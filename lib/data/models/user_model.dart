@@ -35,7 +35,7 @@ class UserModel extends User {
   }
 
   Map<String, dynamic> toMap() {
-    return {
+    final map = {
       'id': id,
       'username': username,
       'email': email,
@@ -49,5 +49,9 @@ class UserModel extends User {
       'created_at': createdAt.toIso8601String(),
       'updated_at': updatedAt.toIso8601String(),
     };
+    if (id == null) {
+      map.remove('id');
+    }
+    return map;
   }
 }

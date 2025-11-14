@@ -20,8 +20,9 @@ class DatabaseHelper {
     final path = join(dbPath, 'app_database.db');
     final db = await openDatabase(
       path,
-      version: 1,
+      version: 2,
       onCreate: _onCreate,
+      onUpgrade: _onUpgrade,
       onConfigure: _onConfigure,
     );
     return db;
@@ -32,6 +33,46 @@ class DatabaseHelper {
   }
 
   Future<void> _onCreate(Database db, int version) async {
+    await _createTables(db);
+  }
+
+  Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
+    if (oldVersion < 2) {
+      await db.execute('''
+      CREATE TABLE cash_sessions (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          warehouse_id INTEGER NOT NULL,
+          user_id INTEGER NOT NULL,
+          opening_balance_cents BIGINT NOT NULL,
+          closing_balance_cents BIGINT,
+          expected_balance_cents BIGINT,
+          difference_cents BIGINT,
+          status TEXT NOT NULL DEFAULT 'open',
+          opened_at TEXT NOT NULL,
+          closed_at TEXT,
+          notes TEXT,
+          FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE RESTRICT
+      )
+      ''');
+
+      await db.execute('''
+      CREATE TABLE cash_movements (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          cash_session_id INTEGER NOT NULL,
+          movement_type TEXT NOT NULL,
+          amount_cents BIGINT NOT NULL,
+          reason TEXT NOT NULL,
+          description TEXT,
+          performed_by INTEGER NOT NULL,
+          movement_date TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (cash_session_id) REFERENCES cash_sessions(id) ON DELETE CASCADE,
+          FOREIGN KEY (performed_by) REFERENCES users(id) ON DELETE RESTRICT
+      )
+      ''');
+    }
+  }
+
+  Future<void> _createTables(Database db) async {
     await db.execute('''
       CREATE TABLE users (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -72,5 +113,37 @@ class DatabaseHelper {
         FOREIGN KEY (granted_by) REFERENCES users(id) ON DELETE SET NULL
       )
     ''');
+
+    await db.execute('''
+      CREATE TABLE cash_sessions (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          warehouse_id INTEGER NOT NULL,
+          user_id INTEGER NOT NULL,
+          opening_balance_cents BIGINT NOT NULL,
+          closing_balance_cents BIGINT,
+          expected_balance_cents BIGINT,
+          difference_cents BIGINT,
+          status TEXT NOT NULL DEFAULT 'open',
+          opened_at TEXT NOT NULL,
+          closed_at TEXT,
+          notes TEXT,
+          FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE RESTRICT
+      )
+      ''');
+
+    await db.execute('''
+      CREATE TABLE cash_movements (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          cash_session_id INTEGER NOT NULL,
+          movement_type TEXT NOT NULL,
+          amount_cents BIGINT NOT NULL,
+          reason TEXT NOT NULL,
+          description TEXT,
+          performed_by INTEGER NOT NULL,
+          movement_date TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (cash_session_id) REFERENCES cash_sessions(id) ON DELETE CASCADE,
+          FOREIGN KEY (performed_by) REFERENCES users(id) ON DELETE RESTRICT
+      )
+      ''');
   }
 }

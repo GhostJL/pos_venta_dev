@@ -42,7 +42,7 @@ class AuthRepository {
       passwordHash: hashedPassword,
       firstName: user.firstName,
       lastName: user.lastName,
-      role: user.role,
+      role: UserRole.admin, // Assign admin role directly
       phone: user.phone,
       isActive: user.isActive,
       lastLoginAt: user.lastLoginAt,
@@ -52,10 +52,24 @@ class AuthRepository {
 
     try {
       final id = await db.insert('users', userModel.toMap());
-      return user.copyWith(id: id);
+      await _grantAllPermissions(id);
+      return user.copyWith(id: id, role: UserRole.admin);
     } catch (e) {
       // Handle unique constraint violations or other errors
       return null;
     }
+  }
+
+  Future<void> _grantAllPermissions(int userId) async {
+    final db = await _databaseHelper.database;
+    final permissions = await db.query('permissions');
+    final batch = db.batch();
+    for (final permission in permissions) {
+      batch.insert('user_permissions', {
+        'user_id': userId,
+        'permission_id': permission['id'],
+      });
+    }
+    await batch.commit(noResult: true);
   }
 }
