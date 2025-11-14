@@ -7,9 +7,10 @@ import 'package:myapp/presentation/pages/login_page.dart';
 import 'package:myapp/presentation/providers/auth_provider.dart';
 import 'package:myapp/presentation/providers/cash_session_provider.dart';
 import 'package:myapp/presentation/screens/add_movement_screen.dart';
+import 'package:myapp/presentation/screens/cash_session_screen.dart';
 import 'package:myapp/presentation/screens/open_session_screen.dart';
+import 'package:myapp/presentation/screens/revenue_details_screen.dart';
 
-// Add this key for the root navigator
 final GlobalKey<NavigatorState> _rootNavigatorKey = GlobalKey<NavigatorState>();
 
 final routerProvider = Provider<GoRouter>((ref) {
@@ -20,25 +21,27 @@ final routerProvider = Provider<GoRouter>((ref) {
     navigatorKey: _rootNavigatorKey,
     initialLocation: '/',
     routes: [
-      // Main application shell
       ShellRoute(
         builder: (context, state, child) {
-          return HomePage(child: child); // Your main layout with BottomNavBar
+          return HomePage(child: child);
         },
         routes: [
           GoRoute(
             path: '/',
             pageBuilder: (context, state) =>
-                const NoTransitionPage(child: SizedBox.shrink()), // Placeholder
+                const NoTransitionPage(child: RevenueDetailsScreen()),
           ),
           GoRoute(
             path: '/session',
             pageBuilder: (context, state) =>
-                const NoTransitionPage(child: SizedBox.shrink()), // Placeholder
+                const NoTransitionPage(child: CashSessionScreen()),
+          ),
+          GoRoute(
+            path: '/revenue-details',
+            builder: (context, state) => const RevenueDetailsScreen(),
           ),
         ],
       ),
-      // Standalone pages (no shell)
       GoRoute(path: '/login', builder: (context, state) => const LoginPage()),
       GoRoute(
         path: '/create-account',
@@ -48,7 +51,6 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/open-session',
         builder: (context, state) => const OpenSessionScreen(),
       ),
-      // Modal-style page for adding movements
       GoRoute(
         parentNavigatorKey: _rootNavigatorKey,
         path: '/add-movement',
@@ -70,30 +72,33 @@ final routerProvider = Provider<GoRouter>((ref) {
         return loggingIn ? null : '/login';
       }
 
-      // If logged in and trying to access login/create account, redirect to home
       if (loggingIn) {
         return '/';
       }
 
-      final sessionOpen = cashSessionAsync.when(
-        data: (session) => session != null && session.closedAt == null,
-        loading: () => false,
-        error: (e, s) => false,
-      );
+      // If the session provider is loading, don't redirect. This prevents
+      // navigation errors during data refreshes.
+      if (cashSessionAsync.isLoading) {
+        return null;
+      }
 
-      final isAtOpenSession = state.matchedLocation == '/open-session';
+      // Safely get the session data.
+      final session = cashSessionAsync.hasValue ? cashSessionAsync.value : null;
+      final sessionOpen = session != null && session.closedAt == null;
 
-      if (!sessionOpen &&
-          !isAtOpenSession &&
-          state.matchedLocation != '/add-movement') {
+      final isAtProtectedScreen =
+          state.matchedLocation == '/session' ||
+          state.matchedLocation == '/add-movement';
+
+      if (!sessionOpen && isAtProtectedScreen) {
         return '/open-session';
       }
 
-      if (sessionOpen && isAtOpenSession) {
-        return '/'; // Go to the main dashboard/shell route
+      if (sessionOpen && state.matchedLocation == '/open-session') {
+        return '/';
       }
 
-      return null; // No redirection needed
+      return null;
     },
   );
 });

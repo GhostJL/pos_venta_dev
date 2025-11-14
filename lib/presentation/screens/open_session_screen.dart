@@ -65,7 +65,7 @@ class _OpenSessionScreenState extends ConsumerState<OpenSessionScreen> {
                       return 'Please enter a balance';
                     }
                     if (double.tryParse(value) == null) {
-                       return 'Invalid number';
+                      return 'Invalid number';
                     }
                     if (double.parse(value) < 0) {
                       return 'Balance cannot be negative';

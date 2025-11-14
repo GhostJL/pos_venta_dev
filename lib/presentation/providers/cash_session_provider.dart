@@ -29,13 +29,17 @@ final getCurrentSessionProvider = Provider((ref) {
 
 final cashSessionProvider =
     StateNotifierProvider<CashSessionNotifier, AsyncValue<CashSession?>>((ref) {
-      return CashSessionNotifier(ref);
-    });
+  return CashSessionNotifier(ref);
+});
 
 class CashSessionNotifier extends StateNotifier<AsyncValue<CashSession?>> {
   final Ref _ref;
 
-  CashSessionNotifier(this._ref) : super(const AsyncValue.loading());
+  CashSessionNotifier(this._ref) : super(const AsyncValue.loading()) {
+    // Fetch the initial session data when the provider is first created.
+    // TODO: Replace the hardcoded userId with the actual logged-in user's ID.
+    getCurrentSession(1);
+  }
 
   Future<void> openSession(
     int warehouseId,
@@ -68,7 +72,8 @@ class CashSessionNotifier extends StateNotifier<AsyncValue<CashSession?>> {
   }
 
   Future<void> getCurrentSession(int userId) async {
-    state = const AsyncValue.loading();
+    // No need to set loading state here if it's already set in the constructor.
+    // If this is called to refresh, we might want a different loading indicator.
     try {
       final getCurrentSession = _ref.read(getCurrentSessionProvider);
       final session = await getCurrentSession(userId);

@@ -3,21 +3,20 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:myapp/app/theme.dart';
 import 'package:myapp/presentation/providers/auth_provider.dart';
+import 'package:myapp/presentation/providers/cash_session_provider.dart';
 import 'package:myapp/presentation/screens/cash_session_screen.dart';
 import 'package:myapp/presentation/widgets/dashboard_card.dart';
 
 class HomePage extends ConsumerWidget {
-  final Widget child; // This will be the content from the nested GoRoute
+  final Widget child;
 
   const HomePage({super.key, required this.child});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // Determine the selected index based on the current route
     final String location = GoRouterState.of(context).matchedLocation;
     final int selectedIndex = location == '/session' ? 1 : 0;
 
-    // The list of views for the BottomNavBar
     final List<Widget> views = [
       const DashboardView(),
       const CashSessionScreen(),
@@ -31,13 +30,11 @@ class HomePage extends ConsumerWidget {
             icon: const Icon(Icons.logout, color: AppTheme.primary),
             onPressed: () {
               ref.read(authStateProvider.notifier).signOut();
-              // No need to context.go here, the redirect logic in the router will handle it
             },
             tooltip: 'Logout',
           ),
         ],
       ),
-      // Display the selected view
       body: IndexedStack(index: selectedIndex, children: views),
       bottomNavigationBar: BottomNavigationBar(
         items: const <BottomNavigationBarItem>[
@@ -53,7 +50,6 @@ class HomePage extends ConsumerWidget {
         currentIndex: selectedIndex,
         selectedItemColor: AppTheme.primary,
         onTap: (index) {
-          // Navigate to the corresponding route when a tab is tapped
           if (index == 0) {
             context.go('/');
           } else {
@@ -65,11 +61,13 @@ class HomePage extends ConsumerWidget {
   }
 }
 
-class DashboardView extends StatelessWidget {
+class DashboardView extends ConsumerWidget {
   const DashboardView({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final cashSessionAsync = ref.watch(cashSessionProvider);
+
     return ListView(
       padding: const EdgeInsets.all(16.0),
       children: [
@@ -78,14 +76,41 @@ class DashboardView extends StatelessWidget {
           value: '\$1,250.75', // Dummy data
           icon: Icons.monetization_on_outlined,
           color: AppTheme.primary,
+          onTap: () => context.go('/revenue-details'),
         ),
         const SizedBox(height: 16),
-        DashboardCard(
-          title: 'Active Session',
-          value: 'OPEN', // Dummy data
-          icon: Icons.check_circle_outline_rounded,
-          color: AppTheme.success,
-          onTap: () => context.go('/session'), // Navigate to the session tab
+        cashSessionAsync.when(
+          data: (session) {
+            if (session != null && session.closedAt == null) {
+              return DashboardCard(
+                title: 'Active Session',
+                value: 'OPEN',
+                icon: Icons.check_circle_outline_rounded,
+                color: AppTheme.success,
+                onTap: () => context.go('/session'),
+              );
+            } else {
+              return DashboardCard(
+                title: 'No Active Session',
+                value: 'Tap to open',
+                icon: Icons.play_circle_outline_rounded,
+                color: Colors.blueGrey,
+                onTap: () => context.go('/open-session'),
+              );
+            }
+          },
+          loading: () => const DashboardCard(
+            title: 'Active Session',
+            value: 'Loading...',
+            icon: Icons.hourglass_empty_rounded,
+            color: Colors.grey,
+          ),
+          error: (err, stack) => DashboardCard(
+            title: 'Error',
+            value: 'Could not load session',
+            icon: Icons.error_outline_rounded,
+            color: AppTheme.error,
+          ),
         ),
         const SizedBox(height: 16),
         DashboardCard(

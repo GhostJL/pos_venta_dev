@@ -1,34 +1,60 @@
-# Project Blueprint
+# Blueprint: Cash Management App
 
 ## Overview
 
-A Flutter application to manage point of sale, cash sessions and cash movements.
+This document outlines the architecture, design, and features of the Cash Management App. The application is a Flutter-based mobile and web app designed to help users track cash flow through distinct work sessions.
 
-## Style, Design, and Features
+## Style & Design
 
-- **Theme:** A custom theme is implemented in `lib/app/theme.dart` with a color scheme and typography based on Google Fonts.
-- **Authentication:** The application uses Firebase Authentication to manage user accounts.
-- **Routing:** The application uses `go_router` for navigation.
-- **State Management:** The application uses `flutter_riverpod` for state management.
+- **Theme:** The app uses a custom theme defined in `lib/app/theme.dart`, which provides a consistent color scheme and styling across the application.
+- **Layout:** The layout is designed to be clean, modern, and intuitive, with a focus on ease of use. It uses standard Material Design components with custom styling.
+- **Typography:** The app uses the default Material Design typography.
 
-## Current Plan
+## Features Implemented
 
-### Implemented Features
+### 1. Authentication
+- **Login:** Users can log in with their credentials.
+- **Create Account:** New users can create an account.
 
-- [x] **Authentication:**
-  - [x] Login screen (`lib/presentation/pages/login_page.dart`)
-  - [x] Create account screen (`lib/presentation/pages/create_account_page.dart`)
-- [x] **Cash Session:**
-  - [x] Open cash session screen (`lib/presentation/screens/open_session_screen.dart`)
-  - [x] Cash session screen (`lib/presentation/screens/cash_session_screen.dart`)
-- [x] **Cash Movement:**
-  - [x] Add movement screen (`lib/presentation/screens/add_movement_screen.dart`)
-  - [x] Movements list widget (`lib/presentation/widgets/movements_list.dart`)
-- [x] **Dashboard:**
-  - [x] Dashboard home page (`lib/presentation/pages/home_page.dart`)
-  - [x] Dashboard card widget (`lib/presentation/widgets/dashboard_card.dart`)
+### 2. Cash Sessions
+- **Open Session:** Users can start a new cash session with an initial opening balance.
+- **View Current Session:** The main screen displays the details of the active cash session, including:
+    - Initial Amount
+    - Cash Flow (total income minus total expenses)
+    - Expected Total
+- **Close Session:** Users can close the active session by providing the final cash amount. The app calculates and displays the difference between the expected and actual closing balances.
 
-### Next Steps
+### 3. Cash Movements
+- **Add Movement:** Users can add new transactions (income or expense) to the active session. Each movement includes:
+    - Amount
+    - Type (Income/Expense)
+    - Description
+- **List Movements:** The main screen displays a list of all movements for the current session.
 
-- [ ] Implement the revenue details screen.
-- [ ] Implement the movements list screen.
+### 4. Navigation
+- The app uses `go_router` for declarative navigation, with the following routes:
+    - `/` (Home/Cash Session Screen)
+    - `/login`
+    - `/create-account`
+    - `/open-session`
+    - `/add-movement`
+
+## Current Task: Stabilize and Refactor
+
+### Plan & Steps
+
+1.  **Identify and Fix Critical Errors:**
+    - **`cash_session_screen.dart`:**
+        - Corrected widget lifecycle by moving `_buildSessionHeader` out of the `build` method.
+        - Fixed mismatched braces.
+        - Corrected property names from `initialAmount` and `total` to `openingBalanceCents` and `currentBalanceCents`.
+        - Implemented a robust `_showCloseSessionDialog` to handle session closing with a form for the final cash amount.
+    - **`add_movement_screen.dart`:**
+        - Fixed the "The instance member 'ref' can't be accessed in an initializer" error by moving the session ID retrieval logic into the `onPressed` callback.
+
+2.  **Code Formatting and Analysis:**
+    - Formatted the entire codebase using `dart format .`.
+    - Ran `flutter analyze` to ensure there are no remaining analysis issues.
+
+3.  **Documentation:**
+    - Created this `blueprint.md` file to document the application.

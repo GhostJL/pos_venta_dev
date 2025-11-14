@@ -24,4 +24,8 @@ class CashSession {
     this.closedAt,
     this.notes,
   });
+
+  int get currentBalanceCents {
+    return openingBalanceCents + (expectedBalanceCents ?? 0);
+  }
 }
