@@ -5,20 +5,29 @@ import 'package:myapp/app/theme.dart';
 import 'package:myapp/domain/entities/cash_movement.dart';
 import 'package:myapp/presentation/providers/cash_movement_provider.dart';
 
-class MovementsList extends ConsumerWidget {
+class MovementsList extends ConsumerStatefulWidget {
   final int sessionId;
   const MovementsList({super.key, required this.sessionId});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final movementsAsync = ref.watch(cashMovementProvider);
+  ConsumerState<MovementsList> createState() => _MovementsListState();
+}
 
-    // Fetch movements when the widget is built
+class _MovementsListState extends ConsumerState<MovementsList> {
+  @override
+  void initState() {
+    super.initState();
+    // Fetch movements once when the widget is initialized
     Future.microtask(
       () => ref
           .read(cashMovementProvider.notifier)
-          .getMovementsBySession(sessionId),
+          .getMovementsBySession(widget.sessionId),
     );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final movementsAsync = ref.watch(cashMovementProvider);
 
     return movementsAsync.when(
       data: (movements) {

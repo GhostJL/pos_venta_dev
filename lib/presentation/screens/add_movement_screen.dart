@@ -19,6 +19,14 @@ class _AddMovementScreenState extends ConsumerState<AddMovementScreen> {
   String _reason = 'deposit';
   final _amountController = TextEditingController();
   final _descriptionController = TextEditingController();
+  bool _isSubmitting = false;
+
+  @override
+  void dispose() {
+    _amountController.dispose();
+    _descriptionController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -69,7 +77,7 @@ class _AddMovementScreenState extends ConsumerState<AddMovementScreen> {
                   ),
                   const SizedBox(height: 24),
                   DropdownButtonFormField<String>(
-                    initialValue: _reason,
+                    value: _reason,
                     decoration: const InputDecoration(labelText: 'Reason'),
                     onChanged: (value) => setState(() => _reason = value!),
                     items: const [
@@ -98,8 +106,18 @@ class _AddMovementScreenState extends ConsumerState<AddMovementScreen> {
                   ),
                   const SizedBox(height: 32),
                   ElevatedButton(
-                    onPressed: _submitForm,
-                    child: const Text('Save Movement'),
+                    onPressed: _isSubmitting ? null : _submitForm,
+                    child: _isSubmitting
+                        ? const SizedBox(
+                            height: 20,
+                            width: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor:
+                                  AlwaysStoppedAnimation<Color>(Colors.white),
+                            ),
+                          )
+                        : const Text('Save Movement'),
                   ),
                 ],
               ),
@@ -127,9 +145,8 @@ class _AddMovementScreenState extends ConsumerState<AddMovementScreen> {
         selectedBackgroundColor: _movementType == 'in'
             ? AppTheme.success.withAlpha(51)
             : AppTheme.error.withAlpha(51),
-        selectedForegroundColor: _movementType == 'in'
-            ? AppTheme.success
-            : AppTheme.error,
+        selectedForegroundColor:
+            _movementType == 'in' ? AppTheme.success : AppTheme.error,
       ),
       segments: const <ButtonSegment<String>>[
         ButtonSegment(
@@ -150,24 +167,52 @@ class _AddMovementScreenState extends ConsumerState<AddMovementScreen> {
     );
   }
 
-  void _submitForm() {
-    if (_formKey.currentState!.validate()) {
-      final amount = (double.parse(_amountController.text) * 100).toInt();
-      final user = ref.read(authStateProvider);
-      final session = ref.read(cashSessionProvider).asData!.value;
+  Future<void> _submitForm() async {
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
 
-      if (user != null && session != null) {
-        ref.read(cashMovementProvider.notifier).createMovement(
-          session.id!,
-          _movementType,
-          amount,
-          _reason,
-          description: _descriptionController.text.isNotEmpty
-              ? _descriptionController.text
-              : null,
-        );
-        context.pop();
+    setState(() => _isSubmitting = true);
+
+    final amount = (double.parse(_amountController.text) * 100).toInt();
+    final user = ref.read(authStateProvider);
+    final session = ref.read(cashSessionProvider).asData?.value;
+
+    if (user != null && session != null) {
+      try {
+        await ref.read(cashMovementProvider.notifier).createMovement(
+              session.id!,
+              _movementType,
+              amount,
+              _reason,
+              description: _descriptionController.text.isNotEmpty
+                  ? _descriptionController.text
+                  : null,
+            );
+
+        // Wait for the provider to update before popping
+        await ref.read(cashSessionProvider.notifier).getCurrentSession(session.userId);
+
+        if (mounted) {
+          context.pop();
+        }
+      } catch (e) {
+        // Handle error, e.g., show a SnackBar
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Failed to save movement: $e'),
+              backgroundColor: AppTheme.error,
+            ),
+          );
+        }
+      } finally {
+        if (mounted) {
+          setState(() => _isSubmitting = false);
+        }
       }
+    } else {
+      setState(() => _isSubmitting = false);
     }
   }
 }

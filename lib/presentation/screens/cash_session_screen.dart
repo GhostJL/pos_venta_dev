@@ -67,7 +67,7 @@ class CashSessionScreen extends ConsumerWidget {
       floatingActionButton: cashSessionState.when(
         data: (session) => session != null && session.closedAt == null
             ? FloatingActionButton(
-                onPressed: () => context.go('/add-movement'),
+                onPressed: () => context.push('/add-movement'),
                 backgroundColor: AppTheme.primary,
                 child: const Icon(Icons.add, color: Colors.white),
               )

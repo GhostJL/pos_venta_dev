@@ -61,6 +61,7 @@ class CashMovementNotifier
       state = AsyncValue.data(movements);
     } catch (e, s) {
       state = AsyncValue.error(e, s);
+      rethrow; // Re-throw the exception
     }
   }
 
