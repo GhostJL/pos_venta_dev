@@ -1,4 +1,3 @@
-
 enum UserRole { admin, manager, cashier, viewer }
 
 class User {

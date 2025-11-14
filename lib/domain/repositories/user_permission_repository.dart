@@ -1,4 +1,3 @@
-
 import 'package:myapp/domain/entities/user_permission.dart';
 
 abstract class UserPermissionRepository {

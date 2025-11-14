@@ -1,4 +1,3 @@
-
 import 'package:myapp/data/datasources/database_helper.dart';
 import 'package:myapp/data/models/cash_movement_model.dart';
 import 'package:myapp/domain/entities/cash_movement.dart';
@@ -11,7 +10,13 @@ class CashMovementRepositoryImpl implements CashMovementRepository {
   CashMovementRepositoryImpl(this._databaseHelper, this.userId);
 
   @override
-  Future<CashMovement> createMovement(int cashSessionId, String movementType, int amountCents, String reason, {String? description}) async {
+  Future<CashMovement> createMovement(
+    int cashSessionId,
+    String movementType,
+    int amountCents,
+    String reason, {
+    String? description,
+  }) async {
     final db = await _databaseHelper.database;
     final now = DateTime.now();
     final data = {
@@ -39,7 +44,11 @@ class CashMovementRepositoryImpl implements CashMovementRepository {
   @override
   Future<List<CashMovement>> getMovementsBySession(int sessionId) async {
     final db = await _databaseHelper.database;
-    final result = await db.query('cash_movements', where: 'cash_session_id = ?', whereArgs: [sessionId]);
+    final result = await db.query(
+      'cash_movements',
+      where: 'cash_session_id = ?',
+      whereArgs: [sessionId],
+    );
     return result.map((map) => CashMovementModel.fromMap(map)).toList();
   }
 }

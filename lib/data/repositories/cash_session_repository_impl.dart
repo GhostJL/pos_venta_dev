@@ -1,4 +1,3 @@
-
 import 'package:myapp/data/datasources/database_helper.dart';
 import 'package:myapp/data/models/cash_session_model.dart';
 import 'package:myapp/domain/entities/cash_session.dart';
@@ -10,7 +9,11 @@ class CashSessionRepositoryImpl implements CashSessionRepository {
   CashSessionRepositoryImpl(this._databaseHelper);
 
   @override
-  Future<CashSession> openSession(int warehouseId, int userId, int openingBalanceCents) async {
+  Future<CashSession> openSession(
+    int warehouseId,
+    int userId,
+    int openingBalanceCents,
+  ) async {
     final db = await _databaseHelper.database;
     final now = DateTime.now();
     final data = {
@@ -32,7 +35,10 @@ class CashSessionRepositoryImpl implements CashSessionRepository {
   }
 
   @override
-  Future<CashSession> closeSession(int sessionId, int closingBalanceCents) async {
+  Future<CashSession> closeSession(
+    int sessionId,
+    int closingBalanceCents,
+  ) async {
     final db = await _databaseHelper.database;
     final now = DateTime.now();
     // You would typically calculate expected_balance_cents and difference_cents here
@@ -41,8 +47,17 @@ class CashSessionRepositoryImpl implements CashSessionRepository {
       'status': 'closed',
       'closed_at': now.toIso8601String(),
     };
-    await db.update('cash_sessions', data, where: 'id = ?', whereArgs: [sessionId]);
-    final updatedData = await db.query('cash_sessions', where: 'id = ?', whereArgs: [sessionId]);
+    await db.update(
+      'cash_sessions',
+      data,
+      where: 'id = ?',
+      whereArgs: [sessionId],
+    );
+    final updatedData = await db.query(
+      'cash_sessions',
+      where: 'id = ?',
+      whereArgs: [sessionId],
+    );
     return CashSessionModel.fromMap(updatedData.first);
   }
 

@@ -1,4 +1,3 @@
-
 import 'package:myapp/domain/entities/cash_session.dart';
 import 'package:myapp/domain/repositories/cash_session_repository.dart';
 

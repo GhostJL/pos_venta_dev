@@ -1,4 +1,3 @@
-
 import 'package:myapp/domain/entities/user.dart';
 
 class UserModel extends User {
@@ -28,7 +27,9 @@ class UserModel extends User {
       role: UserRole.values.byName(map['role']),
       phone: map['phone'],
       isActive: map['is_active'] == 1,
-      lastLoginAt: map['last_login_at'] != null ? DateTime.parse(map['last_login_at']) : null,
+      lastLoginAt: map['last_login_at'] != null
+          ? DateTime.parse(map['last_login_at'])
+          : null,
       createdAt: DateTime.parse(map['created_at']),
       updatedAt: DateTime.parse(map['updated_at']),
     );

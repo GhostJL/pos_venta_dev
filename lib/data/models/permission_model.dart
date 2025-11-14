@@ -1,4 +1,3 @@
-
 import 'package:myapp/domain/entities/permission.dart';
 
 class PermissionModel extends Permission {

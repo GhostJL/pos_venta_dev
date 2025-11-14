@@ -1,4 +1,3 @@
-
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 import 'package:myapp/data/datasources/database_helper.dart';
@@ -28,20 +27,29 @@ final getCurrentSessionProvider = Provider((ref) {
   return GetCurrentSession(repository);
 });
 
-final cashSessionProvider = StateNotifierProvider<CashSessionNotifier, AsyncValue<CashSession?>>((ref) {
-  return CashSessionNotifier(ref);
-});
+final cashSessionProvider =
+    StateNotifierProvider<CashSessionNotifier, AsyncValue<CashSession?>>((ref) {
+      return CashSessionNotifier(ref);
+    });
 
 class CashSessionNotifier extends StateNotifier<AsyncValue<CashSession?>> {
   final Ref _ref;
 
   CashSessionNotifier(this._ref) : super(const AsyncValue.loading());
 
-  Future<void> openSession(int warehouseId, int userId, int openingBalanceCents) async {
+  Future<void> openSession(
+    int warehouseId,
+    int userId,
+    int openingBalanceCents,
+  ) async {
     state = const AsyncValue.loading();
     try {
       final openSession = _ref.read(openSessionProvider);
-      final session = await openSession(warehouseId, userId, openingBalanceCents);
+      final session = await openSession(
+        warehouseId,
+        userId,
+        openingBalanceCents,
+      );
       state = AsyncValue.data(session);
     } catch (e, s) {
       state = AsyncValue.error(e, s);

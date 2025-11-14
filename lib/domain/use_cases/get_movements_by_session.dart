@@ -1,4 +1,3 @@
-
 import 'package:myapp/domain/entities/cash_movement.dart';
 import 'package:myapp/domain/repositories/cash_movement_repository.dart';
 

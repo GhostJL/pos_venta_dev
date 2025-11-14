@@ -1,4 +1,3 @@
-
 import 'package:myapp/domain/entities/cash_session.dart';
 import 'package:myapp/domain/repositories/cash_session_repository.dart';
 
@@ -7,7 +6,11 @@ class OpenSession {
 
   OpenSession(this.repository);
 
-  Future<CashSession> call(int warehouseId, int userId, int openingBalanceCents) {
+  Future<CashSession> call(
+    int warehouseId,
+    int userId,
+    int openingBalanceCents,
+  ) {
     return repository.openSession(warehouseId, userId, openingBalanceCents);
   }
 }

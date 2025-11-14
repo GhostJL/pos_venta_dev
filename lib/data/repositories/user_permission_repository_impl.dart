@@ -1,4 +1,3 @@
-
 import 'package:myapp/data/datasources/database_helper.dart';
 import 'package:myapp/data/models/user_permission_model.dart';
 import 'package:myapp/domain/entities/user_permission.dart';

@@ -1,4 +1,3 @@
-
 import 'package:myapp/domain/entities/cash_session.dart';
 
 class CashSessionModel extends CashSession {
@@ -27,7 +26,9 @@ class CashSessionModel extends CashSession {
       differenceCents: map['difference_cents'],
       status: map['status'],
       openedAt: DateTime.parse(map['opened_at']),
-      closedAt: map['closed_at'] != null ? DateTime.parse(map['closed_at']) : null,
+      closedAt: map['closed_at'] != null
+          ? DateTime.parse(map['closed_at'])
+          : null,
       notes: map['notes'],
     );
   }

@@ -1,17 +1,51 @@
-# myapp
 
-A new Flutter project.
+# Point of Sale Mobile App
 
-## Getting Started
+This is a Flutter-based mobile application designed to manage point-of-sale operations, including cash sessions and movements. It features a clean, modern user interface and leverages Firebase for backend services.
 
-This project is a starting point for a Flutter application.
+## ✨ Features
 
-A few resources to get you started if this is your first Flutter project:
+- **Authentication**: Secure user login and account creation using Firebase Authentication.
+- **Cash Sessions**: Start, manage, and close cash sessions with an opening balance.
+- **Cash Movements**: Record cash-in and cash-out transactions with details like amount, reason, and description.
+- **Dashboard**: A central hub displaying key metrics like today\'s revenue, session status, and total movements.
+- **Modern UI**: A visually appealing and consistent design system with a custom theme and typography.
+- **Responsive Design**: Adapts to various screen sizes for a seamless experience on mobile and web.
+- **State Management**: Built with `flutter_riverpod` for scalable and maintainable state management.
+- **Navigation**: Uses `go_router` for a declarative and robust routing solution.
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+## 🚀 Technologies Used
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
-# pos_venta_dev
+- **Frontend**: Flutter
+- **Backend**: Firebase (Authentication, Firestore)
+- **State Management**: Riverpod
+- **Routing**: go_router
+- **Styling**: Google Fonts
+
+## 🏁 Getting Started
+
+To get a local copy up and running, follow these simple steps.
+
+### Prerequisites
+
+- Flutter SDK: [Installation Guide](https://flutter.dev/docs/get-started/install)
+- Firebase CLI: `npm install -g firebase-tools`
+
+### Installation
+
+1. **Clone the repo**
+   ```sh
+   git clone https://your-repository-url.git
+   ```
+2. **Install packages**
+   ```sh
+   flutter pub get
+   ```
+3. **Run the app**
+   ```sh
+   flutter run
+   ```
+
+## 📄 License
+
+Distributed under the MIT License. See `LICENSE` for more information.

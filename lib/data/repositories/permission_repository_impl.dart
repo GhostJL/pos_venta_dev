@@ -1,4 +1,3 @@
-
 import 'package:myapp/data/datasources/database_helper.dart';
 import 'package:myapp/data/models/permission_model.dart';
 import 'package:myapp/domain/entities/permission.dart';
@@ -31,7 +30,11 @@ class PermissionRepositoryImpl implements PermissionRepository {
   @override
   Future<Permission?> getPermission(int id) async {
     final db = await _databaseHelper.database;
-    final maps = await db.query('permissions', where: 'id = ?', whereArgs: [id]);
+    final maps = await db.query(
+      'permissions',
+      where: 'id = ?',
+      whereArgs: [id],
+    );
     if (maps.isNotEmpty) {
       return PermissionModel.fromMap(maps.first);
     } else {

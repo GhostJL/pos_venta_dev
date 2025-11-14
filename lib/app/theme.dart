@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -34,15 +33,30 @@ class AppTheme {
     // 📝 Typography
     textTheme: TextTheme(
       displayLarge: GoogleFonts.montserrat(
-          fontSize: 57, fontWeight: FontWeight.bold, color: textPrimary),
+        fontSize: 57,
+        fontWeight: FontWeight.bold,
+        color: textPrimary,
+      ),
       titleLarge: GoogleFonts.montserrat(
-          fontSize: 22, fontWeight: FontWeight.w600, color: textPrimary),
+        fontSize: 22,
+        fontWeight: FontWeight.w600,
+        color: textPrimary,
+      ),
       bodyLarge: GoogleFonts.lato(
-          fontSize: 16, color: textPrimary, height: 1.5),
+        fontSize: 16,
+        color: textPrimary,
+        height: 1.5,
+      ),
       bodyMedium: GoogleFonts.lato(
-          fontSize: 14, color: textSecondary, height: 1.5),
+        fontSize: 14,
+        color: textSecondary,
+        height: 1.5,
+      ),
       labelLarge: GoogleFonts.lato(
-          fontSize: 14, fontWeight: FontWeight.bold, color: Colors.white),
+        fontSize: 14,
+        fontWeight: FontWeight.bold,
+        color: Colors.white,
+      ),
     ),
 
     // 🔵 AppBar Theme
@@ -51,7 +65,10 @@ class AppTheme {
       foregroundColor: textPrimary,
       elevation: 0,
       titleTextStyle: GoogleFonts.montserrat(
-          fontSize: 24, fontWeight: FontWeight.bold, color: textPrimary),
+        fontSize: 24,
+        fontWeight: FontWeight.bold,
+        color: textPrimary,
+      ),
     ),
 
     // ✅ Button Theme
@@ -92,9 +109,7 @@ class AppTheme {
       color: cardBackground,
       elevation: 4,
       shadowColor: textPrimary.withAlpha(10),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
     ),
 
     // 🧭 Navigation Bar Theme

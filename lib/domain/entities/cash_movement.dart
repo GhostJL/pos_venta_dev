@@ -1,4 +1,3 @@
-
 class CashMovement {
   final int? id;
   final int cashSessionId;

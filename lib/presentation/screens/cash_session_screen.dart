@@ -1,10 +1,9 @@
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:myapp/presentation/providers/auth_provider.dart';
+import 'package:go_router/go_router.dart';
+import 'package:myapp/app/theme.dart';
 import 'package:myapp/presentation/providers/cash_session_provider.dart';
-import 'package:myapp/presentation/providers/cash_movement_provider.dart';
-import 'package:myapp/presentation/screens/add_movement_screen.dart';
+import 'package:myapp/presentation/widgets/movements_list.dart';
 
 class CashSessionScreen extends ConsumerWidget {
   const CashSessionScreen({super.key});
@@ -12,79 +11,159 @@ class CashSessionScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final cashSessionState = ref.watch(cashSessionProvider);
-    final cashMovementState = ref.watch(cashMovementProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Cash Session'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: () => ref.read(authStateProvider.notifier).signOut(),
-          )
-        ],
-      ),
       body: cashSessionState.when(
         data: (session) {
-          if (session == null) {
-            return const Center(child: Text('No active session.'));
-          }
-          // Fetch movements when session is available
-          Future.microtask(() => ref.read(cashMovementProvider.notifier).getMovementsBySession(session.id!));
-          return Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              children: [
-                Text('Session ID: ${session.id}'),
-                Text('Opening Balance: ${session.openingBalanceCents / 100}'),
-                if (session.closingBalanceCents != null)
-                  Text('Closing Balance: ${session.closingBalanceCents! / 100}'),
-                if (session.closedAt != null)
-                  Text('Closed At: ${session.closedAt}'),
-                const SizedBox(height: 20),
-                if (session.closedAt == null)
+          if (session == null || session.closedAt != null) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(
+                    Icons.info_outline_rounded,
+                    color: AppTheme.textSecondary,
+                    size: 48,
+                  ),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'No active session.',
+                    style: TextStyle(
+                      color: AppTheme.textSecondary,
+                      fontSize: 18,
+                    ),
+                  ),
+                  const SizedBox(height: 24),
                   ElevatedButton(
-                    onPressed: () {
-                      ref.read(cashSessionProvider.notifier).closeSession(session.id!, 100000); // 1000.00
-                    },
-                    child: const Text('Close Session'),
+                    onPressed: () => context.go('/open-session'),
+                    child: const Text('Start New Session'),
                   ),
-                const SizedBox(height: 20),
-                Expanded(
-                  child: cashMovementState.when(
-                    data: (movements) {
-                      return ListView.builder(
-                        itemCount: movements.length,
-                        itemBuilder: (context, index) {
-                          final movement = movements[index];
-                          return ListTile(
-                            title: Text(movement.reason),
-                            subtitle: Text(movement.description ?? ''),
-                            trailing: Text('${movement.amountCents / 100}'),
-                          );
-                        },
-                      );
-                    },
-                    loading: () => const Center(child: CircularProgressIndicator()),
-                    error: (error, stackTrace) => Center(child: Text('Error: $error')),
-                  ),
+                ],
+              ),
+            );
+          }
+          return Column(
+            children: [
+              _buildSessionHeader(context, session, ref),
+              const Divider(height: 1, color: AppTheme.borders),
+              Expanded(
+                child: MovementsList(
+                  sessionId: session.id!,
+                ), // Use the new widget
+              ),
+            ],
+          );
+        },
+        loading: () => const Center(
+          child: CircularProgressIndicator(color: AppTheme.primary),
+        ),
+        error: (err, stack) => Center(
+          child: Text(
+            'Error: $err',
+            style: const TextStyle(color: AppTheme.error),
+          ),
+        ),
+      ),
+      floatingActionButton: cashSessionState.when(
+        data: (session) => session != null && session.closedAt == null
+            ? FloatingActionButton(
+                onPressed: () => context.go('/add-movement'),
+                backgroundColor: AppTheme.primary,
+                child: const Icon(Icons.add, color: Colors.white),
+              )
+            : const SizedBox.shrink(),
+        loading: () => const SizedBox.shrink(),
+        error: (_, __) => const SizedBox.shrink(),
+      ),
+    );
+  }
+
+  Widget _buildSessionHeader(BuildContext context, session, WidgetRef ref) {
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Current Balance',
+            style: Theme.of(
+              context,
+            ).textTheme.titleLarge?.copyWith(color: AppTheme.textSecondary),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            '\$${(session.currentBalanceCents / 100).toStringAsFixed(2)}',
+            style: Theme.of(
+              context,
+            ).textTheme.displayLarge?.copyWith(color: AppTheme.primary),
+          ),
+          const SizedBox(height: 24),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              _buildInfoChip(
+                context,
+                label: 'Opening Balance',
+                value:
+                    '\$${(session.openingBalanceCents / 100).toStringAsFixed(2)}',
+              ),
+              ElevatedButton(
+                onPressed: () async {
+                  // Show confirmation dialog before closing
+                  final confirmed = await showDialog<bool>(
+                    context: context,
+                    builder: (BuildContext context) => AlertDialog(
+                      title: const Text('Confirm Close Session'),
+                      content: const Text(
+                        'Are you sure you want to close this session?',
+                      ),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.of(context).pop(false),
+                          child: const Text('Cancel'),
+                        ),
+                        TextButton(
+                          onPressed: () => Navigator.of(context).pop(true),
+                          child: const Text('Confirm'),
+                        ),
+                      ],
+                    ),
+                  );
+
+                  if (confirmed ?? false) {
+                    ref
+                        .read(cashSessionProvider.notifier)
+                        .closeSession(session.id!, session.currentBalanceCents);
+                  }
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppTheme.error,
                 ),
-              ],
-            ),
-          );
-        },
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, stackTrace) => Center(child: Text('Error: $error')),
+                child: const Text('Close Session'),
+              ),
+            ],
+          ),
+        ],
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.push(
+    );
+  }
+
+  Widget _buildInfoChip(
+    BuildContext context, {
+    required String label,
+    required String value,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label, style: Theme.of(context).textTheme.bodyMedium),
+        Text(
+          value,
+          style: Theme.of(
             context,
-            MaterialPageRoute(builder: (context) => const AddMovementScreen()),
-          );
-        },
-        child: const Icon(Icons.add),
-      ),
+          ).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold),
+        ),
+      ],
     );
   }
 }

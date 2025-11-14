@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -40,7 +39,9 @@ class LoginPage extends ConsumerWidget {
                 const SizedBox(height: 32),
                 ElevatedButton(
                   onPressed: () {
-                    ref.read(authStateProvider.notifier).signIn(
+                    ref
+                        .read(authStateProvider.notifier)
+                        .signIn(
                           usernameController.text,
                           passwordController.text,
                         );

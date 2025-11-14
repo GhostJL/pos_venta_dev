@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:myapp/domain/entities/user.dart';
@@ -67,7 +66,9 @@ class CreateAccountPage extends ConsumerWidget {
                 const SizedBox(height: 32),
                 ElevatedButton(
                   onPressed: () async {
-                    final success = await ref.read(authStateProvider.notifier).signUp(
+                    final success = await ref
+                        .read(authStateProvider.notifier)
+                        .signUp(
                           User(
                             username: usernameController.text,
                             email: emailController.text,
@@ -85,7 +86,9 @@ class CreateAccountPage extends ConsumerWidget {
                     } else {
                       if (context.mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Failed to create account')),
+                          const SnackBar(
+                            content: Text('Failed to create account'),
+                          ),
                         );
                       }
                     }

@@ -1,4 +1,3 @@
-
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 import 'package:myapp/data/datasources/database_helper.dart';
@@ -26,20 +25,36 @@ final getMovementsBySessionProvider = Provider((ref) {
   return GetMovementsBySession(repository);
 });
 
-final cashMovementProvider = StateNotifierProvider<CashMovementNotifier, AsyncValue<List<CashMovement>>>((ref) {
-  return CashMovementNotifier(ref);
-});
+final cashMovementProvider =
+    StateNotifierProvider<CashMovementNotifier, AsyncValue<List<CashMovement>>>(
+      (ref) {
+        return CashMovementNotifier(ref);
+      },
+    );
 
-class CashMovementNotifier extends StateNotifier<AsyncValue<List<CashMovement>>> {
+class CashMovementNotifier
+    extends StateNotifier<AsyncValue<List<CashMovement>>> {
   final Ref _ref;
 
   CashMovementNotifier(this._ref) : super(const AsyncValue.loading());
 
-  Future<void> createMovement(int cashSessionId, String movementType, int amountCents, String reason, {String? description}) async {
+  Future<void> createMovement(
+    int cashSessionId,
+    String movementType,
+    int amountCents,
+    String reason, {
+    String? description,
+  }) async {
     state = const AsyncValue.loading();
     try {
       final createCashMovement = _ref.read(createCashMovementProvider);
-      await createCashMovement(cashSessionId, movementType, amountCents, reason, description: description);
+      await createCashMovement(
+        cashSessionId,
+        movementType,
+        amountCents,
+        reason,
+        description: description,
+      );
       // After creating a movement, refresh the list of movements for the session
       final getMovementsBySession = _ref.read(getMovementsBySessionProvider);
       final movements = await getMovementsBySession(cashSessionId);

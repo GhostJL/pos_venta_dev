@@ -1,4 +1,3 @@
-
 import 'package:myapp/domain/entities/user.dart';
 
 abstract class UserRepository {

@@ -1,4 +1,3 @@
-
 class CashSession {
   final int? id;
   final int warehouseId;

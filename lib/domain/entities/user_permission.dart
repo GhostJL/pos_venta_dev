@@ -1,4 +1,3 @@
-
 class UserPermission {
   final int userId;
   final int permissionId;
