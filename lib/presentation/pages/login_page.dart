@@ -1,8 +1,5 @@
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
-import 'package:myapp/data/datasources/database_helper.dart';
 import 'package:myapp/presentation/providers/auth_provider.dart';
 
 class LoginPage extends ConsumerStatefulWidget {
@@ -27,10 +24,9 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   Future<void> _login() async {
     if (!_formKey.currentState!.validate()) return;
 
-    final success = await ref.read(authProvider.notifier).login(
-          _usernameController.text,
-          _passwordController.text,
-        );
+    final success = await ref
+        .read(authProvider.notifier)
+        .login(_usernameController.text, _passwordController.text);
 
     if (!mounted) return;
 
@@ -39,16 +35,6 @@ class _LoginPageState extends ConsumerState<LoginPage> {
         const SnackBar(content: Text('Invalid username or password')),
       );
     }
-    // Navigation is handled by the router's redirect logic
-  }
-
-  // Temporary function to allow easy testing of the onboarding flow
-  Future<void> _resetOnboarding() async {
-    await DatabaseHelper().resetDatabase();
-    // Navigate to a neutral route to re-trigger the router logic
-    if(mounted) {
-      context.go('/splash');
-    }
   }
 
   @override
@@ -56,7 +42,9 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     ref.listen<AuthState>(authProvider, (_, state) {
       if (state.status == AuthStatus.error) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(state.errorMessage ?? 'An unknown error occurred')),
+          SnackBar(
+            content: Text(state.errorMessage ?? 'An unknown error occurred'),
+          ),
         );
       }
     });
@@ -73,21 +61,35 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Text('Welcome Back', style: Theme.of(context).textTheme.headlineMedium),
+                  Text(
+                    'Welcome Back',
+                    style: Theme.of(context).textTheme.headlineMedium,
+                  ),
                   const SizedBox(height: 8),
-                  Text('Sign in to continue', style: Theme.of(context).textTheme.bodyMedium),
+                  Text(
+                    'Sign in to continue',
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
                   const SizedBox(height: 32),
                   TextFormField(
                     controller: _usernameController,
-                    decoration: const InputDecoration(labelText: 'Username', border: OutlineInputBorder()),
-                    validator: (value) => value!.isEmpty ? 'Please enter a username' : null,
+                    decoration: const InputDecoration(
+                      labelText: 'Username',
+                      border: OutlineInputBorder(),
+                    ),
+                    validator: (value) =>
+                        value!.isEmpty ? 'Please enter a username' : null,
                   ),
                   const SizedBox(height: 16),
                   TextFormField(
                     controller: _passwordController,
                     obscureText: true,
-                    decoration: const InputDecoration(labelText: 'Password', border: OutlineInputBorder()),
-                    validator: (value) => value!.isEmpty ? 'Please enter a password' : null,
+                    decoration: const InputDecoration(
+                      labelText: 'Password',
+                      border: OutlineInputBorder(),
+                    ),
+                    validator: (value) =>
+                        value!.isEmpty ? 'Please enter a password' : null,
                   ),
                   const SizedBox(height: 24),
                   ElevatedButton(
@@ -96,12 +98,6 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                     ),
                     onPressed: _login,
                     child: const Text('Login'),
-                  ),
-                  const SizedBox(height: 16),
-                  // Temporary button for development
-                  TextButton(
-                    onPressed: _resetOnboarding,
-                    child: const Text('Reset Onboarding (Dev)'),
                   ),
                 ],
               ),
