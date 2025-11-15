@@ -1,47 +1,31 @@
-
 import 'dart:convert';
 import 'package:crypto/crypto.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:myapp/data/datasources/database_helper.dart';
 import 'package:myapp/domain/entities/user.dart';
 import 'package:myapp/domain/repositories/auth_repository.dart';
 import 'package:myapp/domain/repositories/user_repository.dart';
-
-
-final databaseHelperProvider = Provider<DatabaseHelper>((ref) => DatabaseHelper());
 
 class AuthRepositoryImpl implements AuthRepository, UserRepository {
   final DatabaseHelper _databaseHelper;
 
   AuthRepositoryImpl(this._databaseHelper);
 
-  String _hashPin(String pin) {
-    final bytes = utf8.encode(pin);
+  String _hashPassword(String password) {
+    final bytes = utf8.encode(password);
     final digest = sha256.convert(bytes);
     return digest.toString();
   }
 
   @override
-  Future<User?> login(String pin) async {
+  Future<User?> login(String username, String password) async {
     final db = await _databaseHelper.database;
-    final hashedPin = _hashPin(pin);
-    final maps = await db.query(
+    final List<Map<String, dynamic>> maps = await db.query(
       'users',
-      where: 'password_hash = ?',
-      whereArgs: [hashedPin],
+      // Corrected column name from 'password' to 'password_hash'
+      where: 'username = ? AND password_hash = ?',
+      whereArgs: [username, _hashPassword(password)],
     );
 
-    if (maps.isNotEmpty) {
-      return User.fromMap(maps.first);
-    } else {
-      return null;
-    }
-  }
-
-  @override
-  Future<User?> getUserById(int id) async {
-    final db = await _databaseHelper.database;
-    final maps = await db.query('users', where: 'id = ?', whereArgs: [id]);
     if (maps.isNotEmpty) {
       return User.fromMap(maps.first);
     }
@@ -50,34 +34,67 @@ class AuthRepositoryImpl implements AuthRepository, UserRepository {
 
   @override
   Future<void> logout() async {
-    return;
+    return Future.value();
   }
 
-  // --- UserRepository Implementation ---
+  @override
+  Future<User?> getUserById(int id) async {
+    final db = await _databaseHelper.database;
+    final List<Map<String, dynamic>> maps = await db.query(
+      'users',
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+
+    if (maps.isNotEmpty) {
+      return User.fromMap(maps.first);
+    }
+    return null;
+  }
 
   @override
   Future<void> addUser(User user, {String? password}) async {
-    final db = await _databaseHelper.database;
-    String? hashedPassword;
-    if (password != null) {
-      hashedPassword = _hashPin(password);
+    if (password == null || password.isEmpty) {
+      throw ArgumentError('Password cannot be null or empty for a new user.');
     }
-    
-    final userMap = user.copyWith(passwordHash: hashedPassword).toMap();
+    final db = await _databaseHelper.database;
+    final hashedPassword = _hashPassword(password);
+
+    final userMap = user.toMap();
+    userMap['password_hash'] = hashedPassword;
 
     await db.insert('users', userMap);
   }
 
   @override
-  Future<User?> getUser(int id) async {
+  Future<void> deleteUser(int id) async {
+    final db = await _databaseHelper.database;
+    await db.delete('users', where: 'id = ?', whereArgs: [id]);
+  }
+
+  @override
+  Future<User?> getUser(int id) {
     return getUserById(id);
   }
 
   @override
   Future<List<User>> getUsers() async {
     final db = await _databaseHelper.database;
-    final maps = await db.query('users');
-    return maps.map((map) => User.fromMap(map)).toList();
+    final List<Map<String, dynamic>> maps = await db.query('users');
+    return List.generate(maps.length, (i) => User.fromMap(maps[i]));
+  }
+
+  Future<List<User>> getCashiers() async {
+    final db = await _databaseHelper.database;
+    final List<Map<String, dynamic>> maps = await db.query(
+      'users',
+      where: 'role = ?',
+      whereArgs: [UserRole.cashier.name],
+    );
+
+    return List.generate(maps.length, (i) {
+      return User.fromMap(maps[i]);
+    });
   }
 
   @override
@@ -89,11 +106,5 @@ class AuthRepositoryImpl implements AuthRepository, UserRepository {
       where: 'id = ?',
       whereArgs: [user.id],
     );
-  }
-
-  @override
-  Future<void> deleteUser(int id) async {
-    final db = await _databaseHelper.database;
-    await db.delete('users', where: 'id = ?', whereArgs: [id]);
   }
 }

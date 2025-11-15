@@ -11,57 +11,112 @@ class LoginPage extends ConsumerStatefulWidget {
 }
 
 class _LoginPageState extends ConsumerState<LoginPage> {
-  final TextEditingController _pinController = TextEditingController();
+  final TextEditingController _usernameController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
   String _errorMessage = '';
 
   void _login() async {
-    final pin = _pinController.text;
-    if (pin.isEmpty) {
-      setState(() => _errorMessage = 'Please enter your PIN');
+    final username = _usernameController.text;
+    final password = _passwordController.text;
+
+    if (username.isEmpty || password.isEmpty) {
+      setState(() => _errorMessage = 'Please enter username and password');
       return;
     }
 
-    final success = await ref.read(authProvider.notifier).login(pin);
+    // Set loading state and clear previous errors
+    setState(() {
+      _errorMessage = '';
+    });
+
+    final success = await ref.read(authProvider.notifier).login(username, password);
 
     if (!success && mounted) {
       setState(() {
-        _errorMessage = ref.read(authProvider).errorMessage ?? 'Invalid PIN';
+        _errorMessage = ref.read(authProvider).errorMessage ?? 'Invalid credentials';
       });
     }
+    // No need for an else block, the router will handle redirection on successful login
   }
 
   @override
   Widget build(BuildContext context) {
+    // Listen for errors from the provider
+    ref.listen<AuthState>(authProvider, (previous, next) {
+      if (next.status == AuthStatus.error) {
+        setState(() {
+          _errorMessage = next.errorMessage ?? 'An unknown error occurred';
+        });
+      }
+    });
+
     final authState = ref.watch(authProvider);
 
     return Scaffold(
       body: Center(
-        child: Padding(
+        child: SingleChildScrollView(
           padding: const EdgeInsets.all(24.0),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: <Widget>[
-              const Text('Enter Your PIN', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
-              const SizedBox(height: 20),
-              TextField(
-                controller: _pinController,
-                keyboardType: TextInputType.number,
-                obscureText: true,
-                decoration: InputDecoration(
-                  labelText: 'PIN',
-                  border: OutlineInputBorder(),
-                  errorText: _errorMessage.isNotEmpty ? _errorMessage : null,
-                ),
-                onChanged: (_) => setState(() => _errorMessage = ''),
+              Text(
+                'Welcome Back',
+                style: Theme.of(context).textTheme.headlineLarge,
+                textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 20),
-              if (authState.status == AuthStatus.loading)
-                const CircularProgressIndicator()
-              else
-                ElevatedButton(
-                  onPressed: _login,
-                  child: const Text('Login'),
+              const SizedBox(height: 8),
+              Text(
+                'Please sign in to continue',
+                style: Theme.of(context).textTheme.titleMedium,
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 48),
+              TextField(
+                controller: _usernameController,
+                decoration: const InputDecoration(
+                  labelText: 'Username',
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.person_outline),
                 ),
+                keyboardType: TextInputType.text,
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: _passwordController,
+                decoration: const InputDecoration(
+                  labelText: 'Password',
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.lock_outline),
+                ),
+                obscureText: true,
+              ),
+              const SizedBox(height: 24),
+              if (_errorMessage.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 16.0),
+                  child: Text(
+                    _errorMessage,
+                    style: TextStyle(color: Theme.of(context).colorScheme.error),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ElevatedButton(
+                onPressed: authState.status == AuthStatus.loading ? null : _login,
+                style: ElevatedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                child: authState.status == AuthStatus.loading
+                    ? const SizedBox(
+                        height: 24,
+                        width: 24,
+                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                      )
+                    : const Text('Login'),
+              ),
             ],
           ),
         ),

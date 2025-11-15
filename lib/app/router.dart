@@ -2,13 +2,13 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:myapp/data/datasources/database_helper.dart';
 import 'package:myapp/domain/entities/user.dart';
 import 'package:myapp/presentation/pages/cashier_home_page.dart';
 import 'package:myapp/presentation/pages/home_page.dart';
 import 'package:myapp/presentation/pages/login_page.dart';
 import 'package:myapp/presentation/providers/auth_provider.dart';
 import 'package:myapp/presentation/pages/dashboard_page.dart';
+import 'package:myapp/presentation/providers/transaction_provider.dart';
 
 // Onboarding Pages
 import 'package:myapp/presentation/pages/onboarding/admin_setup_page.dart';
@@ -28,7 +28,7 @@ final routerProvider = Provider<GoRouter>((ref) {
   return GoRouter(
     navigatorKey: _rootNavigatorKey,
     refreshListenable: refreshNotifier,
-    initialLocation: '/splash', // Always start at splash to resolve dependencies
+    initialLocation: '/splash', 
 
     routes: [
       GoRoute(
@@ -39,8 +39,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/error',
         builder: (context, state) => const Scaffold(body: Center(child: Text('An error occurred'))),
       ),
-
-      // Onboarding Routes
+      // Onboarding Routes (Unaffected)
       GoRoute(path: '/setup-admin', builder: (context, state) => const AdminSetupPage()),
       GoRoute(path: '/add-cashiers', builder: (context, state) => const AddCashiersPage()),
       GoRoute(path: '/add-cashier-form', builder: (context, state) => const AddCashierFormPage()),
@@ -52,7 +51,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const LoginPage(),
       ),
 
-      // Main App Routes under a ShellRoute
+      // Main App Routes
       ShellRoute(
         builder: (context, state, child) => HomePage(child: child),
         routes: [
@@ -70,54 +69,65 @@ final routerProvider = Provider<GoRouter>((ref) {
 
     redirect: (context, state) {
       final location = state.matchedLocation;
+      
+      // Get auth and onboarding status
+      final authLoading = authState.status == AuthStatus.loading;
+      final onboardingLoading = onboardingCheck.isLoading;
+      final loggedIn = authState.status == AuthStatus.authenticated;
+      final needsOnboarding = !(onboardingCheck.asData?.value ?? true);
 
-      if (authState.status == AuthStatus.loading || onboardingCheck.isLoading) {
+      // While loading, show splash screen
+      if (authLoading || onboardingLoading) {
         return '/splash';
       }
 
-      final needsOnboarding = !(onboardingCheck.asData?.value ?? true);
-      final isSettingUp = location.startsWith('/setup') || location.startsWith('/add-cashier') || location == '/set-pin';
-
+      // --- Onboarding Logic (Unaffected) ---
+      final isDuringOnboarding = location.startsWith('/setup') || location.startsWith('/add-cashier') || location == '/set-pin';
       if (needsOnboarding) {
-        return isSettingUp ? null : '/setup-admin';
+        return isDuringOnboarding ? null : '/setup-admin';
       }
-      if (!needsOnboarding && isSettingUp) {
+      if (!needsOnboarding && isDuringOnboarding) {
         return '/login';
       }
+      // --- End of Onboarding Logic ---
 
-      final loggedIn = authState.status == AuthStatus.authenticated;
-      final isLoggingIn = location == '/login';
+      final isAtLogin = location == '/login';
+      final isAtSplash = location == '/splash';
 
-      if (!loggedIn && !isLoggingIn) {
-        return '/login';
-      }
-
+      // --- Handle Authenticated Users ---
       if (loggedIn) {
         final isAdmin = authState.user?.role == UserRole.admin;
+        final targetHome = isAdmin ? '/' : '/home';
 
-        final onAdminDashboard = location == '/';
-        final onCashierHome = location == '/home';
-
-        if (isLoggingIn) {
-          return isAdmin ? '/' : '/home';
+        // If a logged-in user is on the login or splash page, send them home.
+        if (isAtLogin || isAtSplash) {
+          return targetHome;
         }
 
-        if (onAdminDashboard && !isAdmin) {
-          return '/home';
-        }
+        // If a logged-in user is on the wrong role page, correct it.
+        final onAdminPage = location == '/';
+        final onCashierPage = location == '/home';
 
-        if (onCashierHome && isAdmin) {
-          return '/';
-        }
+        if (isAdmin && onCashierPage) return '/';
+        if (!isAdmin && onAdminPage) return '/home';
+
+        // Otherwise, they are on a valid page.
+        return null;
       }
-      
-      return null;
+
+      // --- Handle Unauthenticated Users ---
+      // If an unauthenticated user is anywhere but the login page, send them to login.
+      if (!isAtLogin) {
+        return '/login';
+      }
+
+      return null; // No redirection needed
     },
   );
 });
 
 final onboardingCompletedProvider = FutureProvider<bool>((ref) async {
-  final dbHelper = DatabaseHelper();
+  final dbHelper = ref.watch(databaseHelperProvider);
   return await dbHelper.onboardingCompleted();
 });
 

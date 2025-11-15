@@ -1,8 +1,10 @@
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 import 'package:myapp/data/repositories/auth_repository_impl.dart';
 import 'package:myapp/domain/entities/user.dart';
 import 'package:myapp/domain/repositories/auth_repository.dart';
+import 'package:myapp/presentation/providers/transaction_provider.dart'; // Import centralized provider
 import 'package:shared_preferences/shared_preferences.dart';
 
 // Defines the authentication state of the app
@@ -43,6 +45,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
         if (user != null) {
           state = AuthState.authenticated(user);
         } else {
+          // If user from session is not in DB, clear session
+          await prefs.remove('user_id');
           state = AuthState.unauthenticated();
         }
       } else {
@@ -53,17 +57,17 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
-  Future<bool> login(String pin) async {
+  Future<bool> login(String username, String password) async {
     state = AuthState.loading();
     try {
-      final user = await _authRepository.login(pin);
+      final user = await _authRepository.login(username, password);
       if (user != null) {
         final prefs = await SharedPreferences.getInstance();
         await prefs.setInt('user_id', user.id!);
         state = AuthState.authenticated(user);
         return true;
       } else {
-        state = AuthState.error("Invalid PIN");
+        state = AuthState.error("Invalid username or password");
         return false;
       }
     } catch (e) {
@@ -74,6 +78,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
   Future<void> logout() async {
     state = AuthState.loading();
+    await _authRepository.logout();
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('user_id');
     state = AuthState.unauthenticated();
@@ -91,3 +96,4 @@ final authProvider = StateNotifierProvider<AuthNotifier, AuthState>((ref) {
   final repo = ref.watch(authRepositoryProvider);
   return AuthNotifier(repo);
 });
+
