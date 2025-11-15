@@ -8,17 +8,15 @@ class AddCashiersPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // Watch the onboarding state to get the list of cashiers
     final onboardingState = ref.watch(onboardingNotifierProvider);
     final cashiers = onboardingState.cashiers;
-    final canAddMore = cashiers.length < 10; // Allow up to 10 cashiers
+    final canAddMore = cashiers.length < 10;
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Add Team Members (Cashiers)'),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          // Navigate back to admin setup, allowing changes
           onPressed: () => context.go('/setup-admin'),
         ),
       ),
@@ -74,7 +72,6 @@ class AddCashiersPage extends ConsumerWidget {
                               ),
                               tooltip: 'Remove ${cashier.username}',
                               onPressed: () {
-                                // Call the notifier to remove the cashier
                                 ref
                                     .read(onboardingNotifierProvider.notifier)
                                     .removeCashier(cashier);
@@ -87,7 +84,7 @@ class AddCashiersPage extends ConsumerWidget {
             ),
             const SizedBox(height: 16),
             ElevatedButton(
-              onPressed: () => context.push('/set-pin'),
+              onPressed: () => context.push('/set-access-key'), // Updated navigation
               style: ElevatedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: 16),
               ),

@@ -2,27 +2,25 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:myapp/app/router.dart';
+import 'package:myapp/app/router.dart'; // Added import
 import 'package:myapp/data/datasources/database_helper.dart';
 import 'package:myapp/presentation/providers/onboarding_state.dart';
 
-class SetPinPage extends ConsumerStatefulWidget {
-  const SetPinPage({super.key});
+class SetAccessKeyPage extends ConsumerStatefulWidget {
+  const SetAccessKeyPage({super.key});
 
   @override
-  ConsumerState<SetPinPage> createState() => _SetPinPageState();
+  ConsumerState<SetAccessKeyPage> createState() => _SetAccessKeyPageState();
 }
 
-class _SetPinPageState extends ConsumerState<SetPinPage> {
+class _SetAccessKeyPageState extends ConsumerState<SetAccessKeyPage> {
   final _formKey = GlobalKey<FormState>();
-  final _pinController = TextEditingController();
-  final _confirmPinController = TextEditingController();
+  final _accessKeyController = TextEditingController();
   bool _isLoading = false;
 
   @override
   void dispose() {
-    _pinController.dispose();
-    _confirmPinController.dispose();
+    _accessKeyController.dispose();
     super.dispose();
   }
 
@@ -31,11 +29,8 @@ class _SetPinPageState extends ConsumerState<SetPinPage> {
 
     setState(() => _isLoading = true);
 
-    // 1. Get the complete onboarding state
     final onboardingState = ref.read(onboardingNotifierProvider);
-
-    // Add the pin to the state
-    final finalState = onboardingState.copyWith(pin: _pinController.text);
+    final finalState = onboardingState.copyWith(accessKey: _accessKeyController.text);
 
     if (finalState.adminUser == null || finalState.adminPassword == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -46,14 +41,10 @@ class _SetPinPageState extends ConsumerState<SetPinPage> {
     }
 
     try {
-      // 2. Call the correct database method with the complete state
       final dbHelper = DatabaseHelper();
       await dbHelper.setupInitialData(finalState);
 
-      // 3. Reset the onboarding state
       ref.read(onboardingNotifierProvider.notifier).reset();
-      
-      // 4. Invalidate providers to trigger a UI refresh and route check
       ref.invalidate(onboardingCompletedProvider);
 
       if (mounted) {
@@ -63,10 +54,8 @@ class _SetPinPageState extends ConsumerState<SetPinPage> {
             backgroundColor: Colors.green,
           ),
         );
-        // 5. Navigate to the login screen
         context.go('/login');
       }
-
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -84,10 +73,10 @@ class _SetPinPageState extends ConsumerState<SetPinPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Set Admin Access PIN'),
+        title: const Text('Set Application Access Key'),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.go('/add-cashiers'), // Allow going back
+          onPressed: () => context.go('/add-cashiers'),
         ),
       ),
       body: Center(
@@ -99,36 +88,27 @@ class _SetPinPageState extends ConsumerState<SetPinPage> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Text(
-                  'Final Step: Set a Security PIN',
+                  'Final Step: Set Access Key',
                   style: Theme.of(context).textTheme.headlineSmall,
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 8),
                 const Text(
-                  'This PIN will be used for critical admin actions.',
+                  'This key will be required to use the application.',
                   style: TextStyle(color: Colors.grey),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 32),
                 TextFormField(
-                  controller: _pinController,
+                  controller: _accessKeyController,
                   obscureText: true,
-                  keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(labelText: '4-Digit PIN', border: OutlineInputBorder()),
+                  decoration: const InputDecoration(
+                    labelText: 'Access Key',
+                    border: OutlineInputBorder(),
+                  ),
                   validator: (value) {
-                    if (value == null || value.isEmpty) return 'PIN is required';
-                    if (value.length != 4) return 'PIN must be exactly 4 digits';
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: _confirmPinController,
-                  obscureText: true,
-                  keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(labelText: 'Confirm PIN', border: OutlineInputBorder()),
-                  validator: (value) {
-                    if (value != _pinController.text) return 'PINs do not match';
+                    if (value == null || value.isEmpty) return 'Access key is required';
+                    if (value != '123 clave de acceso') return 'Invalid access key';
                     return null;
                   },
                 ),

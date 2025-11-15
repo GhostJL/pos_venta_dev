@@ -14,7 +14,7 @@ import 'package:myapp/presentation/providers/transaction_provider.dart';
 import 'package:myapp/presentation/pages/onboarding/admin_setup_page.dart';
 import 'package:myapp/presentation/pages/onboarding/add_cashiers_page.dart';
 import 'package:myapp/presentation/pages/onboarding/add_cashier_form_page.dart';
-import 'package:myapp/presentation/pages/onboarding/set_pin_page.dart';
+import 'package:myapp/presentation/pages/onboarding/set_access_key_page.dart'; // Updated import
 
 final GlobalKey<NavigatorState> _rootNavigatorKey = GlobalKey<NavigatorState>();
 
@@ -39,11 +39,11 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/error',
         builder: (context, state) => const Scaffold(body: Center(child: Text('An error occurred'))),
       ),
-      // Onboarding Routes (Unaffected)
+      // Onboarding Routes
       GoRoute(path: '/setup-admin', builder: (context, state) => const AdminSetupPage()),
       GoRoute(path: '/add-cashiers', builder: (context, state) => const AddCashiersPage()),
       GoRoute(path: '/add-cashier-form', builder: (context, state) => const AddCashierFormPage()),
-      GoRoute(path: '/set-pin', builder: (context, state) => const SetPinPage()),
+      GoRoute(path: '/set-access-key', builder: (context, state) => const SetAccessKeyPage()), // Updated route
 
       // Login Route
       GoRoute(
@@ -70,19 +70,17 @@ final routerProvider = Provider<GoRouter>((ref) {
     redirect: (context, state) {
       final location = state.matchedLocation;
       
-      // Get auth and onboarding status
       final authLoading = authState.status == AuthStatus.loading;
       final onboardingLoading = onboardingCheck.isLoading;
       final loggedIn = authState.status == AuthStatus.authenticated;
       final needsOnboarding = !(onboardingCheck.asData?.value ?? true);
 
-      // While loading, show splash screen
       if (authLoading || onboardingLoading) {
         return '/splash';
       }
 
-      // --- Onboarding Logic (Unaffected) ---
-      final isDuringOnboarding = location.startsWith('/setup') || location.startsWith('/add-cashier') || location == '/set-pin';
+      // --- Onboarding Logic ---
+      final isDuringOnboarding = location.startsWith('/setup') || location.startsWith('/add-cashier') || location == '/set-access-key'; // Updated route
       if (needsOnboarding) {
         return isDuringOnboarding ? null : '/setup-admin';
       }
@@ -94,29 +92,23 @@ final routerProvider = Provider<GoRouter>((ref) {
       final isAtLogin = location == '/login';
       final isAtSplash = location == '/splash';
 
-      // --- Handle Authenticated Users ---
       if (loggedIn) {
         final isAdmin = authState.user?.role == UserRole.admin;
         final targetHome = isAdmin ? '/' : '/home';
 
-        // If a logged-in user is on the login or splash page, send them home.
         if (isAtLogin || isAtSplash) {
           return targetHome;
         }
 
-        // If a logged-in user is on the wrong role page, correct it.
         final onAdminPage = location == '/';
         final onCashierPage = location == '/home';
 
         if (isAdmin && onCashierPage) return '/';
         if (!isAdmin && onAdminPage) return '/home';
 
-        // Otherwise, they are on a valid page.
         return null;
       }
 
-      // --- Handle Unauthenticated Users ---
-      // If an unauthenticated user is anywhere but the login page, send them to login.
       if (!isAtLogin) {
         return '/login';
       }

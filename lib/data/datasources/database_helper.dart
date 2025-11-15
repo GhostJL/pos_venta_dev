@@ -41,7 +41,6 @@ class DatabaseHelper {
   }
 
   Future<void> _createDb(Database db, int version) async {
-    // Updated schema to include last_login_at
     await db.execute('''
       CREATE TABLE users (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -53,7 +52,7 @@ class DatabaseHelper {
         role TEXT NOT NULL,
         is_active INTEGER NOT NULL DEFAULT 1,
         onboarding_completed INTEGER NOT NULL DEFAULT 0,
-        last_login_at TEXT, -- Added missing column
+        last_login_at TEXT,
         created_at TEXT NOT NULL,
         updated_at TEXT NOT NULL
       )
@@ -97,7 +96,7 @@ class DatabaseHelper {
       // 2. Insert Cashier Users
       for (final cashier in state.cashiers) {
         final cashierMap = cashier.toMap();
-        final rawPassword = cashier.passwordHash ?? ''; // Temporarily getting raw pass from this field
+        final rawPassword = cashier.passwordHash ?? '';
         if (rawPassword.isEmpty) {
           throw Exception('Onboarding error: Cashier password for ${cashier.username} is empty.');
         }
@@ -108,14 +107,14 @@ class DatabaseHelper {
       // 3. Mark Onboarding as Completed
       await txn.insert('app_meta', {'key': 'onboarding_completed', 'value': '1'});
 
-      // 4. Save the hashed admin PIN
-      if (state.pin != null && state.pin!.isNotEmpty) {
+      // 4. Save the hashed App Access Key
+      if (state.accessKey != null && state.accessKey!.isNotEmpty) {
         await txn.insert('app_meta', {
-          'key': 'admin_pin_hash',
-          'value': _hashData(state.pin!)
+          'key': 'app_access_key_hash', // Renamed key
+          'value': _hashData(state.accessKey!) // Using accessKey
         });
       } else {
-        throw Exception('Onboarding error: Admin PIN is missing.');
+        throw Exception('Onboarding error: App Access Key is missing.');
       }
     });
   }
@@ -124,6 +123,6 @@ class DatabaseHelper {
     final dbPath = await getDatabasesPath();
     final path = join(dbPath, 'app.db');
     await deleteDatabase(path);
-    _database = null; 
+    _database = null;
   }
 }

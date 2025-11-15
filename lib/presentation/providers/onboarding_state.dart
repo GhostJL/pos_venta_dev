@@ -3,28 +3,28 @@ import 'package:myapp/domain/entities/user.dart';
 
 class OnboardingState {
   final User? adminUser;
-  final String? adminPassword; // Added to hold the raw password temporarily
+  final String? adminPassword;
   final List<User> cashiers;
-  final String? pin;
+  final String? accessKey; // Changed from pin to accessKey
 
   OnboardingState({
     this.adminUser,
     this.adminPassword,
     this.cashiers = const [],
-    this.pin,
+    this.accessKey, // Changed from pin to accessKey
   });
 
   OnboardingState copyWith({
     User? adminUser,
     String? adminPassword,
     List<User>? cashiers,
-    String? pin,
+    String? accessKey, // Changed from pin to accessKey
   }) {
     return OnboardingState(
       adminUser: adminUser ?? this.adminUser,
       adminPassword: adminPassword ?? this.adminPassword,
       cashiers: cashiers ?? this.cashiers,
-      pin: pin ?? this.pin,
+      accessKey: accessKey ?? this.accessKey, // Changed from pin to accessKey
     );
   }
 }
@@ -46,8 +46,8 @@ class OnboardingNotifier extends StateNotifier<OnboardingState> {
     );
   }
 
-  void setPin(String pin) {
-    state = state.copyWith(pin: pin);
+  void setAccessKey(String key) {
+    state = state.copyWith(accessKey: key);
   }
 
   void reset() {
@@ -57,5 +57,5 @@ class OnboardingNotifier extends StateNotifier<OnboardingState> {
 
 final onboardingNotifierProvider =
     StateNotifierProvider<OnboardingNotifier, OnboardingState>((ref) {
-      return OnboardingNotifier();
-    });
+  return OnboardingNotifier();
+});
