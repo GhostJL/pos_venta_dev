@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:myapp/app/router.dart';
 import 'package:myapp/data/datasources/database_helper.dart';
-import 'package:myapp/presentation/pages/onboarding/admin_setup_page.dart';
 import 'package:myapp/presentation/providers/onboarding_state.dart';
 
 class SetPinPage extends ConsumerStatefulWidget {
@@ -30,37 +29,31 @@ class _SetPinPageState extends ConsumerState<SetPinPage> {
   Future<void> _completeSetup() async {
     if (!_formKey.currentState!.validate()) return;
 
-    // 1. Get all data from the onboarding state providers
-    final onboardingState = ref.read(onboardingNotifierProvider);
-    final adminUser = onboardingState.admin;
-    final cashiers = onboardingState.cashiers;
-    final adminPassword = ref.read(adminPasswordProvider);
-    final pin = _pinController.text;
+    setState(() => _isLoading = true);
 
-    if (adminUser == null || adminPassword == null) {
+    // 1. Get the complete onboarding state
+    final onboardingState = ref.read(onboardingNotifierProvider);
+
+    // Add the pin to the state
+    final finalState = onboardingState.copyWith(pin: _pinController.text);
+
+    if (finalState.adminUser == null || finalState.adminPassword == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Admin data is missing. Please restart the setup.')),
       );
+      setState(() => _isLoading = false);
       return;
     }
 
-    setState(() => _isLoading = true);
-
     try {
-      // 2. Execute the database transaction
+      // 2. Call the correct database method with the complete state
       final dbHelper = DatabaseHelper();
-      await dbHelper.completeOnboardingTransaction(
-        admin: adminUser,
-        cashiers: cashiers,
-        pin: pin,
-        adminPassword: adminPassword,
-      );
+      await dbHelper.setupInitialData(finalState);
 
-      // 3. Reset all onboarding state
+      // 3. Reset the onboarding state
       ref.read(onboardingNotifierProvider.notifier).reset();
-      ref.read(adminPasswordProvider.notifier).state = null;
       
-      // 4. Invalidate the router provider to force a redirect check
+      // 4. Invalidate providers to trigger a UI refresh and route check
       ref.invalidate(onboardingCompletedProvider);
 
       if (mounted) {

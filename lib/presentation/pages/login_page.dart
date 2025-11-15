@@ -1,6 +1,8 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:myapp/data/datasources/database_helper.dart';
 import 'package:myapp/presentation/providers/auth_provider.dart';
 
 class LoginPage extends ConsumerStatefulWidget {
@@ -11,113 +13,99 @@ class LoginPage extends ConsumerStatefulWidget {
 }
 
 class _LoginPageState extends ConsumerState<LoginPage> {
-  final TextEditingController _usernameController = TextEditingController();
-  final TextEditingController _passwordController = TextEditingController();
-  String _errorMessage = '';
+  final _formKey = GlobalKey<FormState>();
+  final _usernameController = TextEditingController();
+  final _passwordController = TextEditingController();
 
-  void _login() async {
-    final username = _usernameController.text;
-    final password = _passwordController.text;
+  @override
+  void dispose() {
+    _usernameController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
 
-    if (username.isEmpty || password.isEmpty) {
-      setState(() => _errorMessage = 'Please enter username and password');
-      return;
+  Future<void> _login() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    final success = await ref.read(authProvider.notifier).login(
+          _usernameController.text,
+          _passwordController.text,
+        );
+
+    if (!mounted) return;
+
+    if (!success) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Invalid username or password')),
+      );
     }
+    // Navigation is handled by the router's redirect logic
+  }
 
-    // Set loading state and clear previous errors
-    setState(() {
-      _errorMessage = '';
-    });
-
-    final success = await ref.read(authProvider.notifier).login(username, password);
-
-    if (!success && mounted) {
-      setState(() {
-        _errorMessage = ref.read(authProvider).errorMessage ?? 'Invalid credentials';
-      });
+  // Temporary function to allow easy testing of the onboarding flow
+  Future<void> _resetOnboarding() async {
+    await DatabaseHelper().resetDatabase();
+    // Navigate to a neutral route to re-trigger the router logic
+    if(mounted) {
+      context.go('/splash');
     }
-    // No need for an else block, the router will handle redirection on successful login
   }
 
   @override
   Widget build(BuildContext context) {
-    // Listen for errors from the provider
-    ref.listen<AuthState>(authProvider, (previous, next) {
-      if (next.status == AuthStatus.error) {
-        setState(() {
-          _errorMessage = next.errorMessage ?? 'An unknown error occurred';
-        });
+    ref.listen<AuthState>(authProvider, (_, state) {
+      if (state.status == AuthStatus.error) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(state.errorMessage ?? 'An unknown error occurred')),
+        );
       }
     });
-
-    final authState = ref.watch(authProvider);
 
     return Scaffold(
       body: Center(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: <Widget>[
-              Text(
-                'Welcome Back',
-                style: Theme.of(context).textTheme.headlineLarge,
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Please sign in to continue',
-                style: Theme.of(context).textTheme.titleMedium,
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 48),
-              TextField(
-                controller: _usernameController,
-                decoration: const InputDecoration(
-                  labelText: 'Username',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.person_outline),
-                ),
-                keyboardType: TextInputType.text,
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: _passwordController,
-                decoration: const InputDecoration(
-                  labelText: 'Password',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.lock_outline),
-                ),
-                obscureText: true,
-              ),
-              const SizedBox(height: 24),
-              if (_errorMessage.isNotEmpty)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 16.0),
-                  child: Text(
-                    _errorMessage,
-                    style: TextStyle(color: Theme.of(context).colorScheme.error),
-                    textAlign: TextAlign.center,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 400),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text('Welcome Back', style: Theme.of(context).textTheme.headlineMedium),
+                  const SizedBox(height: 8),
+                  Text('Sign in to continue', style: Theme.of(context).textTheme.bodyMedium),
+                  const SizedBox(height: 32),
+                  TextFormField(
+                    controller: _usernameController,
+                    decoration: const InputDecoration(labelText: 'Username', border: OutlineInputBorder()),
+                    validator: (value) => value!.isEmpty ? 'Please enter a username' : null,
                   ),
-                ),
-              ElevatedButton(
-                onPressed: authState.status == AuthStatus.loading ? null : _login,
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: _passwordController,
+                    obscureText: true,
+                    decoration: const InputDecoration(labelText: 'Password', border: OutlineInputBorder()),
+                    validator: (value) => value!.isEmpty ? 'Please enter a password' : null,
                   ),
-                ),
-                child: authState.status == AuthStatus.loading
-                    ? const SizedBox(
-                        height: 24,
-                        width: 24,
-                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                      )
-                    : const Text('Login'),
+                  const SizedBox(height: 24),
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                    ),
+                    onPressed: _login,
+                    child: const Text('Login'),
+                  ),
+                  const SizedBox(height: 16),
+                  // Temporary button for development
+                  TextButton(
+                    onPressed: _resetOnboarding,
+                    child: const Text('Reset Onboarding (Dev)'),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
         ),
       ),

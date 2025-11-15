@@ -2,15 +2,27 @@ import 'package:flutter_riverpod/legacy.dart';
 import 'package:myapp/domain/entities/user.dart';
 
 class OnboardingState {
-  final User? admin;
+  final User? adminUser;
+  final String? adminPassword; // Added to hold the raw password temporarily
   final List<User> cashiers;
   final String? pin;
 
-  OnboardingState({this.admin, this.cashiers = const [], this.pin});
+  OnboardingState({
+    this.adminUser,
+    this.adminPassword,
+    this.cashiers = const [],
+    this.pin,
+  });
 
-  OnboardingState copyWith({User? admin, List<User>? cashiers, String? pin}) {
+  OnboardingState copyWith({
+    User? adminUser,
+    String? adminPassword,
+    List<User>? cashiers,
+    String? pin,
+  }) {
     return OnboardingState(
-      admin: admin ?? this.admin,
+      adminUser: adminUser ?? this.adminUser,
+      adminPassword: adminPassword ?? this.adminPassword,
       cashiers: cashiers ?? this.cashiers,
       pin: pin ?? this.pin,
     );
@@ -20,8 +32,8 @@ class OnboardingState {
 class OnboardingNotifier extends StateNotifier<OnboardingState> {
   OnboardingNotifier() : super(OnboardingState());
 
-  void setAdmin(User admin) {
-    state = state.copyWith(admin: admin);
+  void setAdmin(User admin, String password) {
+    state = state.copyWith(adminUser: admin, adminPassword: password);
   }
 
   void addCashier(User cashier) {

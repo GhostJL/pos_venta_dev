@@ -14,10 +14,8 @@ class UserModel {
   final String firstName;
   final String lastName;
   final UserRole role;
-  final String? phone;
   final bool isActive;
   final bool onboardingCompleted;
-  final DateTime? lastLoginAt;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -29,10 +27,8 @@ class UserModel {
     required this.firstName,
     required this.lastName,
     required this.role,
-    this.phone,
     required this.isActive,
     required this.onboardingCompleted,
-    this.lastLoginAt,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -46,12 +42,8 @@ class UserModel {
       firstName: map['first_name'],
       lastName: map['last_name'],
       role: UserRole.values.byName(map['role']),
-      phone: map['phone'],
       isActive: map['is_active'] == 1,
       onboardingCompleted: map['onboarding_completed'] == 1,
-      lastLoginAt: map['last_login_at'] != null
-          ? DateTime.parse(map['last_login_at'])
-          : null,
       createdAt: DateTime.parse(map['created_at']),
       updatedAt: DateTime.parse(map['updated_at']),
     );
@@ -66,10 +58,8 @@ class UserModel {
       firstName: entity.firstName,
       lastName: entity.lastName,
       role: entity.role,
-      phone: entity.phone,
       isActive: entity.isActive,
       onboardingCompleted: entity.onboardingCompleted,
-      lastLoginAt: entity.lastLoginAt,
       createdAt: entity.createdAt,
       updatedAt: entity.updatedAt,
     );
@@ -84,10 +74,8 @@ class UserModel {
       'first_name': firstName,
       'last_name': lastName,
       'role': role.name,
-      'phone': phone,
       'is_active': isActive ? 1 : 0,
       'onboarding_completed': onboardingCompleted ? 1 : 0,
-      'last_login_at': lastLoginAt?.toIso8601String(),
       'created_at': createdAt.toIso8601String(),
       'updated_at': updatedAt.toIso8601String(),
     };
@@ -102,10 +90,8 @@ class UserModel {
       firstName: firstName,
       lastName: lastName,
       role: role,
-      phone: phone,
       isActive: isActive,
       onboardingCompleted: onboardingCompleted,
-      lastLoginAt: lastLoginAt,
       createdAt: createdAt,
       updatedAt: updatedAt,
     );
@@ -134,10 +120,8 @@ class UserModel {
       firstName: firstName ?? this.firstName,
       lastName: lastName ?? this.lastName,
       role: role ?? this.role,
-      phone: phone ?? this.phone,
       isActive: isActive ?? this.isActive,
       onboardingCompleted: onboardingCompleted ?? this.onboardingCompleted,
-      lastLoginAt: lastLoginAt ?? this.lastLoginAt,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
