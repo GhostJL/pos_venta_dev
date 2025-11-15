@@ -8,9 +8,8 @@ class OpenSession {
 
   Future<CashSession> call(
     int warehouseId,
-    int userId,
     int openingBalanceCents,
   ) {
-    return repository.openSession(warehouseId, userId, openingBalanceCents);
+    return repository.openSession(warehouseId, openingBalanceCents);
   }
 }

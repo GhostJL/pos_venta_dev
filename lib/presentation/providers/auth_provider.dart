@@ -1,39 +1,93 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
+import 'package:myapp/data/repositories/auth_repository_impl.dart';
 import 'package:myapp/domain/entities/user.dart';
 import 'package:myapp/domain/repositories/auth_repository.dart';
-import 'package:myapp/data/datasources/database_helper.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-final authRepositoryProvider = Provider<AuthRepository>((ref) {
-  final dbHelper = DatabaseHelper();
-  return AuthRepository(dbHelper);
-});
+// Defines the authentication state of the app
+enum AuthStatus { initial, authenticated, unauthenticated, loading, error }
 
-final authStateProvider = StateNotifierProvider<AuthNotifier, User?>((ref) {
-  final authRepository = ref.watch(authRepositoryProvider);
-  return AuthNotifier(authRepository);
-});
+class AuthState {
+  final AuthStatus status;
+  final User? user;
+  final String? errorMessage;
 
-class AuthNotifier extends StateNotifier<User?> {
+  AuthState._({this.status = AuthStatus.initial, this.user, this.errorMessage});
+
+  factory AuthState.initial() => AuthState._();
+  factory AuthState.authenticated(User user) =>
+      AuthState._(status: AuthStatus.authenticated, user: user);
+  factory AuthState.unauthenticated() =>
+      AuthState._(status: AuthStatus.unauthenticated);
+  factory AuthState.loading() => AuthState._(status: AuthStatus.loading);
+  factory AuthState.error(String message) =>
+      AuthState._(status: AuthStatus.error, errorMessage: message);
+}
+
+// Notifier for authentication logic
+class AuthNotifier extends StateNotifier<AuthState> {
   final AuthRepository _authRepository;
 
-  AuthNotifier(this._authRepository) : super(null);
-
-  Future<void> signIn(String username, String password) async {
-    final user = await _authRepository.signIn(username, password);
-    state = user;
+  AuthNotifier(this._authRepository) : super(AuthState.initial()) {
+    _loadSession();
   }
 
-  Future<bool> signUp(User user, String password) async {
-    final createdUser = await _authRepository.signUp(user, password);
-    if (createdUser != null) {
-      state = createdUser;
-      return true;
+  Future<void> _loadSession() async {
+    state = AuthState.loading();
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final userId = prefs.getInt('user_id');
+      if (userId != null) {
+        final user = await _authRepository.getUserById(userId);
+        if (user != null) {
+          state = AuthState.authenticated(user);
+        } else {
+          state = AuthState.unauthenticated();
+        }
+      } else {
+        state = AuthState.unauthenticated();
+      }
+    } catch (e) {
+      state = AuthState.error("Failed to load session: ${e.toString()}");
     }
-    return false;
   }
 
-  void signOut() {
-    state = null;
+  Future<bool> login(String pin) async {
+    state = AuthState.loading();
+    try {
+      final user = await _authRepository.login(pin);
+      if (user != null) {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setInt('user_id', user.id!);
+        state = AuthState.authenticated(user);
+        return true;
+      } else {
+        state = AuthState.error("Invalid PIN");
+        return false;
+      }
+    } catch (e) {
+      state = AuthState.error("Login failed: ${e.toString()}");
+      return false;
+    }
+  }
+
+  Future<void> logout() async {
+    state = AuthState.loading();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('user_id');
+    state = AuthState.unauthenticated();
   }
 }
+
+// Provider for AuthRepository
+final authRepositoryProvider = Provider<AuthRepository>((ref) {
+  final dbHelper = ref.watch(databaseHelperProvider);
+  return AuthRepositoryImpl(dbHelper);
+});
+
+// Provider for AuthNotifier
+final authProvider = StateNotifierProvider<AuthNotifier, AuthState>((ref) {
+  final repo = ref.watch(authRepositoryProvider);
+  return AuthNotifier(repo);
+});

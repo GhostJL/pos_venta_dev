@@ -2,59 +2,47 @@
 
 ## Overview
 
-This document outlines the architecture, design, and features of the Cash Management App. The application is a Flutter-based mobile and web app designed to help users track cash flow through distinct work sessions.
+This document outlines the architecture, features, and design of the Cash Management Flutter application. It serves as a single source of truth for the project's implementation details.
 
 ## Style & Design
 
-- **Theme:** The app uses a custom theme defined in `lib/app/theme.dart`, which provides a consistent color scheme and styling across the application.
-- **Layout:** The layout is designed to be clean, modern, and intuitive, with a focus on ease of use. It uses standard Material Design components with custom styling.
-- **Typography:** The app uses the default Material Design typography.
+- **UI Framework**: Flutter with Material Design 3.
+- **Theme**: A consistent theme is applied using `ThemeData`, with support for both light and dark modes. Colors are generated from a seed color for a modern look.
+- **Typography**: Custom fonts are managed via `google_fonts` to ensure a unique and readable text style across the app.
+- **Layout**: The app uses a responsive layout, ensuring a great user experience on both mobile and web. Key components are organized in a clean, intuitive manner.
 
 ## Features Implemented
 
-### 1. Authentication
-- **Login:** Users can log in with their credentials.
-- **Create Account:** New users can create an account.
+- **Authentication**:
+    - Secure user login.
+    - Role-based access control (Admin, Manager, Cashier, Viewer).
+    - State managed by `AsyncNotifier` from `flutter_riverpod`.
+- **Routing**:
+    - Declarative routing managed by `go_router`.
+    - Authentication-aware redirects to protect routes.
+    - Shell route for persistent UI elements like the main app bar.
+- **Database**:
+    - Local persistence using `sqflite`.
+    - Repository pattern to abstract data sources.
+- **Architecture**:
+    - Layered architecture (Presentation, Domain, Data).
+    - Dependency injection using `flutter_riverpod`.
 
-### 2. Cash Sessions
-- **Open Session:** Users can start a new cash session with an initial opening balance.
-- **View Current Session:** The main screen displays the details of the active cash session, including:
-    - Initial Amount
-    - Cash Flow (total income minus total expenses)
-    - Expected Total
-- **Close Session:** Users can close the active session by providing the final cash amount. The app calculates and displays the difference between the expected and actual closing balances.
+## Current Task: Implement Onboarding Flow
 
-### 3. Cash Movements
-- **Add Movement:** Users can add new transactions (income or expense) to the active session. Each movement includes:
-    - Amount
-    - Type (Income/Expense)
-    - Description
-- **List Movements:** The main screen displays a list of all movements for the current session.
+### Plan
 
-### 4. Navigation
-- The app uses `go_router` for declarative navigation, with the following routes:
-    - `/` (Home/Cash Session Screen)
-    - `/login`
-    - `/create-account`
-    - `/open-session`
-    - `/add-movement`
+The current goal is to replace the existing public sign-up flow with a guided onboarding process for the first-time admin user.
 
-## Current Task: Stabilize and Refactor
-
-### Plan & Steps
-
-1.  **Identify and Fix Critical Errors:**
-    - **`cash_session_screen.dart`:**
-        - Corrected widget lifecycle by moving `_buildSessionHeader` out of the `build` method.
-        - Fixed mismatched braces.
-        - Corrected property names from `initialAmount` and `total` to `openingBalanceCents` and `currentBalanceCents`.
-        - Implemented a robust `_showCloseSessionDialog` to handle session closing with a form for the final cash amount.
-    - **`add_movement_screen.dart`:**
-        - Fixed the "The instance member 'ref' can't be accessed in an initializer" error by moving the session ID retrieval logic into the `onPressed` callback.
-
-2.  **Code Formatting and Analysis:**
-    - Formatted the entire codebase using `dart format .`.
-    - Ran `flutter analyze` to ensure there are no remaining analysis issues.
-
-3.  **Documentation:**
-    - Created this `blueprint.md` file to document the application.
+1.  **Remove Public Sign-Up**: The `SignUpPage` will be deleted, and the corresponding route will be removed.
+2.  **First-Run Detection**: The app will check if an admin user exists in the database on startup. If not, it will trigger the onboarding flow.
+3.  **Onboarding Screens**: A series of new screens will be created:
+    *   **Admin Setup Screen**: Allows the initial admin to confirm or edit their pre-filled details (username, password). A default admin user will be provided.
+    *   **Add Cashiers Screen**: A screen for the admin to add up to 4 cashier accounts.
+    *   **Set Access PIN Screen**: A screen to define a numeric PIN for quick access (initially hardcoded to '1234').
+4.  **Router Update**: `go_router` will be updated to handle the new onboarding logic:
+    *   On startup, if no admin exists, redirect to `/setup-admin`.
+    *   The onboarding screens will navigate sequentially: `/setup-admin` -> `/add-cashiers` -> `/set-pin`.
+    *   After onboarding, the user will be directed to the `/login` page.
+5.  **Repository & Provider Updates**: The `AuthRepository` and `authProvider` will be modified to support the creation of users with specific roles (Admin and Cashier) as part of the new flow.
+6.  **Login Page Cleanup**: The `LoginPage` will be updated to remove the link to the old sign-up page.

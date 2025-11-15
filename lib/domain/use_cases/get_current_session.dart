@@ -6,7 +6,7 @@ class GetCurrentSession {
 
   GetCurrentSession(this.repository);
 
-  Future<CashSession?> call(int userId) {
-    return repository.getCurrentSession(userId);
+  Future<CashSession?> call() {
+    return repository.getCurrentSession();
   }
 }

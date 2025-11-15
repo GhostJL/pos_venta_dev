@@ -1,104 +1,134 @@
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:myapp/presentation/pages/create_account_page.dart';
+import 'package:myapp/data/datasources/database_helper.dart';
+import 'package:myapp/domain/entities/user.dart';
+import 'package:myapp/presentation/pages/cashier_home_page.dart';
 import 'package:myapp/presentation/pages/home_page.dart';
 import 'package:myapp/presentation/pages/login_page.dart';
 import 'package:myapp/presentation/providers/auth_provider.dart';
-import 'package:myapp/presentation/providers/cash_session_provider.dart';
-import 'package:myapp/presentation/screens/add_movement_screen.dart';
-import 'package:myapp/presentation/screens/cash_session_screen.dart';
-import 'package:myapp/presentation/screens/open_session_screen.dart';
-import 'package:myapp/presentation/screens/revenue_details_screen.dart';
+import 'package:myapp/presentation/pages/dashboard_page.dart';
+
+// Onboarding Pages
+import 'package:myapp/presentation/pages/onboarding/admin_setup_page.dart';
+import 'package:myapp/presentation/pages/onboarding/add_cashiers_page.dart';
+import 'package:myapp/presentation/pages/onboarding/add_cashier_form_page.dart';
+import 'package:myapp/presentation/pages/onboarding/set_pin_page.dart';
 
 final GlobalKey<NavigatorState> _rootNavigatorKey = GlobalKey<NavigatorState>();
 
 final routerProvider = Provider<GoRouter>((ref) {
-  final authState = ref.watch(authStateProvider);
-  final cashSessionAsync = ref.watch(cashSessionProvider);
+  final authState = ref.watch(authProvider);
+  final refreshNotifier = ValueNotifier<int>(0);
+  ref.listen(authProvider, (_, __) => refreshNotifier.value++);
+
+  final onboardingCheck = ref.watch(onboardingCompletedProvider);
 
   return GoRouter(
     navigatorKey: _rootNavigatorKey,
-    initialLocation: '/',
+    refreshListenable: refreshNotifier,
+    initialLocation: '/splash', // Always start at splash to resolve dependencies
+
     routes: [
+      GoRoute(
+        path: '/splash',
+        builder: (context, state) => const Scaffold(body: Center(child: CircularProgressIndicator())),
+      ),
+      GoRoute(
+        path: '/error',
+        builder: (context, state) => const Scaffold(body: Center(child: Text('An error occurred'))),
+      ),
+
+      // Onboarding Routes
+      GoRoute(path: '/setup-admin', builder: (context, state) => const AdminSetupPage()),
+      GoRoute(path: '/add-cashiers', builder: (context, state) => const AddCashiersPage()),
+      GoRoute(path: '/add-cashier-form', builder: (context, state) => const AddCashierFormPage()),
+      GoRoute(path: '/set-pin', builder: (context, state) => const SetPinPage()),
+
+      // Login Route
+      GoRoute(
+        path: '/login',
+        builder: (context, state) => const LoginPage(),
+      ),
+
+      // Main App Routes under a ShellRoute
       ShellRoute(
-        builder: (context, state, child) {
-          return HomePage(child: child);
-        },
+        builder: (context, state, child) => HomePage(child: child),
         routes: [
           GoRoute(
-            path: '/',
-            pageBuilder: (context, state) =>
-                const NoTransitionPage(child: RevenueDetailsScreen()),
+            path: '/', // Admin dashboard
+            pageBuilder: (context, state) => const NoTransitionPage(child: DashboardScreen()),
           ),
           GoRoute(
-            path: '/session',
-            pageBuilder: (context, state) =>
-                const NoTransitionPage(child: CashSessionScreen()),
-          ),
-          GoRoute(
-            path: '/revenue-details',
-            builder: (context, state) => const RevenueDetailsScreen(),
+            path: '/home', // Cashier home
+            pageBuilder: (context, state) => const NoTransitionPage(child: CashierHomePage()),
           ),
         ],
       ),
-      GoRoute(path: '/login', builder: (context, state) => const LoginPage()),
-      GoRoute(
-        path: '/create-account',
-        builder: (context, state) => const CreateAccountPage(),
-      ),
-      GoRoute(
-        path: '/open-session',
-        builder: (context, state) => const OpenSessionScreen(),
-      ),
-      GoRoute(
-        parentNavigatorKey: _rootNavigatorKey,
-        path: '/add-movement',
-        pageBuilder: (context, state) {
-          return const MaterialPage(
-            fullscreenDialog: true,
-            child: AddMovementScreen(),
-          );
-        },
-      ),
     ],
+
     redirect: (context, state) {
-      final loggedIn = authState != null;
-      final loggingIn =
-          state.matchedLocation == '/login' ||
-          state.matchedLocation == '/create-account';
+      final location = state.matchedLocation;
 
-      if (!loggedIn) {
-        return loggingIn ? null : '/login';
+      if (authState.status == AuthStatus.loading || onboardingCheck.isLoading) {
+        return '/splash';
       }
 
-      if (loggingIn) {
-        return '/';
+      final needsOnboarding = !(onboardingCheck.asData?.value ?? true);
+      final isSettingUp = location.startsWith('/setup') || location.startsWith('/add-cashier') || location == '/set-pin';
+
+      if (needsOnboarding) {
+        return isSettingUp ? null : '/setup-admin';
+      }
+      if (!needsOnboarding && isSettingUp) {
+        return '/login';
       }
 
-      // If the session provider is loading, don't redirect. This prevents
-      // navigation errors during data refreshes.
-      if (cashSessionAsync.isLoading) {
-        return null;
+      final loggedIn = authState.status == AuthStatus.authenticated;
+      final isLoggingIn = location == '/login';
+
+      if (!loggedIn && !isLoggingIn) {
+        return '/login';
       }
 
-      // Safely get the session data.
-      final session = cashSessionAsync.hasValue ? cashSessionAsync.value : null;
-      final sessionOpen = session != null && session.closedAt == null;
+      if (loggedIn) {
+        final isAdmin = authState.user?.role == UserRole.admin;
 
-      final isAtProtectedScreen =
-          state.matchedLocation == '/session' ||
-          state.matchedLocation == '/add-movement';
+        final onAdminDashboard = location == '/';
+        final onCashierHome = location == '/home';
 
-      if (!sessionOpen && isAtProtectedScreen) {
-        return '/open-session';
+        if (isLoggingIn) {
+          return isAdmin ? '/' : '/home';
+        }
+
+        if (onAdminDashboard && !isAdmin) {
+          return '/home';
+        }
+
+        if (onCashierHome && isAdmin) {
+          return '/';
+        }
       }
-
-      if (sessionOpen && state.matchedLocation == '/open-session') {
-        return '/';
-      }
-
+      
       return null;
     },
   );
 });
+
+final onboardingCompletedProvider = FutureProvider<bool>((ref) async {
+  final dbHelper = DatabaseHelper();
+  return await dbHelper.onboardingCompleted();
+});
+
+class NoTransitionPage<T> extends CustomTransitionPage<T> {
+  const NoTransitionPage({
+    super.key,
+    super.name,
+    required super.child,
+  }) : super(transitionsBuilder: _transitionsBuilder);
+
+  static Widget _transitionsBuilder(BuildContext context, Animation<double> animation,
+          Animation<double> secondaryAnimation, Widget child) =>
+      child;
+}

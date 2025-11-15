@@ -1,19 +1,40 @@
 import 'package:myapp/domain/entities/user.dart';
 
-class UserModel extends User {
+extension UserRoleExtension on UserRole {
+  String toShortString() {
+    return name;
+  }
+}
+
+class UserModel {
+  final int? id;
+  final String username;
+  final String? email;
+  final String? passwordHash;
+  final String firstName;
+  final String lastName;
+  final UserRole role;
+  final String? phone;
+  final bool isActive;
+  final bool onboardingCompleted;
+  final DateTime? lastLoginAt;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+
   UserModel({
-    super.id,
-    required super.username,
-    required super.email,
-    required super.passwordHash,
-    required super.firstName,
-    required super.lastName,
-    super.role,
-    super.phone,
-    super.isActive,
-    super.lastLoginAt,
-    required super.createdAt,
-    required super.updatedAt,
+    this.id,
+    required this.username,
+    required this.email,
+    this.passwordHash,
+    required this.firstName,
+    required this.lastName,
+    required this.role,
+    this.phone,
+    required this.isActive,
+    required this.onboardingCompleted,
+    this.lastLoginAt,
+    required this.createdAt,
+    required this.updatedAt,
   });
 
   factory UserModel.fromMap(Map<String, dynamic> map) {
@@ -27,6 +48,7 @@ class UserModel extends User {
       role: UserRole.values.byName(map['role']),
       phone: map['phone'],
       isActive: map['is_active'] == 1,
+      onboardingCompleted: map['onboarding_completed'] == 1,
       lastLoginAt: map['last_login_at'] != null
           ? DateTime.parse(map['last_login_at'])
           : null,
@@ -35,8 +57,26 @@ class UserModel extends User {
     );
   }
 
+  factory UserModel.fromEntity(User entity) {
+    return UserModel(
+      id: entity.id,
+      username: entity.username,
+      email: entity.email,
+      passwordHash: entity.passwordHash,
+      firstName: entity.firstName,
+      lastName: entity.lastName,
+      role: entity.role,
+      phone: entity.phone,
+      isActive: entity.isActive,
+      onboardingCompleted: entity.onboardingCompleted,
+      lastLoginAt: entity.lastLoginAt,
+      createdAt: entity.createdAt,
+      updatedAt: entity.updatedAt,
+    );
+  }
+
   Map<String, dynamic> toMap() {
-    final map = {
+    return {
       'id': id,
       'username': username,
       'email': email,
@@ -46,13 +86,60 @@ class UserModel extends User {
       'role': role.name,
       'phone': phone,
       'is_active': isActive ? 1 : 0,
+      'onboarding_completed': onboardingCompleted ? 1 : 0,
       'last_login_at': lastLoginAt?.toIso8601String(),
       'created_at': createdAt.toIso8601String(),
       'updated_at': updatedAt.toIso8601String(),
     };
-    if (id == null) {
-      map.remove('id');
-    }
-    return map;
+  }
+
+  User toEntity() {
+    return User(
+      id: id,
+      username: username,
+      email: email,
+      passwordHash: passwordHash,
+      firstName: firstName,
+      lastName: lastName,
+      role: role,
+      phone: phone,
+      isActive: isActive,
+      onboardingCompleted: onboardingCompleted,
+      lastLoginAt: lastLoginAt,
+      createdAt: createdAt,
+      updatedAt: updatedAt,
+    );
+  }
+
+  UserModel copyWith({
+    int? id,
+    String? username,
+    String? email,
+    String? passwordHash,
+    String? firstName,
+    String? lastName,
+    UserRole? role,
+    String? phone,
+    bool? isActive,
+    bool? onboardingCompleted,
+    DateTime? lastLoginAt,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+  }) {
+    return UserModel(
+      id: id ?? this.id,
+      username: username ?? this.username,
+      email: email ?? this.email,
+      passwordHash: passwordHash ?? this.passwordHash,
+      firstName: firstName ?? this.firstName,
+      lastName: lastName ?? this.lastName,
+      role: role ?? this.role,
+      phone: phone ?? this.phone,
+      isActive: isActive ?? this.isActive,
+      onboardingCompleted: onboardingCompleted ?? this.onboardingCompleted,
+      lastLoginAt: lastLoginAt ?? this.lastLoginAt,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+    );
   }
 }
