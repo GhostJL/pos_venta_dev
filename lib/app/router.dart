@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:myapp/domain/entities/user.dart';
 import 'package:myapp/presentation/pages/cashier_home_page.dart';
+import 'package:myapp/presentation/pages/categories_page.dart';
 import 'package:myapp/presentation/pages/departments_page.dart';
 import 'package:myapp/presentation/pages/home_page.dart';
 import 'package:myapp/presentation/pages/login_page.dart';
@@ -80,6 +81,11 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: '/departments',
             pageBuilder: (context, state) =>
                 const NoTransitionPage(child: DepartmentsPage()),
+          ),
+          GoRoute(
+            path: '/categories',
+            pageBuilder: (context, state) =>
+                const NoTransitionPage(child: CategoriesPage()),
           ),
         ],
       ),

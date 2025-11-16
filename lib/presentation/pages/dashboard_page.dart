@@ -33,6 +33,14 @@ class DashboardScreen extends StatelessWidget {
           color: Colors.cyan,
           onTap: () => context.push('/departments'),
         ),
+        const SizedBox(height: 16),
+        DashboardCard(
+          title: 'Categories',
+          value: 'Manage',
+          icon: Icons.category_outlined,
+          color: Colors.purple,
+          onTap: () => context.push('/categories'),
+        ),
       ],
     );
   }

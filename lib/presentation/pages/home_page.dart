@@ -7,11 +7,7 @@ class HomePage extends ConsumerWidget {
   final Widget child;
   final GoRouterState state;
 
-  const HomePage({
-    super.key,
-    required this.child,
-    required this.state,
-  });
+  const HomePage({super.key, required this.child, required this.state});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -19,6 +15,8 @@ class HomePage extends ConsumerWidget {
     final String title;
     if (state.uri.toString().startsWith('/departments')) {
       title = 'Departments';
+    } else if (state.uri.toString().startsWith('/categories')) {
+      title = 'Categories';
     } else {
       title = 'Dashboard';
     }
