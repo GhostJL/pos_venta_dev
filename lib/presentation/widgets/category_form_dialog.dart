@@ -69,7 +69,7 @@ class _CategoryFormDialogState extends ConsumerState<CategoryFormDialog> {
                     _departmentId = departments.first.id!;
                   }
                   return DropdownButtonFormField<int>(
-                    value: _departmentId,
+                    initialValue: _departmentId,
                     items: departments.map((Department department) {
                       return DropdownMenuItem<int>(
                         value: department.id,

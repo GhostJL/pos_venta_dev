@@ -17,6 +17,8 @@ class HomePage extends ConsumerWidget {
       title = 'Departments';
     } else if (state.uri.toString().startsWith('/categories')) {
       title = 'Categories';
+    } else if (state.uri.toString().startsWith('/brands')) {
+      title = 'Brands';
     } else {
       title = 'Dashboard';
     }

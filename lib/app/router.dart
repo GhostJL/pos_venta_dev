@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:myapp/domain/entities/user.dart';
+import 'package:myapp/presentation/pages/brands_page.dart';
 import 'package:myapp/presentation/pages/cashier_home_page.dart';
 import 'package:myapp/presentation/pages/categories_page.dart';
 import 'package:myapp/presentation/pages/departments_page.dart';
@@ -86,6 +87,11 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: '/categories',
             pageBuilder: (context, state) =>
                 const NoTransitionPage(child: CategoriesPage()),
+          ),
+           GoRoute(
+            path: '/brands',
+            pageBuilder: (context, state) =>
+                const NoTransitionPage(child: BrandsPage()),
           ),
         ],
       ),

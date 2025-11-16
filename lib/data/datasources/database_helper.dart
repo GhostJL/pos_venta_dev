@@ -21,7 +21,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 2, // Incremented version
+      version: 3, // Incremented version
       onCreate: _createDb,
       onUpgrade: _upgradeDb,
       onConfigure: _onConfigure,
@@ -83,11 +83,15 @@ class DatabaseHelper {
     ''');
 
     await _createCategoriesTable(db);
+    await _createBrandsTable(db);
   }
 
   Future<void> _upgradeDb(Database db, int oldVersion, int newVersion) async {
     if (oldVersion < 2) {
       await _createCategoriesTable(db);
+    }
+    if (oldVersion < 3) {
+      await _createBrandsTable(db);
     }
   }
 
@@ -106,6 +110,19 @@ class DatabaseHelper {
         updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (department_id) REFERENCES departments(id) ON DELETE RESTRICT,
         FOREIGN KEY (parent_category_id) REFERENCES categories(id) ON DELETE SET NULL
+      )
+    ''');
+  }
+
+    Future<void> _createBrandsTable(Database db) async {
+    await db.execute('''
+      CREATE TABLE brands (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          name TEXT NOT NULL,
+          code TEXT NOT NULL UNIQUE,
+          is_active INTEGER NOT NULL DEFAULT 1,
+          created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
       )
     ''');
   }
