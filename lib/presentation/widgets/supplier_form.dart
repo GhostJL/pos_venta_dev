@@ -55,11 +55,11 @@ class _SupplierFormState extends ConsumerState<SupplierForm> {
         id: widget.supplier?.id,
         name: _nameController.text,
         code: _codeController.text,
-        contactPerson: _contactPersonController.text,
-        phone: _phoneController.text,
-        email: _emailController.text,
-        address: _addressController.text,
-        taxId: _taxIdController.text,
+        contactPerson: _contactPersonController.text.isNotEmpty ? _contactPersonController.text : null,
+        phone: _phoneController.text.isNotEmpty ? _phoneController.text : null,
+        email: _emailController.text.isNotEmpty ? _emailController.text : null,
+        address: _addressController.text.isNotEmpty ? _addressController.text : null,
+        taxId: _taxIdController.text.isNotEmpty ? _taxIdController.text : null,
         creditDays: int.tryParse(_creditDaysController.text) ?? 0,
         isActive: widget.supplier?.isActive ?? true,
       );
@@ -86,39 +86,59 @@ class _SupplierFormState extends ConsumerState<SupplierForm> {
             children: <Widget>[
               TextFormField(
                 controller: _nameController,
-                decoration: const InputDecoration(labelText: 'Nombre'),
-                validator: (value) => value!.isEmpty ? 'Campo requerido' : null,
+                decoration: const InputDecoration(labelText: 'Nombre', border: OutlineInputBorder()),
+                validator: (value) => value!.isEmpty ? 'El nombre es requerido' : null,
               ),
+              const SizedBox(height: 16),
               TextFormField(
                 controller: _codeController,
-                decoration: const InputDecoration(labelText: 'Código'),
-                validator: (value) => value!.isEmpty ? 'Campo requerido' : null,
+                decoration: const InputDecoration(labelText: 'Código', border: OutlineInputBorder()),
+                validator: (value) => value!.isEmpty ? 'El código es requerido' : null,
               ),
+              const SizedBox(height: 16),
               TextFormField(
                 controller: _contactPersonController,
-                decoration: const InputDecoration(labelText: 'Persona de Contacto'),
+                decoration: const InputDecoration(labelText: 'Persona de Contacto', border: OutlineInputBorder()),
               ),
+              const SizedBox(height: 16),
               TextFormField(
                 controller: _phoneController,
-                decoration: const InputDecoration(labelText: 'Teléfono'),
+                decoration: const InputDecoration(labelText: 'Teléfono', border: OutlineInputBorder()),
               ),
+              const SizedBox(height: 16),
               TextFormField(
                 controller: _emailController,
-                decoration: const InputDecoration(labelText: 'Email'),
+                decoration: const InputDecoration(labelText: 'Email', border: OutlineInputBorder()),
                 keyboardType: TextInputType.emailAddress,
+                validator: (value) {
+                  if (value == null || value.isEmpty) return null;
+                  final emailRegex = RegExp(r'^[\w-]+(\.[\w-]+)*@([\w-]+\.)+[a-zA-Z]{2,7}$');
+                  if (!emailRegex.hasMatch(value)) {
+                    return 'Introduce un email válido';
+                  }
+                  return null;
+                },
               ),
+              const SizedBox(height: 16),
               TextFormField(
                 controller: _addressController,
-                decoration: const InputDecoration(labelText: 'Dirección'),
+                decoration: const InputDecoration(labelText: 'Dirección', border: OutlineInputBorder()),
               ),
+              const SizedBox(height: 16),
               TextFormField(
                 controller: _taxIdController,
-                decoration: const InputDecoration(labelText: 'ID Fiscal (RFC)'),
+                decoration: const InputDecoration(labelText: 'ID Fiscal (RFC/RUT)', border: OutlineInputBorder()),
               ),
+              const SizedBox(height: 16),
               TextFormField(
                 controller: _creditDaysController,
-                decoration: const InputDecoration(labelText: 'Días de Crédito'),
+                decoration: const InputDecoration(labelText: 'Días de Crédito', border: OutlineInputBorder()),
                 keyboardType: TextInputType.number,
+                validator: (value) {
+                  if (value == null || value.isEmpty) return 'Introduce los días de crédito';
+                  if (int.tryParse(value) == null) return 'Introduce un número válido';
+                  return null;
+                },
               ),
             ],
           ),
@@ -131,7 +151,7 @@ class _SupplierFormState extends ConsumerState<SupplierForm> {
         ),
         ElevatedButton(
           onPressed: _submit,
-          child: Text(widget.supplier == null ? 'Añadir' : 'Guardar'),
+          child: const Text('Guardar'),
         ),
       ],
     );

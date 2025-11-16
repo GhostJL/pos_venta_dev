@@ -29,7 +29,7 @@ class BrandFormState extends ConsumerState<BrandForm> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: Text(widget.brand == null ? 'New Brand' : 'Edit Brand'),
+      title: Text(widget.brand == null ? 'Nueva Marca' : 'Editar Marca'),
       content: Form(
         key: _formKey,
         child: Column(
@@ -37,24 +37,34 @@ class BrandFormState extends ConsumerState<BrandForm> {
           children: [
             TextFormField(
               controller: _nameController,
-              decoration: const InputDecoration(labelText: 'Name'),
-              validator: (value) => value!.isEmpty ? 'Required field' : null,
+              decoration: const InputDecoration(
+                labelText: 'Nombre',
+                border: OutlineInputBorder(),
+              ),
+              validator: (value) => value!.isEmpty ? 'Campo requerido' : null,
             ),
+            const SizedBox(height: 16),
             TextFormField(
               controller: _codeController,
-              decoration: const InputDecoration(labelText: 'Code'),
-              validator: (value) => value!.isEmpty ? 'Required field' : null,
+              decoration: const InputDecoration(
+                labelText: 'Código',
+                border: OutlineInputBorder(),
+              ),
+              validator: (value) => value!.isEmpty ? 'Campo requerido' : null,
             ),
+            const SizedBox(height: 10),
             CheckboxListTile(
-              title: const Text('Active'),
+              title: const Text('Activo'),
               value: _isActive,
               onChanged: (value) => setState(() => _isActive = value!),
+              controlAffinity: ListTileControlAffinity.leading,
+              contentPadding: EdgeInsets.zero,
             ),
           ],
         ),
       ),
       actions: [
-        TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')), // Cancel
+        TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancelar')), // Cancelar
         ElevatedButton(
           onPressed: () {
             if (_formKey.currentState!.validate()) {
@@ -72,7 +82,7 @@ class BrandFormState extends ConsumerState<BrandForm> {
               Navigator.pop(context);
             }
           },
-          child: const Text('Save'), // Save
+          child: const Text('Guardar'), // Guardar
         ),
       ],
     );

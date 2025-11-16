@@ -9,59 +9,59 @@ class DashboardScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final cards = [
       DashboardCard(
-        title: "Today's Revenue",
-        value: '\$1,250.75', // Dummy data
+        title: "Ingresos de Hoy",
+        value: '\$1,250.75', // Datos de ejemplo
         icon: Icons.monetization_on_outlined,
-        color: const Color(0xFF2E7D32), // Deep Green
+        color: const Color(0xFF2E7D32), // Verde oscuro
         onTap: () {},
       ),
       DashboardCard(
-        title: 'Total Movements',
-        value: '12', // Dummy data
+        title: 'Movimientos Totales',
+        value: '12', // Datos de ejemplo
         icon: Icons.sync_alt_rounded,
-        color: const Color(0xFFF57F17), // Amber
+        color: const Color(0xFFF57F17), // Ámbar
         onTap: () {},
       ),
       DashboardCard(
-        title: 'Departments',
-        value: 'Manage',
+        title: 'Departamentos',
+        value: 'Gestionar',
         icon: Icons.business_outlined,
-        color: const Color(0xFF0277BD), // Light Blue
+        color: const Color(0xFF0277BD), // Azul claro
         onTap: () => context.push('/departments'),
       ),
       DashboardCard(
-        title: 'Categories',
-        value: 'Manage',
+        title: 'Categorías',
+        value: 'Gestionar',
         icon: Icons.category_outlined,
-        color: const Color(0xFF6A1B9A), // Deep Purple
+        color: const Color(0xFF6A1B9A), // Púrpura oscuro
         onTap: () => context.push('/categories'),
       ),
       DashboardCard(
-        title: 'Brands',
-        value: 'Manage',
+        title: 'Marcas',
+        value: 'Gestionar',
         icon: Icons.label_important_outline,
         color: const Color(0xFF00695C), // Teal
         onTap: () => context.push('/brands'),
       ),
        DashboardCard(
         title: 'Proveedores',
-        value: 'Manage',
+        value: 'Gestionar',
         icon: Icons.local_shipping_outlined,
-        color: const Color(0xFFC62828), // Red
+        color: const Color(0xFFC62828), // Rojo
         onTap: () => context.push('/suppliers'),
       ),
       DashboardCard(
-        title: 'Users',
-        value: 'Manage',
+        title: 'Usuarios',
+        value: 'Gestionar',
         icon: Icons.people_outline,
-        color: const Color(0xFFD84315), // Deep Orange
+        color: const Color(0xFFD84315), // Naranja oscuro
         onTap: () {},
       ),
     ];
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        // Define breakpoints for responsive layout
+        // Definir puntos de interrupción para el diseño adaptable
         const double mobileBreakpoint = 600;
         const double tabletBreakpoint = 900;
 
@@ -69,15 +69,15 @@ class DashboardScreen extends StatelessWidget {
         double childAspectRatio;
 
         if (constraints.maxWidth < mobileBreakpoint) {
-          // Mobile layout: Single column, taller cards
+          // Diseño móvil: Una sola columna, tarjetas más altas
           crossAxisCount = 1;
           childAspectRatio = 4 / 1.1;
         } else if (constraints.maxWidth < tabletBreakpoint) {
-          // Tablet layout: Two columns
+          // Diseño de tableta: Dos columnas
           crossAxisCount = 2;
           childAspectRatio = 3 / 1;
         } else {
-          // Desktop layout: Three columns
+          // Diseño de escritorio: Tres columnas
           crossAxisCount = 3;
           childAspectRatio = 2.8 / 1;
         }

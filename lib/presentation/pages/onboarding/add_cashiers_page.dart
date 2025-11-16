@@ -11,10 +11,11 @@ class AddCashiersPage extends ConsumerWidget {
     final onboardingState = ref.watch(onboardingNotifierProvider);
     final cashiers = onboardingState.cashiers;
     final canAddMore = cashiers.length < 10;
+    final membersText = cashiers.length == 1 ? 'miembro' : 'miembros';
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Add Team Members (Cashiers)'),
+        title: const Text('Añadir Miembros del Equipo (Cajeros)'),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => context.go('/setup-admin'),
@@ -26,7 +27,7 @@ class AddCashiersPage extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Text(
-              'You have added ${cashiers.length} team member(s).',
+              'Has añadido ${cashiers.length} $membersText del equipo.',
               style: Theme.of(context).textTheme.titleMedium,
               textAlign: TextAlign.center,
             ),
@@ -43,16 +44,16 @@ class AddCashiersPage extends ConsumerWidget {
               ),
               icon: const Icon(Icons.add, color: Colors.white),
               label: const Text(
-                'Add New Member',
+                'Añadir Nuevo Miembro',
                 style: TextStyle(color: Colors.white),
               ),
             ),
             const SizedBox(height: 24),
-            Text('Current Team', style: Theme.of(context).textTheme.titleLarge),
+            Text('Equipo Actual', style: Theme.of(context).textTheme.titleLarge),
             const Divider(),
             Expanded(
               child: cashiers.isEmpty
-                  ? const Center(child: Text('No team members added yet.'))
+                  ? const Center(child: Text('Aún no se han añadido miembros al equipo.'))
                   : ListView.builder(
                       itemCount: cashiers.length,
                       itemBuilder: (context, index) {
@@ -70,7 +71,7 @@ class AddCashiersPage extends ConsumerWidget {
                                 Icons.delete_outline,
                                 color: Colors.redAccent,
                               ),
-                              tooltip: 'Remove ${cashier.username}',
+                              tooltip: 'Eliminar a ${cashier.username}',
                               onPressed: () {
                                 ref
                                     .read(onboardingNotifierProvider.notifier)
@@ -84,11 +85,11 @@ class AddCashiersPage extends ConsumerWidget {
             ),
             const SizedBox(height: 16),
             ElevatedButton(
-              onPressed: () => context.push('/set-access-key'), // Updated navigation
+              onPressed: () => context.push('/set-access-key'),
               style: ElevatedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: 16),
               ),
-              child: const Text('Continue to Final Step'),
+              child: const Text('Continuar al Paso Final'),
             ),
           ],
         ),

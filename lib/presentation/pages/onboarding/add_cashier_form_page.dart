@@ -18,14 +18,12 @@ class _AddCashierFormPageState extends ConsumerState<AddCashierFormPage> {
   final _firstNameController = TextEditingController();
   final _lastNameController = TextEditingController();
 
-  // Static counter to ensure unique default usernames
-  static int _cashierCounter = 1;
+  static int _cajeroCounter = 1;
 
   @override
   void initState() {
     super.initState();
-    // Pre-fill username to make it easier for the admin
-    _usernameController.text = 'cashier$_cashierCounter';
+    _usernameController.text = 'cajero$_cajeroCounter';
   }
 
   @override
@@ -41,10 +39,8 @@ class _AddCashierFormPageState extends ConsumerState<AddCashierFormPage> {
     if (!_formKey.currentState!.validate()) return;
 
     final newUser = User(
-      id: DateTime.now().millisecondsSinceEpoch, // Temporary unique ID
+      id: DateTime.now().millisecondsSinceEpoch,
       username: _usernameController.text,
-      // The password will be handled by the notifier and database helper.
-      // We pass the plain text password to the state.
       passwordHash: _passwordController.text,
       firstName: _firstNameController.text,
       lastName: _lastNameController.text,
@@ -58,7 +54,7 @@ class _AddCashierFormPageState extends ConsumerState<AddCashierFormPage> {
 
     ref.read(onboardingNotifierProvider.notifier).addCashier(newUser);
 
-    _cashierCounter++;
+    _cajeroCounter++;
 
     if (mounted) {
       context.pop();
@@ -68,60 +64,69 @@ class _AddCashierFormPageState extends ConsumerState<AddCashierFormPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Add New Cashier')),
+      appBar: AppBar(title: const Text('Añadir Nuevo Cajero')),
       body: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(24.0),
         child: Form(
           key: _formKey,
-          child: Column(
-            children: [
-              TextFormField(
-                controller: _usernameController,
-                decoration: const InputDecoration(labelText: 'Username'),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter a username';
-                  }
-                  return null;
-                },
-              ),
-              TextFormField(
-                controller: _passwordController,
-                decoration: const InputDecoration(labelText: 'Password'),
-                obscureText: true,
-                validator: (value) {
-                  if (value == null || value.isEmpty || value.length < 8) {
-                    return 'Password must be at least 6 characters long';
-                  }
-                  return null;
-                },
-              ),
-              TextFormField(
-                controller: _firstNameController,
-                decoration: const InputDecoration(labelText: 'First Name'),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter a first name';
-                  }
-                  return null;
-                },
-              ),
-              TextFormField(
-                controller: _lastNameController,
-                decoration: const InputDecoration(labelText: 'Last Name'),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter a last name';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: _submit,
-                child: const Text('Save Cashier'),
-              ),
-            ],
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                TextFormField(
+                  controller: _usernameController,
+                  decoration: const InputDecoration(labelText: 'Nombre de usuario', border: OutlineInputBorder()),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Por favor, introduce un nombre de usuario';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 16),
+                TextFormField(
+                  controller: _passwordController,
+                  decoration: const InputDecoration(labelText: 'Contraseña', border: OutlineInputBorder()),
+                  obscureText: true,
+                  validator: (value) {
+                    if (value == null || value.isEmpty || value.length < 8) {
+                      return 'La contraseña debe tener al menos 8 caracteres';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 16),
+                TextFormField(
+                  controller: _firstNameController,
+                  decoration: const InputDecoration(labelText: 'Nombre', border: OutlineInputBorder()),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Por favor, introduce un nombre';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 16),
+                TextFormField(
+                  controller: _lastNameController,
+                  decoration: const InputDecoration(labelText: 'Apellido', border: OutlineInputBorder()),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Por favor, introduce un apellido';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 32),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                  ),
+                  onPressed: _submit,
+                  child: const Text('Guardar Cajero'),
+                ),
+              ],
+            ),
           ),
         ),
       ),

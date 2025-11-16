@@ -1,51 +1,50 @@
+# Aplicación Móvil de Punto de Venta (PDV)
 
-# Point of Sale Mobile App
+Esta es una aplicación móvil basada en Flutter diseñada para gestionar operaciones de punto de venta, incluyendo sesiones de caja y movimientos de efectivo. Cuenta con una interfaz de usuario limpia y moderna y utiliza Firebase para los servicios de backend.
 
-This is a Flutter-based mobile application designed to manage point-of-sale operations, including cash sessions and movements. It features a clean, modern user interface and leverages Firebase for backend services.
+## ✨ Características
 
-## ✨ Features
+- **Autenticación**: Inicio de sesión seguro y creación de cuentas de usuario.
+- **Sesiones de Caja**: Inicia, gestiona y cierra sesiones de caja con un saldo inicial.
+- **Movimientos de Efectivo**: Registra transacciones de entrada y salida de efectivo con detalles como monto, motivo y descripción.
+- **Panel de Control**: Un centro principal que muestra métricas clave como los ingresos del día, el estado de la sesión y el total de movimientos.
+- **Interfaz de Usuario Moderna**: Un sistema de diseño visualmente atractivo y coherente con un tema y tipografía personalizados.
+- **Diseño Adaptable**: Se adapta a varios tamaños de pantalla para una experiencia fluida en dispositivos móviles y web.
+- **Gestión de Estado**: Construido con `flutter_riverpod` para una gestión de estado escalable y mantenible.
+- **Navegación**: Utiliza `go_router` para una solución de enrutamiento declarativa y robusta.
 
-- **Authentication**: Secure user login and account creation using Firebase Authentication.
-- **Cash Sessions**: Start, manage, and close cash sessions with an opening balance.
-- **Cash Movements**: Record cash-in and cash-out transactions with details like amount, reason, and description.
-- **Dashboard**: A central hub displaying key metrics like today\'s revenue, session status, and total movements.
-- **Modern UI**: A visually appealing and consistent design system with a custom theme and typography.
-- **Responsive Design**: Adapts to various screen sizes for a seamless experience on mobile and web.
-- **State Management**: Built with `flutter_riverpod` for scalable and maintainable state management.
-- **Navigation**: Uses `go_router` for a declarative and robust routing solution.
-
-## 🚀 Technologies Used
+## 🚀 Tecnologías Utilizadas
 
 - **Frontend**: Flutter
 - **Backend**: Firebase (Authentication, Firestore)
-- **State Management**: Riverpod
-- **Routing**: go_router
-- **Styling**: Google Fonts
+- **Gestión de Estado**: Riverpod
+- **Enrutamiento**: go_router
+- **Estilos**: Google Fonts
 
-## 🏁 Getting Started
+## 🏁 Cómo Empezar
 
-To get a local copy up and running, follow these simple steps.
+Para obtener una copia local y ponerla en funcionamiento, sigue estos sencillos pasos.
 
-### Prerequisites
+### Prerrequisitos
 
-- Flutter SDK: [Installation Guide](https://flutter.dev/docs/get-started/install)
+- Flutter SDK: [Guía de Instalación](https://flutter.dev/docs/get-started/install)
 - Firebase CLI: `npm install -g firebase-tools`
 
-### Installation
+### Instalación
 
-1. **Clone the repo**
+1. **Clona el repositorio**
    ```sh
-   git clone https://your-repository-url.git
+   git clone https://tu-url-del-repositorio.git
    ```
-2. **Install packages**
+2. **Instala los paquetes**
    ```sh
    flutter pub get
    ```
-3. **Run the app**
+3. **Ejecuta la aplicación**
    ```sh
    flutter run
    ```
 
-## 📄 License
+## 📄 Licencia
 
-Distributed under the MIT License. See `LICENSE` for more information.
+Distribuido bajo la Licencia MIT. Consulta `LICENSE` para más información.

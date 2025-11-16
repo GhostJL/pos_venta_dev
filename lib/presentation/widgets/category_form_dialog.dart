@@ -18,7 +18,7 @@ class _CategoryFormDialogState extends ConsumerState<CategoryFormDialog> {
   late String _name;
   late String _code;
   late String? _description;
-  late int _departmentId;
+  int? _departmentId;
 
   @override
   void initState() {
@@ -26,7 +26,7 @@ class _CategoryFormDialogState extends ConsumerState<CategoryFormDialog> {
     _name = widget.category?.name ?? '';
     _code = widget.category?.code ?? '';
     _description = widget.category?.description;
-    _departmentId = widget.category?.departmentId ?? 0;
+    _departmentId = widget.category?.departmentId;
   }
 
   @override
@@ -43,7 +43,7 @@ class _CategoryFormDialogState extends ConsumerState<CategoryFormDialog> {
             children: [
               TextFormField(
                 initialValue: _name,
-                decoration: const InputDecoration(labelText: 'Nombre'),
+                decoration: const InputDecoration(labelText: 'Nombre', border: OutlineInputBorder()),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Por favor, introduce un nombre';
@@ -52,9 +52,10 @@ class _CategoryFormDialogState extends ConsumerState<CategoryFormDialog> {
                 },
                 onSaved: (value) => _name = value!,
               ),
+              const SizedBox(height: 16),
               TextFormField(
                 initialValue: _code,
-                decoration: const InputDecoration(labelText: 'Código'),
+                decoration: const InputDecoration(labelText: 'Código', border: OutlineInputBorder()),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Por favor, introduce un código';
@@ -63,13 +64,22 @@ class _CategoryFormDialogState extends ConsumerState<CategoryFormDialog> {
                 },
                 onSaved: (value) => _code = value!,
               ),
+              const SizedBox(height: 16),
               departmentsAsync.when(
                 data: (departments) {
-                   if (_departmentId == 0 && departments.isNotEmpty) {
-                    _departmentId = departments.first.id!;
+                  if (departments.isEmpty) {
+                    return const Text(
+                      'No hay departamentos. Añade un departamento primero.',
+                      textAlign: TextAlign.center,
+                    );
                   }
+
+                  final validDepartmentId = _departmentId != null && departments.any((d) => d.id == _departmentId)
+                      ? _departmentId
+                      : null;
+                  
                   return DropdownButtonFormField<int>(
-                    initialValue: _departmentId,
+                    value: validDepartmentId,
                     items: departments.map((Department department) {
                       return DropdownMenuItem<int>(
                         value: department.id,
@@ -78,18 +88,23 @@ class _CategoryFormDialogState extends ConsumerState<CategoryFormDialog> {
                     }).toList(),
                     onChanged: (value) {
                       setState(() {
-                        _departmentId = value!;
+                        _departmentId = value;
                       });
                     },
-                    decoration: const InputDecoration(labelText: 'Departamento'),
+                    decoration: const InputDecoration(
+                      labelText: 'Departamento',
+                      border: OutlineInputBorder(),
+                    ),
+                     validator: (value) => value == null ? 'Por favor, selecciona un departamento' : null,
                   );
                 },
-                loading: () => const CircularProgressIndicator(),
-                error: (err, stack) => Text('Error: $err'),
+                loading: () => const Center(child: CircularProgressIndicator()),
+                error: (err, stack) => Text('Error al cargar departamentos: $err'),
               ),
+              const SizedBox(height: 16),
               TextFormField(
                 initialValue: _description,
-                decoration: const InputDecoration(labelText: 'Descripción'),
+                decoration: const InputDecoration(labelText: 'Descripción', border: OutlineInputBorder()),
                 onSaved: (value) => _description = value,
               ),
             ],
@@ -112,11 +127,18 @@ class _CategoryFormDialogState extends ConsumerState<CategoryFormDialog> {
   void _submit() {
     if (_formKey.currentState!.validate()) {
       _formKey.currentState!.save();
+      if (_departmentId == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('No se ha seleccionado ningún departamento.')),
+        );
+        return;
+      }
+
       final category = Category(
         id: widget.category?.id,
         name: _name,
         code: _code,
-        departmentId: _departmentId,
+        departmentId: _departmentId!,
         description: _description,
         isActive: widget.category?.isActive ?? true,
       );

@@ -13,6 +13,8 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   final _formKey = GlobalKey<FormState>();
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
+  bool _isLoading = false;
+  bool _isPasswordObscured = true;
 
   @override
   void dispose() {
@@ -22,18 +24,21 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   }
 
   Future<void> _login() async {
-    if (!_formKey.currentState!.validate()) return;
+    if (!_formKey.currentState!.validate() || _isLoading) return;
+
+    setState(() => _isLoading = true);
 
     final success = await ref
         .read(authProvider.notifier)
         .login(_usernameController.text, _passwordController.text);
 
-    if (!mounted) return;
-
-    if (!success) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Invalid username or password')),
-      );
+    if (mounted) {
+      setState(() => _isLoading = false);
+      if (!success) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Nombre de usuario o contraseña inválidos')),
+        );
+      }
     }
   }
 
@@ -43,7 +48,8 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       if (state.status == AuthStatus.error) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(state.errorMessage ?? 'An unknown error occurred'),
+            content: Text(state.errorMessage ?? 'Ocurrió un error desconocido'),
+            backgroundColor: Colors.red,
           ),
         );
       }
@@ -61,43 +67,57 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
+                  const Icon(Icons.lock_outline, size: 64, color: Colors.deepPurple),
+                  const SizedBox(height: 16),
                   Text(
-                    'Welcome Back',
-                    style: Theme.of(context).textTheme.headlineMedium,
+                    'Bienvenido de Nuevo',
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Sign in to continue',
+                    'Inicia sesión para continuar',
+                    textAlign: TextAlign.center,
                     style: Theme.of(context).textTheme.bodyMedium,
                   ),
                   const SizedBox(height: 32),
                   TextFormField(
                     controller: _usernameController,
                     decoration: const InputDecoration(
-                      labelText: 'Username',
+                      labelText: 'Nombre de usuario',
                       border: OutlineInputBorder(),
+                      prefixIcon: Icon(Icons.person_outline),
                     ),
                     validator: (value) =>
-                        value!.isEmpty ? 'Please enter a username' : null,
+                        value!.isEmpty ? 'Por favor, introduce tu nombre de usuario' : null,
                   ),
                   const SizedBox(height: 16),
                   TextFormField(
                     controller: _passwordController,
-                    obscureText: true,
-                    decoration: const InputDecoration(
-                      labelText: 'Password',
-                      border: OutlineInputBorder(),
+                    obscureText: _isPasswordObscured,
+                    decoration: InputDecoration(
+                      labelText: 'Contraseña',
+                      border: const OutlineInputBorder(),
+                      prefixIcon: const Icon(Icons.lock_person_outlined),
+                      suffixIcon: IconButton(
+                        icon: Icon(_isPasswordObscured ? Icons.visibility_off : Icons.visibility),
+                        onPressed: () {
+                          setState(() => _isPasswordObscured = !_isPasswordObscured);
+                        },
+                      ),
                     ),
                     validator: (value) =>
-                        value!.isEmpty ? 'Please enter a password' : null,
+                        value!.isEmpty ? 'Por favor, introduce tu contraseña' : null,
                   ),
                   const SizedBox(height: 24),
                   ElevatedButton(
                     style: ElevatedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 16),
                     ),
-                    onPressed: _login,
-                    child: const Text('Login'),
+                    onPressed: _isLoading ? null : _login,
+                    child: _isLoading
+                        ? const SizedBox(height: 24, width: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 3.0))
+                        : const Text('Iniciar Sesión'),
                   ),
                 ],
               ),

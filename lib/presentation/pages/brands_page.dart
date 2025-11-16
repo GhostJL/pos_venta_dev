@@ -27,7 +27,7 @@ class BrandsPage extends ConsumerWidget {
           return AlertDialog(
             title: const Text('Confirmar Eliminación'),
             content: Text(
-              '¿Estás seguro de que deseas eliminar la marca "${brand.name}"?',
+              '¿Estás seguro de que quieres eliminar la marca "${brand.name}"?',
             ),
             actions: <Widget>[
               TextButton(
@@ -35,6 +35,9 @@ class BrandsPage extends ConsumerWidget {
                 onPressed: () => Navigator.of(context).pop(),
               ),
               TextButton(
+                style: TextButton.styleFrom(
+                  foregroundColor: Colors.red,
+                ),
                 child: const Text('Eliminar'),
                 onPressed: () {
                   ref.read(brandListProvider.notifier).deleteBrand(brand.id!);
@@ -68,7 +71,7 @@ class BrandsPage extends ConsumerWidget {
               child: brandList.when(
                 data: (brands) {
                   return brands.isEmpty
-                      ? const Center(child: Text('No hay marcas registradas.'))
+                      ? const Center(child: Text('No hay marcas registradas. ¡Añade una para empezar!'))
                       : CustomDataTable(
                           columns: const [
                             DataColumn(label: Text('Nombre')),
@@ -96,13 +99,16 @@ class BrandsPage extends ConsumerWidget {
                                 ),
                                 DataCell(
                                   Row(
+                                    mainAxisSize: MainAxisSize.min,
                                     children: [
                                       IconButton(
                                         icon: const Icon(Icons.edit),
+                                        tooltip: 'Editar Marca',
                                         onPressed: () => showForm(brand),
                                       ),
                                       IconButton(
                                         icon: const Icon(Icons.delete),
+                                        tooltip: 'Eliminar Marca',
                                         onPressed: () =>
                                             confirmDelete(context, ref, brand),
                                       ),

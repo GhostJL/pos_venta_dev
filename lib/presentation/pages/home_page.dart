@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:myapp/presentation/providers/auth_provider.dart';
+import 'package:myapp/presentation/widgets/app_drawer.dart';
 
 class HomePage extends ConsumerWidget {
   final Widget child;
@@ -11,35 +12,36 @@ class HomePage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // Determine the title based on the current route
     final String title;
-    if (state.uri.toString().startsWith('/departments')) {
-      title = 'Departments';
-    } else if (state.uri.toString().startsWith('/categories')) {
-      title = 'Categories';
-    } else if (state.uri.toString().startsWith('/brands')) {
-      title = 'Brands';
-    } else if (state.uri.toString().startsWith('/suppliers')) {
-      title = 'Suppliers';
+    final path = state.uri.toString();
+
+    if (path.startsWith('/departments')) {
+      title = 'Departamentos';
+    } else if (path.startsWith('/categories')) {
+      title = 'Categorías';
+    } else if (path.startsWith('/brands')) {
+      title = 'Marcas';
+    } else if (path.startsWith('/suppliers')) {
+      title = 'Proveedores';
     } else {
-      title = 'Dashboard';
+      title = 'Panel de Control';
     }
 
     return Scaffold(
       appBar: AppBar(
         title: Text(title),
-        // The back button will be automatically managed by the router
         actions: [
           IconButton(
             icon: const Icon(Icons.logout),
-            tooltip: 'Logout',
+            tooltip: 'Cerrar Sesión',
             onPressed: () {
               ref.read(authProvider.notifier).logout();
             },
           ),
         ],
       ),
-      body: child, // The nested screen from the router
+      drawer: const AppDrawer(), // Menú lateral añadido
+      body: child,
     );
   }
 }

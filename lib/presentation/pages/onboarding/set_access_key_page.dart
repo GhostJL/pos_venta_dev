@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:myapp/app/router.dart'; // Added import
-import 'package:myapp/data/datasources/database_helper.dart';
+import 'package:myapp/app/router.dart';
 import 'package:myapp/presentation/providers/onboarding_state.dart';
+import 'package:myapp/presentation/providers/transaction_provider.dart';
 
 class SetAccessKeyPage extends ConsumerStatefulWidget {
   const SetAccessKeyPage({super.key});
@@ -15,11 +15,14 @@ class SetAccessKeyPage extends ConsumerStatefulWidget {
 class _SetAccessKeyPageState extends ConsumerState<SetAccessKeyPage> {
   final _formKey = GlobalKey<FormState>();
   final _accessKeyController = TextEditingController();
+  final _confirmAccessKeyController = TextEditingController();
   bool _isLoading = false;
+  bool _isObscured = true;
 
   @override
   void dispose() {
     _accessKeyController.dispose();
+    _confirmAccessKeyController.dispose();
     super.dispose();
   }
 
@@ -36,7 +39,8 @@ class _SetAccessKeyPageState extends ConsumerState<SetAccessKeyPage> {
     if (finalState.adminUser == null || finalState.adminPassword == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Admin data is missing. Please restart the setup.'),
+          content: Text('Faltan datos del administrador. Por favor, reinicia la configuración.'),
+          backgroundColor: Colors.red,
         ),
       );
       setState(() => _isLoading = false);
@@ -44,7 +48,7 @@ class _SetAccessKeyPageState extends ConsumerState<SetAccessKeyPage> {
     }
 
     try {
-      final dbHelper = DatabaseHelper();
+      final dbHelper = ref.read(databaseHelperProvider);
       await dbHelper.setupInitialData(finalState);
 
       ref.read(onboardingNotifierProvider.notifier).reset();
@@ -53,7 +57,7 @@ class _SetAccessKeyPageState extends ConsumerState<SetAccessKeyPage> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Setup complete! Please log in.'),
+            content: Text('¡Configuración completa! Ya puedes iniciar sesión.'),
             backgroundColor: Colors.green,
           ),
         );
@@ -61,9 +65,9 @@ class _SetAccessKeyPageState extends ConsumerState<SetAccessKeyPage> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('An error occurred: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Ocurrió un error inesperado: $e')),
+        );
       }
     } finally {
       if (mounted) {
@@ -76,7 +80,7 @@ class _SetAccessKeyPageState extends ConsumerState<SetAccessKeyPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Set Application Access Key'),
+        title: const Text('Establecer Clave de Acceso'),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => context.go('/add-cashiers'),
@@ -91,29 +95,44 @@ class _SetAccessKeyPageState extends ConsumerState<SetAccessKeyPage> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Text(
-                  'Final Step: Set Access Key',
+                  'Último Paso: Crea una Clave de Acceso',
                   style: Theme.of(context).textTheme.headlineSmall,
                   textAlign: TextAlign.center,
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 12),
                 const Text(
-                  'This key will be required to use the application.',
-                  style: TextStyle(color: Colors.grey),
+                  'Esta clave es un PIN compartido que todos los usuarios (administradores y cajeros) usarán para desbloquear la aplicación al iniciar. No es tu contraseña personal.',
+                  style: TextStyle(color: Colors.grey, fontSize: 14),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 32),
                 TextFormField(
                   controller: _accessKeyController,
-                  obscureText: true,
+                  obscureText: _isObscured,
+                  decoration: InputDecoration(
+                    labelText: 'Nueva Clave de Acceso',
+                    border: const OutlineInputBorder(),
+                    suffixIcon: IconButton(
+                      icon: Icon(_isObscured ? Icons.visibility_off : Icons.visibility),
+                      onPressed: () => setState(() => _isObscured = !_isObscured),
+                    ),
+                  ),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) return 'La clave es obligatoria';
+                    if (value.length < 4) return 'Debe tener al menos 4 caracteres';
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 16),
+                TextFormField(
+                  controller: _confirmAccessKeyController,
+                  obscureText: _isObscured,
                   decoration: const InputDecoration(
-                    labelText: 'Access Key',
+                    labelText: 'Confirmar Clave de Acceso',
                     border: OutlineInputBorder(),
                   ),
                   validator: (value) {
-                    if (value == null || value.isEmpty)
-                      return 'Access key is required';
-                    if (value != '123 clave de acceso')
-                      return 'Invalid access key';
+                    if (value != _accessKeyController.text) return 'Las claves no coinciden';
                     return null;
                   },
                 ),
@@ -125,7 +144,7 @@ class _SetAccessKeyPageState extends ConsumerState<SetAccessKeyPage> {
                   onPressed: _isLoading ? null : _completeSetup,
                   child: _isLoading
                       ? const CircularProgressIndicator(color: Colors.white)
-                      : const Text('Complete Setup'),
+                      : const Text('Completar Configuración'),
                 ),
               ],
             ),

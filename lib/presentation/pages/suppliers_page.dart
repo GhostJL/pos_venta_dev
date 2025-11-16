@@ -32,7 +32,7 @@ class SuppliersPage extends ConsumerWidget {
             const SizedBox(height: 20),
             Expanded(
               child: suppliers.isEmpty
-                  ? const Center(child: Text('No hay proveedores registrados.'))
+                  ? const Center(child: Text('No hay proveedores registrados. ¡Añade uno para empezar!'))
                   : CustomDataTable(
                       columns: const [
                         DataColumn(label: Text('Nombre')),
@@ -66,9 +66,11 @@ class SuppliersPage extends ConsumerWidget {
                             ),
                             DataCell(
                               Row(
+                                mainAxisSize: MainAxisSize.min,
                                 children: [
                                   IconButton(
                                     icon: const Icon(Icons.edit),
+                                    tooltip: 'Editar Proveedor',
                                     onPressed: () => _showSupplierForm(
                                       context,
                                       ref,
@@ -77,6 +79,7 @@ class SuppliersPage extends ConsumerWidget {
                                   ),
                                   IconButton(
                                     icon: const Icon(Icons.delete),
+                                    tooltip: 'Eliminar Proveedor',
                                     onPressed: () =>
                                         _confirmDelete(context, ref, supplier),
                                   ),
@@ -112,7 +115,7 @@ class SuppliersPage extends ConsumerWidget {
         return AlertDialog(
           title: const Text('Confirmar Eliminación'),
           content: Text(
-            '¿Estás seguro de que deseas eliminar al proveedor "${supplier.name}"?',
+            '¿Estás seguro de que quieres eliminar al proveedor "${supplier.name}"?',
           ),
           actions: <Widget>[
             TextButton(
@@ -120,6 +123,9 @@ class SuppliersPage extends ConsumerWidget {
               onPressed: () => Navigator.of(context).pop(),
             ),
             TextButton(
+              style: TextButton.styleFrom(
+                foregroundColor: Colors.red,
+              ),
               child: const Text('Eliminar'),
               onPressed: () {
                 ref

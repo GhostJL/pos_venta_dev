@@ -16,7 +16,7 @@ class DepartmentsPage extends ConsumerWidget {
           if (departments.isEmpty) {
             return const Center(
               child: Text(
-                'No departments found. Add one to get started!',
+                'No se encontraron departamentos. ¡Añade uno para empezar!',
                 style: TextStyle(fontSize: 16),
               ),
             );
@@ -32,17 +32,17 @@ class DepartmentsPage extends ConsumerWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     department.isActive
-                        ? const Icon(Icons.check_circle, color: Colors.green, semanticLabel: 'Active')
-                        : const Icon(Icons.cancel, color: Colors.red, semanticLabel: 'Inactive'),
+                        ? const Icon(Icons.check_circle, color: Colors.green, semanticLabel: 'Activo')
+                        : const Icon(Icons.cancel, color: Colors.red, semanticLabel: 'Inactivo'),
                     const SizedBox(width: 8),
                     IconButton(
                       icon: const Icon(Icons.edit, color: Colors.blueAccent),
-                      tooltip: 'Edit Department',
+                      tooltip: 'Editar Departamento',
                       onPressed: () => _showEditDepartmentDialog(context, ref, department),
                     ),
                     IconButton(
                       icon: const Icon(Icons.delete, color: Colors.redAccent),
-                      tooltip: 'Delete Department',
+                      tooltip: 'Eliminar Departamento',
                       onPressed: () => _showDeleteConfirmationDialog(context, ref, department.id!),
                     ),
                   ],
@@ -56,7 +56,7 @@ class DepartmentsPage extends ConsumerWidget {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showAddDepartmentDialog(context, ref),
-        tooltip: 'Add Department',
+        tooltip: 'Añadir Departamento',
         child: const Icon(Icons.add),
       ),
     );
@@ -74,8 +74,8 @@ class DepartmentsPage extends ConsumerWidget {
       barrierDismissible: false,
       builder: (BuildContext dialogContext) {
         return AlertDialog(
-          title: const Text('Edit Department'),
-          content: StatefulBuilder( 
+          title: const Text('Editar Departamento'),
+          content: StatefulBuilder(
             builder: (BuildContext context, StateSetter setState) {
               return Form(
                 key: formKey,
@@ -85,30 +85,30 @@ class DepartmentsPage extends ConsumerWidget {
                     children: <Widget>[
                       TextFormField(
                         controller: nameController,
-                        decoration: const InputDecoration(labelText: 'Name'),
+                        decoration: const InputDecoration(labelText: 'Nombre'),
                         validator: (value) {
                           if (value == null || value.isEmpty) {
-                            return 'Please enter a name';
+                            return 'Por favor, introduce un nombre';
                           }
                           return null;
                         },
                       ),
                       TextFormField(
                         controller: codeController,
-                        decoration: const InputDecoration(labelText: 'Code'),
+                        decoration: const InputDecoration(labelText: 'Código'),
                         validator: (value) {
                           if (value == null || value.isEmpty) {
-                            return 'Please enter a code';
+                            return 'Por favor, introduce un código';
                           }
                           return null;
                         },
                       ),
                       TextFormField(
                         controller: descriptionController,
-                        decoration: const InputDecoration(labelText: 'Description'),
+                        decoration: const InputDecoration(labelText: 'Descripción'),
                       ),
                       SwitchListTile(
-                        title: const Text('Active'),
+                        title: const Text('Activo'),
                         value: isActive,
                         onChanged: (bool value) {
                           setState(() {
@@ -124,17 +124,17 @@ class DepartmentsPage extends ConsumerWidget {
           ),
           actions: <Widget>[
             TextButton(
-              child: const Text('Cancel'),
+              child: const Text('Cancelar'),
               onPressed: () {
                 Navigator.of(dialogContext).pop();
               },
             ),
             ElevatedButton(
-              child: const Text('Save'),
+              child: const Text('Guardar'),
               onPressed: () {
                 if (formKey.currentState!.validate()) {
                   final updatedDepartment = Department(
-                    id: department.id, 
+                    id: department.id,
                     name: nameController.text,
                     code: codeController.text,
                     description: descriptionController.text,
@@ -158,18 +158,18 @@ class DepartmentsPage extends ConsumerWidget {
       barrierDismissible: false,
       builder: (BuildContext dialogContext) {
         return AlertDialog(
-          title: const Text('Confirm Deletion'),
+          title: const Text('Confirmar Eliminación'),
           content: const SingleChildScrollView(
             child: ListBody(
               children: <Widget>[
-                Text('Are you sure you want to delete this department?'),
-                Text('This action cannot be undone.'),
+                Text('¿Estás seguro de que quieres eliminar este departamento?'),
+                Text('Esta acción no se puede deshacer.'),
               ],
             ),
           ),
           actions: <Widget>[
             TextButton(
-              child: const Text('Cancel'),
+              child: const Text('Cancelar'),
               onPressed: () {
                 Navigator.of(dialogContext).pop();
               },
@@ -178,7 +178,7 @@ class DepartmentsPage extends ConsumerWidget {
               style: TextButton.styleFrom(
                 foregroundColor: Colors.red,
               ),
-              child: const Text('Delete'),
+              child: const Text('Eliminar'),
               onPressed: () {
                 ref.read(departmentListProvider.notifier).deleteDepartment(departmentId);
                 Navigator.of(dialogContext).pop();
@@ -201,7 +201,7 @@ class DepartmentsPage extends ConsumerWidget {
       barrierDismissible: false,
       builder: (BuildContext dialogContext) {
         return AlertDialog(
-          title: const Text('Add New Department'),
+          title: const Text('Añadir Nuevo Departamento'),
           content: Form(
             key: formKey,
             child: SingleChildScrollView(
@@ -210,27 +210,27 @@ class DepartmentsPage extends ConsumerWidget {
                 children: <Widget>[
                   TextFormField(
                     controller: nameController,
-                    decoration: const InputDecoration(labelText: 'Name'),
+                    decoration: const InputDecoration(labelText: 'Nombre'),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return 'Please enter a name';
+                        return 'Por favor, introduce un nombre';
                       }
                       return null;
                     },
                   ),
                   TextFormField(
                     controller: codeController,
-                    decoration: const InputDecoration(labelText: 'Code'),
+                    decoration: const InputDecoration(labelText: 'Código'),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return 'Please enter a code';
+                        return 'Por favor, introduce un código';
                       }
                       return null;
                     },
                   ),
                   TextFormField(
                     controller: descriptionController,
-                    decoration: const InputDecoration(labelText: 'Description'),
+                    decoration: const InputDecoration(labelText: 'Descripción'),
                   ),
                 ],
               ),
@@ -238,20 +238,20 @@ class DepartmentsPage extends ConsumerWidget {
           ),
           actions: <Widget>[
             TextButton(
-              child: const Text('Cancel'),
+              child: const Text('Cancelar'),
               onPressed: () {
                 Navigator.of(dialogContext).pop();
               },
             ),
             ElevatedButton(
-              child: const Text('Add'),
+              child: const Text('Añadir'),
               onPressed: () {
                 if (formKey.currentState!.validate()) {
                   final newDepartment = Department(
                     name: nameController.text,
                     code: codeController.text,
                     description: descriptionController.text,
-                    displayOrder: 0, 
+                    displayOrder: 0,
                     isActive: true,
                   );
                   ref.read(departmentListProvider.notifier).addDepartment(newDepartment);

@@ -15,7 +15,7 @@ class CategoriesPage extends ConsumerWidget {
       body: categoriesAsync.when(
         data: (categories) {
           if (categories.isEmpty) {
-            return const Center(child: Text('No hay categorías. ¡Añade una!'));
+            return const Center(child: Text('No se encontraron categorías. ¡Añade una para empezar!'));
           }
           return ListView.builder(
             itemCount: categories.length,
@@ -29,6 +29,7 @@ class CategoriesPage extends ConsumerWidget {
                   children: [
                     IconButton(
                       icon: const Icon(Icons.edit),
+                      tooltip: 'Editar Categoría',
                       onPressed: () {
                         _showCategoryFormDialog(
                           context,
@@ -39,6 +40,7 @@ class CategoriesPage extends ConsumerWidget {
                     ),
                     IconButton(
                       icon: const Icon(Icons.delete),
+                      tooltip: 'Eliminar Categoría',
                       onPressed: () {
                         _showDeleteConfirmation(context, ref, category);
                       },
@@ -56,6 +58,7 @@ class CategoriesPage extends ConsumerWidget {
         onPressed: () {
           _showCategoryFormDialog(context, ref);
         },
+        tooltip: 'Añadir Categoría',
         child: const Icon(Icons.add),
       ),
     );
@@ -101,6 +104,7 @@ class CategoriesPage extends ConsumerWidget {
             ),
             TextButton(
               child: const Text('Eliminar'),
+              style: TextButton.styleFrom(foregroundColor: Colors.red),
               onPressed: () {
                 ref
                     .read(categoryListProvider.notifier)
