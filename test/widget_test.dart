@@ -22,7 +22,5 @@ void main() {
     expect(find.widgetWithText(TextField, 'Username'), findsOneWidget);
     expect(find.widgetWithText(TextField, 'Password'), findsOneWidget);
     expect(find.widgetWithText(ElevatedButton, 'Sign In'), findsOneWidget);
-
-    // TODO: Mock the auth provider and test authentication logic
   });
 }

@@ -1,9 +1,9 @@
-
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:myapp/domain/entities/user.dart';
 import 'package:myapp/presentation/pages/cashier_home_page.dart';
+import 'package:myapp/presentation/pages/departments_page.dart';
 import 'package:myapp/presentation/pages/home_page.dart';
 import 'package:myapp/presentation/pages/login_page.dart';
 import 'package:myapp/presentation/providers/auth_provider.dart';
@@ -28,40 +28,58 @@ final routerProvider = Provider<GoRouter>((ref) {
   return GoRouter(
     navigatorKey: _rootNavigatorKey,
     refreshListenable: refreshNotifier,
-    initialLocation: '/splash', 
+    initialLocation: '/splash',
 
     routes: [
       GoRoute(
         path: '/splash',
-        builder: (context, state) => const Scaffold(body: Center(child: CircularProgressIndicator())),
+        builder: (context, state) =>
+            const Scaffold(body: Center(child: CircularProgressIndicator())),
       ),
       GoRoute(
         path: '/error',
-        builder: (context, state) => const Scaffold(body: Center(child: Text('An error occurred'))),
+        builder: (context, state) =>
+            const Scaffold(body: Center(child: Text('An error occurred'))),
       ),
       // Onboarding Routes
-      GoRoute(path: '/setup-admin', builder: (context, state) => const AdminSetupPage()),
-      GoRoute(path: '/add-cashiers', builder: (context, state) => const AddCashiersPage()),
-      GoRoute(path: '/add-cashier-form', builder: (context, state) => const AddCashierFormPage()),
-      GoRoute(path: '/set-access-key', builder: (context, state) => const SetAccessKeyPage()), // Updated route
-
-      // Login Route
       GoRoute(
-        path: '/login',
-        builder: (context, state) => const LoginPage(),
+        path: '/setup-admin',
+        builder: (context, state) => const AdminSetupPage(),
       ),
+      GoRoute(
+        path: '/add-cashiers',
+        builder: (context, state) => const AddCashiersPage(),
+      ),
+      GoRoute(
+        path: '/add-cashier-form',
+        builder: (context, state) => const AddCashierFormPage(),
+      ),
+      GoRoute(
+        path: '/set-access-key',
+        builder: (context, state) => const SetAccessKeyPage(),
+      ), // Updated route
+      // Login Route
+      GoRoute(path: '/login', builder: (context, state) => const LoginPage()),
 
       // Main App Routes
       ShellRoute(
-        builder: (context, state, child) => HomePage(child: child),
+        builder: (context, state, child) =>
+            HomePage(state: state, child: child),
         routes: [
           GoRoute(
             path: '/', // Admin dashboard
-            pageBuilder: (context, state) => const NoTransitionPage(child: DashboardScreen()),
+            pageBuilder: (context, state) =>
+                const NoTransitionPage(child: DashboardScreen()),
           ),
           GoRoute(
             path: '/home', // Cashier home
-            pageBuilder: (context, state) => const NoTransitionPage(child: CashierHomePage()),
+            pageBuilder: (context, state) =>
+                const NoTransitionPage(child: CashierHomePage()),
+          ),
+          GoRoute(
+            path: '/departments',
+            pageBuilder: (context, state) =>
+                const NoTransitionPage(child: DepartmentsPage()),
           ),
         ],
       ),
@@ -69,7 +87,7 @@ final routerProvider = Provider<GoRouter>((ref) {
 
     redirect: (context, state) {
       final location = state.matchedLocation;
-      
+
       final authLoading = authState.status == AuthStatus.loading;
       final onboardingLoading = onboardingCheck.isLoading;
       final loggedIn = authState.status == AuthStatus.authenticated;
@@ -80,7 +98,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       }
 
       // --- Onboarding Logic ---
-      final isDuringOnboarding = location.startsWith('/setup') || location.startsWith('/add-cashier') || location == '/set-access-key'; // Updated route
+      final isDuringOnboarding =
+          location.startsWith('/setup') ||
+          location.startsWith('/add-cashier') ||
+          location == '/set-access-key'; // Updated route
       if (needsOnboarding) {
         return isDuringOnboarding ? null : '/setup-admin';
       }
@@ -124,13 +145,13 @@ final onboardingCompletedProvider = FutureProvider<bool>((ref) async {
 });
 
 class NoTransitionPage<T> extends CustomTransitionPage<T> {
-  const NoTransitionPage({
-    super.key,
-    super.name,
-    required super.child,
-  }) : super(transitionsBuilder: _transitionsBuilder);
+  const NoTransitionPage({super.key, super.name, required super.child})
+    : super(transitionsBuilder: _transitionsBuilder);
 
-  static Widget _transitionsBuilder(BuildContext context, Animation<double> animation,
-          Animation<double> secondaryAnimation, Widget child) =>
-      child;
+  static Widget _transitionsBuilder(
+    BuildContext context,
+    Animation<double> animation,
+    Animation<double> secondaryAnimation,
+    Widget child,
+  ) => child;
 }

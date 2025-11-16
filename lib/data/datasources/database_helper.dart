@@ -76,6 +76,19 @@ class DatabaseHelper {
           FOREIGN KEY (userId) REFERENCES users(id) ON DELETE SET NULL
       )
     ''');
+
+    await db.execute('''
+      CREATE TABLE departments (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        code TEXT NOT NULL UNIQUE,
+        description TEXT,
+        display_order INTEGER NOT NULL DEFAULT 0,
+        is_active INTEGER NOT NULL DEFAULT 1,
+        created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+      )
+    ''');
   }
 
   Future<bool> onboardingCompleted() async {
@@ -98,7 +111,7 @@ class DatabaseHelper {
         final cashierMap = cashier.toMap();
         final rawPassword = cashier.passwordHash ?? '';
         if (rawPassword.isEmpty) {
-          throw Exception('Onboarding error: Cashier password for ${cashier.username} is empty.');
+          throw Exception('Onboarding error: Cashier password for \${cashier.username} is empty.');
         }
         cashierMap['password_hash'] = _hashData(rawPassword);
         await txn.insert('users', cashierMap);

@@ -1,11 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:myapp/presentation/providers/auth_provider.dart';
 
 class HomePage extends ConsumerWidget {
   final Widget child;
 
-  const HomePage({super.key, required this.child});
+  const HomePage({
+    super.key,
+    required this.child,
+    required GoRouterState state,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
