@@ -5,11 +5,13 @@ import 'package:myapp/domain/entities/department.dart';
 import 'package:myapp/domain/repositories/department_repository.dart';
 
 class DepartmentRepositoryImpl implements DepartmentRepository {
-  final DatabaseHelper _databaseHelper = DatabaseHelper();
+  final DatabaseHelper databaseHelper;
+
+  DepartmentRepositoryImpl(this.databaseHelper);
 
   @override
   Future<void> createDepartment(Department department) async {
-    final db = await _databaseHelper.database;
+    final db = await databaseHelper.database;
     final departmentModel = DepartmentModel(
       name: department.name,
       code: department.code,
@@ -22,7 +24,7 @@ class DepartmentRepositoryImpl implements DepartmentRepository {
 
   @override
   Future<Department?> getDepartmentById(int id) async {
-    final db = await _databaseHelper.database;
+    final db = await databaseHelper.database;
     final maps = await db.query('departments', where: 'id = ?', whereArgs: [id]);
     if (maps.isNotEmpty) {
       return DepartmentModel.fromMap(maps.first);
@@ -32,14 +34,14 @@ class DepartmentRepositoryImpl implements DepartmentRepository {
 
   @override
   Future<List<Department>> getAllDepartments() async {
-    final db = await _databaseHelper.database;
+    final db = await databaseHelper.database;
     final maps = await db.query('departments', orderBy: 'display_order ASC');
     return maps.map((map) => DepartmentModel.fromMap(map)).toList();
   }
 
   @override
   Future<void> updateDepartment(Department department) async {
-    final db = await _databaseHelper.database;
+    final db = await databaseHelper.database;
     final departmentModel = DepartmentModel(
       id: department.id,
       name: department.name,
@@ -58,7 +60,7 @@ class DepartmentRepositoryImpl implements DepartmentRepository {
 
   @override
   Future<void> deleteDepartment(int id) async {
-    final db = await _databaseHelper.database;
+    final db = await databaseHelper.database;
     await db.delete('departments', where: 'id = ?', whereArgs: [id]);
   }
 }
