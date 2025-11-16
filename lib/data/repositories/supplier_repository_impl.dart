@@ -1,4 +1,5 @@
-import 'package:myapp/core/data/database_helper.dart';
+
+import 'package:myapp/data/datasources/database_helper.dart';
 import 'package:myapp/data/models/supplier_model.dart';
 import 'package:myapp/domain/entities/supplier.dart';
 import 'package:myapp/domain/repositories/supplier_repository.dart';

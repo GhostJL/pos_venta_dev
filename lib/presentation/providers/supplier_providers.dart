@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
-import 'package:myapp/core/data/database_helper.dart';
+import 'package:myapp/data/datasources/database_helper.dart';
 import 'package:myapp/data/repositories/supplier_repository_impl.dart';
 import 'package:myapp/domain/entities/supplier.dart';
 import 'package:myapp/domain/repositories/supplier_repository.dart';
