@@ -35,6 +35,12 @@ class DatabaseHelper {
     await db.execute('PRAGMA foreign_keys = ON');
   }
 
+  String _hashData(String data) {
+    final bytes = utf8.encode(data);
+    final digest = sha256.convert(bytes);
+    return digest.toString();
+  }
+
   Future<void> _createDb(Database db, int version) async {
     await db.execute('''
       CREATE TABLE users (
@@ -89,6 +95,75 @@ class DatabaseHelper {
     await _createBrandsTable(db);
   }
 
+  Future<bool> onboardingCompleted() async {
+    final db = await database;
+    final result = await db.query(
+      'app_meta',
+      where: 'key = ?',
+      whereArgs: ['onboarding_completed'],
+    );
+    return result.isNotEmpty && result.first['value'] == '1';
+  }
+
+  Future<void> setupInitialData(OnboardingState state) async {
+    final db = await database;
+    final now = DateTime.now().toIso8601String();
+
+    await db.transaction((txn) async {
+      // 1. Insert Admin User
+      if (state.adminUser != null && state.adminPassword != null) {
+        final admin = state.adminUser!;
+        final hashedPassword = _hashData(state.adminPassword!);
+        await txn.insert('users', {
+          'username': admin.username,
+          'password_hash': hashedPassword,
+          'first_name': admin.firstName,
+          'last_name': admin.lastName,
+          'email': admin.email,
+          'role': UserRole.admin.name,
+          'is_active': 1,
+          'onboarding_completed': 1,
+          'created_at': now,
+          'updated_at': now,
+        });
+      }
+
+      // 2. Insert Cashier Users
+      for (final cashier in state.cashiers) {
+        final cashierPassword = cashier.passwordHash; // The plain text password
+        final hashedPassword = _hashData(cashierPassword);
+        await txn.insert('users', {
+          'username': cashier.username,
+          'password_hash': hashedPassword,
+          'first_name': cashier.firstName,
+          'last_name': cashier.lastName,
+          'email': cashier.email,
+          'role': UserRole.cashier.name,
+          'is_active': 1,
+          'onboarding_completed': 1,
+          'created_at': now,
+          'updated_at': now,
+        });
+      }
+
+      // 3. Set Access Key
+      if (state.accessKey != null) {
+        await txn.insert(
+          'app_meta',
+          {'key': 'access_key', 'value': state.accessKey!},
+          conflictAlgorithm: ConflictAlgorithm.replace,
+        );
+      }
+
+      // 4. Mark onboarding as completed
+      await txn.insert(
+        'app_meta',
+        {'key': 'onboarding_completed', 'value': '1'},
+        conflictAlgorithm: ConflictAlgorithm.replace,
+      );
+    });
+  }
+
   Future<void> _upgradeDb(Database db, int oldVersion, int newVersion) async {
     if (oldVersion < 2) {
       await _createCategoriesTable(db);
@@ -128,82 +203,6 @@ class DatabaseHelper {
           updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
       )
     ''');
-  }
-
-  Future<bool> onboardingCompleted() async {
-    final db = await database;
-    final result = await db.query(
-      'app_meta',
-      where: 'key = ?',
-      whereArgs: ['onboarding_completed'],
-    );
-    return result.isNotEmpty && result.first['value'] == '1';
-  }
-
-  Future<void> setupInitialData(OnboardingState state) async {
-    final db = await database;
-    final now = DateTime.now().toIso8601String();
-
-    String hashPassword(String password) {
-      final bytes = utf8.encode(password);
-      final digest = sha256.convert(bytes);
-      return digest.toString();
-    }
-
-    await db.transaction((txn) async {
-      // 1. Insert Admin User
-      if (state.adminUser != null && state.adminPassword != null) {
-        final admin = state.adminUser!;
-        final hashedPassword = hashPassword(state.adminPassword!);
-        await txn.insert('users', {
-          'username': admin.username,
-          'password_hash': hashedPassword,
-          'first_name': admin.firstName,
-          'last_name': admin.lastName,
-          'email': admin.email,
-          'role': UserRole.admin.name,
-          'is_active': 1,
-          'onboarding_completed': 1,
-          'created_at': now,
-          'updated_at': now,
-        });
-      }
-
-      // 2. Insert Cashier Users
-      if (state.accessKey != null) {
-        final cashierPasswordHash = hashPassword(state.accessKey!);
-        for (final cashier in state.cashiers) {
-          await txn.insert('users', {
-            'username': cashier.username,
-            'password_hash': cashierPasswordHash,
-            'first_name': cashier.firstName,
-            'last_name': cashier.lastName,
-            'email': cashier.email,
-            'role': UserRole.cashier.name,
-            'is_active': 1,
-            'onboarding_completed': 1,
-            'created_at': now,
-            'updated_at': now,
-          });
-        }
-      }
-
-      // 3. Set Access Key
-      if (state.accessKey != null) {
-        await txn.insert(
-          'app_meta',
-          {'key': 'access_key', 'value': state.accessKey!},
-          conflictAlgorithm: ConflictAlgorithm.replace,
-        );
-      }
-
-      // 4. Mark onboarding as completed
-      await txn.insert(
-        'app_meta',
-        {'key': 'onboarding_completed', 'value': '1'},
-        conflictAlgorithm: ConflictAlgorithm.replace,
-      );
-    });
   }
 
   Future<void> resetDatabase() async {

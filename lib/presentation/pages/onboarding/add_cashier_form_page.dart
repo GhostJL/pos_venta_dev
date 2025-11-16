@@ -1,3 +1,4 @@
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -18,7 +19,7 @@ class _AddCashierFormPageState extends ConsumerState<AddCashierFormPage> {
   final _firstNameController = TextEditingController();
   final _lastNameController = TextEditingController();
 
-  // A counter to create unique usernames for cashiers easily
+  // Static counter to ensure unique default usernames
   static int _cashierCounter = 1;
 
   @override
@@ -31,6 +32,7 @@ class _AddCashierFormPageState extends ConsumerState<AddCashierFormPage> {
   @override
   void dispose() {
     _usernameController.dispose();
+    _passwordController.dispose();
     _firstNameController.dispose();
     _lastNameController.dispose();
     super.dispose();
@@ -42,24 +44,23 @@ class _AddCashierFormPageState extends ConsumerState<AddCashierFormPage> {
     final newUser = User(
       id: DateTime.now().millisecondsSinceEpoch, // Temporary unique ID
       username: _usernameController.text,
-      passwordHash: _passwordController.text,
+      // The password will be handled by the notifier and database helper.
+      // We pass the plain text password to the state.
+      passwordHash: _passwordController.text, 
       firstName: _firstNameController.text,
       lastName: _lastNameController.text,
       email: "",
       role: UserRole.cashier,
       isActive: true,
-      onboardingCompleted: false, // Not relevant until saved
+      onboardingCompleted: false, 
       createdAt: DateTime.now(),
       updatedAt: DateTime.now(),
     );
 
-    // Add the new cashier to the in-memory list
     ref.read(onboardingNotifierProvider.notifier).addCashier(newUser);
     
-    // Increment the counter for the next default username
     _cashierCounter++;
 
-    // Go back to the cashier list page
     if (mounted) {
       context.pop();
     }
@@ -69,46 +70,59 @@ class _AddCashierFormPageState extends ConsumerState<AddCashierFormPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Add New Team Member'),
+        title: const Text('Add New Cashier'),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24.0),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
         child: Form(
           key: _formKey,
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               TextFormField(
                 controller: _usernameController,
-                decoration: const InputDecoration(labelText: 'Username', border: OutlineInputBorder()),
-                validator: (value) => value!.isEmpty ? 'Username is required' : null,
+                decoration: const InputDecoration(labelText: 'Username'),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter a username';
+                  }
+                  return null;
+                },
               ),
-              
-              const SizedBox(height: 16),
               TextFormField(
-                controller: _passwordController, // Added phone controller
-                decoration: const InputDecoration(labelText: 'Password', border: OutlineInputBorder()),
-                validator: (value) => value!.isEmpty ? 'Password is required' : null, // Added validator
+                controller: _passwordController,
+                decoration: const InputDecoration(labelText: 'Password'),
+                obscureText: true,
+                validator: (value) {
+                  if (value == null || value.isEmpty || value.length < 6) {
+                    return 'Password must be at least 6 characters long';
+                  }
+                  return null;
+                },
               ),
-              const SizedBox(height: 16),
               TextFormField(
                 controller: _firstNameController,
-                decoration: const InputDecoration(labelText: 'First Name', border: OutlineInputBorder()),
-                validator: (value) => value!.isEmpty ? 'First Name is required' : null,
+                decoration: const InputDecoration(labelText: 'First Name'),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter a first name';
+                  }
+                  return null;
+                },
               ),
-              const SizedBox(height: 16),
               TextFormField(
                 controller: _lastNameController,
-                decoration: const InputDecoration(labelText: 'Last Name', border: OutlineInputBorder()),
-                validator: (value) => value!.isEmpty ? 'Last Name is required' : null,
+                decoration: const InputDecoration(labelText: 'Last Name'),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter a last name';
+                  }
+                  return null;
+                },
               ),
-              const SizedBox(height: 32),
+              const SizedBox(height: 20),
               ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                ),
                 onPressed: _submit,
-                child: const Text('Add Member'),
+                child: const Text('Save Cashier'),
               ),
             ],
           ),
@@ -117,3 +131,4 @@ class _AddCashierFormPageState extends ConsumerState<AddCashierFormPage> {
     );
   }
 }
+
