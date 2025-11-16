@@ -32,10 +32,17 @@ class DepartmentsPage extends ConsumerWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     department.isActive
-                        ? const Icon(Icons.check_circle, color: Colors.green)
-                        : const Icon(Icons.cancel, color: Colors.red),
+                        ? const Icon(Icons.check_circle, color: Colors.green, semanticLabel: 'Active')
+                        : const Icon(Icons.cancel, color: Colors.red, semanticLabel: 'Inactive'),
+                    const SizedBox(width: 8),
+                    IconButton(
+                      icon: const Icon(Icons.edit, color: Colors.blueAccent),
+                      tooltip: 'Edit Department',
+                      onPressed: () => _showEditDepartmentDialog(context, ref, department),
+                    ),
                     IconButton(
                       icon: const Icon(Icons.delete, color: Colors.redAccent),
+                      tooltip: 'Delete Department',
                       onPressed: () => _showDeleteConfirmationDialog(context, ref, department.id!),
                     ),
                   ],
@@ -55,10 +62,100 @@ class DepartmentsPage extends ConsumerWidget {
     );
   }
 
+  Future<void> _showEditDepartmentDialog(BuildContext context, WidgetRef ref, Department department) async {
+    final formKey = GlobalKey<FormState>();
+    final nameController = TextEditingController(text: department.name);
+    final codeController = TextEditingController(text: department.code);
+    final descriptionController = TextEditingController(text: department.description);
+    bool isActive = department.isActive;
+
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext dialogContext) {
+        return AlertDialog(
+          title: const Text('Edit Department'),
+          content: StatefulBuilder( 
+            builder: (BuildContext context, StateSetter setState) {
+              return Form(
+                key: formKey,
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: <Widget>[
+                      TextFormField(
+                        controller: nameController,
+                        decoration: const InputDecoration(labelText: 'Name'),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter a name';
+                          }
+                          return null;
+                        },
+                      ),
+                      TextFormField(
+                        controller: codeController,
+                        decoration: const InputDecoration(labelText: 'Code'),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter a code';
+                          }
+                          return null;
+                        },
+                      ),
+                      TextFormField(
+                        controller: descriptionController,
+                        decoration: const InputDecoration(labelText: 'Description'),
+                      ),
+                      SwitchListTile(
+                        title: const Text('Active'),
+                        value: isActive,
+                        onChanged: (bool value) {
+                          setState(() {
+                            isActive = value;
+                          });
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Cancel'),
+              onPressed: () {
+                Navigator.of(dialogContext).pop();
+              },
+            ),
+            ElevatedButton(
+              child: const Text('Save'),
+              onPressed: () {
+                if (formKey.currentState!.validate()) {
+                  final updatedDepartment = Department(
+                    id: department.id, 
+                    name: nameController.text,
+                    code: codeController.text,
+                    description: descriptionController.text,
+                    isActive: isActive,
+                    displayOrder: department.displayOrder,
+                  );
+                  ref.read(departmentListProvider.notifier).updateDepartment(updatedDepartment);
+                  Navigator.of(dialogContext).pop();
+                }
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   Future<void> _showDeleteConfirmationDialog(BuildContext context, WidgetRef ref, int departmentId) async {
     return showDialog<void>(
       context: context,
-      barrierDismissible: false, // User must tap a button
+      barrierDismissible: false,
       builder: (BuildContext dialogContext) {
         return AlertDialog(
           title: const Text('Confirm Deletion'),
