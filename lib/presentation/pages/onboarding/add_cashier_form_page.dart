@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -46,19 +45,19 @@ class _AddCashierFormPageState extends ConsumerState<AddCashierFormPage> {
       username: _usernameController.text,
       // The password will be handled by the notifier and database helper.
       // We pass the plain text password to the state.
-      passwordHash: _passwordController.text, 
+      passwordHash: _passwordController.text,
       firstName: _firstNameController.text,
       lastName: _lastNameController.text,
       email: "",
       role: UserRole.cashier,
       isActive: true,
-      onboardingCompleted: false, 
+      onboardingCompleted: false,
       createdAt: DateTime.now(),
       updatedAt: DateTime.now(),
     );
 
     ref.read(onboardingNotifierProvider.notifier).addCashier(newUser);
-    
+
     _cashierCounter++;
 
     if (mounted) {
@@ -69,9 +68,7 @@ class _AddCashierFormPageState extends ConsumerState<AddCashierFormPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Add New Cashier'),
-      ),
+      appBar: AppBar(title: const Text('Add New Cashier')),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Form(
@@ -93,7 +90,7 @@ class _AddCashierFormPageState extends ConsumerState<AddCashierFormPage> {
                 decoration: const InputDecoration(labelText: 'Password'),
                 obscureText: true,
                 validator: (value) {
-                  if (value == null || value.isEmpty || value.length < 6) {
+                  if (value == null || value.isEmpty || value.length < 8) {
                     return 'Password must be at least 6 characters long';
                   }
                   return null;
@@ -131,4 +128,3 @@ class _AddCashierFormPageState extends ConsumerState<AddCashierFormPage> {
     );
   }
 }
-

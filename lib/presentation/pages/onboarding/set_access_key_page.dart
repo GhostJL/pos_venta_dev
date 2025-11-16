@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -30,11 +29,15 @@ class _SetAccessKeyPageState extends ConsumerState<SetAccessKeyPage> {
     setState(() => _isLoading = true);
 
     final onboardingState = ref.read(onboardingNotifierProvider);
-    final finalState = onboardingState.copyWith(accessKey: _accessKeyController.text);
+    final finalState = onboardingState.copyWith(
+      accessKey: _accessKeyController.text,
+    );
 
     if (finalState.adminUser == null || finalState.adminPassword == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Admin data is missing. Please restart the setup.')),
+        const SnackBar(
+          content: Text('Admin data is missing. Please restart the setup.'),
+        ),
       );
       setState(() => _isLoading = false);
       return;
@@ -58,9 +61,9 @@ class _SetAccessKeyPageState extends ConsumerState<SetAccessKeyPage> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('An error occurred: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('An error occurred: $e')));
       }
     } finally {
       if (mounted) {
@@ -107,8 +110,10 @@ class _SetAccessKeyPageState extends ConsumerState<SetAccessKeyPage> {
                     border: OutlineInputBorder(),
                   ),
                   validator: (value) {
-                    if (value == null || value.isEmpty) return 'Access key is required';
-                    if (value != '123 clave de acceso') return 'Invalid access key';
+                    if (value == null || value.isEmpty)
+                      return 'Access key is required';
+                    if (value != '123 clave de acceso')
+                      return 'Invalid access key';
                     return null;
                   },
                 ),

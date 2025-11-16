@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -47,10 +46,9 @@ class _AdminSetupPageState extends ConsumerState<AdminSetupPage> {
     );
 
     // Update the onboarding state with both admin user and their password
-    ref.read(onboardingNotifierProvider.notifier).setAdmin(
-      adminUser,
-      _passwordController.text,
-    );
+    ref
+        .read(onboardingNotifierProvider.notifier)
+        .setAdmin(adminUser, _passwordController.text);
 
     context.push('/add-cashiers');
   }
@@ -58,9 +56,7 @@ class _AdminSetupPageState extends ConsumerState<AdminSetupPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Setup Admin Account'),
-      ),
+      appBar: AppBar(title: const Text('Setup Admin Account')),
       body: Center(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24.0),
@@ -77,37 +73,58 @@ class _AdminSetupPageState extends ConsumerState<AdminSetupPage> {
                 const SizedBox(height: 32),
                 TextFormField(
                   controller: _usernameController,
-                  decoration: const InputDecoration(labelText: 'Username', border: OutlineInputBorder()),
-                  validator: (value) => value!.isEmpty ? 'Username is required' : null,
+                  decoration: const InputDecoration(
+                    labelText: 'Username',
+                    border: OutlineInputBorder(),
+                  ),
+                  validator: (value) =>
+                      value!.isEmpty ? 'Username is required' : null,
                 ),
                 const SizedBox(height: 16),
                 TextFormField(
                   controller: _passwordController,
                   obscureText: true,
-                  decoration: const InputDecoration(labelText: 'Password', border: OutlineInputBorder()),
+                  decoration: const InputDecoration(
+                    labelText: 'Password',
+                    border: OutlineInputBorder(),
+                  ),
                   validator: (value) {
-                    if (value == null || value.isEmpty) return 'Password is required';
-                    if (value.length < 4) return 'Password must be at least 4 characters';
+                    if (value == null || value.isEmpty)
+                      return 'Password is required';
+                    if (value.length < 8)
+                      return 'Password must be at least 4 characters';
                     return null;
                   },
                 ),
                 const SizedBox(height: 16),
                 TextFormField(
                   controller: _firstNameController,
-                  decoration: const InputDecoration(labelText: 'First Name', border: OutlineInputBorder()),
-                  validator: (value) => value!.isEmpty ? 'First name is required' : null,
+                  decoration: const InputDecoration(
+                    labelText: 'First Name',
+                    border: OutlineInputBorder(),
+                  ),
+                  validator: (value) =>
+                      value!.isEmpty ? 'First name is required' : null,
                 ),
                 const SizedBox(height: 16),
                 TextFormField(
                   controller: _lastNameController,
-                  decoration: const InputDecoration(labelText: 'Last Name', border: OutlineInputBorder()),
-                  validator: (value) => value!.isEmpty ? 'Last name is required' : null,
+                  decoration: const InputDecoration(
+                    labelText: 'Last Name',
+                    border: OutlineInputBorder(),
+                  ),
+                  validator: (value) =>
+                      value!.isEmpty ? 'Last name is required' : null,
                 ),
                 const SizedBox(height: 16),
                 TextFormField(
                   controller: _emailController,
-                  decoration: const InputDecoration(labelText: 'Email', border: OutlineInputBorder()),
-                  validator: (value) => value!.isEmpty ? 'Email is required' : null,
+                  decoration: const InputDecoration(
+                    labelText: 'Email',
+                    border: OutlineInputBorder(),
+                  ),
+                  validator: (value) =>
+                      value!.isEmpty ? 'Email is required' : null,
                 ),
                 const SizedBox(height: 32),
                 ElevatedButton(

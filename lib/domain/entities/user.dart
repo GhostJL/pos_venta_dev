@@ -4,7 +4,7 @@ class User {
   final int? id;
   final String username;
   final String? email;
-  final String? passwordHash; 
+  final String? passwordHash;
   final String firstName;
   final String lastName;
   final UserRole role;

@@ -1,6 +1,5 @@
 import 'dart:convert';
 import 'package:crypto/crypto.dart';
-import 'package:myapp/domain/entities/user.dart';
 import 'package:myapp/presentation/providers/onboarding_state.dart';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
@@ -26,7 +25,6 @@ class DatabaseHelper {
       path,
       version: 3, // Incremented version
       onCreate: _createDb,
-      onUpgrade: _upgradeDb,
       onConfigure: _onConfigure,
     );
   }
@@ -107,70 +105,42 @@ class DatabaseHelper {
 
   Future<void> setupInitialData(OnboardingState state) async {
     final db = await database;
-    final now = DateTime.now().toIso8601String();
 
     await db.transaction((txn) async {
       // 1. Insert Admin User
-      if (state.adminUser != null && state.adminPassword != null) {
-        final admin = state.adminUser!;
-        final hashedPassword = _hashData(state.adminPassword!);
-        await txn.insert('users', {
-          'username': admin.username,
-          'password_hash': hashedPassword,
-          'first_name': admin.firstName,
-          'last_name': admin.lastName,
-          'email': admin.email,
-          'role': UserRole.admin.name,
-          'is_active': 1,
-          'onboarding_completed': 1,
-          'created_at': now,
-          'updated_at': now,
-        });
-      }
+      var adminMap = state.adminUser!.toMap();
+      adminMap['password_hash'] = _hashData(state.adminPassword!);
+      await txn.insert('users', adminMap);
 
       // 2. Insert Cashier Users
       for (final cashier in state.cashiers) {
-        final cashierPassword = cashier.passwordHash; // The plain text password
-        final hashedPassword = _hashData(cashierPassword);
-        await txn.insert('users', {
-          'username': cashier.username,
-          'password_hash': hashedPassword,
-          'first_name': cashier.firstName,
-          'last_name': cashier.lastName,
-          'email': cashier.email,
-          'role': UserRole.cashier.name,
-          'is_active': 1,
-          'onboarding_completed': 1,
-          'created_at': now,
-          'updated_at': now,
+        final cashierMap = cashier.toMap();
+        final rawPassword = cashier.passwordHash ?? '';
+        if (rawPassword.isEmpty) {
+          throw Exception(
+            'Onboarding error: Cashier password for ${cashier.username} is empty.',
+          );
+        }
+        cashierMap['password_hash'] = _hashData(rawPassword);
+        await txn.insert('users', cashierMap);
+      }
+
+      // 3. Mark Onboarding as Completed
+      await txn.insert('app_meta', {
+        'key': 'onboarding_completed',
+        'value': '1',
+      });
+
+      // 4. Save the hashed App Access Key
+      if (state.accessKey != null && state.accessKey!.isNotEmpty) {
+        await txn.insert('app_meta', {
+          'key': 'app_access_key_hash', // Renamed key
+          'value': _hashData(state.accessKey!), // Using accessKey
         });
+      } else {
+        throw Exception('Onboarding error: App Access Key is missing.');
       }
-
-      // 3. Set Access Key
-      if (state.accessKey != null) {
-        await txn.insert(
-          'app_meta',
-          {'key': 'access_key', 'value': state.accessKey!},
-          conflictAlgorithm: ConflictAlgorithm.replace,
-        );
-      }
-
-      // 4. Mark onboarding as completed
-      await txn.insert(
-        'app_meta',
-        {'key': 'onboarding_completed', 'value': '1'},
-        conflictAlgorithm: ConflictAlgorithm.replace,
-      );
     });
-  }
-
-  Future<void> _upgradeDb(Database db, int oldVersion, int newVersion) async {
-    if (oldVersion < 2) {
-      await _createCategoriesTable(db);
-    }
-    if (oldVersion < 3) {
-      await _createBrandsTable(db);
-    }
   }
 
   Future<void> _createCategoriesTable(Database db) async {
@@ -192,7 +162,7 @@ class DatabaseHelper {
     ''');
   }
 
-    Future<void> _createBrandsTable(Database db) async {
+  Future<void> _createBrandsTable(Database db) async {
     await db.execute('''
       CREATE TABLE brands (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
