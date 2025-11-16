@@ -117,9 +117,10 @@ final routerProvider = Provider<GoRouter>((ref) {
 
       // --- Onboarding Logic ---
       final isDuringOnboarding =
-          location.startsWith('/setup') ||
-          location.startsWith('/add-cashier') ||
-          location == '/set-access-key'; // Updated route
+          location == '/setup-admin' ||
+          location == '/add-cashiers' ||
+          location == '/add-cashier-form' ||
+          location == '/set-access-key';
       if (needsOnboarding) {
         return isDuringOnboarding ? null : '/setup-admin';
       }
