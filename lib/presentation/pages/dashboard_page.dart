@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 import 'package:myapp/presentation/widgets/dashboard_card.dart';
 
 class DashboardScreen extends StatelessWidget {
@@ -7,95 +7,147 @@ class DashboardScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cards = [
-      DashboardCard(
-        title: "Ingresos de Hoy",
-        value: '\$1,250.75', // Datos de ejemplo
+    final textTheme = Theme.of(context).textTheme;
+    final isSmallScreen = MediaQuery.of(context).size.width < 600;
+
+    // --- KPI Cards ---
+    final kpiCards = [
+      _buildKpiCard(
+        title: "Ventas de Hoy",
+        value: NumberFormat.currency(symbol: '\$', decimalDigits: 2).format(1250.75),
         icon: Icons.monetization_on_outlined,
-        color: const Color(0xFF2E7D32), // Verde oscuro
-        onTap: () {},
+        color: const Color(0xFF2E7D32), // Verde
       ),
-      DashboardCard(
-        title: 'Movimientos Totales',
-        value: '12', // Datos de ejemplo
-        icon: Icons.sync_alt_rounded,
+      _buildKpiCard(
+        title: 'Transacciones',
+        value: '82',
+        icon: Icons.receipt_long_outlined,
         color: const Color(0xFFF57F17), // Ámbar
+      ),
+      _buildKpiCard(
+        title: 'Ticket Promedio',
+        value: NumberFormat.currency(symbol: '\$', decimalDigits: 2).format(15.25),
+        icon: Icons.show_chart_outlined,
+        color: const Color(0xFF1565C0), // Azul
+      ),
+    ];
+
+    // --- Action Cards ---
+    final actionCards = [
+      DashboardCard(
+        title: 'Gestionar Inventario',
+        value: 'Productos',
+        icon: Icons.inventory_2_outlined,
+        color: const Color(0xFF0277BD),
         onTap: () {},
       ),
       DashboardCard(
-        title: 'Departamentos',
-        value: 'Gestionar',
-        icon: Icons.business_outlined,
-        color: const Color(0xFF0277BD), // Azul claro
-        onTap: () => context.push('/departments'),
-      ),
-      DashboardCard(
-        title: 'Categorías',
-        value: 'Gestionar',
-        icon: Icons.category_outlined,
-        color: const Color(0xFF6A1B9A), // Púrpura oscuro
-        onTap: () => context.push('/categories'),
-      ),
-      DashboardCard(
-        title: 'Marcas',
-        value: 'Gestionar',
-        icon: Icons.label_important_outline,
-        color: const Color(0xFF00695C), // Teal
-        onTap: () => context.push('/brands'),
-      ),
-       DashboardCard(
-        title: 'Proveedores',
-        value: 'Gestionar',
-        icon: Icons.local_shipping_outlined,
-        color: const Color(0xFFC62828), // Rojo
-        onTap: () => context.push('/suppliers'),
-      ),
-      DashboardCard(
-        title: 'Usuarios',
-        value: 'Gestionar',
+        title: 'Gestionar Equipo',
+        value: 'Usuarios',
         icon: Icons.people_outline,
-        color: const Color(0xFFD84315), // Naranja oscuro
+        color: const Color(0xFFD84315),
+        onTap: () {},
+      ),
+      DashboardCard(
+        title: 'Reportes de Ventas',
+        value: 'Ver Historial',
+        icon: Icons.bar_chart_outlined,
+        color: const Color(0xFF6A1B9A),
+        onTap: () {},
+      ),
+      DashboardCard(
+        title: 'Configuración',
+        value: 'Tienda y POS',
+        icon: Icons.settings_outlined,
+        color: const Color(0xFF455A64),
         onTap: () {},
       ),
     ];
 
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        // Definir puntos de interrupción para el diseño adaptable
-        const double mobileBreakpoint = 600;
-        const double tabletBreakpoint = 900;
+    return ListView(
+      padding: const EdgeInsets.all(16.0),
+      children: [
+        // --- SECCIÓN DE RESUMEN DEL DÍA ---
+        _buildSectionTitle('Resumen del Día', textTheme),
+        Wrap(
+          spacing: 16.0, // Espacio horizontal
+          runSpacing: 16.0, // Espacio vertical
+          children: kpiCards.map((card) {
+            return ConstrainedBox(
+              constraints: BoxConstraints(
+                minWidth: isSmallScreen ? double.infinity : 250,
+                maxWidth: isSmallScreen ? double.infinity : 350,
+              ),
+              child: card,
+            );
+          }).toList(),
+        ),
+        const SizedBox(height: 24),
 
-        int crossAxisCount;
-        double childAspectRatio;
-
-        if (constraints.maxWidth < mobileBreakpoint) {
-          // Diseño móvil: Una sola columna, tarjetas más altas
-          crossAxisCount = 1;
-          childAspectRatio = 4 / 1.1;
-        } else if (constraints.maxWidth < tabletBreakpoint) {
-          // Diseño de tableta: Dos columnas
-          crossAxisCount = 2;
-          childAspectRatio = 3 / 1;
-        } else {
-          // Diseño de escritorio: Tres columnas
-          crossAxisCount = 3;
-          childAspectRatio = 2.8 / 1;
-        }
-
-        return GridView.builder(
-          padding: const EdgeInsets.all(16.0),
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: crossAxisCount,
+        // --- SECCIÓN DE ACCESOS RÁPIDOS ---
+        _buildSectionTitle('Accesos Rápidos', textTheme),
+        GridView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
+            maxCrossAxisExtent: 400, // Ancho máximo por elemento
+            childAspectRatio: isSmallScreen ? 2.5 : 3, // Ajusta el ratio para pantallas grandes
             crossAxisSpacing: 16.0,
             mainAxisSpacing: 16.0,
-            childAspectRatio: childAspectRatio,
           ),
-          itemCount: cards.length,
-          itemBuilder: (context, index) {
-            return cards[index];
-          },
-        );
-      },
+          itemCount: actionCards.length,
+          itemBuilder: (context, index) => actionCards[index],
+        ),
+        const SizedBox(height: 24),
+
+        // --- SECCIÓN DE ACTIVIDAD RECIENTE ---
+        _buildSectionTitle('Actividad Reciente', textTheme),
+        Card(
+          elevation: 0,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+            side: BorderSide(color: Colors.grey.shade300),
+          ),
+          child: Column(
+            children: List.generate(5, (index) {
+              final amount = 10.0 + (index * 5.5);
+              final time = TimeOfDay(hour: 14 - index, minute: 30 - (index * 5));
+              return ListTile(
+                leading: CircleAvatar(
+                  backgroundColor: Colors.green.withOpacity(0.1),
+                  child: const Icon(Icons.receipt_outlined, color: Colors.green),
+                ),
+                title: Text('Venta #${120 - index}', style: textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600)),
+                subtitle: Text('Cajero: Ana'),
+                trailing: Text(
+                  '${NumberFormat.currency(symbol: '\$', decimalDigits: 2).format(amount)} - ${time.format(context)}',
+                  style: textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
+                ),
+              );
+            }),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSectionTitle(String title, TextTheme textTheme) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16.0, top: 8.0),
+      child: Text(
+        title,
+        style: textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold, color: Colors.black87),
+      ),
+    );
+  }
+
+  Widget _buildKpiCard({required String title, required String value, required IconData icon, required Color color}) {
+    return DashboardCard(
+      title: title,
+      value: value,
+      icon: icon,
+      color: color,
+      isKpi: true, // Añadimos una distinción para estilizarlo diferente si es necesario
     );
   }
 }

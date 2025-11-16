@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:myapp/presentation/providers/auth_provider.dart';
 import 'package:myapp/presentation/widgets/app_drawer.dart';
 
 class HomePage extends ConsumerWidget {
@@ -30,17 +29,9 @@ class HomePage extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text(title),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.logout),
-            tooltip: 'Cerrar Sesión',
-            onPressed: () {
-              ref.read(authProvider.notifier).logout();
-            },
-          ),
-        ],
+        // El botón de logout ha sido removido de aquí
       ),
-      drawer: const AppDrawer(), // Menú lateral añadido
+      drawer: const AppDrawer(), // El AppDrawer ya contiene la opción de logout
       body: child,
     );
   }

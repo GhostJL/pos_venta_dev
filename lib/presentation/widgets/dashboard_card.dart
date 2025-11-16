@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:myapp/app/theme.dart';
 
 class DashboardCard extends StatefulWidget {
   final String title;
@@ -7,6 +6,7 @@ class DashboardCard extends StatefulWidget {
   final IconData icon;
   final Color color;
   final VoidCallback? onTap;
+  final bool isKpi;
 
   const DashboardCard({
     super.key,
@@ -14,7 +14,8 @@ class DashboardCard extends StatefulWidget {
     required this.value,
     required this.icon,
     this.onTap,
-    this.color = AppTheme.primary,
+    this.color = Colors.deepPurple,
+    this.isKpi = false, // Por defecto es una tarjeta de acción
   });
 
   @override
@@ -33,7 +34,7 @@ class _DashboardCardState extends State<DashboardCard>
       vsync: this,
       duration: const Duration(milliseconds: 150),
     );
-    _scaleAnimation = Tween<double>(begin: 1.0, end: 0.96).animate(
+    _scaleAnimation = Tween<double>(begin: 1.0, end: 0.98).animate(
       CurvedAnimation(parent: _animationController, curve: Curves.easeOut),
     );
   }
@@ -71,59 +72,96 @@ class _DashboardCardState extends State<DashboardCard>
         child: Container(
           padding: const EdgeInsets.all(16.0),
           decoration: BoxDecoration(
-            color: AppTheme.cardBackground,
+            color: Theme.of(context).cardColor,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: AppTheme.borders, width: 1.5),
+            border: Border.all(color: Colors.grey.shade200, width: 1),
             boxShadow: [
               BoxShadow(
-                color: AppTheme.primary.withAlpha(50),
+                color: Colors.black.withOpacity(0.05),
                 blurRadius: 10,
-                offset: const Offset(0, 5),
+                offset: const Offset(0, 4),
               ),
             ],
           ),
-          child: Row(
+          child: widget.isKpi ? _buildKpiLayout(textTheme) : _buildActionLayout(textTheme),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildKpiLayout(TextTheme textTheme) {
+    return Row(
+      children: [
+        _buildIcon(),
+        const SizedBox(width: 16),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Container(
-                padding: const EdgeInsets.all(12.0),
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: widget.color.withAlpha(10),
-                ),
-                child: Icon(widget.icon, color: widget.color, size: 24),
+              Text(
+                widget.title,
+                style: textTheme.bodyMedium?.copyWith(color: Colors.grey.shade600),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      widget.title,
-                      style: textTheme.bodyMedium?.copyWith(
-                        color: AppTheme.textSecondary,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      widget.value,
-                      style: textTheme.titleLarge?.copyWith(
-                        color: AppTheme.textPrimary,
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
+              const SizedBox(height: 4),
+              Text(
+                widget.value,
+                style: textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
                 ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
             ],
           ),
         ),
+      ],
+    );
+  }
+
+  Widget _buildActionLayout(TextTheme textTheme) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        _buildIcon(),
+        const SizedBox(height: 8),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              widget.title,
+              style: textTheme.bodyLarge?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: Colors.black87,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+            const SizedBox(height: 2),
+            Text(
+              widget.value,
+              style: textTheme.bodyMedium?.copyWith(color: Colors.grey.shade600),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildIcon() {
+    return Container(
+      padding: const EdgeInsets.all(10.0),
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: widget.color.withOpacity(0.1),
       ),
+      child: Icon(widget.icon, color: widget.color, size: 22),
     );
   }
 }

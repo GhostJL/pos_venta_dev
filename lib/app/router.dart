@@ -17,7 +17,7 @@ import 'package:myapp/presentation/providers/transaction_provider.dart';
 import 'package:myapp/presentation/pages/onboarding/admin_setup_page.dart';
 import 'package:myapp/presentation/pages/onboarding/add_cashiers_page.dart';
 import 'package:myapp/presentation/pages/onboarding/add_cashier_form_page.dart';
-import 'package:myapp/presentation/pages/onboarding/set_access_key_page.dart'; // Updated import
+import 'package:myapp/presentation/pages/onboarding/set_access_key_page.dart';
 
 final GlobalKey<NavigatorState> _rootNavigatorKey = GlobalKey<NavigatorState>();
 
@@ -32,7 +32,6 @@ final routerProvider = Provider<GoRouter>((ref) {
     navigatorKey: _rootNavigatorKey,
     refreshListenable: refreshNotifier,
     initialLocation: '/splash',
-
     routes: [
       GoRoute(
         path: '/splash',
@@ -60,7 +59,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/set-access-key',
         builder: (context, state) => const SetAccessKeyPage(),
-      ), // Updated route
+      ),
       // Login Route
       GoRoute(path: '/login', builder: (context, state) => const LoginPage()),
 
@@ -89,12 +88,12 @@ final routerProvider = Provider<GoRouter>((ref) {
             pageBuilder: (context, state) =>
                 const NoTransitionPage(child: CategoriesPage()),
           ),
-           GoRoute(
+          GoRoute(
             path: '/brands',
             pageBuilder: (context, state) =>
                 const NoTransitionPage(child: BrandsPage()),
           ),
-           GoRoute(
+          GoRoute(
             path: '/suppliers',
             pageBuilder: (context, state) =>
                 const NoTransitionPage(child: SuppliersPage()),
@@ -165,12 +164,13 @@ final onboardingCompletedProvider = FutureProvider<bool>((ref) async {
 
 class NoTransitionPage<T> extends CustomTransitionPage<T> {
   const NoTransitionPage({super.key, super.name, required super.child})
-    : super(transitionsBuilder: _transitionsBuilder);
+      : super(transitionsBuilder: _transitionsBuilder);
 
   static Widget _transitionsBuilder(
     BuildContext context,
     Animation<double> animation,
     Animation<double> secondaryAnimation,
     Widget child,
-  ) => child;
+  ) =>
+      child;
 }
