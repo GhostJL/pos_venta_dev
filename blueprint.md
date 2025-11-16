@@ -27,22 +27,23 @@ This document outlines the architecture, features, and design of the Cash Manage
 - **Architecture**:
     - Layered architecture (Presentation, Domain, Data).
     - Dependency injection using `flutter_riverpod`.
+- **Onboarding Flow**:
+    - Guided setup for the first-time admin user.
+    - Creation of initial cashier accounts.
+    - Secure access PIN setup.
 
-## Current Task: Implement Onboarding Flow
+## Current Task: Implement Supplier Management
 
 ### Plan
 
-The current goal is to replace the existing public sign-up flow with a guided onboarding process for the first-time admin user.
+The current goal is to add a new module for managing suppliers. This includes creating, reading, updating, and deleting (CRUD) supplier information.
 
-1.  **Remove Public Sign-Up**: The `SignUpPage` will be deleted, and the corresponding route will be removed.
-2.  **First-Run Detection**: The app will check if an admin user exists in the database on startup. If not, it will trigger the onboarding flow.
-3.  **Onboarding Screens**: A series of new screens will be created:
-    *   **Admin Setup Screen**: Allows the initial admin to confirm or edit their pre-filled details (username, password). A default admin user will be provided.
-    *   **Add Cashiers Screen**: A screen for the admin to add up to 4 cashier accounts.
-    *   **Set Access PIN Screen**: A screen to define a numeric PIN for quick access (initially hardcoded to '1234').
-4.  **Router Update**: `go_router` will be updated to handle the new onboarding logic:
-    *   On startup, if no admin exists, redirect to `/setup-admin`.
-    *   The onboarding screens will navigate sequentially: `/setup-admin` -> `/add-cashiers` -> `/set-pin`.
-    *   After onboarding, the user will be directed to the `/login` page.
-5.  **Repository & Provider Updates**: The `AuthRepository` and `authProvider` will be modified to support the creation of users with specific roles (Admin and Cashier) as part of the new flow.
-6.  **Login Page Cleanup**: The `LoginPage` will be updated to remove the link to the old sign-up page.
+1.  **Database Update**: The `DatabaseHelper` will be updated to include a new table for suppliers, with fields such as name, code, contact person, phone, email, etc.
+2.  **Domain Layer**: A new `Supplier` entity will be created, along with a `SupplierRepository` interface and corresponding use cases (`GetAllSuppliers`, `CreateSupplier`, `UpdateSupplier`, `DeleteSupplier`).
+3.  **Data Layer**: The `SupplierRepositoryImpl` will be created to implement the repository interface, handling the direct interaction with the `sqflite` database.
+4.  **State Management**: `Riverpod` providers will be set up to manage the state of the suppliers list, exposing the repository and use cases to the UI.
+5.  **User Interface**:
+    *   A new `SuppliersPage` will be created to display a list of suppliers in a responsive data table.
+    *   A `SupplierForm` will be developed to allow users to add and edit supplier details in a dialog.
+    *   A new card will be added to the `Dashboard` to provide easy access to the supplier management page.
+6.  **Routing Update**: The `go_router` configuration will be updated to include a new route `/suppliers` that navigates to the `SuppliersPage`.

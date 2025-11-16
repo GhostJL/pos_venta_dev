@@ -43,6 +43,13 @@ class DashboardScreen extends StatelessWidget {
         color: const Color(0xFF00695C), // Teal
         onTap: () => context.push('/brands'),
       ),
+       DashboardCard(
+        title: 'Proveedores',
+        value: 'Manage',
+        icon: Icons.local_shipping_outlined,
+        color: const Color(0xFFC62828), // Red
+        onTap: () => context.push('/suppliers'),
+      ),
       DashboardCard(
         title: 'Users',
         value: 'Manage',

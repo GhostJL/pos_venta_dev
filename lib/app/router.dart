@@ -8,6 +8,7 @@ import 'package:myapp/presentation/pages/categories_page.dart';
 import 'package:myapp/presentation/pages/departments_page.dart';
 import 'package:myapp/presentation/pages/home_page.dart';
 import 'package:myapp/presentation/pages/login_page.dart';
+import 'package:myapp/presentation/pages/suppliers_page.dart';
 import 'package:myapp/presentation/providers/auth_provider.dart';
 import 'package:myapp/presentation/pages/dashboard_page.dart';
 import 'package:myapp/presentation/providers/transaction_provider.dart';
@@ -92,6 +93,11 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: '/brands',
             pageBuilder: (context, state) =>
                 const NoTransitionPage(child: BrandsPage()),
+          ),
+           GoRoute(
+            path: '/suppliers',
+            pageBuilder: (context, state) =>
+                const NoTransitionPage(child: SuppliersPage()),
           ),
         ],
       ),

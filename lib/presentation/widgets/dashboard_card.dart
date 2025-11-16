@@ -21,7 +21,8 @@ class DashboardCard extends StatefulWidget {
   State<DashboardCard> createState() => _DashboardCardState();
 }
 
-class _DashboardCardState extends State<DashboardCard> with SingleTickerProviderStateMixin {
+class _DashboardCardState extends State<DashboardCard>
+    with SingleTickerProviderStateMixin {
   late AnimationController _animationController;
   late Animation<double> _scaleAnimation;
 
@@ -75,7 +76,7 @@ class _DashboardCardState extends State<DashboardCard> with SingleTickerProvider
             border: Border.all(color: AppTheme.borders, width: 1.5),
             boxShadow: [
               BoxShadow(
-                color: AppTheme.primary.withOpacity(0.05),
+                color: AppTheme.primary.withAlpha(50),
                 blurRadius: 10,
                 offset: const Offset(0, 5),
               ),
@@ -87,7 +88,7 @@ class _DashboardCardState extends State<DashboardCard> with SingleTickerProvider
                 padding: const EdgeInsets.all(12.0),
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: widget.color.withOpacity(0.1),
+                  color: widget.color.withAlpha(10),
                 ),
                 child: Icon(widget.icon, color: widget.color, size: 24),
               ),
@@ -99,7 +100,9 @@ class _DashboardCardState extends State<DashboardCard> with SingleTickerProvider
                   children: [
                     Text(
                       widget.title,
-                      style: textTheme.bodyMedium?.copyWith(color: AppTheme.textSecondary),
+                      style: textTheme.bodyMedium?.copyWith(
+                        color: AppTheme.textSecondary,
+                      ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
