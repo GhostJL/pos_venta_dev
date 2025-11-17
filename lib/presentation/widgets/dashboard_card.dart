@@ -120,7 +120,7 @@ class DashboardCard extends StatelessWidget {
       padding: const EdgeInsets.all(10.0),
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        color: iconColor.withOpacity(0.1),
+        color: iconColor.withAlpha(10),
       ),
       child: Icon(icon, color: iconColor, size: 22),
     );

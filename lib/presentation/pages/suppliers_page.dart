@@ -95,7 +95,7 @@ class SuppliersPage extends ConsumerWidget {
   Widget _buildStatusChip(bool isActive) {
     return Chip(
       label: Text(isActive ? 'Activo' : 'Inactivo'),
-      backgroundColor: isActive ? AppTheme.success.withOpacity(0.1) : AppTheme.error.withOpacity(0.1),
+      backgroundColor: isActive ? AppTheme.success.withAlpha(10) : AppTheme.error.withAlpha(10),
       labelStyle: TextStyle(
         color: isActive ? AppTheme.success : AppTheme.error,
         fontWeight: FontWeight.w600,

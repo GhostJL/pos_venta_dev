@@ -76,7 +76,7 @@ class AddCashiersPage extends ConsumerWidget {
                           leading: Container(
                             padding: const EdgeInsets.all(8),
                             decoration: BoxDecoration(
-                              color: AppTheme.primary.withOpacity(0.1),
+                              color: AppTheme.primary.withAlpha(10),
                               shape: BoxShape.circle,
                             ),
                             child: Icon(

@@ -9,10 +9,10 @@ class SupplierForm extends ConsumerStatefulWidget {
   const SupplierForm({super.key, this.supplier});
 
   @override
-  _SupplierFormState createState() => _SupplierFormState();
+  SupplierFormState createState() => SupplierFormState();
 }
 
-class _SupplierFormState extends ConsumerState<SupplierForm> {
+class SupplierFormState extends ConsumerState<SupplierForm> {
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _nameController;
   late TextEditingController _codeController;

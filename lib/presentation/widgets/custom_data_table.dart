@@ -59,7 +59,7 @@ class CustomDataTable<T> extends StatelessWidget {
           child: Theme(
             data: Theme.of(
               context,
-            ).copyWith(dividerColor: AppTheme.borders.withOpacity(0.5)),
+            ).copyWith(dividerColor: AppTheme.borders.withAlpha(50)),
             child: DataTable(
               columns: columns.map((col) {
                 return DataColumn(
@@ -76,7 +76,7 @@ class CustomDataTable<T> extends StatelessWidget {
               }).toList(),
               rows: rows,
               headingRowColor: WidgetStateProperty.all(
-                AppTheme.inputBackground.withOpacity(0.3),
+                AppTheme.inputBackground.withAlpha(30),
               ),
               headingRowHeight: isSmallScreen ? 44 : 48,
               dataRowMinHeight: isSmallScreen ? 48 : 56,
@@ -88,7 +88,7 @@ class CustomDataTable<T> extends StatelessWidget {
                 Set<WidgetState> states,
               ) {
                 if (states.contains(WidgetState.hovered)) {
-                  return AppTheme.inputBackground.withOpacity(0.5);
+                  return AppTheme.inputBackground.withAlpha(50);
                 }
                 return Colors.transparent;
               }),
@@ -126,7 +126,7 @@ class CustomDataTable<T> extends StatelessWidget {
                         vertical: 4,
                       ),
                       decoration: BoxDecoration(
-                        color: AppTheme.primary.withOpacity(0.1),
+                        color: AppTheme.primary.withAlpha(10),
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: Text(
@@ -195,7 +195,7 @@ class CustomDataTable<T> extends StatelessWidget {
                         vertical: 4,
                       ),
                       decoration: BoxDecoration(
-                        color: AppTheme.primary.withOpacity(0.1),
+                        color: AppTheme.primary.withAlpha(10),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Text(
@@ -257,12 +257,12 @@ class CustomDataTable<T> extends StatelessWidget {
             padding: EdgeInsets.all(isSmallScreen ? 20 : 24),
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: AppTheme.inputBackground.withOpacity(0.5),
+              color: AppTheme.inputBackground.withAlpha(50),
             ),
             child: Icon(
               Icons.inventory_2_outlined,
               size: isSmallScreen ? 40 : 48,
-              color: AppTheme.textSecondary.withOpacity(0.6),
+              color: AppTheme.textSecondary.withAlpha(60),
             ),
           ),
           SizedBox(height: isSmallScreen ? 16 : 20),
@@ -279,7 +279,7 @@ class CustomDataTable<T> extends StatelessWidget {
             'Comienza agregando un nuevo elemento',
             textAlign: TextAlign.center,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: AppTheme.textSecondary.withOpacity(0.7),
+              color: AppTheme.textSecondary.withAlpha(70),
               fontSize: isSmallScreen ? 12 : 13,
             ),
           ),

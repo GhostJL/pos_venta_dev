@@ -80,7 +80,7 @@ class SideMenu extends ConsumerWidget {
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 60, 20, 20),
       decoration: BoxDecoration(
-        color: AppTheme.primary.withOpacity(0.05),
+        color: AppTheme.primary.withAlpha(5),
       ),
       child: Row(
         children: [
@@ -128,7 +128,7 @@ class SideMenu extends ConsumerWidget {
       child: Text(
         title.toUpperCase(),
         style: TextStyle(
-          color: AppTheme.textSecondary.withOpacity(0.7),
+          color: AppTheme.textSecondary.withAlpha(70),
           fontWeight: FontWeight.w600,
           fontSize: 12,
           letterSpacing: 0.5,
@@ -166,7 +166,7 @@ class SideMenu extends ConsumerWidget {
         },
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         selected: isSelected,
-        selectedTileColor: AppTheme.primary.withOpacity(0.1),
+        selectedTileColor: AppTheme.primary.withAlpha(10),
         selectedColor: AppTheme.primary,
       ),
     );
