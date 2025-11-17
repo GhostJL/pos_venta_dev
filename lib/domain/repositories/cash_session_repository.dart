@@ -1,10 +1,7 @@
-import 'package:myapp/domain/entities/cash_session.dart';
+import 'package:posventa/domain/entities/cash_session.dart';
 
 abstract class CashSessionRepository {
-  Future<CashSession> openSession(
-    int warehouseId,
-    int openingBalanceCents,
-  );
+  Future<CashSession> openSession(int warehouseId, int openingBalanceCents);
   Future<CashSession> closeSession(int sessionId, int closingBalanceCents);
   Future<CashSession?> getCurrentSession();
 }

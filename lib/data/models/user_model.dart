@@ -1,4 +1,4 @@
-import 'package:myapp/domain/entities/user.dart';
+import 'package:posventa/domain/entities/user.dart';
 
 extension UserRoleExtension on UserRole {
   String toShortString() {

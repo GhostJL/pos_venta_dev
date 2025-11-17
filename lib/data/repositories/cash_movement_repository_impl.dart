@@ -1,7 +1,7 @@
-import 'package:myapp/data/datasources/database_helper.dart';
-import 'package:myapp/data/models/cash_movement_model.dart';
-import 'package:myapp/domain/entities/cash_movement.dart';
-import 'package:myapp/domain/repositories/cash_movement_repository.dart';
+import 'package:posventa/data/datasources/database_helper.dart';
+import 'package:posventa/data/models/cash_movement_model.dart';
+import 'package:posventa/domain/entities/cash_movement.dart';
+import 'package:posventa/domain/repositories/cash_movement_repository.dart';
 
 class CashMovementRepositoryImpl implements CashMovementRepository {
   final DatabaseHelper _databaseHelper;

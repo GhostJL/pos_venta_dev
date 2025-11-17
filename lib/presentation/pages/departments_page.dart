@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:myapp/app/theme.dart';
-import 'package:myapp/domain/entities/department.dart';
-import 'package:myapp/presentation/providers/department_providers.dart';
-import 'package:myapp/presentation/widgets/custom_data_table.dart';
+import 'package:posventa/app/theme.dart';
+import 'package:posventa/domain/entities/department.dart';
+import 'package:posventa/presentation/providers/department_providers.dart';
+import 'package:posventa/presentation/widgets/custom_data_table.dart';
 
 class DepartmentsPage extends ConsumerWidget {
   const DepartmentsPage({super.key});
@@ -24,10 +24,13 @@ class DepartmentsPage extends ConsumerWidget {
               DataColumn(label: Text('Estado')),
               DataColumn(label: Text('Acciones')),
             ],
-            rows: departments.map((dept) => _createDataRow(context, ref, dept)).toList(),
+            rows: departments
+                .map((dept) => _createDataRow(context, ref, dept))
+                .toList(),
             itemCount: departments.length,
             onAddItem: () => _showDepartmentDialog(context, ref),
-            emptyText: 'No se encontraron departamentos. ¡Añade uno para empezar!',
+            emptyText:
+                'No se encontraron departamentos. ¡Añade uno para empezar!',
           ),
           loading: () => const Center(child: CircularProgressIndicator()),
           error: (err, stack) => Center(child: Text('Error: $err')),
@@ -36,24 +39,42 @@ class DepartmentsPage extends ConsumerWidget {
     );
   }
 
-  DataRow _createDataRow(BuildContext context, WidgetRef ref, Department department) {
+  DataRow _createDataRow(
+    BuildContext context,
+    WidgetRef ref,
+    Department department,
+  ) {
     return DataRow(
       cells: [
-        DataCell(Text(department.name, style: Theme.of(context).textTheme.bodyLarge)),
-        DataCell(Text(department.code, style: Theme.of(context).textTheme.bodyMedium)),
+        DataCell(
+          Text(department.name, style: Theme.of(context).textTheme.bodyLarge),
+        ),
+        DataCell(
+          Text(department.code, style: Theme.of(context).textTheme.bodyMedium),
+        ),
         DataCell(_buildStatusChip(department.isActive)),
         DataCell(
           Row(
             children: [
               IconButton(
-                icon: const Icon(Icons.edit_rounded, color: AppTheme.primary, size: 20),
+                icon: const Icon(
+                  Icons.edit_rounded,
+                  color: AppTheme.primary,
+                  size: 20,
+                ),
                 tooltip: 'Editar Departamento',
-                onPressed: () => _showDepartmentDialog(context, ref, department: department),
+                onPressed: () =>
+                    _showDepartmentDialog(context, ref, department: department),
               ),
               IconButton(
-                icon: const Icon(Icons.delete_rounded, color: AppTheme.error, size: 20),
+                icon: const Icon(
+                  Icons.delete_rounded,
+                  color: AppTheme.error,
+                  size: 20,
+                ),
                 tooltip: 'Eliminar Departamento',
-                onPressed: () => _showDeleteConfirmation(context, ref, department.id!),
+                onPressed: () =>
+                    _showDeleteConfirmation(context, ref, department.id!),
               ),
             ],
           ),
@@ -65,7 +86,9 @@ class DepartmentsPage extends ConsumerWidget {
   Widget _buildStatusChip(bool isActive) {
     return Chip(
       label: Text(isActive ? 'Activo' : 'Inactivo'),
-      backgroundColor: isActive ? AppTheme.success.withAlpha(10) : AppTheme.error.withAlpha(10),
+      backgroundColor: isActive
+          ? AppTheme.success.withAlpha(10)
+          : AppTheme.error.withAlpha(10),
       labelStyle: TextStyle(
         color: isActive ? AppTheme.success : AppTheme.error,
         fontWeight: FontWeight.w600,
@@ -75,20 +98,30 @@ class DepartmentsPage extends ConsumerWidget {
     );
   }
 
-  void _showDepartmentDialog(BuildContext context, WidgetRef ref, {Department? department}) {
+  void _showDepartmentDialog(
+    BuildContext context,
+    WidgetRef ref, {
+    Department? department,
+  }) {
     showDialog(
       context: context,
       builder: (context) => DepartmentFormDialog(department: department),
     );
   }
 
-  void _showDeleteConfirmation(BuildContext context, WidgetRef ref, int departmentId) {
+  void _showDeleteConfirmation(
+    BuildContext context,
+    WidgetRef ref,
+    int departmentId,
+  ) {
     showDialog(
       context: context,
       builder: (BuildContext dialogContext) {
         return AlertDialog(
           title: const Text('Confirmar Eliminación'),
-          content: const Text('¿Estás seguro de que quieres eliminar este departamento? Esta acción no se puede deshacer.'),
+          content: const Text(
+            '¿Estás seguro de que quieres eliminar este departamento? Esta acción no se puede deshacer.',
+          ),
           actions: <Widget>[
             TextButton(
               child: const Text('Cancelar'),
@@ -98,7 +131,9 @@ class DepartmentsPage extends ConsumerWidget {
               style: ElevatedButton.styleFrom(backgroundColor: AppTheme.error),
               child: const Text('Eliminar'),
               onPressed: () {
-                ref.read(departmentListProvider.notifier).deleteDepartment(departmentId);
+                ref
+                    .read(departmentListProvider.notifier)
+                    .deleteDepartment(departmentId);
                 Navigator.of(dialogContext).pop();
               },
             ),
@@ -115,7 +150,8 @@ class DepartmentFormDialog extends ConsumerStatefulWidget {
   const DepartmentFormDialog({super.key, this.department});
 
   @override
-  ConsumerState<DepartmentFormDialog> createState() => _DepartmentFormDialogState();
+  ConsumerState<DepartmentFormDialog> createState() =>
+      _DepartmentFormDialogState();
 }
 
 class _DepartmentFormDialogState extends ConsumerState<DepartmentFormDialog> {
@@ -128,9 +164,15 @@ class _DepartmentFormDialogState extends ConsumerState<DepartmentFormDialog> {
   @override
   void initState() {
     super.initState();
-    _nameController = TextEditingController(text: widget.department?.name ?? '');
-    _codeController = TextEditingController(text: widget.department?.code ?? '');
-    _descriptionController = TextEditingController(text: widget.department?.description ?? '');
+    _nameController = TextEditingController(
+      text: widget.department?.name ?? '',
+    );
+    _codeController = TextEditingController(
+      text: widget.department?.code ?? '',
+    );
+    _descriptionController = TextEditingController(
+      text: widget.department?.description ?? '',
+    );
     _isActive = widget.department?.isActive ?? true;
   }
 
@@ -166,7 +208,11 @@ class _DepartmentFormDialogState extends ConsumerState<DepartmentFormDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: Text(widget.department == null ? 'Añadir Departamento' : 'Editar Departamento'),
+      title: Text(
+        widget.department == null
+            ? 'Añadir Departamento'
+            : 'Editar Departamento',
+      ),
       content: Form(
         key: _formKey,
         child: SingleChildScrollView(
@@ -176,13 +222,15 @@ class _DepartmentFormDialogState extends ConsumerState<DepartmentFormDialog> {
               TextFormField(
                 controller: _nameController,
                 decoration: const InputDecoration(labelText: 'Nombre'),
-                validator: (v) => v!.isEmpty ? 'Por favor, introduce un nombre' : null,
+                validator: (v) =>
+                    v!.isEmpty ? 'Por favor, introduce un nombre' : null,
               ),
               const SizedBox(height: 16),
               TextFormField(
                 controller: _codeController,
                 decoration: const InputDecoration(labelText: 'Código'),
-                validator: (v) => v!.isEmpty ? 'Por favor, introduce un código' : null,
+                validator: (v) =>
+                    v!.isEmpty ? 'Por favor, introduce un código' : null,
               ),
               const SizedBox(height: 16),
               TextFormField(
@@ -207,10 +255,7 @@ class _DepartmentFormDialogState extends ConsumerState<DepartmentFormDialog> {
           child: const Text('Cancelar'),
           onPressed: () => Navigator.of(context).pop(),
         ),
-        ElevatedButton(
-          onPressed: _submit,
-          child: const Text('Guardar'),
-        ),
+        ElevatedButton(onPressed: _submit, child: const Text('Guardar')),
       ],
     );
   }

@@ -1,4 +1,4 @@
-import 'package:myapp/domain/entities/brand.dart';
+import 'package:posventa/domain/entities/brand.dart';
 
 abstract class BrandRepository {
   Future<List<Brand>> getAllBrands();

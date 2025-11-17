@@ -1,5 +1,4 @@
-
-import 'package:myapp/domain/entities/department.dart';
+import 'package:posventa/domain/entities/department.dart';
 
 class DepartmentModel extends Department {
   DepartmentModel({

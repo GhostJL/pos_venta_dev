@@ -1,4 +1,4 @@
-import 'package:myapp/domain/entities/cash_movement.dart';
+import 'package:posventa/domain/entities/cash_movement.dart';
 
 class CashMovementModel extends CashMovement {
   CashMovementModel({

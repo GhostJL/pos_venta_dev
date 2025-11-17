@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:myapp/app/theme.dart';
-import 'package:myapp/presentation/widgets/dashboard_card.dart';
+import 'package:posventa/app/theme.dart';
+import 'package:posventa/presentation/widgets/dashboard_card.dart';
 
 class DashboardScreen extends StatelessWidget {
   const DashboardScreen({super.key});
@@ -26,7 +26,7 @@ class DashboardScreen extends StatelessWidget {
 
   Widget _buildHeader(BuildContext context) {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: .start,
       children: [
         Text(
           '¡Buenos días, Administrador!',
@@ -82,7 +82,7 @@ class DashboardScreen extends StatelessWidget {
     ];
 
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: .start,
       children: [
         Builder(
           builder: (context) => _buildSectionTitle(context, 'Resumen Diario'),
@@ -92,7 +92,7 @@ class DashboardScreen extends StatelessWidget {
           runSpacing: 12.0,
           children: kpiCards.map((card) {
             return SizedBox(
-              width: isSmallScreen ? double.infinity : 250,
+              width: isSmallScreen ? double.infinity : double.infinity,
               child: card,
             );
           }).toList(),
@@ -134,19 +134,19 @@ class DashboardScreen extends StatelessWidget {
     ];
 
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: .start,
       children: [
         Builder(
-          builder: (context) => _buildSectionTitle(context, 'Acceso Rápido'),
+          builder: (context) => _buildSectionTitle(context, 'Accesos Rápido'),
         ),
         GridView.builder(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: isSmallScreen ? 1 : 2,
-            childAspectRatio: isSmallScreen ? 4 : 3.5,
-            crossAxisSpacing: 12,
-            mainAxisSpacing: 12,
+            childAspectRatio: isSmallScreen ? 4 : 3,
+            crossAxisSpacing: 8,
+            mainAxisSpacing: 8,
           ),
           itemCount: actionCards.length,
           itemBuilder: (context, index) => actionCards[index],
@@ -157,7 +157,7 @@ class DashboardScreen extends StatelessWidget {
 
   Widget _buildRecentActivitySection(BuildContext context) {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: .start,
       children: [
         _buildSectionTitle(context, 'Actividad Reciente'),
         Card(
@@ -166,36 +166,138 @@ class DashboardScreen extends StatelessWidget {
             borderRadius: BorderRadius.circular(12),
             side: const BorderSide(color: AppTheme.borders, width: 1),
           ),
-          child: Column(
-            children: List.generate(5, (index) {
+          child: ListView.separated(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            padding: EdgeInsets.zero,
+            itemCount: 5,
+            separatorBuilder: (context, index) => const Divider(
+              height: 1,
+              thickness: 1,
+              color: AppTheme.borders,
+              indent: 72,
+            ),
+            itemBuilder: (context, index) {
               final amount = 10.0 + (index * 5.5);
               final time = TimeOfDay(
                 hour: 14 - index,
                 minute: 30 - (index * 5),
               );
-              return ListTile(
-                leading: const CircleAvatar(
-                  backgroundColor: AppTheme.inputBackground,
-                  child: Icon(
-                    Icons.receipt_rounded,
-                    color: AppTheme.textSecondary,
-                  ),
+
+              return Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16.0,
+                  vertical: 12.0,
                 ),
-                title: Text(
-                  'Venta #${120 - index}',
-                  style: Theme.of(
-                    context,
-                  ).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600),
-                ),
-                subtitle: const Text('Cajero: Ana'),
-                trailing: Text(
-                  '${NumberFormat.currency(symbol: '\$', decimalDigits: 2).format(amount)} - ${time.format(context)}',
-                  style: Theme.of(
-                    context,
-                  ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
+                child: Row(
+                  children: [
+                    // Icono con badge de número
+                    Stack(
+                      clipBehavior: Clip.none,
+                      children: [
+                        Container(
+                          width: 48,
+                          height: 48,
+                          decoration: BoxDecoration(
+                            color: AppTheme.success.withAlpha(25),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Icon(
+                            Icons.receipt_long_rounded,
+                            color: AppTheme.success,
+                            size: 24,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(width: 12),
+                    // Información principal
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: .start,
+                        children: [
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  'Venta #${120 - index}',
+                                  style: Theme.of(context).textTheme.bodyLarge
+                                      ?.copyWith(
+                                        fontWeight: FontWeight.w600,
+                                        fontSize: 15,
+                                      ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              // Monto destacado
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                  vertical: 4,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: AppTheme.success.withAlpha(25),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Text(
+                                  NumberFormat.currency(
+                                    symbol: '\$',
+                                    decimalDigits: 2,
+                                  ).format(amount),
+                                  style: Theme.of(context).textTheme.bodyMedium
+                                      ?.copyWith(
+                                        fontWeight: FontWeight.bold,
+                                        color: AppTheme.success,
+                                        fontSize: 14,
+                                      ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 6),
+                          // Detalles secundarios
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.person_outline_rounded,
+                                size: 14,
+                                color: AppTheme.textSecondary,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                'Ana',
+                                style: Theme.of(context).textTheme.bodySmall
+                                    ?.copyWith(
+                                      color: AppTheme.textSecondary,
+                                      fontSize: 13,
+                                    ),
+                              ),
+                              Spacer(),
+                              Icon(
+                                Icons.access_time_rounded,
+                                size: 14,
+                                color: AppTheme.textSecondary,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                time.format(context),
+                                style: Theme.of(context).textTheme.bodySmall
+                                    ?.copyWith(
+                                      color: AppTheme.textSecondary,
+                                      fontSize: 13,
+                                    ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
               );
-            }),
+            },
           ),
         ),
       ],

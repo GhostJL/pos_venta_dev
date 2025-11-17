@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:myapp/app/theme.dart';
-import 'package:myapp/domain/entities/user.dart';
-import 'package:myapp/presentation/providers/auth_provider.dart';
+import 'package:posventa/app/theme.dart';
+import 'package:posventa/domain/entities/user.dart';
+import 'package:posventa/presentation/providers/auth_provider.dart';
 
 class SideMenu extends ConsumerWidget {
   const SideMenu({super.key});
@@ -12,7 +12,9 @@ class SideMenu extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final authState = ref.watch(authProvider);
     final user = authState.user;
-    final currentPath = GoRouter.of(context).routerDelegate.currentConfiguration.uri.toString();
+    final currentPath = GoRouter.of(
+      context,
+    ).routerDelegate.currentConfiguration.uri.toString();
 
     return Container(
       width: 260,
@@ -73,15 +75,15 @@ class SideMenu extends ConsumerWidget {
 
   Widget _buildDrawerHeader(BuildContext context, User? user) {
     final accountName = user?.firstName ?? 'Usuario';
+    final accountLastName = user?.lastName ?? 'N.';
+
     final accountEmail = user != null
         ? (user.role == UserRole.administrador ? 'Administrador' : 'Cajero')
         : 'Rol no disponible';
 
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 60, 20, 20),
-      decoration: BoxDecoration(
-        color: AppTheme.primary.withAlpha(5),
-      ),
+      decoration: BoxDecoration(color: AppTheme.primary.withAlpha(5)),
       child: Row(
         children: [
           CircleAvatar(
@@ -99,14 +101,13 @@ class SideMenu extends ConsumerWidget {
           const SizedBox(width: 16),
           Expanded(
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              crossAxisAlignment: .start,
               children: [
                 Text(
-                  accountName,
-                  style: Theme.of(context)
-                      .textTheme
-                      .titleLarge
-                      ?.copyWith(fontWeight: FontWeight.bold),
+                  '$accountName $accountLastName',
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
                   overflow: TextOverflow.ellipsis,
                 ),
                 Text(
@@ -128,7 +129,7 @@ class SideMenu extends ConsumerWidget {
       child: Text(
         title.toUpperCase(),
         style: TextStyle(
-          color: AppTheme.textSecondary.withAlpha(70),
+          color: AppTheme.textSecondary.withAlpha(204),
           fontWeight: FontWeight.w600,
           fontSize: 12,
           letterSpacing: 0.5,
@@ -148,13 +149,16 @@ class SideMenu extends ConsumerWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12.0),
       child: ListTile(
-        leading: Icon(icon, color: isSelected ? AppTheme.primary : AppTheme.textSecondary),
+        leading: Icon(
+          icon,
+          color: isSelected ? AppTheme.primary : AppTheme.textSecondary,
+        ),
         title: Text(
           title,
           style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                color: isSelected ? AppTheme.primary : AppTheme.textPrimary,
-                fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-              ),
+            color: isSelected ? AppTheme.primary : AppTheme.textPrimary,
+            fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+          ),
         ),
         onTap: () {
           // Navigate to the new page
@@ -189,13 +193,18 @@ class SideMenu extends ConsumerWidget {
           // Then, perform the logout action
           ref.read(authProvider.notifier).logout();
         },
-        style: OutlinedButton.styleFrom(
-          padding: const EdgeInsets.symmetric(vertical: 12),
-          side: const BorderSide(color: AppTheme.error, width: 1.5),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        ).copyWith(
-            fixedSize: WidgetStateProperty.all(const Size.fromWidth(double.maxFinite))
-        ),
+        style:
+            OutlinedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              side: const BorderSide(color: AppTheme.error, width: 1.5),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ).copyWith(
+              fixedSize: WidgetStateProperty.all(
+                const Size.fromWidth(double.maxFinite),
+              ),
+            ),
       ),
     );
   }

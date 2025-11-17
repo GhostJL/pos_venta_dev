@@ -1,7 +1,8 @@
 import 'dart:convert';
+
 import 'package:crypto/crypto.dart';
-import 'package:myapp/presentation/providers/onboarding_state.dart';
 import 'package:path/path.dart';
+import 'package:posventa/presentation/providers/onboarding_state.dart';
 import 'package:sqflite/sqflite.dart';
 
 class DatabaseHelper {
@@ -203,7 +204,9 @@ class DatabaseHelper {
           'value': _hashData(state.accessKey!),
         });
       } else {
-        throw Exception('Error de incorporación: falta la clave de acceso a la aplicación.');
+        throw Exception(
+          'Error de incorporación: falta la clave de acceso a la aplicación.',
+        );
       }
     });
   }

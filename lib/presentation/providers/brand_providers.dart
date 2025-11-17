@@ -1,13 +1,13 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
-import 'package:myapp/data/repositories/brand_repository_impl.dart';
-import 'package:myapp/domain/entities/brand.dart';
-import 'package:myapp/domain/repositories/brand_repository.dart';
-import 'package:myapp/domain/use_cases/create_brand.dart';
-import 'package:myapp/domain/use_cases/delete_brand.dart';
-import 'package:myapp/domain/use_cases/get_all_brands.dart';
-import 'package:myapp/domain/use_cases/update_brand.dart';
-import 'package:myapp/presentation/providers/department_providers.dart';
+import 'package:posventa/data/repositories/brand_repository_impl.dart';
+import 'package:posventa/domain/entities/brand.dart';
+import 'package:posventa/domain/repositories/brand_repository.dart';
+import 'package:posventa/domain/use_cases/create_brand.dart';
+import 'package:posventa/domain/use_cases/delete_brand.dart';
+import 'package:posventa/domain/use_cases/get_all_brands.dart';
+import 'package:posventa/domain/use_cases/update_brand.dart';
+import 'package:posventa/presentation/providers/department_providers.dart';
 
 final brandRepositoryProvider = Provider<BrandRepository>((ref) {
   final dbHelper = ref.watch(databaseHelperProvider);

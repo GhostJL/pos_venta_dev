@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:myapp/app/router.dart';
-import 'package:myapp/app/theme.dart';
-import 'package:myapp/data/datasources/database_helper.dart';
+import 'package:posventa/app/router.dart';
+import 'package:posventa/app/theme.dart';
+import 'package:posventa/data/datasources/database_helper.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();

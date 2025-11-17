@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:myapp/domain/entities/user.dart';
-import 'package:myapp/presentation/pages/onboarding/onboarding_layout.dart';
-import 'package:myapp/presentation/providers/onboarding_state.dart';
+import 'package:posventa/domain/entities/user.dart';
+import 'package:posventa/presentation/pages/onboarding/onboarding_layout.dart';
+import 'package:posventa/presentation/providers/onboarding_state.dart';
 
 class AddCashierFormPage extends ConsumerStatefulWidget {
   const AddCashierFormPage({super.key});
@@ -71,7 +71,7 @@ class _AddCashierFormPageState extends ConsumerState<AddCashierFormPage> {
       child: LayoutBuilder(
         builder: (context, constraints) {
           final isSmallScreen = constraints.maxWidth < 600;
-          
+
           return Form(
             key: _formKey,
             child: Column(
@@ -79,7 +79,9 @@ class _AddCashierFormPageState extends ConsumerState<AddCashierFormPage> {
               children: [
                 TextFormField(
                   controller: _usernameController,
-                  decoration: const InputDecoration(labelText: 'Nombre de usuario'),
+                  decoration: const InputDecoration(
+                    labelText: 'Nombre de usuario',
+                  ),
                   validator: (value) => value!.isEmpty
                       ? 'Por favor, introduce un nombre de usuario'
                       : null,
@@ -107,8 +109,9 @@ class _AddCashierFormPageState extends ConsumerState<AddCashierFormPage> {
                 TextFormField(
                   controller: _lastNameController,
                   decoration: const InputDecoration(labelText: 'Apellido'),
-                  validator: (value) =>
-                      value!.isEmpty ? 'Por favor, introduce un apellido' : null,
+                  validator: (value) => value!.isEmpty
+                      ? 'Por favor, introduce un apellido'
+                      : null,
                 ),
                 SizedBox(height: isSmallScreen ? 24 : 32),
                 ElevatedButton(

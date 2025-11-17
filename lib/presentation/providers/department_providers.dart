@@ -1,13 +1,13 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
-import 'package:myapp/data/datasources/database_helper.dart';
-import 'package:myapp/data/repositories/department_repository_impl.dart';
-import 'package:myapp/domain/entities/department.dart';
-import 'package:myapp/domain/repositories/department_repository.dart';
-import 'package:myapp/domain/use_cases/create_department.dart';
-import 'package:myapp/domain/use_cases/delete_department.dart';
-import 'package:myapp/domain/use_cases/get_all_departments.dart';
-import 'package:myapp/domain/use_cases/update_department.dart';
+import 'package:posventa/data/datasources/database_helper.dart';
+import 'package:posventa/data/repositories/department_repository_impl.dart';
+import 'package:posventa/domain/entities/department.dart';
+import 'package:posventa/domain/repositories/department_repository.dart';
+import 'package:posventa/domain/use_cases/create_department.dart';
+import 'package:posventa/domain/use_cases/delete_department.dart';
+import 'package:posventa/domain/use_cases/get_all_departments.dart';
+import 'package:posventa/domain/use_cases/update_department.dart';
 
 // Provider for DatabaseHelper
 final databaseHelperProvider = Provider<DatabaseHelper>((ref) {
@@ -21,13 +21,22 @@ final departmentRepositoryProvider = Provider<DepartmentRepository>((ref) {
 });
 
 // Use Case Providers
-final getAllDepartmentsUseCaseProvider = Provider((ref) => GetAllDepartments(ref.watch(departmentRepositoryProvider)));
-final createDepartmentUseCaseProvider = Provider((ref) => CreateDepartment(ref.watch(departmentRepositoryProvider)));
-final updateDepartmentUseCaseProvider = Provider((ref) => UpdateDepartment(ref.watch(departmentRepositoryProvider)));
-final deleteDepartmentUseCaseProvider = Provider((ref) => DeleteDepartment(ref.watch(departmentRepositoryProvider)));
+final getAllDepartmentsUseCaseProvider = Provider(
+  (ref) => GetAllDepartments(ref.watch(departmentRepositoryProvider)),
+);
+final createDepartmentUseCaseProvider = Provider(
+  (ref) => CreateDepartment(ref.watch(departmentRepositoryProvider)),
+);
+final updateDepartmentUseCaseProvider = Provider(
+  (ref) => UpdateDepartment(ref.watch(departmentRepositoryProvider)),
+);
+final deleteDepartmentUseCaseProvider = Provider(
+  (ref) => DeleteDepartment(ref.watch(departmentRepositoryProvider)),
+);
 
 // StateNotifier for the department list
-class DepartmentListNotifier extends StateNotifier<AsyncValue<List<Department>>> {
+class DepartmentListNotifier
+    extends StateNotifier<AsyncValue<List<Department>>> {
   final GetAllDepartments _getAllDepartments;
   final CreateDepartment _createDepartment;
   final UpdateDepartment _updateDepartment;
@@ -92,12 +101,12 @@ class DepartmentListNotifier extends StateNotifier<AsyncValue<List<Department>>>
 // The final provider for the notifier
 final departmentListProvider =
     StateNotifierProvider<DepartmentListNotifier, AsyncValue<List<Department>>>(
-  (ref) {
-    return DepartmentListNotifier(
-      ref.watch(getAllDepartmentsUseCaseProvider),
-      ref.watch(createDepartmentUseCaseProvider),
-      ref.watch(updateDepartmentUseCaseProvider),
-      ref.watch(deleteDepartmentUseCaseProvider),
+      (ref) {
+        return DepartmentListNotifier(
+          ref.watch(getAllDepartmentsUseCaseProvider),
+          ref.watch(createDepartmentUseCaseProvider),
+          ref.watch(updateDepartmentUseCaseProvider),
+          ref.watch(deleteDepartmentUseCaseProvider),
+        );
+      },
     );
-  },
-);

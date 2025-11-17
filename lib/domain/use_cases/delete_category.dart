@@ -1,4 +1,4 @@
-import 'package:myapp/domain/repositories/category_repository.dart';
+import 'package:posventa/domain/repositories/category_repository.dart';
 
 class DeleteCategory {
   final CategoryRepository repository;

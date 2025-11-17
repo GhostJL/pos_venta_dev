@@ -1,4 +1,4 @@
-import 'package:myapp/domain/repositories/supplier_repository.dart';
+import 'package:posventa/domain/repositories/supplier_repository.dart';
 
 class DeleteSupplier {
   final SupplierRepository repository;

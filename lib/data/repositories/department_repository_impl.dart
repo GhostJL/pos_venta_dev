@@ -1,8 +1,7 @@
-
-import 'package:myapp/data/datasources/database_helper.dart';
-import 'package:myapp/data/models/department_model.dart';
-import 'package:myapp/domain/entities/department.dart';
-import 'package:myapp/domain/repositories/department_repository.dart';
+import 'package:posventa/data/datasources/database_helper.dart';
+import 'package:posventa/data/models/department_model.dart';
+import 'package:posventa/domain/entities/department.dart';
+import 'package:posventa/domain/repositories/department_repository.dart';
 
 class DepartmentRepositoryImpl implements DepartmentRepository {
   final DatabaseHelper databaseHelper;
@@ -25,7 +24,11 @@ class DepartmentRepositoryImpl implements DepartmentRepository {
   @override
   Future<Department?> getDepartmentById(int id) async {
     final db = await databaseHelper.database;
-    final maps = await db.query('departments', where: 'id = ?', whereArgs: [id]);
+    final maps = await db.query(
+      'departments',
+      where: 'id = ?',
+      whereArgs: [id],
+    );
     if (maps.isNotEmpty) {
       return DepartmentModel.fromMap(maps.first);
     }

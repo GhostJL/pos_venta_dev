@@ -1,4 +1,4 @@
-import 'package:myapp/domain/entities/supplier.dart';
+import 'package:posventa/domain/entities/supplier.dart';
 
 class SupplierModel extends Supplier {
   SupplierModel({
@@ -27,7 +27,9 @@ class SupplierModel extends Supplier {
       taxId: map['tax_id'],
       creditDays: map['credit_days'] ?? 0,
       isActive: map['is_active'] == 1,
-      createdAt: map['created_at'] != null ? DateTime.parse(map['created_at']) : null,
+      createdAt: map['created_at'] != null
+          ? DateTime.parse(map['created_at'])
+          : null,
     );
   }
 

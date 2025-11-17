@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:myapp/app/theme.dart';
-import 'package:myapp/presentation/providers/auth_provider.dart';
+import 'package:posventa/app/theme.dart';
+import 'package:posventa/presentation/providers/auth_provider.dart';
 
 class LoginPage extends ConsumerStatefulWidget {
   const LoginPage({super.key});
@@ -68,8 +68,13 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                     child: Form(
                       key: _formKey,
                       child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        crossAxisAlignment: .stretch,
                         children: [
+                          Text(
+                            'Inicia sesión para gestionar tu tienda',
+                            style: Theme.of(context).textTheme.bodyMedium,
+                          ),
+                          const SizedBox(height: 20),
                           // Username Field
                           TextFormField(
                             controller: _usernameController,
@@ -143,22 +148,24 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 
   Widget _buildHeader(BuildContext context) {
     return Column(
+      crossAxisAlignment: .start,
       children: [
-        const Icon(Icons.storefront_rounded, size: 64, color: AppTheme.primary),
-        const SizedBox(height: 16),
+        const Icon(
+          Icons.point_of_sale_rounded,
+          size: 64,
+          color: AppTheme.primary,
+        ),
+        const SizedBox(height: 8),
         Text(
           textAlign: TextAlign.center,
-          'Bienvenido de Vuelta',
+          'POSVENTA',
           style: Theme.of(context).textTheme.displayLarge?.copyWith(
             fontSize: 32,
             fontWeight: FontWeight.bold,
           ),
         ),
         const SizedBox(height: 8),
-        Text(
-          'Inicia sesión para gestionar tu tienda',
-          style: Theme.of(context).textTheme.bodyMedium,
-        ),
+        Text('Bienvenido, realizar una venta en pocos pasos.'),
       ],
     );
   }

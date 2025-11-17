@@ -1,5 +1,5 @@
-import 'package:myapp/domain/entities/category.dart';
-import 'package:myapp/domain/repositories/category_repository.dart';
+import 'package:posventa/domain/entities/category.dart';
+import 'package:posventa/domain/repositories/category_repository.dart';
 
 class GetAllCategories {
   final CategoryRepository repository;

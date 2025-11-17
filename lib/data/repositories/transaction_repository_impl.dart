@@ -1,7 +1,6 @@
-
-import 'package:myapp/data/datasources/database_helper.dart';
-import 'package:myapp/domain/entities/transaction.dart';
-import 'package:myapp/domain/repositories/transaction_repository.dart';
+import 'package:posventa/data/datasources/database_helper.dart';
+import 'package:posventa/domain/entities/transaction.dart';
+import 'package:posventa/domain/repositories/transaction_repository.dart';
 
 class TransactionRepositoryImpl implements TransactionRepository {
   final DatabaseHelper _databaseHelper;
@@ -37,8 +36,19 @@ class TransactionRepositoryImpl implements TransactionRepository {
   Future<double> getTodaysRevenue() async {
     final db = await _databaseHelper.database;
     final today = DateTime.now();
-    final startOfDay = DateTime(today.year, today.month, today.day).toIso8601String();
-    final endOfDay = DateTime(today.year, today.month, today.day, 23, 59, 59).toIso8601String();
+    final startOfDay = DateTime(
+      today.year,
+      today.month,
+      today.day,
+    ).toIso8601String();
+    final endOfDay = DateTime(
+      today.year,
+      today.month,
+      today.day,
+      23,
+      59,
+      59,
+    ).toIso8601String();
 
     final result = await db.rawQuery(
       'SELECT SUM(amount) as total FROM transactions WHERE type = ? AND timestamp BETWEEN ? AND ?',
@@ -53,8 +63,19 @@ class TransactionRepositoryImpl implements TransactionRepository {
   Future<int> getTodaysMovements() async {
     final db = await _databaseHelper.database;
     final today = DateTime.now();
-    final startOfDay = DateTime(today.year, today.month, today.day).toIso8601String();
-    final endOfDay = DateTime(today.year, today.month, today.day, 23, 59, 59).toIso8601String();
+    final startOfDay = DateTime(
+      today.year,
+      today.month,
+      today.day,
+    ).toIso8601String();
+    final endOfDay = DateTime(
+      today.year,
+      today.month,
+      today.day,
+      23,
+      59,
+      59,
+    ).toIso8601String();
 
     final result = await db.rawQuery(
       'SELECT COUNT(*) as count FROM transactions WHERE timestamp BETWEEN ? AND ?',

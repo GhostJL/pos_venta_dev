@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:myapp/app/theme.dart';
-import 'package:myapp/domain/entities/brand.dart';
-import 'package:myapp/presentation/providers/brand_providers.dart';
-import 'package:myapp/presentation/widgets/custom_data_table.dart';
-import 'package:myapp/presentation/widgets/brand_form.dart';
+import 'package:posventa/app/theme.dart';
+import 'package:posventa/domain/entities/brand.dart';
+import 'package:posventa/presentation/providers/brand_providers.dart';
+import 'package:posventa/presentation/widgets/brand_form.dart';
+import 'package:posventa/presentation/widgets/custom_data_table.dart';
 
 class BrandsPage extends ConsumerWidget {
   const BrandsPage({super.key});
@@ -26,14 +26,18 @@ class BrandsPage extends ConsumerWidget {
         builder: (BuildContext dialogContext) {
           return AlertDialog(
             title: const Text('Confirmar Eliminación'),
-            content: Text('¿Estás seguro de que quieres eliminar la marca "${brand.name}"?'),
+            content: Text(
+              '¿Estás seguro de que quieres eliminar la marca "${brand.name}"?',
+            ),
             actions: <Widget>[
               TextButton(
                 child: const Text('Cancelar'),
                 onPressed: () => Navigator.of(dialogContext).pop(),
               ),
               ElevatedButton(
-                style: ElevatedButton.styleFrom(backgroundColor: AppTheme.error),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppTheme.error,
+                ),
                 child: const Text('Eliminar'),
                 onPressed: () {
                   ref.read(brandListProvider.notifier).deleteBrand(brand.id!);
@@ -61,19 +65,37 @@ class BrandsPage extends ConsumerWidget {
             rows: brands.map((brand) {
               return DataRow(
                 cells: [
-                  DataCell(Text(brand.name, style: Theme.of(context).textTheme.bodyLarge)),
-                  DataCell(Text(brand.code, style: Theme.of(context).textTheme.bodyMedium)),
+                  DataCell(
+                    Text(
+                      brand.name,
+                      style: Theme.of(context).textTheme.bodyLarge,
+                    ),
+                  ),
+                  DataCell(
+                    Text(
+                      brand.code,
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    ),
+                  ),
                   DataCell(_buildStatusChip(brand.isActive)),
                   DataCell(
                     Row(
                       children: [
                         IconButton(
-                          icon: const Icon(Icons.edit_rounded, color: AppTheme.primary, size: 20),
+                          icon: const Icon(
+                            Icons.edit_rounded,
+                            color: AppTheme.primary,
+                            size: 20,
+                          ),
                           tooltip: 'Editar Marca',
                           onPressed: () => showForm(brand),
                         ),
                         IconButton(
-                          icon: const Icon(Icons.delete_rounded, color: AppTheme.error, size: 20),
+                          icon: const Icon(
+                            Icons.delete_rounded,
+                            color: AppTheme.error,
+                            size: 20,
+                          ),
                           tooltip: 'Eliminar Marca',
                           onPressed: () => confirmDelete(context, ref, brand),
                         ),
@@ -97,7 +119,9 @@ class BrandsPage extends ConsumerWidget {
   Widget _buildStatusChip(bool isActive) {
     return Chip(
       label: Text(isActive ? 'Activo' : 'Inactivo'),
-      backgroundColor: isActive ? AppTheme.success.withAlpha(10) : AppTheme.error.withAlpha(10),
+      backgroundColor: isActive
+          ? AppTheme.success.withAlpha(10)
+          : AppTheme.error.withAlpha(10),
       labelStyle: TextStyle(
         color: isActive ? AppTheme.success : AppTheme.error,
         fontWeight: FontWeight.w600,

@@ -1,9 +1,10 @@
 import 'dart:convert';
+
 import 'package:crypto/crypto.dart';
-import 'package:myapp/data/datasources/database_helper.dart';
-import 'package:myapp/domain/entities/user.dart';
-import 'package:myapp/domain/repositories/auth_repository.dart';
-import 'package:myapp/domain/repositories/user_repository.dart';
+import 'package:posventa/data/datasources/database_helper.dart';
+import 'package:posventa/domain/entities/user.dart';
+import 'package:posventa/domain/repositories/auth_repository.dart';
+import 'package:posventa/domain/repositories/user_repository.dart';
 
 class AuthRepositoryImpl implements AuthRepository, UserRepository {
   final DatabaseHelper _databaseHelper;

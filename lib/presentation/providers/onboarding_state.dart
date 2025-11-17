@@ -1,5 +1,5 @@
 import 'package:flutter_riverpod/legacy.dart';
-import 'package:myapp/domain/entities/user.dart';
+import 'package:posventa/domain/entities/user.dart';
 
 class OnboardingState {
   final User? adminUser;
@@ -57,5 +57,5 @@ class OnboardingNotifier extends StateNotifier<OnboardingState> {
 
 final onboardingNotifierProvider =
     StateNotifierProvider<OnboardingNotifier, OnboardingState>((ref) {
-  return OnboardingNotifier();
-});
+      return OnboardingNotifier();
+    });

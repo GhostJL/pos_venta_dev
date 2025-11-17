@@ -1,24 +1,22 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:myapp/domain/entities/user.dart';
-import 'package:myapp/presentation/pages/brands_page.dart';
-import 'package:myapp/presentation/pages/cashier_home_page.dart';
-import 'package:myapp/presentation/pages/categories_page.dart';
-import 'package:myapp/presentation/pages/departments_page.dart';
-import 'package:myapp/presentation/pages/login_page.dart';
-import 'package:myapp/presentation/pages/suppliers_page.dart';
-import 'package:myapp/presentation/providers/auth_provider.dart';
-import 'package:myapp/presentation/pages/dashboard_screen.dart';
-import 'package:myapp/presentation/providers/transaction_provider.dart';
-
+import 'package:go_router/go_router.dart';
+import 'package:posventa/domain/entities/user.dart';
+import 'package:posventa/presentation/pages/brands_page.dart';
+import 'package:posventa/presentation/pages/cashier_home_page.dart';
+import 'package:posventa/presentation/pages/categories_page.dart';
+import 'package:posventa/presentation/pages/dashboard_screen.dart';
+import 'package:posventa/presentation/pages/departments_page.dart';
+import 'package:posventa/presentation/pages/login_page.dart';
+import 'package:posventa/presentation/pages/main_layout.dart';
+import 'package:posventa/presentation/pages/onboarding/add_cashier_form_page.dart';
+import 'package:posventa/presentation/pages/onboarding/add_cashiers_page.dart';
 // Onboarding Pages
-import 'package:myapp/presentation/pages/onboarding/admin_setup_page.dart';
-import 'package:myapp/presentation/pages/onboarding/add_cashiers_page.dart';
-import 'package:myapp/presentation/pages/onboarding/add_cashier_form_page.dart';
-import 'package:myapp/presentation/pages/onboarding/set_access_key_page.dart';
-
-import 'package:myapp/presentation/pages/main_layout.dart';
+import 'package:posventa/presentation/pages/onboarding/admin_setup_page.dart';
+import 'package:posventa/presentation/pages/onboarding/set_access_key_page.dart';
+import 'package:posventa/presentation/pages/suppliers_page.dart';
+import 'package:posventa/presentation/providers/auth_provider.dart';
+import 'package:posventa/presentation/providers/transaction_provider.dart';
 
 final GlobalKey<NavigatorState> _rootNavigatorKey = GlobalKey<NavigatorState>();
 

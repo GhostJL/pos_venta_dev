@@ -1,4 +1,4 @@
-import 'package:myapp/domain/repositories/brand_repository.dart';
+import 'package:posventa/domain/repositories/brand_repository.dart';
 
 class DeleteBrand {
   final BrandRepository repository;

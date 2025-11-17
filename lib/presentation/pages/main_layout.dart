@@ -1,6 +1,5 @@
-
 import 'package:flutter/material.dart';
-import 'package:myapp/presentation/widgets/side_menu.dart';
+import 'package:posventa/presentation/widgets/side_menu.dart';
 
 class MainLayout extends StatelessWidget {
   final Widget child;
@@ -21,9 +20,7 @@ class MainLayout extends StatelessWidget {
             appBar: AppBar(
               // The AppBar can be customized as needed
             ),
-            drawer: const Drawer(
-              child: SideMenu(),
-            ),
+            drawer: const Drawer(child: SideMenu()),
             body: child,
           );
         } else {
@@ -33,9 +30,7 @@ class MainLayout extends StatelessWidget {
               children: [
                 const SideMenu(),
                 const VerticalDivider(width: 1, thickness: 1),
-                Expanded(
-                  child: child,
-                ),
+                Expanded(child: child),
               ],
             ),
           );

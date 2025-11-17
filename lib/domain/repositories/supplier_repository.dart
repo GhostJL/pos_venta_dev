@@ -1,4 +1,4 @@
-import 'package:myapp/domain/entities/supplier.dart';
+import 'package:posventa/domain/entities/supplier.dart';
 
 abstract class SupplierRepository {
   Future<List<Supplier>> getAllSuppliers();

@@ -1,10 +1,9 @@
-
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
-import 'package:myapp/data/repositories/auth_repository_impl.dart';
-import 'package:myapp/domain/entities/user.dart';
-import 'package:myapp/domain/repositories/auth_repository.dart';
-import 'package:myapp/presentation/providers/transaction_provider.dart'; // Import centralized provider
+import 'package:posventa/data/repositories/auth_repository_impl.dart';
+import 'package:posventa/domain/entities/user.dart';
+import 'package:posventa/domain/repositories/auth_repository.dart';
+import 'package:posventa/presentation/providers/transaction_provider.dart'; // Import centralized provider
 import 'package:shared_preferences/shared_preferences.dart';
 
 // Defines the authentication state of the app
@@ -96,4 +95,3 @@ final authProvider = StateNotifierProvider<AuthNotifier, AuthState>((ref) {
   final repo = ref.watch(authRepositoryProvider);
   return AuthNotifier(repo);
 });
-

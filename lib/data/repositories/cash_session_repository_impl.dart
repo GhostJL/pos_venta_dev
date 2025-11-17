@@ -1,7 +1,7 @@
-import 'package:myapp/data/datasources/database_helper.dart';
-import 'package:myapp/data/models/cash_session_model.dart';
-import 'package:myapp/domain/entities/cash_session.dart';
-import 'package:myapp/domain/repositories/cash_session_repository.dart';
+import 'package:posventa/data/datasources/database_helper.dart';
+import 'package:posventa/data/models/cash_session_model.dart';
+import 'package:posventa/domain/entities/cash_session.dart';
+import 'package:posventa/domain/repositories/cash_session_repository.dart';
 
 class CashSessionRepositoryImpl implements CashSessionRepository {
   final DatabaseHelper _databaseHelper;

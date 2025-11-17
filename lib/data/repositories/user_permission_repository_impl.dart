@@ -1,7 +1,7 @@
-import 'package:myapp/data/datasources/database_helper.dart';
-import 'package:myapp/data/models/user_permission_model.dart';
-import 'package:myapp/domain/entities/user_permission.dart';
-import 'package:myapp/domain/repositories/user_permission_repository.dart';
+import 'package:posventa/data/datasources/database_helper.dart';
+import 'package:posventa/data/models/user_permission_model.dart';
+import 'package:posventa/domain/entities/user_permission.dart';
+import 'package:posventa/domain/repositories/user_permission_repository.dart';
 
 class UserPermissionRepositoryImpl implements UserPermissionRepository {
   final DatabaseHelper _databaseHelper;

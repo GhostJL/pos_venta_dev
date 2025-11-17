@@ -1,8 +1,7 @@
-
-import 'package:myapp/data/datasources/database_helper.dart';
-import 'package:myapp/data/models/supplier_model.dart';
-import 'package:myapp/domain/entities/supplier.dart';
-import 'package:myapp/domain/repositories/supplier_repository.dart';
+import 'package:posventa/data/datasources/database_helper.dart';
+import 'package:posventa/data/models/supplier_model.dart';
+import 'package:posventa/domain/entities/supplier.dart';
+import 'package:posventa/domain/repositories/supplier_repository.dart';
 import 'package:sqflite/sqflite.dart';
 
 class SupplierRepositoryImpl implements SupplierRepository {
@@ -13,7 +12,9 @@ class SupplierRepositoryImpl implements SupplierRepository {
   @override
   Future<List<Supplier>> getAllSuppliers() async {
     final db = await _dbHelper.database;
-    final List<Map<String, dynamic>> maps = await db.query(DatabaseHelper.tableSuppliers);
+    final List<Map<String, dynamic>> maps = await db.query(
+      DatabaseHelper.tableSuppliers,
+    );
     return List.generate(maps.length, (i) => SupplierModel.fromMap(maps[i]));
   }
 
@@ -31,7 +32,11 @@ class SupplierRepositoryImpl implements SupplierRepository {
       creditDays: supplier.creditDays,
       isActive: supplier.isActive,
     );
-    final id = await db.insert(DatabaseHelper.tableSuppliers, model.toMap(), conflictAlgorithm: ConflictAlgorithm.replace);
+    final id = await db.insert(
+      DatabaseHelper.tableSuppliers,
+      model.toMap(),
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
     final createdSupplier = await _getSupplierById(id);
     return createdSupplier;
   }
@@ -51,7 +56,12 @@ class SupplierRepositoryImpl implements SupplierRepository {
       creditDays: supplier.creditDays,
       isActive: supplier.isActive,
     );
-    await db.update(DatabaseHelper.tableSuppliers, model.toMap(), where: 'id = ?', whereArgs: [supplier.id]);
+    await db.update(
+      DatabaseHelper.tableSuppliers,
+      model.toMap(),
+      where: 'id = ?',
+      whereArgs: [supplier.id],
+    );
     final updatedSupplier = await _getSupplierById(supplier.id!);
     return updatedSupplier;
   }
@@ -59,12 +69,20 @@ class SupplierRepositoryImpl implements SupplierRepository {
   @override
   Future<void> deleteSupplier(int supplierId) async {
     final db = await _dbHelper.database;
-    await db.delete(DatabaseHelper.tableSuppliers, where: 'id = ?', whereArgs: [supplierId]);
+    await db.delete(
+      DatabaseHelper.tableSuppliers,
+      where: 'id = ?',
+      whereArgs: [supplierId],
+    );
   }
 
   Future<Supplier> _getSupplierById(int id) async {
     final db = await _dbHelper.database;
-    final List<Map<String, dynamic>> maps = await db.query(DatabaseHelper.tableSuppliers, where: 'id = ?', whereArgs: [id]);
+    final List<Map<String, dynamic>> maps = await db.query(
+      DatabaseHelper.tableSuppliers,
+      where: 'id = ?',
+      whereArgs: [id],
+    );
     if (maps.isNotEmpty) {
       return SupplierModel.fromMap(maps.first);
     } else {

@@ -1,4 +1,4 @@
-import 'package:myapp/domain/entities/cash_session.dart';
+import 'package:posventa/domain/entities/cash_session.dart';
 
 class CashSessionModel extends CashSession {
   CashSessionModel({

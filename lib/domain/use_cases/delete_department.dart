@@ -1,4 +1,4 @@
-import 'package:myapp/domain/repositories/department_repository.dart';
+import 'package:posventa/domain/repositories/department_repository.dart';
 
 class DeleteDepartment {
   final DepartmentRepository repository;

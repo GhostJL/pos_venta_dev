@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:myapp/app/theme.dart';
-import 'package:myapp/domain/entities/category.dart';
-import 'package:myapp/presentation/providers/category_providers.dart';
-import 'package:myapp/presentation/widgets/custom_data_table.dart';
-import 'package:myapp/presentation/widgets/category_form_dialog.dart';
-import 'package:myapp/presentation/providers/department_providers.dart';
+import 'package:posventa/app/theme.dart';
+import 'package:posventa/domain/entities/category.dart';
+import 'package:posventa/presentation/providers/category_providers.dart';
+import 'package:posventa/presentation/providers/department_providers.dart';
+import 'package:posventa/presentation/widgets/category_form_dialog.dart';
+import 'package:posventa/presentation/widgets/custom_data_table.dart';
 
 class CategoriesPage extends ConsumerWidget {
   const CategoriesPage({super.key});

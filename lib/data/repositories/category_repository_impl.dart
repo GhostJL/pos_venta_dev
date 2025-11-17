@@ -1,7 +1,7 @@
-import 'package:myapp/data/datasources/database_helper.dart';
-import 'package:myapp/data/models/category_model.dart';
-import 'package:myapp/domain/entities/category.dart';
-import 'package:myapp/domain/repositories/category_repository.dart';
+import 'package:posventa/data/datasources/database_helper.dart';
+import 'package:posventa/data/models/category_model.dart';
+import 'package:posventa/domain/entities/category.dart';
+import 'package:posventa/domain/repositories/category_repository.dart';
 
 class CategoryRepositoryImpl implements CategoryRepository {
   final DatabaseHelper _databaseHelper;

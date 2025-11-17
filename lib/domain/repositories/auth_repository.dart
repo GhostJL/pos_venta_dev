@@ -1,5 +1,4 @@
-
-import 'package:myapp/domain/entities/user.dart';
+import 'package:posventa/domain/entities/user.dart';
 
 abstract class AuthRepository {
   Future<User?> login(String username, String password);

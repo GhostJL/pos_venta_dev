@@ -1,8 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:myapp/data/repositories/auth_repository_impl.dart';
-import 'package:myapp/domain/entities/user.dart';
-import 'package:myapp/domain/repositories/user_repository.dart';
-import 'package:myapp/presentation/providers/transaction_provider.dart';
+import 'package:posventa/data/repositories/auth_repository_impl.dart';
+import 'package:posventa/domain/entities/user.dart';
+import 'package:posventa/domain/repositories/user_repository.dart';
+import 'package:posventa/presentation/providers/transaction_provider.dart';
 
 // Proveedor para UserRepository
 final userRepositoryProvider = Provider<UserRepository>((ref) {

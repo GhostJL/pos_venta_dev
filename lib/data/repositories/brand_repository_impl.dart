@@ -1,7 +1,7 @@
-import 'package:myapp/data/datasources/database_helper.dart';
-import 'package:myapp/data/models/brand_model.dart';
-import 'package:myapp/domain/entities/brand.dart';
-import 'package:myapp/domain/repositories/brand_repository.dart';
+import 'package:posventa/data/datasources/database_helper.dart';
+import 'package:posventa/data/models/brand_model.dart';
+import 'package:posventa/domain/entities/brand.dart';
+import 'package:posventa/domain/repositories/brand_repository.dart';
 
 class BrandRepositoryImpl implements BrandRepository {
   final DatabaseHelper dbHelper;
@@ -18,7 +18,11 @@ class BrandRepositoryImpl implements BrandRepository {
   @override
   Future<Brand> createBrand(Brand brand) async {
     final db = await dbHelper.database;
-    final model = BrandModel(name: brand.name, code: brand.code, isActive: brand.isActive);
+    final model = BrandModel(
+      name: brand.name,
+      code: brand.code,
+      isActive: brand.isActive,
+    );
     final id = await db.insert('brands', model.toMap());
     return brand.copyWith(id: id);
   }
@@ -44,10 +48,6 @@ class BrandRepositoryImpl implements BrandRepository {
   @override
   Future<void> deleteBrand(int brandId) async {
     final db = await dbHelper.database;
-    await db.delete(
-      'brands',
-      where: 'id = ?',
-      whereArgs: [brandId],
-    );
+    await db.delete('brands', where: 'id = ?', whereArgs: [brandId]);
   }
 }

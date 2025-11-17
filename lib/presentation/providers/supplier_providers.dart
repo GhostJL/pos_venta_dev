@@ -1,13 +1,13 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
-import 'package:myapp/data/datasources/database_helper.dart';
-import 'package:myapp/data/repositories/supplier_repository_impl.dart';
-import 'package:myapp/domain/entities/supplier.dart';
-import 'package:myapp/domain/repositories/supplier_repository.dart';
-import 'package:myapp/domain/use_cases/create_supplier.dart';
-import 'package:myapp/domain/use_cases/delete_supplier.dart';
-import 'package:myapp/domain/use_cases/get_all_suppliers.dart';
-import 'package:myapp/domain/use_cases/update_supplier.dart';
+import 'package:posventa/data/datasources/database_helper.dart';
+import 'package:posventa/data/repositories/supplier_repository_impl.dart';
+import 'package:posventa/domain/entities/supplier.dart';
+import 'package:posventa/domain/repositories/supplier_repository.dart';
+import 'package:posventa/domain/use_cases/create_supplier.dart';
+import 'package:posventa/domain/use_cases/delete_supplier.dart';
+import 'package:posventa/domain/use_cases/get_all_suppliers.dart';
+import 'package:posventa/domain/use_cases/update_supplier.dart';
 
 // 1. Repositorio
 final supplierRepositoryProvider = Provider<SupplierRepository>((ref) {
@@ -32,9 +32,10 @@ final deleteSupplierProvider = Provider((ref) {
 });
 
 // 3. State Notifier para la lista de proveedores
-final supplierListProvider = StateNotifierProvider<SupplierListNotifier, List<Supplier>>((ref) {
-  return SupplierListNotifier(ref);
-});
+final supplierListProvider =
+    StateNotifierProvider<SupplierListNotifier, List<Supplier>>((ref) {
+      return SupplierListNotifier(ref);
+    });
 
 class SupplierListNotifier extends StateNotifier<List<Supplier>> {
   final Ref _ref;

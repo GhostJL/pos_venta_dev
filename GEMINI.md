@@ -119,7 +119,7 @@ void main() {
   runApp(
     ChangeNotifierProvider(
       create: (context) => ThemeProvider(),
-      child: const MyApp(),
+      child: const posventa(),
     ),
   );
 }
@@ -141,7 +141,7 @@ class ThemeProvider with ChangeNotifier {
   }
 }
 
-class MyApp extends StatelessWidget {
+class posventa extends StatelessWidget {
   const MyApp({super.key});
 
   @override

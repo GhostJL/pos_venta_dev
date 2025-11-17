@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:myapp/domain/entities/category.dart';
-import 'package:myapp/domain/entities/department.dart';
-import 'package:myapp/presentation/providers/department_providers.dart';
+import 'package:posventa/domain/entities/category.dart';
+import 'package:posventa/domain/entities/department.dart';
+import 'package:posventa/presentation/providers/department_providers.dart';
 
 class CategoryFormDialog extends ConsumerStatefulWidget {
   final Category? category;
@@ -34,7 +34,9 @@ class _CategoryFormDialogState extends ConsumerState<CategoryFormDialog> {
     final departmentsAsync = ref.watch(departmentListProvider);
 
     return AlertDialog(
-      title: Text(widget.category == null ? 'Añadir Categoría' : 'Editar Categoría'),
+      title: Text(
+        widget.category == null ? 'Añadir Categoría' : 'Editar Categoría',
+      ),
       content: Form(
         key: _formKey,
         child: SingleChildScrollView(
@@ -74,10 +76,12 @@ class _CategoryFormDialogState extends ConsumerState<CategoryFormDialog> {
                     );
                   }
 
-                  final validDepartmentId = _departmentId != null && departments.any((d) => d.id == _departmentId)
+                  final validDepartmentId =
+                      _departmentId != null &&
+                          departments.any((d) => d.id == _departmentId)
                       ? _departmentId
                       : null;
-                  
+
                   return DropdownButtonFormField<int>(
                     initialValue: validDepartmentId,
                     items: departments.map((Department department) {
@@ -94,11 +98,14 @@ class _CategoryFormDialogState extends ConsumerState<CategoryFormDialog> {
                     decoration: const InputDecoration(
                       labelText: 'Departamento',
                     ),
-                     validator: (value) => value == null ? 'Por favor, seleccione un departamento' : null,
+                    validator: (value) => value == null
+                        ? 'Por favor, seleccione un departamento'
+                        : null,
                   );
                 },
                 loading: () => const Center(child: CircularProgressIndicator()),
-                error: (err, stack) => Text('Error al cargar los departamentos: $err'),
+                error: (err, stack) =>
+                    Text('Error al cargar los departamentos: $err'),
               ),
               const SizedBox(height: 16),
               TextFormField(
@@ -116,10 +123,7 @@ class _CategoryFormDialogState extends ConsumerState<CategoryFormDialog> {
           onPressed: () => Navigator.of(context).pop(),
           child: const Text('Cancelar'),
         ),
-        ElevatedButton(
-          onPressed: _submit,
-          child: const Text('Guardar'),
-        ),
+        ElevatedButton(onPressed: _submit, child: const Text('Guardar')),
       ],
     );
   }
@@ -129,7 +133,9 @@ class _CategoryFormDialogState extends ConsumerState<CategoryFormDialog> {
       _formKey.currentState!.save();
       if (_departmentId == null) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('No se ha seleccionado ningún departamento.')),
+          const SnackBar(
+            content: Text('No se ha seleccionado ningún departamento.'),
+          ),
         );
         return;
       }

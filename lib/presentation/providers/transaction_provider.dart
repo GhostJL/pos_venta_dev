@@ -1,22 +1,26 @@
-
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
-import 'package:myapp/data/datasources/database_helper.dart';
-import 'package:myapp/data/repositories/transaction_repository_impl.dart';
-import 'package:myapp/domain/entities/transaction.dart';
-import 'package:myapp/domain/repositories/transaction_repository.dart';
+import 'package:posventa/data/datasources/database_helper.dart';
+import 'package:posventa/data/repositories/transaction_repository_impl.dart';
+import 'package:posventa/domain/entities/transaction.dart';
+import 'package:posventa/domain/repositories/transaction_repository.dart';
 
-final databaseHelperProvider = Provider<DatabaseHelper>((ref) => DatabaseHelper());
+final databaseHelperProvider = Provider<DatabaseHelper>(
+  (ref) => DatabaseHelper(),
+);
 
 final transactionRepositoryProvider = Provider<TransactionRepository>((ref) {
   final dbHelper = ref.watch(databaseHelperProvider);
   return TransactionRepositoryImpl(dbHelper);
 });
 
-final transactionProvider = StateNotifierProvider<TransactionNotifier, AsyncValue<List<Transaction>>>((ref) {
-  final repo = ref.watch(transactionRepositoryProvider);
-  return TransactionNotifier(repo);
-});
+final transactionProvider =
+    StateNotifierProvider<TransactionNotifier, AsyncValue<List<Transaction>>>((
+      ref,
+    ) {
+      final repo = ref.watch(transactionRepositoryProvider);
+      return TransactionNotifier(repo);
+    });
 
 class TransactionNotifier extends StateNotifier<AsyncValue<List<Transaction>>> {
   final TransactionRepository _repository;

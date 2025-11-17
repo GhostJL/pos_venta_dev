@@ -1,4 +1,4 @@
-import 'package:myapp/domain/entities/category.dart';
+import 'package:posventa/domain/entities/category.dart';
 
 class CategoryModel extends Category {
   CategoryModel({

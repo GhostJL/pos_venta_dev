@@ -1,4 +1,4 @@
-import 'package:myapp/domain/entities/permission.dart';
+import 'package:posventa/domain/entities/permission.dart';
 
 class PermissionModel extends Permission {
   PermissionModel({

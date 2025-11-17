@@ -1,5 +1,4 @@
-
-import 'package:myapp/domain/entities/transaction.dart';
+import 'package:posventa/domain/entities/transaction.dart';
 
 abstract class TransactionRepository {
   Future<void> addTransaction(Transaction transaction);

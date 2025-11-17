@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:myapp/domain/entities/brand.dart';
-import 'package:myapp/presentation/providers/brand_providers.dart';
+import 'package:posventa/domain/entities/brand.dart';
+import 'package:posventa/presentation/providers/brand_providers.dart';
 
 class BrandForm extends ConsumerStatefulWidget {
   final Brand? brand;
@@ -37,17 +37,13 @@ class BrandFormState extends ConsumerState<BrandForm> {
           children: [
             TextFormField(
               controller: _nameController,
-              decoration: const InputDecoration(
-                labelText: 'Nombre',
-              ),
+              decoration: const InputDecoration(labelText: 'Nombre'),
               validator: (value) => value!.isEmpty ? 'Campo requerido' : null,
             ),
             const SizedBox(height: 16),
             TextFormField(
               controller: _codeController,
-              decoration: const InputDecoration(
-                labelText: 'Código',
-              ),
+              decoration: const InputDecoration(labelText: 'Código'),
               validator: (value) => value!.isEmpty ? 'Campo requerido' : null,
             ),
             const SizedBox(height: 10),
@@ -62,7 +58,10 @@ class BrandFormState extends ConsumerState<BrandForm> {
         ),
       ),
       actions: [
-        TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancelar')), // Cancelar
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Cancelar'),
+        ), // Cancelar
         ElevatedButton(
           onPressed: () {
             if (_formKey.currentState!.validate()) {

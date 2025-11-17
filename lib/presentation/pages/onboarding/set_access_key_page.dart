@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:myapp/app/router.dart';
-import 'package:myapp/app/theme.dart';
-import 'package:myapp/presentation/pages/onboarding/onboarding_layout.dart';
-import 'package:myapp/presentation/providers/onboarding_state.dart';
-import 'package:myapp/presentation/providers/transaction_provider.dart';
+import 'package:posventa/app/router.dart';
+import 'package:posventa/app/theme.dart';
+import 'package:posventa/presentation/pages/onboarding/onboarding_layout.dart';
+import 'package:posventa/presentation/providers/onboarding_state.dart';
+import 'package:posventa/presentation/providers/transaction_provider.dart';
 
 class SetAccessKeyPage extends ConsumerStatefulWidget {
   const SetAccessKeyPage({super.key});

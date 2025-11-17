@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:myapp/domain/entities/user.dart';
-import 'package:myapp/presentation/pages/onboarding/onboarding_layout.dart';
-import 'package:myapp/presentation/providers/onboarding_state.dart';
+import 'package:posventa/domain/entities/user.dart';
+import 'package:posventa/presentation/pages/onboarding/onboarding_layout.dart';
+import 'package:posventa/presentation/providers/onboarding_state.dart';
 
 class AdminSetupPage extends ConsumerStatefulWidget {
   const AdminSetupPage({super.key});
@@ -46,7 +46,9 @@ class _AdminSetupPageState extends ConsumerState<AdminSetupPage> {
       updatedAt: DateTime.now(),
     );
 
-    ref.read(onboardingNotifierProvider.notifier).setAdmin(adminUser, _passwordController.text);
+    ref
+        .read(onboardingNotifierProvider.notifier)
+        .setAdmin(adminUser, _passwordController.text);
     context.push('/add-cashiers');
   }
 
@@ -60,7 +62,7 @@ class _AdminSetupPageState extends ConsumerState<AdminSetupPage> {
       child: LayoutBuilder(
         builder: (context, constraints) {
           final isSmallScreen = constraints.maxWidth < 600;
-          
+
           return Form(
             key: _formKey,
             child: Column(
@@ -68,8 +70,12 @@ class _AdminSetupPageState extends ConsumerState<AdminSetupPage> {
               children: [
                 TextFormField(
                   controller: _usernameController,
-                  decoration: const InputDecoration(labelText: 'Nombre de usuario'),
-                  validator: (value) => value!.isEmpty ? 'El nombre de usuario es obligatorio' : null,
+                  decoration: const InputDecoration(
+                    labelText: 'Nombre de usuario',
+                  ),
+                  validator: (value) => value!.isEmpty
+                      ? 'El nombre de usuario es obligatorio'
+                      : null,
                 ),
                 SizedBox(height: isSmallScreen ? 12 : 16),
                 TextFormField(
@@ -77,8 +83,12 @@ class _AdminSetupPageState extends ConsumerState<AdminSetupPage> {
                   obscureText: true,
                   decoration: const InputDecoration(labelText: 'Contraseña'),
                   validator: (value) {
-                    if (value == null || value.isEmpty) return 'La contraseña es obligatoria';
-                    if (value.length < 8) return 'La contraseña debe tener al menos 8 caracteres';
+                    if (value == null || value.isEmpty) {
+                      return 'La contraseña es obligatoria';
+                    }
+                    if (value.length < 8) {
+                      return 'La contraseña debe tener al menos 8 caracteres';
+                    }
                     return null;
                   },
                 ),
@@ -86,20 +96,26 @@ class _AdminSetupPageState extends ConsumerState<AdminSetupPage> {
                 TextFormField(
                   controller: _firstNameController,
                   decoration: const InputDecoration(labelText: 'Nombre'),
-                  validator: (value) => value!.isEmpty ? 'El nombre es obligatorio' : null,
+                  validator: (value) =>
+                      value!.isEmpty ? 'El nombre es obligatorio' : null,
                 ),
                 SizedBox(height: isSmallScreen ? 12 : 16),
                 TextFormField(
                   controller: _lastNameController,
                   decoration: const InputDecoration(labelText: 'Apellido'),
-                  validator: (value) => value!.isEmpty ? 'El apellido es obligatorio' : null,
+                  validator: (value) =>
+                      value!.isEmpty ? 'El apellido es obligatorio' : null,
                 ),
                 SizedBox(height: isSmallScreen ? 12 : 16),
                 TextFormField(
                   controller: _emailController,
-                  decoration: const InputDecoration(labelText: 'Correo electrónico'),
+                  decoration: const InputDecoration(
+                    labelText: 'Correo electrónico',
+                  ),
                   keyboardType: TextInputType.emailAddress,
-                  validator: (value) => value!.isEmpty ? 'El correo electrónico es obligatorio' : null,
+                  validator: (value) => value!.isEmpty
+                      ? 'El correo electrónico es obligatorio'
+                      : null,
                 ),
                 SizedBox(height: isSmallScreen ? 24 : 32),
                 ElevatedButton(

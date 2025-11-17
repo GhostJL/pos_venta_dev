@@ -1,4 +1,4 @@
-import 'package:myapp/domain/entities/permission.dart';
+import 'package:posventa/domain/entities/permission.dart';
 
 abstract class PermissionRepository {
   Future<void> addPermission(Permission permission);

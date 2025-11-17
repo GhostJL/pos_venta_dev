@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:myapp/domain/entities/supplier.dart';
-import 'package:myapp/presentation/providers/supplier_providers.dart';
+import 'package:posventa/domain/entities/supplier.dart';
+import 'package:posventa/presentation/providers/supplier_providers.dart';
 
 class SupplierForm extends ConsumerStatefulWidget {
   final Supplier? supplier;
@@ -28,12 +28,24 @@ class SupplierFormState extends ConsumerState<SupplierForm> {
     super.initState();
     _nameController = TextEditingController(text: widget.supplier?.name ?? '');
     _codeController = TextEditingController(text: widget.supplier?.code ?? '');
-    _contactPersonController = TextEditingController(text: widget.supplier?.contactPerson ?? '');
-    _phoneController = TextEditingController(text: widget.supplier?.phone ?? '');
-    _emailController = TextEditingController(text: widget.supplier?.email ?? '');
-    _addressController = TextEditingController(text: widget.supplier?.address ?? '');
-    _taxIdController = TextEditingController(text: widget.supplier?.taxId ?? '');
-    _creditDaysController = TextEditingController(text: widget.supplier?.creditDays.toString() ?? '0');
+    _contactPersonController = TextEditingController(
+      text: widget.supplier?.contactPerson ?? '',
+    );
+    _phoneController = TextEditingController(
+      text: widget.supplier?.phone ?? '',
+    );
+    _emailController = TextEditingController(
+      text: widget.supplier?.email ?? '',
+    );
+    _addressController = TextEditingController(
+      text: widget.supplier?.address ?? '',
+    );
+    _taxIdController = TextEditingController(
+      text: widget.supplier?.taxId ?? '',
+    );
+    _creditDaysController = TextEditingController(
+      text: widget.supplier?.creditDays.toString() ?? '0',
+    );
   }
 
   @override
@@ -55,10 +67,14 @@ class SupplierFormState extends ConsumerState<SupplierForm> {
         id: widget.supplier?.id,
         name: _nameController.text,
         code: _codeController.text,
-        contactPerson: _contactPersonController.text.isNotEmpty ? _contactPersonController.text : null,
+        contactPerson: _contactPersonController.text.isNotEmpty
+            ? _contactPersonController.text
+            : null,
         phone: _phoneController.text.isNotEmpty ? _phoneController.text : null,
         email: _emailController.text.isNotEmpty ? _emailController.text : null,
-        address: _addressController.text.isNotEmpty ? _addressController.text : null,
+        address: _addressController.text.isNotEmpty
+            ? _addressController.text
+            : null,
         taxId: _taxIdController.text.isNotEmpty ? _taxIdController.text : null,
         creditDays: int.tryParse(_creditDaysController.text) ?? 0,
         isActive: widget.supplier?.isActive ?? true,
@@ -77,7 +93,9 @@ class SupplierFormState extends ConsumerState<SupplierForm> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: Text(widget.supplier == null ? 'Añadir Proveedor' : 'Editar Proveedor'),
+      title: Text(
+        widget.supplier == null ? 'Añadir Proveedor' : 'Editar Proveedor',
+      ),
       content: Form(
         key: _formKey,
         child: SingleChildScrollView(
@@ -87,18 +105,22 @@ class SupplierFormState extends ConsumerState<SupplierForm> {
               TextFormField(
                 controller: _nameController,
                 decoration: const InputDecoration(labelText: 'Nombre'),
-                validator: (value) => value!.isEmpty ? 'El nombre es obligatorio' : null,
+                validator: (value) =>
+                    value!.isEmpty ? 'El nombre es obligatorio' : null,
               ),
               const SizedBox(height: 16),
               TextFormField(
                 controller: _codeController,
                 decoration: const InputDecoration(labelText: 'Código'),
-                validator: (value) => value!.isEmpty ? 'El código es obligatorio' : null,
+                validator: (value) =>
+                    value!.isEmpty ? 'El código es obligatorio' : null,
               ),
               const SizedBox(height: 16),
               TextFormField(
                 controller: _contactPersonController,
-                decoration: const InputDecoration(labelText: 'Persona de Contacto'),
+                decoration: const InputDecoration(
+                  labelText: 'Persona de Contacto',
+                ),
               ),
               const SizedBox(height: 16),
               TextFormField(
@@ -108,11 +130,15 @@ class SupplierFormState extends ConsumerState<SupplierForm> {
               const SizedBox(height: 16),
               TextFormField(
                 controller: _emailController,
-                decoration: const InputDecoration(labelText: 'Correo Electrónico'),
+                decoration: const InputDecoration(
+                  labelText: 'Correo Electrónico',
+                ),
                 keyboardType: TextInputType.emailAddress,
                 validator: (value) {
                   if (value == null || value.isEmpty) return null;
-                  final emailRegex = RegExp(r'^[\w-]+(\.[\w-]+)*@([\w-]+\.)+[a-zA-Z]{2,7}$');
+                  final emailRegex = RegExp(
+                    r'^[\w-]+(\.[\w-]+)*@([\w-]+\.)+[a-zA-Z]{2,7}$',
+                  );
                   if (!emailRegex.hasMatch(value)) {
                     return 'Ingrese un correo electrónico válido';
                   }
@@ -135,8 +161,12 @@ class SupplierFormState extends ConsumerState<SupplierForm> {
                 decoration: const InputDecoration(labelText: 'Días de Crédito'),
                 keyboardType: TextInputType.number,
                 validator: (value) {
-                  if (value == null || value.isEmpty) return 'Ingrese los días de crédito';
-                  if (int.tryParse(value) == null) return 'Ingrese un número válido';
+                  if (value == null || value.isEmpty) {
+                    return 'Ingrese los días de crédito';
+                  }
+                  if (int.tryParse(value) == null) {
+                    return 'Ingrese un número válido';
+                  }
                   return null;
                 },
               ),
@@ -149,10 +179,7 @@ class SupplierFormState extends ConsumerState<SupplierForm> {
           child: const Text('Cancelar'),
           onPressed: () => Navigator.of(context).pop(),
         ),
-        ElevatedButton(
-          onPressed: _submit,
-          child: const Text('Guardar'),
-        ),
+        ElevatedButton(onPressed: _submit, child: const Text('Guardar')),
       ],
     );
   }

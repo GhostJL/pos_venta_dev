@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:myapp/app/theme.dart';
+import 'package:posventa/app/theme.dart';
 
 class CustomDataTable<T> extends StatelessWidget {
   final List<DataColumn> columns;

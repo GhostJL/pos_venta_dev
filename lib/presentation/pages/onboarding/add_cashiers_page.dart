@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:myapp/app/theme.dart';
-import 'package:myapp/presentation/pages/onboarding/onboarding_layout.dart';
-import 'package:myapp/presentation/providers/onboarding_state.dart';
+import 'package:posventa/app/theme.dart';
+import 'package:posventa/presentation/pages/onboarding/onboarding_layout.dart';
+import 'package:posventa/presentation/providers/onboarding_state.dart';
 
 class AddCashiersPage extends ConsumerWidget {
   const AddCashiersPage({super.key});
@@ -23,12 +23,14 @@ class AddCashiersPage extends ConsumerWidget {
       child: LayoutBuilder(
         builder: (context, constraints) {
           final isSmallScreen = constraints.maxWidth < 600;
-          
+
           return Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               OutlinedButton.icon(
-                onPressed: canAddMore ? () => context.push('/add-cashier-form') : null,
+                onPressed: canAddMore
+                    ? () => context.push('/add-cashier-form')
+                    : null,
                 icon: const Icon(Icons.add_rounded),
                 label: const Text('Añadir Nuevo Miembro'),
                 style: OutlinedButton.styleFrom(
@@ -43,8 +45,8 @@ class AddCashiersPage extends ConsumerWidget {
                 Text(
                   'Equipo Actual',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
                 const Divider(height: 24),
                 ConstrainedBox(
@@ -94,9 +96,7 @@ class AddCashiersPage extends ConsumerWidget {
                           ),
                           subtitle: Text(
                             '${cashier.firstName} ${cashier.lastName}',
-                            style: TextStyle(
-                              fontSize: isSmallScreen ? 12 : 14,
-                            ),
+                            style: TextStyle(fontSize: isSmallScreen ? 12 : 14),
                           ),
                           trailing: IconButton(
                             icon: Icon(
@@ -106,7 +106,9 @@ class AddCashiersPage extends ConsumerWidget {
                             ),
                             tooltip: 'Eliminar a ${cashier.username}',
                             onPressed: () {
-                              ref.read(onboardingNotifierProvider.notifier).removeCashier(cashier);
+                              ref
+                                  .read(onboardingNotifierProvider.notifier)
+                                  .removeCashier(cashier);
                             },
                           ),
                         ),
@@ -133,7 +135,9 @@ class AddCashiersPage extends ConsumerWidget {
                     vertical: isSmallScreen ? 10 : 12,
                   ),
                 ),
-                child: const Text('Volver a la Configuración del Administrador'),
+                child: const Text(
+                  'Volver a la Configuración del Administrador',
+                ),
               ),
             ],
           );
