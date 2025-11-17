@@ -1,49 +1,47 @@
-# Blueprint: Cash Management App
+# POS App Blueprint
 
 ## Overview
 
-This document outlines the architecture, features, and design of the Cash Management Flutter application. It serves as a single source of truth for the project's implementation details.
+This document outlines the design and features of the POS App, a simple point-of-sale application for managing products, sales, and users.
 
-## Style & Design
+## Style and Design
 
-- **UI Framework**: Flutter with Material Design 3.
-- **Theme**: A consistent theme is applied using `ThemeData`, with support for both light and dark modes. Colors are generated from a seed color for a modern look.
-- **Typography**: Custom fonts are managed via `google_fonts` to ensure a unique and readable text style across the app.
-- **Layout**: The app uses a responsive layout, ensuring a great user experience on both mobile and web. Key components are organized in a clean, intuitive manner.
+The app follows a modern and clean design aesthetic, with a focus on usability and clarity. The color scheme is based on a primary color of deep purple, with a light and dark theme available. The typography uses Google Fonts for a clean and readable look.
 
-## Features Implemented
+### Key Design Elements:
 
-- **Authentication**:
-    - Secure user login.
-    - Role-based access control (Admin, Manager, Cashier, Viewer).
-    - State managed by `AsyncNotifier` from `flutter_riverpod`.
-- **Routing**:
-    - Declarative routing managed by `go_router`.
-    - Authentication-aware redirects to protect routes.
-    - Shell route for persistent UI elements like the main app bar.
-- **Database**:
-    - Local persistence using `sqflite`.
-    - Repository pattern to abstract data sources.
-- **Architecture**:
-    - Layered architecture (Presentation, Domain, Data).
-    - Dependency injection using `flutter_riverpod`.
-- **Onboarding Flow**:
-    - Guided setup for the first-time admin user.
-    - Creation of initial cashier accounts.
-    - Secure access PIN setup.
+*   **Primary Color:** Deep Purple
+*   **Typography:** Oswald for headings, Roboto for body text
+*   **Layout:** Responsive design with a side menu for navigation on larger screens and a drawer for smaller screens.
+*   **Components:** Custom-designed data tables, forms, and cards for a consistent look and feel.
 
-## Current Task: Implement Supplier Management
+## Features
 
-### Plan
+### 1. Authentication
 
-The current goal is to add a new module for managing suppliers. This includes creating, reading, updating, and deleting (CRUD) supplier information.
+*   **Login:** Users can log in with their email and password.
+*   **Roles:** The app supports two user roles: Admin and Cashier.
+*   **Onboarding:** A simple onboarding process for setting up the initial admin user.
 
-1.  **Database Update**: The `DatabaseHelper` will be updated to include a new table for suppliers, with fields such as name, code, contact person, phone, email, etc.
-2.  **Domain Layer**: A new `Supplier` entity will be created, along with a `SupplierRepository` interface and corresponding use cases (`GetAllSuppliers`, `CreateSupplier`, `UpdateSupplier`, `DeleteSupplier`).
-3.  **Data Layer**: The `SupplierRepositoryImpl` will be created to implement the repository interface, handling the direct interaction with the `sqflite` database.
-4.  **State Management**: `Riverpod` providers will be set up to manage the state of the suppliers list, exposing the repository and use cases to the UI.
-5.  **User Interface**:
-    *   A new `SuppliersPage` will be created to display a list of suppliers in a responsive data table.
-    *   A `SupplierForm` will be developed to allow users to add and edit supplier details in a dialog.
-    *   A new card will be added to the `Dashboard` to provide easy access to the supplier management page.
-6.  **Routing Update**: The `go_router` configuration will be updated to include a new route `/suppliers` that navigates to the `SuppliersPage`.
+### 2. Dashboard
+
+*   **Sales Summary:** A dashboard displaying key sales metrics for the day.
+*   **Quick Access:** Shortcuts to common tasks like managing inventory and viewing reports.
+*   **Recent Activity:** A list of recent sales transactions.
+
+### 3. CRUD Operations
+
+The app provides full CRUD (Create, Read, Update, Delete) functionality for the following entities:
+
+*   **Departments:** Organize products into different departments.
+*   **Categories:** Further categorize products within departments.
+*   **Brands:** Manage product brands.
+*   **Suppliers:** Keep track of product suppliers.
+
+### 4. Cashier Interface
+
+*   **Simple Interface:** A streamlined interface for cashiers to process sales quickly.
+
+## Current Plan
+
+This is the first version of the application. The current plan is to test the app thoroughly and gather feedback for future improvements.

@@ -68,7 +68,7 @@ class SupplierRepositoryImpl implements SupplierRepository {
     if (maps.isNotEmpty) {
       return SupplierModel.fromMap(maps.first);
     } else {
-      throw Exception('ID $id not found');
+      throw Exception('ID $id no encontrado');
     }
   }
 }

@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:myapp/app/router.dart';
+import 'package:myapp/app/theme.dart';
+import 'package:myapp/presentation/pages/onboarding/onboarding_layout.dart';
 import 'package:myapp/presentation/providers/onboarding_state.dart';
 import 'package:myapp/presentation/providers/transaction_provider.dart';
 
@@ -14,15 +16,13 @@ class SetAccessKeyPage extends ConsumerStatefulWidget {
 
 class _SetAccessKeyPageState extends ConsumerState<SetAccessKeyPage> {
   final _formKey = GlobalKey<FormState>();
-  final _accessKeyController = TextEditingController();
-  final _confirmAccessKeyController = TextEditingController();
+  final _accessKeyController = TextEditingController(text: '123');
   bool _isLoading = false;
   bool _isObscured = true;
 
   @override
   void dispose() {
     _accessKeyController.dispose();
-    _confirmAccessKeyController.dispose();
     super.dispose();
   }
 
@@ -39,7 +39,9 @@ class _SetAccessKeyPageState extends ConsumerState<SetAccessKeyPage> {
     if (finalState.adminUser == null || finalState.adminPassword == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Faltan datos del administrador. Por favor, reinicia la configuración.'),
+          content: Text(
+            'Faltan datos del administrador. Por favor, reinicia la configuración.',
+          ),
           backgroundColor: Colors.red,
         ),
       );
@@ -57,7 +59,9 @@ class _SetAccessKeyPageState extends ConsumerState<SetAccessKeyPage> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('¡Configuración completa! Ya puedes iniciar sesión.'),
+            content: Text(
+              '¡Configuración completa! Ahora puedes iniciar sesión.',
+            ),
             backgroundColor: Colors.green,
           ),
         );
@@ -78,78 +82,115 @@ class _SetAccessKeyPageState extends ConsumerState<SetAccessKeyPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Establecer Clave de Acceso'),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.go('/add-cashiers'),
-        ),
-      ),
-      body: Center(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24.0),
-          child: Form(
+    return OnboardingLayout(
+      title: 'Paso Final',
+      subtitle:
+          'Crea una clave de acceso compartida para desbloquear la aplicación.',
+      currentStep: 3,
+      totalSteps: 3,
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final isSmallScreen = constraints.maxWidth < 600;
+
+          return Form(
             key: _formKey,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Text(
-                  'Último Paso: Crea una Clave de Acceso',
-                  style: Theme.of(context).textTheme.headlineSmall,
-                  textAlign: TextAlign.center,
+                Container(
+                  padding: EdgeInsets.all(isSmallScreen ? 16 : 20),
+                  decoration: BoxDecoration(
+                    color: AppTheme.primary.withOpacity(0.05),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: AppTheme.primary.withOpacity(0.2),
+                      width: 1,
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.info_outline_rounded,
+                        color: AppTheme.primary,
+                        size: isSmallScreen ? 20 : 24,
+                      ),
+                      SizedBox(width: isSmallScreen ? 10 : 12),
+                      Expanded(
+                        child: Text(
+                          'Esta clave será usada para acceder a la aplicación. Por defecto es "123".',
+                          style: TextStyle(
+                            fontSize: isSmallScreen ? 13 : 14,
+                            color: AppTheme.textSecondary,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-                const SizedBox(height: 12),
-                const Text(
-                  'Esta clave es un PIN compartido que todos los usuarios (administradores y cajeros) usarán para desbloquear la aplicación al iniciar. No es tu contraseña personal.',
-                  style: TextStyle(color: Colors.grey, fontSize: 14),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 32),
+                SizedBox(height: isSmallScreen ? 24 : 32),
                 TextFormField(
                   controller: _accessKeyController,
                   obscureText: _isObscured,
+                  style: TextStyle(
+                    fontSize: isSmallScreen ? 18 : 20,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 4,
+                  ),
+                  textAlign: TextAlign.center,
                   decoration: InputDecoration(
-                    labelText: 'Nueva Clave de Acceso',
-                    border: const OutlineInputBorder(),
+                    labelText: 'Clave de Acceso',
+                    hintText: '123',
                     suffixIcon: IconButton(
-                      icon: Icon(_isObscured ? Icons.visibility_off : Icons.visibility),
-                      onPressed: () => setState(() => _isObscured = !_isObscured),
+                      icon: Icon(
+                        _isObscured ? Icons.visibility_off : Icons.visibility,
+                      ),
+                      onPressed: () =>
+                          setState(() => _isObscured = !_isObscured),
                     ),
                   ),
                   validator: (value) {
-                    if (value == null || value.isEmpty) return 'La clave es obligatoria';
-                    if (value.length < 4) return 'Debe tener al menos 4 caracteres';
+                    if (value == null || value.isEmpty) {
+                      return 'La clave es obligatoria';
+                    }
+                    if (value.length < 3) {
+                      return 'Debe tener al menos 3 caracteres';
+                    }
                     return null;
                   },
                 ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: _confirmAccessKeyController,
-                  obscureText: _isObscured,
-                  decoration: const InputDecoration(
-                    labelText: 'Confirmar Clave de Acceso',
-                    border: OutlineInputBorder(),
-                  ),
-                  validator: (value) {
-                    if (value != _accessKeyController.text) return 'Las claves no coinciden';
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 32),
+                SizedBox(height: isSmallScreen ? 32 : 40),
                 ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                  ),
                   onPressed: _isLoading ? null : _completeSetup,
+                  style: ElevatedButton.styleFrom(
+                    padding: EdgeInsets.symmetric(
+                      vertical: isSmallScreen ? 16 : 18,
+                    ),
+                  ),
                   child: _isLoading
-                      ? const CircularProgressIndicator(color: Colors.white)
+                      ? SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 2,
+                          ),
+                        )
                       : const Text('Completar Configuración'),
+                ),
+                SizedBox(height: isSmallScreen ? 8 : 12),
+                TextButton(
+                  onPressed: () => context.go('/add-cashiers'),
+                  style: TextButton.styleFrom(
+                    padding: EdgeInsets.symmetric(
+                      vertical: isSmallScreen ? 10 : 12,
+                    ),
+                  ),
+                  child: const Text('Volver a Miembros del Equipo'),
                 ),
               ],
             ),
-          ),
-        ),
+          );
+        },
       ),
     );
   }

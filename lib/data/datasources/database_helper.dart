@@ -183,7 +183,7 @@ class DatabaseHelper {
         final rawPassword = cashier.passwordHash ?? '';
         if (rawPassword.isEmpty) {
           throw Exception(
-            'Onboarding error: Cashier password for ${cashier.username} is empty.',
+            'Error de incorporación: la contraseña del cajero para ${cashier.username} está vacía.',
           );
         }
         cashierMap['password_hash'] = _hashData(rawPassword);
@@ -203,7 +203,7 @@ class DatabaseHelper {
           'value': _hashData(state.accessKey!),
         });
       } else {
-        throw Exception('Onboarding error: App Access Key is missing.');
+        throw Exception('Error de incorporación: falta la clave de acceso a la aplicación.');
       }
     });
   }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:myapp/domain/entities/user.dart';
+import 'package:myapp/presentation/pages/onboarding/onboarding_layout.dart';
 import 'package:myapp/presentation/providers/onboarding_state.dart';
 
 class AddCashierFormPage extends ConsumerStatefulWidget {
@@ -18,12 +19,12 @@ class _AddCashierFormPageState extends ConsumerState<AddCashierFormPage> {
   final _firstNameController = TextEditingController();
   final _lastNameController = TextEditingController();
 
-  static int _cajeroCounter = 1;
+  static int _cashierCounter = 1;
 
   @override
   void initState() {
     super.initState();
-    _usernameController.text = 'cajero$_cajeroCounter';
+    _usernameController.text = 'cajero$_cashierCounter';
   }
 
   @override
@@ -45,7 +46,7 @@ class _AddCashierFormPageState extends ConsumerState<AddCashierFormPage> {
       firstName: _firstNameController.text,
       lastName: _lastNameController.text,
       email: "",
-      role: UserRole.cashier,
+      role: UserRole.cajero,
       isActive: true,
       onboardingCompleted: false,
       createdAt: DateTime.now(),
@@ -53,8 +54,7 @@ class _AddCashierFormPageState extends ConsumerState<AddCashierFormPage> {
     );
 
     ref.read(onboardingNotifierProvider.notifier).addCashier(newUser);
-
-    _cajeroCounter++;
+    _cashierCounter++;
 
     if (mounted) {
       context.pop();
@@ -63,31 +63,32 @@ class _AddCashierFormPageState extends ConsumerState<AddCashierFormPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Añadir Nuevo Cajero')),
-      body: Padding(
-        padding: const EdgeInsets.all(24.0),
-        child: Form(
-          key: _formKey,
-          child: SingleChildScrollView(
+    return OnboardingLayout(
+      title: 'Añadir Nuevo Cajero',
+      subtitle: 'Introduce los detalles del nuevo miembro del equipo.',
+      currentStep: 2,
+      totalSteps: 3,
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final isSmallScreen = constraints.maxWidth < 600;
+          
+          return Form(
+            key: _formKey,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 TextFormField(
                   controller: _usernameController,
-                  decoration: const InputDecoration(labelText: 'Nombre de usuario', border: OutlineInputBorder()),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Por favor, introduce un nombre de usuario';
-                    }
-                    return null;
-                  },
+                  decoration: const InputDecoration(labelText: 'Nombre de usuario'),
+                  validator: (value) => value!.isEmpty
+                      ? 'Por favor, introduce un nombre de usuario'
+                      : null,
                 ),
-                const SizedBox(height: 16),
+                SizedBox(height: isSmallScreen ? 12 : 16),
                 TextFormField(
                   controller: _passwordController,
-                  decoration: const InputDecoration(labelText: 'Contraseña', border: OutlineInputBorder()),
                   obscureText: true,
+                  decoration: const InputDecoration(labelText: 'Contraseña'),
                   validator: (value) {
                     if (value == null || value.isEmpty || value.length < 8) {
                       return 'La contraseña debe tener al menos 8 caracteres';
@@ -95,40 +96,34 @@ class _AddCashierFormPageState extends ConsumerState<AddCashierFormPage> {
                     return null;
                   },
                 ),
-                const SizedBox(height: 16),
+                SizedBox(height: isSmallScreen ? 12 : 16),
                 TextFormField(
                   controller: _firstNameController,
-                  decoration: const InputDecoration(labelText: 'Nombre', border: OutlineInputBorder()),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Por favor, introduce un nombre';
-                    }
-                    return null;
-                  },
+                  decoration: const InputDecoration(labelText: 'Nombre'),
+                  validator: (value) =>
+                      value!.isEmpty ? 'Por favor, introduce un nombre' : null,
                 ),
-                const SizedBox(height: 16),
+                SizedBox(height: isSmallScreen ? 12 : 16),
                 TextFormField(
                   controller: _lastNameController,
-                  decoration: const InputDecoration(labelText: 'Apellido', border: OutlineInputBorder()),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Por favor, introduce un apellido';
-                    }
-                    return null;
-                  },
+                  decoration: const InputDecoration(labelText: 'Apellido'),
+                  validator: (value) =>
+                      value!.isEmpty ? 'Por favor, introduce un apellido' : null,
                 ),
-                const SizedBox(height: 32),
+                SizedBox(height: isSmallScreen ? 24 : 32),
                 ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                  ),
                   onPressed: _submit,
                   child: const Text('Guardar Cajero'),
                 ),
+                SizedBox(height: isSmallScreen ? 8 : 12),
+                TextButton(
+                  onPressed: () => context.pop(),
+                  child: const Text('Cancelar'),
+                ),
               ],
             ),
-          ),
-        ),
+          );
+        },
       ),
     );
   }

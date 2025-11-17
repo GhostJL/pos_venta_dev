@@ -43,10 +43,10 @@ class _CategoryFormDialogState extends ConsumerState<CategoryFormDialog> {
             children: [
               TextFormField(
                 initialValue: _name,
-                decoration: const InputDecoration(labelText: 'Nombre', border: OutlineInputBorder()),
+                decoration: const InputDecoration(labelText: 'Nombre'),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'Por favor, introduce un nombre';
+                    return 'Por favor, ingrese un nombre';
                   }
                   return null;
                 },
@@ -55,10 +55,10 @@ class _CategoryFormDialogState extends ConsumerState<CategoryFormDialog> {
               const SizedBox(height: 16),
               TextFormField(
                 initialValue: _code,
-                decoration: const InputDecoration(labelText: 'Código', border: OutlineInputBorder()),
+                decoration: const InputDecoration(labelText: 'Código'),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'Por favor, introduce un código';
+                    return 'Por favor, ingrese un código';
                   }
                   return null;
                 },
@@ -69,7 +69,7 @@ class _CategoryFormDialogState extends ConsumerState<CategoryFormDialog> {
                 data: (departments) {
                   if (departments.isEmpty) {
                     return const Text(
-                      'No hay departamentos. Añade un departamento primero.',
+                      'No se encontraron departamentos. Por favor, añada un departamento primero.',
                       textAlign: TextAlign.center,
                     );
                   }
@@ -79,7 +79,7 @@ class _CategoryFormDialogState extends ConsumerState<CategoryFormDialog> {
                       : null;
                   
                   return DropdownButtonFormField<int>(
-                    value: validDepartmentId,
+                    initialValue: validDepartmentId,
                     items: departments.map((Department department) {
                       return DropdownMenuItem<int>(
                         value: department.id,
@@ -93,18 +93,18 @@ class _CategoryFormDialogState extends ConsumerState<CategoryFormDialog> {
                     },
                     decoration: const InputDecoration(
                       labelText: 'Departamento',
-                      border: OutlineInputBorder(),
                     ),
-                     validator: (value) => value == null ? 'Por favor, selecciona un departamento' : null,
+                     validator: (value) => value == null ? 'Por favor, seleccione un departamento' : null,
                   );
                 },
                 loading: () => const Center(child: CircularProgressIndicator()),
-                error: (err, stack) => Text('Error al cargar departamentos: $err'),
+                error: (err, stack) => Text('Error al cargar los departamentos: $err'),
               ),
               const SizedBox(height: 16),
               TextFormField(
                 initialValue: _description,
-                decoration: const InputDecoration(labelText: 'Descripción', border: OutlineInputBorder()),
+                decoration: const InputDecoration(labelText: 'Descripción'),
+                maxLines: 2,
                 onSaved: (value) => _description = value,
               ),
             ],

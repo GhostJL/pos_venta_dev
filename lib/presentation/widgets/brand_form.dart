@@ -39,7 +39,6 @@ class BrandFormState extends ConsumerState<BrandForm> {
               controller: _nameController,
               decoration: const InputDecoration(
                 labelText: 'Nombre',
-                border: OutlineInputBorder(),
               ),
               validator: (value) => value!.isEmpty ? 'Campo requerido' : null,
             ),
@@ -48,16 +47,15 @@ class BrandFormState extends ConsumerState<BrandForm> {
               controller: _codeController,
               decoration: const InputDecoration(
                 labelText: 'Código',
-                border: OutlineInputBorder(),
               ),
               validator: (value) => value!.isEmpty ? 'Campo requerido' : null,
             ),
             const SizedBox(height: 10),
-            CheckboxListTile(
+            SwitchListTile(
               title: const Text('Activo'),
               value: _isActive,
-              onChanged: (value) => setState(() => _isActive = value!),
-              controlAffinity: ListTileControlAffinity.leading,
+              onChanged: (value) => setState(() => _isActive = value),
+              dense: true,
               contentPadding: EdgeInsets.zero,
             ),
           ],

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:myapp/domain/entities/user.dart';
+import 'package:myapp/presentation/pages/onboarding/onboarding_layout.dart';
 import 'package:myapp/presentation/providers/onboarding_state.dart';
 
 class AdminSetupPage extends ConsumerStatefulWidget {
@@ -33,111 +34,82 @@ class _AdminSetupPageState extends ConsumerState<AdminSetupPage> {
     if (!_formKey.currentState!.validate()) return;
 
     final adminUser = User(
-      id: 0, // Será autogenerado por la base de datos
+      id: 0,
       username: _usernameController.text,
       email: _emailController.text,
       firstName: _firstNameController.text,
       lastName: _lastNameController.text,
-      role: UserRole.admin,
+      role: UserRole.administrador,
       isActive: true,
       onboardingCompleted: false,
       createdAt: DateTime.now(),
       updatedAt: DateTime.now(),
     );
 
-    // Actualizar el estado de onboarding con el usuario admin y su contraseña
-    ref
-        .read(onboardingNotifierProvider.notifier)
-        .setAdmin(adminUser, _passwordController.text);
-
+    ref.read(onboardingNotifierProvider.notifier).setAdmin(adminUser, _passwordController.text);
     context.push('/add-cashiers');
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Configurar Cuenta de Administrador')),
-      body: Center(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24.0),
-          child: Form(
+    return OnboardingLayout(
+      title: '¡Bienvenido!',
+      subtitle: 'Vamos a crear tu cuenta de administrador.',
+      currentStep: 1,
+      totalSteps: 3,
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final isSmallScreen = constraints.maxWidth < 600;
+          
+          return Form(
             key: _formKey,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Text(
-                  '¡Bienvenido! Vamos a crear tu cuenta de administrador.',
-                  style: Theme.of(context).textTheme.headlineSmall,
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 32),
                 TextFormField(
                   controller: _usernameController,
-                  decoration: const InputDecoration(
-                    labelText: 'Nombre de usuario',
-                    border: OutlineInputBorder(),
-                  ),
-                  validator: (value) =>
-                      value!.isEmpty ? 'El nombre de usuario es obligatorio' : null,
+                  decoration: const InputDecoration(labelText: 'Nombre de usuario'),
+                  validator: (value) => value!.isEmpty ? 'El nombre de usuario es obligatorio' : null,
                 ),
-                const SizedBox(height: 16),
+                SizedBox(height: isSmallScreen ? 12 : 16),
                 TextFormField(
                   controller: _passwordController,
                   obscureText: true,
-                  decoration: const InputDecoration(
-                    labelText: 'Contraseña',
-                    border: OutlineInputBorder(),
-                  ),
+                  decoration: const InputDecoration(labelText: 'Contraseña'),
                   validator: (value) {
-                    if (value == null || value.isEmpty)
-                      return 'La contraseña es obligatoria';
-                    if (value.length < 8)
-                      return 'La contraseña debe tener al menos 8 caracteres';
+                    if (value == null || value.isEmpty) return 'La contraseña es obligatoria';
+                    if (value.length < 8) return 'La contraseña debe tener al menos 8 caracteres';
                     return null;
                   },
                 ),
-                const SizedBox(height: 16),
+                SizedBox(height: isSmallScreen ? 12 : 16),
                 TextFormField(
                   controller: _firstNameController,
-                  decoration: const InputDecoration(
-                    labelText: 'Nombre',
-                    border: OutlineInputBorder(),
-                  ),
-                  validator: (value) =>
-                      value!.isEmpty ? 'El nombre es obligatorio' : null,
+                  decoration: const InputDecoration(labelText: 'Nombre'),
+                  validator: (value) => value!.isEmpty ? 'El nombre es obligatorio' : null,
                 ),
-                const SizedBox(height: 16),
+                SizedBox(height: isSmallScreen ? 12 : 16),
                 TextFormField(
                   controller: _lastNameController,
-                  decoration: const InputDecoration(
-                    labelText: 'Apellido',
-                    border: OutlineInputBorder(),
-                  ),
-                  validator: (value) =>
-                      value!.isEmpty ? 'El apellido es obligatorio' : null,
+                  decoration: const InputDecoration(labelText: 'Apellido'),
+                  validator: (value) => value!.isEmpty ? 'El apellido es obligatorio' : null,
                 ),
-                const SizedBox(height: 16),
+                SizedBox(height: isSmallScreen ? 12 : 16),
                 TextFormField(
                   controller: _emailController,
-                  decoration: const InputDecoration(
-                    labelText: 'Correo electrónico',
-                    border: OutlineInputBorder(),
-                  ),
-                  validator: (value) =>
-                      value!.isEmpty ? 'El correo electrónico es obligatorio' : null,
+                  decoration: const InputDecoration(labelText: 'Correo electrónico'),
+                  keyboardType: TextInputType.emailAddress,
+                  validator: (value) => value!.isEmpty ? 'El correo electrónico es obligatorio' : null,
                 ),
-                const SizedBox(height: 32),
+                SizedBox(height: isSmallScreen ? 24 : 32),
                 ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                  ),
                   onPressed: _submit,
                   child: const Text('Guardar y Continuar'),
                 ),
               ],
             ),
-          ),
-        ),
+          );
+        },
       ),
     );
   }

@@ -6,11 +6,10 @@ import 'package:myapp/presentation/pages/brands_page.dart';
 import 'package:myapp/presentation/pages/cashier_home_page.dart';
 import 'package:myapp/presentation/pages/categories_page.dart';
 import 'package:myapp/presentation/pages/departments_page.dart';
-import 'package:myapp/presentation/pages/home_page.dart';
 import 'package:myapp/presentation/pages/login_page.dart';
 import 'package:myapp/presentation/pages/suppliers_page.dart';
 import 'package:myapp/presentation/providers/auth_provider.dart';
-import 'package:myapp/presentation/pages/dashboard_page.dart';
+import 'package:myapp/presentation/pages/dashboard_screen.dart';
 import 'package:myapp/presentation/providers/transaction_provider.dart';
 
 // Onboarding Pages
@@ -18,6 +17,8 @@ import 'package:myapp/presentation/pages/onboarding/admin_setup_page.dart';
 import 'package:myapp/presentation/pages/onboarding/add_cashiers_page.dart';
 import 'package:myapp/presentation/pages/onboarding/add_cashier_form_page.dart';
 import 'package:myapp/presentation/pages/onboarding/set_access_key_page.dart';
+
+import 'package:myapp/presentation/pages/main_layout.dart';
 
 final GlobalKey<NavigatorState> _rootNavigatorKey = GlobalKey<NavigatorState>();
 
@@ -65,8 +66,7 @@ final routerProvider = Provider<GoRouter>((ref) {
 
       // Main App Routes
       ShellRoute(
-        builder: (context, state, child) =>
-            HomePage(state: state, child: child),
+        builder: (context, state, child) => MainLayout(child: child),
         routes: [
           GoRoute(
             path: '/', // Admin dashboard
@@ -132,7 +132,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       final isAtSplash = location == '/splash';
 
       if (loggedIn) {
-        final isAdmin = authState.user?.role == UserRole.admin;
+        final isAdmin = authState.user?.role == UserRole.administrador;
         final targetHome = isAdmin ? '/' : '/home';
 
         if (isAtLogin || isAtSplash) {
@@ -164,13 +164,12 @@ final onboardingCompletedProvider = FutureProvider<bool>((ref) async {
 
 class NoTransitionPage<T> extends CustomTransitionPage<T> {
   const NoTransitionPage({super.key, super.name, required super.child})
-      : super(transitionsBuilder: _transitionsBuilder);
+    : super(transitionsBuilder: _transitionsBuilder);
 
   static Widget _transitionsBuilder(
     BuildContext context,
     Animation<double> animation,
     Animation<double> secondaryAnimation,
     Widget child,
-  ) =>
-      child;
+  ) => child;
 }

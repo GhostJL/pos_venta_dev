@@ -1,4 +1,4 @@
-enum UserRole { admin, manager, cashier, viewer }
+enum UserRole { administrador, gerente, cajero, espectador }
 
 class User {
   final int? id;
@@ -20,7 +20,7 @@ class User {
     this.passwordHash,
     required this.firstName,
     required this.lastName,
-    this.role = UserRole.cashier,
+    this.role = UserRole.cajero,
     this.isActive = true,
     this.onboardingCompleted = false,
     required this.createdAt,

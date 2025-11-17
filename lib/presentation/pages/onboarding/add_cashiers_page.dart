@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:myapp/app/theme.dart';
+import 'package:myapp/presentation/pages/onboarding/onboarding_layout.dart';
 import 'package:myapp/presentation/providers/onboarding_state.dart';
 
 class AddCashiersPage extends ConsumerWidget {
@@ -13,86 +15,129 @@ class AddCashiersPage extends ConsumerWidget {
     final canAddMore = cashiers.length < 10;
     final membersText = cashiers.length == 1 ? 'miembro' : 'miembros';
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Añadir Miembros del Equipo (Cajeros)'),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.go('/setup-admin'),
-        ),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(
-              'Has añadido ${cashiers.length} $membersText del equipo.',
-              style: Theme.of(context).textTheme.titleMedium,
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 24),
-            ElevatedButton.icon(
-              onPressed: canAddMore
-                  ? () => context.push('/add-cashier-form')
-                  : null,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: canAddMore
-                    ? Theme.of(context).primaryColor
-                    : Colors.grey,
-                padding: const EdgeInsets.symmetric(vertical: 12),
+    return OnboardingLayout(
+      title: 'Añadir Miembros del Equipo',
+      subtitle: 'Has añadido ${cashiers.length} $membersText al equipo.',
+      currentStep: 2,
+      totalSteps: 3,
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final isSmallScreen = constraints.maxWidth < 600;
+          
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              OutlinedButton.icon(
+                onPressed: canAddMore ? () => context.push('/add-cashier-form') : null,
+                icon: const Icon(Icons.add_rounded),
+                label: const Text('Añadir Nuevo Miembro'),
+                style: OutlinedButton.styleFrom(
+                  padding: EdgeInsets.symmetric(
+                    vertical: isSmallScreen ? 12 : 16,
+                    horizontal: isSmallScreen ? 16 : 24,
+                  ),
+                ),
               ),
-              icon: const Icon(Icons.add, color: Colors.white),
-              label: const Text(
-                'Añadir Nuevo Miembro',
-                style: TextStyle(color: Colors.white),
-              ),
-            ),
-            const SizedBox(height: 24),
-            Text('Equipo Actual', style: Theme.of(context).textTheme.titleLarge),
-            const Divider(),
-            Expanded(
-              child: cashiers.isEmpty
-                  ? const Center(child: Text('Aún no se han añadido miembros al equipo.'))
-                  : ListView.builder(
-                      itemCount: cashiers.length,
-                      itemBuilder: (context, index) {
-                        final cashier = cashiers[index];
-                        return Card(
-                          margin: const EdgeInsets.symmetric(vertical: 8),
-                          child: ListTile(
-                            leading: const Icon(Icons.person_outline),
-                            title: Text(cashier.username),
-                            subtitle: Text(
-                              '${cashier.firstName} ${cashier.lastName}',
+              SizedBox(height: isSmallScreen ? 20 : 24),
+              if (cashiers.isNotEmpty) ...[
+                Text(
+                  'Equipo Actual',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                ),
+                const Divider(height: 24),
+                ConstrainedBox(
+                  constraints: BoxConstraints(
+                    maxHeight: isSmallScreen ? 300 : 400,
+                  ),
+                  child: ListView.builder(
+                    shrinkWrap: true,
+                    itemCount: cashiers.length,
+                    itemBuilder: (context, index) {
+                      final cashier = cashiers[index];
+                      return Card(
+                        elevation: 0,
+                        margin: EdgeInsets.symmetric(
+                          vertical: isSmallScreen ? 4 : 6,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          side: const BorderSide(
+                            color: AppTheme.borders,
+                            width: 1,
+                          ),
+                        ),
+                        child: ListTile(
+                          contentPadding: EdgeInsets.symmetric(
+                            horizontal: isSmallScreen ? 12 : 16,
+                            vertical: isSmallScreen ? 4 : 8,
+                          ),
+                          leading: Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: AppTheme.primary.withOpacity(0.1),
+                              shape: BoxShape.circle,
                             ),
-                            trailing: IconButton(
-                              icon: const Icon(
-                                Icons.delete_outline,
-                                color: Colors.redAccent,
-                              ),
-                              tooltip: 'Eliminar a ${cashier.username}',
-                              onPressed: () {
-                                ref
-                                    .read(onboardingNotifierProvider.notifier)
-                                    .removeCashier(cashier);
-                              },
+                            child: Icon(
+                              Icons.person_outline_rounded,
+                              color: AppTheme.primary,
+                              size: isSmallScreen ? 20 : 24,
                             ),
                           ),
-                        );
-                      },
-                    ),
-            ),
-            const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: () => context.push('/set-access-key'),
-              style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 16),
+                          title: Text(
+                            cashier.username,
+                            style: TextStyle(
+                              fontWeight: FontWeight.w600,
+                              fontSize: isSmallScreen ? 14 : 16,
+                            ),
+                          ),
+                          subtitle: Text(
+                            '${cashier.firstName} ${cashier.lastName}',
+                            style: TextStyle(
+                              fontSize: isSmallScreen ? 12 : 14,
+                            ),
+                          ),
+                          trailing: IconButton(
+                            icon: Icon(
+                              Icons.delete_outline_rounded,
+                              color: AppTheme.error,
+                              size: isSmallScreen ? 20 : 24,
+                            ),
+                            tooltip: 'Eliminar a ${cashier.username}',
+                            onPressed: () {
+                              ref.read(onboardingNotifierProvider.notifier).removeCashier(cashier);
+                            },
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+                SizedBox(height: isSmallScreen ? 20 : 24),
+              ],
+              ElevatedButton(
+                onPressed: () => context.push('/set-access-key'),
+                style: ElevatedButton.styleFrom(
+                  padding: EdgeInsets.symmetric(
+                    vertical: isSmallScreen ? 14 : 16,
+                  ),
+                ),
+                child: const Text('Continuar al Paso Final'),
               ),
-              child: const Text('Continuar al Paso Final'),
-            ),
-          ],
-        ),
+              SizedBox(height: isSmallScreen ? 8 : 12),
+              TextButton(
+                onPressed: () => context.go('/setup-admin'),
+                style: TextButton.styleFrom(
+                  padding: EdgeInsets.symmetric(
+                    vertical: isSmallScreen ? 10 : 12,
+                  ),
+                ),
+                child: const Text('Volver a la Configuración del Administrador'),
+              ),
+            ],
+          );
+        },
       ),
     );
   }

@@ -53,7 +53,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
         state = AuthState.unauthenticated();
       }
     } catch (e) {
-      state = AuthState.error("Failed to load session: ${e.toString()}");
+      state = AuthState.error("Error al cargar la sesión: ${e.toString()}");
     }
   }
 
@@ -67,11 +67,11 @@ class AuthNotifier extends StateNotifier<AuthState> {
         state = AuthState.authenticated(user);
         return true;
       } else {
-        state = AuthState.error("Invalid username or password");
+        state = AuthState.error("Usuario o contraseña no válidos");
         return false;
       }
     } catch (e) {
-      state = AuthState.error("Login failed: ${e.toString()}");
+      state = AuthState.error("Error al iniciar sesión: ${e.toString()}");
       return false;
     }
   }

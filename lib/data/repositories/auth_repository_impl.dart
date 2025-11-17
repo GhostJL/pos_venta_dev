@@ -55,7 +55,9 @@ class AuthRepositoryImpl implements AuthRepository, UserRepository {
   @override
   Future<void> addUser(User user, {String? password}) async {
     if (password == null || password.isEmpty) {
-      throw ArgumentError('Password cannot be null or empty for a new user.');
+      throw ArgumentError(
+        'La contraseña no puede ser nula ni estar vacía para un usuario nuevo.',
+      );
     }
     final db = await _databaseHelper.database;
     final hashedPassword = _hashPassword(password);
@@ -89,7 +91,7 @@ class AuthRepositoryImpl implements AuthRepository, UserRepository {
     final List<Map<String, dynamic>> maps = await db.query(
       'users',
       where: 'role = ?',
-      whereArgs: [UserRole.cashier.name],
+      whereArgs: [UserRole.cajero.name],
     );
 
     return List.generate(maps.length, (i) {

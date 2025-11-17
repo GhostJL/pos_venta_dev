@@ -6,7 +6,7 @@ import 'package:myapp/presentation/providers/supplier_providers.dart';
 class SupplierForm extends ConsumerStatefulWidget {
   final Supplier? supplier;
 
-  const SupplierForm({Key? key, this.supplier}) : super(key: key);
+  const SupplierForm({super.key, this.supplier});
 
   @override
   _SupplierFormState createState() => _SupplierFormState();
@@ -86,35 +86,35 @@ class _SupplierFormState extends ConsumerState<SupplierForm> {
             children: <Widget>[
               TextFormField(
                 controller: _nameController,
-                decoration: const InputDecoration(labelText: 'Nombre', border: OutlineInputBorder()),
-                validator: (value) => value!.isEmpty ? 'El nombre es requerido' : null,
+                decoration: const InputDecoration(labelText: 'Nombre'),
+                validator: (value) => value!.isEmpty ? 'El nombre es obligatorio' : null,
               ),
               const SizedBox(height: 16),
               TextFormField(
                 controller: _codeController,
-                decoration: const InputDecoration(labelText: 'Código', border: OutlineInputBorder()),
-                validator: (value) => value!.isEmpty ? 'El código es requerido' : null,
+                decoration: const InputDecoration(labelText: 'Código'),
+                validator: (value) => value!.isEmpty ? 'El código es obligatorio' : null,
               ),
               const SizedBox(height: 16),
               TextFormField(
                 controller: _contactPersonController,
-                decoration: const InputDecoration(labelText: 'Persona de Contacto', border: OutlineInputBorder()),
+                decoration: const InputDecoration(labelText: 'Persona de Contacto'),
               ),
               const SizedBox(height: 16),
               TextFormField(
                 controller: _phoneController,
-                decoration: const InputDecoration(labelText: 'Teléfono', border: OutlineInputBorder()),
+                decoration: const InputDecoration(labelText: 'Teléfono'),
               ),
               const SizedBox(height: 16),
               TextFormField(
                 controller: _emailController,
-                decoration: const InputDecoration(labelText: 'Email', border: OutlineInputBorder()),
+                decoration: const InputDecoration(labelText: 'Correo Electrónico'),
                 keyboardType: TextInputType.emailAddress,
                 validator: (value) {
                   if (value == null || value.isEmpty) return null;
                   final emailRegex = RegExp(r'^[\w-]+(\.[\w-]+)*@([\w-]+\.)+[a-zA-Z]{2,7}$');
                   if (!emailRegex.hasMatch(value)) {
-                    return 'Introduce un email válido';
+                    return 'Ingrese un correo electrónico válido';
                   }
                   return null;
                 },
@@ -122,21 +122,21 @@ class _SupplierFormState extends ConsumerState<SupplierForm> {
               const SizedBox(height: 16),
               TextFormField(
                 controller: _addressController,
-                decoration: const InputDecoration(labelText: 'Dirección', border: OutlineInputBorder()),
+                decoration: const InputDecoration(labelText: 'Dirección'),
               ),
               const SizedBox(height: 16),
               TextFormField(
                 controller: _taxIdController,
-                decoration: const InputDecoration(labelText: 'ID Fiscal (RFC/RUT)', border: OutlineInputBorder()),
+                decoration: const InputDecoration(labelText: 'ID de Impuestos'),
               ),
               const SizedBox(height: 16),
               TextFormField(
                 controller: _creditDaysController,
-                decoration: const InputDecoration(labelText: 'Días de Crédito', border: OutlineInputBorder()),
+                decoration: const InputDecoration(labelText: 'Días de Crédito'),
                 keyboardType: TextInputType.number,
                 validator: (value) {
-                  if (value == null || value.isEmpty) return 'Introduce los días de crédito';
-                  if (int.tryParse(value) == null) return 'Introduce un número válido';
+                  if (value == null || value.isEmpty) return 'Ingrese los días de crédito';
+                  if (int.tryParse(value) == null) return 'Ingrese un número válido';
                   return null;
                 },
               ),

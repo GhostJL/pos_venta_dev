@@ -1,6 +1,6 @@
 
 
-enum TransactionType { income, expense }
+enum TransactionType { entrada, salida }
 
 class Transaction {
   final int? id;

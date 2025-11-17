@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:myapp/app/theme.dart';
 import 'package:myapp/domain/entities/category.dart';
 import 'package:myapp/presentation/providers/category_providers.dart';
+import 'package:myapp/presentation/widgets/custom_data_table.dart';
 import 'package:myapp/presentation/widgets/category_form_dialog.dart';
+import 'package:myapp/presentation/providers/department_providers.dart';
 
 class CategoriesPage extends ConsumerWidget {
   const CategoriesPage({super.key});
@@ -12,55 +15,79 @@ class CategoriesPage extends ConsumerWidget {
     final categoriesAsync = ref.watch(categoryListProvider);
 
     return Scaffold(
-      body: categoriesAsync.when(
-        data: (categories) {
-          if (categories.isEmpty) {
-            return const Center(child: Text('No se encontraron categorías. ¡Añade una para empezar!'));
-          }
-          return ListView.builder(
+      backgroundColor: AppTheme.background,
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: categoriesAsync.when(
+          data: (categories) => CustomDataTable<Category>(
+            columns: const [
+              DataColumn(label: Text('Nombre')),
+              DataColumn(label: Text('Código')),
+              DataColumn(label: Text('Departamento')),
+              DataColumn(label: Text('Acciones')),
+            ],
+            rows: categories
+                .map((cat) => _createDataRow(context, ref, cat))
+                .toList(),
             itemCount: categories.length,
-            itemBuilder: (context, index) {
-              final category = categories[index];
-              return ListTile(
-                title: Text(category.name),
-                subtitle: Text(category.code),
-                trailing: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    IconButton(
-                      icon: const Icon(Icons.edit),
-                      tooltip: 'Editar Categoría',
-                      onPressed: () {
-                        _showCategoryFormDialog(
-                          context,
-                          ref,
-                          category: category,
-                        );
-                      },
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.delete),
-                      tooltip: 'Eliminar Categoría',
-                      onPressed: () {
-                        _showDeleteConfirmation(context, ref, category);
-                      },
-                    ),
-                  ],
+            onAddItem: () => _showCategoryFormDialog(context, ref),
+            emptyText: 'No se encontraron categorías. ¡Añade una para empezar!',
+          ),
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (err, stack) => Center(child: Text('Error: $err')),
+        ),
+      ),
+    );
+  }
+
+  DataRow _createDataRow(
+    BuildContext context,
+    WidgetRef ref,
+    Category category,
+  ) {
+    final departments = ref.watch(departmentListProvider);
+    final departmentName =
+        departments.asData?.value
+            .firstWhere((d) => d.id == category.departmentId)
+            .name ??
+        'N/A';
+
+    return DataRow(
+      cells: [
+        DataCell(
+          Text(category.name, style: Theme.of(context).textTheme.bodyLarge),
+        ),
+        DataCell(
+          Text(category.code, style: Theme.of(context).textTheme.bodyMedium),
+        ),
+        DataCell(Text(departmentName)),
+        DataCell(
+          Row(
+            children: [
+              IconButton(
+                icon: const Icon(
+                  Icons.edit_rounded,
+                  color: AppTheme.primary,
+                  size: 20,
                 ),
-              );
-            },
-          );
-        },
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (err, stack) => Center(child: Text('Error: $err')),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          _showCategoryFormDialog(context, ref);
-        },
-        tooltip: 'Añadir Categoría',
-        child: const Icon(Icons.add),
-      ),
+                tooltip: 'Editar Categoría',
+                onPressed: () =>
+                    _showCategoryFormDialog(context, ref, category: category),
+              ),
+              IconButton(
+                icon: const Icon(
+                  Icons.delete_rounded,
+                  color: AppTheme.error,
+                  size: 20,
+                ),
+                tooltip: 'Eliminar Categoría',
+                onPressed: () =>
+                    _showDeleteConfirmation(context, ref, category),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 
@@ -91,7 +118,7 @@ class CategoriesPage extends ConsumerWidget {
   ) {
     showDialog(
       context: context,
-      builder: (BuildContext context) {
+      builder: (BuildContext dialogContext) {
         return AlertDialog(
           title: const Text('Confirmar Eliminación'),
           content: Text(
@@ -100,16 +127,16 @@ class CategoriesPage extends ConsumerWidget {
           actions: <Widget>[
             TextButton(
               child: const Text('Cancelar'),
-              onPressed: () => Navigator.of(context).pop(),
+              onPressed: () => Navigator.of(dialogContext).pop(),
             ),
-            TextButton(
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(backgroundColor: AppTheme.error),
               child: const Text('Eliminar'),
-              style: TextButton.styleFrom(foregroundColor: Colors.red),
               onPressed: () {
                 ref
                     .read(categoryListProvider.notifier)
                     .deleteCategory(category.id!);
-                Navigator.of(context).pop();
+                Navigator.of(dialogContext).pop();
               },
             ),
           ],
