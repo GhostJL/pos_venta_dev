@@ -14,173 +14,148 @@ class SupplierForm extends ConsumerStatefulWidget {
 
 class SupplierFormState extends ConsumerState<SupplierForm> {
   final _formKey = GlobalKey<FormState>();
-  late TextEditingController _nameController;
-  late TextEditingController _codeController;
-  late TextEditingController _contactPersonController;
-  late TextEditingController _phoneController;
-  late TextEditingController _emailController;
-  late TextEditingController _addressController;
-  late TextEditingController _taxIdController;
-  late TextEditingController _creditDaysController;
+  late String _name;
+  late String _code;
+  String? _contactName;
+  String? _phone;
+  String? _email;
+  String? _address;
 
   @override
   void initState() {
     super.initState();
-    _nameController = TextEditingController(text: widget.supplier?.name ?? '');
-    _codeController = TextEditingController(text: widget.supplier?.code ?? '');
-    _contactPersonController = TextEditingController(
-      text: widget.supplier?.contactPerson ?? '',
-    );
-    _phoneController = TextEditingController(
-      text: widget.supplier?.phone ?? '',
-    );
-    _emailController = TextEditingController(
-      text: widget.supplier?.email ?? '',
-    );
-    _addressController = TextEditingController(
-      text: widget.supplier?.address ?? '',
-    );
-    _taxIdController = TextEditingController(
-      text: widget.supplier?.taxId ?? '',
-    );
-    _creditDaysController = TextEditingController(
-      text: widget.supplier?.creditDays.toString() ?? '0',
-    );
-  }
-
-  @override
-  void dispose() {
-    _nameController.dispose();
-    _codeController.dispose();
-    _contactPersonController.dispose();
-    _phoneController.dispose();
-    _emailController.dispose();
-    _addressController.dispose();
-    _taxIdController.dispose();
-    _creditDaysController.dispose();
-    super.dispose();
+    _name = widget.supplier?.name ?? '';
+    _code = widget.supplier?.code ?? '';
+    _contactName = widget.supplier?.contactPerson;
+    _phone = widget.supplier?.phone;
+    _email = widget.supplier?.email;
+    _address = widget.supplier?.address;
   }
 
   void _submit() {
     if (_formKey.currentState!.validate()) {
+      _formKey.currentState!.save();
       final supplier = Supplier(
         id: widget.supplier?.id,
-        name: _nameController.text,
-        code: _codeController.text,
-        contactPerson: _contactPersonController.text.isNotEmpty
-            ? _contactPersonController.text
-            : null,
-        phone: _phoneController.text.isNotEmpty ? _phoneController.text : null,
-        email: _emailController.text.isNotEmpty ? _emailController.text : null,
-        address: _addressController.text.isNotEmpty
-            ? _addressController.text
-            : null,
-        taxId: _taxIdController.text.isNotEmpty ? _taxIdController.text : null,
-        creditDays: int.tryParse(_creditDaysController.text) ?? 0,
-        isActive: widget.supplier?.isActive ?? true,
+        name: _name,
+        code: _code,
+        contactPerson: _contactName,
+        phone: _phone,
+        email: _email,
+        address: _address,
       );
-
       if (widget.supplier == null) {
         ref.read(supplierListProvider.notifier).addSupplier(supplier);
       } else {
-        ref.read(supplierListProvider.notifier).editSupplier(supplier);
+        ref.read(supplierListProvider.notifier).updateSupplier(supplier);
       }
-
-      Navigator.of(context).pop();
+      if (mounted) {
+        Navigator.of(context).pop();
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
-      title: Text(
-        widget.supplier == null ? 'Añadir Proveedor' : 'Editar Proveedor',
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(widget.supplier == null ? 'Nuevo Proveedor' : 'Editar Proveedor'),
+        centerTitle: true,
       ),
-      content: Form(
+      body: Form(
         key: _formKey,
         child: SingleChildScrollView(
+          padding: const EdgeInsets.all(24.0),
           child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: <Widget>[
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
               TextFormField(
-                controller: _nameController,
-                decoration: const InputDecoration(labelText: 'Nombre'),
-                validator: (value) =>
-                    value!.isEmpty ? 'El nombre es obligatorio' : null,
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _codeController,
-                decoration: const InputDecoration(labelText: 'Código'),
-                validator: (value) =>
-                    value!.isEmpty ? 'El código es obligatorio' : null,
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _contactPersonController,
+                initialValue: _name,
                 decoration: const InputDecoration(
-                  labelText: 'Persona de Contacto',
+                  labelText: 'Nombre del Proveedor',
+                  border: OutlineInputBorder(),
                 ),
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _phoneController,
-                decoration: const InputDecoration(labelText: 'Teléfono'),
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _emailController,
-                decoration: const InputDecoration(
-                  labelText: 'Correo Electrónico',
-                ),
-                keyboardType: TextInputType.emailAddress,
-                validator: (value) {
-                  if (value == null || value.isEmpty) return null;
-                  final emailRegex = RegExp(
-                    r'^[\w-]+(\.[\w-]+)*@([\w-]+\.)+[a-zA-Z]{2,7}$',
-                  );
-                  if (!emailRegex.hasMatch(value)) {
-                    return 'Ingrese un correo electrónico válido';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _addressController,
-                decoration: const InputDecoration(labelText: 'Dirección'),
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _taxIdController,
-                decoration: const InputDecoration(labelText: 'ID de Impuestos'),
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _creditDaysController,
-                decoration: const InputDecoration(labelText: 'Días de Crédito'),
-                keyboardType: TextInputType.number,
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'Ingrese los días de crédito';
-                  }
-                  if (int.tryParse(value) == null) {
-                    return 'Ingrese un número válido';
+                    return 'Por favor, introduce un nombre de proveedor';
                   }
                   return null;
                 },
+                onSaved: (value) => _name = value!,
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                initialValue: _code,
+                decoration: const InputDecoration(
+                  labelText: 'Código del Proveedor',
+                  border: OutlineInputBorder(),
+                ),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Por favor, introduce un código de proveedor';
+                  }
+                  return null;
+                },
+                onSaved: (value) => _code = value!,
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                initialValue: _contactName,
+                decoration: const InputDecoration(
+                  labelText: 'Nombre de Contacto',
+                  border: OutlineInputBorder(),
+                ),
+                onSaved: (value) => _contactName = value,
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                initialValue: _phone,
+                decoration: const InputDecoration(
+                  labelText: 'Teléfono',
+                  border: OutlineInputBorder(),
+                ),
+                onSaved: (value) => _phone = value,
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                initialValue: _email,
+                decoration: const InputDecoration(
+                  labelText: 'Correo Electrónico',
+                  border: OutlineInputBorder(),
+                ),
+                onSaved: (value) => _email = value,
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                initialValue: _address,
+                decoration: const InputDecoration(
+                  labelText: 'Dirección',
+                  border: OutlineInputBorder(),
+                ),
+                onSaved: (value) => _address = value,
               ),
             ],
           ),
         ),
       ),
-      actions: <Widget>[
-        TextButton(
-          child: const Text('Cancelar'),
-          onPressed: () => Navigator.of(context).pop(),
+      bottomNavigationBar: Padding(
+        padding: EdgeInsets.fromLTRB(
+          24,
+          8,
+          24,
+          24 + MediaQuery.of(context).viewInsets.bottom,
         ),
-        ElevatedButton(onPressed: _submit, child: const Text('Guardar')),
-      ],
+        child: ElevatedButton(
+          onPressed: _submit,
+          style: ElevatedButton.styleFrom(
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
+          child: Text(widget.supplier == null ? 'Crear' : 'Actualizar'),
+        ),
+      ),
     );
   }
 }

@@ -9,64 +9,89 @@ import 'package:posventa/domain/use_cases/delete_supplier.dart';
 import 'package:posventa/domain/use_cases/get_all_suppliers.dart';
 import 'package:posventa/domain/use_cases/update_supplier.dart';
 
-// 1. Repositorio
+final databaseHelperProvider = Provider<DatabaseHelper>((ref) {
+  return DatabaseHelper();
+});
+
 final supplierRepositoryProvider = Provider<SupplierRepository>((ref) {
-  return SupplierRepositoryImpl(DatabaseHelper.instance);
+  final dbHelper = ref.watch(databaseHelperProvider);
+  return SupplierRepositoryImpl(dbHelper);
 });
 
-// 2. Casos de Uso
-final getAllSuppliersProvider = Provider((ref) {
-  return GetAllSuppliers(ref.watch(supplierRepositoryProvider));
-});
+final getAllSuppliersUseCaseProvider = Provider(
+  (ref) => GetAllSuppliers(ref.watch(supplierRepositoryProvider)),
+);
 
-final createSupplierProvider = Provider((ref) {
-  return CreateSupplier(ref.watch(supplierRepositoryProvider));
-});
+final createSupplierUseCaseProvider = Provider(
+  (ref) => CreateSupplier(ref.watch(supplierRepositoryProvider)),
+);
 
-final updateSupplierProvider = Provider((ref) {
-  return UpdateSupplier(ref.watch(supplierRepositoryProvider));
-});
+final updateSupplierUseCaseProvider = Provider(
+  (ref) => UpdateSupplier(ref.watch(supplierRepositoryProvider)),
+);
 
-final deleteSupplierProvider = Provider((ref) {
-  return DeleteSupplier(ref.watch(supplierRepositoryProvider));
-});
+final deleteSupplierUseCaseProvider = Provider(
+  (ref) => DeleteSupplier(ref.watch(supplierRepositoryProvider)),
+);
 
-// 3. State Notifier para la lista de proveedores
-final supplierListProvider =
-    StateNotifierProvider<SupplierListNotifier, List<Supplier>>((ref) {
-      return SupplierListNotifier(ref);
-    });
+class SupplierListNotifier extends StateNotifier<AsyncValue<List<Supplier>>> {
+  final GetAllSuppliers _getAllSuppliers;
+  final CreateSupplier _createSupplier;
+  final UpdateSupplier _updateSupplier;
+  final DeleteSupplier _deleteSupplier;
 
-class SupplierListNotifier extends StateNotifier<List<Supplier>> {
-  final Ref _ref;
-
-  SupplierListNotifier(this._ref) : super([]) {
+  SupplierListNotifier(
+    this._getAllSuppliers,
+    this._createSupplier,
+    this._updateSupplier,
+    this._deleteSupplier,
+  ) : super(const AsyncValue.loading()) {
     loadSuppliers();
   }
 
   Future<void> loadSuppliers() async {
-    final getAllSuppliers = _ref.read(getAllSuppliersProvider);
-    state = await getAllSuppliers();
+    state = const AsyncValue.loading();
+    try {
+      final suppliers = await _getAllSuppliers();
+      state = AsyncValue.data(suppliers);
+    } catch (e, s) {
+      state = AsyncValue.error(e, s);
+    }
   }
 
   Future<void> addSupplier(Supplier supplier) async {
-    final createSupplier = _ref.read(createSupplierProvider);
-    final newSupplier = await createSupplier(supplier);
-    state = [...state, newSupplier];
+    try {
+      await _createSupplier(supplier);
+    } finally {
+      await loadSuppliers();
+    }
   }
 
-  Future<void> editSupplier(Supplier supplier) async {
-    final updateSupplier = _ref.read(updateSupplierProvider);
-    final updatedSupplier = await updateSupplier(supplier);
-    state = [
-      for (final s in state)
-        if (s.id == updatedSupplier.id) updatedSupplier else s,
-    ];
+  Future<void> updateSupplier(Supplier supplier) async {
+    try {
+      await _updateSupplier(supplier);
+    } finally {
+      await loadSuppliers();
+    }
   }
 
-  Future<void> removeSupplier(int supplierId) async {
-    final deleteSupplier = _ref.read(deleteSupplierProvider);
-    await deleteSupplier(supplierId);
-    state = state.where((s) => s.id != supplierId).toList();
+  Future<void> deleteSupplier(int id) async {
+    try {
+      await _deleteSupplier(id);
+    } finally {
+      await loadSuppliers();
+    }
   }
 }
+
+final supplierListProvider =
+    StateNotifierProvider<SupplierListNotifier, AsyncValue<List<Supplier>>>(
+  (ref) {
+    return SupplierListNotifier(
+      ref.watch(getAllSuppliersUseCaseProvider),
+      ref.watch(createSupplierUseCaseProvider),
+      ref.watch(updateSupplierUseCaseProvider),
+      ref.watch(deleteSupplierUseCaseProvider),
+    );
+  },
+);

@@ -107,9 +107,9 @@ class _TaxRateFormState extends ConsumerState<TaxRateForm> {
         isDefault: _isDefault,
       );
       if (widget.taxRate == null) {
-        ref.read(taxRatesProvider.notifier).addTaxRate(newTaxRate);
+        ref.read(taxRateListProvider.notifier).addTaxRate(newTaxRate);
       } else {
-        ref.read(taxRatesProvider.notifier).updateTaxRate(newTaxRate);
+        ref.read(taxRateListProvider.notifier).updateTaxRate(newTaxRate);
       }
       Navigator.of(context).pop();
     }

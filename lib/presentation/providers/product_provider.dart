@@ -7,28 +7,7 @@ class ProductNotifier extends StateNotifier<AsyncValue<List<Product>>> {
     _loadProducts();
   }
 
-  final List<Product> _initialProducts = [
-    const Product(
-      id: 1,
-      code: 'P001',
-      name: 'Sample Product 1',
-      departmentId: 1,
-      categoryId: 1,
-      unitOfMeasure: 'unit',
-      costPriceCents: 1000,
-      salePriceCents: 1500,
-    ),
-    const Product(
-      id: 2,
-      code: 'P002',
-      name: 'Sample Product 2',
-      departmentId: 1,
-      categoryId: 2,
-      unitOfMeasure: 'unit',
-      costPriceCents: 1200,
-      salePriceCents: 1800,
-    ),
-  ];
+  final List<Product> _initialProducts = [];
 
   Future<void> _loadProducts() async {
     try {
@@ -39,31 +18,33 @@ class ProductNotifier extends StateNotifier<AsyncValue<List<Product>>> {
     }
   }
 
-  Future<void> createProduct(Product product) async {
-    state.whenData((products) async {
+  Future<void> addProduct(Product product) async {
+    final currentState = state;
+    if (currentState is AsyncData<List<Product>>) {
       try {
         await Future.delayed(const Duration(milliseconds: 500));
-        final newProduct = product.copyWith(id: products.length + 1);
-        state = AsyncValue.data([...products, newProduct]);
+        final newProduct = product.copyWith(id: currentState.value.length + 1);
+        state = AsyncValue.data([...currentState.value, newProduct]);
       } catch (e, s) {
         state = AsyncValue.error(e, s);
       }
-    });
+    }
   }
 
   Future<void> updateProduct(Product product) async {
-    state.whenData((products) async {
+    final currentState = state;
+    if (currentState is AsyncData<List<Product>>) {
       try {
         await Future.delayed(const Duration(milliseconds: 500));
         final updatedProducts = [
-          for (final p in products)
+          for (final p in currentState.value)
             if (p.id == product.id) product else p,
         ];
         state = AsyncValue.data(updatedProducts);
       } catch (e, s) {
         state = AsyncValue.error(e, s);
       }
-    });
+    }
   }
 }
 

@@ -1,18 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:posventa/domain/entities/brand.dart';
-import 'package:posventa/presentation/providers/brand_providers.dart';
+import 'package:posventa/domain/entities/department.dart';
+import 'package:posventa/presentation/providers/department_providers.dart';
 
-class BrandForm extends ConsumerStatefulWidget {
-  final Brand? brand;
+class DepartmentForm extends ConsumerStatefulWidget {
+  final Department? department;
 
-  const BrandForm({super.key, this.brand});
+  const DepartmentForm({super.key, this.department});
 
   @override
-  BrandFormState createState() => BrandFormState();
+  DepartmentFormState createState() => DepartmentFormState();
 }
 
-class BrandFormState extends ConsumerState<BrandForm> {
+class DepartmentFormState extends ConsumerState<DepartmentForm> {
   final _formKey = GlobalKey<FormState>();
   late String _name;
   late String _code;
@@ -20,18 +20,18 @@ class BrandFormState extends ConsumerState<BrandForm> {
   @override
   void initState() {
     super.initState();
-    _name = widget.brand?.name ?? '';
-    _code = widget.brand?.code ?? '';
+    _name = widget.department?.name ?? '';
+    _code = widget.department?.code ?? '';
   }
 
   void _submit() {
     if (_formKey.currentState!.validate()) {
       _formKey.currentState!.save();
-      final brand = Brand(id: widget.brand?.id, name: _name, code: _code);
-      if (widget.brand == null) {
-        ref.read(brandListProvider.notifier).addBrand(brand);
+      final department = Department(id: widget.department?.id, name: _name, code: _code);
+      if (widget.department == null) {
+        ref.read(departmentListProvider.notifier).addDepartment(department);
       } else {
-        ref.read(brandListProvider.notifier).updateBrand(brand);
+        ref.read(departmentListProvider.notifier).updateDepartment(department);
       }
       if (mounted) {
         Navigator.of(context).pop();
@@ -43,7 +43,7 @@ class BrandFormState extends ConsumerState<BrandForm> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.brand == null ? 'Nueva Marca' : 'Editar Marca'),
+        title: Text(widget.department == null ? 'Nuevo Departamento' : 'Editar Departamento'),
         centerTitle: true,
       ),
       body: Form(
@@ -56,12 +56,12 @@ class BrandFormState extends ConsumerState<BrandForm> {
               TextFormField(
                 initialValue: _name,
                 decoration: const InputDecoration(
-                  labelText: 'Nombre de la Marca',
+                  labelText: 'Nombre del Departamento',
                   border: OutlineInputBorder(),
                 ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'Por favor, introduce un nombre de marca';
+                    return 'Por favor, introduce un nombre de departamento';
                   }
                   return null;
                 },
@@ -71,12 +71,12 @@ class BrandFormState extends ConsumerState<BrandForm> {
               TextFormField(
                 initialValue: _code,
                 decoration: const InputDecoration(
-                  labelText: 'Código de la Marca',
+                  labelText: 'Código del Departamento',
                   border: OutlineInputBorder(),
                 ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'Por favor, introduce un código de marca';
+                    return 'Por favor, introduce un código de departamento';
                   }
                   return null;
                 },
@@ -101,7 +101,7 @@ class BrandFormState extends ConsumerState<BrandForm> {
               borderRadius: BorderRadius.circular(12),
             ),
           ),
-          child: Text(widget.brand == null ? 'Crear' : 'Actualizar'),
+          child: Text(widget.department == null ? 'Crear' : 'Actualizar'),
         ),
       ),
     );

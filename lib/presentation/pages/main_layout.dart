@@ -8,23 +8,23 @@ class MainLayout extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Use LayoutBuilder to create a responsive layout
+    // Usa LayoutBuilder para crear un diseño responsivo
     return LayoutBuilder(
       builder: (context, constraints) {
-        // Define a breakpoint for small screens (e.g., mobile phones)
+        // Define un punto de quiebre para pantallas pequeñas (ej. teléfonos móviles)
         final bool isSmallScreen = constraints.maxWidth < 768;
 
         if (isSmallScreen) {
-          // For small screens, use a Scaffold with a Drawer
+          // Para pantallas pequeñas, usa un Scaffold con un Drawer
           return Scaffold(
             appBar: AppBar(
-              // The AppBar can be customized as needed
+              // El AppBar se puede personalizar según sea necesario
             ),
             drawer: const Drawer(child: SideMenu()),
             body: child,
           );
         } else {
-          // For larger screens, use a Row with a fixed side menu
+          // Para pantallas más grandes, usa una Fila con un menú lateral fijo
           return Scaffold(
             body: Row(
               children: [

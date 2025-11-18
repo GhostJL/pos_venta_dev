@@ -1,5 +1,5 @@
-
 import 'package:flutter/foundation.dart';
+import 'package:posventa/domain/entities/product_tax.dart';
 
 @immutable
 class Product {
@@ -8,8 +8,8 @@ class Product {
   final String? barcode;
   final String name;
   final String? description;
-  final int departmentId;
-  final int categoryId;
+  final int? departmentId;
+  final int? categoryId;
   final int? brandId;
   final int? supplierId;
   final String unitOfMeasure;
@@ -18,6 +18,7 @@ class Product {
   final int salePriceCents;
   final int? wholesalePriceCents;
   final bool isActive;
+  final List<ProductTax>? productTaxes;
 
   const Product({
     this.id,
@@ -25,8 +26,8 @@ class Product {
     this.barcode,
     required this.name,
     this.description,
-    required this.departmentId,
-    required this.categoryId,
+    this.departmentId,
+    this.categoryId,
     this.brandId,
     this.supplierId,
     required this.unitOfMeasure,
@@ -35,5 +36,44 @@ class Product {
     required this.salePriceCents,
     this.wholesalePriceCents,
     this.isActive = true,
+    this.productTaxes,
   });
+
+  Product copyWith({
+    int? id,
+    String? code,
+    String? barcode,
+    String? name,
+    String? description,
+    int? departmentId,
+    int? categoryId,
+    int? brandId,
+    int? supplierId,
+    String? unitOfMeasure,
+    bool? isSoldByWeight,
+    int? costPriceCents,
+    int? salePriceCents,
+    int? wholesalePriceCents,
+    bool? isActive,
+    List<ProductTax>? productTaxes,
+  }) {
+    return Product(
+      id: id ?? this.id,
+      code: code ?? this.code,
+      barcode: barcode ?? this.barcode,
+      name: name ?? this.name,
+      description: description ?? this.description,
+      departmentId: departmentId ?? this.departmentId,
+      categoryId: categoryId ?? this.categoryId,
+      brandId: brandId ?? this.brandId,
+      supplierId: supplierId ?? this.supplierId,
+      unitOfMeasure: unitOfMeasure ?? this.unitOfMeasure,
+      isSoldByWeight: isSoldByWeight ?? this.isSoldByWeight,
+      costPriceCents: costPriceCents ?? this.costPriceCents,
+      salePriceCents: salePriceCents ?? this.salePriceCents,
+      wholesalePriceCents: wholesalePriceCents ?? this.wholesalePriceCents,
+      isActive: isActive ?? this.isActive,
+      productTaxes: productTaxes ?? this.productTaxes,
+    );
+  }
 }

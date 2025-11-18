@@ -39,9 +39,10 @@ final setDefaultTaxRateProvider = Provider((ref) {
   return SetDefaultTaxRate(repository);
 });
 
-final taxRatesProvider = StateNotifierProvider<TaxRateNotifier, AsyncValue<List<TaxRate>>>((ref) {
-  return TaxRateNotifier(ref);
-});
+final taxRateListProvider =
+    StateNotifierProvider<TaxRateNotifier, AsyncValue<List<TaxRate>>>((ref) {
+      return TaxRateNotifier(ref);
+    });
 
 class TaxRateNotifier extends StateNotifier<AsyncValue<List<TaxRate>>> {
   final Ref _ref;

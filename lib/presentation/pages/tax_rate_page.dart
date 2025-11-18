@@ -9,7 +9,7 @@ class TaxRatePage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final taxRates = ref.watch(taxRatesProvider);
+    final taxRates = ref.watch(taxRateListProvider);
 
     return Scaffold(
       appBar: AppBar(title: const Text('Gestionar Tasas de Impuestos')),
@@ -47,7 +47,7 @@ class TaxRatePage extends ConsumerWidget {
                       onSelected: (value) {
                         if (value == 'setDefault') {
                           ref
-                              .read(taxRatesProvider.notifier)
+                              .read(taxRateListProvider.notifier)
                               .setDefaultTaxRate(taxRate.id!);
                         }
                       },
@@ -175,9 +175,9 @@ class TaxRatePage extends ConsumerWidget {
 
                   try {
                     if (taxRate == null) {
-                      await ref.read(taxRatesProvider.notifier).addTaxRate(newTaxRate);
+                      await ref.read(taxRateListProvider.notifier).addTaxRate(newTaxRate);
                     } else {
-                      await ref.read(taxRatesProvider.notifier).updateTaxRate(newTaxRate);
+                      await ref.read(taxRateListProvider.notifier).updateTaxRate(newTaxRate);
                     }
                     if (context.mounted) Navigator.of(context).pop();
                   } catch (e) {
@@ -210,7 +210,7 @@ class TaxRatePage extends ConsumerWidget {
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
             onPressed: () {
-              ref.read(taxRatesProvider.notifier).deleteTaxRate(taxRate.id!);
+              ref.read(taxRateListProvider.notifier).deleteTaxRate(taxRate.id!);
               Navigator.of(context).pop();
             },
             child: const Text('Eliminar', style: TextStyle(color: Colors.white)),
