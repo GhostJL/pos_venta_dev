@@ -8,6 +8,8 @@ class TaxRateModel extends TaxRate {
     required super.rate,
     required super.isDefault,
     super.isActive,
+    super.isEditable,
+    super.isOptional,
   });
 
   factory TaxRateModel.fromJson(Map<String, dynamic> json) {
@@ -18,6 +20,8 @@ class TaxRateModel extends TaxRate {
       rate: (json['rate'] as num).toDouble(),
       isDefault: json['is_default'] == 1,
       isActive: json['is_active'] == 1,
+      isEditable: json['is_editable'] == 1,
+      isOptional: json['is_optional'] == 1,
     );
   }
 
@@ -29,6 +33,8 @@ class TaxRateModel extends TaxRate {
       'rate': rate,
       'is_default': isDefault ? 1 : 0,
       'is_active': isActive ? 1 : 0,
+      'is_editable': isEditable ? 1 : 0,
+      'is_optional': isOptional ? 1 : 0,
     };
   }
 
@@ -40,6 +46,8 @@ class TaxRateModel extends TaxRate {
       rate: entity.rate,
       isDefault: entity.isDefault,
       isActive: entity.isActive,
+      isEditable: entity.isEditable,
+      isOptional: entity.isOptional,
     );
   }
 
@@ -51,6 +59,8 @@ class TaxRateModel extends TaxRate {
       rate: rate,
       isDefault: isDefault,
       isActive: isActive,
+      isEditable: isEditable,
+      isOptional: isOptional,
     );
   }
 }

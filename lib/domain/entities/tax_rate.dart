@@ -5,6 +5,8 @@
     final double rate;
     final bool isDefault;
     final bool isActive;
+    final bool isEditable;
+    final bool isOptional;
 
     TaxRate({
       this.id,
@@ -13,6 +15,8 @@
       required this.rate,
       this.isDefault = false,
       this.isActive = true,
+      this.isEditable = false,
+      this.isOptional = false,
     });
 
     TaxRate copyWith({
@@ -22,6 +26,8 @@
       double? rate,
       bool? isDefault,
       bool? isActive,
+      bool? isEditable,
+      bool? isOptional,
     }) {
       return TaxRate(
         id: id ?? this.id,
@@ -30,6 +36,8 @@
         rate: rate ?? this.rate,
         isDefault: isDefault ?? this.isDefault,
         isActive: isActive ?? this.isActive,
+        isEditable: isEditable ?? this.isEditable,
+        isOptional: isOptional ?? this.isOptional,
       );
     }
   }

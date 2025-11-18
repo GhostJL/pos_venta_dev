@@ -18,8 +18,9 @@ class TaxRatePage extends ConsumerWidget {
           itemBuilder: (context, index) {
             final taxRate = data[index];
             return ListTile(
+              leading: !taxRate.isEditable ? const Icon(Icons.lock, color: Colors.grey) : null,
               title: Text('${taxRate.name} (${taxRate.code})'),
-              subtitle: Text('${taxRate.rate}%'),
+              subtitle: Text('Tasa: ${taxRate.rate * 100}%'),
               trailing: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -30,12 +31,15 @@ class TaxRatePage extends ConsumerWidget {
                       labelStyle: TextStyle(color: Colors.white),
                     ),
                   IconButton(
-                    icon: const Icon(Icons.edit),
+                    icon: Icon(taxRate.isEditable ? Icons.edit : Icons.visibility),
+                    tooltip: taxRate.isEditable ? 'Editar' : 'Ver',
                     onPressed: () => _showTaxRateDialog(context, ref, taxRate),
                   ),
                   IconButton(
                     icon: const Icon(Icons.delete),
-                    onPressed: () => _deleteTaxRate(context, ref, taxRate),
+                    onPressed: taxRate.isEditable
+                        ? () => _deleteTaxRate(context, ref, taxRate)
+                        : () => _showCannotPerformOperationDialog(context, 'eliminar'),
                   ),
                   if (!taxRate.isDefault)
                     PopupMenuButton<String>(
@@ -74,20 +78,26 @@ class TaxRatePage extends ConsumerWidget {
     WidgetRef ref, [
     TaxRate? taxRate,
   ]) {
+    final isEditing = taxRate != null;
+    final isEditable = taxRate?.isEditable ?? true; // New taxes are editable
+
     final formKey = GlobalKey<FormState>();
     final nameController = TextEditingController(text: taxRate?.name);
     final codeController = TextEditingController(text: taxRate?.code);
     final rateController = TextEditingController(
-      text: taxRate?.rate.toString(),
+      text: taxRate != null ? (taxRate.rate * 100).toString() : '',
     );
+    var isOptional = taxRate?.isOptional ?? false;
 
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: Text(
-          taxRate == null
+          !isEditing
               ? 'Añadir Tasa de Impuesto'
-              : 'Editar Tasa de Impuesto',
+              : isEditable 
+                ? 'Editar Tasa de Impuesto'
+                : 'Ver Tasa de Impuesto',
         ),
         content: Form(
           key: formKey,
@@ -96,6 +106,7 @@ class TaxRatePage extends ConsumerWidget {
             children: [
               TextFormField(
                 controller: nameController,
+                readOnly: !isEditable,
                 decoration: const InputDecoration(labelText: 'Nombre'),
                 validator: (value) =>
                     value!.isEmpty ? 'Por favor ingrese un nombre' : null,
@@ -103,6 +114,7 @@ class TaxRatePage extends ConsumerWidget {
               const SizedBox(height: 8),
               TextFormField(
                 controller: codeController,
+                readOnly: !isEditable,
                 decoration: const InputDecoration(labelText: 'Código'),
                 validator: (value) =>
                     value!.isEmpty ? 'Por favor ingrese un código' : null,
@@ -110,6 +122,7 @@ class TaxRatePage extends ConsumerWidget {
               const SizedBox(height: 8),
               TextFormField(
                 controller: rateController,
+                readOnly: !isEditable,
                 decoration: const InputDecoration(labelText: 'Tasa (%)'),
                 keyboardType: TextInputType.number,
                 validator: (value) {
@@ -122,42 +135,59 @@ class TaxRatePage extends ConsumerWidget {
                   return null;
                 },
               ),
+              if (isEditable)
+                StatefulBuilder(
+                  builder: (BuildContext context, StateSetter setState) {
+                    return CheckboxListTile(
+                      title: const Text("Opcional"),
+                      value: isOptional,
+                      onChanged: (newValue) {
+                        setState(() {
+                          isOptional = newValue!;
+                        });
+                      },
+                      controlAffinity: ListTileControlAffinity.leading,
+                    );
+                  },
+                ),
             ],
           ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Cancelar'),
+            child: const Text('Cerrar'),
           ),
-          ElevatedButton(
-            onPressed: () async {
-              if (formKey.currentState!.validate()) {
-                final newTaxRate = TaxRate(
-                  id: taxRate?.id,
-                  name: nameController.text,
-                  code: codeController.text,
-                  rate: double.parse(rateController.text),
-                  isDefault: taxRate?.isDefault ?? false,
-                );
-
-                try {
-                  if (taxRate == null) {
-                    await ref.read(taxRatesProvider.notifier).addTaxRate(newTaxRate);
-                  } else {
-                    await ref.read(taxRatesProvider.notifier).updateTaxRate(newTaxRate);
-                  }
-                  Navigator.of(context).pop();
-                } catch (e) {
-                  // Show error snackbar
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Error: ${e.toString()}')),
+          if (isEditable)
+            ElevatedButton(
+              onPressed: () async {
+                if (formKey.currentState!.validate()) {
+                  final newTaxRate = TaxRate(
+                    id: taxRate?.id,
+                    name: nameController.text,
+                    code: codeController.text,
+                    rate: double.parse(rateController.text) / 100,
+                    isDefault: taxRate?.isDefault ?? false,
+                    isEditable: true,
+                    isOptional: isOptional,
                   );
+
+                  try {
+                    if (taxRate == null) {
+                      await ref.read(taxRatesProvider.notifier).addTaxRate(newTaxRate);
+                    } else {
+                      await ref.read(taxRatesProvider.notifier).updateTaxRate(newTaxRate);
+                    }
+                    Navigator.of(context).pop();
+                  } catch (e) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Error: ${e.toString()}')),
+                    );
+                  }
                 }
-              }
-            },
-            child: const Text('Guardar'),
-          ),
+              },
+              child: const Text('Guardar'),
+            ),
         ],
       ),
     );
@@ -181,6 +211,22 @@ class TaxRatePage extends ConsumerWidget {
               Navigator.of(context).pop();
             },
             child: const Text('Eliminar', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showCannotPerformOperationDialog(BuildContext context, String operation) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Operación no permitida'),
+        content: Text('Esta tasa de impuesto es predefinida y no se puede $operation.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('OK'),
           ),
         ],
       ),

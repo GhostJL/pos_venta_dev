@@ -14,7 +14,7 @@ class DatabaseHelper {
 
   // Database configuration
   static const _databaseName = "pos.db";
-  static const _databaseVersion = 5; // Incremented version
+  static const _databaseVersion = 6; // Incremented version
 
   // Table names
   static const tableUsers = 'users';
@@ -170,7 +170,7 @@ class DatabaseHelper {
     if (oldVersion < 4) {
       await _createWarehousesTable(db);
     }
-    if (oldVersion < 5) {
+    if (oldVersion < 6) {
       await _createTaxRatesTable(db);
     }
   }
@@ -192,16 +192,53 @@ class DatabaseHelper {
 
   Future<void> _createTaxRatesTable(Database db) async {
     await db.execute('''
-      CREATE TABLE IF NOT EXISTS $tableTaxRates (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT NOT NULL,
-        code TEXT NOT NULL UNIQUE,
-        rate REAL NOT NULL,
-        is_default INTEGER NOT NULL DEFAULT 0,
-        is_active INTEGER NOT NULL DEFAULT 1,
-        created_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
-      )
-    ''');
+    CREATE TABLE IF NOT EXISTS $tableTaxRates (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      code TEXT NOT NULL UNIQUE,
+      rate REAL NOT NULL,
+      is_default INTEGER NOT NULL DEFAULT 0,
+      is_active INTEGER NOT NULL DEFAULT 1,
+      is_editable INTEGER NOT NULL DEFAULT 0,
+      is_optional INTEGER NOT NULL DEFAULT 0,
+      created_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
+    )
+  ''');
+
+    final predefinedTaxes = [
+      {
+        'name': 'IVA 16%',
+        'code': 'IVA_16',
+        'rate': 0.16,
+        'is_default': 1,
+        'is_editable': 0,
+        'is_optional': 0,
+      },
+      {
+        'name': 'Exento',
+        'code': 'EXENTO',
+        'rate': 0.0,
+        'is_default': 0,
+        'is_editable': 0,
+        'is_optional': 0,
+      },
+      {
+        'name': 'IEPS 8%',
+        'code': 'IEPS_8',
+        'rate': 0.08,
+        'is_default': 0,
+        'is_editable': 0,
+        'is_optional': 1,
+      },
+    ];
+
+    for (final tax in predefinedTaxes) {
+      await db.insert(tableTaxRates, {
+        ...tax,
+        'is_active': 1,
+        'created_at': DateTime.now().toIso8601String(),
+      }, conflictAlgorithm: ConflictAlgorithm.ignore);
+    }
   }
 
   // Onboarding methods
@@ -265,7 +302,7 @@ class DatabaseHelper {
     _database = null;
   }
 
-    Future<int> insert(String table, Map<String, dynamic> row) async {
+  Future<int> insert(String table, Map<String, dynamic> row) async {
     final db = await database;
     return await db.insert(table, row);
   }
@@ -294,5 +331,4 @@ class DatabaseHelper {
     final db = await database;
     return await db.delete(table, where: 'id = ?', whereArgs: [id]);
   }
-
 }
