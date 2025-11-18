@@ -1,19 +1,16 @@
-# POS App Blueprint
+# POS System Blueprint
 
 ## Overview
 
-This document outlines the design and features of the POS App, a simple point-of-sale application for managing products, sales, and users.
+This document outlines the architecture and features of a Point of Sale (POS) system built with Flutter. The application follows the principles of Clean Architecture to ensure a modular, scalable, and maintainable codebase.
 
-## Style and Design
+## Architecture
 
-The app follows a modern and clean design aesthetic, with a focus on usability and clarity. The color scheme is based on a primary color of deep purple, with a light and dark theme available. The typography uses Google Fonts for a clean and readable look.
+The project is structured into three main layers:
 
-### Key Design Elements:
-
-*   **Primary Color:** Deep Purple
-*   **Typography:** Oswald for headings, Roboto for body text
-*   **Layout:** Responsive design with a side menu for navigation on larger screens and a drawer for smaller screens.
-*   **Components:** Custom-designed data tables, forms, and cards for a consistent look and feel.
+*   **Domain:** Contains the core business logic, entities, and use cases. This layer is independent of any other layer.
+*   **Data:** Implements the repositories defined in the domain layer and manages data sources (e.g., local database, network).
+*   **Presentation:** Contains the UI and state management logic (e.g., using Provider).
 
 ## Features
 
@@ -37,6 +34,7 @@ The app provides full CRUD (Create, Read, Update, Delete) functionality for the 
 *   **Categories:** Further categorize products within departments.
 *   **Brands:** Manage product brands.
 *   **Suppliers:** Keep track of product suppliers.
+*   **Warehouses:** Manage warehouses and branches.
 
 ### 4. Cashier Interface
 
@@ -44,4 +42,5 @@ The app provides full CRUD (Create, Read, Update, Delete) functionality for the 
 
 ## Current Plan
 
-This is the first version of the application. The current plan is to test the app thoroughly and gather feedback for future improvements.
+*   Implement the `warehouses` table and its corresponding CRUD operations, following the clean architecture principles already established in the project.
+*   Create the UI for managing warehouses.

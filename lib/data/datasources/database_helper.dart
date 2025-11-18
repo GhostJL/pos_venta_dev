@@ -14,7 +14,7 @@ class DatabaseHelper {
 
   // Database configuration
   static const _databaseName = "pos.db";
-  static const _databaseVersion = 3;
+  static const _databaseVersion = 4; // Incremented version
 
   // Table names
   static const tableUsers = 'users';
@@ -24,6 +24,7 @@ class DatabaseHelper {
   static const tableCategories = 'categories';
   static const tableBrands = 'brands';
   static const tableSuppliers = 'suppliers';
+  static const tableWarehouses = 'warehouses'; // New table
 
   static Database? _database;
 
@@ -41,6 +42,7 @@ class DatabaseHelper {
       path,
       version: _databaseVersion,
       onCreate: _onCreate,
+      onUpgrade: _onUpgrade,
       onConfigure: _onConfigure,
     );
   }
@@ -154,6 +156,30 @@ class DatabaseHelper {
         is_active INTEGER NOT NULL DEFAULT 1,
         created_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
         updated_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
+      )
+    ''');
+
+    // Warehouses table
+    await _createWarehousesTable(db);
+  }
+
+  Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
+    if (oldVersion < 4) {
+      await _createWarehousesTable(db);
+    }
+  }
+
+  Future<void> _createWarehousesTable(Database db) async {
+    await db.execute('''
+      CREATE TABLE $tableWarehouses (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        code TEXT NOT NULL UNIQUE,
+        address TEXT,
+        phone TEXT,
+        is_main INTEGER NOT NULL DEFAULT 0,
+        is_active INTEGER NOT NULL DEFAULT 1,
+        created_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
       )
     ''');
   }
