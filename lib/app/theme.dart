@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 class AppTheme {
   // 🎨 Base Palette
@@ -30,29 +29,34 @@ class AppTheme {
       onSurface: textPrimary,
     ),
 
-    // 📝 Typography
-    textTheme: TextTheme(
-      displayLarge: GoogleFonts.montserrat(
+    // 📝 Typography using local assets
+    textTheme: const TextTheme(
+      displayLarge: TextStyle(
+        fontFamily: 'Montserrat',
         fontSize: 57,
         fontWeight: FontWeight.bold,
         color: textPrimary,
       ),
-      titleLarge: GoogleFonts.montserrat(
+      titleLarge: TextStyle(
+        fontFamily: 'Montserrat',
         fontSize: 22,
         fontWeight: FontWeight.w600,
         color: textPrimary,
       ),
-      bodyLarge: GoogleFonts.lato(
+      bodyLarge: TextStyle(
+        fontFamily: 'Lato',
         fontSize: 16,
         color: textPrimary,
         height: 1.5,
       ),
-      bodyMedium: GoogleFonts.lato(
+      bodyMedium: TextStyle(
+        fontFamily: 'Lato',
         fontSize: 14,
         color: textSecondary,
         height: 1.5,
       ),
-      labelLarge: GoogleFonts.lato(
+      labelLarge: TextStyle(
+        fontFamily: 'Lato',
         fontSize: 14,
         fontWeight: FontWeight.bold,
         color: Colors.white,
@@ -60,11 +64,12 @@ class AppTheme {
     ),
 
     // 🔵 AppBar Theme
-    appBarTheme: AppBarTheme(
+    appBarTheme: const AppBarTheme(
       backgroundColor: background,
       foregroundColor: textPrimary,
       elevation: 0,
-      titleTextStyle: GoogleFonts.montserrat(
+      titleTextStyle: TextStyle(
+        fontFamily: 'Montserrat',
         fontSize: 24,
         fontWeight: FontWeight.bold,
         color: textPrimary,
@@ -80,27 +85,29 @@ class AppTheme {
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
         shadowColor: primary.withAlpha(40),
         elevation: 8,
-        textStyle: GoogleFonts.lato(fontSize: 16, fontWeight: FontWeight.bold),
+        textStyle: const TextStyle(
+            fontFamily: 'Lato', fontSize: 16, fontWeight: FontWeight.bold),
       ),
     ),
 
     // 🧾 Input Theme
-    inputDecorationTheme: InputDecorationTheme(
+    inputDecorationTheme: const InputDecorationTheme(
       filled: true,
       fillColor: inputBackground,
-      labelStyle: const TextStyle(color: textSecondary),
-      hintStyle: GoogleFonts.lato(color: textSecondary, fontSize: 14),
+      labelStyle: TextStyle(color: textSecondary),
+      hintStyle: TextStyle(
+          fontFamily: 'Lato', color: textSecondary, fontSize: 14),
       border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.all(Radius.circular(12)),
         borderSide: BorderSide.none,
       ),
       enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.all(Radius.circular(12)),
         borderSide: BorderSide.none,
       ),
       focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: primary, width: 2),
+        borderRadius: BorderRadius.all(Radius.circular(12)),
+        borderSide: BorderSide(color: primary, width: 2),
       ),
     ),
 

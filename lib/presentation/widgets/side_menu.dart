@@ -71,6 +71,13 @@ class SideMenu extends ConsumerWidget {
                   path: '/warehouses',
                   currentPath: currentPath,
                 ),
+                 _buildDrawerItem(
+                  context: context,
+                  icon: Icons.price_change_rounded,
+                  title: 'Tasas de Impuesto',
+                  path: '/tax-rates',
+                  currentPath: currentPath,
+                ),
               ],
             ),
           ),

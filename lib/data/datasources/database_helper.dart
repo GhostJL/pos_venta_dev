@@ -14,7 +14,7 @@ class DatabaseHelper {
 
   // Database configuration
   static const _databaseName = "pos.db";
-  static const _databaseVersion = 4; // Incremented version
+  static const _databaseVersion = 5; // Incremented version
 
   // Table names
   static const tableUsers = 'users';
@@ -24,7 +24,8 @@ class DatabaseHelper {
   static const tableCategories = 'categories';
   static const tableBrands = 'brands';
   static const tableSuppliers = 'suppliers';
-  static const tableWarehouses = 'warehouses'; // New table
+  static const tableWarehouses = 'warehouses';
+  static const tableTaxRates = 'tax_rates'; // New table
 
   static Database? _database;
 
@@ -161,23 +162,42 @@ class DatabaseHelper {
 
     // Warehouses table
     await _createWarehousesTable(db);
+    // TaxRates table
+    await _createTaxRatesTable(db);
   }
 
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
     if (oldVersion < 4) {
       await _createWarehousesTable(db);
     }
+    if (oldVersion < 5) {
+      await _createTaxRatesTable(db);
+    }
   }
 
   Future<void> _createWarehousesTable(Database db) async {
     await db.execute('''
-      CREATE TABLE $tableWarehouses (
+      CREATE TABLE IF NOT EXISTS $tableWarehouses (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT NOT NULL,
         code TEXT NOT NULL UNIQUE,
         address TEXT,
         phone TEXT,
         is_main INTEGER NOT NULL DEFAULT 0,
+        is_active INTEGER NOT NULL DEFAULT 1,
+        created_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
+      )
+    ''');
+  }
+
+  Future<void> _createTaxRatesTable(Database db) async {
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS $tableTaxRates (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        code TEXT NOT NULL UNIQUE,
+        rate REAL NOT NULL,
+        is_default INTEGER NOT NULL DEFAULT 0,
         is_active INTEGER NOT NULL DEFAULT 1,
         created_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
       )
@@ -244,4 +264,35 @@ class DatabaseHelper {
     await deleteDatabase(path);
     _database = null;
   }
+
+    Future<int> insert(String table, Map<String, dynamic> row) async {
+    final db = await database;
+    return await db.insert(table, row);
+  }
+
+  Future<List<Map<String, dynamic>>> queryAll(String table) async {
+    final db = await database;
+    return await db.query(table);
+  }
+
+  Future<Map<String, dynamic>?> queryById(String table, int id) async {
+    final db = await database;
+    final maps = await db.query(table, where: 'id = ?', whereArgs: [id]);
+    if (maps.isNotEmpty) {
+      return maps.first;
+    }
+    return null;
+  }
+
+  Future<int> update(String table, Map<String, dynamic> row) async {
+    final db = await database;
+    int id = row['id'];
+    return await db.update(table, row, where: 'id = ?', whereArgs: [id]);
+  }
+
+  Future<int> delete(String table, int id) async {
+    final db = await database;
+    return await db.delete(table, where: 'id = ?', whereArgs: [id]);
+  }
+
 }
