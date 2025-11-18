@@ -14,7 +14,7 @@ class DatabaseHelper {
 
   // Database configuration
   static const _databaseName = "pos.db";
-  static const _databaseVersion = 6; // Incremented version
+  static const _databaseVersion = 7; // Incremented version
 
   // Table names
   static const tableUsers = 'users';
@@ -25,7 +25,9 @@ class DatabaseHelper {
   static const tableBrands = 'brands';
   static const tableSuppliers = 'suppliers';
   static const tableWarehouses = 'warehouses';
-  static const tableTaxRates = 'tax_rates'; // New table
+  static const tableTaxRates = 'tax_rates';
+  static const tableProducts = 'products'; // New table
+  static const tableProductTaxes = 'product_taxes'; // New table
 
   static Database? _database;
 
@@ -164,6 +166,10 @@ class DatabaseHelper {
     await _createWarehousesTable(db);
     // TaxRates table
     await _createTaxRatesTable(db);
+    // Products table
+    await _createProductsTable(db);
+    // ProductTaxes table
+    await _createProductTaxesTable(db);
   }
 
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
@@ -172,6 +178,10 @@ class DatabaseHelper {
     }
     if (oldVersion < 6) {
       await _createTaxRatesTable(db);
+    }
+    if (oldVersion < 7) {
+      await _createProductsTable(db);
+      await _createProductTaxesTable(db);
     }
   }
 
@@ -239,6 +249,47 @@ class DatabaseHelper {
         'created_at': DateTime.now().toIso8601String(),
       }, conflictAlgorithm: ConflictAlgorithm.ignore);
     }
+  }
+  
+  Future<void> _createProductsTable(Database db) async {
+    await db.execute('''
+      CREATE TABLE $tableProducts (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        code TEXT NOT NULL UNIQUE,
+        barcode TEXT UNIQUE,
+        name TEXT NOT NULL,
+        description TEXT,
+        department_id INTEGER NOT NULL,
+        category_id INTEGER NOT NULL,
+        brand_id INTEGER,
+        supplier_id INTEGER,
+        unit_of_measure TEXT NOT NULL DEFAULT 'pieza',
+        is_sold_by_weight INTEGER NOT NULL DEFAULT 0,
+        cost_price_cents INTEGER NOT NULL DEFAULT 0,
+        sale_price_cents INTEGER NOT NULL,
+        wholesale_price_cents INTEGER,
+        is_active INTEGER NOT NULL DEFAULT 1,
+        created_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
+        updated_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
+        FOREIGN KEY (department_id) REFERENCES $tableDepartments(id) ON DELETE RESTRICT,
+        FOREIGN KEY (category_id) REFERENCES $tableCategories(id) ON DELETE RESTRICT,
+        FOREIGN KEY (brand_id) REFERENCES $tableBrands(id) ON DELETE SET NULL,
+        FOREIGN KEY (supplier_id) REFERENCES $tableSuppliers(id) ON DELETE SET NULL
+      )
+    ''');
+  }
+
+  Future<void> _createProductTaxesTable(Database db) async {
+    await db.execute('''
+      CREATE TABLE $tableProductTaxes (
+        product_id INTEGER NOT NULL,
+        tax_rate_id INTEGER NOT NULL,
+        apply_order INTEGER NOT NULL DEFAULT 1,
+        PRIMARY KEY (product_id, tax_rate_id),
+        FOREIGN KEY (product_id) REFERENCES $tableProducts(id) ON DELETE CASCADE,
+        FOREIGN KEY (tax_rate_id) REFERENCES $tableTaxRates(id) ON DELETE RESTRICT
+      )
+    ''');
   }
 
   // Onboarding methods

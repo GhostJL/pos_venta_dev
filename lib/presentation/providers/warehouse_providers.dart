@@ -1,6 +1,6 @@
 import 'package:posventa/domain/entities/warehouse.dart';
 import 'package:posventa/domain/use_cases/get_all_warehouses.dart';
-import 'package:posventa/providers.dart';
+import 'package:posventa/presentation/providers/providers.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'warehouse_providers.g.dart';

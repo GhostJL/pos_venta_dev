@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:posventa/presentation/pages/products_page.dart';
 import 'package:posventa/domain/entities/user.dart';
 import 'package:posventa/presentation/pages/tax_rate_page.dart';
 import 'package:posventa/presentation/pages/brands_page.dart';
@@ -79,6 +80,11 @@ final routerProvider = Provider<GoRouter>((ref) {
                 const NoTransitionPage(child: CashierHomePage()),
           ),
           GoRoute(
+            path: '/products',
+            pageBuilder: (context, state) =>
+                const NoTransitionPage(child: ProductsPage()),
+          ),
+          GoRoute(
             path: '/departments',
             pageBuilder: (context, state) =>
                 const NoTransitionPage(child: DepartmentsPage()),
@@ -107,10 +113,6 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: '/tax-rates',
             pageBuilder: (context, state) =>
                 const NoTransitionPage(child: TaxRatePage()),
-          ),
-          GoRoute(
-            path: '/tax-rates',
-            builder: (context, state) => const TaxRatePage(),
           ),
         ],
       ),

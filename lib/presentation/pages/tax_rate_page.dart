@@ -1,3 +1,4 @@
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:posventa/domain/entities/tax_rate.dart';
@@ -178,11 +179,13 @@ class TaxRatePage extends ConsumerWidget {
                     } else {
                       await ref.read(taxRatesProvider.notifier).updateTaxRate(newTaxRate);
                     }
-                    Navigator.of(context).pop();
+                    if (context.mounted) Navigator.of(context).pop();
                   } catch (e) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Error: ${e.toString()}')),
-                    );
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Error: ${e.toString()}')),
+                      );
+                    }
                   }
                 }
               },

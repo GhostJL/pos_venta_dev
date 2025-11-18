@@ -38,6 +38,13 @@ class SideMenu extends ConsumerWidget {
                 _buildSectionHeader('Gestión de Catálogo'),
                 _buildDrawerItem(
                   context: context,
+                  icon: Icons.inventory_2_rounded,
+                  title: 'Productos',
+                  path: '/products',
+                  currentPath: currentPath,
+                ),
+                _buildDrawerItem(
+                  context: context,
                   icon: Icons.store_rounded,
                   title: 'Departamentos',
                   path: '/departments',
