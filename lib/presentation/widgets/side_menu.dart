@@ -94,6 +94,13 @@ class SideMenu extends ConsumerWidget {
                   path: '/tax-rates',
                   currentPath: currentPath,
                 ),
+                _buildDrawerItem(
+                  context: context,
+                  icon: Icons.inventory_2_rounded,
+                  title: 'Inventario',
+                  path: '/inventory',
+                  currentPath: currentPath,
+                ),
               ],
             ),
           ),

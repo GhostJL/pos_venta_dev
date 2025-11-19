@@ -319,7 +319,7 @@ class ProductFormPageState extends ConsumerState<ProductFormPage> {
                   const SizedBox(height: 16),
                   if (isSmallScreen) ...[
                     DropdownButtonFormField<String>(
-                      value: _selectedUnit,
+                      initialValue: _selectedUnit,
                       decoration: const InputDecoration(
                         labelText: 'Unidad',
                         prefixIcon: Icon(Icons.scale_rounded),
@@ -340,7 +340,7 @@ class ProductFormPageState extends ConsumerState<ProductFormPage> {
                     SwitchListTile(
                       title: const Text('Venta por Peso'),
                       value: _isSoldByWeight,
-                      activeColor: AppTheme.primary,
+                      activeThumbColor: AppTheme.primary,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
@@ -352,7 +352,7 @@ class ProductFormPageState extends ConsumerState<ProductFormPage> {
                       children: [
                         Expanded(
                           child: DropdownButtonFormField<String>(
-                            value: _selectedUnit,
+                            initialValue: _selectedUnit,
                             decoration: const InputDecoration(
                               labelText: 'Unidad',
                               prefixIcon: Icon(Icons.scale_rounded),
@@ -376,7 +376,7 @@ class ProductFormPageState extends ConsumerState<ProductFormPage> {
                           child: SwitchListTile(
                             title: const Text('Venta por Peso'),
                             value: _isSoldByWeight,
-                            activeColor: AppTheme.primary,
+                            activeThumbColor: AppTheme.primary,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
                             ),
@@ -489,7 +489,7 @@ class ProductFormPageState extends ConsumerState<ProductFormPage> {
                   SwitchListTile(
                     title: const Text('Producto Activo'),
                     value: _isActive,
-                    activeColor: AppTheme.success,
+                    activeThumbColor: AppTheme.success,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
@@ -537,7 +537,7 @@ class ProductFormPageState extends ConsumerState<ProductFormPage> {
   }) {
     return asyncValue.when(
       data: (items) => DropdownButtonFormField<int>(
-        value: currentValue,
+        initialValue: currentValue,
         decoration: InputDecoration(
           labelText: label,
           prefixIcon: icon != null ? Icon(icon) : null,

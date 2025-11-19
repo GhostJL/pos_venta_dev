@@ -111,7 +111,7 @@ class _TaxRateFormState extends ConsumerState<TaxRateForm> {
                   style: TextStyle(fontSize: 12),
                 ),
                 value: _isDefault,
-                activeColor: AppTheme.primary,
+                activeThumbColor: AppTheme.primary,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
@@ -131,7 +131,7 @@ class _TaxRateFormState extends ConsumerState<TaxRateForm> {
                   style: TextStyle(fontSize: 12),
                 ),
                 value: _isOptional,
-                activeColor: AppTheme.primary,
+                activeThumbColor: AppTheme.primary,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),

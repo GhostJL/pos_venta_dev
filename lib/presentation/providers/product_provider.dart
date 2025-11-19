@@ -1,56 +1,60 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 import 'package:posventa/domain/entities/product.dart';
+import 'package:posventa/domain/use_cases/get_all_products.dart';
+import 'package:posventa/domain/use_cases/create_product.dart';
+import 'package:posventa/domain/use_cases/update_product.dart';
+import 'package:posventa/presentation/providers/providers.dart';
 
 class ProductNotifier extends StateNotifier<AsyncValue<List<Product>>> {
-  ProductNotifier() : super(const AsyncValue.loading()) {
+  final GetAllProducts _getAllProducts;
+  final CreateProduct _createProduct;
+  final UpdateProduct _updateProduct;
+
+  ProductNotifier({
+    required GetAllProducts getAllProducts,
+    required CreateProduct createProduct,
+    required UpdateProduct updateProduct,
+  }) : _getAllProducts = getAllProducts,
+       _createProduct = createProduct,
+       _updateProduct = updateProduct,
+       super(const AsyncValue.loading()) {
     _loadProducts();
   }
 
-  final List<Product> _initialProducts = [];
-
   Future<void> _loadProducts() async {
-    try {
-      await Future.delayed(const Duration(seconds: 1));
-      state = AsyncValue.data(_initialProducts);
-    } catch (e, s) {
-      state = AsyncValue.error(e, s);
-    }
+    state = const AsyncValue.loading();
+    state = await AsyncValue.guard(() => _getAllProducts());
   }
 
   Future<void> addProduct(Product product) async {
-    final currentState = state;
-    if (currentState is AsyncData<List<Product>>) {
-      try {
-        await Future.delayed(const Duration(milliseconds: 500));
-        final newProduct = product.copyWith(id: currentState.value.length + 1);
-        state = AsyncValue.data([...currentState.value, newProduct]);
-      } catch (e, s) {
-        state = AsyncValue.error(e, s);
-      }
-    }
+    state = const AsyncValue.loading();
+    state = await AsyncValue.guard(() async {
+      await _createProduct(product);
+      return _getAllProducts();
+    });
   }
 
   Future<void> updateProduct(Product product) async {
-    final currentState = state;
-    if (currentState is AsyncData<List<Product>>) {
-      try {
-        await Future.delayed(const Duration(milliseconds: 500));
-        final updatedProducts = [
-          for (final p in currentState.value)
-            if (p.id == product.id) product else p,
-        ];
-        state = AsyncValue.data(updatedProducts);
-      } catch (e, s) {
-        state = AsyncValue.error(e, s);
-      }
-    }
+    state = const AsyncValue.loading();
+    state = await AsyncValue.guard(() async {
+      await _updateProduct(product);
+      return _getAllProducts();
+    });
   }
 }
 
 final productNotifierProvider =
     StateNotifierProvider<ProductNotifier, AsyncValue<List<Product>>>((ref) {
-      return ProductNotifier();
+      final getAllProducts = ref.watch(getAllProductsProvider);
+      final createProduct = ref.watch(createProductProvider);
+      final updateProduct = ref.watch(updateProductProvider);
+
+      return ProductNotifier(
+        getAllProducts: getAllProducts,
+        createProduct: createProduct,
+        updateProduct: updateProduct,
+      );
     });
 
 extension ProductCopyWith on Product {

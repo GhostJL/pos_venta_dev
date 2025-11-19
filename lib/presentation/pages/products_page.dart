@@ -485,7 +485,7 @@ class ProductsPageState extends ConsumerState<ProductsPage> {
 
                   // Sort Order
                   DropdownButtonFormField<String>(
-                    value: _sortOrder,
+                    initialValue: _sortOrder,
                     decoration: const InputDecoration(
                       labelText: 'Ordenar por',
                       prefixIcon: Icon(Icons.sort_rounded),
@@ -568,7 +568,7 @@ class ProductsPageState extends ConsumerState<ProductsPage> {
     IconData icon,
   ) {
     return DropdownButtonFormField<int>(
-      value: currentValue,
+      initialValue: currentValue,
       decoration: InputDecoration(labelText: label, prefixIcon: Icon(icon)),
       items: items
           .map(

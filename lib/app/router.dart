@@ -18,6 +18,7 @@ import 'package:posventa/presentation/pages/onboarding/admin_setup_page.dart';
 import 'package:posventa/presentation/pages/onboarding/set_access_key_page.dart';
 import 'package:posventa/presentation/pages/suppliers_page.dart';
 import 'package:posventa/presentation/pages/warehouses_page.dart';
+import 'package:posventa/presentation/pages/inventory_page.dart';
 import 'package:posventa/presentation/providers/auth_provider.dart';
 import 'package:posventa/presentation/providers/transaction_provider.dart';
 
@@ -113,6 +114,11 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: '/tax-rates',
             pageBuilder: (context, state) =>
                 const NoTransitionPage(child: TaxRatePage()),
+          ),
+          GoRoute(
+            path: '/inventory',
+            pageBuilder: (context, state) =>
+                const NoTransitionPage(child: InventoryPage()),
           ),
         ],
       ),

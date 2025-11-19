@@ -14,7 +14,7 @@ class DatabaseHelper {
 
   // Database configuration
   static const _databaseName = "pos.db";
-  static const _databaseVersion = 7; // Incremented version
+  static const _databaseVersion = 8; // Incremented version
 
   // Table names
   static const tableUsers = 'users';
@@ -28,6 +28,7 @@ class DatabaseHelper {
   static const tableTaxRates = 'tax_rates';
   static const tableProducts = 'products'; // New table
   static const tableProductTaxes = 'product_taxes'; // New table
+  static const tableInventory = 'inventory'; // New table
 
   static Database? _database;
 
@@ -170,6 +171,8 @@ class DatabaseHelper {
     await _createProductsTable(db);
     // ProductTaxes table
     await _createProductTaxesTable(db);
+    // Inventory table
+    await _createInventoryTable(db);
   }
 
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
@@ -182,6 +185,9 @@ class DatabaseHelper {
     if (oldVersion < 7) {
       await _createProductsTable(db);
       await _createProductTaxesTable(db);
+    }
+    if (oldVersion < 8) {
+      await _createInventoryTable(db);
     }
   }
 
@@ -250,7 +256,7 @@ class DatabaseHelper {
       }, conflictAlgorithm: ConflictAlgorithm.ignore);
     }
   }
-  
+
   Future<void> _createProductsTable(Database db) async {
     await db.execute('''
       CREATE TABLE $tableProducts (
@@ -288,6 +294,26 @@ class DatabaseHelper {
         PRIMARY KEY (product_id, tax_rate_id),
         FOREIGN KEY (product_id) REFERENCES $tableProducts(id) ON DELETE CASCADE,
         FOREIGN KEY (tax_rate_id) REFERENCES $tableTaxRates(id) ON DELETE RESTRICT
+      )
+    ''');
+  }
+
+  Future<void> _createInventoryTable(Database db) async {
+    await db.execute('''
+      CREATE TABLE $tableInventory (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        product_id INTEGER NOT NULL,
+        warehouse_id INTEGER NOT NULL,
+        quantity_on_hand REAL NOT NULL DEFAULT 0,
+        quantity_reserved REAL NOT NULL DEFAULT 0,
+        min_stock INTEGER,
+        max_stock INTEGER,
+        lot_number TEXT,
+        expiration_date TEXT,
+        updated_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
+        UNIQUE (product_id, warehouse_id, lot_number),
+        FOREIGN KEY (product_id) REFERENCES $tableProducts(id) ON DELETE CASCADE,
+        FOREIGN KEY (warehouse_id) REFERENCES $tableWarehouses(id) ON DELETE CASCADE
       )
     ''');
   }
