@@ -34,7 +34,6 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   @override
   Widget build(BuildContext context) {
     final auth = ref.watch(authProvider);
-    final authNotifier = ref.read(authProvider.notifier);
 
     ref.listen<AuthState>(authProvider, (_, state) {
       if (state.status == AuthStatus.error && state.errorMessage != null) {
@@ -43,6 +42,10 @@ class _LoginPageState extends ConsumerState<LoginPage> {
             content: Text(state.errorMessage!),
             backgroundColor: AppTheme.error,
             behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+            margin: const EdgeInsets.all(16),
           ),
         );
       }
@@ -54,88 +57,130 @@ class _LoginPageState extends ConsumerState<LoginPage> {
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24.0),
           child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 420),
+            constraints: const BoxConstraints(maxWidth: 400),
             child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                // Header
                 _buildHeader(context),
-                const SizedBox(height: 32),
-
-                // Form Card
-                Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(32.0),
-                    child: Form(
-                      key: _formKey,
-                      child: Column(
-                        crossAxisAlignment: .stretch,
-                        children: [
-                          Text(
-                            'Inicia sesión para gestionar tu tienda',
-                            style: Theme.of(context).textTheme.bodyMedium,
-                          ),
-                          const SizedBox(height: 20),
-                          // Username Field
-                          TextFormField(
-                            controller: _usernameController,
-                            decoration: const InputDecoration(
-                              labelText: 'Usuario',
-                              prefixIcon: Icon(Icons.person_outline_rounded),
-                            ),
-                            validator: (value) => value!.isEmpty
-                                ? 'Por favor, introduce tu usuario'
-                                : null,
-                          ),
-                          const SizedBox(height: 20),
-
-                          // Password Field
-                          TextFormField(
-                            controller: _passwordController,
-                            obscureText: _isPasswordObscured,
-                            decoration: InputDecoration(
-                              labelText: 'Contraseña',
-                              prefixIcon: const Icon(
-                                Icons.lock_outline_rounded,
-                              ),
-                              suffixIcon: IconButton(
-                                icon: Icon(
-                                  _isPasswordObscured
-                                      ? Icons.visibility_off_outlined
-                                      : Icons.visibility_outlined,
-                                ),
-                                onPressed: () {
-                                  setState(
-                                    () => _isPasswordObscured =
-                                        !_isPasswordObscured,
-                                  );
-                                },
-                              ),
-                            ),
-                            validator: (value) => value!.isEmpty
-                                ? 'Por favor, introduce tu contraseña'
-                                : null,
-                          ),
-                          const SizedBox(height: 32),
-
-                          // Login Button
-                          ElevatedButton(
-                            onPressed: auth.status == AuthStatus.loading
-                                ? null
-                                : () => _login(authProvider),
-                            child: auth.status == AuthStatus.loading
-                                ? const SizedBox(
-                                    height: 24,
-                                    width: 24,
-                                    child: CircularProgressIndicator(
-                                      color: Colors.white,
-                                      strokeWidth: 3,
-                                    ),
-                                  )
-                                : const Text('Iniciar Sesión'),
-                          ),
-                        ],
+                const SizedBox(height: 40),
+                Container(
+                  decoration: BoxDecoration(
+                    color: AppTheme.cardBackground,
+                    borderRadius: BorderRadius.circular(24),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppTheme.textPrimary.withAlpha(15),
+                        blurRadius: 30,
+                        offset: const Offset(0, 10),
                       ),
+                    ],
+                  ),
+                  padding: const EdgeInsets.all(32.0),
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Text(
+                          'Bienvenido de nuevo',
+                          style: Theme.of(context).textTheme.headlineSmall
+                              ?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: AppTheme.textPrimary,
+                              ),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Inicia sesión para continuar',
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(color: AppTheme.textSecondary),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 32),
+                        TextFormField(
+                          controller: _usernameController,
+                          decoration: const InputDecoration(
+                            labelText: 'Usuario',
+                            prefixIcon: Icon(Icons.person_outline_rounded),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.all(
+                                Radius.circular(12),
+                              ),
+                            ),
+                          ),
+                          validator: (value) => value!.isEmpty
+                              ? 'Por favor, introduce tu usuario'
+                              : null,
+                        ),
+                        const SizedBox(height: 20),
+                        TextFormField(
+                          controller: _passwordController,
+                          obscureText: _isPasswordObscured,
+                          decoration: InputDecoration(
+                            labelText: 'Contraseña',
+                            prefixIcon: const Icon(Icons.lock_outline_rounded),
+                            suffixIcon: IconButton(
+                              icon: Icon(
+                                _isPasswordObscured
+                                    ? Icons.visibility_off_outlined
+                                    : Icons.visibility_outlined,
+                              ),
+                              onPressed: () {
+                                setState(
+                                  () => _isPasswordObscured =
+                                      !_isPasswordObscured,
+                                );
+                              },
+                            ),
+                            border: const OutlineInputBorder(
+                              borderRadius: BorderRadius.all(
+                                Radius.circular(12),
+                              ),
+                            ),
+                          ),
+                          validator: (value) => value!.isEmpty
+                              ? 'Por favor, introduce tu contraseña'
+                              : null,
+                        ),
+                        const SizedBox(height: 32),
+                        ElevatedButton(
+                          onPressed: auth.status == AuthStatus.loading
+                              ? null
+                              : () => _login(authProvider),
+                          style: ElevatedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            elevation: 0,
+                          ),
+                          child: auth.status == AuthStatus.loading
+                              ? const SizedBox(
+                                  height: 24,
+                                  width: 24,
+                                  child: CircularProgressIndicator(
+                                    color: Colors.white,
+                                    strokeWidth: 2.5,
+                                  ),
+                                )
+                              : const Text(
+                                  'Iniciar Sesión',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                        ),
+                      ],
                     ),
+                  ),
+                ),
+                const SizedBox(height: 24),
+                Text(
+                  '© 2024 POSVENTA',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: AppTheme.textSecondary.withAlpha(150),
                   ),
                 ),
               ],
@@ -148,24 +193,28 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 
   Widget _buildHeader(BuildContext context) {
     return Column(
-      crossAxisAlignment: .start,
       children: [
-        const Icon(
-          Icons.point_of_sale_rounded,
-          size: 64,
-          color: AppTheme.primary,
-        ),
-        const SizedBox(height: 8),
-        Text(
-          textAlign: TextAlign.center,
-          'POSVENTA',
-          style: Theme.of(context).textTheme.displayLarge?.copyWith(
-            fontSize: 32,
-            fontWeight: FontWeight.bold,
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: AppTheme.primary.withAlpha(25),
+            shape: BoxShape.circle,
+          ),
+          child: const Icon(
+            Icons.point_of_sale_rounded,
+            size: 48,
+            color: AppTheme.primary,
           ),
         ),
-        const SizedBox(height: 8),
-        Text('Bienvenido, realizar una venta en pocos pasos.'),
+        const SizedBox(height: 16),
+        Text(
+          'POSVENTA',
+          style: Theme.of(context).textTheme.displaySmall?.copyWith(
+            fontWeight: FontWeight.w900,
+            color: AppTheme.primary,
+            letterSpacing: 1.5,
+          ),
+        ),
       ],
     );
   }

@@ -9,6 +9,7 @@ import 'package:posventa/presentation/providers/category_providers.dart';
 import 'package:posventa/presentation/providers/department_providers.dart';
 import 'package:posventa/presentation/providers/supplier_providers.dart';
 import 'package:posventa/presentation/providers/tax_rate_provider.dart';
+import 'package:posventa/app/theme.dart';
 
 class ProductFormPage extends ConsumerStatefulWidget {
   final Product? product;
@@ -96,7 +97,9 @@ class ProductFormPageState extends ConsumerState<ProductFormPage> {
       if (salePrice <= costPrice) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('El precio de venta debe ser mayor que el precio de costo.'),
+            content: Text(
+              'El precio de venta debe ser mayor que el precio de costo.',
+            ),
           ),
         );
         return;
@@ -137,126 +140,238 @@ class ProductFormPageState extends ConsumerState<ProductFormPage> {
     final taxRatesAsync = ref.watch(taxRateListProvider);
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.product == null ? 'Nuevo Producto' : 'Editar Producto'),
-        actions: [IconButton(icon: const Icon(Icons.save), onPressed: _submit)],
+        title: Text(
+          widget.product == null ? 'Nuevo Producto' : 'Editar Producto',
+        ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.save_rounded),
+            onPressed: _submit,
+            tooltip: 'Guardar Producto',
+          ),
+        ],
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(24.0),
         child: Form(
           key: _formKey,
-          child: Wrap(
-            spacing: 16,
-            runSpacing: 16,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              TextFormField(
-                controller: _codeController,
-                decoration: const InputDecoration(labelText: 'Código/SKU'),
-                validator: (value) =>
-                    value!.isEmpty ? 'Por favor, introduce un código' : null,
+              _buildSectionTitle('Información Básica'),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextFormField(
+                      controller: _codeController,
+                      decoration: const InputDecoration(
+                        labelText: 'Código/SKU',
+                        prefixIcon: Icon(Icons.qr_code_rounded),
+                      ),
+                      validator: (value) => value!.isEmpty ? 'Requerido' : null,
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: TextFormField(
+                      controller: _barcodeController,
+                      decoration: const InputDecoration(
+                        labelText: 'Código de Barras',
+                        prefixIcon: Icon(Icons.qr_code_scanner_rounded),
+                      ),
+                    ),
+                  ),
+                ],
               ),
-              TextFormField(
-                controller: _barcodeController,
-                decoration: const InputDecoration(labelText: 'Código de Barras'),
-              ),
+              const SizedBox(height: 16),
               TextFormField(
                 controller: _nameController,
-                decoration: const InputDecoration(labelText: 'Nombre del Producto'),
+                decoration: const InputDecoration(
+                  labelText: 'Nombre del Producto',
+                  prefixIcon: Icon(Icons.label_outline_rounded),
+                ),
                 validator: (value) =>
                     value!.isEmpty ? 'Por favor, introduce un nombre' : null,
               ),
+              const SizedBox(height: 16),
               TextFormField(
                 controller: _descriptionController,
-                decoration: const InputDecoration(labelText: 'Descripción'),
+                decoration: const InputDecoration(
+                  labelText: 'Descripción',
+                  prefixIcon: Icon(Icons.description_outlined),
+                ),
                 maxLines: 3,
               ),
-              _buildDropdown(
-                ref.watch(departmentListProvider),
-                'Departamento',
-                _selectedDepartment,
-                (val) => setState(() => _selectedDepartment = val),
+              const SizedBox(height: 24),
+              _buildSectionTitle('Clasificación'),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildDropdown(
+                      ref.watch(departmentListProvider),
+                      'Departamento',
+                      _selectedDepartment,
+                      (val) => setState(() => _selectedDepartment = val),
+                      icon: Icons.business_rounded,
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: _buildDropdown(
+                      ref.watch(categoryListProvider),
+                      'Categoría',
+                      _selectedCategory,
+                      (val) => setState(() => _selectedCategory = val),
+                      icon: Icons.category_rounded,
+                    ),
+                  ),
+                ],
               ),
-              _buildDropdown(
-                ref.watch(categoryListProvider),
-                'Categoría',
-                _selectedCategory,
-                (val) => setState(() => _selectedCategory = val),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildDropdown(
+                      ref.watch(brandListProvider),
+                      'Marca',
+                      _selectedBrand,
+                      (val) => setState(() => _selectedBrand = val),
+                      isOptional: true,
+                      icon: Icons.branding_watermark_rounded,
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: _buildDropdown(
+                      ref.watch(supplierListProvider),
+                      'Proveedor',
+                      _selectedSupplier,
+                      (val) => setState(() => _selectedSupplier = val),
+                      isOptional: true,
+                      icon: Icons.local_shipping_rounded,
+                    ),
+                  ),
+                ],
               ),
-              _buildDropdown(
-                ref.watch(brandListProvider),
-                'Marca',
-                _selectedBrand,
-                (val) => setState(() => _selectedBrand = val),
-                isOptional: true,
+              const SizedBox(height: 24),
+              _buildSectionTitle('Precios y Unidad'),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(
+                    child: DropdownButtonFormField<String>(
+                      value: _selectedUnit,
+                      decoration: const InputDecoration(
+                        labelText: 'Unidad',
+                        prefixIcon: Icon(Icons.scale_rounded),
+                      ),
+                      items: ['pieza', 'kg', 'litro', 'caja']
+                          .map(
+                            (unit) => DropdownMenuItem(
+                              value: unit,
+                              child: Text(unit),
+                            ),
+                          )
+                          .toList(),
+                      onChanged: (value) =>
+                          setState(() => _selectedUnit = value),
+                      validator: (value) => value == null ? 'Requerido' : null,
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: SwitchListTile(
+                      title: const Text('Venta por Peso'),
+                      value: _isSoldByWeight,
+                      activeColor: AppTheme.primary,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      onChanged: (value) =>
+                          setState(() => _isSoldByWeight = value),
+                    ),
+                  ),
+                ],
               ),
-              _buildDropdown(
-                ref.watch(supplierListProvider),
-                'Proveedor',
-                _selectedSupplier,
-                (val) => setState(() => _selectedSupplier = val),
-                isOptional: true,
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextFormField(
+                      controller: _costPriceController,
+                      decoration: const InputDecoration(
+                        labelText: 'Costo',
+                        prefixText: '€ ',
+                        prefixIcon: Icon(Icons.euro_rounded),
+                      ),
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
+                      ),
+                      validator: (value) => value!.isEmpty ? 'Requerido' : null,
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: TextFormField(
+                      controller: _salePriceController,
+                      decoration: const InputDecoration(
+                        labelText: 'Venta',
+                        prefixText: '€ ',
+                        prefixIcon: Icon(Icons.sell_rounded),
+                      ),
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
+                      ),
+                      validator: (value) => value!.isEmpty ? 'Requerido' : null,
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: TextFormField(
+                      controller: _wholesalePriceController,
+                      decoration: const InputDecoration(
+                        labelText: 'Mayorista',
+                        prefixText: '€ ',
+                        prefixIcon: Icon(Icons.storefront_rounded),
+                      ),
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
+                      ),
+                      validator: (value) => value!.isEmpty ? 'Requerido' : null,
+                    ),
+                  ),
+                ],
               ),
-              DropdownButtonFormField<String>(
-                value: _selectedUnit,
-                hint: const Text('Unidad de Medida'),
-                items: ['pieza', 'kg', 'litro', 'caja']
-                    .map(
-                      (unit) =>
-                          DropdownMenuItem(value: unit, child: Text(unit)),
-                    )
-                    .toList(),
-                onChanged: (value) => setState(() => _selectedUnit = value),
-                validator: (value) => value == null ? 'Selecciona una unidad' : null,
-              ),
-              SwitchListTile(
-                title: const Text('Vendido por Peso'),
-                value: _isSoldByWeight,
-                onChanged: (value) => setState(() => _isSoldByWeight = value),
-              ),
-              TextFormField(
-                controller: _costPriceController,
-                decoration: const InputDecoration(
-                  labelText: 'Precio de Costo',
-                  prefixText: '€',
-                ),
-                keyboardType: const TextInputType.numberWithOptions(
-                  decimal: true,
-                ),
-                validator: (value) =>
-                    value!.isEmpty ? 'Por favor, introduce el precio de costo' : null,
-              ),
-              TextFormField(
-                controller: _salePriceController,
-                decoration: const InputDecoration(
-                  labelText: 'Precio de Venta',
-                  prefixText: '€',
-                ),
-                keyboardType: const TextInputType.numberWithOptions(
-                  decimal: true,
-                ),
-                validator: (value) =>
-                    value!.isEmpty ? 'Por favor, introduce el precio de venta' : null,
-              ),
-              TextFormField(
-                controller: _wholesalePriceController,
-                decoration: const InputDecoration(
-                  labelText: 'Precio al por Mayor',
-                  prefixText: '€',
-                ),
-                keyboardType: const TextInputType.numberWithOptions(
-                  decimal: true,
-                ),
-                validator: (value) =>
-                    value!.isEmpty ? 'Por favor, introduce el precio al por mayor' : null,
-              ),
+              const SizedBox(height: 24),
               taxRatesAsync.when(
                 data: (taxRates) => _buildTaxSelection(taxRates),
                 loading: () => const Center(child: CircularProgressIndicator()),
-                error: (e, s) => Text('Error al cargar las tasas de impuestos: $e'),
+                error: (e, s) => Text('Error al cargar impuestos: $e'),
               ),
+              const SizedBox(height: 24),
               SwitchListTile(
                 title: const Text('Producto Activo'),
                 value: _isActive,
+                activeColor: AppTheme.success,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
                 onChanged: (value) => setState(() => _isActive = value),
+              ),
+              const SizedBox(height: 32),
+              ElevatedButton.icon(
+                onPressed: _submit,
+                icon: const Icon(Icons.save_rounded),
+                label: const Text('Guardar Producto'),
+                style: ElevatedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  elevation: 0,
+                ),
               ),
             ],
           ),
@@ -265,35 +380,56 @@ class ProductFormPageState extends ConsumerState<ProductFormPage> {
     );
   }
 
+  Widget _buildSectionTitle(String title) {
+    return Text(
+      title,
+      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+        fontWeight: FontWeight.bold,
+        color: AppTheme.primary,
+      ),
+    );
+  }
+
   Widget _buildDropdown(
     AsyncValue<List<dynamic>> asyncValue,
-    String hint,
+    String label,
     int? currentValue,
     void Function(int?) onChanged, {
     bool isOptional = false,
+    IconData? icon,
   }) {
     return asyncValue.when(
       data: (items) => DropdownButtonFormField<int>(
         value: currentValue,
-        hint: Text(hint),
+        decoration: InputDecoration(
+          labelText: label,
+          prefixIcon: icon != null ? Icon(icon) : null,
+        ),
         items: items
             .map(
               (e) => DropdownMenuItem(
                 value: e.id as int,
-                child: Text(e.name as String),
+                child: Text(e.name as String, overflow: TextOverflow.ellipsis),
               ),
             )
             .toList(),
         onChanged: onChanged,
         validator: (value) {
           if (!isOptional && value == null) {
-            return 'Por favor, selecciona un $hint';
+            return 'Requerido';
           }
           return null;
         },
+        isExpanded: true,
       ),
-      loading: () => const Center(child: CircularProgressIndicator()),
-      error: (e, s) => Text('Error al cargar $hint: $e'),
+      loading: () => const Center(
+        child: SizedBox(
+          height: 20,
+          width: 20,
+          child: CircularProgressIndicator(strokeWidth: 2),
+        ),
+      ),
+      error: (e, s) => Text('Error: $e'),
     );
   }
 
@@ -306,60 +442,97 @@ class ProductFormPageState extends ConsumerState<ProductFormPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text('Impuestos', style: TextStyle(fontWeight: FontWeight.bold)),
-        ...activeTaxRates.map((taxRate) {
-          final isSelected = _selectedTaxes.any(
-            (pt) => pt.taxRateId == taxRate.id,
-          );
-          return CheckboxListTile(
-            title: Text('${taxRate.name} ${taxRate.rate}%'),
-            value: isSelected,
-            onChanged: isExempt && taxRate.name != 'Exento'
-                ? null
-                : (bool? value) {
-                    setState(() {
-                      if (value == true) {
-                        if (taxRate.name == 'Exento') {
-                          _selectedTaxes.clear();
-                        }
-                        _selectedTaxes.add(
-                          ProductTax(
-                            taxRateId: taxRate.id!,
-                            applyOrder: _selectedTaxes.length + 1,
-                          ),
-                        );
-                      } else {
-                        _selectedTaxes.removeWhere(
-                          (pt) => pt.taxRateId == taxRate.id,
-                        );
-                      }
-                      _updateApplyOrder();
-                    });
-                  },
-          );
-        }),
-        if (_selectedTaxes.length > 1)
-          ReorderableListView(
-            shrinkWrap: true,
-            onReorder: (oldIndex, newIndex) {
-              setState(() {
-                if (newIndex > oldIndex) {
-                  newIndex -= 1;
-                }
-                final item = _selectedTaxes.removeAt(oldIndex);
-                _selectedTaxes.insert(newIndex, item);
-                _updateApplyOrder();
-              });
-            },
-            children: _selectedTaxes.map((pt) {
-              final taxRate = taxRates.firstWhere((t) => t.id == pt.taxRateId);
-              return ListTile(
-                key: ValueKey(pt.taxRateId),
-                title: Text('${taxRate.name} ${taxRate.rate}%'),
-                trailing: Text('Orden: ${pt.applyOrder}'),
-              );
-            }).toList(),
+        _buildSectionTitle('Impuestos Aplicables'),
+        const SizedBox(height: 8),
+        Card(
+          elevation: 0,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+            side: const BorderSide(color: AppTheme.borders),
           ),
+          child: Column(
+            children: [
+              ...activeTaxRates.map((taxRate) {
+                final isSelected = _selectedTaxes.any(
+                  (pt) => pt.taxRateId == taxRate.id,
+                );
+                return CheckboxListTile(
+                  title: Text('${taxRate.name} (${taxRate.rate}%)'),
+                  value: isSelected,
+                  activeColor: AppTheme.primary,
+                  onChanged: isExempt && taxRate.name != 'Exento'
+                      ? null
+                      : (bool? value) {
+                          setState(() {
+                            if (value == true) {
+                              if (taxRate.name == 'Exento') {
+                                _selectedTaxes.clear();
+                              }
+                              _selectedTaxes.add(
+                                ProductTax(
+                                  taxRateId: taxRate.id!,
+                                  applyOrder: _selectedTaxes.length + 1,
+                                ),
+                              );
+                            } else {
+                              _selectedTaxes.removeWhere(
+                                (pt) => pt.taxRateId == taxRate.id,
+                              );
+                            }
+                            _updateApplyOrder();
+                          });
+                        },
+                );
+              }),
+            ],
+          ),
+        ),
+        if (_selectedTaxes.length > 1) ...[
+          const SizedBox(height: 16),
+          const Text(
+            'Orden de Aplicación (Arrastra para reordenar)',
+            style: TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+          ),
+          const SizedBox(height: 8),
+          Container(
+            decoration: BoxDecoration(
+              border: Border.all(color: AppTheme.borders),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: ReorderableListView(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              onReorder: (oldIndex, newIndex) {
+                setState(() {
+                  if (newIndex > oldIndex) {
+                    newIndex -= 1;
+                  }
+                  final item = _selectedTaxes.removeAt(oldIndex);
+                  _selectedTaxes.insert(newIndex, item);
+                  _updateApplyOrder();
+                });
+              },
+              children: _selectedTaxes.map((pt) {
+                final taxRate = taxRates.firstWhere(
+                  (t) => t.id == pt.taxRateId,
+                );
+                return ListTile(
+                  key: ValueKey(pt.taxRateId),
+                  leading: const Icon(Icons.drag_handle_rounded),
+                  title: Text('${taxRate.name} ${taxRate.rate}%'),
+                  trailing: Chip(
+                    label: Text('Orden: ${pt.applyOrder}'),
+                    backgroundColor: AppTheme.primary.withAlpha(20),
+                    labelStyle: const TextStyle(
+                      color: AppTheme.primary,
+                      fontSize: 12,
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+          ),
+        ],
       ],
     );
   }

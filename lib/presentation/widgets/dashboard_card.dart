@@ -21,57 +21,77 @@ class DashboardCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: const BorderSide(color: AppTheme.borders, width: 1),
+    return Container(
+      decoration: BoxDecoration(
+        color: AppTheme.cardBackground,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: AppTheme.textPrimary.withAlpha(10),
+            blurRadius: 20,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
-          child: isKpi ? _buildKpiLayout(context) : _buildActionLayout(context),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(20),
+          child: Padding(
+            padding: const EdgeInsets.all(20.0),
+            child: isKpi
+                ? _buildKpiLayout(context)
+                : _buildActionLayout(context),
+          ),
         ),
       ),
     );
   }
 
   Widget _buildKpiLayout(BuildContext context) {
-    return Row(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        _buildIcon(),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: .start,
-            mainAxisAlignment: .center,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                title,
-                style: Theme.of(
-                  context,
-                ).textTheme.bodyMedium?.copyWith(fontSize: 13),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildIcon(),
+            if (onTap != null)
+              Icon(
+                Icons.arrow_outward_rounded,
+                size: 20,
+                color: AppTheme.textSecondary.withAlpha(100),
               ),
-              const SizedBox(height: 4),
-              FittedBox(
-                fit: BoxFit.scaleDown,
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  value,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                  ),
-                  maxLines: 1,
-                ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              value,
+              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: AppTheme.textPrimary,
+                height: 1.0,
               ),
-            ],
-          ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+            const SizedBox(height: 4),
+            Text(
+              title,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: AppTheme.textSecondary,
+                fontWeight: FontWeight.w500,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
         ),
       ],
     );
@@ -81,17 +101,17 @@ class DashboardCard extends StatelessWidget {
     return Row(
       children: [
         _buildIcon(),
-        const SizedBox(width: 12),
+        const SizedBox(width: 16),
         Expanded(
           child: Column(
-            crossAxisAlignment: .start,
+            crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
                 title,
-                style: const TextStyle(
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.bold,
-                  fontSize: 14,
+                  color: AppTheme.textPrimary,
                 ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
@@ -99,7 +119,9 @@ class DashboardCard extends StatelessWidget {
               const SizedBox(height: 4),
               Text(
                 value,
-                style: const TextStyle(fontSize: 12),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodySmall?.copyWith(color: AppTheme.textSecondary),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
@@ -107,11 +129,18 @@ class DashboardCard extends StatelessWidget {
           ),
         ),
         if (onTap != null) ...[
-          const SizedBox(width: 8),
-          const Icon(
-            Icons.arrow_forward_ios_rounded,
-            size: 16,
-            color: AppTheme.textSecondary,
+          const SizedBox(width: 12),
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: AppTheme.background,
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(
+              Icons.chevron_right_rounded,
+              size: 20,
+              color: AppTheme.textSecondary,
+            ),
           ),
         ],
       ],
@@ -120,12 +149,12 @@ class DashboardCard extends StatelessWidget {
 
   Widget _buildIcon() {
     return Container(
-      padding: const EdgeInsets.all(10.0),
+      padding: const EdgeInsets.all(12.0),
       decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: iconColor.withAlpha(10),
+        color: iconColor.withAlpha(20),
+        borderRadius: BorderRadius.circular(14),
       ),
-      child: Icon(icon, color: iconColor, size: 22),
+      child: Icon(icon, color: iconColor, size: 24),
     );
   }
 }

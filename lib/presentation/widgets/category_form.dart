@@ -54,7 +54,9 @@ class CategoryFormState extends ConsumerState<CategoryForm> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.category == null ? 'Nueva Categoría' : 'Editar Categoría'),
+        title: Text(
+          widget.category == null ? 'Nueva Categoría' : 'Editar Categoría',
+        ),
         centerTitle: true,
       ),
       body: Form(
@@ -68,7 +70,7 @@ class CategoryFormState extends ConsumerState<CategoryForm> {
                 initialValue: _name,
                 decoration: const InputDecoration(
                   labelText: 'Nombre de la Categoría',
-                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.category_rounded),
                 ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
@@ -78,12 +80,12 @@ class CategoryFormState extends ConsumerState<CategoryForm> {
                 },
                 onSaved: (value) => _name = value!,
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 20),
               TextFormField(
                 initialValue: _code,
                 decoration: const InputDecoration(
                   labelText: 'Código de la Categoría',
-                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.qr_code_rounded),
                 ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
@@ -93,32 +95,36 @@ class CategoryFormState extends ConsumerState<CategoryForm> {
                 },
                 onSaved: (value) => _code = value!,
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 20),
               departmentsAsync.when(
                 data: (departments) {
                   return DropdownButtonFormField<int>(
                     initialValue: _selectedDepartmentId,
                     decoration: const InputDecoration(
                       labelText: 'Departamento',
-                      border: OutlineInputBorder(),
+                      prefixIcon: Icon(Icons.business_rounded),
                     ),
                     items: departments
-                        .map((Department department) => DropdownMenuItem<int>(
-                              value: department.id,
-                              child: Text(department.name),
-                            ))
+                        .map(
+                          (Department department) => DropdownMenuItem<int>(
+                            value: department.id,
+                            child: Text(department.name),
+                          ),
+                        )
                         .toList(),
                     onChanged: (int? newValue) {
                       setState(() {
                         _selectedDepartmentId = newValue;
                       });
                     },
-                    validator: (value) =>
-                        value == null ? 'Por favor, selecciona un departamento' : null,
+                    validator: (value) => value == null
+                        ? 'Por favor, selecciona un departamento'
+                        : null,
                   );
                 },
                 loading: () => const Center(child: CircularProgressIndicator()),
-                error: (err, stack) => Text('Error al cargar departamentos: $err'),
+                error: (err, stack) =>
+                    Text('Error al cargar departamentos: $err'),
               ),
             ],
           ),
@@ -138,8 +144,14 @@ class CategoryFormState extends ConsumerState<CategoryForm> {
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
             ),
+            elevation: 0,
           ),
-          child: Text(widget.category == null ? 'Crear' : 'Actualizar'),
+          child: Text(
+            widget.category == null
+                ? 'Crear Categoría'
+                : 'Actualizar Categoría',
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          ),
         ),
       ),
     );

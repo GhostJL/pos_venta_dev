@@ -8,17 +8,17 @@ class DashboardScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isSmallScreen = MediaQuery.of(context).size.width < 600;
+    final isSmallScreen = MediaQuery.of(context).size.width < 800;
 
     return ListView(
       padding: const EdgeInsets.all(24.0),
       children: [
         _buildHeader(context),
-        const SizedBox(height: 16),
-        _buildKpiSection(isSmallScreen),
-        const SizedBox(height: 16),
-        _buildQuickAccessSection(isSmallScreen),
-        const SizedBox(height: 16),
+        const SizedBox(height: 24),
+        _buildKpiSection(context, isSmallScreen),
+        const SizedBox(height: 32),
+        _buildQuickAccessSection(context, isSmallScreen),
+        const SizedBox(height: 32),
         _buildRecentActivitySection(context),
       ],
     );
@@ -26,18 +26,21 @@ class DashboardScreen extends StatelessWidget {
 
   Widget _buildHeader(BuildContext context) {
     return Column(
-      crossAxisAlignment: .start,
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           '¡Buenos días, Administrador!',
-          style: Theme.of(
-            context,
-          ).textTheme.displayLarge?.copyWith(fontSize: 32),
+          style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+            fontWeight: FontWeight.bold,
+            color: AppTheme.textPrimary,
+          ),
         ),
-        const SizedBox(height: 4),
+        const SizedBox(height: 8),
         Text(
           'Aquí tienes el resumen de tu tienda para hoy.',
-          style: Theme.of(context).textTheme.bodyMedium,
+          style: Theme.of(
+            context,
+          ).textTheme.bodyLarge?.copyWith(color: AppTheme.textSecondary),
         ),
       ],
     );
@@ -45,12 +48,18 @@ class DashboardScreen extends StatelessWidget {
 
   Widget _buildSectionTitle(BuildContext context, String title) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 12.0),
-      child: Text(title, style: Theme.of(context).textTheme.titleLarge),
+      padding: const EdgeInsets.only(bottom: 16.0),
+      child: Text(
+        title,
+        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+          fontWeight: FontWeight.bold,
+          color: AppTheme.textPrimary,
+        ),
+      ),
     );
   }
 
-  Widget _buildKpiSection(bool isSmallScreen) {
+  Widget _buildKpiSection(BuildContext context, bool isSmallScreen) {
     final kpiCards = [
       DashboardCard(
         title: "Ventas de Hoy",
@@ -81,27 +90,46 @@ class DashboardScreen extends StatelessWidget {
       ),
     ];
 
+    if (isSmallScreen) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildSectionTitle(context, 'Resumen Diario'),
+          ...kpiCards.map(
+            (card) => Padding(
+              padding: const EdgeInsets.only(bottom: 12.0),
+              child: SizedBox(width: double.infinity, child: card),
+            ),
+          ),
+        ],
+      );
+    }
+
     return Column(
-      crossAxisAlignment: .start,
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Builder(
-          builder: (context) => _buildSectionTitle(context, 'Resumen Diario'),
-        ),
-        Wrap(
-          spacing: 12.0,
-          runSpacing: 12.0,
-          children: kpiCards.map((card) {
-            return SizedBox(
-              width: isSmallScreen ? double.infinity : double.infinity,
-              child: card,
-            );
-          }).toList(),
+        _buildSectionTitle(context, 'Resumen Diario'),
+        Row(
+          children:
+              kpiCards
+                  .map(
+                    (card) => Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.only(right: 16.0),
+                        child: card,
+                      ),
+                    ),
+                  )
+                  .toList()
+                ..last = Expanded(
+                  child: kpiCards.last,
+                ), // Remove padding from last item
         ),
       ],
     );
   }
 
-  Widget _buildQuickAccessSection(bool isSmallScreen) {
+  Widget _buildQuickAccessSection(BuildContext context, bool isSmallScreen) {
     final actionCards = [
       DashboardCard(
         title: 'Gestionar Inventario',
@@ -134,19 +162,17 @@ class DashboardScreen extends StatelessWidget {
     ];
 
     return Column(
-      crossAxisAlignment: .start,
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Builder(
-          builder: (context) => _buildSectionTitle(context, 'Accesos Rápido'),
-        ),
+        _buildSectionTitle(context, 'Accesos Rápido'),
         GridView.builder(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: isSmallScreen ? 1 : 2,
-            childAspectRatio: isSmallScreen ? 4 : 3,
-            crossAxisSpacing: 8,
-            mainAxisSpacing: 8,
+            childAspectRatio: isSmallScreen ? 3.5 : 3,
+            crossAxisSpacing: 16,
+            mainAxisSpacing: 16,
           ),
           itemCount: actionCards.length,
           itemBuilder: (context, index) => actionCards[index],
@@ -157,25 +183,33 @@ class DashboardScreen extends StatelessWidget {
 
   Widget _buildRecentActivitySection(BuildContext context) {
     return Column(
-      crossAxisAlignment: .start,
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _buildSectionTitle(context, 'Actividad Reciente'),
-        Card(
-          elevation: 0,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-            side: const BorderSide(color: AppTheme.borders, width: 1),
+        Container(
+          decoration: BoxDecoration(
+            color: AppTheme.cardBackground,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: AppTheme.textPrimary.withAlpha(10),
+                blurRadius: 20,
+                offset: const Offset(0, 4),
+              ),
+            ],
+            border: Border.all(color: AppTheme.borders.withAlpha(50)),
           ),
           child: ListView.separated(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
-            padding: EdgeInsets.zero,
+            padding: const EdgeInsets.symmetric(vertical: 8),
             itemCount: 5,
-            separatorBuilder: (context, index) => const Divider(
+            separatorBuilder: (context, index) => Divider(
               height: 1,
               thickness: 1,
-              color: AppTheme.borders,
-              indent: 72,
+              color: AppTheme.borders.withAlpha(50),
+              indent: 80,
+              endIndent: 24,
             ),
             itemBuilder: (context, index) {
               final amount = 10.0 + (index * 5.5);
@@ -186,78 +220,54 @@ class DashboardScreen extends StatelessWidget {
 
               return Padding(
                 padding: const EdgeInsets.symmetric(
-                  horizontal: 16.0,
-                  vertical: 12.0,
+                  horizontal: 24.0,
+                  vertical: 16.0,
                 ),
                 child: Row(
                   children: [
-                    // Icono con badge de número
-                    Stack(
-                      clipBehavior: Clip.none,
-                      children: [
-                        Container(
-                          width: 48,
-                          height: 48,
-                          decoration: BoxDecoration(
-                            color: AppTheme.success.withAlpha(25),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Icon(
-                            Icons.receipt_long_rounded,
-                            color: AppTheme.success,
-                            size: 24,
-                          ),
-                        ),
-                      ],
+                    Container(
+                      width: 48,
+                      height: 48,
+                      decoration: BoxDecoration(
+                        color: AppTheme.success.withAlpha(20),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Icon(
+                        Icons.receipt_long_rounded,
+                        color: AppTheme.success,
+                        size: 24,
+                      ),
                     ),
-                    const SizedBox(width: 12),
-                    // Información principal
+                    const SizedBox(width: 16),
                     Expanded(
                       child: Column(
-                        crossAxisAlignment: .start,
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Expanded(
-                                child: Text(
-                                  'Venta #${120 - index}',
-                                  style: Theme.of(context).textTheme.bodyLarge
-                                      ?.copyWith(
-                                        fontWeight: FontWeight.w600,
-                                        fontSize: 15,
-                                      ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
+                              Text(
+                                'Venta #${120 - index}',
+                                style: Theme.of(context).textTheme.bodyLarge
+                                    ?.copyWith(
+                                      fontWeight: FontWeight.w600,
+                                      color: AppTheme.textPrimary,
+                                    ),
                               ),
-                              const SizedBox(width: 8),
-                              // Monto destacado
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 10,
-                                  vertical: 4,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: AppTheme.success.withAlpha(25),
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: Text(
-                                  NumberFormat.currency(
-                                    symbol: '\$',
-                                    decimalDigits: 2,
-                                  ).format(amount),
-                                  style: Theme.of(context).textTheme.bodyMedium
-                                      ?.copyWith(
-                                        fontWeight: FontWeight.bold,
-                                        color: AppTheme.success,
-                                        fontSize: 14,
-                                      ),
-                                ),
+                              Text(
+                                NumberFormat.currency(
+                                  symbol: '\$',
+                                  decimalDigits: 2,
+                                ).format(amount),
+                                style: Theme.of(context).textTheme.bodyLarge
+                                    ?.copyWith(
+                                      fontWeight: FontWeight.bold,
+                                      color: AppTheme.success,
+                                    ),
                               ),
                             ],
                           ),
-                          const SizedBox(height: 6),
-                          // Detalles secundarios
+                          const SizedBox(height: 4),
                           Row(
                             children: [
                               Icon(
@@ -268,13 +278,10 @@ class DashboardScreen extends StatelessWidget {
                               const SizedBox(width: 4),
                               Text(
                                 'Ana',
-                                style: Theme.of(context).textTheme.bodySmall
-                                    ?.copyWith(
-                                      color: AppTheme.textSecondary,
-                                      fontSize: 13,
-                                    ),
+                                style: Theme.of(context).textTheme.bodyMedium
+                                    ?.copyWith(color: AppTheme.textSecondary),
                               ),
-                              Spacer(),
+                              const SizedBox(width: 16),
                               Icon(
                                 Icons.access_time_rounded,
                                 size: 14,
@@ -283,11 +290,8 @@ class DashboardScreen extends StatelessWidget {
                               const SizedBox(width: 4),
                               Text(
                                 time.format(context),
-                                style: Theme.of(context).textTheme.bodySmall
-                                    ?.copyWith(
-                                      color: AppTheme.textSecondary,
-                                      fontSize: 13,
-                                    ),
+                                style: Theme.of(context).textTheme.bodyMedium
+                                    ?.copyWith(color: AppTheme.textSecondary),
                               ),
                             ],
                           ),

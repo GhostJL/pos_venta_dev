@@ -59,7 +59,9 @@ class SupplierFormState extends ConsumerState<SupplierForm> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.supplier == null ? 'Nuevo Proveedor' : 'Editar Proveedor'),
+        title: Text(
+          widget.supplier == null ? 'Nuevo Proveedor' : 'Editar Proveedor',
+        ),
         centerTitle: true,
       ),
       body: Form(
@@ -73,7 +75,7 @@ class SupplierFormState extends ConsumerState<SupplierForm> {
                 initialValue: _name,
                 decoration: const InputDecoration(
                   labelText: 'Nombre del Proveedor',
-                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.business_rounded),
                 ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
@@ -83,12 +85,12 @@ class SupplierFormState extends ConsumerState<SupplierForm> {
                 },
                 onSaved: (value) => _name = value!,
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 20),
               TextFormField(
                 initialValue: _code,
                 decoration: const InputDecoration(
                   labelText: 'Código del Proveedor',
-                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.qr_code_rounded),
                 ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
@@ -98,39 +100,39 @@ class SupplierFormState extends ConsumerState<SupplierForm> {
                 },
                 onSaved: (value) => _code = value!,
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 20),
               TextFormField(
                 initialValue: _contactName,
                 decoration: const InputDecoration(
                   labelText: 'Nombre de Contacto',
-                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.person_outline_rounded),
                 ),
                 onSaved: (value) => _contactName = value,
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 20),
               TextFormField(
                 initialValue: _phone,
                 decoration: const InputDecoration(
                   labelText: 'Teléfono',
-                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.phone_rounded),
                 ),
                 onSaved: (value) => _phone = value,
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 20),
               TextFormField(
                 initialValue: _email,
                 decoration: const InputDecoration(
                   labelText: 'Correo Electrónico',
-                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.email_outlined),
                 ),
                 onSaved: (value) => _email = value,
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 20),
               TextFormField(
                 initialValue: _address,
                 decoration: const InputDecoration(
                   labelText: 'Dirección',
-                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.location_on_outlined),
                 ),
                 onSaved: (value) => _address = value,
               ),
@@ -152,8 +154,14 @@ class SupplierFormState extends ConsumerState<SupplierForm> {
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
             ),
+            elevation: 0,
           ),
-          child: Text(widget.supplier == null ? 'Crear' : 'Actualizar'),
+          child: Text(
+            widget.supplier == null
+                ? 'Crear Proveedor'
+                : 'Actualizar Proveedor',
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          ),
         ),
       ),
     );

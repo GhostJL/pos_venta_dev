@@ -60,8 +60,9 @@ class WarehousesPage extends ConsumerWidget {
                         ),
                         side: BorderSide.none,
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 2),
+                          horizontal: 8,
+                          vertical: 2,
+                        ),
                       ),
                     ),
                     DataCell(
@@ -71,14 +72,16 @@ class WarehousesPage extends ConsumerWidget {
                             ? AppTheme.success.withAlpha(25)
                             : AppTheme.error.withAlpha(25),
                         labelStyle: TextStyle(
-                            color: warehouse.isActive
-                                ? AppTheme.success
-                                : AppTheme.error,
-                            fontWeight: FontWeight.w600),
+                          color: warehouse.isActive
+                              ? AppTheme.success
+                              : AppTheme.error,
+                          fontWeight: FontWeight.w600,
+                        ),
                         side: BorderSide.none,
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 2),
+                          horizontal: 8,
+                          vertical: 2,
+                        ),
                       ),
                     ),
                     DataCell(
@@ -189,39 +192,46 @@ class _WarehouseFormState extends ConsumerState<WarehouseForm> {
         child: Form(
           key: _formKey,
           child: SingleChildScrollView(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 8.0, vertical: 12.0),
+            padding: const EdgeInsets.symmetric(
+              horizontal: 8.0,
+              vertical: 12.0,
+            ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 TextFormField(
                   initialValue: _name,
-                  decoration:
-                      const InputDecoration(labelText: 'Nombre del Almacén'),
-                  validator: (value) =>
-                      (value == null || value.isEmpty) ? 'Campo requerido' : null,
+                  decoration: const InputDecoration(
+                    labelText: 'Nombre del Almacén',
+                  ),
+                  validator: (value) => (value == null || value.isEmpty)
+                      ? 'Campo requerido'
+                      : null,
                   onSaved: (value) => _name = value!,
                 ),
                 const SizedBox(height: 16),
                 TextFormField(
                   initialValue: _code,
                   decoration: const InputDecoration(labelText: 'Código Único'),
-                  validator: (value) =>
-                      (value == null || value.isEmpty) ? 'Campo requerido' : null,
+                  validator: (value) => (value == null || value.isEmpty)
+                      ? 'Campo requerido'
+                      : null,
                   onSaved: (value) => _code = value!,
                 ),
                 const SizedBox(height: 16),
                 TextFormField(
                   initialValue: _address,
-                  decoration:
-                      const InputDecoration(labelText: 'Dirección (Opcional)'),
+                  decoration: const InputDecoration(
+                    labelText: 'Dirección (Opcional)',
+                  ),
                   onSaved: (value) => _address = value,
                 ),
                 const SizedBox(height: 16),
                 TextFormField(
                   initialValue: _phone,
-                  decoration:
-                      const InputDecoration(labelText: 'Teléfono (Opcional)'),
+                  decoration: const InputDecoration(
+                    labelText: 'Teléfono (Opcional)',
+                  ),
                   onSaved: (value) => _phone = value,
                 ),
                 const SizedBox(height: 20),
@@ -293,25 +303,24 @@ class _SwitchTile extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(title,
-                  style: Theme.of(context)
-                      .textTheme
-                      .bodyLarge
-                      ?.copyWith(fontWeight: FontWeight.w600)),
+              Text(
+                title,
+                style: Theme.of(
+                  context,
+                ).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600),
+              ),
               const SizedBox(height: 2),
-              Text(subtitle,
-                  style: Theme.of(context)
-                      .textTheme
-                      .bodySmall
-                      ?.copyWith(color: AppTheme.textSecondary)),
+              Text(
+                subtitle,
+                style: Theme.of(
+                  context,
+                ).textTheme.bodySmall?.copyWith(color: AppTheme.textSecondary),
+              ),
             ],
           ),
         ),
         const SizedBox(width: 16),
-        Switch(
-          value: value,
-          onChanged: onChanged,
-        ),
+        Switch(value: value, onChanged: onChanged),
       ],
     );
   }

@@ -27,7 +27,11 @@ class DepartmentFormState extends ConsumerState<DepartmentForm> {
   void _submit() {
     if (_formKey.currentState!.validate()) {
       _formKey.currentState!.save();
-      final department = Department(id: widget.department?.id, name: _name, code: _code);
+      final department = Department(
+        id: widget.department?.id,
+        name: _name,
+        code: _code,
+      );
       if (widget.department == null) {
         ref.read(departmentListProvider.notifier).addDepartment(department);
       } else {
@@ -43,7 +47,11 @@ class DepartmentFormState extends ConsumerState<DepartmentForm> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.department == null ? 'Nuevo Departamento' : 'Editar Departamento'),
+        title: Text(
+          widget.department == null
+              ? 'Nuevo Departamento'
+              : 'Editar Departamento',
+        ),
         centerTitle: true,
       ),
       body: Form(
@@ -57,7 +65,7 @@ class DepartmentFormState extends ConsumerState<DepartmentForm> {
                 initialValue: _name,
                 decoration: const InputDecoration(
                   labelText: 'Nombre del Departamento',
-                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.business_rounded),
                 ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
@@ -67,12 +75,12 @@ class DepartmentFormState extends ConsumerState<DepartmentForm> {
                 },
                 onSaved: (value) => _name = value!,
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 20),
               TextFormField(
                 initialValue: _code,
                 decoration: const InputDecoration(
                   labelText: 'Código del Departamento',
-                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.qr_code_rounded),
                 ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
@@ -100,8 +108,14 @@ class DepartmentFormState extends ConsumerState<DepartmentForm> {
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
             ),
+            elevation: 0,
           ),
-          child: Text(widget.department == null ? 'Crear' : 'Actualizar'),
+          child: Text(
+            widget.department == null
+                ? 'Crear Departamento'
+                : 'Actualizar Departamento',
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          ),
         ),
       ),
     );

@@ -100,10 +100,10 @@ class _SetAccessKeyPageState extends ConsumerState<SetAccessKeyPage> {
                 Container(
                   padding: EdgeInsets.all(isSmallScreen ? 16 : 20),
                   decoration: BoxDecoration(
-                    color: AppTheme.primary.withAlpha(5),
+                    color: AppTheme.primary.withOpacity(0.05),
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
-                      color: AppTheme.primary.withAlpha(20),
+                      color: AppTheme.primary.withOpacity(0.2),
                       width: 1,
                     ),
                   ),
@@ -121,6 +121,7 @@ class _SetAccessKeyPageState extends ConsumerState<SetAccessKeyPage> {
                           style: TextStyle(
                             fontSize: isSmallScreen ? 13 : 14,
                             color: AppTheme.textSecondary,
+                            height: 1.4,
                           ),
                         ),
                       ),
@@ -132,21 +133,43 @@ class _SetAccessKeyPageState extends ConsumerState<SetAccessKeyPage> {
                   controller: _accessKeyController,
                   obscureText: _isObscured,
                   style: TextStyle(
-                    fontSize: isSmallScreen ? 18 : 20,
-                    fontWeight: FontWeight.w600,
-                    letterSpacing: 4,
+                    fontSize: isSmallScreen ? 24 : 32,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 8,
+                    color: AppTheme.textPrimary,
                   ),
                   textAlign: TextAlign.center,
                   decoration: InputDecoration(
                     labelText: 'Clave de Acceso',
                     hintText: '123',
+                    floatingLabelAlignment: FloatingLabelAlignment.center,
                     suffixIcon: IconButton(
                       icon: Icon(
-                        _isObscured ? Icons.visibility_off : Icons.visibility,
+                        _isObscured
+                            ? Icons.visibility_off_outlined
+                            : Icons.visibility_outlined,
+                        color: AppTheme.textSecondary,
                       ),
                       onPressed: () =>
                           setState(() => _isObscured = !_isObscured),
                     ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      borderSide: const BorderSide(color: AppTheme.borders),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      borderSide: const BorderSide(color: AppTheme.borders),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      borderSide: const BorderSide(
+                        color: AppTheme.primary,
+                        width: 2,
+                      ),
+                    ),
+                    filled: true,
+                    fillColor: AppTheme.inputBackground,
                   ),
                   validator: (value) {
                     if (value == null || value.isEmpty) {

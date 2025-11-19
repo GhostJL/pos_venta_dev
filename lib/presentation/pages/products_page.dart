@@ -1,6 +1,6 @@
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:posventa/app/theme.dart';
 import 'package:posventa/domain/entities/product.dart';
 import 'package:posventa/presentation/widgets/product_form_page.dart';
 import 'package:posventa/presentation/providers/brand_providers.dart';
@@ -54,23 +54,32 @@ class ProductsPageState extends ConsumerState<ProductsPage> {
                   _clearFilters();
                 }
               },
+              backgroundColor: AppTheme.inputBackground,
+              selectedColor: AppTheme.primary.withAlpha(50),
+              checkmarkColor: AppTheme.primary,
+              labelStyle: TextStyle(
+                color: _activeFilterCount > 0
+                    ? AppTheme.primary
+                    : AppTheme.textPrimary,
+                fontWeight: FontWeight.bold,
+              ),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+              ),
+              side: BorderSide.none,
             ),
           ),
         ],
       ),
       body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16.0),
+        padding: const EdgeInsets.symmetric(horizontal: 24.0),
         child: Column(
           children: [
-            const SizedBox(height: 16),
+            const SizedBox(height: 24),
             TextField(
-              decoration: InputDecoration(
+              decoration: const InputDecoration(
                 hintText: 'Buscar por nombre, código o descripción',
-                prefixIcon: const Icon(Icons.search),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                prefixIcon: Icon(Icons.search_rounded),
               ),
               onChanged: (value) {
                 setState(() {
@@ -78,31 +87,115 @@ class ProductsPageState extends ConsumerState<ProductsPage> {
                 });
               },
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: 16),
             _buildActiveFilters(),
-            const SizedBox(height: 10),
+            const SizedBox(height: 16),
             Expanded(
               child: products.when(
                 data: (productList) {
                   var filteredList = _getFilteredAndSortedList(productList);
 
-                  return ListView.builder(
+                  if (filteredList.isEmpty) {
+                    return Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.inventory_2_outlined,
+                            size: 64,
+                            color: AppTheme.textSecondary.withAlpha(100),
+                          ),
+                          const SizedBox(height: 16),
+                          const Text(
+                            'No se encontraron productos',
+                            style: TextStyle(
+                              fontSize: 18,
+                              color: AppTheme.textSecondary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  }
+
+                  return ListView.separated(
                     itemCount: filteredList.length,
+                    separatorBuilder: (context, index) =>
+                        const SizedBox(height: 12),
                     itemBuilder: (context, index) {
                       final product = filteredList[index];
-                      return Card(
-                        elevation: 2,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                      return Container(
+                        decoration: BoxDecoration(
+                          color: AppTheme.cardBackground,
+                          borderRadius: BorderRadius.circular(16),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withAlpha(10),
+                              blurRadius: 10,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                          border: Border.all(
+                            color: AppTheme.borders.withAlpha(50),
+                          ),
                         ),
                         child: ListTile(
-                          title: Text(product.name),
+                          contentPadding: const EdgeInsets.all(16),
+                          leading: Container(
+                            width: 48,
+                            height: 48,
+                            decoration: BoxDecoration(
+                              color: AppTheme.primary.withAlpha(20),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: const Icon(
+                              Icons.inventory_2_rounded,
+                              color: AppTheme.primary,
+                            ),
+                          ),
+                          title: Text(
+                            product.name,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
+                          ),
                           subtitle: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text('Código: ${product.code}'),
-                              if (product.barcode != null) Text('Código de barras: ${product.barcode!}'),
-                              Text('Unidad: ${product.unitOfMeasure}'),
+                              const SizedBox(height: 4),
+                              Row(
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 6,
+                                      vertical: 2,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: AppTheme.background,
+                                      borderRadius: BorderRadius.circular(4),
+                                      border: Border.all(
+                                        color: AppTheme.borders,
+                                      ),
+                                    ),
+                                    child: Text(
+                                      product.code,
+                                      style: const TextStyle(
+                                        fontSize: 12,
+                                        fontFamily: 'Monospace',
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    product.unitOfMeasure,
+                                    style: const TextStyle(
+                                      fontSize: 12,
+                                      color: AppTheme.textSecondary,
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ],
                           ),
                           trailing: Row(
@@ -110,10 +203,15 @@ class ProductsPageState extends ConsumerState<ProductsPage> {
                             children: [
                               Text(
                                 '€${(product.salePriceCents / 100).toStringAsFixed(2)}',
-                                style: Theme.of(context).textTheme.titleMedium,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
+                                  color: AppTheme.primary,
+                                ),
                               ),
+                              const SizedBox(width: 8),
                               IconButton(
-                                icon: const Icon(Icons.more_vert),
+                                icon: const Icon(Icons.more_vert_rounded),
                                 onPressed: () => _showActions(context, product),
                               ),
                             ],
@@ -127,7 +225,7 @@ class ProductsPageState extends ConsumerState<ProductsPage> {
                 error: (error, stack) => Center(child: Text('Error: $error')),
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 24),
           ],
         ),
       ),
@@ -137,7 +235,9 @@ class ProductsPageState extends ConsumerState<ProductsPage> {
             MaterialPageRoute(builder: (context) => const ProductFormPage()),
           );
         },
-        child: const Icon(Icons.add),
+        backgroundColor: AppTheme.primary,
+        foregroundColor: Colors.white,
+        child: const Icon(Icons.add_rounded),
       ),
     );
   }
@@ -150,18 +250,30 @@ class ProductsPageState extends ConsumerState<ProductsPage> {
 
     return Wrap(
       spacing: 8.0,
-      runSpacing: 4.0,
+      runSpacing: 8.0,
       children: [
         if (_departmentFilter != null)
           departments.when(
             data: (list) {
-              final name = list.firstWhere((d) => d.id == _departmentFilter).name;
+              final name = list
+                  .firstWhere((d) => d.id == _departmentFilter)
+                  .name;
               return Chip(
                 label: Text('Dpto: $name'),
                 onDeleted: () => setState(() => _departmentFilter = null),
+                backgroundColor: AppTheme.primary.withAlpha(20),
+                labelStyle: const TextStyle(
+                  color: AppTheme.primary,
+                  fontSize: 12,
+                ),
+                deleteIconColor: AppTheme.primary,
+                side: BorderSide.none,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
+                ),
               );
             },
-            loading: () => const Chip(label: Text('...')),
+            loading: () => const SizedBox(),
             error: (e, s) => const SizedBox(),
           ),
         if (_categoryFilter != null)
@@ -171,9 +283,19 @@ class ProductsPageState extends ConsumerState<ProductsPage> {
               return Chip(
                 label: Text('Cat: $name'),
                 onDeleted: () => setState(() => _categoryFilter = null),
+                backgroundColor: AppTheme.secondary.withAlpha(20),
+                labelStyle: const TextStyle(
+                  color: AppTheme.secondary,
+                  fontSize: 12,
+                ),
+                deleteIconColor: AppTheme.secondary,
+                side: BorderSide.none,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
+                ),
               );
             },
-            loading: () => const Chip(label: Text('...')),
+            loading: () => const SizedBox(),
             error: (e, s) => const SizedBox(),
           ),
         if (_brandFilter != null)
@@ -183,9 +305,16 @@ class ProductsPageState extends ConsumerState<ProductsPage> {
               return Chip(
                 label: Text('Marca: $name'),
                 onDeleted: () => setState(() => _brandFilter = null),
+                backgroundColor: Colors.orange.withAlpha(20),
+                labelStyle: const TextStyle(color: Colors.orange, fontSize: 12),
+                deleteIconColor: Colors.orange,
+                side: BorderSide.none,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
+                ),
               );
             },
-            loading: () => const Chip(label: Text('...')),
+            loading: () => const SizedBox(),
             error: (e, s) => const SizedBox(),
           ),
         if (_supplierFilter != null)
@@ -193,11 +322,18 @@ class ProductsPageState extends ConsumerState<ProductsPage> {
             data: (list) {
               final name = list.firstWhere((s) => s.id == _supplierFilter).name;
               return Chip(
-                label: Text('Proveedor: $name'),
+                label: Text('Prov: $name'),
                 onDeleted: () => setState(() => _supplierFilter = null),
+                backgroundColor: Colors.purple.withAlpha(20),
+                labelStyle: const TextStyle(color: Colors.purple, fontSize: 12),
+                deleteIconColor: Colors.purple,
+                side: BorderSide.none,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
+                ),
               );
             },
-            loading: () => const Chip(label: Text('...')),
+            loading: () => const SizedBox(),
             error: (e, s) => const SizedBox(),
           ),
       ],
@@ -245,8 +381,9 @@ class ProductsPageState extends ConsumerState<ProductsPage> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      backgroundColor: AppTheme.background,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       builder: (context) {
         return StatefulBuilder(
@@ -257,48 +394,91 @@ class ProductsPageState extends ConsumerState<ProductsPage> {
             final suppliers = ref.watch(supplierListProvider);
 
             return Padding(
-              padding: const EdgeInsets.all(24.0),
+              padding: EdgeInsets.fromLTRB(
+                24,
+                24,
+                24,
+                24 + MediaQuery.of(context).viewInsets.bottom,
+              ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Text(
-                    'Filtrar y Ordenar',
-                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
-                    textAlign: TextAlign.center,
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Filtrar y Ordenar',
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.close_rounded),
+                        onPressed: () => Navigator.pop(context),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 24),
 
                   // Dropdowns for filtering
                   departments.when(
-                    data: (data) => _buildFilterDropdown(data, 'Departamento', _departmentFilter, (val) {
-                      setSheetState(() => _departmentFilter = val);
-                    }),
-                    loading: () => const Center(child: CircularProgressIndicator()),
+                    data: (data) => _buildFilterDropdown(
+                      data,
+                      'Departamento',
+                      _departmentFilter,
+                      (val) {
+                        setSheetState(() => _departmentFilter = val);
+                      },
+                      Icons.business_rounded,
+                    ),
+                    loading: () =>
+                        const Center(child: CircularProgressIndicator()),
                     error: (e, s) => Text('Error: $e'),
                   ),
                   const SizedBox(height: 16),
                   categories.when(
-                    data: (data) => _buildFilterDropdown(data, 'Categoría', _categoryFilter, (val) {
-                      setSheetState(() => _categoryFilter = val);
-                    }),
-                    loading: () => const Center(child: CircularProgressIndicator()),
+                    data: (data) => _buildFilterDropdown(
+                      data,
+                      'Categoría',
+                      _categoryFilter,
+                      (val) {
+                        setSheetState(() => _categoryFilter = val);
+                      },
+                      Icons.category_rounded,
+                    ),
+                    loading: () =>
+                        const Center(child: CircularProgressIndicator()),
                     error: (e, s) => Text('Error: $e'),
                   ),
                   const SizedBox(height: 16),
                   brands.when(
-                    data: (data) => _buildFilterDropdown(data, 'Marca', _brandFilter, (val) {
-                      setSheetState(() => _brandFilter = val);
-                    }),
-                    loading: () => const Center(child: CircularProgressIndicator()),
+                    data: (data) => _buildFilterDropdown(
+                      data,
+                      'Marca',
+                      _brandFilter,
+                      (val) {
+                        setSheetState(() => _brandFilter = val);
+                      },
+                      Icons.branding_watermark_rounded,
+                    ),
+                    loading: () =>
+                        const Center(child: CircularProgressIndicator()),
                     error: (e, s) => Text('Error: $e'),
                   ),
                   const SizedBox(height: 16),
                   suppliers.when(
-                    data: (data) => _buildFilterDropdown(data, 'Proveedor', _supplierFilter, (val) {
-                      setSheetState(() => _supplierFilter = val);
-                    }),
-                    loading: () => const Center(child: CircularProgressIndicator()),
+                    data: (data) => _buildFilterDropdown(
+                      data,
+                      'Proveedor',
+                      _supplierFilter,
+                      (val) {
+                        setSheetState(() => _supplierFilter = val);
+                      },
+                      Icons.local_shipping_rounded,
+                    ),
+                    loading: () =>
+                        const Center(child: CircularProgressIndicator()),
                     error: (e, s) => Text('Error: $e'),
                   ),
                   const SizedBox(height: 24),
@@ -308,12 +488,15 @@ class ProductsPageState extends ConsumerState<ProductsPage> {
                     value: _sortOrder,
                     decoration: const InputDecoration(
                       labelText: 'Ordenar por',
-                      border: OutlineInputBorder(),
+                      prefixIcon: Icon(Icons.sort_rounded),
                     ),
                     items: const [
                       DropdownMenuItem(value: 'name', child: Text('Nombre')),
                       DropdownMenuItem(value: 'price', child: Text('Precio')),
-                      DropdownMenuItem(value: 'created_at', child: Text('Fecha')),
+                      DropdownMenuItem(
+                        value: 'created_at',
+                        child: Text('Fecha'),
+                      ),
                     ],
                     onChanged: (value) {
                       if (value != null) {
@@ -323,7 +506,7 @@ class ProductsPageState extends ConsumerState<ProductsPage> {
                       }
                     },
                   ),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 32),
 
                   // Action Buttons
                   Row(
@@ -338,6 +521,12 @@ class ProductsPageState extends ConsumerState<ProductsPage> {
                               _supplierFilter = null;
                             });
                           },
+                          style: OutlinedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
                           child: const Text('Limpiar todo'),
                         ),
                       ),
@@ -345,9 +534,18 @@ class ProductsPageState extends ConsumerState<ProductsPage> {
                       Expanded(
                         child: ElevatedButton(
                           onPressed: () {
-                            setState(() {}); // This triggers the main page to rebuild with the new filters
+                            setState(
+                              () {},
+                            ); // This triggers the main page to rebuild with the new filters
                             Navigator.pop(context);
                           },
+                          style: ElevatedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            elevation: 0,
+                          ),
                           child: const Text('Aplicar Filtros'),
                         ),
                       ),
@@ -364,19 +562,21 @@ class ProductsPageState extends ConsumerState<ProductsPage> {
 
   Widget _buildFilterDropdown(
     List<dynamic> items,
-    String hint,
+    String label,
     int? currentValue,
     void Function(int?) onChanged,
+    IconData icon,
   ) {
     return DropdownButtonFormField<int>(
       value: currentValue,
-      hint: Text(hint),
-      decoration: InputDecoration(
-        border: const OutlineInputBorder(),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      ),
+      decoration: InputDecoration(labelText: label, prefixIcon: Icon(icon)),
       items: items
-          .map((e) => DropdownMenuItem(value: e.id as int, child: Text(e.name as String)))
+          .map(
+            (e) => DropdownMenuItem(
+              value: e.id as int,
+              child: Text(e.name as String),
+            ),
+          )
           .toList(),
       onChanged: onChanged,
     );
@@ -385,47 +585,112 @@ class ProductsPageState extends ConsumerState<ProductsPage> {
   void _showActions(BuildContext context, Product product) {
     showModalBottomSheet(
       context: context,
+      backgroundColor: AppTheme.background,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       builder: (context) {
-        return Wrap(
-          children: [
-            ListTile(
-              leading: const Icon(Icons.edit),
-              title: const Text('Editar'),
-              onTap: () {
-                Navigator.pop(context);
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (context) => ProductFormPage(product: product),
+        return Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey[300],
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(height: 24),
+              ListTile(
+                leading: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: AppTheme.primary.withAlpha(20),
+                    borderRadius: BorderRadius.circular(8),
                   ),
-                );
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.copy),
-              title: const Text('Duplicar'),
-              onTap: () {
-                Navigator.pop(context);
-                final newProduct = product.copyWith(id: null, name: '${product.name} (Copia)');
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (context) => ProductFormPage(product: newProduct),
+                  child: const Icon(
+                    Icons.edit_rounded,
+                    color: AppTheme.primary,
                   ),
-                );
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.power_settings_new),
-              title: Text(product.isActive ? 'Desactivar' : 'Activar'),
-              onTap: () {
-                Navigator.pop(context);
-                final updatedProduct = product.copyWith(isActive: !product.isActive);
-                ref.read(productNotifierProvider.notifier).updateProduct(updatedProduct);
-              },
-            ),
-          ],
+                ),
+                title: const Text(
+                  'Editar Producto',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => ProductFormPage(product: product),
+                    ),
+                  );
+                },
+              ),
+              const SizedBox(height: 8),
+              ListTile(
+                leading: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: AppTheme.secondary.withAlpha(20),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Icon(
+                    Icons.copy_rounded,
+                    color: AppTheme.secondary,
+                  ),
+                ),
+                title: const Text(
+                  'Duplicar Producto',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                onTap: () {
+                  Navigator.pop(context);
+                  final newProduct = product.copyWith(
+                    id: null,
+                    name: '${product.name} (Copia)',
+                  );
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) =>
+                          ProductFormPage(product: newProduct),
+                    ),
+                  );
+                },
+              ),
+              const SizedBox(height: 8),
+              ListTile(
+                leading: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color:
+                        (product.isActive ? AppTheme.error : AppTheme.success)
+                            .withAlpha(20),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(
+                    Icons.power_settings_new_rounded,
+                    color: product.isActive ? AppTheme.error : AppTheme.success,
+                  ),
+                ),
+                title: Text(
+                  product.isActive ? 'Desactivar Producto' : 'Activar Producto',
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
+                onTap: () {
+                  Navigator.pop(context);
+                  final updatedProduct = product.copyWith(
+                    isActive: !product.isActive,
+                  );
+                  ref
+                      .read(productNotifierProvider.notifier)
+                      .updateProduct(updatedProduct);
+                },
+              ),
+            ],
+          ),
         );
       },
     );

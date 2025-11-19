@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:posventa/presentation/widgets/side_menu.dart';
+import 'package:posventa/app/theme.dart';
 
 class MainLayout extends StatelessWidget {
   final Widget child;
@@ -8,28 +9,35 @@ class MainLayout extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Usa LayoutBuilder para crear un diseño responsivo
     return LayoutBuilder(
       builder: (context, constraints) {
-        // Define un punto de quiebre para pantallas pequeñas (ej. teléfonos móviles)
         final bool isSmallScreen = constraints.maxWidth < 768;
 
         if (isSmallScreen) {
-          // Para pantallas pequeñas, usa un Scaffold con un Drawer
           return Scaffold(
+            backgroundColor: AppTheme.background,
             appBar: AppBar(
-              // El AppBar se puede personalizar según sea necesario
+              backgroundColor: AppTheme.background,
+              elevation: 0,
+              leading: Builder(
+                builder: (context) => IconButton(
+                  icon: const Icon(
+                    Icons.menu_rounded,
+                    color: AppTheme.textPrimary,
+                  ),
+                  onPressed: () => Scaffold.of(context).openDrawer(),
+                ),
+              ),
             ),
-            drawer: const Drawer(child: SideMenu()),
+            drawer: const Drawer(elevation: 0, child: SideMenu()),
             body: child,
           );
         } else {
-          // Para pantallas más grandes, usa una Fila con un menú lateral fijo
           return Scaffold(
+            backgroundColor: AppTheme.background,
             body: Row(
               children: [
                 const SideMenu(),
-                const VerticalDivider(width: 1, thickness: 1),
                 Expanded(child: child),
               ],
             ),

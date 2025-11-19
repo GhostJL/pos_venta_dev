@@ -72,6 +72,7 @@ class _AdminSetupPageState extends ConsumerState<AdminSetupPage> {
                   controller: _usernameController,
                   decoration: const InputDecoration(
                     labelText: 'Nombre de usuario',
+                    prefixIcon: Icon(Icons.person_outline_rounded),
                   ),
                   validator: (value) => value!.isEmpty
                       ? 'El nombre de usuario es obligatorio'
@@ -81,7 +82,10 @@ class _AdminSetupPageState extends ConsumerState<AdminSetupPage> {
                 TextFormField(
                   controller: _passwordController,
                   obscureText: true,
-                  decoration: const InputDecoration(labelText: 'Contraseña'),
+                  decoration: const InputDecoration(
+                    labelText: 'Contraseña',
+                    prefixIcon: Icon(Icons.lock_outline_rounded),
+                  ),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
                       return 'La contraseña es obligatoria';
@@ -95,14 +99,20 @@ class _AdminSetupPageState extends ConsumerState<AdminSetupPage> {
                 SizedBox(height: isSmallScreen ? 12 : 16),
                 TextFormField(
                   controller: _firstNameController,
-                  decoration: const InputDecoration(labelText: 'Nombre'),
+                  decoration: const InputDecoration(
+                    labelText: 'Nombre',
+                    prefixIcon: Icon(Icons.badge_outlined),
+                  ),
                   validator: (value) =>
                       value!.isEmpty ? 'El nombre es obligatorio' : null,
                 ),
                 SizedBox(height: isSmallScreen ? 12 : 16),
                 TextFormField(
                   controller: _lastNameController,
-                  decoration: const InputDecoration(labelText: 'Apellido'),
+                  decoration: const InputDecoration(
+                    labelText: 'Apellido',
+                    prefixIcon: Icon(Icons.badge_outlined),
+                  ),
                   validator: (value) =>
                       value!.isEmpty ? 'El apellido es obligatorio' : null,
                 ),
@@ -111,6 +121,7 @@ class _AdminSetupPageState extends ConsumerState<AdminSetupPage> {
                   controller: _emailController,
                   decoration: const InputDecoration(
                     labelText: 'Correo electrónico',
+                    prefixIcon: Icon(Icons.email_outlined),
                   ),
                   keyboardType: TextInputType.emailAddress,
                   validator: (value) => value!.isEmpty

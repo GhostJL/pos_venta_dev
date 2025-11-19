@@ -16,9 +16,7 @@ class BrandsPage extends ConsumerWidget {
     void navigateToForm([Brand? brand]) {
       Navigator.push(
         context,
-        MaterialPageRoute(
-          builder: (context) => BrandForm(brand: brand), // Actualizado
-        ),
+        MaterialPageRoute(builder: (context) => BrandForm(brand: brand)),
       );
     }
 
@@ -27,10 +25,15 @@ class BrandsPage extends ConsumerWidget {
         context: context,
         builder: (BuildContext dialogContext) {
           return AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+            ),
             title: const Text('Confirmar Eliminación'),
             content: Text(
               '¿Estás seguro de que quieres eliminar la marca "${brand.name}"?',
+              style: Theme.of(context).textTheme.bodyMedium,
             ),
+            actionsPadding: const EdgeInsets.all(20),
             actions: <Widget>[
               TextButton(
                 child: const Text('Cancelar'),
@@ -39,6 +42,11 @@ class BrandsPage extends ConsumerWidget {
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppTheme.error,
+                  foregroundColor: Colors.white,
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
                 child: const Text('Eliminar'),
                 onPressed: () {
@@ -53,7 +61,7 @@ class BrandsPage extends ConsumerWidget {
     }
 
     return Padding(
-      padding: const EdgeInsets.all(16.0),
+      padding: const EdgeInsets.all(24.0),
       child: brandList.when(
         data: (brands) => CustomDataTable<Brand>(
           columns: const [
@@ -68,13 +76,18 @@ class BrandsPage extends ConsumerWidget {
                 DataCell(
                   Text(
                     brand.name,
-                    style: Theme.of(context).textTheme.bodyLarge,
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: AppTheme.textPrimary,
+                    ),
                   ),
                 ),
                 DataCell(
                   Text(
                     brand.code,
-                    style: Theme.of(context).textTheme.bodyMedium,
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: AppTheme.textSecondary,
+                    ),
                   ),
                 ),
                 DataCell(_buildStatusChip(brand.isActive)),
@@ -116,17 +129,27 @@ class BrandsPage extends ConsumerWidget {
   }
 
   Widget _buildStatusChip(bool isActive) {
-    return Chip(
-      label: Text(isActive ? 'Activo' : 'Inactivo'),
-      backgroundColor: isActive
-          ? AppTheme.success.withAlpha(10)
-          : AppTheme.error.withAlpha(10),
-      labelStyle: TextStyle(
-        color: isActive ? AppTheme.success : AppTheme.error,
-        fontWeight: FontWeight.w600,
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: isActive
+            ? AppTheme.success.withAlpha(20)
+            : AppTheme.error.withAlpha(20),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: isActive
+              ? AppTheme.success.withAlpha(50)
+              : AppTheme.error.withAlpha(50),
+        ),
       ),
-      side: BorderSide.none,
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      child: Text(
+        isActive ? 'Activo' : 'Inactivo',
+        style: TextStyle(
+          color: isActive ? AppTheme.success : AppTheme.error,
+          fontWeight: FontWeight.bold,
+          fontSize: 12,
+        ),
+      ),
     );
   }
 }

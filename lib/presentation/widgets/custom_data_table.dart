@@ -7,6 +7,9 @@ class CustomDataTable<T> extends StatelessWidget {
   final int itemCount;
   final VoidCallback onAddItem;
   final String emptyText;
+  final String? title;
+  final String? searchQuery;
+  final ValueChanged<String>? onSearch;
 
   const CustomDataTable({
     super.key,
@@ -15,6 +18,9 @@ class CustomDataTable<T> extends StatelessWidget {
     required this.itemCount,
     required this.onAddItem,
     this.emptyText = 'No se encontraron artículos.',
+    this.title,
+    this.searchQuery,
+    this.onSearch,
   });
 
   @override
@@ -23,17 +29,24 @@ class CustomDataTable<T> extends StatelessWidget {
       builder: (context, constraints) {
         final isSmallScreen = constraints.maxWidth < 600;
 
-        return Card(
-          elevation: 0,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(isSmallScreen ? 12 : 16),
-            side: const BorderSide(color: AppTheme.borders, width: 1),
+        return Container(
+          decoration: BoxDecoration(
+            color: AppTheme.cardBackground,
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: AppTheme.textPrimary.withOpacity(0.05),
+                blurRadius: 20,
+                offset: const Offset(0, 4),
+              ),
+            ],
           ),
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               _buildHeader(context, isSmallScreen),
-              const Divider(height: 1, thickness: 1),
-              if (itemCount == 0)
+              if (itemCount == 0 &&
+                  (searchQuery == null || searchQuery!.isEmpty))
                 _buildEmptyState(context, isSmallScreen)
               else
                 _buildTable(context, isSmallScreen),
@@ -46,49 +59,49 @@ class CustomDataTable<T> extends StatelessWidget {
 
   Widget _buildTable(BuildContext context, bool isSmallScreen) {
     return ClipRRect(
-      borderRadius: BorderRadius.only(
-        bottomLeft: Radius.circular(isSmallScreen ? 12 : 16),
-        bottomRight: Radius.circular(isSmallScreen ? 12 : 16),
+      borderRadius: const BorderRadius.only(
+        bottomLeft: Radius.circular(20),
+        bottomRight: Radius.circular(20),
       ),
       child: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
         child: ConstrainedBox(
           constraints: BoxConstraints(
-            minWidth: MediaQuery.of(context).size.width - 32,
+            minWidth:
+                MediaQuery.of(context).size.width - (isSmallScreen ? 32 : 64),
           ),
           child: Theme(
-            data: Theme.of(
-              context,
-            ).copyWith(dividerColor: AppTheme.borders.withAlpha(50)),
+            data: Theme.of(context).copyWith(
+              dividerColor: Colors.transparent,
+              dividerTheme: const DividerThemeData(color: Colors.transparent),
+            ),
             child: DataTable(
               columns: columns.map((col) {
                 return DataColumn(
                   label: DefaultTextStyle(
                     style: TextStyle(
-                      fontSize: isSmallScreen ? 12 : 13,
-                      fontWeight: FontWeight.w600,
+                      fontSize: 13,
+                      fontWeight: FontWeight.bold,
                       color: AppTheme.textSecondary,
-                      letterSpacing: 0.3,
+                      letterSpacing: 0.5,
                     ),
                     child: col.label,
                   ),
                 );
               }).toList(),
               rows: rows,
-              headingRowColor: WidgetStateProperty.all(
-                AppTheme.inputBackground.withAlpha(30),
-              ),
-              headingRowHeight: isSmallScreen ? 44 : 48,
-              dataRowMinHeight: isSmallScreen ? 48 : 56,
-              dataRowMaxHeight: isSmallScreen ? 64 : 72,
-              horizontalMargin: isSmallScreen ? 12 : 20,
-              columnSpacing: isSmallScreen ? 16 : 24,
+              headingRowColor: WidgetStateProperty.all(Colors.transparent),
+              headingRowHeight: 56,
+              dataRowMinHeight: 60,
+              dataRowMaxHeight: 72,
+              horizontalMargin: 24,
+              columnSpacing: 24,
               showBottomBorder: false,
               dataRowColor: WidgetStateProperty.resolveWith<Color>((
                 Set<WidgetState> states,
               ) {
                 if (states.contains(WidgetState.hovered)) {
-                  return AppTheme.inputBackground.withAlpha(50);
+                  return AppTheme.primary.withOpacity(0.05);
                 }
                 return Colors.transparent;
               }),
@@ -101,187 +114,159 @@ class CustomDataTable<T> extends StatelessWidget {
 
   Widget _buildHeader(BuildContext context, bool isSmallScreen) {
     return Padding(
-      padding: EdgeInsets.symmetric(
-        horizontal: isSmallScreen ? 12.0 : 20.0,
-        vertical: isSmallScreen ? 12.0 : 16.0,
-      ),
-      child: isSmallScreen
-          ? Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+      padding: const EdgeInsets.all(24.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (isSmallScreen) ...[
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        _getEntityName(),
-                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.w600,
-                          fontSize: 16,
-                        ),
-                      ),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        color: AppTheme.primary.withAlpha(10),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Text(
-                        '$itemCount',
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: AppTheme.primary,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                SizedBox(
-                  width: double.infinity,
-                  child: Material(
-                    color: AppTheme.primary,
-                    borderRadius: BorderRadius.circular(10),
-                    child: InkWell(
-                      onTap: onAddItem,
-                      borderRadius: BorderRadius.circular(10),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(vertical: 10),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: const [
-                            Icon(
-                              Icons.add_rounded,
-                              size: 18,
-                              color: Colors.white,
-                            ),
-                            SizedBox(width: 6),
-                            Text(
-                              'Agregar',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.w600,
-                                fontSize: 14,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
+                Expanded(
+                  child: Text(
+                    title ?? _getEntityName(),
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: AppTheme.textPrimary,
                     ),
                   ),
                 ),
+                _buildCountBadge(),
               ],
-            )
-          : Row(
+            ),
+            const SizedBox(height: 16),
+            if (onSearch != null) ...[
+              _buildSearchBar(),
+              const SizedBox(height: 16),
+            ],
+            SizedBox(width: double.infinity, child: _buildAddButton(context)),
+          ] else ...[
+            Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Row(
                   children: [
                     Text(
-                      _getEntityName(),
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 18,
-                      ),
+                      title ?? _getEntityName(),
+                      style: Theme.of(context).textTheme.headlineSmall
+                          ?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: AppTheme.textPrimary,
+                            fontSize: 24,
+                          ),
                     ),
-                    const SizedBox(width: 8),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        color: AppTheme.primary.withAlpha(10),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Text(
-                        '$itemCount',
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                          color: AppTheme.primary,
-                        ),
-                      ),
-                    ),
+                    const SizedBox(width: 12),
+                    _buildCountBadge(),
                   ],
                 ),
-                Material(
-                  color: AppTheme.primary,
-                  borderRadius: BorderRadius.circular(12),
-                  child: InkWell(
-                    onTap: onAddItem,
-                    borderRadius: BorderRadius.circular(12),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 10,
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: const [
-                          Icon(
-                            Icons.add_rounded,
-                            size: 20,
-                            color: Colors.white,
-                          ),
-                          SizedBox(width: 6),
-                          Text(
-                            'Agregar',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.w600,
-                              fontSize: 14,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
+                Row(
+                  children: [
+                    if (onSearch != null) ...[
+                      SizedBox(width: 250, child: _buildSearchBar()),
+                      const SizedBox(width: 16),
+                    ],
+                    _buildAddButton(context),
+                  ],
                 ),
               ],
             ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSearchBar() {
+    return TextField(
+      onChanged: onSearch,
+      decoration: InputDecoration(
+        hintText: 'Buscar...',
+        prefixIcon: const Icon(
+          Icons.search_rounded,
+          color: AppTheme.textSecondary,
+        ),
+        filled: true,
+        fillColor: AppTheme.background,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide.none,
+        ),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 12,
+        ),
+        isDense: true,
+      ),
+    );
+  }
+
+  Widget _buildCountBadge() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: AppTheme.primary.withAlpha(10),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Text(
+        '$itemCount',
+        style: const TextStyle(
+          fontSize: 14,
+          fontWeight: FontWeight.bold,
+          color: AppTheme.primary,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAddButton(BuildContext context) {
+    return ElevatedButton.icon(
+      onPressed: onAddItem,
+      icon: const Icon(Icons.add_rounded, size: 20),
+      label: const Text('Agregar Nuevo'),
+      style: ElevatedButton.styleFrom(
+        backgroundColor: AppTheme.primary,
+        foregroundColor: Colors.white,
+        elevation: 0,
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+      ),
     );
   }
 
   Widget _buildEmptyState(BuildContext context, bool isSmallScreen) {
     return Padding(
-      padding: EdgeInsets.all(isSmallScreen ? 40.0 : 64.0),
+      padding: EdgeInsets.all(isSmallScreen ? 40.0 : 80.0),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Container(
-            padding: EdgeInsets.all(isSmallScreen ? 20 : 24),
+            padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: AppTheme.inputBackground.withAlpha(50),
+              color: AppTheme.background,
             ),
             child: Icon(
               Icons.inventory_2_outlined,
-              size: isSmallScreen ? 40 : 48,
-              color: AppTheme.textSecondary.withAlpha(60),
+              size: 48,
+              color: AppTheme.textSecondary.withAlpha(100),
             ),
           ),
-          SizedBox(height: isSmallScreen ? 16 : 20),
+          const SizedBox(height: 24),
           Text(
             emptyText,
             textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-              color: AppTheme.textSecondary,
-              fontSize: isSmallScreen ? 14 : 15,
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+              color: AppTheme.textPrimary,
+              fontWeight: FontWeight.w600,
             ),
           ),
-          SizedBox(height: isSmallScreen ? 6 : 8),
+          const SizedBox(height: 8),
           Text(
-            'Comienza agregando un nuevo elemento',
+            'Comienza agregando un nuevo elemento a la lista',
             textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: AppTheme.textSecondary.withAlpha(70),
-              fontSize: isSmallScreen ? 12 : 13,
-            ),
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(color: AppTheme.textSecondary),
           ),
         ],
       ),

@@ -17,14 +17,23 @@ class SideMenu extends ConsumerWidget {
     ).routerDelegate.currentConfiguration.uri.toString();
 
     return Container(
-      width: 260,
-      color: AppTheme.background,
+      width: 280, // Slightly wider for better readability
+      decoration: BoxDecoration(
+        color: AppTheme.background,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withAlpha(10),
+            blurRadius: 20,
+            offset: const Offset(4, 0),
+          ),
+        ],
+      ),
       child: Column(
         children: [
           _buildDrawerHeader(context, user),
           Expanded(
             child: ListView(
-              padding: EdgeInsets.zero,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
               children: [
                 _buildSectionHeader('General'),
                 _buildDrawerItem(
@@ -34,7 +43,7 @@ class SideMenu extends ConsumerWidget {
                   path: '/',
                   currentPath: currentPath,
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 24),
                 _buildSectionHeader('Gestión de Catálogo'),
                 _buildDrawerItem(
                   context: context,
@@ -78,7 +87,7 @@ class SideMenu extends ConsumerWidget {
                   path: '/warehouses',
                   currentPath: currentPath,
                 ),
-                 _buildDrawerItem(
+                _buildDrawerItem(
                   context: context,
                   icon: Icons.price_change_rounded,
                   title: 'Tasas de Impuesto',
@@ -103,38 +112,68 @@ class SideMenu extends ConsumerWidget {
         : 'Rol no disponible';
 
     return Container(
-      padding: const EdgeInsets.fromLTRB(20, 60, 20, 20),
-      decoration: BoxDecoration(color: AppTheme.primary.withAlpha(5)),
+      padding: const EdgeInsets.fromLTRB(24, 60, 24, 30),
+      decoration: BoxDecoration(
+        color: AppTheme.cardBackground,
+        border: Border(
+          bottom: BorderSide(color: AppTheme.borders.withAlpha(100)),
+        ),
+      ),
       child: Row(
         children: [
-          CircleAvatar(
-            radius: 30,
-            backgroundColor: AppTheme.primary,
-            child: Text(
-              accountName.isNotEmpty ? accountName[0].toUpperCase() : 'U',
-              style: const TextStyle(
-                fontSize: 28,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
+          Container(
+            padding: const EdgeInsets.all(2),
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(
+                color: AppTheme.primary.withAlpha(50),
+                width: 2,
+              ),
+            ),
+            child: CircleAvatar(
+              radius: 28,
+              backgroundColor: AppTheme.primary.withAlpha(20),
+              child: Text(
+                accountName.isNotEmpty ? accountName[0].toUpperCase() : 'U',
+                style: const TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: AppTheme.primary,
+                ),
               ),
             ),
           ),
           const SizedBox(width: 16),
           Expanded(
             child: Column(
-              crossAxisAlignment: .start,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   '$accountName $accountLastName',
-                  style: Theme.of(
-                    context,
-                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: AppTheme.textPrimary,
+                  ),
                   overflow: TextOverflow.ellipsis,
                 ),
-                Text(
-                  accountEmail,
-                  style: Theme.of(context).textTheme.bodyMedium,
-                  overflow: TextOverflow.ellipsis,
+                const SizedBox(height: 4),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 2,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppTheme.primary.withAlpha(10),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    accountEmail,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: AppTheme.primary,
+                      fontWeight: FontWeight.w600,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
               ],
             ),
@@ -146,14 +185,14 @@ class SideMenu extends ConsumerWidget {
 
   Widget _buildSectionHeader(String title) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+      padding: const EdgeInsets.only(left: 12, bottom: 8, top: 4),
       child: Text(
         title.toUpperCase(),
         style: TextStyle(
-          color: AppTheme.textSecondary.withAlpha(204),
-          fontWeight: FontWeight.w600,
-          fontSize: 12,
-          letterSpacing: 0.5,
+          color: AppTheme.textSecondary,
+          fontWeight: FontWeight.bold,
+          fontSize: 11,
+          letterSpacing: 1.2,
         ),
       ),
     );
@@ -167,65 +206,74 @@ class SideMenu extends ConsumerWidget {
     required String currentPath,
   }) {
     final bool isSelected = currentPath == path;
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12.0),
+    return Container(
+      margin: const EdgeInsets.only(bottom: 4),
       child: ListTile(
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
         leading: Icon(
           icon,
           color: isSelected ? AppTheme.primary : AppTheme.textSecondary,
+          size: 22,
         ),
         title: Text(
           title,
-          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
             color: isSelected ? AppTheme.primary : AppTheme.textPrimary,
-            fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+            fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+            fontSize: 14,
           ),
         ),
         onTap: () {
-          // Navigate to the new page
           context.go(path);
-          // If the drawer is open (on small screens), close it
           if (Scaffold.of(context).isDrawerOpen) {
             Scaffold.of(context).closeDrawer();
           }
         },
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        selected: isSelected,
-        selectedTileColor: AppTheme.primary.withAlpha(10),
-        selectedColor: AppTheme.primary,
+        tileColor: isSelected
+            ? AppTheme.primary.withAlpha(15)
+            : Colors.transparent,
+        hoverColor: AppTheme.primary.withAlpha(5),
       ),
     );
   }
 
   Widget _buildLogoutSection(BuildContext context, WidgetRef ref) {
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: OutlinedButton.icon(
-        icon: const Icon(Icons.logout_rounded, color: AppTheme.error),
-        label: const Text(
-          'Cerrar Sesión',
-          style: TextStyle(color: AppTheme.error, fontWeight: FontWeight.bold),
-        ),
-        onPressed: () {
-          // First, close the drawer if it's open
+    return Container(
+      padding: const EdgeInsets.all(24.0),
+      decoration: BoxDecoration(
+        border: Border(top: BorderSide(color: AppTheme.borders.withAlpha(100))),
+      ),
+      child: InkWell(
+        onTap: () {
           if (Scaffold.of(context).isDrawerOpen) {
             Scaffold.of(context).closeDrawer();
           }
-          // Then, perform the logout action
           ref.read(authProvider.notifier).logout();
         },
-        style:
-            OutlinedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: 12),
-              side: const BorderSide(color: AppTheme.error, width: 1.5),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+          decoration: BoxDecoration(
+            color: AppTheme.error.withAlpha(10),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: const [
+              Icon(Icons.logout_rounded, color: AppTheme.error, size: 20),
+              SizedBox(width: 8),
+              Text(
+                'Cerrar Sesión',
+                style: TextStyle(
+                  color: AppTheme.error,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                ),
               ),
-            ).copyWith(
-              fixedSize: WidgetStateProperty.all(
-                const Size.fromWidth(double.maxFinite),
-              ),
-            ),
+            ],
+          ),
+        ),
       ),
     );
   }

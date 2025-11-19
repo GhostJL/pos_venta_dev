@@ -57,7 +57,7 @@ class BrandFormState extends ConsumerState<BrandForm> {
                 initialValue: _name,
                 decoration: const InputDecoration(
                   labelText: 'Nombre de la Marca',
-                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.branding_watermark_rounded),
                 ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
@@ -67,12 +67,12 @@ class BrandFormState extends ConsumerState<BrandForm> {
                 },
                 onSaved: (value) => _name = value!,
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 20),
               TextFormField(
                 initialValue: _code,
                 decoration: const InputDecoration(
                   labelText: 'Código de la Marca',
-                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.qr_code_rounded),
                 ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
@@ -100,8 +100,12 @@ class BrandFormState extends ConsumerState<BrandForm> {
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
             ),
+            elevation: 0,
           ),
-          child: Text(widget.brand == null ? 'Crear' : 'Actualizar'),
+          child: Text(
+            widget.brand == null ? 'Crear Marca' : 'Actualizar Marca',
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          ),
         ),
       ),
     );

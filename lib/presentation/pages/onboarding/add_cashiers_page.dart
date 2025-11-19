@@ -58,17 +58,21 @@ class AddCashiersPage extends ConsumerWidget {
                     itemCount: cashiers.length,
                     itemBuilder: (context, index) {
                       final cashier = cashiers[index];
-                      return Card(
-                        elevation: 0,
+                      return Container(
                         margin: EdgeInsets.symmetric(
                           vertical: isSmallScreen ? 4 : 6,
                         ),
-                        shape: RoundedRectangleBorder(
+                        decoration: BoxDecoration(
+                          color: AppTheme.cardBackground,
                           borderRadius: BorderRadius.circular(12),
-                          side: const BorderSide(
-                            color: AppTheme.borders,
-                            width: 1,
-                          ),
+                          border: Border.all(color: AppTheme.borders, width: 1),
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppTheme.textPrimary.withOpacity(0.05),
+                              blurRadius: 4,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
                         ),
                         child: ListTile(
                           contentPadding: EdgeInsets.symmetric(

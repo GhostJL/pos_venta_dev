@@ -29,10 +29,15 @@ class CategoriesPage extends ConsumerWidget {
         context: context,
         builder: (BuildContext dialogContext) {
           return AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+            ),
             title: const Text('Confirmar Eliminación'),
             content: Text(
               '¿Estás seguro de que quieres eliminar la categoría "${category.name}"?',
+              style: Theme.of(context).textTheme.bodyMedium,
             ),
+            actionsPadding: const EdgeInsets.all(20),
             actions: <Widget>[
               TextButton(
                 child: const Text('Cancelar'),
@@ -41,6 +46,11 @@ class CategoriesPage extends ConsumerWidget {
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppTheme.error,
+                  foregroundColor: Colors.white,
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
                 child: const Text('Eliminar'),
                 onPressed: () {
@@ -57,7 +67,7 @@ class CategoriesPage extends ConsumerWidget {
     }
 
     return Padding(
-      padding: const EdgeInsets.all(16.0),
+      padding: const EdgeInsets.all(24.0),
       child: categoriesAsync.when(
         data: (categories) => CustomDataTable<Category>(
           columns: const [
@@ -67,19 +77,38 @@ class CategoriesPage extends ConsumerWidget {
             DataColumn(label: Text('Acciones')),
           ],
           rows: categories.map((category) {
-            final departmentName = departments.asData?.value
+            final departmentName =
+                departments.asData?.value
                     .firstWhere((d) => d.id == category.departmentId)
                     .name ??
                 'N/A';
             return DataRow(
               cells: [
                 DataCell(
-                  Text(category.name, style: Theme.of(context).textTheme.bodyLarge),
+                  Text(
+                    category.name,
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: AppTheme.textPrimary,
+                    ),
+                  ),
                 ),
                 DataCell(
-                  Text(category.code, style: Theme.of(context).textTheme.bodyMedium),
+                  Text(
+                    category.code,
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: AppTheme.textSecondary,
+                    ),
+                  ),
                 ),
-                DataCell(Text(departmentName)),
+                DataCell(
+                  Text(
+                    departmentName,
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: AppTheme.textPrimary,
+                    ),
+                  ),
+                ),
                 DataCell(
                   Row(
                     children: [

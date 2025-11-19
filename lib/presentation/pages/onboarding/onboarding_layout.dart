@@ -22,7 +22,7 @@ class OnboardingLayout extends StatelessWidget {
     return Scaffold(
       backgroundColor: AppTheme.background,
       body: SafeArea(
-        minimum: EdgeInsets.symmetric(vertical: 16),
+        minimum: const EdgeInsets.symmetric(vertical: 16),
         child: LayoutBuilder(
           builder: (context, constraints) {
             final isSmallScreen = constraints.maxWidth < 600;
@@ -37,25 +37,32 @@ class OnboardingLayout extends StatelessWidget {
                         ? double.infinity
                         : (isMediumScreen ? 600 : 700),
                   ),
-                  child: Card(
-                    elevation: isSmallScreen ? 0 : 4,
+                  child: Container(
                     margin: EdgeInsets.all(isSmallScreen ? 0 : 24.0),
-                    shape: RoundedRectangleBorder(
+                    padding: EdgeInsets.all(isSmallScreen ? 24.0 : 40.0),
+                    decoration: BoxDecoration(
+                      color: AppTheme.cardBackground,
                       borderRadius: BorderRadius.circular(
-                        isSmallScreen ? 0 : 20,
+                        isSmallScreen ? 0 : 24,
                       ),
+                      boxShadow: isSmallScreen
+                          ? []
+                          : [
+                              BoxShadow(
+                                color: AppTheme.textPrimary.withOpacity(0.05),
+                                blurRadius: 30,
+                                offset: const Offset(0, 10),
+                              ),
+                            ],
                     ),
-                    child: Padding(
-                      padding: EdgeInsets.all(isSmallScreen ? 20.0 : 32.0),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          _buildHeader(context, isSmallScreen),
-                          SizedBox(height: isSmallScreen ? 24 : 32),
-                          child,
-                        ],
-                      ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        _buildHeader(context, isSmallScreen),
+                        SizedBox(height: isSmallScreen ? 32 : 48),
+                        child,
+                      ],
                     ),
                   ),
                 ),
