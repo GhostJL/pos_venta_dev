@@ -26,9 +26,9 @@ class _TaxRateFormState extends ConsumerState<TaxRateForm> {
     super.initState();
     _name = widget.taxRate?.name ?? '';
     _code = widget.taxRate?.code ?? '';
-    _rate = widget.taxRate?.rate ?? 0.0;
+    _rate = (widget.taxRate?.rate ?? 0.0) * 100;
     _isDefault = widget.taxRate?.isDefault ?? false;
-    _isOptional = widget.taxRate?.isOptional ?? false;
+    _isOptional = widget.taxRate?.isOptional ?? true;
   }
 
   @override
@@ -74,6 +74,7 @@ class _TaxRateFormState extends ConsumerState<TaxRateForm> {
                 enabled: isEditable,
                 decoration: const InputDecoration(
                   labelText: 'Código',
+                  helperText: 'Ejemplo: IVA_16, ISR_10',
                   prefixIcon: Icon(Icons.qr_code_rounded),
                 ),
                 validator: (value) {
@@ -90,6 +91,7 @@ class _TaxRateFormState extends ConsumerState<TaxRateForm> {
                 enabled: isEditable,
                 decoration: const InputDecoration(
                   labelText: 'Tasa (%)',
+                  helperText: 'Ingrese el porcentaje (ej. 16 para 16%)',
                   prefixIcon: Icon(Icons.percent_rounded),
                 ),
                 keyboardType: TextInputType.number,
@@ -102,8 +104,12 @@ class _TaxRateFormState extends ConsumerState<TaxRateForm> {
                 onSaved: (value) => _rate = double.parse(value!),
               ),
               const SizedBox(height: 16),
-              CheckboxListTile(
+              SwitchListTile(
                 title: const Text('¿Es predeterminada?'),
+                subtitle: const Text(
+                  'Las tasas predeterminadas aparecen de manera opcional y no se pueden modificar o eliminar.',
+                  style: TextStyle(fontSize: 12),
+                ),
                 value: _isDefault,
                 activeColor: AppTheme.primary,
                 shape: RoundedRectangleBorder(
@@ -112,14 +118,18 @@ class _TaxRateFormState extends ConsumerState<TaxRateForm> {
                 onChanged: isEditable
                     ? (value) {
                         setState(() {
-                          _isDefault = value!;
+                          _isDefault = value;
                           if (_isDefault) _isOptional = false;
                         });
                       }
                     : null,
               ),
-              CheckboxListTile(
+              SwitchListTile(
                 title: const Text('¿Es opcional?'),
+                subtitle: const Text(
+                  'Las tasas opcionales se pueden seleccionar manualmente en cada producto y pueden ser modificadas o eliminadas.',
+                  style: TextStyle(fontSize: 12),
+                ),
                 value: _isOptional,
                 activeColor: AppTheme.primary,
                 shape: RoundedRectangleBorder(
@@ -128,7 +138,7 @@ class _TaxRateFormState extends ConsumerState<TaxRateForm> {
                 onChanged: isEditable
                     ? (value) {
                         setState(() {
-                          _isOptional = value!;
+                          _isOptional = value;
                           if (_isOptional) _isDefault = false;
                         });
                       }
@@ -194,11 +204,22 @@ class _TaxRateFormState extends ConsumerState<TaxRateForm> {
         return;
       }
 
+      if (!_isDefault && !_isOptional) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Debe seleccionar al menos una opción (Predeterminada u Opcional).',
+            ),
+          ),
+        );
+        return;
+      }
+
       final newTaxRate = TaxRate(
         id: widget.taxRate?.id,
         name: _name,
         code: _code,
-        rate: _rate,
+        rate: _rate / 100, // Convert percentage to decimal
         isDefault: _isDefault,
         isEditable:
             widget.taxRate?.isEditable ??

@@ -47,9 +47,9 @@ class CustomDataTable<T> extends StatelessWidget {
               _buildHeader(context, isSmallScreen),
               if (itemCount == 0 &&
                   (searchQuery == null || searchQuery!.isEmpty))
-                _buildEmptyState(context, isSmallScreen)
+                Expanded(child: _buildEmptyState(context, isSmallScreen))
               else
-                _buildTable(context, isSmallScreen),
+                Expanded(child: _buildTable(context, isSmallScreen)),
             ],
           ),
         );
@@ -64,47 +64,50 @@ class CustomDataTable<T> extends StatelessWidget {
         bottomRight: Radius.circular(20),
       ),
       child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: ConstrainedBox(
-          constraints: BoxConstraints(
-            minWidth:
-                MediaQuery.of(context).size.width - (isSmallScreen ? 32 : 64),
-          ),
-          child: Theme(
-            data: Theme.of(context).copyWith(
-              dividerColor: Colors.transparent,
-              dividerTheme: const DividerThemeData(color: Colors.transparent),
+        scrollDirection: Axis.vertical,
+        child: SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              minWidth:
+                  MediaQuery.of(context).size.width - (isSmallScreen ? 32 : 64),
             ),
-            child: DataTable(
-              columns: columns.map((col) {
-                return DataColumn(
-                  label: DefaultTextStyle(
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.bold,
-                      color: AppTheme.textSecondary,
-                      letterSpacing: 0.5,
+            child: Theme(
+              data: Theme.of(context).copyWith(
+                dividerColor: Colors.transparent,
+                dividerTheme: const DividerThemeData(color: Colors.transparent),
+              ),
+              child: DataTable(
+                columns: columns.map((col) {
+                  return DataColumn(
+                    label: DefaultTextStyle(
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
+                        color: AppTheme.textSecondary,
+                        letterSpacing: 0.5,
+                      ),
+                      child: col.label,
                     ),
-                    child: col.label,
-                  ),
-                );
-              }).toList(),
-              rows: rows,
-              headingRowColor: WidgetStateProperty.all(Colors.transparent),
-              headingRowHeight: 56,
-              dataRowMinHeight: 60,
-              dataRowMaxHeight: 72,
-              horizontalMargin: 24,
-              columnSpacing: 24,
-              showBottomBorder: false,
-              dataRowColor: WidgetStateProperty.resolveWith<Color>((
-                Set<WidgetState> states,
-              ) {
-                if (states.contains(WidgetState.hovered)) {
-                  return AppTheme.primary.withOpacity(0.05);
-                }
-                return Colors.transparent;
-              }),
+                  );
+                }).toList(),
+                rows: rows,
+                headingRowColor: WidgetStateProperty.all(Colors.transparent),
+                headingRowHeight: 56,
+                dataRowMinHeight: 60,
+                dataRowMaxHeight: 72,
+                horizontalMargin: 24,
+                columnSpacing: 24,
+                showBottomBorder: false,
+                dataRowColor: WidgetStateProperty.resolveWith<Color>((
+                  Set<WidgetState> states,
+                ) {
+                  if (states.contains(WidgetState.hovered)) {
+                    return AppTheme.primary.withOpacity(0.05);
+                  }
+                  return Colors.transparent;
+                }),
+              ),
             ),
           ),
         ),
