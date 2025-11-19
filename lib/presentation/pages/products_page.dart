@@ -202,7 +202,7 @@ class ProductsPageState extends ConsumerState<ProductsPage> {
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Text(
-                                '€${(product.salePriceCents / 100).toStringAsFixed(2)}',
+                                '\$${(product.salePriceCents / 100).toStringAsFixed(2)}',
                                 style: const TextStyle(
                                   fontWeight: FontWeight.bold,
                                   fontSize: 16,

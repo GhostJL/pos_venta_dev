@@ -115,11 +115,10 @@ class _TaxRatePageState extends ConsumerState<TaxRatePage> {
                                 onPressed: taxRate.isEditable
                                     ? () =>
                                           _deleteTaxRate(context, ref, taxRate)
-                                    : () => _showCannotPerformOperationDialog(
-                                        context,
-                                        'eliminar',
-                                      ),
-                                tooltip: 'Eliminar',
+                                    : null, // Disable button if not editable
+                                tooltip: taxRate.isEditable
+                                    ? 'Eliminar'
+                                    : 'No se puede eliminar',
                               ),
                               if (!taxRate.isDefault)
                                 PopupMenuButton<String>(
@@ -217,32 +216,6 @@ class _TaxRatePageState extends ConsumerState<TaxRatePage> {
               Navigator.of(context).pop();
             },
             child: const Text('Eliminar'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showCannotPerformOperationDialog(
-    BuildContext context,
-    String operation,
-  ) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text(
-          'Operación no permitida',
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-        content: Text(
-          'Esta tasa de impuesto es predefinida y no se puede $operation.',
-        ),
-        actionsPadding: const EdgeInsets.all(16),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('OK'),
           ),
         ],
       ),
