@@ -4,10 +4,10 @@ import 'package:posventa/data/datasources/database_helper.dart';
 import 'package:posventa/data/repositories/category_repository_impl.dart';
 import 'package:posventa/domain/entities/category.dart';
 import 'package:posventa/domain/repositories/category_repository.dart';
-import 'package:posventa/domain/use_cases/create_category.dart';
-import 'package:posventa/domain/use_cases/delete_category.dart';
-import 'package:posventa/domain/use_cases/get_all_categories.dart';
-import 'package:posventa/domain/use_cases/update_category.dart';
+import 'package:posventa/domain/use_cases/category/create_category.dart';
+import 'package:posventa/domain/use_cases/category/delete_category.dart';
+import 'package:posventa/domain/use_cases/category/get_all_categories.dart';
+import 'package:posventa/domain/use_cases/category/update_category.dart';
 
 final databaseHelperProvider = Provider<DatabaseHelper>((ref) {
   return DatabaseHelper();
@@ -85,13 +85,13 @@ class CategoryListNotifier extends StateNotifier<AsyncValue<List<Category>>> {
 }
 
 final categoryListProvider =
-    StateNotifierProvider<CategoryListNotifier, AsyncValue<List<Category>>>(
-  (ref) {
-    return CategoryListNotifier(
-      ref.watch(getAllCategoriesUseCaseProvider),
-      ref.watch(createCategoryUseCaseProvider),
-      ref.watch(updateCategoryUseCaseProvider),
-      ref.watch(deleteCategoryUseCaseProvider),
-    );
-  },
-);
+    StateNotifierProvider<CategoryListNotifier, AsyncValue<List<Category>>>((
+      ref,
+    ) {
+      return CategoryListNotifier(
+        ref.watch(getAllCategoriesUseCaseProvider),
+        ref.watch(createCategoryUseCaseProvider),
+        ref.watch(updateCategoryUseCaseProvider),
+        ref.watch(deleteCategoryUseCaseProvider),
+      );
+    });

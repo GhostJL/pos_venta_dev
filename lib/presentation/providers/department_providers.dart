@@ -4,10 +4,10 @@ import 'package:posventa/data/datasources/database_helper.dart';
 import 'package:posventa/data/repositories/department_repository_impl.dart';
 import 'package:posventa/domain/entities/department.dart';
 import 'package:posventa/domain/repositories/department_repository.dart';
-import 'package:posventa/domain/use_cases/create_department.dart';
-import 'package:posventa/domain/use_cases/delete_department.dart';
-import 'package:posventa/domain/use_cases/get_all_departments.dart';
-import 'package:posventa/domain/use_cases/update_department.dart';
+import 'package:posventa/domain/use_cases/department/create_department.dart';
+import 'package:posventa/domain/use_cases/department/delete_department.dart';
+import 'package:posventa/domain/use_cases/department/get_all_departments.dart';
+import 'package:posventa/domain/use_cases/department/update_department.dart';
 
 // Provider for DatabaseHelper
 final databaseHelperProvider = Provider<DatabaseHelper>((ref) {

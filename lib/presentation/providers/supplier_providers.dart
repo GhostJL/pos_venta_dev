@@ -4,10 +4,10 @@ import 'package:posventa/data/datasources/database_helper.dart';
 import 'package:posventa/data/repositories/supplier_repository_impl.dart';
 import 'package:posventa/domain/entities/supplier.dart';
 import 'package:posventa/domain/repositories/supplier_repository.dart';
-import 'package:posventa/domain/use_cases/create_supplier.dart';
-import 'package:posventa/domain/use_cases/delete_supplier.dart';
-import 'package:posventa/domain/use_cases/get_all_suppliers.dart';
-import 'package:posventa/domain/use_cases/update_supplier.dart';
+import 'package:posventa/domain/use_cases/supplier/create_supplier.dart';
+import 'package:posventa/domain/use_cases/supplier/delete_supplier.dart';
+import 'package:posventa/domain/use_cases/supplier/get_all_suppliers.dart';
+import 'package:posventa/domain/use_cases/supplier/update_supplier.dart';
 
 final databaseHelperProvider = Provider<DatabaseHelper>((ref) {
   return DatabaseHelper();
@@ -85,13 +85,13 @@ class SupplierListNotifier extends StateNotifier<AsyncValue<List<Supplier>>> {
 }
 
 final supplierListProvider =
-    StateNotifierProvider<SupplierListNotifier, AsyncValue<List<Supplier>>>(
-  (ref) {
-    return SupplierListNotifier(
-      ref.watch(getAllSuppliersUseCaseProvider),
-      ref.watch(createSupplierUseCaseProvider),
-      ref.watch(updateSupplierUseCaseProvider),
-      ref.watch(deleteSupplierUseCaseProvider),
-    );
-  },
-);
+    StateNotifierProvider<SupplierListNotifier, AsyncValue<List<Supplier>>>((
+      ref,
+    ) {
+      return SupplierListNotifier(
+        ref.watch(getAllSuppliersUseCaseProvider),
+        ref.watch(createSupplierUseCaseProvider),
+        ref.watch(updateSupplierUseCaseProvider),
+        ref.watch(deleteSupplierUseCaseProvider),
+      );
+    });

@@ -1,5 +1,5 @@
 import 'package:posventa/domain/entities/warehouse.dart';
-import 'package:posventa/domain/use_cases/get_all_warehouses.dart';
+import 'package:posventa/domain/use_cases/warehouse/get_all_warehouses.dart';
 import 'package:posventa/presentation/providers/providers.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -7,7 +7,6 @@ part 'warehouse_providers.g.dart';
 
 @riverpod
 class WarehouseNotifier extends _$WarehouseNotifier {
-  
   // Helper method to read the use case provider
   GetAllWarehouses get _getAllWarehouses => ref.read(getAllWarehousesProvider);
 

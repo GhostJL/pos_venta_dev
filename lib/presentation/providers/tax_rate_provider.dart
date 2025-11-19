@@ -3,11 +3,11 @@ import 'package:flutter_riverpod/legacy.dart';
 import 'package:posventa/data/datasources/database_helper.dart';
 import 'package:posventa/data/repositories/tax_rate_repository_impl.dart';
 import 'package:posventa/domain/entities/tax_rate.dart';
-import 'package:posventa/domain/use_cases/create_tax_rate.dart';
-import 'package:posventa/domain/use_cases/delete_tax_rate.dart';
-import 'package:posventa/domain/use_cases/get_all_tax_rates.dart';
-import 'package:posventa/domain/use_cases/set_default_tax_rate.dart';
-import 'package:posventa/domain/use_cases/update_tax_rate.dart';
+import 'package:posventa/domain/use_cases/tax_rate/create_tax_rate.dart';
+import 'package:posventa/domain/use_cases/tax_rate/delete_tax_rate.dart';
+import 'package:posventa/domain/use_cases/tax_rate/get_all_tax_rates.dart';
+import 'package:posventa/domain/use_cases/tax_rate/set_default_tax_rate.dart';
+import 'package:posventa/domain/use_cases/tax_rate/update_tax_rate.dart';
 
 final taxRateRepositoryProvider = Provider((ref) {
   final dbHelper = DatabaseHelper.instance;

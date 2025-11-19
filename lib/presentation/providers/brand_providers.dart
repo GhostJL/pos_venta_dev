@@ -4,10 +4,10 @@ import 'package:posventa/data/datasources/database_helper.dart';
 import 'package:posventa/data/repositories/brand_repository_impl.dart';
 import 'package:posventa/domain/entities/brand.dart';
 import 'package:posventa/domain/repositories/brand_repository.dart';
-import 'package:posventa/domain/use_cases/create_brand.dart';
-import 'package:posventa/domain/use_cases/delete_brand.dart';
-import 'package:posventa/domain/use_cases/get_all_brands.dart';
-import 'package:posventa/domain/use_cases/update_brand.dart';
+import 'package:posventa/domain/use_cases/brand/create_brand.dart';
+import 'package:posventa/domain/use_cases/brand/delete_brand.dart';
+import 'package:posventa/domain/use_cases/brand/get_all_brands.dart';
+import 'package:posventa/domain/use_cases/brand/update_brand.dart';
 
 final databaseHelperProvider = Provider<DatabaseHelper>((ref) {
   return DatabaseHelper();
@@ -85,13 +85,11 @@ class BrandListNotifier extends StateNotifier<AsyncValue<List<Brand>>> {
 }
 
 final brandListProvider =
-    StateNotifierProvider<BrandListNotifier, AsyncValue<List<Brand>>>(
-  (ref) {
-    return BrandListNotifier(
-      ref.watch(getAllBrandsUseCaseProvider),
-      ref.watch(createBrandUseCaseProvider),
-      ref.watch(updateBrandUseCaseProvider),
-      ref.watch(deleteBrandUseCaseProvider),
-    );
-  },
-);
+    StateNotifierProvider<BrandListNotifier, AsyncValue<List<Brand>>>((ref) {
+      return BrandListNotifier(
+        ref.watch(getAllBrandsUseCaseProvider),
+        ref.watch(createBrandUseCaseProvider),
+        ref.watch(updateBrandUseCaseProvider),
+        ref.watch(deleteBrandUseCaseProvider),
+      );
+    });

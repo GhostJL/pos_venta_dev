@@ -1,9 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 import 'package:posventa/domain/entities/product.dart';
-import 'package:posventa/domain/use_cases/get_all_products.dart';
-import 'package:posventa/domain/use_cases/create_product.dart';
-import 'package:posventa/domain/use_cases/update_product.dart';
+import 'package:posventa/domain/use_cases/product/get_all_products.dart';
+import 'package:posventa/domain/use_cases/product/create_product.dart';
+import 'package:posventa/domain/use_cases/product/update_product.dart';
 import 'package:posventa/presentation/providers/providers.dart';
 
 class ProductNotifier extends StateNotifier<AsyncValue<List<Product>>> {
