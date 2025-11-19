@@ -100,10 +100,10 @@ class _SetAccessKeyPageState extends ConsumerState<SetAccessKeyPage> {
                 Container(
                   padding: EdgeInsets.all(isSmallScreen ? 16 : 20),
                   decoration: BoxDecoration(
-                    color: AppTheme.primary.withOpacity(0.05),
+                    color: AppTheme.primary.withAlpha(10),
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
-                      color: AppTheme.primary.withOpacity(0.2),
+                      color: AppTheme.primary.withAlpha(20),
                       width: 1,
                     ),
                   ),

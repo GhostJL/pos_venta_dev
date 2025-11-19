@@ -4,6 +4,7 @@ import 'package:posventa/app/theme.dart';
 import 'package:posventa/presentation/providers/inventory_providers.dart';
 import 'package:posventa/presentation/providers/product_provider.dart';
 import 'package:posventa/presentation/pages/inventory_form_page.dart';
+import 'package:posventa/presentation/pages/inventory_movements_page.dart';
 
 class InventoryPage extends ConsumerWidget {
   const InventoryPage({super.key});
@@ -21,6 +22,19 @@ class InventoryPage extends ConsumerWidget {
         centerTitle: true,
         backgroundColor: AppTheme.background,
         elevation: 0,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.history_rounded),
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => const InventoryMovementsPage(),
+                ),
+              );
+            },
+            tooltip: 'Ver Kardex',
+          ),
+        ],
       ),
       body: inventoryAsync.when(
         data: (inventoryList) {

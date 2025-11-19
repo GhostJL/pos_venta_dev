@@ -14,7 +14,7 @@ class DatabaseHelper {
 
   // Database configuration
   static const _databaseName = "pos.db";
-  static const _databaseVersion = 8; // Incremented version
+  static const _databaseVersion = 9; // Incremented for inventory_movements
 
   // Table names
   static const tableUsers = 'users';
@@ -29,6 +29,7 @@ class DatabaseHelper {
   static const tableProducts = 'products'; // New table
   static const tableProductTaxes = 'product_taxes'; // New table
   static const tableInventory = 'inventory'; // New table
+  static const tableInventoryMovements = 'inventory_movements'; // Kardex table
 
   static Database? _database;
 
@@ -173,6 +174,8 @@ class DatabaseHelper {
     await _createProductTaxesTable(db);
     // Inventory table
     await _createInventoryTable(db);
+    // InventoryMovements table (Kardex)
+    await _createInventoryMovementsTable(db);
   }
 
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
@@ -188,6 +191,9 @@ class DatabaseHelper {
     }
     if (oldVersion < 8) {
       await _createInventoryTable(db);
+    }
+    if (oldVersion < 9) {
+      await _createInventoryMovementsTable(db);
     }
   }
 
@@ -315,6 +321,55 @@ class DatabaseHelper {
         FOREIGN KEY (product_id) REFERENCES $tableProducts(id) ON DELETE CASCADE,
         FOREIGN KEY (warehouse_id) REFERENCES $tableWarehouses(id) ON DELETE CASCADE
       )
+    ''');
+  }
+
+  Future<void> _createInventoryMovementsTable(Database db) async {
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS $tableInventoryMovements (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        product_id INTEGER NOT NULL,
+        warehouse_id INTEGER NOT NULL,
+        movement_type TEXT NOT NULL,
+        quantity REAL NOT NULL,
+        quantity_before REAL NOT NULL,
+        quantity_after REAL NOT NULL,
+        reference_type TEXT,
+        reference_id INTEGER,
+        lot_number TEXT,
+        reason TEXT,
+        performed_by INTEGER NOT NULL,
+        movement_date TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
+        FOREIGN KEY (product_id) REFERENCES $tableProducts(id) ON DELETE RESTRICT,
+        FOREIGN KEY (warehouse_id) REFERENCES $tableWarehouses(id) ON DELETE RESTRICT,
+        FOREIGN KEY (performed_by) REFERENCES $tableUsers(id) ON DELETE RESTRICT
+      )
+    ''');
+
+    // Create indexes for better query performance
+    await db.execute('''
+      CREATE INDEX IF NOT EXISTS idx_inventory_movements_product 
+      ON $tableInventoryMovements(product_id)
+    ''');
+
+    await db.execute('''
+      CREATE INDEX IF NOT EXISTS idx_inventory_movements_warehouse 
+      ON $tableInventoryMovements(warehouse_id)
+    ''');
+
+    await db.execute('''
+      CREATE INDEX IF NOT EXISTS idx_inventory_movements_type 
+      ON $tableInventoryMovements(movement_type)
+    ''');
+
+    await db.execute('''
+      CREATE INDEX IF NOT EXISTS idx_inventory_movements_date 
+      ON $tableInventoryMovements(movement_date)
+    ''');
+
+    await db.execute('''
+      CREATE INDEX IF NOT EXISTS idx_inventory_movements_reference 
+      ON $tableInventoryMovements(reference_type, reference_id)
     ''');
   }
 

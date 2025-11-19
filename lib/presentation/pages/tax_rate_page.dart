@@ -73,10 +73,10 @@ class _TaxRatePageState extends ConsumerState<TaxRatePage> {
                                     vertical: 4,
                                   ),
                                   decoration: BoxDecoration(
-                                    color: AppTheme.success.withOpacity(0.1),
+                                    color: AppTheme.success.withAlpha(10),
                                     borderRadius: BorderRadius.circular(8),
                                     border: Border.all(
-                                      color: AppTheme.success.withOpacity(0.5),
+                                      color: AppTheme.success.withAlpha(50),
                                     ),
                                   ),
                                   child: const Text(

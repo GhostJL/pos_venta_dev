@@ -49,7 +49,7 @@ class OnboardingLayout extends StatelessWidget {
                           ? []
                           : [
                               BoxShadow(
-                                color: AppTheme.textPrimary.withOpacity(0.05),
+                                color: AppTheme.textPrimary.withAlpha(10),
                                 blurRadius: 30,
                                 offset: const Offset(0, 10),
                               ),

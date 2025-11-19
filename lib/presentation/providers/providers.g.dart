@@ -744,3 +744,602 @@ final class DeleteProductProvider
 }
 
 String _$deleteProductHash() => r'5850111edda5cac19ef54114f99d4d2be5fcd6a4';
+
+@ProviderFor(inventoryMovementRepository)
+const inventoryMovementRepositoryProvider =
+    InventoryMovementRepositoryProvider._();
+
+final class InventoryMovementRepositoryProvider
+    extends
+        $FunctionalProvider<
+          InventoryMovementRepository,
+          InventoryMovementRepository,
+          InventoryMovementRepository
+        >
+    with $Provider<InventoryMovementRepository> {
+  const InventoryMovementRepositoryProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'inventoryMovementRepositoryProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$inventoryMovementRepositoryHash();
+
+  @$internal
+  @override
+  $ProviderElement<InventoryMovementRepository> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  InventoryMovementRepository create(Ref ref) {
+    return inventoryMovementRepository(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(InventoryMovementRepository value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<InventoryMovementRepository>(value),
+    );
+  }
+}
+
+String _$inventoryMovementRepositoryHash() =>
+    r'460bf1060744dfeccb272e2a0cd53d62b9119b3d';
+
+@ProviderFor(getAllInventoryMovements)
+const getAllInventoryMovementsProvider = GetAllInventoryMovementsProvider._();
+
+final class GetAllInventoryMovementsProvider
+    extends
+        $FunctionalProvider<
+          GetAllInventoryMovements,
+          GetAllInventoryMovements,
+          GetAllInventoryMovements
+        >
+    with $Provider<GetAllInventoryMovements> {
+  const GetAllInventoryMovementsProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'getAllInventoryMovementsProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$getAllInventoryMovementsHash();
+
+  @$internal
+  @override
+  $ProviderElement<GetAllInventoryMovements> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  GetAllInventoryMovements create(Ref ref) {
+    return getAllInventoryMovements(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(GetAllInventoryMovements value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<GetAllInventoryMovements>(value),
+    );
+  }
+}
+
+String _$getAllInventoryMovementsHash() =>
+    r'0741fe0c847a92d78c322083a6f500d5092918f1';
+
+@ProviderFor(createInventoryMovement)
+const createInventoryMovementProvider = CreateInventoryMovementProvider._();
+
+final class CreateInventoryMovementProvider
+    extends
+        $FunctionalProvider<
+          CreateInventoryMovement,
+          CreateInventoryMovement,
+          CreateInventoryMovement
+        >
+    with $Provider<CreateInventoryMovement> {
+  const CreateInventoryMovementProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'createInventoryMovementProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$createInventoryMovementHash();
+
+  @$internal
+  @override
+  $ProviderElement<CreateInventoryMovement> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  CreateInventoryMovement create(Ref ref) {
+    return createInventoryMovement(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(CreateInventoryMovement value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<CreateInventoryMovement>(value),
+    );
+  }
+}
+
+String _$createInventoryMovementHash() =>
+    r'9892926c6f672a0c8e8eb5820ffb2a6aa12733d2';
+
+@ProviderFor(updateInventoryMovement)
+const updateInventoryMovementProvider = UpdateInventoryMovementProvider._();
+
+final class UpdateInventoryMovementProvider
+    extends
+        $FunctionalProvider<
+          UpdateInventoryMovement,
+          UpdateInventoryMovement,
+          UpdateInventoryMovement
+        >
+    with $Provider<UpdateInventoryMovement> {
+  const UpdateInventoryMovementProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'updateInventoryMovementProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$updateInventoryMovementHash();
+
+  @$internal
+  @override
+  $ProviderElement<UpdateInventoryMovement> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  UpdateInventoryMovement create(Ref ref) {
+    return updateInventoryMovement(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(UpdateInventoryMovement value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<UpdateInventoryMovement>(value),
+    );
+  }
+}
+
+String _$updateInventoryMovementHash() =>
+    r'ed8ba72410737ef3aea4c8b1e8a2c5dd029b6b46';
+
+@ProviderFor(deleteInventoryMovement)
+const deleteInventoryMovementProvider = DeleteInventoryMovementProvider._();
+
+final class DeleteInventoryMovementProvider
+    extends
+        $FunctionalProvider<
+          DeleteInventoryMovement,
+          DeleteInventoryMovement,
+          DeleteInventoryMovement
+        >
+    with $Provider<DeleteInventoryMovement> {
+  const DeleteInventoryMovementProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'deleteInventoryMovementProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$deleteInventoryMovementHash();
+
+  @$internal
+  @override
+  $ProviderElement<DeleteInventoryMovement> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  DeleteInventoryMovement create(Ref ref) {
+    return deleteInventoryMovement(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(DeleteInventoryMovement value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<DeleteInventoryMovement>(value),
+    );
+  }
+}
+
+String _$deleteInventoryMovementHash() =>
+    r'1342e29e5fc1dfdb0a4bbcb76e52e7da81dfce35';
+
+@ProviderFor(getInventoryMovementsByProduct)
+const getInventoryMovementsByProductProvider =
+    GetInventoryMovementsByProductProvider._();
+
+final class GetInventoryMovementsByProductProvider
+    extends
+        $FunctionalProvider<
+          GetInventoryMovementsByProduct,
+          GetInventoryMovementsByProduct,
+          GetInventoryMovementsByProduct
+        >
+    with $Provider<GetInventoryMovementsByProduct> {
+  const GetInventoryMovementsByProductProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'getInventoryMovementsByProductProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$getInventoryMovementsByProductHash();
+
+  @$internal
+  @override
+  $ProviderElement<GetInventoryMovementsByProduct> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  GetInventoryMovementsByProduct create(Ref ref) {
+    return getInventoryMovementsByProduct(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(GetInventoryMovementsByProduct value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<GetInventoryMovementsByProduct>(
+        value,
+      ),
+    );
+  }
+}
+
+String _$getInventoryMovementsByProductHash() =>
+    r'724847c12bd374da1dc2e97c51c0eb82ee883fe1';
+
+@ProviderFor(getInventoryMovementsByWarehouse)
+const getInventoryMovementsByWarehouseProvider =
+    GetInventoryMovementsByWarehouseProvider._();
+
+final class GetInventoryMovementsByWarehouseProvider
+    extends
+        $FunctionalProvider<
+          GetInventoryMovementsByWarehouse,
+          GetInventoryMovementsByWarehouse,
+          GetInventoryMovementsByWarehouse
+        >
+    with $Provider<GetInventoryMovementsByWarehouse> {
+  const GetInventoryMovementsByWarehouseProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'getInventoryMovementsByWarehouseProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$getInventoryMovementsByWarehouseHash();
+
+  @$internal
+  @override
+  $ProviderElement<GetInventoryMovementsByWarehouse> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  GetInventoryMovementsByWarehouse create(Ref ref) {
+    return getInventoryMovementsByWarehouse(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(GetInventoryMovementsByWarehouse value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<GetInventoryMovementsByWarehouse>(
+        value,
+      ),
+    );
+  }
+}
+
+String _$getInventoryMovementsByWarehouseHash() =>
+    r'97bf413ae95ebf3a4943f1de8bd64f322704dfb9';
+
+@ProviderFor(getInventoryMovementsByDateRange)
+const getInventoryMovementsByDateRangeProvider =
+    GetInventoryMovementsByDateRangeProvider._();
+
+final class GetInventoryMovementsByDateRangeProvider
+    extends
+        $FunctionalProvider<
+          GetInventoryMovementsByDateRange,
+          GetInventoryMovementsByDateRange,
+          GetInventoryMovementsByDateRange
+        >
+    with $Provider<GetInventoryMovementsByDateRange> {
+  const GetInventoryMovementsByDateRangeProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'getInventoryMovementsByDateRangeProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$getInventoryMovementsByDateRangeHash();
+
+  @$internal
+  @override
+  $ProviderElement<GetInventoryMovementsByDateRange> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  GetInventoryMovementsByDateRange create(Ref ref) {
+    return getInventoryMovementsByDateRange(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(GetInventoryMovementsByDateRange value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<GetInventoryMovementsByDateRange>(
+        value,
+      ),
+    );
+  }
+}
+
+String _$getInventoryMovementsByDateRangeHash() =>
+    r'b2b6d81024167c492e0952d2e59dcfd18a3e6cc0';
+
+@ProviderFor(userRepository)
+const userRepositoryProvider = UserRepositoryProvider._();
+
+final class UserRepositoryProvider
+    extends $FunctionalProvider<UserRepository, UserRepository, UserRepository>
+    with $Provider<UserRepository> {
+  const UserRepositoryProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'userRepositoryProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$userRepositoryHash();
+
+  @$internal
+  @override
+  $ProviderElement<UserRepository> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  UserRepository create(Ref ref) {
+    return userRepository(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(UserRepository value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<UserRepository>(value),
+    );
+  }
+}
+
+String _$userRepositoryHash() => r'300cb71d0b47bbe8549c1eaae7751c31efb7cc1f';
+
+@ProviderFor(getAllUsers)
+const getAllUsersProvider = GetAllUsersProvider._();
+
+final class GetAllUsersProvider
+    extends $FunctionalProvider<GetAllUsers, GetAllUsers, GetAllUsers>
+    with $Provider<GetAllUsers> {
+  const GetAllUsersProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'getAllUsersProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$getAllUsersHash();
+
+  @$internal
+  @override
+  $ProviderElement<GetAllUsers> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  GetAllUsers create(Ref ref) {
+    return getAllUsers(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(GetAllUsers value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<GetAllUsers>(value),
+    );
+  }
+}
+
+String _$getAllUsersHash() => r'b305a9a9ca0f8d24052387567486e00ecd04fafe';
+
+@ProviderFor(createUser)
+const createUserProvider = CreateUserProvider._();
+
+final class CreateUserProvider
+    extends $FunctionalProvider<CreateUser, CreateUser, CreateUser>
+    with $Provider<CreateUser> {
+  const CreateUserProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'createUserProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$createUserHash();
+
+  @$internal
+  @override
+  $ProviderElement<CreateUser> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  CreateUser create(Ref ref) {
+    return createUser(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(CreateUser value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<CreateUser>(value),
+    );
+  }
+}
+
+String _$createUserHash() => r'165a6032bcf8510db7f794aa287d2c6b35c810c8';
+
+@ProviderFor(updateUser)
+const updateUserProvider = UpdateUserProvider._();
+
+final class UpdateUserProvider
+    extends $FunctionalProvider<UpdateUser, UpdateUser, UpdateUser>
+    with $Provider<UpdateUser> {
+  const UpdateUserProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'updateUserProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$updateUserHash();
+
+  @$internal
+  @override
+  $ProviderElement<UpdateUser> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  UpdateUser create(Ref ref) {
+    return updateUser(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(UpdateUser value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<UpdateUser>(value),
+    );
+  }
+}
+
+String _$updateUserHash() => r'662689f7e09c3417995a673e8b5ab2ec9d2ac4b2';
+
+@ProviderFor(deleteUser)
+const deleteUserProvider = DeleteUserProvider._();
+
+final class DeleteUserProvider
+    extends $FunctionalProvider<DeleteUser, DeleteUser, DeleteUser>
+    with $Provider<DeleteUser> {
+  const DeleteUserProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'deleteUserProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$deleteUserHash();
+
+  @$internal
+  @override
+  $ProviderElement<DeleteUser> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  DeleteUser create(Ref ref) {
+    return deleteUser(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(DeleteUser value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<DeleteUser>(value),
+    );
+  }
+}
+
+String _$deleteUserHash() => r'75ab4530a0645fe2c2ac76bc69aa750a11d1259b';

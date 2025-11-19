@@ -76,7 +76,7 @@ class _InventoryFormPageState extends ConsumerState<InventoryFormPage> {
               // Product Dropdown
               productsAsync.when(
                 data: (products) => DropdownButtonFormField<int>(
-                  value: _selectedProductId,
+                  initialValue: _selectedProductId,
                   decoration: const InputDecoration(
                     labelText: 'Producto',
                     border: OutlineInputBorder(),
@@ -99,7 +99,7 @@ class _InventoryFormPageState extends ConsumerState<InventoryFormPage> {
               // Warehouse Dropdown
               warehousesAsync.when(
                 data: (warehouses) => DropdownButtonFormField<int>(
-                  value: _selectedWarehouseId,
+                  initialValue: _selectedWarehouseId,
                   decoration: const InputDecoration(
                     labelText: 'Almacén',
                     border: OutlineInputBorder(),

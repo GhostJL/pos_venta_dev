@@ -1,21 +1,45 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:posventa/data/repositories/auth_repository_impl.dart';
 import 'package:posventa/domain/entities/user.dart';
-import 'package:posventa/domain/repositories/user_repository.dart';
-import 'package:posventa/presentation/providers/transaction_provider.dart';
+import 'package:posventa/presentation/providers/providers.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-// Proveedor para UserRepository
-final userRepositoryProvider = Provider<UserRepository>((ref) {
-  final dbHelper = ref.watch(databaseHelperProvider);
-  return AuthRepositoryImpl(dbHelper);
-});
+part 'user_provider.g.dart';
 
-// Proveedor para obtener todos los usuarios
-final allUsersProvider = FutureProvider<List<User>>((ref) {
-  return ref.watch(userRepositoryProvider).getUsers();
-});
+@riverpod
+class UserNotifier extends _$UserNotifier {
+  @override
+  Future<List<User>> build() async {
+    return ref.read(getAllUsersProvider).call();
+  }
 
-// Proveedor para agregar un usuario
-final addUserProvider = FutureProvider.family<void, User>((ref, user) {
-  return ref.watch(userRepositoryProvider).addUser(user);
-});
+  Future<void> addUser(User user) async {
+    state = const AsyncValue.loading();
+    state = await AsyncValue.guard(() async {
+      await ref.read(createUserProvider).call(user);
+      return ref.read(getAllUsersProvider).call();
+    });
+  }
+
+  Future<void> modifyUser(User user) async {
+    state = const AsyncValue.loading();
+    state = await AsyncValue.guard(() async {
+      await ref.read(updateUserProvider).call(user);
+      return ref.read(getAllUsersProvider).call();
+    });
+  }
+
+  Future<void> removeUser(int id) async {
+    state = const AsyncValue.loading();
+    state = await AsyncValue.guard(() async {
+      await ref.read(deleteUserProvider).call(id);
+      return ref.read(getAllUsersProvider).call();
+    });
+  }
+}
+
+@riverpod
+Future<User?> currentUser(Ref ref) async {
+  // This is a placeholder - you should implement proper session management
+  // For now, we'll return the first admin user as a fallback
+  final users = await ref.watch(getAllUsersProvider).call();
+  return users.isNotEmpty ? users.first : null;
+}

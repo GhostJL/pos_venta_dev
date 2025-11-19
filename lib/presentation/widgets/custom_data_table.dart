@@ -35,7 +35,7 @@ class CustomDataTable<T> extends StatelessWidget {
             borderRadius: BorderRadius.circular(20),
             boxShadow: [
               BoxShadow(
-                color: AppTheme.textPrimary.withOpacity(0.05),
+                color: AppTheme.textPrimary.withAlpha(10),
                 blurRadius: 20,
                 offset: const Offset(0, 4),
               ),
@@ -103,7 +103,7 @@ class CustomDataTable<T> extends StatelessWidget {
                   Set<WidgetState> states,
                 ) {
                   if (states.contains(WidgetState.hovered)) {
-                    return AppTheme.primary.withOpacity(0.05);
+                    return AppTheme.primary.withAlpha(10);
                   }
                   return Colors.transparent;
                 }),

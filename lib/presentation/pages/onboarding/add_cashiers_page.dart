@@ -68,7 +68,7 @@ class AddCashiersPage extends ConsumerWidget {
                           border: Border.all(color: AppTheme.borders, width: 1),
                           boxShadow: [
                             BoxShadow(
-                              color: AppTheme.textPrimary.withOpacity(0.05),
+                              color: AppTheme.textPrimary.withAlpha(10),
                               blurRadius: 4,
                               offset: const Offset(0, 2),
                             ),
