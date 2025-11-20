@@ -52,6 +52,13 @@ import 'package:posventa/domain/use_cases/sale/cancel_sale_use_case.dart';
 import 'package:posventa/domain/repositories/cash_session_repository.dart';
 import 'package:posventa/data/repositories/cash_session_repository_impl.dart';
 import 'package:posventa/domain/use_cases/cash_movement/get_current_session.dart';
+import 'package:posventa/domain/repositories/purchase_repository.dart';
+import 'package:posventa/data/repositories/purchase_repository_impl.dart';
+import 'package:posventa/domain/use_cases/purchase/get_purchases_usecase.dart';
+import 'package:posventa/domain/use_cases/purchase/get_purchase_by_id_usecase.dart';
+import 'package:posventa/domain/use_cases/purchase/create_purchase_usecase.dart';
+import 'package:posventa/domain/use_cases/purchase/update_purchase_usecase.dart';
+import 'package:posventa/domain/use_cases/purchase/delete_purchase_usecase.dart';
 import 'package:posventa/presentation/providers/auth_provider.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -256,3 +263,29 @@ CashSessionRepository cashSessionRepository(ref) {
 @riverpod
 GetCurrentSession getCurrentSession(ref) =>
     GetCurrentSession(ref.watch(cashSessionRepositoryProvider));
+
+// --- Purchase Providers ---
+
+@riverpod
+PurchaseRepository purchaseRepository(ref) =>
+    PurchaseRepositoryImpl(ref.watch(databaseHelperProvider));
+
+@riverpod
+GetPurchasesUseCase getPurchasesUseCase(ref) =>
+    GetPurchasesUseCase(ref.watch(purchaseRepositoryProvider));
+
+@riverpod
+GetPurchaseByIdUseCase getPurchaseByIdUseCase(ref) =>
+    GetPurchaseByIdUseCase(ref.watch(purchaseRepositoryProvider));
+
+@riverpod
+CreatePurchaseUseCase createPurchaseUseCase(ref) =>
+    CreatePurchaseUseCase(ref.watch(purchaseRepositoryProvider));
+
+@riverpod
+UpdatePurchaseUseCase updatePurchaseUseCase(ref) =>
+    UpdatePurchaseUseCase(ref.watch(purchaseRepositoryProvider));
+
+@riverpod
+DeletePurchaseUseCase deletePurchaseUseCase(ref) =>
+    DeletePurchaseUseCase(ref.watch(purchaseRepositoryProvider));

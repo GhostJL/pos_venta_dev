@@ -23,6 +23,9 @@ import 'package:posventa/presentation/pages/customers_page.dart';
 import 'package:posventa/presentation/pages/sales_page.dart';
 import 'package:posventa/presentation/pages/sales_history_page.dart';
 import 'package:posventa/presentation/pages/sale_detail_page.dart';
+import 'package:posventa/presentation/pages/purchases_page.dart';
+import 'package:posventa/presentation/pages/purchase_detail_page.dart';
+import 'package:posventa/presentation/pages/purchase_form_page.dart';
 import 'package:posventa/presentation/providers/auth_provider.dart';
 import 'package:posventa/presentation/providers/transaction_provider.dart';
 
@@ -144,6 +147,23 @@ final routerProvider = Provider<GoRouter>((ref) {
             pageBuilder: (context, state) {
               final id = int.parse(state.pathParameters['id']!);
               return NoTransitionPage(child: SaleDetailPage(saleId: id));
+            },
+          ),
+          GoRoute(
+            path: '/purchases',
+            pageBuilder: (context, state) =>
+                const NoTransitionPage(child: PurchasesPage()),
+          ),
+          GoRoute(
+            path: '/purchases/:id',
+            pageBuilder: (context, state) {
+              final id = state.pathParameters['id']!;
+              if (id == 'new') {
+                return const NoTransitionPage(child: PurchaseFormPage());
+              }
+              return NoTransitionPage(
+                child: PurchaseDetailPage(purchaseId: int.parse(id)),
+              );
             },
           ),
         ],

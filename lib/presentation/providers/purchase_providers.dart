@@ -1,0 +1,42 @@
+import 'package:posventa/domain/entities/purchase.dart';
+import 'package:posventa/presentation/providers/providers.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
+
+part 'purchase_providers.g.dart';
+
+@riverpod
+class PurchaseNotifier extends _$PurchaseNotifier {
+  @override
+  Future<List<Purchase>> build() async {
+    return ref.read(getPurchasesUseCaseProvider).call();
+  }
+
+  Future<void> addPurchase(Purchase purchase) async {
+    state = const AsyncValue.loading();
+    state = await AsyncValue.guard(() async {
+      await ref.read(createPurchaseUseCaseProvider).call(purchase);
+      return ref.read(getPurchasesUseCaseProvider).call();
+    });
+  }
+
+  Future<void> updatePurchase(Purchase purchase) async {
+    state = const AsyncValue.loading();
+    state = await AsyncValue.guard(() async {
+      await ref.read(updatePurchaseUseCaseProvider).call(purchase);
+      return ref.read(getPurchasesUseCaseProvider).call();
+    });
+  }
+
+  Future<void> deletePurchase(int id) async {
+    state = const AsyncValue.loading();
+    state = await AsyncValue.guard(() async {
+      await ref.read(deletePurchaseUseCaseProvider).call(id);
+      return ref.read(getPurchasesUseCaseProvider).call();
+    });
+  }
+}
+
+@riverpod
+Future<Purchase?> purchaseById(Ref ref, int id) {
+  return ref.watch(getPurchaseByIdUseCaseProvider).call(id);
+}

@@ -82,6 +82,13 @@ class SideMenu extends ConsumerWidget {
                 ),
                 _buildDrawerItem(
                   context: context,
+                  icon: Icons.shopping_cart_rounded,
+                  title: 'Compras',
+                  path: '/purchases',
+                  currentPath: currentPath,
+                ),
+                _buildDrawerItem(
+                  context: context,
                   icon: Icons.warehouse_rounded,
                   title: 'Almacenes',
                   path: '/warehouses',

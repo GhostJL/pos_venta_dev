@@ -2094,3 +2094,291 @@ final class GetCurrentSessionProvider
 }
 
 String _$getCurrentSessionHash() => r'32cb4df366931b14802aaa665b114d665ad3873d';
+
+@ProviderFor(purchaseRepository)
+const purchaseRepositoryProvider = PurchaseRepositoryProvider._();
+
+final class PurchaseRepositoryProvider
+    extends
+        $FunctionalProvider<
+          PurchaseRepository,
+          PurchaseRepository,
+          PurchaseRepository
+        >
+    with $Provider<PurchaseRepository> {
+  const PurchaseRepositoryProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'purchaseRepositoryProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$purchaseRepositoryHash();
+
+  @$internal
+  @override
+  $ProviderElement<PurchaseRepository> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  PurchaseRepository create(Ref ref) {
+    return purchaseRepository(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(PurchaseRepository value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<PurchaseRepository>(value),
+    );
+  }
+}
+
+String _$purchaseRepositoryHash() =>
+    r'5de5f138cbc4d1e4d32947336eefb8a9119181e0';
+
+@ProviderFor(getPurchasesUseCase)
+const getPurchasesUseCaseProvider = GetPurchasesUseCaseProvider._();
+
+final class GetPurchasesUseCaseProvider
+    extends
+        $FunctionalProvider<
+          GetPurchasesUseCase,
+          GetPurchasesUseCase,
+          GetPurchasesUseCase
+        >
+    with $Provider<GetPurchasesUseCase> {
+  const GetPurchasesUseCaseProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'getPurchasesUseCaseProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$getPurchasesUseCaseHash();
+
+  @$internal
+  @override
+  $ProviderElement<GetPurchasesUseCase> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  GetPurchasesUseCase create(Ref ref) {
+    return getPurchasesUseCase(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(GetPurchasesUseCase value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<GetPurchasesUseCase>(value),
+    );
+  }
+}
+
+String _$getPurchasesUseCaseHash() =>
+    r'8c55b8a426b11b2b7ccfa9e2056029f0ae4ad1e8';
+
+@ProviderFor(getPurchaseByIdUseCase)
+const getPurchaseByIdUseCaseProvider = GetPurchaseByIdUseCaseProvider._();
+
+final class GetPurchaseByIdUseCaseProvider
+    extends
+        $FunctionalProvider<
+          GetPurchaseByIdUseCase,
+          GetPurchaseByIdUseCase,
+          GetPurchaseByIdUseCase
+        >
+    with $Provider<GetPurchaseByIdUseCase> {
+  const GetPurchaseByIdUseCaseProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'getPurchaseByIdUseCaseProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$getPurchaseByIdUseCaseHash();
+
+  @$internal
+  @override
+  $ProviderElement<GetPurchaseByIdUseCase> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  GetPurchaseByIdUseCase create(Ref ref) {
+    return getPurchaseByIdUseCase(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(GetPurchaseByIdUseCase value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<GetPurchaseByIdUseCase>(value),
+    );
+  }
+}
+
+String _$getPurchaseByIdUseCaseHash() =>
+    r'25ccbb63fb4bb3ab351b6d849e0c2057847d5b68';
+
+@ProviderFor(createPurchaseUseCase)
+const createPurchaseUseCaseProvider = CreatePurchaseUseCaseProvider._();
+
+final class CreatePurchaseUseCaseProvider
+    extends
+        $FunctionalProvider<
+          CreatePurchaseUseCase,
+          CreatePurchaseUseCase,
+          CreatePurchaseUseCase
+        >
+    with $Provider<CreatePurchaseUseCase> {
+  const CreatePurchaseUseCaseProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'createPurchaseUseCaseProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$createPurchaseUseCaseHash();
+
+  @$internal
+  @override
+  $ProviderElement<CreatePurchaseUseCase> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  CreatePurchaseUseCase create(Ref ref) {
+    return createPurchaseUseCase(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(CreatePurchaseUseCase value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<CreatePurchaseUseCase>(value),
+    );
+  }
+}
+
+String _$createPurchaseUseCaseHash() =>
+    r'8d04eb3b1c5b0bae0411ad0b84f05c0d66a1eee4';
+
+@ProviderFor(updatePurchaseUseCase)
+const updatePurchaseUseCaseProvider = UpdatePurchaseUseCaseProvider._();
+
+final class UpdatePurchaseUseCaseProvider
+    extends
+        $FunctionalProvider<
+          UpdatePurchaseUseCase,
+          UpdatePurchaseUseCase,
+          UpdatePurchaseUseCase
+        >
+    with $Provider<UpdatePurchaseUseCase> {
+  const UpdatePurchaseUseCaseProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'updatePurchaseUseCaseProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$updatePurchaseUseCaseHash();
+
+  @$internal
+  @override
+  $ProviderElement<UpdatePurchaseUseCase> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  UpdatePurchaseUseCase create(Ref ref) {
+    return updatePurchaseUseCase(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(UpdatePurchaseUseCase value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<UpdatePurchaseUseCase>(value),
+    );
+  }
+}
+
+String _$updatePurchaseUseCaseHash() =>
+    r'a2c85efd8df5f369e8550192060cfb71f9a888c3';
+
+@ProviderFor(deletePurchaseUseCase)
+const deletePurchaseUseCaseProvider = DeletePurchaseUseCaseProvider._();
+
+final class DeletePurchaseUseCaseProvider
+    extends
+        $FunctionalProvider<
+          DeletePurchaseUseCase,
+          DeletePurchaseUseCase,
+          DeletePurchaseUseCase
+        >
+    with $Provider<DeletePurchaseUseCase> {
+  const DeletePurchaseUseCaseProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'deletePurchaseUseCaseProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$deletePurchaseUseCaseHash();
+
+  @$internal
+  @override
+  $ProviderElement<DeletePurchaseUseCase> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  DeletePurchaseUseCase create(Ref ref) {
+    return deletePurchaseUseCase(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(DeletePurchaseUseCase value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<DeletePurchaseUseCase>(value),
+    );
+  }
+}
+
+String _$deletePurchaseUseCaseHash() =>
+    r'be05b66b079aa65b5c28d6916b1b474848b5d8d6';

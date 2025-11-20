@@ -168,6 +168,15 @@ class DashboardScreen extends StatelessWidget {
           context.go('/customers');
         },
       ),
+      DashboardCard(
+        title: 'Compras',
+        value: 'Gestionar Compras',
+        icon: Icons.shopping_cart_rounded,
+        iconColor: Colors.teal.shade600,
+        onTap: () {
+          context.go('/purchases');
+        },
+      ),
     ];
 
     return Column(
