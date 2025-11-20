@@ -108,6 +108,13 @@ class SideMenu extends ConsumerWidget {
                   path: '/customers',
                   currentPath: currentPath,
                 ),
+                _buildDrawerItem(
+                  context: context,
+                  icon: Icons.point_of_sale,
+                  title: 'Ventas (POS)',
+                  path: '/sales',
+                  currentPath: currentPath,
+                ),
               ],
             ),
           ),

@@ -30,17 +30,43 @@ class ProductRepositoryImpl implements ProductRepository {
   @override
   Future<List<Product>> getAllProducts() async {
     final db = await databaseHelper.database;
-    final maps = await db.query(DatabaseHelper.tableProducts);
+    // Join with inventory to get stock
+    final List<Map<String, dynamic>> maps = await db.rawQuery('''
+      SELECT p.*, (SELECT SUM(quantity_on_hand) FROM inventory WHERE product_id = p.id) as stock
+      FROM ${DatabaseHelper.tableProducts} p
+      WHERE p.is_active = 1
+    ''');
+    return maps.map((map) => ProductModel.fromMap(map)).toList();
+  }
+
+  @override
+  Future<List<Product>> searchProducts(String query) async {
+    final db = await databaseHelper.database;
+    final List<Map<String, dynamic>> maps = await db.rawQuery(
+      '''
+      SELECT p.*, (SELECT SUM(quantity_on_hand) FROM inventory WHERE product_id = p.id) as stock
+      FROM ${DatabaseHelper.tableProducts} p
+      WHERE p.is_active = 1 AND (
+        p.name LIKE ? OR 
+        p.code LIKE ? OR 
+        p.barcode LIKE ?
+      )
+    ''',
+      ['%$query%', '%$query%', '%$query%'],
+    );
     return maps.map((map) => ProductModel.fromMap(map)).toList();
   }
 
   @override
   Future<Product?> getProductById(int id) async {
     final db = await databaseHelper.database;
-    final maps = await db.query(
-      DatabaseHelper.tableProducts,
-      where: 'id = ?',
-      whereArgs: [id],
+    final maps = await db.rawQuery(
+      '''
+      SELECT p.*, (SELECT SUM(quantity_on_hand) FROM inventory WHERE product_id = p.id) as stock
+      FROM ${DatabaseHelper.tableProducts} p
+      WHERE p.id = ?
+    ''',
+      [id],
     );
     if (maps.isNotEmpty) {
       return ProductModel.fromMap(maps.first);

@@ -19,6 +19,7 @@ class Product {
   final int? wholesalePriceCents;
   final bool isActive;
   final List<ProductTax>? productTaxes;
+  final double? stock;
 
   const Product({
     this.id,
@@ -37,7 +38,11 @@ class Product {
     this.wholesalePriceCents,
     this.isActive = true,
     this.productTaxes,
+    this.stock,
   });
+
+  double get price => salePriceCents / 100.0;
+  double get costPrice => costPriceCents / 100.0;
 
   Product copyWith({
     int? id,
@@ -56,6 +61,7 @@ class Product {
     int? wholesalePriceCents,
     bool? isActive,
     List<ProductTax>? productTaxes,
+    double? stock,
   }) {
     return Product(
       id: id ?? this.id,
@@ -74,6 +80,7 @@ class Product {
       wholesalePriceCents: wholesalePriceCents ?? this.wholesalePriceCents,
       isActive: isActive ?? this.isActive,
       productTaxes: productTaxes ?? this.productTaxes,
+      stock: stock ?? this.stock,
     );
   }
 }

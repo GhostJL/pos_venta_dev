@@ -4,20 +4,24 @@ import 'package:posventa/domain/entities/product.dart';
 import 'package:posventa/domain/use_cases/product/get_all_products.dart';
 import 'package:posventa/domain/use_cases/product/create_product.dart';
 import 'package:posventa/domain/use_cases/product/update_product.dart';
+import 'package:posventa/domain/use_cases/product/search_products.dart';
 import 'package:posventa/presentation/providers/providers.dart';
 
 class ProductNotifier extends StateNotifier<AsyncValue<List<Product>>> {
   final GetAllProducts _getAllProducts;
   final CreateProduct _createProduct;
   final UpdateProduct _updateProduct;
+  final SearchProducts _searchProducts;
 
   ProductNotifier({
     required GetAllProducts getAllProducts,
     required CreateProduct createProduct,
     required UpdateProduct updateProduct,
+    required SearchProducts searchProducts,
   }) : _getAllProducts = getAllProducts,
        _createProduct = createProduct,
        _updateProduct = updateProduct,
+       _searchProducts = searchProducts,
        super(const AsyncValue.loading()) {
     _loadProducts();
   }
@@ -25,6 +29,15 @@ class ProductNotifier extends StateNotifier<AsyncValue<List<Product>>> {
   Future<void> _loadProducts() async {
     state = const AsyncValue.loading();
     state = await AsyncValue.guard(() => _getAllProducts());
+  }
+
+  Future<void> searchProducts(String query) async {
+    if (query.isEmpty) {
+      await _loadProducts();
+      return;
+    }
+    state = const AsyncValue.loading();
+    state = await AsyncValue.guard(() => _searchProducts(query));
   }
 
   Future<void> addProduct(Product product) async {
@@ -49,13 +62,17 @@ final productNotifierProvider =
       final getAllProducts = ref.watch(getAllProductsProvider);
       final createProduct = ref.watch(createProductProvider);
       final updateProduct = ref.watch(updateProductProvider);
+      final searchProducts = ref.watch(searchProductsProvider);
 
       return ProductNotifier(
         getAllProducts: getAllProducts,
         createProduct: createProduct,
         updateProduct: updateProduct,
+        searchProducts: searchProducts,
       );
     });
+
+final productListProvider = productNotifierProvider;
 
 extension ProductCopyWith on Product {
   Product copyWith({

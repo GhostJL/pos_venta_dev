@@ -17,6 +17,8 @@ class ProductModel extends Product {
     required super.salePriceCents,
     super.wholesalePriceCents,
     required super.isActive,
+    super.productTaxes,
+    super.stock,
   });
 
   factory ProductModel.fromEntity(Product product) {
@@ -36,6 +38,8 @@ class ProductModel extends Product {
       salePriceCents: product.salePriceCents,
       wholesalePriceCents: product.wholesalePriceCents,
       isActive: product.isActive,
+      productTaxes: product.productTaxes,
+      stock: product.stock,
     );
   }
 
@@ -56,6 +60,7 @@ class ProductModel extends Product {
       salePriceCents: map['sale_price_cents'],
       wholesalePriceCents: map['wholesale_price_cents'],
       isActive: map['is_active'] == 1,
+      stock: map['stock'] != null ? (map['stock'] as num).toDouble() : null,
     );
   }
 

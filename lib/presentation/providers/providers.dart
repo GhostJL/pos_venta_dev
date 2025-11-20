@@ -18,6 +18,7 @@ import 'package:posventa/domain/use_cases/product/get_all_products.dart';
 import 'package:posventa/domain/use_cases/product/create_product.dart';
 import 'package:posventa/domain/use_cases/product/update_product.dart';
 import 'package:posventa/domain/use_cases/product/delete_product.dart';
+import 'package:posventa/domain/use_cases/product/search_products.dart';
 import 'package:posventa/domain/repositories/inventory_movement_repository.dart';
 import 'package:posventa/data/repositories/inventory_movement_repository_impl.dart';
 import 'package:posventa/domain/use_cases/inventory_movement/get_all_inventory_movements.dart';
@@ -41,6 +42,13 @@ import 'package:posventa/domain/use_cases/customer/update_customer_use_case.dart
 import 'package:posventa/domain/use_cases/customer/delete_customer_use_case.dart';
 import 'package:posventa/domain/use_cases/customer/search_customers_use_case.dart';
 import 'package:posventa/domain/use_cases/customer/generate_next_customer_code_use_case.dart';
+import 'package:posventa/domain/repositories/sale_repository.dart';
+import 'package:posventa/data/repositories/sale_repository_impl.dart';
+import 'package:posventa/domain/use_cases/sale/create_sale_use_case.dart';
+import 'package:posventa/domain/use_cases/sale/get_sales_use_case.dart';
+import 'package:posventa/domain/use_cases/sale/get_sale_by_id_use_case.dart';
+import 'package:posventa/domain/use_cases/sale/generate_next_sale_number_use_case.dart';
+import 'package:posventa/domain/use_cases/sale/cancel_sale_use_case.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'providers.g.dart';
@@ -113,6 +121,10 @@ UpdateProduct updateProduct(ref) =>
 @riverpod
 DeleteProduct deleteProduct(ref) =>
     DeleteProduct(ref.watch(productRepositoryProvider));
+
+@riverpod
+SearchProducts searchProducts(ref) =>
+    SearchProducts(ref.watch(productRepositoryProvider));
 
 // Inventory Movement Providers
 @riverpod
@@ -198,3 +210,29 @@ SearchCustomersUseCase searchCustomersUseCase(ref) =>
 @riverpod
 GenerateNextCustomerCodeUseCase generateNextCustomerCodeUseCase(ref) =>
     GenerateNextCustomerCodeUseCase(ref.watch(customerRepositoryProvider));
+
+// --- Sale Providers ---
+
+@riverpod
+SaleRepository saleRepository(ref) =>
+    SaleRepositoryImpl(ref.watch(databaseHelperProvider));
+
+@riverpod
+CreateSaleUseCase createSaleUseCase(ref) =>
+    CreateSaleUseCase(ref.watch(saleRepositoryProvider));
+
+@riverpod
+GetSalesUseCase getSalesUseCase(ref) =>
+    GetSalesUseCase(ref.watch(saleRepositoryProvider));
+
+@riverpod
+GetSaleByIdUseCase getSaleByIdUseCase(ref) =>
+    GetSaleByIdUseCase(ref.watch(saleRepositoryProvider));
+
+@riverpod
+GenerateNextSaleNumberUseCase generateNextSaleNumberUseCase(ref) =>
+    GenerateNextSaleNumberUseCase(ref.watch(saleRepositoryProvider));
+
+@riverpod
+CancelSaleUseCase cancelSaleUseCase(ref) =>
+    CancelSaleUseCase(ref.watch(saleRepositoryProvider));

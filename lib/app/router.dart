@@ -20,6 +20,7 @@ import 'package:posventa/presentation/pages/suppliers_page.dart';
 import 'package:posventa/presentation/pages/warehouses_page.dart';
 import 'package:posventa/presentation/pages/inventory_page.dart';
 import 'package:posventa/presentation/pages/customers_page.dart';
+import 'package:posventa/presentation/pages/sales_page.dart';
 import 'package:posventa/presentation/providers/auth_provider.dart';
 import 'package:posventa/presentation/providers/transaction_provider.dart';
 
@@ -125,6 +126,11 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: '/customers',
             pageBuilder: (context, state) =>
                 const NoTransitionPage(child: CustomersPage()),
+          ),
+          GoRoute(
+            path: '/sales',
+            pageBuilder: (context, state) =>
+                const NoTransitionPage(child: SalesPage()),
           ),
         ],
       ),

@@ -745,6 +745,47 @@ final class DeleteProductProvider
 
 String _$deleteProductHash() => r'5850111edda5cac19ef54114f99d4d2be5fcd6a4';
 
+@ProviderFor(searchProducts)
+const searchProductsProvider = SearchProductsProvider._();
+
+final class SearchProductsProvider
+    extends $FunctionalProvider<SearchProducts, SearchProducts, SearchProducts>
+    with $Provider<SearchProducts> {
+  const SearchProductsProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'searchProductsProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$searchProductsHash();
+
+  @$internal
+  @override
+  $ProviderElement<SearchProducts> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  SearchProducts create(Ref ref) {
+    return searchProducts(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(SearchProducts value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<SearchProducts>(value),
+    );
+  }
+}
+
+String _$searchProductsHash() => r'e7a0bddb97037d8060018ebe2cf71717022599bf';
+
 @ProviderFor(inventoryMovementRepository)
 const inventoryMovementRepositoryProvider =
     InventoryMovementRepositoryProvider._();
@@ -1682,3 +1723,279 @@ final class GenerateNextCustomerCodeUseCaseProvider
 
 String _$generateNextCustomerCodeUseCaseHash() =>
     r'551db1bc5936022131f56675aa29316bb8ce10f2';
+
+@ProviderFor(saleRepository)
+const saleRepositoryProvider = SaleRepositoryProvider._();
+
+final class SaleRepositoryProvider
+    extends $FunctionalProvider<SaleRepository, SaleRepository, SaleRepository>
+    with $Provider<SaleRepository> {
+  const SaleRepositoryProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'saleRepositoryProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$saleRepositoryHash();
+
+  @$internal
+  @override
+  $ProviderElement<SaleRepository> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  SaleRepository create(Ref ref) {
+    return saleRepository(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(SaleRepository value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<SaleRepository>(value),
+    );
+  }
+}
+
+String _$saleRepositoryHash() => r'42e3886b205d2aaea015479432c0768b0d5147f4';
+
+@ProviderFor(createSaleUseCase)
+const createSaleUseCaseProvider = CreateSaleUseCaseProvider._();
+
+final class CreateSaleUseCaseProvider
+    extends
+        $FunctionalProvider<
+          CreateSaleUseCase,
+          CreateSaleUseCase,
+          CreateSaleUseCase
+        >
+    with $Provider<CreateSaleUseCase> {
+  const CreateSaleUseCaseProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'createSaleUseCaseProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$createSaleUseCaseHash();
+
+  @$internal
+  @override
+  $ProviderElement<CreateSaleUseCase> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  CreateSaleUseCase create(Ref ref) {
+    return createSaleUseCase(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(CreateSaleUseCase value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<CreateSaleUseCase>(value),
+    );
+  }
+}
+
+String _$createSaleUseCaseHash() => r'3db622103744c3ce938942a65c887ad2610100da';
+
+@ProviderFor(getSalesUseCase)
+const getSalesUseCaseProvider = GetSalesUseCaseProvider._();
+
+final class GetSalesUseCaseProvider
+    extends
+        $FunctionalProvider<GetSalesUseCase, GetSalesUseCase, GetSalesUseCase>
+    with $Provider<GetSalesUseCase> {
+  const GetSalesUseCaseProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'getSalesUseCaseProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$getSalesUseCaseHash();
+
+  @$internal
+  @override
+  $ProviderElement<GetSalesUseCase> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  GetSalesUseCase create(Ref ref) {
+    return getSalesUseCase(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(GetSalesUseCase value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<GetSalesUseCase>(value),
+    );
+  }
+}
+
+String _$getSalesUseCaseHash() => r'b8404b9c68a426df76866da8169c2d0562cc427a';
+
+@ProviderFor(getSaleByIdUseCase)
+const getSaleByIdUseCaseProvider = GetSaleByIdUseCaseProvider._();
+
+final class GetSaleByIdUseCaseProvider
+    extends
+        $FunctionalProvider<
+          GetSaleByIdUseCase,
+          GetSaleByIdUseCase,
+          GetSaleByIdUseCase
+        >
+    with $Provider<GetSaleByIdUseCase> {
+  const GetSaleByIdUseCaseProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'getSaleByIdUseCaseProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$getSaleByIdUseCaseHash();
+
+  @$internal
+  @override
+  $ProviderElement<GetSaleByIdUseCase> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  GetSaleByIdUseCase create(Ref ref) {
+    return getSaleByIdUseCase(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(GetSaleByIdUseCase value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<GetSaleByIdUseCase>(value),
+    );
+  }
+}
+
+String _$getSaleByIdUseCaseHash() =>
+    r'6b492a9e9c8bb815c4434ba9911cc9a2435f02c1';
+
+@ProviderFor(generateNextSaleNumberUseCase)
+const generateNextSaleNumberUseCaseProvider =
+    GenerateNextSaleNumberUseCaseProvider._();
+
+final class GenerateNextSaleNumberUseCaseProvider
+    extends
+        $FunctionalProvider<
+          GenerateNextSaleNumberUseCase,
+          GenerateNextSaleNumberUseCase,
+          GenerateNextSaleNumberUseCase
+        >
+    with $Provider<GenerateNextSaleNumberUseCase> {
+  const GenerateNextSaleNumberUseCaseProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'generateNextSaleNumberUseCaseProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$generateNextSaleNumberUseCaseHash();
+
+  @$internal
+  @override
+  $ProviderElement<GenerateNextSaleNumberUseCase> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  GenerateNextSaleNumberUseCase create(Ref ref) {
+    return generateNextSaleNumberUseCase(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(GenerateNextSaleNumberUseCase value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<GenerateNextSaleNumberUseCase>(
+        value,
+      ),
+    );
+  }
+}
+
+String _$generateNextSaleNumberUseCaseHash() =>
+    r'961dbaf4e486457c812f9b381356b98b10dfece1';
+
+@ProviderFor(cancelSaleUseCase)
+const cancelSaleUseCaseProvider = CancelSaleUseCaseProvider._();
+
+final class CancelSaleUseCaseProvider
+    extends
+        $FunctionalProvider<
+          CancelSaleUseCase,
+          CancelSaleUseCase,
+          CancelSaleUseCase
+        >
+    with $Provider<CancelSaleUseCase> {
+  const CancelSaleUseCaseProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'cancelSaleUseCaseProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$cancelSaleUseCaseHash();
+
+  @$internal
+  @override
+  $ProviderElement<CancelSaleUseCase> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  CancelSaleUseCase create(Ref ref) {
+    return cancelSaleUseCase(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(CancelSaleUseCase value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<CancelSaleUseCase>(value),
+    );
+  }
+}
+
+String _$cancelSaleUseCaseHash() => r'9944252307a4ca1b2a7f8216c41b12ac65fb5bc7';
