@@ -1,3 +1,5 @@
+import 'package:posventa/domain/entities/sale_item_tax.dart';
+
 class SaleItem {
   final int? id;
   final int? saleId;
@@ -27,7 +29,10 @@ class SaleItem {
     required this.costPriceCents,
     this.lotNumber,
     this.productName,
+    this.taxes = const [],
   });
+
+  final List<SaleItemTax> taxes;
 
   double get unitPrice => unitPriceCents / 100.0;
   double get subtotal => subtotalCents / 100.0;

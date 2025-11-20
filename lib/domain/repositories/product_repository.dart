@@ -1,8 +1,9 @@
 import 'package:posventa/domain/entities/product.dart';
 import 'package:posventa/domain/entities/product_tax.dart';
+import 'package:posventa/domain/entities/tax_rate.dart';
 
 abstract class ProductRepository {
-  Future<void> createProduct(Product product);
+  Future<int> createProduct(Product product);
   Future<Product?> getProductById(int id);
   Future<List<Product>> getAllProducts();
   Future<List<Product>> searchProducts(String query);
@@ -12,4 +13,8 @@ abstract class ProductRepository {
   Future<void> addTaxToProduct(ProductTax productTax);
   Future<void> removeTaxFromProduct(int productId, int taxRateId);
   Future<List<ProductTax>> getTaxesForProduct(int productId);
+  Future<List<TaxRate>> getTaxRatesForProduct(int productId);
+
+  Future<bool> isCodeUnique(String code, {int? excludeId});
+  Future<bool> isBarcodeUnique(String barcode, {int? excludeId});
 }

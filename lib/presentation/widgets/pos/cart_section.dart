@@ -205,6 +205,14 @@ class CartSection extends ConsumerWidget {
                                         color: Colors.grey.shade600,
                                       ),
                                     ),
+                                    if (item.taxCents > 0)
+                                      Text(
+                                        '+ Imp: \$${(item.taxCents / 100).toStringAsFixed(2)}',
+                                        style: TextStyle(
+                                          fontSize: 10,
+                                          color: Colors.grey.shade500,
+                                        ),
+                                      ),
                                     Text(
                                       '\$${(item.totalCents / 100).toStringAsFixed(2)}',
                                       style: const TextStyle(

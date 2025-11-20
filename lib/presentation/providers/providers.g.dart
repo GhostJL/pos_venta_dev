@@ -1999,3 +1999,98 @@ final class CancelSaleUseCaseProvider
 }
 
 String _$cancelSaleUseCaseHash() => r'9944252307a4ca1b2a7f8216c41b12ac65fb5bc7';
+
+@ProviderFor(cashSessionRepository)
+const cashSessionRepositoryProvider = CashSessionRepositoryProvider._();
+
+final class CashSessionRepositoryProvider
+    extends
+        $FunctionalProvider<
+          CashSessionRepository,
+          CashSessionRepository,
+          CashSessionRepository
+        >
+    with $Provider<CashSessionRepository> {
+  const CashSessionRepositoryProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'cashSessionRepositoryProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$cashSessionRepositoryHash();
+
+  @$internal
+  @override
+  $ProviderElement<CashSessionRepository> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  CashSessionRepository create(Ref ref) {
+    return cashSessionRepository(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(CashSessionRepository value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<CashSessionRepository>(value),
+    );
+  }
+}
+
+String _$cashSessionRepositoryHash() =>
+    r'27facafcaf569de253a084f81d5eea17d1b4be3d';
+
+@ProviderFor(getCurrentSession)
+const getCurrentSessionProvider = GetCurrentSessionProvider._();
+
+final class GetCurrentSessionProvider
+    extends
+        $FunctionalProvider<
+          GetCurrentSession,
+          GetCurrentSession,
+          GetCurrentSession
+        >
+    with $Provider<GetCurrentSession> {
+  const GetCurrentSessionProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'getCurrentSessionProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$getCurrentSessionHash();
+
+  @$internal
+  @override
+  $ProviderElement<GetCurrentSession> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  GetCurrentSession create(Ref ref) {
+    return getCurrentSession(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(GetCurrentSession value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<GetCurrentSession>(value),
+    );
+  }
+}
+
+String _$getCurrentSessionHash() => r'32cb4df366931b14802aaa665b114d665ad3873d';

@@ -6,7 +6,7 @@ class CreateProduct {
 
   CreateProduct(this.repository);
 
-  Future<void> call(Product product) {
+  Future<int> call(Product product) {
     return repository.createProduct(product);
   }
 }

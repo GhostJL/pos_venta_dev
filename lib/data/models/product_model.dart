@@ -68,7 +68,7 @@ class ProductModel extends Product {
     return {
       'id': id,
       'code': code,
-      'barcode': barcode,
+      'barcode': barcode != null && barcode!.isNotEmpty ? barcode : null,
       'name': name,
       'description': description,
       'department_id': departmentId,

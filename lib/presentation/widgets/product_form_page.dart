@@ -9,6 +9,7 @@ import 'package:posventa/presentation/providers/category_providers.dart';
 import 'package:posventa/presentation/providers/department_providers.dart';
 import 'package:posventa/presentation/providers/supplier_providers.dart';
 import 'package:posventa/presentation/providers/tax_rate_provider.dart';
+import 'package:posventa/presentation/providers/providers.dart'; // For productRepositoryProvider
 import 'package:posventa/app/theme.dart';
 
 class ProductFormPage extends ConsumerStatefulWidget {
@@ -40,6 +41,7 @@ class ProductFormPageState extends ConsumerState<ProductFormPage> {
   bool _isActive = true;
 
   List<ProductTax> _selectedTaxes = [];
+  bool _defaultsInitialized = false;
 
   @override
   void initState() {
@@ -74,7 +76,13 @@ class ProductFormPageState extends ConsumerState<ProductFormPage> {
     _selectedUnit = widget.product?.unitOfMeasure;
     _isSoldByWeight = widget.product?.isSoldByWeight ?? false;
     _isActive = widget.product?.isActive ?? true;
-    _selectedTaxes = widget.product?.productTaxes ?? [];
+
+    // Fix TypeError: Create a new mutable list from the source
+    // This ensures we are working with List<ProductTax> and not a restricted subtype list
+    _selectedTaxes = List<ProductTax>.from(widget.product?.productTaxes ?? []);
+
+    // Initialize flag. If editing (product != null), we consider defaults "initialized" (or not needed)
+    _defaultsInitialized = widget.product != null;
   }
 
   @override
@@ -89,7 +97,7 @@ class ProductFormPageState extends ConsumerState<ProductFormPage> {
     super.dispose();
   }
 
-  void _submit() {
+  Future<void> _submit() async {
     if (_formKey.currentState!.validate()) {
       final costPrice = (double.parse(_costPriceController.text) * 100).toInt();
       final salePrice = (double.parse(_salePriceController.text) * 100).toInt();
@@ -102,6 +110,59 @@ class ProductFormPageState extends ConsumerState<ProductFormPage> {
             ),
           ),
         );
+        return;
+      }
+
+      // Validate Uniqueness
+      final productRepo = ref.read(productRepositoryProvider);
+
+      // Check Code/SKU
+      final isCodeUnique = await productRepo.isCodeUnique(
+        _codeController.text,
+        excludeId: widget.product?.id,
+      );
+      if (!isCodeUnique) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('El Código/SKU ya existe. Debe ser único.'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+        return;
+      }
+
+      // Check Barcode (if provided)
+      if (_barcodeController.text.isNotEmpty) {
+        final isBarcodeUnique = await productRepo.isBarcodeUnique(
+          _barcodeController.text,
+          excludeId: widget.product?.id,
+        );
+        if (!isBarcodeUnique) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('El Código de Barras ya existe. Debe ser único.'),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+          return;
+        }
+      } else {
+        // User requirement: "el producto debe de tener un codigo de barras"
+        // If it's mandatory, we should enforce it here or in validator.
+        // The validator currently doesn't enforce it.
+        // I'll enforce it here if empty.
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('El Código de Barras es requerido.'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
         return;
       }
 
@@ -131,13 +192,42 @@ class ProductFormPageState extends ConsumerState<ProductFormPage> {
         ref.read(productNotifierProvider.notifier).updateProduct(newProduct);
       }
 
-      Navigator.of(context).pop();
+      if (mounted) {
+        Navigator.of(context).pop();
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final taxRatesAsync = ref.watch(taxRateListProvider);
+
+    // Initialize default taxes if needed
+    if (!_defaultsInitialized &&
+        widget.product == null &&
+        taxRatesAsync.hasValue) {
+      final taxRates = taxRatesAsync.value!;
+      // Schedule update to avoid setState during build
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && !_defaultsInitialized) {
+          setState(() {
+            final defaultTaxes = taxRates.where((t) => t.isDefault).toList();
+            for (final tax in defaultTaxes) {
+              if (!_selectedTaxes.any((t) => t.taxRateId == tax.id)) {
+                _selectedTaxes.add(
+                  ProductTax(
+                    taxRateId: tax.id!,
+                    applyOrder: _selectedTaxes.length + 1,
+                  ),
+                );
+              }
+            }
+            _defaultsInitialized = true;
+          });
+        }
+      });
+    }
+
     return Scaffold(
       appBar: AppBar(
         title: Text(
@@ -179,6 +269,7 @@ class ProductFormPageState extends ConsumerState<ProductFormPage> {
                         labelText: 'Código de Barras',
                         prefixIcon: Icon(Icons.qr_code_scanner_rounded),
                       ),
+                      validator: (value) => value!.isEmpty ? 'Requerido' : null,
                     ),
                   ] else
                     Row(
@@ -202,6 +293,8 @@ class ProductFormPageState extends ConsumerState<ProductFormPage> {
                               labelText: 'Código de Barras',
                               prefixIcon: Icon(Icons.qr_code_scanner_rounded),
                             ),
+                            validator: (value) =>
+                                value!.isEmpty ? 'Requerido' : null,
                           ),
                         ),
                       ],
@@ -379,6 +472,7 @@ class ProductFormPageState extends ConsumerState<ProductFormPage> {
                             activeThumbColor: AppTheme.primary,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
+                              side: const BorderSide(color: AppTheme.borders),
                             ),
                             onChanged: (value) =>
                                 setState(() => _isSoldByWeight = value),
@@ -492,6 +586,7 @@ class ProductFormPageState extends ConsumerState<ProductFormPage> {
                     activeThumbColor: AppTheme.success,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
+                      side: const BorderSide(color: AppTheme.borders),
                     ),
                     onChanged: (value) => setState(() => _isActive = value),
                   ),
@@ -573,21 +668,15 @@ class ProductFormPageState extends ConsumerState<ProductFormPage> {
   Widget _buildTaxSelection(List<TaxRate> taxRates) {
     final activeTaxRates = taxRates.where((t) => t.isActive).toList();
     final isExempt = _selectedTaxes.any(
-      (pt) => taxRates.firstWhere((t) => t.id == pt.taxRateId).name == 'Exento',
+      (pt) =>
+          taxRates
+              .firstWhere(
+                (t) => t.id == pt.taxRateId,
+                orElse: () => TaxRate(name: '', code: '', rate: 0),
+              )
+              .name ==
+          'Exento',
     );
-
-    // Ensure default taxes are selected if no taxes are selected yet (e.g. new product)
-    // Or should we enforce them always? The user said "el tax por default debe de ser no deseleccionable".
-    // This implies they must be selected and the checkbox disabled.
-
-    // We need to make sure _selectedTaxes includes default taxes if they are missing?
-    // Or just rely on the UI to show them as checked.
-    // But if they are not in _selectedTaxes, they won't be saved.
-    // So we should probably add them to _selectedTaxes in initState or here if missing.
-    // However, modifying state during build is bad.
-    // Let's just handle the UI logic: if it's default, it's checked and disabled.
-    // And we ensure they are added to the list when saving or when the widget initializes?
-    // Better: In the UI, if it's default, we treat it as selected.
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -604,20 +693,44 @@ class ProductFormPageState extends ConsumerState<ProductFormPage> {
             children: [
               ...activeTaxRates.map((taxRate) {
                 final isDefault = taxRate.isDefault;
-                final isSelected =
-                    _selectedTaxes.any((pt) => pt.taxRateId == taxRate.id) ||
-                    isDefault;
+                final isSelected = _selectedTaxes.any(
+                  (pt) => pt.taxRateId == taxRate.id,
+                );
+
+                final isExemptOption = taxRate.name == 'Exento';
+
+                // Logic for enabling/disabling checkboxes
+                bool isEnabled = true;
+
+                if (isExemptOption) {
+                  // Exempt option is always enabled
+                  isEnabled = true;
+                } else {
+                  if (isExempt) {
+                    // If Exempt is selected, others are disabled
+                    isEnabled = false;
+                  } else {
+                    // If not Exempt, Default taxes are mandatory (cannot be unchecked)
+                    if (isDefault) {
+                      isEnabled = false; // Disabled but checked
+                    } else {
+                      isEnabled = true;
+                    }
+                  }
+                }
 
                 return CheckboxListTile(
-                  title: Text('${taxRate.name} (${taxRate.rate}%)'),
+                  title: Text(
+                    '${taxRate.name} (${(taxRate.rate * 100).toStringAsFixed(2)}%)',
+                  ),
                   value: isSelected,
                   activeColor: AppTheme.primary,
-                  onChanged: isDefault || (isExempt && taxRate.name != 'Exento')
-                      ? null
-                      : (bool? value) {
+                  onChanged: isEnabled
+                      ? (bool? value) {
                           setState(() {
                             if (value == true) {
-                              if (taxRate.name == 'Exento') {
+                              if (isExemptOption) {
+                                // If selecting Exempt, clear all others
                                 _selectedTaxes.clear();
                               }
                               _selectedTaxes.add(
@@ -627,13 +740,34 @@ class ProductFormPageState extends ConsumerState<ProductFormPage> {
                                 ),
                               );
                             } else {
+                              // Unchecking
                               _selectedTaxes.removeWhere(
                                 (pt) => pt.taxRateId == taxRate.id,
                               );
+
+                              if (isExemptOption) {
+                                // If unchecking Exempt, restore default taxes
+                                final defaultTaxes = taxRates
+                                    .where((t) => t.isDefault)
+                                    .toList();
+                                for (final dt in defaultTaxes) {
+                                  if (!_selectedTaxes.any(
+                                    (t) => t.taxRateId == dt.id,
+                                  )) {
+                                    _selectedTaxes.add(
+                                      ProductTax(
+                                        taxRateId: dt.id!,
+                                        applyOrder: _selectedTaxes.length + 1,
+                                      ),
+                                    );
+                                  }
+                                }
+                              }
                             }
                             _updateApplyOrder();
                           });
-                        },
+                        }
+                      : null,
                 );
               }),
             ],

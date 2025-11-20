@@ -14,8 +14,7 @@ class DatabaseHelper {
 
   // Database configuration
   static const _databaseName = "pos.db";
-  static const _databaseVersion =
-      10; // Incremented for new modules (Customers, Sales, Purchases, Cash, Audit)
+  static const _databaseVersion = 11; // Incremented for idx_products_search
 
   // Table names
   static const tableUsers = 'users';
@@ -228,6 +227,12 @@ class DatabaseHelper {
       await _createCashSessionsTable(db);
       await _createCashMovementsTable(db);
       await _createAuditLogsTable(db);
+    }
+    if (oldVersion < 11) {
+      await db.execute('''
+        CREATE INDEX IF NOT EXISTS idx_products_search 
+        ON $tableProducts(name, code, barcode)
+      ''');
     }
   }
 

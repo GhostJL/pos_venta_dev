@@ -1,8 +1,11 @@
 import 'package:posventa/data/datasources/database_helper.dart';
+import 'package:sqflite/sqflite.dart';
 import 'package:posventa/data/models/product_model.dart';
 import 'package:posventa/data/models/product_tax_model.dart';
 import 'package:posventa/domain/entities/product.dart';
 import 'package:posventa/domain/entities/product_tax.dart';
+import 'package:posventa/domain/entities/tax_rate.dart';
+import 'package:posventa/data/models/tax_rate_model.dart';
 import 'package:posventa/domain/repositories/product_repository.dart';
 
 class ProductRepositoryImpl implements ProductRepository {
@@ -11,10 +14,45 @@ class ProductRepositoryImpl implements ProductRepository {
   ProductRepositoryImpl(this.databaseHelper);
 
   @override
-  Future<void> createProduct(Product product) async {
+  Future<int> createProduct(Product product) async {
     final db = await databaseHelper.database;
     final productModel = ProductModel.fromEntity(product);
-    await db.insert(DatabaseHelper.tableProducts, productModel.toMap());
+
+    // Insert product and get its ID
+    final productId = await db.insert(
+      DatabaseHelper.tableProducts,
+      productModel.toMap(),
+    );
+
+    // Save selected taxes from the form
+    if (product.productTaxes != null && product.productTaxes!.isNotEmpty) {
+      for (final tax in product.productTaxes!) {
+        await db.insert(DatabaseHelper.tableProductTaxes, {
+          'product_id': productId,
+          'tax_rate_id': tax.taxRateId,
+          'apply_order': tax.applyOrder,
+        });
+      }
+    } else {
+      // If no taxes selected, assign default tax (IVA_16)
+      final defaultTaxResult = await db.query(
+        DatabaseHelper.tableTaxRates,
+        where: 'is_default = ? AND is_active = ?',
+        whereArgs: [1, 1],
+        limit: 1,
+      );
+
+      if (defaultTaxResult.isNotEmpty) {
+        final defaultTaxId = defaultTaxResult.first['id'] as int;
+        await db.insert(DatabaseHelper.tableProductTaxes, {
+          'product_id': productId,
+          'tax_rate_id': defaultTaxId,
+          'apply_order': 1,
+        });
+      }
+    }
+
+    return productId;
   }
 
   @override
@@ -36,7 +74,16 @@ class ProductRepositoryImpl implements ProductRepository {
       FROM ${DatabaseHelper.tableProducts} p
       WHERE p.is_active = 1
     ''');
-    return maps.map((map) => ProductModel.fromMap(map)).toList();
+
+    // Load taxes for each product
+    final products = <Product>[];
+    for (final map in maps) {
+      final product = ProductModel.fromMap(map);
+      final taxes = await getTaxesForProduct(product.id!);
+      products.add(product.copyWith(productTaxes: taxes.cast<ProductTax>()));
+    }
+
+    return products;
   }
 
   @override
@@ -54,7 +101,16 @@ class ProductRepositoryImpl implements ProductRepository {
     ''',
       ['%$query%', '%$query%', '%$query%'],
     );
-    return maps.map((map) => ProductModel.fromMap(map)).toList();
+
+    // Load taxes for each product
+    final products = <Product>[];
+    for (final map in maps) {
+      final product = ProductModel.fromMap(map);
+      final taxes = await getTaxesForProduct(product.id!);
+      products.add(product.copyWith(productTaxes: taxes.cast<ProductTax>()));
+    }
+
+    return products;
   }
 
   @override
@@ -68,9 +124,13 @@ class ProductRepositoryImpl implements ProductRepository {
     ''',
       [id],
     );
+
     if (maps.isNotEmpty) {
-      return ProductModel.fromMap(maps.first);
+      final product = ProductModel.fromMap(maps.first);
+      final taxes = await getTaxesForProduct(id);
+      return product.copyWith(productTaxes: taxes.cast<ProductTax>());
     }
+
     return null;
   }
 
@@ -78,12 +138,34 @@ class ProductRepositoryImpl implements ProductRepository {
   Future<void> updateProduct(Product product) async {
     final db = await databaseHelper.database;
     final productModel = ProductModel.fromEntity(product);
-    await db.update(
-      DatabaseHelper.tableProducts,
-      productModel.toMap(),
-      where: 'id = ?',
-      whereArgs: [product.id],
-    );
+
+    await db.transaction((txn) async {
+      // Update product data
+      await txn.update(
+        DatabaseHelper.tableProducts,
+        productModel.toMap(),
+        where: 'id = ?',
+        whereArgs: [product.id],
+      );
+
+      // Delete existing taxes
+      await txn.delete(
+        DatabaseHelper.tableProductTaxes,
+        where: 'product_id = ?',
+        whereArgs: [product.id],
+      );
+
+      // Insert updated taxes
+      if (product.productTaxes != null && product.productTaxes!.isNotEmpty) {
+        for (final tax in product.productTaxes!) {
+          await txn.insert(DatabaseHelper.tableProductTaxes, {
+            'product_id': product.id,
+            'tax_rate_id': tax.taxRateId,
+            'apply_order': tax.applyOrder,
+          });
+        }
+      }
+    });
   }
 
   @override
@@ -112,5 +194,63 @@ class ProductRepositoryImpl implements ProductRepository {
       where: 'product_id = ? AND tax_rate_id = ?',
       whereArgs: [productId, taxRateId],
     );
+  }
+
+  @override
+  Future<List<TaxRate>> getTaxRatesForProduct(int productId) async {
+    final db = await databaseHelper.database;
+    final result = await db.rawQuery(
+      '''
+      SELECT tr.* 
+      FROM ${DatabaseHelper.tableTaxRates} tr
+      JOIN ${DatabaseHelper.tableProductTaxes} pt ON tr.id = pt.tax_rate_id
+      WHERE pt.product_id = ?
+    ''',
+      [productId],
+    );
+
+    return result.map((map) => TaxRateModel.fromJson(map)).toList();
+  }
+
+  @override
+  Future<bool> isCodeUnique(String code, {int? excludeId}) async {
+    final db = await databaseHelper.database;
+    final List<Object> whereArgs = [code];
+    var whereClause = 'code = ?';
+
+    if (excludeId != null) {
+      whereClause += ' AND id != ?';
+      whereArgs.add(excludeId);
+    }
+
+    final count = Sqflite.firstIntValue(
+      await db.rawQuery(
+        'SELECT COUNT(*) FROM ${DatabaseHelper.tableProducts} WHERE $whereClause',
+        whereArgs,
+      ),
+    );
+
+    return count == 0;
+  }
+
+  @override
+  Future<bool> isBarcodeUnique(String barcode, {int? excludeId}) async {
+    final db = await databaseHelper.database;
+    final List<Object> whereArgs = [barcode];
+    var whereClause = 'barcode = ?';
+
+    if (excludeId != null) {
+      whereClause += ' AND id != ?';
+      whereArgs.add(excludeId);
+    }
+
+    final count = Sqflite.firstIntValue(
+      await db.rawQuery(
+        'SELECT COUNT(*) FROM ${DatabaseHelper.tableProducts} WHERE $whereClause',
+        whereArgs,
+      ),
+    );
+
+    return count == 0;
   }
 }

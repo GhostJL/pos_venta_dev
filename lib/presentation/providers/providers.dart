@@ -49,6 +49,10 @@ import 'package:posventa/domain/use_cases/sale/get_sales_use_case.dart';
 import 'package:posventa/domain/use_cases/sale/get_sale_by_id_use_case.dart';
 import 'package:posventa/domain/use_cases/sale/generate_next_sale_number_use_case.dart';
 import 'package:posventa/domain/use_cases/sale/cancel_sale_use_case.dart';
+import 'package:posventa/domain/repositories/cash_session_repository.dart';
+import 'package:posventa/data/repositories/cash_session_repository_impl.dart';
+import 'package:posventa/domain/use_cases/cash_movement/get_current_session.dart';
+import 'package:posventa/presentation/providers/auth_provider.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'providers.g.dart';
@@ -236,3 +240,19 @@ GenerateNextSaleNumberUseCase generateNextSaleNumberUseCase(ref) =>
 @riverpod
 CancelSaleUseCase cancelSaleUseCase(ref) =>
     CancelSaleUseCase(ref.watch(saleRepositoryProvider));
+
+// --- Cash Session Providers ---
+
+@riverpod
+CashSessionRepository cashSessionRepository(ref) {
+  final authState = ref.watch(authProvider);
+  final user = authState.user;
+  if (user == null) {
+    throw Exception('User not authenticated');
+  }
+  return CashSessionRepositoryImpl(ref.watch(databaseHelperProvider), user.id!);
+}
+
+@riverpod
+GetCurrentSession getCurrentSession(ref) =>
+    GetCurrentSession(ref.watch(cashSessionRepositoryProvider));

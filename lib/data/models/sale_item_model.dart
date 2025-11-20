@@ -1,4 +1,5 @@
 import 'package:posventa/domain/entities/sale_item.dart';
+import 'package:posventa/domain/entities/sale_item_tax.dart';
 
 class SaleItemModel extends SaleItem {
   const SaleItemModel({
@@ -15,6 +16,7 @@ class SaleItemModel extends SaleItem {
     required super.costPriceCents,
     super.lotNumber,
     super.productName,
+    super.taxes,
   });
 
   factory SaleItemModel.fromJson(Map<String, dynamic> json) {
@@ -67,6 +69,41 @@ class SaleItemModel extends SaleItem {
       costPriceCents: item.costPriceCents,
       lotNumber: item.lotNumber,
       productName: item.productName,
+      taxes: item.taxes,
+    );
+  }
+
+  SaleItemModel copyWith({
+    int? id,
+    int? saleId,
+    int? productId,
+    double? quantity,
+    String? unitOfMeasure,
+    int? unitPriceCents,
+    int? discountCents,
+    int? subtotalCents,
+    int? taxCents,
+    int? totalCents,
+    int? costPriceCents,
+    String? lotNumber,
+    String? productName,
+    List<SaleItemTax>? taxes,
+  }) {
+    return SaleItemModel(
+      id: id ?? this.id,
+      saleId: saleId ?? this.saleId,
+      productId: productId ?? this.productId,
+      quantity: quantity ?? this.quantity,
+      unitOfMeasure: unitOfMeasure ?? this.unitOfMeasure,
+      unitPriceCents: unitPriceCents ?? this.unitPriceCents,
+      discountCents: discountCents ?? this.discountCents,
+      subtotalCents: subtotalCents ?? this.subtotalCents,
+      taxCents: taxCents ?? this.taxCents,
+      totalCents: totalCents ?? this.totalCents,
+      costPriceCents: costPriceCents ?? this.costPriceCents,
+      lotNumber: lotNumber ?? this.lotNumber,
+      productName: productName ?? this.productName,
+      taxes: taxes ?? this.taxes,
     );
   }
 }

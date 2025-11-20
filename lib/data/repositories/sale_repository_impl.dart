@@ -1,6 +1,7 @@
 import 'package:posventa/data/datasources/database_helper.dart';
 import 'package:posventa/data/models/sale_item_model.dart';
 import 'package:posventa/data/models/sale_model.dart';
+import 'package:posventa/data/models/sale_item_tax_model.dart';
 import 'package:posventa/data/models/sale_payment_model.dart';
 import 'package:posventa/domain/entities/sale.dart';
 import 'package:posventa/domain/repositories/sale_repository.dart';
@@ -59,7 +60,19 @@ class SaleRepositoryImpl implements SaleRepository {
         [saleId],
       );
 
-      final items = itemsResult.map((e) => SaleItemModel.fromJson(e)).toList();
+      final items = <SaleItemModel>[];
+      for (final itemData in itemsResult) {
+        final itemId = itemData['id'] as int;
+        final taxesResult = await db.query(
+          DatabaseHelper.tableSaleItemTaxes,
+          where: 'sale_item_id = ?',
+          whereArgs: [itemId],
+        );
+        final taxes = taxesResult
+            .map((e) => SaleItemTaxModel.fromJson(e))
+            .toList();
+        items.add(SaleItemModel.fromJson(itemData).copyWith(taxes: taxes));
+      }
 
       final sale = SaleModel.fromJson(saleData).copyWith(items: items);
       sales.add(sale);
@@ -98,7 +111,19 @@ class SaleRepositoryImpl implements SaleRepository {
       [id],
     );
 
-    final items = itemsResult.map((e) => SaleItemModel.fromJson(e)).toList();
+    final items = <SaleItemModel>[];
+    for (final itemData in itemsResult) {
+      final itemId = itemData['id'] as int;
+      final taxesResult = await db.query(
+        DatabaseHelper.tableSaleItemTaxes,
+        where: 'sale_item_id = ?',
+        whereArgs: [itemId],
+      );
+      final taxes = taxesResult
+          .map((e) => SaleItemTaxModel.fromJson(e))
+          .toList();
+      items.add(SaleItemModel.fromJson(itemData).copyWith(taxes: taxes));
+    }
 
     // Get Payments
     final paymentsResult = await db.query(
@@ -148,7 +173,18 @@ class SaleRepositoryImpl implements SaleRepository {
         // Ensure saleId is set
         final itemMap = itemModel.toMap();
         itemMap['sale_id'] = saleId;
-        await txn.insert(DatabaseHelper.tableSaleItems, itemMap);
+        final saleItemId = await txn.insert(
+          DatabaseHelper.tableSaleItems,
+          itemMap,
+        );
+
+        // Insert Item Taxes
+        for (final tax in item.taxes) {
+          final taxModel = SaleItemTaxModel.fromEntity(tax);
+          final taxMap = taxModel.toMap();
+          taxMap['sale_item_id'] = saleItemId;
+          await txn.insert(DatabaseHelper.tableSaleItemTaxes, taxMap);
+        }
 
         // Update Inventory (Decrease stock)
         // Note: This assumes standard deduction. Logic might be more complex if tracking lots.
