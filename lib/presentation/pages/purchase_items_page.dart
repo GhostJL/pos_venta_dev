@@ -162,28 +162,24 @@ class _PurchaseItemsPageState extends ConsumerState<PurchaseItemsPage> {
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            ListTile(
+            RadioListTile<String>(
               title: const Text('Todos'),
-              leading: Radio<String>(
-                value: 'all',
-                groupValue: _filterType,
-                onChanged: (value) {
-                  setState(() => _filterType = value!);
-                  Navigator.pop(context);
-                },
-              ),
+              value: 'all',
+              groupValue: _filterType,
+              onChanged: (value) {
+                setState(() => _filterType = value!);
+                Navigator.pop(context);
+              },
             ),
-            ListTile(
+            RadioListTile<String>(
               title: const Text('Recientes (últimos 50)'),
-              leading: Radio<String>(
-                value: 'recent',
-                groupValue: _filterType,
-                onChanged: (value) {
-                  setState(() => _filterType = value!);
-                  Navigator.pop(context);
-                  // TODO: Implement recent filter
-                },
-              ),
+              value: 'recent',
+              groupValue: _filterType,
+              onChanged: (value) {
+                setState(() => _filterType = value!);
+                Navigator.pop(context);
+                // TODO: Implement recent filter
+              },
             ),
           ],
         ),

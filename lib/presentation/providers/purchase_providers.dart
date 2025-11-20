@@ -34,6 +34,22 @@ class PurchaseNotifier extends _$PurchaseNotifier {
       return ref.read(getPurchasesUseCaseProvider).call();
     });
   }
+
+  /// Receive a purchase and update inventory
+  /// This triggers:
+  /// 1. Purchase status update to 'completed'
+  /// 2. Inventory stock increase
+  /// 3. Kardex movement creation
+  /// 4. Product cost update (Last Cost policy)
+  Future<void> receivePurchase(int purchaseId, int receivedBy) async {
+    state = const AsyncValue.loading();
+    state = await AsyncValue.guard(() async {
+      await ref
+          .read(receivePurchaseUseCaseProvider)
+          .call(purchaseId, receivedBy);
+      return ref.read(getPurchasesUseCaseProvider).call();
+    });
+  }
 }
 
 @riverpod

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:posventa/domain/entities/purchase.dart';
 import 'package:posventa/domain/entities/purchase_item.dart';
+import 'package:posventa/presentation/providers/auth_provider.dart';
 import 'package:posventa/presentation/providers/purchase_providers.dart';
 
 class PurchaseDetailPage extends ConsumerWidget {
@@ -15,7 +16,27 @@ class PurchaseDetailPage extends ConsumerWidget {
     final purchaseAsync = ref.watch(purchaseByIdProvider(purchaseId));
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Detalle de Compra')),
+      appBar: AppBar(
+        title: const Text('Detalle de Compra'),
+        actions: [
+          // Show receive button only for pending purchases
+          purchaseAsync.when(
+            data: (purchase) {
+              if (purchase != null &&
+                  purchase.status == PurchaseStatus.pending) {
+                return IconButton(
+                  icon: const Icon(Icons.check_circle),
+                  tooltip: 'Recibir Compra',
+                  onPressed: () => _receivePurchase(context, ref, purchase),
+                );
+              }
+              return const SizedBox.shrink();
+            },
+            loading: () => const SizedBox.shrink(),
+            error: (_, __) => const SizedBox.shrink(),
+          ),
+        ],
+      ),
       body: purchaseAsync.when(
         data: (purchase) {
           if (purchase == null) {
@@ -27,6 +48,68 @@ class PurchaseDetailPage extends ConsumerWidget {
         error: (error, stack) => Center(child: Text('Error: $error')),
       ),
     );
+  }
+
+  Future<void> _receivePurchase(
+    BuildContext context,
+    WidgetRef ref,
+    Purchase purchase,
+  ) async {
+    // Confirm reception
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Recibir Compra'),
+        content: Text(
+          '¿Confirma que ha recibido la mercancía de la compra ${purchase.purchaseNumber}?\n\n'
+          'Esta acción:\n'
+          '• Actualizará el inventario\n'
+          '• Registrará movimientos en el Kardex\n'
+          '• Actualizará los costos de los productos',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancelar'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Confirmar Recepción'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+
+    try {
+      final user = ref.read(authProvider).user;
+      if (user == null) {
+        throw Exception('Usuario no autenticado');
+      }
+
+      await ref
+          .read(purchaseProvider.notifier)
+          .receivePurchase(purchase.id!, user.id!);
+
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Compra recibida exitosamente'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error al recibir compra: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 }
 

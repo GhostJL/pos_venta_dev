@@ -99,8 +99,7 @@ class _PurchaseFormPageState extends ConsumerState<PurchaseFormPage> {
       requestedBy: user.id!,
       createdAt: DateTime.now(),
       items: _items,
-      status: PurchaseStatus
-          .completed, // Auto-complete for now, or add logic for pending
+      status: PurchaseStatus.pending, // Start as pending, complete on reception
     );
 
     try {
