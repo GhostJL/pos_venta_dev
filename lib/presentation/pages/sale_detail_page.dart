@@ -20,7 +20,6 @@ class SaleDetailPage extends ConsumerWidget {
           IconButton(
             icon: const Icon(Icons.print),
             onPressed: () {
-              // TODO: Implement print receipt
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
                   content: Text('Función de impresión próximamente'),

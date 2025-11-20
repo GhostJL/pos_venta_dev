@@ -26,6 +26,9 @@ import 'package:posventa/presentation/pages/sale_detail_page.dart';
 import 'package:posventa/presentation/pages/purchases_page.dart';
 import 'package:posventa/presentation/pages/purchase_detail_page.dart';
 import 'package:posventa/presentation/pages/purchase_form_page.dart';
+import 'package:posventa/presentation/pages/purchase_items_page.dart';
+import 'package:posventa/presentation/pages/purchase_item_detail_page.dart';
+import 'package:posventa/presentation/pages/purchase_item_form_page.dart';
 import 'package:posventa/presentation/providers/auth_provider.dart';
 import 'package:posventa/presentation/providers/transaction_provider.dart';
 
@@ -163,6 +166,24 @@ final routerProvider = Provider<GoRouter>((ref) {
               }
               return NoTransitionPage(
                 child: PurchaseDetailPage(purchaseId: int.parse(id)),
+              );
+            },
+          ),
+          // Purchase Items Routes
+          GoRoute(
+            path: '/purchase-items',
+            pageBuilder: (context, state) =>
+                const NoTransitionPage(child: PurchaseItemsPage()),
+          ),
+          GoRoute(
+            path: '/purchase-items/:id',
+            pageBuilder: (context, state) {
+              final id = state.pathParameters['id']!;
+              if (id == 'new') {
+                return const NoTransitionPage(child: PurchaseItemFormPage());
+              }
+              return NoTransitionPage(
+                child: PurchaseItemDetailPage(itemId: int.parse(id)),
               );
             },
           ),

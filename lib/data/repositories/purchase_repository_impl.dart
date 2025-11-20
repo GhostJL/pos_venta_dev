@@ -70,9 +70,6 @@ class PurchaseRepositoryImpl implements PurchaseRepository {
     final List<PurchaseItem> items = itemsResult
         .map((json) => PurchaseItemModel.fromJson(json))
         .toList();
-
-    print('Fetched purchase $id with ${items.length} items');
-
     return PurchaseModel.fromJson(purchaseData).copyWith(items: items);
   }
 
@@ -88,7 +85,6 @@ class PurchaseRepositoryImpl implements PurchaseRepository {
 
       for (final item in purchase.items) {
         final itemModel = PurchaseItemModel.fromEntity(item);
-        print('Saving item: ${itemModel.toMap()}');
         await txn.insert(
           DatabaseHelper.tablePurchaseItems,
           itemModel.toMap()
@@ -96,8 +92,6 @@ class PurchaseRepositoryImpl implements PurchaseRepository {
             ..['purchase_id'] = purchaseId,
         );
       }
-      print('Saved purchase $purchaseId with ${purchase.items.length} items');
-
       return purchaseId;
     });
   }

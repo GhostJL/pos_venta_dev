@@ -147,7 +147,7 @@ class _PurchaseFormPageState extends ConsumerState<PurchaseFormPage> {
                       children: [
                         Expanded(
                           child: DropdownButtonFormField<Supplier>(
-                            value: _selectedSupplier,
+                            initialValue: _selectedSupplier,
                             decoration: const InputDecoration(
                               labelText: 'Proveedor',
                               border: OutlineInputBorder(),
@@ -173,7 +173,7 @@ class _PurchaseFormPageState extends ConsumerState<PurchaseFormPage> {
                         const SizedBox(width: 16),
                         Expanded(
                           child: DropdownButtonFormField<Warehouse>(
-                            value: _selectedWarehouse,
+                            initialValue: _selectedWarehouse,
                             decoration: const InputDecoration(
                               labelText: 'Almacén Destino',
                               border: OutlineInputBorder(),
@@ -317,7 +317,7 @@ class _PurchaseFormPageState extends ConsumerState<PurchaseFormPage> {
                 color: Theme.of(context).colorScheme.surface,
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
+                    color: Colors.black.withAlpha(100),
                     blurRadius: 4,
                     offset: const Offset(0, -2),
                   ),
@@ -405,7 +405,7 @@ class _AddItemDialogState extends ConsumerState<_AddItemDialog> {
             mainAxisSize: MainAxisSize.min,
             children: [
               DropdownButtonFormField<Product>(
-                value: _selectedProduct,
+                initialValue: _selectedProduct,
                 decoration: const InputDecoration(
                   labelText: 'Producto',
                   border: OutlineInputBorder(),
