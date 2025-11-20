@@ -151,7 +151,7 @@ class _SaleCard extends StatelessWidget {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: InkWell(
         onTap: () {
-          context.go('/sale-detail/${sale.id}');
+          context.push('/sale-detail/${sale.id}');
         },
         borderRadius: BorderRadius.circular(12),
         child: Padding(
