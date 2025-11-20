@@ -101,6 +101,13 @@ class SideMenu extends ConsumerWidget {
                   path: '/inventory',
                   currentPath: currentPath,
                 ),
+                _buildDrawerItem(
+                  context: context,
+                  icon: Icons.people_rounded,
+                  title: 'Clientes',
+                  path: '/customers',
+                  currentPath: currentPath,
+                ),
               ],
             ),
           ),
