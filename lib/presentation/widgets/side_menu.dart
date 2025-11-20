@@ -115,6 +115,13 @@ class SideMenu extends ConsumerWidget {
                   path: '/sales',
                   currentPath: currentPath,
                 ),
+                _buildDrawerItem(
+                  context: context,
+                  icon: Icons.receipt_long,
+                  title: 'Historial de Ventas',
+                  path: '/sales-history',
+                  currentPath: currentPath,
+                ),
               ],
             ),
           ),

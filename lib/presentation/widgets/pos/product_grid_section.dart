@@ -17,6 +17,15 @@ class _ProductGridSectionState extends ConsumerState<ProductGridSection> {
   final TextEditingController _searchController = TextEditingController();
 
   @override
+  void initState() {
+    super.initState();
+    // Reload products when this widget is shown
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(productListProvider.notifier).reload();
+    });
+  }
+
+  @override
   void dispose() {
     _searchController.dispose();
     super.dispose();

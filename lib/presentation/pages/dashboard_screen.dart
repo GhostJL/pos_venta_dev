@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:posventa/app/theme.dart';
 import 'package:posventa/presentation/widgets/dashboard_card.dart';
@@ -132,32 +133,40 @@ class DashboardScreen extends StatelessWidget {
   Widget _buildQuickAccessSection(BuildContext context, bool isSmallScreen) {
     final actionCards = [
       DashboardCard(
+        title: 'Punto de Venta',
+        value: 'Iniciar Venta',
+        icon: Icons.point_of_sale,
+        iconColor: AppTheme.primary,
+        onTap: () {
+          context.go('/sales');
+        },
+      ),
+      DashboardCard(
+        title: 'Historial de Ventas',
+        value: 'Ver Ventas',
+        icon: Icons.receipt_long,
+        iconColor: Colors.green.shade600,
+        onTap: () {
+          context.go('/sales-history');
+        },
+      ),
+      DashboardCard(
         title: 'Gestionar Inventario',
         value: 'Productos y Stock',
         icon: Icons.inventory_2_rounded,
-        iconColor: AppTheme.primary,
-        onTap: () {},
+        iconColor: Colors.orange.shade600,
+        onTap: () {
+          context.go('/inventory');
+        },
       ),
       DashboardCard(
-        title: 'Gestionar Equipo',
-        value: 'Usuarios y Permisos',
+        title: 'Clientes',
+        value: 'Gestionar Clientes',
         icon: Icons.people_alt_rounded,
-        iconColor: Colors.deepOrange.shade600,
-        onTap: () {},
-      ),
-      DashboardCard(
-        title: 'Reportes de Ventas',
-        value: 'Ver Historial',
-        icon: Icons.bar_chart_rounded,
         iconColor: Colors.purple.shade600,
-        onTap: () {},
-      ),
-      DashboardCard(
-        title: 'Configuración',
-        value: 'Tienda y POS',
-        icon: Icons.settings_rounded,
-        iconColor: Colors.grey.shade700,
-        onTap: () {},
+        onTap: () {
+          context.go('/customers');
+        },
       ),
     ];
 

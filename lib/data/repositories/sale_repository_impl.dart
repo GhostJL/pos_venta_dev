@@ -43,7 +43,29 @@ class SaleRepositoryImpl implements SaleRepository {
       ${offset != null ? 'OFFSET $offset' : ''}
     ''', whereArgs);
 
-    return result.map((e) => SaleModel.fromJson(e)).toList();
+    // Load items for each sale
+    final sales = <Sale>[];
+    for (final saleData in result) {
+      final saleId = saleData['id'] as int;
+
+      // Get items
+      final itemsResult = await db.rawQuery(
+        '''
+        SELECT si.*, p.name as product_name
+        FROM ${DatabaseHelper.tableSaleItems} si
+        LEFT JOIN ${DatabaseHelper.tableProducts} p ON si.product_id = p.id
+        WHERE si.sale_id = ?
+      ''',
+        [saleId],
+      );
+
+      final items = itemsResult.map((e) => SaleItemModel.fromJson(e)).toList();
+
+      final sale = SaleModel.fromJson(saleData).copyWith(items: items);
+      sales.add(sale);
+    }
+
+    return sales;
   }
 
   @override

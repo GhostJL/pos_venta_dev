@@ -31,6 +31,10 @@ class ProductNotifier extends StateNotifier<AsyncValue<List<Product>>> {
     state = await AsyncValue.guard(() => _getAllProducts());
   }
 
+  Future<void> reload() async {
+    await _loadProducts();
+  }
+
   Future<void> searchProducts(String query) async {
     if (query.isEmpty) {
       await _loadProducts();
