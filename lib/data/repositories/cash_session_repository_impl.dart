@@ -42,23 +42,94 @@ class CashSessionRepositoryImpl implements CashSessionRepository {
   ) async {
     final db = await _databaseHelper.database;
     final now = DateTime.now();
-    final data = {
-      'closing_balance_cents': closingBalanceCents,
-      'status': 'closed',
-      'closed_at': now.toIso8601String(),
-    };
-    await db.update(
-      'cash_sessions',
-      data,
-      where: 'id = ? AND user_id = ?', // Ensure user owns the session
-      whereArgs: [sessionId, _userId],
-    );
-    final updatedData = await db.query(
-      'cash_sessions',
-      where: 'id = ?',
-      whereArgs: [sessionId],
-    );
-    return CashSessionModel.fromMap(updatedData.first);
+
+    return await db.transaction((txn) async {
+      // 1. Obtener la sesión actual
+      final sessionResult = await txn.query(
+        'cash_sessions',
+        where: 'id = ? AND user_id = ?',
+        whereArgs: [sessionId, _userId],
+      );
+
+      if (sessionResult.isEmpty) {
+        throw Exception('Sesión no encontrada o no pertenece al usuario');
+      }
+
+      final session = CashSessionModel.fromMap(sessionResult.first);
+
+      // 2. Calcular efectivo esperado
+      // 2a. Sumar pagos en efectivo de ventas realizadas durante la sesión
+      final cashSalesResult = await txn.rawQuery(
+        '''
+        SELECT COALESCE(SUM(sp.amount_cents), 0) as total
+        FROM sale_payments sp
+        INNER JOIN sales s ON sp.sale_id = s.id
+        WHERE s.cashier_id = ?
+          AND sp.payment_method = 'Efectivo'
+          AND s.sale_date >= ?
+          AND s.sale_date <= ?
+          AND s.status = 'completed'
+      ''',
+        [_userId, session.openedAt.toIso8601String(), now.toIso8601String()],
+      );
+
+      final cashFromSales = (cashSalesResult.first['total'] as int?) ?? 0;
+
+      // 2b. Sumar movimientos de efectivo (entradas - salidas)
+      final cashMovementsResult = await txn.rawQuery(
+        '''
+        SELECT COALESCE(SUM(amount_cents), 0) as total
+        FROM cash_movements
+        WHERE cash_session_id = ?
+      ''',
+        [sessionId],
+      );
+
+      final cashMovements = (cashMovementsResult.first['total'] as int?) ?? 0;
+
+      // 3. Calcular balance esperado y diferencia
+      final expectedBalanceCents =
+          session.openingBalanceCents + cashFromSales + cashMovements;
+      final differenceCents = closingBalanceCents - expectedBalanceCents;
+
+      // 4. Actualizar la sesión
+      await txn.update(
+        'cash_sessions',
+        {
+          'closing_balance_cents': closingBalanceCents,
+          'expected_balance_cents': expectedBalanceCents,
+          'difference_cents': differenceCents,
+          'status': 'closed',
+          'closed_at': now.toIso8601String(),
+        },
+        where: 'id = ?',
+        whereArgs: [sessionId],
+      );
+
+      // 5. Registrar en audit_logs
+      await txn.insert('audit_logs', {
+        'table_name': 'cash_sessions',
+        'record_id': sessionId,
+        'action': 'close_session',
+        'user_id': _userId,
+        'username':
+            'user_$_userId', // Se puede mejorar obteniendo el username real
+        'new_values':
+            '{"closing_balance_cents":$closingBalanceCents,'
+            '"expected_balance_cents":$expectedBalanceCents,'
+            '"difference_cents":$differenceCents}',
+        'created_at': now.toIso8601String(),
+      });
+
+      // 6. Obtener y retornar la sesión actualizada
+      final updatedData = await txn.query(
+        'cash_sessions',
+        where: 'id = ?',
+        whereArgs: [sessionId],
+      );
+
+      return CashSessionModel.fromMap(updatedData.first);
+    });
   }
 
   @override

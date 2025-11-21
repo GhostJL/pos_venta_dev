@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:posventa/app/theme.dart';
 import 'package:posventa/domain/entities/user.dart';
 import 'package:posventa/presentation/providers/auth_provider.dart';
+import 'package:posventa/presentation/providers/providers.dart';
 
 class SideMenu extends ConsumerWidget {
   const SideMenu({super.key});
@@ -287,11 +288,46 @@ class SideMenu extends ConsumerWidget {
         border: Border(top: BorderSide(color: AppTheme.borders.withAlpha(100))),
       ),
       child: InkWell(
-        onTap: () {
+        onTap: () async {
           if (Scaffold.of(context).isDrawerOpen) {
             Scaffold.of(context).closeDrawer();
           }
-          ref.read(authProvider.notifier).logout();
+
+          // Verificar si hay sesión de caja abierta
+          final session = await ref
+              .read(getCurrentCashSessionUseCaseProvider)
+              .call();
+
+          if (session != null && context.mounted) {
+            // Mostrar diálogo obligando a cerrar caja
+            showDialog(
+              context: context,
+              builder: (context) => AlertDialog(
+                title: const Text('Caja Abierta'),
+                content: const Text(
+                  'Tienes una sesión de caja abierta.\nDebe cerrarla antes de cerrar sesión.',
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text('Cancelar'),
+                  ),
+                  FilledButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                      context.go('/cash-session-close?intent=logout');
+                    },
+                    style: FilledButton.styleFrom(
+                      backgroundColor: Colors.orange,
+                    ),
+                    child: const Text('Ir a Cerrar Caja'),
+                  ),
+                ],
+              ),
+            );
+          } else {
+            ref.read(authProvider.notifier).logout();
+          }
         },
         borderRadius: BorderRadius.circular(12),
         child: Container(

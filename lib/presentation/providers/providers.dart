@@ -52,6 +52,9 @@ import 'package:posventa/domain/use_cases/sale/cancel_sale_use_case.dart';
 import 'package:posventa/domain/repositories/cash_session_repository.dart';
 import 'package:posventa/data/repositories/cash_session_repository_impl.dart';
 import 'package:posventa/domain/use_cases/cash_movement/get_current_session.dart';
+import 'package:posventa/domain/use_cases/cash_session/open_cash_session_use_case.dart';
+import 'package:posventa/domain/use_cases/cash_session/close_cash_session_use_case.dart';
+import 'package:posventa/domain/use_cases/cash_session/get_current_cash_session_use_case.dart';
 import 'package:posventa/domain/repositories/purchase_repository.dart';
 import 'package:posventa/data/repositories/purchase_repository_impl.dart';
 import 'package:posventa/domain/use_cases/purchase/get_purchases_usecase.dart';
@@ -275,6 +278,23 @@ CashSessionRepository cashSessionRepository(ref) {
 @riverpod
 GetCurrentSession getCurrentSession(ref) =>
     GetCurrentSession(ref.watch(cashSessionRepositoryProvider));
+
+@riverpod
+GetCurrentCashSessionUseCase getCurrentCashSessionUseCase(ref) =>
+    GetCurrentCashSessionUseCase(ref.watch(cashSessionRepositoryProvider));
+
+@riverpod
+OpenCashSessionUseCase openCashSessionUseCase(ref) =>
+    OpenCashSessionUseCase(ref.watch(cashSessionRepositoryProvider));
+
+@riverpod
+CloseCashSessionUseCase closeCashSessionUseCase(ref) =>
+    CloseCashSessionUseCase(ref.watch(cashSessionRepositoryProvider));
+
+@riverpod
+Future<dynamic> currentCashSession(ref) async {
+  return await ref.watch(getCurrentCashSessionUseCaseProvider).call();
+}
 
 // --- Purchase Providers ---
 

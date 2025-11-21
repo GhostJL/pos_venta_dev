@@ -2095,6 +2095,185 @@ final class GetCurrentSessionProvider
 
 String _$getCurrentSessionHash() => r'32cb4df366931b14802aaa665b114d665ad3873d';
 
+@ProviderFor(getCurrentCashSessionUseCase)
+const getCurrentCashSessionUseCaseProvider =
+    GetCurrentCashSessionUseCaseProvider._();
+
+final class GetCurrentCashSessionUseCaseProvider
+    extends
+        $FunctionalProvider<
+          GetCurrentCashSessionUseCase,
+          GetCurrentCashSessionUseCase,
+          GetCurrentCashSessionUseCase
+        >
+    with $Provider<GetCurrentCashSessionUseCase> {
+  const GetCurrentCashSessionUseCaseProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'getCurrentCashSessionUseCaseProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$getCurrentCashSessionUseCaseHash();
+
+  @$internal
+  @override
+  $ProviderElement<GetCurrentCashSessionUseCase> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  GetCurrentCashSessionUseCase create(Ref ref) {
+    return getCurrentCashSessionUseCase(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(GetCurrentCashSessionUseCase value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<GetCurrentCashSessionUseCase>(value),
+    );
+  }
+}
+
+String _$getCurrentCashSessionUseCaseHash() =>
+    r'98544a12457218c3a7087521b443cd7737d465bf';
+
+@ProviderFor(openCashSessionUseCase)
+const openCashSessionUseCaseProvider = OpenCashSessionUseCaseProvider._();
+
+final class OpenCashSessionUseCaseProvider
+    extends
+        $FunctionalProvider<
+          OpenCashSessionUseCase,
+          OpenCashSessionUseCase,
+          OpenCashSessionUseCase
+        >
+    with $Provider<OpenCashSessionUseCase> {
+  const OpenCashSessionUseCaseProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'openCashSessionUseCaseProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$openCashSessionUseCaseHash();
+
+  @$internal
+  @override
+  $ProviderElement<OpenCashSessionUseCase> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  OpenCashSessionUseCase create(Ref ref) {
+    return openCashSessionUseCase(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(OpenCashSessionUseCase value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<OpenCashSessionUseCase>(value),
+    );
+  }
+}
+
+String _$openCashSessionUseCaseHash() =>
+    r'68b51296d4be6325f6e606e6009900ff914be8ee';
+
+@ProviderFor(closeCashSessionUseCase)
+const closeCashSessionUseCaseProvider = CloseCashSessionUseCaseProvider._();
+
+final class CloseCashSessionUseCaseProvider
+    extends
+        $FunctionalProvider<
+          CloseCashSessionUseCase,
+          CloseCashSessionUseCase,
+          CloseCashSessionUseCase
+        >
+    with $Provider<CloseCashSessionUseCase> {
+  const CloseCashSessionUseCaseProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'closeCashSessionUseCaseProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$closeCashSessionUseCaseHash();
+
+  @$internal
+  @override
+  $ProviderElement<CloseCashSessionUseCase> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  CloseCashSessionUseCase create(Ref ref) {
+    return closeCashSessionUseCase(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(CloseCashSessionUseCase value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<CloseCashSessionUseCase>(value),
+    );
+  }
+}
+
+String _$closeCashSessionUseCaseHash() =>
+    r'e8034c2c4d3e82819d4b83c41a2faa31afd39824';
+
+@ProviderFor(currentCashSession)
+const currentCashSessionProvider = CurrentCashSessionProvider._();
+
+final class CurrentCashSessionProvider
+    extends $FunctionalProvider<AsyncValue<dynamic>, dynamic, FutureOr<dynamic>>
+    with $FutureModifier<dynamic>, $FutureProvider<dynamic> {
+  const CurrentCashSessionProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'currentCashSessionProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$currentCashSessionHash();
+
+  @$internal
+  @override
+  $FutureProviderElement<dynamic> $createElement($ProviderPointer pointer) =>
+      $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<dynamic> create(Ref ref) {
+    return currentCashSession(ref);
+  }
+}
+
+String _$currentCashSessionHash() =>
+    r'020890236b6c4f78961a49c79e957ea5124a4128';
+
 @ProviderFor(purchaseRepository)
 const purchaseRepositoryProvider = PurchaseRepositoryProvider._();
 

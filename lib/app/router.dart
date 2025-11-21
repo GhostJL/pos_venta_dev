@@ -10,7 +10,7 @@ import 'package:posventa/presentation/pages/categories_page.dart';
 import 'package:posventa/presentation/pages/dashboard_screen.dart';
 import 'package:posventa/presentation/pages/departments_page.dart';
 import 'package:posventa/presentation/pages/login_page.dart';
-import 'package:posventa/presentation/pages/main_layout.dart';
+import 'package:posventa/presentation/widgets/cash_session_guard.dart';
 import 'package:posventa/presentation/pages/onboarding/add_cashier_form_page.dart';
 import 'package:posventa/presentation/pages/onboarding/add_cashiers_page.dart';
 // Onboarding Pages
@@ -29,6 +29,8 @@ import 'package:posventa/presentation/pages/purchase_form_page.dart';
 import 'package:posventa/presentation/pages/purchase_items_page.dart';
 import 'package:posventa/presentation/pages/purchase_item_detail_page.dart';
 import 'package:posventa/presentation/pages/purchase_item_form_page.dart';
+import 'package:posventa/presentation/pages/cash_session_open_page.dart';
+import 'package:posventa/presentation/pages/cash_session_close_page.dart';
 import 'package:posventa/presentation/providers/auth_provider.dart';
 import 'package:posventa/presentation/providers/transaction_provider.dart';
 
@@ -76,9 +78,22 @@ final routerProvider = Provider<GoRouter>((ref) {
       // Login Route
       GoRoute(path: '/login', builder: (context, state) => const LoginPage()),
 
-      // Main App Routes
+      // Cash Session Routes (standalone, outside main layout)
+      GoRoute(
+        path: '/cash-session-open',
+        builder: (context, state) => const CashSessionOpenPage(),
+      ),
+      GoRoute(
+        path: '/cash-session-close',
+        builder: (context, state) {
+          final intent = state.uri.queryParameters['intent'];
+          return CashSessionClosePage(isLogoutIntent: intent == 'logout');
+        },
+      ),
+
+      // Main App Routes with Cash Session Guard
       ShellRoute(
-        builder: (context, state, child) => MainLayout(child: child),
+        builder: (context, state, child) => CashSessionGuard(child: child),
         routes: [
           GoRoute(
             path: '/', // Admin dashboard
