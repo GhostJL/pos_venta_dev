@@ -10,6 +10,7 @@ import 'package:posventa/presentation/providers/product_provider.dart';
 import 'package:posventa/presentation/providers/supplier_providers.dart';
 import 'package:posventa/core/constants/permission_constants.dart';
 import 'package:posventa/presentation/providers/permission_provider.dart';
+import 'package:posventa/presentation/widgets/barcode_scanner_widget.dart';
 
 class ProductsPage extends ConsumerStatefulWidget {
   const ProductsPage({super.key});
@@ -25,6 +26,7 @@ class ProductsPageState extends ConsumerState<ProductsPage> {
   int? _brandFilter;
   int? _supplierFilter;
   String _sortOrder = 'name';
+  final TextEditingController _searchController = TextEditingController();
 
   int get _activeFilterCount {
     int count = 0;
@@ -33,6 +35,34 @@ class ProductsPageState extends ConsumerState<ProductsPage> {
     if (_brandFilter != null) count++;
     if (_supplierFilter != null) count++;
     return count;
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  void _openScanner() async {
+    final result = await Navigator.push<String>(
+      context,
+      MaterialPageRoute(
+        builder: (context) => BarcodeScannerWidget(
+          title: 'Buscar Producto',
+          hint: 'Escanea el código de barras del producto',
+          onBarcodeScanned: (context, barcode) {
+            Navigator.pop(context, barcode);
+          },
+        ),
+      ),
+    );
+
+    if (result != null && mounted) {
+      setState(() {
+        _searchController.text = result;
+        _searchQuery = result;
+      });
+    }
   }
 
   @override
@@ -81,16 +111,38 @@ class ProductsPageState extends ConsumerState<ProductsPage> {
         child: Column(
           children: [
             const SizedBox(height: 24),
-            TextField(
-              decoration: const InputDecoration(
-                hintText: 'Buscar por nombre, código o descripción',
-                prefixIcon: Icon(Icons.search_rounded),
-              ),
-              onChanged: (value) {
-                setState(() {
-                  _searchQuery = value;
-                });
-              },
+            Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _searchController,
+                    decoration: const InputDecoration(
+                      hintText: 'Buscar por nombre, código o código de barras',
+                      prefixIcon: Icon(Icons.search_rounded),
+                    ),
+                    onChanged: (value) {
+                      setState(() {
+                        _searchQuery = value;
+                      });
+                    },
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Container(
+                  decoration: BoxDecoration(
+                    color: AppTheme.primary,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: IconButton(
+                    icon: const Icon(
+                      Icons.qr_code_scanner,
+                      color: Colors.white,
+                    ),
+                    onPressed: _openScanner,
+                    tooltip: 'Escanear código',
+                  ),
+                ),
+              ],
             ),
             const SizedBox(height: 16),
             _buildActiveFilters(),
@@ -355,6 +407,7 @@ class ProductsPageState extends ConsumerState<ProductsPage> {
       return (_searchQuery.isEmpty ||
               p.name.toLowerCase().contains(searchLower) ||
               p.code.toLowerCase().contains(searchLower) ||
+              (p.barcode?.toLowerCase().contains(searchLower) ?? false) ||
               (p.description?.toLowerCase().contains(searchLower) ?? false)) &&
           (_departmentFilter == null || p.departmentId == _departmentFilter) &&
           (_categoryFilter == null || p.categoryId == _categoryFilter) &&

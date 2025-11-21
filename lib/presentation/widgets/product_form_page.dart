@@ -11,6 +11,7 @@ import 'package:posventa/presentation/providers/supplier_providers.dart';
 import 'package:posventa/presentation/providers/tax_rate_provider.dart';
 import 'package:posventa/presentation/providers/providers.dart'; // For productRepositoryProvider
 import 'package:posventa/app/theme.dart';
+import 'package:posventa/presentation/widgets/barcode_scanner_widget.dart';
 
 class ProductFormPage extends ConsumerStatefulWidget {
   final Product? product;
@@ -95,6 +96,27 @@ class ProductFormPageState extends ConsumerState<ProductFormPage> {
     _salePriceController.dispose();
     _wholesalePriceController.dispose();
     super.dispose();
+  }
+
+  void _openBarcodeScanner() async {
+    final result = await Navigator.push<String>(
+      context,
+      MaterialPageRoute(
+        builder: (context) => BarcodeScannerWidget(
+          title: 'Escanear Código de Barras',
+          hint: 'Escanea el código de barras del producto',
+          onBarcodeScanned: (context, barcode) {
+            Navigator.pop(context, barcode);
+          },
+        ),
+      ),
+    );
+
+    if (result != null && mounted) {
+      setState(() {
+        _barcodeController.text = result;
+      });
+    }
   }
 
   Future<void> _submit() async {
@@ -265,9 +287,17 @@ class ProductFormPageState extends ConsumerState<ProductFormPage> {
                     const SizedBox(height: 16),
                     TextFormField(
                       controller: _barcodeController,
-                      decoration: const InputDecoration(
+                      decoration: InputDecoration(
                         labelText: 'Código de Barras',
-                        prefixIcon: Icon(Icons.qr_code_scanner_rounded),
+                        prefixIcon: const Icon(Icons.qr_code_scanner_rounded),
+                        suffixIcon: IconButton(
+                          icon: const Icon(
+                            Icons.qr_code_scanner,
+                            color: AppTheme.primary,
+                          ),
+                          onPressed: _openBarcodeScanner,
+                          tooltip: 'Escanear',
+                        ),
                       ),
                       validator: (value) => value!.isEmpty ? 'Requerido' : null,
                     ),
@@ -289,9 +319,19 @@ class ProductFormPageState extends ConsumerState<ProductFormPage> {
                         Expanded(
                           child: TextFormField(
                             controller: _barcodeController,
-                            decoration: const InputDecoration(
+                            decoration: InputDecoration(
                               labelText: 'Código de Barras',
-                              prefixIcon: Icon(Icons.qr_code_scanner_rounded),
+                              prefixIcon: const Icon(
+                                Icons.qr_code_scanner_rounded,
+                              ),
+                              suffixIcon: IconButton(
+                                icon: const Icon(
+                                  Icons.qr_code_scanner,
+                                  color: AppTheme.primary,
+                                ),
+                                onPressed: _openBarcodeScanner,
+                                tooltip: 'Escanear',
+                              ),
                             ),
                             validator: (value) =>
                                 value!.isEmpty ? 'Requerido' : null,

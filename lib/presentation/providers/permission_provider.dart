@@ -27,6 +27,8 @@ final currentUserPermissionsProvider = FutureProvider<List<String>>((
       PermissionConstants.cashMovement,
       PermissionConstants.inventoryView,
       PermissionConstants.inventoryAdjust,
+      PermissionConstants.catalogManage,
+      PermissionConstants.customerManage,
       PermissionConstants.reportsView,
     ];
   }
