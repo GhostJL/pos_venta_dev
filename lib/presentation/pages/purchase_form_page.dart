@@ -9,13 +9,13 @@ import 'package:posventa/domain/entities/warehouse.dart';
 import 'package:posventa/presentation/providers/auth_provider.dart';
 import 'package:posventa/presentation/providers/product_provider.dart';
 import 'package:posventa/presentation/providers/purchase_providers.dart';
-import 'package:posventa/presentation/providers/supplier_providers.dart';
-import 'package:posventa/presentation/providers/warehouse_providers.dart';
 import 'package:posventa/presentation/widgets/barcode_scanner_widget.dart';
 import 'package:uuid/uuid.dart';
 
 class PurchaseFormPage extends ConsumerStatefulWidget {
-  const PurchaseFormPage({super.key});
+  final Map<String, dynamic>? headerData;
+
+  const PurchaseFormPage({super.key, this.headerData});
 
   @override
   ConsumerState<PurchaseFormPage> createState() => _PurchaseFormPageState();
@@ -24,32 +24,36 @@ class PurchaseFormPage extends ConsumerStatefulWidget {
 class _PurchaseFormPageState extends ConsumerState<PurchaseFormPage> {
   final _formKey = GlobalKey<FormState>();
 
-  Supplier? _selectedSupplier;
-  Warehouse? _selectedWarehouse;
-  final _supplierInvoiceController = TextEditingController();
-  DateTime _purchaseDate = DateTime.now();
+  // Header data from previous step
+  late final Supplier _supplier;
+  late final Warehouse _warehouse;
+  late final String _invoiceNumber;
+  late final DateTime _purchaseDate;
 
   // Items state
   final List<PurchaseItem> _items = [];
 
   @override
+  void initState() {
+    super.initState();
+    // Initialize from header data
+    if (widget.headerData != null) {
+      _supplier = widget.headerData!['supplier'] as Supplier;
+      _warehouse = widget.headerData!['warehouse'] as Warehouse;
+      _invoiceNumber = widget.headerData!['invoiceNumber'] as String;
+      _purchaseDate = widget.headerData!['purchaseDate'] as DateTime;
+    }
+  }
+
+  @override
   void dispose() {
-    _supplierInvoiceController.dispose();
     super.dispose();
   }
 
   void _addItem() async {
-    if (_selectedWarehouse == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Seleccione un almacén primero')),
-      );
-      return;
-    }
-
     final result = await showDialog<PurchaseItem>(
       context: context,
-      builder: (context) =>
-          _AddItemDialog(warehouseId: _selectedWarehouse!.id!),
+      builder: (context) => _AddItemDialog(warehouseId: _warehouse.id!),
     );
 
     if (result != null) {
@@ -71,12 +75,6 @@ class _PurchaseFormPageState extends ConsumerState<PurchaseFormPage> {
 
   Future<void> _savePurchase() async {
     if (!_formKey.currentState!.validate()) return;
-    if (_selectedSupplier == null || _selectedWarehouse == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Complete todos los campos requeridos')),
-      );
-      return;
-    }
     if (_items.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Agregue al menos un producto')),
@@ -90,13 +88,13 @@ class _PurchaseFormPageState extends ConsumerState<PurchaseFormPage> {
     final purchase = Purchase(
       purchaseNumber:
           'PUR-${const Uuid().v4().substring(0, 8).toUpperCase()}', // Temporary generation
-      supplierId: _selectedSupplier!.id!,
-      warehouseId: _selectedWarehouse!.id!,
+      supplierId: _supplier.id!,
+      warehouseId: _warehouse.id!,
       subtotalCents: (_subtotal * 100).round(),
       taxCents: (_tax * 100).round(),
       totalCents: (_total * 100).round(),
       purchaseDate: _purchaseDate,
-      supplierInvoiceNumber: _supplierInvoiceController.text,
+      supplierInvoiceNumber: _invoiceNumber.isNotEmpty ? _invoiceNumber : null,
       requestedBy: user.id!,
       createdAt: DateTime.now(),
       items: _items,
@@ -122,9 +120,6 @@ class _PurchaseFormPageState extends ConsumerState<PurchaseFormPage> {
 
   @override
   Widget build(BuildContext context) {
-    final suppliersAsync = ref.watch(supplierListProvider);
-    final warehousesAsync = ref.watch(warehouseProvider);
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('Nueva Compra'),
@@ -142,105 +137,128 @@ class _PurchaseFormPageState extends ConsumerState<PurchaseFormPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Header Inputs
-                    Row(
-                      children: [
-                        Expanded(
-                          child: DropdownButtonFormField<Supplier>(
-                            initialValue: _selectedSupplier,
-                            decoration: const InputDecoration(
-                              labelText: 'Proveedor',
-                              border: OutlineInputBorder(),
+                    // Header Info Display (Read-only from previous step)
+                    Card(
+                      color: Colors.blue.shade50,
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Icon(
+                                  Icons.info_outline,
+                                  color: Colors.blue.shade700,
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  'Información de la Compra',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.blue.shade900,
+                                  ),
+                                ),
+                              ],
                             ),
-                            items: suppliersAsync.when(
-                              data: (suppliers) => suppliers
-                                  .map(
-                                    (s) => DropdownMenuItem(
-                                      value: s,
-                                      child: Text(s.name),
+                            const Divider(),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        'Proveedor:',
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: Colors.grey.shade700,
+                                        ),
+                                      ),
+                                      Text(
+                                        _supplier.name,
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        'Almacén:',
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: Colors.grey.shade700,
+                                        ),
+                                      ),
+                                      Text(
+                                        _warehouse.name,
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 8),
+                            Row(
+                              children: [
+                                if (_invoiceNumber.isNotEmpty)
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          'Factura:',
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            color: Colors.grey.shade700,
+                                          ),
+                                        ),
+                                        Text(
+                                          _invoiceNumber,
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                      ],
                                     ),
-                                  )
-                                  .toList(),
-                              loading: () => [],
-                              error: (_, __) => [],
+                                  ),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        'Fecha:',
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: Colors.grey.shade700,
+                                        ),
+                                      ),
+                                      Text(
+                                        "${_purchaseDate.day.toString().padLeft(2, '0')}/${_purchaseDate.month.toString().padLeft(2, '0')}/${_purchaseDate.year}",
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
                             ),
-                            onChanged: (value) =>
-                                setState(() => _selectedSupplier = value),
-                            validator: (value) =>
-                                value == null ? 'Requerido' : null,
-                          ),
+                          ],
                         ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: DropdownButtonFormField<Warehouse>(
-                            initialValue: _selectedWarehouse,
-                            decoration: const InputDecoration(
-                              labelText: 'Almacén Destino',
-                              border: OutlineInputBorder(),
-                            ),
-                            items: warehousesAsync.when(
-                              data: (warehouses) => warehouses
-                                  .map(
-                                    (w) => DropdownMenuItem(
-                                      value: w,
-                                      child: Text(w.name),
-                                    ),
-                                  )
-                                  .toList(),
-                              loading: () => [],
-                              error: (_, __) => [],
-                            ),
-                            onChanged: (value) {
-                              if (_items.isNotEmpty) {
-                                // Warn about clearing items if warehouse changes?
-                                // For now just allow change
-                              }
-                              setState(() => _selectedWarehouse = value);
-                            },
-                            validator: (value) =>
-                                value == null ? 'Requerido' : null,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: TextFormField(
-                            controller: _supplierInvoiceController,
-                            decoration: const InputDecoration(
-                              labelText: 'Factura Proveedor (Opcional)',
-                              border: OutlineInputBorder(),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: InkWell(
-                            onTap: () async {
-                              final picked = await showDatePicker(
-                                context: context,
-                                initialDate: _purchaseDate,
-                                firstDate: DateTime(2000),
-                                lastDate: DateTime.now(),
-                              );
-                              if (picked != null) {
-                                setState(() => _purchaseDate = picked);
-                              }
-                            },
-                            child: InputDecorator(
-                              decoration: const InputDecoration(
-                                labelText: 'Fecha de Compra',
-                                border: OutlineInputBorder(),
-                              ),
-                              child: Text(
-                                "${_purchaseDate.day}/${_purchaseDate.month}/${_purchaseDate.year}",
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
+                      ),
                     ),
                     const SizedBox(height: 24),
 

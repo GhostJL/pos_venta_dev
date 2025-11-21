@@ -2,6 +2,7 @@ class PurchaseItem {
   final int? id;
   final int? purchaseId;
   final int productId;
+  final String? productName;
   final double quantity;
   final String unitOfMeasure;
   final int unitCostCents;
@@ -11,12 +12,12 @@ class PurchaseItem {
   final String? lotNumber;
   final DateTime? expirationDate;
   final DateTime createdAt;
-  final String? productName; // For display
 
   const PurchaseItem({
     this.id,
     this.purchaseId,
     required this.productId,
+    this.productName,
     required this.quantity,
     required this.unitOfMeasure,
     required this.unitCostCents,
@@ -26,7 +27,6 @@ class PurchaseItem {
     this.lotNumber,
     this.expirationDate,
     required this.createdAt,
-    this.productName,
   });
 
   double get unitCost => unitCostCents / 100.0;

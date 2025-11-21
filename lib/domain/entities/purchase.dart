@@ -19,6 +19,7 @@ class Purchase {
   final DateTime createdAt;
   final List<PurchaseItem> items;
   final String? supplierName; // For display
+  final String? warehouseName; // For display
 
   const Purchase({
     this.id,
@@ -37,6 +38,7 @@ class Purchase {
     required this.createdAt,
     this.items = const [],
     this.supplierName,
+    this.warehouseName,
   });
 
   double get subtotal => subtotalCents / 100.0;
