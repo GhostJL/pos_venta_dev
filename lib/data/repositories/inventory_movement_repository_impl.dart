@@ -27,8 +27,10 @@ class InventoryMovementRepositoryImpl implements InventoryMovementRepository {
 
   @override
   Future<List<InventoryMovement>> getAllMovements() async {
-    final result = await _databaseHelper.queryAll(
+    final db = await _databaseHelper.database;
+    final result = await db.query(
       DatabaseHelper.tableInventoryMovements,
+      orderBy: 'movement_date DESC',
     );
     return result.map((e) => InventoryMovementModel.fromJson(e)).toList();
   }
