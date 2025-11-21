@@ -105,7 +105,7 @@ class _CashSessionHistoryPageState
                     // Cashier Dropdown
                     cashiersAsync.when(
                       data: (cashiers) => DropdownButtonFormField<int>(
-                        value: _selectedUserId,
+                        initialValue: _selectedUserId,
                         decoration: const InputDecoration(labelText: 'Cajero'),
                         items: [
                           const DropdownMenuItem<int>(
@@ -129,7 +129,7 @@ class _CashSessionHistoryPageState
                     // Warehouse Dropdown
                     warehousesAsync.when(
                       data: (warehouses) => DropdownButtonFormField<int>(
-                        value: _selectedWarehouseId,
+                        initialValue: _selectedWarehouseId,
                         decoration: const InputDecoration(
                           labelText: 'Sucursal',
                         ),
@@ -198,7 +198,7 @@ class _SessionCard extends StatelessWidget {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: ListTile(
         leading: CircleAvatar(
-          backgroundColor: color.withOpacity(0.2),
+          backgroundColor: color.withAlpha(10),
           child: Icon(Icons.point_of_sale, color: color),
         ),
         title: Text(

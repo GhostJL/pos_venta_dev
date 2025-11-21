@@ -163,8 +163,8 @@ class CashSessionDetailPage extends ConsumerWidget {
         return ListTile(
           leading: CircleAvatar(
             backgroundColor: isEntry
-                ? Colors.green.withOpacity(0.1)
-                : Colors.red.withOpacity(0.1),
+                ? Colors.green.withAlpha(10)
+                : Colors.red.withAlpha(10),
             child: Icon(
               isEntry ? Icons.arrow_downward : Icons.arrow_upward,
               color: isEntry ? Colors.green : Colors.red,

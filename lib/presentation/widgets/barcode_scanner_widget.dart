@@ -97,7 +97,7 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget> {
                 gradient: LinearGradient(
                   begin: Alignment.bottomCenter,
                   end: Alignment.topCenter,
-                  colors: [Colors.black.withOpacity(0.8), Colors.transparent],
+                  colors: [Colors.black.withAlpha(10), Colors.transparent],
                 ),
               ),
               child: Column(
@@ -155,7 +155,7 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget> {
                         Text(
                           'EAN-13, EAN-8, Code 128',
                           style: TextStyle(
-                            color: Colors.white.withOpacity(0.7),
+                            color: Colors.white.withAlpha(10),
                             fontSize: 12,
                           ),
                         ),
@@ -181,7 +181,7 @@ class ScannerOverlayPainter extends CustomPainter {
 
     // Fondo oscuro
     final backgroundPaint = Paint()
-      ..color = Colors.black.withOpacity(0.5)
+      ..color = Colors.black.withAlpha(10)
       ..style = PaintingStyle.fill;
 
     final scanAreaRect = Rect.fromLTWH(
@@ -262,7 +262,7 @@ class ScannerOverlayPainter extends CustomPainter {
 
     // Línea de escaneo animada (opcional, se puede animar con AnimationController)
     final scanLinePaint = Paint()
-      ..color = AppTheme.primary.withOpacity(0.5)
+      ..color = AppTheme.primary.withAlpha(10)
       ..style = PaintingStyle.fill;
 
     canvas.drawRect(
