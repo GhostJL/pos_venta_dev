@@ -1,6 +1,7 @@
 import 'package:posventa/data/datasources/database_helper.dart';
 import 'package:posventa/data/models/inventory_model.dart';
 import 'package:posventa/domain/entities/inventory.dart';
+import 'package:posventa/domain/entities/inventory_movement.dart';
 import 'package:posventa/domain/repositories/inventory_repository.dart';
 
 class InventoryRepositoryImpl implements InventoryRepository {
@@ -84,5 +85,177 @@ class InventoryRepositoryImpl implements InventoryRepository {
     map['updated_at'] = DateTime.now().toIso8601String();
 
     await _databaseHelper.update(DatabaseHelper.tableInventory, map);
+  }
+
+  @override
+  Future<void> adjustInventory(InventoryMovement movement) async {
+    final db = await _databaseHelper.database;
+    await db.transaction((txn) async {
+      // 1. Get current inventory
+      final inventoryResult = await txn.query(
+        DatabaseHelper.tableInventory,
+        where: 'product_id = ? AND warehouse_id = ?',
+        whereArgs: [movement.productId, movement.warehouseId],
+      );
+
+      if (inventoryResult.isEmpty) {
+        // If no inventory exists, create it (assuming starting from 0)
+        await txn.insert(DatabaseHelper.tableInventory, {
+          'product_id': movement.productId,
+          'warehouse_id': movement.warehouseId,
+          'quantity_on_hand': movement
+              .quantity, // Initial quantity is the adjustment amount (if positive) or negative
+          'quantity_reserved': 0,
+          'updated_at': DateTime.now().toIso8601String(),
+        });
+      } else {
+        // Update existing inventory
+        await txn.rawUpdate(
+          '''
+          UPDATE ${DatabaseHelper.tableInventory}
+          SET quantity_on_hand = quantity_on_hand + ?,
+              updated_at = ?
+          WHERE product_id = ? AND warehouse_id = ?
+        ''',
+          [
+            movement.quantity,
+            DateTime.now().toIso8601String(),
+            movement.productId,
+            movement.warehouseId,
+          ],
+        );
+      }
+
+      // 2. Create Movement Record
+      await txn.insert(DatabaseHelper.tableInventoryMovements, {
+        'product_id': movement.productId,
+        'warehouse_id': movement.warehouseId,
+        'movement_type': movement.movementType.value,
+        'quantity': movement.quantity,
+        'quantity_before': movement.quantityBefore,
+        'quantity_after': movement.quantityAfter,
+        'reference_type': movement.referenceType,
+        'reference_id': movement.referenceId,
+        'lot_number': movement.lotNumber,
+        'reason': movement.reason,
+        'performed_by': movement.performedBy,
+        'movement_date': DateTime.now().toIso8601String(),
+      });
+    });
+  }
+
+  @override
+  Future<void> transferInventory({
+    required int fromWarehouseId,
+    required int toWarehouseId,
+    required int productId,
+    required double quantity,
+    required int userId,
+    String? reason,
+  }) async {
+    final db = await _databaseHelper.database;
+    await db.transaction((txn) async {
+      // --- 1. Handle Source Warehouse (OUT) ---
+
+      // Check source inventory
+      final sourceInvResult = await txn.query(
+        DatabaseHelper.tableInventory,
+        where: 'product_id = ? AND warehouse_id = ?',
+        whereArgs: [productId, fromWarehouseId],
+      );
+
+      if (sourceInvResult.isEmpty) {
+        throw Exception('Source inventory not found');
+      }
+
+      final sourceQtyBefore = (sourceInvResult.first['quantity_on_hand'] as num)
+          .toDouble();
+      if (sourceQtyBefore < quantity) {
+        throw Exception('Insufficient stock in source warehouse');
+      }
+
+      // Deduct from source
+      await txn.rawUpdate(
+        '''
+        UPDATE ${DatabaseHelper.tableInventory}
+        SET quantity_on_hand = quantity_on_hand - ?,
+            updated_at = ?
+        WHERE product_id = ? AND warehouse_id = ?
+      ''',
+        [
+          quantity,
+          DateTime.now().toIso8601String(),
+          productId,
+          fromWarehouseId,
+        ],
+      );
+
+      // Record OUT movement
+      await txn.insert(DatabaseHelper.tableInventoryMovements, {
+        'product_id': productId,
+        'warehouse_id': fromWarehouseId,
+        'movement_type': 'transfer_out',
+        'quantity': -quantity,
+        'quantity_before': sourceQtyBefore,
+        'quantity_after': sourceQtyBefore - quantity,
+        'reference_type': 'transfer',
+        // 'reference_id': transferId, // If we had a transfer table
+        'reason': reason ?? 'Transfer to Warehouse $toWarehouseId',
+        'performed_by': userId,
+        'movement_date': DateTime.now().toIso8601String(),
+      });
+
+      // --- 2. Handle Destination Warehouse (IN) ---
+
+      // Check/Create destination inventory
+      final destInvResult = await txn.query(
+        DatabaseHelper.tableInventory,
+        where: 'product_id = ? AND warehouse_id = ?',
+        whereArgs: [productId, toWarehouseId],
+      );
+
+      double destQtyBefore = 0;
+      if (destInvResult.isEmpty) {
+        await txn.insert(DatabaseHelper.tableInventory, {
+          'product_id': productId,
+          'warehouse_id': toWarehouseId,
+          'quantity_on_hand': quantity,
+          'quantity_reserved': 0,
+          'updated_at': DateTime.now().toIso8601String(),
+        });
+      } else {
+        destQtyBefore = (destInvResult.first['quantity_on_hand'] as num)
+            .toDouble();
+        await txn.rawUpdate(
+          '''
+          UPDATE ${DatabaseHelper.tableInventory}
+          SET quantity_on_hand = quantity_on_hand + ?,
+              updated_at = ?
+          WHERE product_id = ? AND warehouse_id = ?
+        ''',
+          [
+            quantity,
+            DateTime.now().toIso8601String(),
+            productId,
+            toWarehouseId,
+          ],
+        );
+      }
+
+      // Record IN movement
+      await txn.insert(DatabaseHelper.tableInventoryMovements, {
+        'product_id': productId,
+        'warehouse_id': toWarehouseId,
+        'movement_type': 'transfer_in',
+        'quantity': quantity,
+        'quantity_before': destQtyBefore,
+        'quantity_after': destQtyBefore + quantity,
+        'reference_type': 'transfer',
+        // 'reference_id': transferId,
+        'reason': reason ?? 'Transfer from Warehouse $fromWarehouseId',
+        'performed_by': userId,
+        'movement_date': DateTime.now().toIso8601String(),
+      });
+    });
   }
 }

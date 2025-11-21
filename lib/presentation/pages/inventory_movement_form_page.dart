@@ -29,6 +29,7 @@ class _InventoryMovementFormPageState
 
   Product? _selectedProduct;
   Warehouse? _selectedWarehouse;
+  Warehouse? _destinationWarehouse;
   MovementType _selectedMovementType = MovementType.adjustment;
   bool _isLoading = false;
 
@@ -139,6 +140,33 @@ class _InventoryMovementFormPageState
                               ),
                               const SizedBox(height: 16),
                               _buildMovementTypeSelector(),
+                              const SizedBox(height: 16),
+                              if (_selectedMovementType ==
+                                  MovementType.transferOut) ...[
+                                _buildDropdown<Warehouse>(
+                                  label: 'Almacén Destino',
+                                  value: _destinationWarehouse,
+                                  items: warehouses
+                                      .where(
+                                        (w) => w.id != _selectedWarehouse?.id,
+                                      )
+                                      .toList(),
+                                  itemLabel: (w) => w.name,
+                                  onChanged: (value) {
+                                    setState(() {
+                                      _destinationWarehouse = value;
+                                    });
+                                  },
+                                  validator: (value) {
+                                    if (_selectedMovementType ==
+                                            MovementType.transferOut &&
+                                        value == null) {
+                                      return 'Seleccione un almacén destino';
+                                    }
+                                    return null;
+                                  },
+                                ),
+                              ],
                             ],
                           ),
                           const SizedBox(height: 16),
@@ -427,18 +455,42 @@ class _InventoryMovementFormPageState
       );
 
       if (widget.movement == null) {
-        await ref
-            .read(inventoryMovementProvider.notifier)
-            .addMovement(movement);
+        if (_selectedMovementType == MovementType.adjustment ||
+            _selectedMovementType == MovementType.damage) {
+          await ref
+              .read(inventoryMovementProvider.notifier)
+              .adjustInventory(movement);
+        } else if (_selectedMovementType == MovementType.transferOut) {
+          if (_destinationWarehouse == null) {
+            throw Exception('Seleccione un almacén de destino');
+          }
+          if (_destinationWarehouse!.id == _selectedWarehouse!.id) {
+            throw Exception(
+              'El almacén de destino debe ser diferente al de origen',
+            );
+          }
 
-        // Update inventory
-        final updatedInventory = currentInventory.copyWith(
-          quantityOnHand: quantityAfter,
-          updatedAt: DateTime.now(),
-        );
-        await ref
-            .read(inventoryProvider.notifier)
-            .updateInventory(updatedInventory);
+          await ref
+              .read(inventoryMovementProvider.notifier)
+              .transferInventory(
+                fromWarehouseId: _selectedWarehouse!.id!,
+                toWarehouseId: _destinationWarehouse!.id!,
+                productId: _selectedProduct!.id!,
+                quantity: movement.quantity.abs(),
+                userId: userId,
+                reason: movement.reason,
+              );
+        } else {
+          await ref
+              .read(inventoryMovementProvider.notifier)
+              .addMovement(movement);
+        }
+
+        // Inventory update is now handled by the use case/repository transactionally.
+        // We don't need to manually update inventory provider here.
+        // But we might want to refresh the inventory list.
+        ref.invalidate(inventoryProvider);
+        ref.invalidate(inventoryByProductProvider);
       } else {
         await ref
             .read(inventoryMovementProvider.notifier)

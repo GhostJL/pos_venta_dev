@@ -30,6 +30,7 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   riverpod_generator: ^3.0.3
+  sqflite_common_ffi: ^2.4.0
 
 flutter:
   uses-material-design: true

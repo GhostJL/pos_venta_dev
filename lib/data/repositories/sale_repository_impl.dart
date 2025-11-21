@@ -187,24 +187,57 @@ class SaleRepositoryImpl implements SaleRepository {
         }
 
         // Update Inventory (Decrease stock)
-        // Note: This assumes standard deduction. Logic might be more complex if tracking lots.
-        // For now, simple deduction from warehouse.
-        // We need to check if inventory exists for this product and warehouse.
-        // If not, we might error or create negative stock depending on rules.
-        // Assuming we allow negative stock or it's checked before.
+        // Check if inventory exists
+        final inventoryResult = await txn.query(
+          DatabaseHelper.tableInventory,
+          where: 'product_id = ? AND warehouse_id = ?',
+          whereArgs: [item.productId, sale.warehouseId],
+        );
 
-        // Simple update:
+        double quantityBefore = 0;
+        if (inventoryResult.isNotEmpty) {
+          quantityBefore = (inventoryResult.first['quantity_on_hand'] as num)
+              .toDouble();
+        } else {
+          // Create if not exists (though ideally it should exist)
+          await txn.insert(DatabaseHelper.tableInventory, {
+            'product_id': item.productId,
+            'warehouse_id': sale.warehouseId,
+            'quantity_on_hand': 0,
+            'quantity_reserved': 0,
+            'updated_at': DateTime.now().toIso8601String(),
+          });
+        }
+
         await txn.rawUpdate(
           '''
           UPDATE ${DatabaseHelper.tableInventory}
-          SET quantity_on_hand = quantity_on_hand - ?
+          SET quantity_on_hand = quantity_on_hand - ?,
+              updated_at = ?
           WHERE product_id = ? AND warehouse_id = ?
         ''',
-          [item.quantity, item.productId, sale.warehouseId],
+          [
+            item.quantity,
+            DateTime.now().toIso8601String(),
+            item.productId,
+            sale.warehouseId,
+          ],
         );
 
-        // Also record movement? Ideally yes.
-        // But for now let's stick to the core requirement.
+        // Record Movement (Sale)
+        await txn.insert(DatabaseHelper.tableInventoryMovements, {
+          'product_id': item.productId,
+          'warehouse_id': sale.warehouseId,
+          'movement_type': 'sale',
+          'quantity': -item.quantity, // Negative for sale
+          'quantity_before': quantityBefore,
+          'quantity_after': quantityBefore - item.quantity,
+          'reference_type': 'sale',
+          'reference_id': saleId,
+          'reason': 'Sale #$saleId',
+          'performed_by': sale.cashierId,
+          'movement_date': DateTime.now().toIso8601String(),
+        });
       }
 
       // 3. Insert Payments
@@ -256,14 +289,43 @@ class SaleRepositoryImpl implements SaleRepository {
         final productId = item['product_id'] as int;
         final quantity = item['quantity'] as double;
 
+        // Get current inventory
+        final inventoryResult = await txn.query(
+          DatabaseHelper.tableInventory,
+          where: 'product_id = ? AND warehouse_id = ?',
+          whereArgs: [productId, warehouseId],
+        );
+
+        double quantityBefore = 0;
+        if (inventoryResult.isNotEmpty) {
+          quantityBefore = (inventoryResult.first['quantity_on_hand'] as num)
+              .toDouble();
+        }
+
         await txn.rawUpdate(
           '''
           UPDATE ${DatabaseHelper.tableInventory}
-          SET quantity_on_hand = quantity_on_hand + ?
+          SET quantity_on_hand = quantity_on_hand + ?,
+              updated_at = ?
           WHERE product_id = ? AND warehouse_id = ?
         ''',
-          [quantity, productId, warehouseId],
+          [quantity, DateTime.now().toIso8601String(), productId, warehouseId],
         );
+
+        // Record Movement (Return/Cancel)
+        await txn.insert(DatabaseHelper.tableInventoryMovements, {
+          'product_id': productId,
+          'warehouse_id': warehouseId,
+          'movement_type': 'return',
+          'quantity': quantity, // Positive for return
+          'quantity_before': quantityBefore,
+          'quantity_after': quantityBefore + quantity,
+          'reference_type': 'sale',
+          'reference_id': saleId,
+          'reason': reason.isNotEmpty ? reason : 'Sale Cancelled',
+          'performed_by': userId,
+          'movement_date': DateTime.now().toIso8601String(),
+        });
       }
     });
   }
