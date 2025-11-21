@@ -11,6 +11,7 @@ import 'package:posventa/presentation/providers/product_provider.dart';
 import 'package:posventa/presentation/providers/purchase_providers.dart';
 import 'package:posventa/presentation/providers/supplier_providers.dart';
 import 'package:posventa/presentation/providers/warehouse_providers.dart';
+import 'package:posventa/presentation/widgets/barcode_scanner_widget.dart';
 import 'package:uuid/uuid.dart';
 
 class PurchaseFormPage extends ConsumerStatefulWidget {
@@ -381,14 +382,66 @@ class _AddItemDialog extends ConsumerStatefulWidget {
 class _AddItemDialogState extends ConsumerState<_AddItemDialog> {
   final _formKey = GlobalKey<FormState>();
   Product? _selectedProduct;
-  final _quantityController = TextEditingController();
+  final _quantityController = TextEditingController(text: '1');
   final _costController = TextEditingController();
+  final _searchController = TextEditingController();
 
   @override
   void dispose() {
     _quantityController.dispose();
     _costController.dispose();
+    _searchController.dispose();
     super.dispose();
+  }
+
+  void _selectProduct(Product product) {
+    setState(() {
+      _selectedProduct = product;
+      _searchController.text = product.name;
+      // Pre-fill with current cost
+      _costController.text = (product.costPriceCents / 100).toStringAsFixed(2);
+    });
+  }
+
+  Future<void> _scanBarcode() async {
+    final productsAsync = ref.read(productNotifierProvider);
+
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => BarcodeScannerWidget(
+          title: 'Escanear Producto',
+          hint: 'Escanea el código de barras del producto',
+          onBarcodeScanned: (ctx, barcode) async {
+            // Search for product by barcode
+            productsAsync.whenData((products) {
+              final product = products
+                  .where((p) => p.barcode == barcode)
+                  .firstOrNull;
+              if (product != null) {
+                _selectProduct(product);
+                Navigator.pop(ctx);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Producto encontrado: ${product.name}'),
+                    backgroundColor: Colors.green,
+                    duration: const Duration(seconds: 2),
+                  ),
+                );
+              } else {
+                Navigator.pop(ctx);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Producto no encontrado'),
+                    backgroundColor: Colors.orange,
+                  ),
+                );
+              }
+            });
+          },
+        ),
+      ),
+    );
   }
 
   @override
@@ -396,46 +449,142 @@ class _AddItemDialogState extends ConsumerState<_AddItemDialog> {
     final productsAsync = ref.watch(productNotifierProvider);
 
     return AlertDialog(
-      title: const Text('Agregar Producto'),
+      title: Row(
+        children: [
+          const Expanded(child: Text('Agregar Producto')),
+          IconButton(
+            icon: const Icon(Icons.qr_code_scanner),
+            onPressed: _scanBarcode,
+            tooltip: 'Escanear código de barras',
+            color: Theme.of(context).primaryColor,
+          ),
+        ],
+      ),
       content: Form(
         key: _formKey,
         child: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              DropdownButtonFormField<Product>(
-                initialValue: _selectedProduct,
-                decoration: const InputDecoration(
-                  labelText: 'Producto',
-                  border: OutlineInputBorder(),
-                ),
-                items: productsAsync.when(
-                  data: (products) => products
-                      .map(
-                        (p) => DropdownMenuItem(value: p, child: Text(p.name)),
-                      )
-                      .toList(),
-                  loading: () => [],
-                  error: (_, __) => [],
-                ),
-                onChanged: (value) {
-                  setState(() {
-                    _selectedProduct = value;
-                    if (value != null) {
-                      // Default cost from product if available, or 0
-                      _costController.text = (value.costPriceCents / 100)
-                          .toStringAsFixed(2);
-                    }
-                  });
+              // Product Search/Selection
+              productsAsync.when(
+                data: (products) {
+                  return Autocomplete<Product>(
+                    optionsBuilder: (TextEditingValue textEditingValue) {
+                      if (textEditingValue.text.isEmpty) {
+                        return products;
+                      }
+                      return products.where((product) {
+                        return product.name.toLowerCase().contains(
+                              textEditingValue.text.toLowerCase(),
+                            ) ||
+                            (product.barcode?.contains(textEditingValue.text) ??
+                                false);
+                      });
+                    },
+                    displayStringForOption: (Product option) => option.name,
+                    onSelected: _selectProduct,
+                    fieldViewBuilder:
+                        (context, controller, focusNode, onEditingComplete) {
+                          _searchController.text = controller.text;
+                          return TextFormField(
+                            controller: controller,
+                            focusNode: focusNode,
+                            decoration: InputDecoration(
+                              labelText: 'Buscar Producto',
+                              border: const OutlineInputBorder(),
+                              prefixIcon: const Icon(Icons.search),
+                              suffixIcon: _selectedProduct != null
+                                  ? IconButton(
+                                      icon: const Icon(Icons.clear),
+                                      onPressed: () {
+                                        controller.clear();
+                                        setState(() => _selectedProduct = null);
+                                      },
+                                    )
+                                  : null,
+                            ),
+                            validator: (value) => _selectedProduct == null
+                                ? 'Seleccione un producto'
+                                : null,
+                          );
+                        },
+                    optionsViewBuilder: (context, onSelected, options) {
+                      return Align(
+                        alignment: Alignment.topLeft,
+                        child: Material(
+                          elevation: 4,
+                          child: ConstrainedBox(
+                            constraints: const BoxConstraints(maxHeight: 200),
+                            child: ListView.builder(
+                              padding: EdgeInsets.zero,
+                              shrinkWrap: true,
+                              itemCount: options.length,
+                              itemBuilder: (context, index) {
+                                final product = options.elementAt(index);
+                                return ListTile(
+                                  title: Text(product.name),
+                                  subtitle: Text(
+                                    'Costo actual: \$${(product.costPriceCents / 100).toStringAsFixed(2)}',
+                                    style: TextStyle(
+                                      color: Colors.grey.shade600,
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                  onTap: () => onSelected(product),
+                                );
+                              },
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  );
                 },
-                validator: (value) => value == null ? 'Requerido' : null,
+                loading: () => const CircularProgressIndicator(),
+                error: (_, __) => const Text('Error al cargar productos'),
               ),
+
+              // Cost Reference (if product selected)
+              if (_selectedProduct != null) ...[
+                const SizedBox(height: 12),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.blue.shade50,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.blue.shade200),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.info_outline,
+                        color: Colors.blue.shade700,
+                        size: 20,
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'Costo anterior: \$${(_selectedProduct!.costPriceCents / 100).toStringAsFixed(2)}',
+                          style: TextStyle(
+                            color: Colors.blue.shade900,
+                            fontWeight: FontWeight.w500,
+                            fontSize: 13,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+
               const SizedBox(height: 16),
               TextFormField(
                 controller: _quantityController,
                 decoration: const InputDecoration(
                   labelText: 'Cantidad',
                   border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.inventory_2),
                 ),
                 keyboardType: const TextInputType.numberWithOptions(
                   decimal: true,
@@ -443,6 +592,7 @@ class _AddItemDialogState extends ConsumerState<_AddItemDialog> {
                 validator: (value) {
                   if (value == null || value.isEmpty) return 'Requerido';
                   if (double.tryParse(value) == null) return 'Inválido';
+                  if (double.parse(value) <= 0) return 'Debe ser mayor a 0';
                   return null;
                 },
               ),
@@ -453,6 +603,7 @@ class _AddItemDialogState extends ConsumerState<_AddItemDialog> {
                   labelText: 'Costo Unitario',
                   prefixText: '\$ ',
                   border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.attach_money),
                 ),
                 keyboardType: const TextInputType.numberWithOptions(
                   decimal: true,
@@ -460,6 +611,7 @@ class _AddItemDialogState extends ConsumerState<_AddItemDialog> {
                 validator: (value) {
                   if (value == null || value.isEmpty) return 'Requerido';
                   if (double.tryParse(value) == null) return 'Inválido';
+                  if (double.parse(value) < 0) return 'No puede ser negativo';
                   return null;
                 },
               ),

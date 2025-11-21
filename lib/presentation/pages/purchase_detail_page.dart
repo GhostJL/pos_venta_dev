@@ -55,26 +55,97 @@ class PurchaseDetailPage extends ConsumerWidget {
     WidgetRef ref,
     Purchase purchase,
   ) async {
-    // Confirm reception
+    // Show detailed confirmation dialog
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Recibir Compra'),
-        content: Text(
-          '¿Confirma que ha recibido la mercancía de la compra ${purchase.purchaseNumber}?\n\n'
-          'Esta acción:\n'
-          '• Actualizará el inventario\n'
-          '• Registrará movimientos en el Kardex\n'
-          '• Actualizará los costos de los productos',
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                '¿Confirma que ha recibido la mercancía de la compra ${purchase.purchaseNumber}?',
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.blue.shade50,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.blue.shade200),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.info_outline,
+                          color: Colors.blue.shade700,
+                          size: 20,
+                        ),
+                        const SizedBox(width: 8),
+                        const Text(
+                          'Esta acción realizará:',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    _buildActionItem(
+                      'Actualizar inventario con las cantidades recibidas',
+                    ),
+                    _buildActionItem('Registrar movimientos en el Kardex'),
+                    _buildActionItem(
+                      'Actualizar costos de productos (Último Costo)',
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                'Productos a recibir:',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 8),
+              ...purchase.items.map(
+                (item) => Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          '• ${item.productName ?? "Producto"}',
+                          style: const TextStyle(fontSize: 13),
+                        ),
+                      ),
+                      Text(
+                        '${item.quantity} ${item.unitOfMeasure}',
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: Colors.grey.shade700,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
             child: const Text('Cancelar'),
           ),
-          ElevatedButton(
+          ElevatedButton.icon(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Confirmar Recepción'),
+            icon: const Icon(Icons.check_circle),
+            label: const Text('Confirmar Recepción'),
           ),
         ],
       ),
@@ -95,8 +166,15 @@ class PurchaseDetailPage extends ConsumerWidget {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Compra recibida exitosamente'),
+            content: Row(
+              children: [
+                Icon(Icons.check_circle, color: Colors.white),
+                SizedBox(width: 8),
+                Expanded(child: Text('Compra recibida exitosamente')),
+              ],
+            ),
             backgroundColor: Colors.green,
+            duration: Duration(seconds: 3),
           ),
         );
       }
@@ -104,12 +182,32 @@ class PurchaseDetailPage extends ConsumerWidget {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error al recibir compra: $e'),
+            content: Row(
+              children: [
+                const Icon(Icons.error, color: Colors.white),
+                const SizedBox(width: 8),
+                Expanded(child: Text('Error al recibir compra: $e')),
+              ],
+            ),
             backgroundColor: Colors.red,
+            duration: const Duration(seconds: 5),
           ),
         );
       }
     }
+  }
+
+  Widget _buildActionItem(String text) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 28, bottom: 4),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text('• ', style: TextStyle(fontSize: 13)),
+          Expanded(child: Text(text, style: const TextStyle(fontSize: 13))),
+        ],
+      ),
+    );
   }
 }
 
