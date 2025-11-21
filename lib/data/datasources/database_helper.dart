@@ -14,7 +14,7 @@ class DatabaseHelper {
 
   // Database configuration
   static const _databaseName = "pos.db";
-  static const _databaseVersion = 11; // Incremented for idx_products_search
+  static const _databaseVersion = 12; // Incremented for permissions
 
   // Table names
   static const tableUsers = 'users';
@@ -40,6 +40,8 @@ class DatabaseHelper {
   static const tableCashSessions = 'cash_sessions';
   static const tableCashMovements = 'cash_movements';
   static const tableAuditLogs = 'audit_logs';
+  static const tablePermissions = 'permissions';
+  static const tableUserPermissions = 'user_permissions';
 
   static Database? _database;
 
@@ -197,6 +199,9 @@ class DatabaseHelper {
     await _createCashSessionsTable(db);
     await _createCashMovementsTable(db);
     await _createAuditLogsTable(db);
+    // Permissions tables
+    await _createPermissionsTable(db);
+    await _createUserPermissionsTable(db);
   }
 
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
@@ -233,6 +238,10 @@ class DatabaseHelper {
         CREATE INDEX IF NOT EXISTS idx_products_search 
         ON $tableProducts(name, code, barcode)
       ''');
+    }
+    if (oldVersion < 12) {
+      await _createPermissionsTable(db);
+      await _createUserPermissionsTable(db);
     }
   }
 
@@ -694,6 +703,113 @@ class DatabaseHelper {
     await db.execute(
       'CREATE INDEX IF NOT EXISTS idx_audit_logs_action ON $tableAuditLogs(action)',
     );
+  }
+
+  Future<void> _createPermissionsTable(Database db) async {
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS $tablePermissions (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        code TEXT NOT NULL UNIQUE,
+        description TEXT,
+        module TEXT NOT NULL,
+        is_active INTEGER NOT NULL DEFAULT 1
+      )
+    ''');
+
+    // Insert default permissions
+    final permissions = [
+      // POS Module
+      {
+        'name': 'Acceso al POS',
+        'code': 'POS_ACCESS',
+        'module': 'POS',
+        'description': 'Permite acceder a la pantalla de ventas',
+      },
+      {
+        'name': 'Aplicar Descuentos',
+        'code': 'POS_DISCOUNT',
+        'module': 'POS',
+        'description': 'Permite aplicar descuentos manuales',
+      },
+      {
+        'name': 'Realizar Devoluciones',
+        'code': 'POS_REFUND',
+        'module': 'POS',
+        'description': 'Permite procesar devoluciones',
+      },
+      {
+        'name': 'Anular Items',
+        'code': 'POS_VOID_ITEM',
+        'module': 'POS',
+        'description': 'Permite eliminar items del carrito',
+      },
+
+      // Cash Module
+      {
+        'name': 'Abrir Caja',
+        'code': 'CASH_OPEN',
+        'module': 'CASH',
+        'description': 'Permite abrir turno de caja',
+      },
+      {
+        'name': 'Cerrar Caja',
+        'code': 'CASH_CLOSE',
+        'module': 'CASH',
+        'description': 'Permite cerrar turno de caja',
+      },
+      {
+        'name': 'Movimientos de Caja',
+        'code': 'CASH_MOVEMENT',
+        'module': 'CASH',
+        'description': 'Permite registrar ingresos/egresos',
+      },
+
+      // Inventory Module
+      {
+        'name': 'Ver Inventario',
+        'code': 'INVENTORY_VIEW',
+        'module': 'INVENTORY',
+        'description': 'Permite ver existencias',
+      },
+      {
+        'name': 'Ajustar Inventario',
+        'code': 'INVENTORY_ADJUST',
+        'module': 'INVENTORY',
+        'description': 'Permite realizar ajustes de inventario',
+      },
+
+      // Reports Module
+      {
+        'name': 'Ver Reportes',
+        'code': 'REPORTS_VIEW',
+        'module': 'REPORTS',
+        'description': 'Permite ver reportes de ventas',
+      },
+    ];
+
+    for (final perm in permissions) {
+      await db.insert(
+        tablePermissions,
+        perm,
+        conflictAlgorithm: ConflictAlgorithm.ignore,
+      );
+    }
+  }
+
+  Future<void> _createUserPermissionsTable(Database db) async {
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS $tableUserPermissions (
+        user_id INTEGER NOT NULL,
+        permission_id INTEGER NOT NULL,
+        granted_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
+        granted_by INTEGER,
+        PRIMARY KEY (user_id, permission_id),
+        FOREIGN KEY (user_id) REFERENCES $tableUsers(id) ON DELETE CASCADE,
+        FOREIGN KEY (permission_id) REFERENCES $tablePermissions(id) ON DELETE CASCADE,
+        FOREIGN KEY (granted_by) REFERENCES $tableUsers(id) ON DELETE SET NULL
+      )
+    ''');
   }
 
   // Onboarding methods

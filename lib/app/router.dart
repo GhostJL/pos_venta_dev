@@ -34,6 +34,8 @@ import 'package:posventa/presentation/pages/cash_session_close_page.dart';
 import 'package:posventa/presentation/providers/auth_provider.dart';
 import 'package:posventa/presentation/providers/transaction_provider.dart';
 
+import 'package:posventa/presentation/pages/cashier/cashier_list_page.dart';
+
 final GlobalKey<NavigatorState> _rootNavigatorKey = GlobalKey<NavigatorState>();
 
 final routerProvider = Provider<GoRouter>((ref) {
@@ -201,6 +203,11 @@ final routerProvider = Provider<GoRouter>((ref) {
                 child: PurchaseItemDetailPage(itemId: int.parse(id)),
               );
             },
+          ),
+          GoRoute(
+            path: '/cashiers',
+            pageBuilder: (context, state) =>
+                const NoTransitionPage(child: CashierListPage()),
           ),
         ],
       ),
