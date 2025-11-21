@@ -2,12 +2,36 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:posventa/presentation/widgets/pos/cart_section.dart';
 import 'package:posventa/presentation/widgets/pos/product_grid_section.dart';
+import 'package:posventa/core/constants/permission_constants.dart';
+import 'package:posventa/presentation/providers/permission_provider.dart';
 
 class SalesPage extends ConsumerWidget {
   const SalesPage({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final hasAccess = ref.watch(
+      hasPermissionProvider(PermissionConstants.posAccess),
+    );
+
+    if (!hasAccess) {
+      return const Scaffold(
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.lock_outline, size: 64, color: Colors.grey),
+              SizedBox(height: 16),
+              Text(
+                'No tienes acceso al Punto de Venta',
+                style: TextStyle(fontSize: 18, color: Colors.grey),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
     return Scaffold(
       appBar: AppBar(title: const Text('Punto de Venta'), elevation: 0),
       body: LayoutBuilder(

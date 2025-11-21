@@ -5,6 +5,8 @@ import 'package:posventa/app/theme.dart';
 import 'package:posventa/domain/entities/user.dart';
 import 'package:posventa/presentation/providers/auth_provider.dart';
 import 'package:posventa/presentation/providers/providers.dart';
+import 'package:posventa/core/constants/permission_constants.dart';
+import 'package:posventa/presentation/providers/permission_provider.dart';
 
 class SideMenu extends ConsumerWidget {
   const SideMenu({super.key});
@@ -16,6 +18,15 @@ class SideMenu extends ConsumerWidget {
     final currentPath = GoRouter.of(
       context,
     ).routerDelegate.currentConfiguration.uri.toString();
+
+    final permissionsAsync = ref.watch(currentUserPermissionsProvider);
+    final permissions = permissionsAsync.asData?.value ?? [];
+
+    // Helper to check permission
+    bool hasAccess(String permission) {
+      if (user?.role == UserRole.administrador) return true;
+      return permissions.contains(permission);
+    }
 
     return Container(
       width: 280, // Slightly wider for better readability
@@ -45,107 +56,129 @@ class SideMenu extends ConsumerWidget {
                   currentPath: currentPath,
                 ),
                 const SizedBox(height: 24),
-                _buildSectionHeader('Gestión de Catálogo'),
-                _buildDrawerItem(
-                  context: context,
-                  icon: Icons.inventory_2_rounded,
-                  title: 'Productos',
-                  path: '/products',
-                  currentPath: currentPath,
-                ),
-                _buildDrawerItem(
-                  context: context,
-                  icon: Icons.store_rounded,
-                  title: 'Departamentos',
-                  path: '/departments',
-                  currentPath: currentPath,
-                ),
-                _buildDrawerItem(
-                  context: context,
-                  icon: Icons.category_rounded,
-                  title: 'Categorías',
-                  path: '/categories',
-                  currentPath: currentPath,
-                ),
-                _buildDrawerItem(
-                  context: context,
-                  icon: Icons.label_rounded,
-                  title: 'Marcas',
-                  path: '/brands',
-                  currentPath: currentPath,
-                ),
-                _buildDrawerItem(
-                  context: context,
-                  icon: Icons.local_shipping_rounded,
-                  title: 'Proveedores',
-                  path: '/suppliers',
-                  currentPath: currentPath,
-                ),
-                _buildDrawerItem(
-                  context: context,
-                  icon: Icons.shopping_cart_rounded,
-                  title: 'Compras',
-                  path: '/purchases',
-                  currentPath: currentPath,
-                ),
-                _buildDrawerItem(
-                  context: context,
-                  icon: Icons.receipt_rounded,
-                  title: 'Artículos de Compra',
-                  path: '/purchase-items',
-                  currentPath: currentPath,
-                ),
-                _buildDrawerItem(
-                  context: context,
-                  icon: Icons.warehouse_rounded,
-                  title: 'Almacenes',
-                  path: '/warehouses',
-                  currentPath: currentPath,
-                ),
-                _buildDrawerItem(
-                  context: context,
-                  icon: Icons.price_change_rounded,
-                  title: 'Tasas de Impuesto',
-                  path: '/tax-rates',
-                  currentPath: currentPath,
-                ),
-                _buildDrawerItem(
-                  context: context,
-                  icon: Icons.inventory_2_rounded,
-                  title: 'Inventario',
-                  path: '/inventory',
-                  currentPath: currentPath,
-                ),
-                _buildDrawerItem(
-                  context: context,
-                  icon: Icons.people_rounded,
-                  title: 'Clientes',
-                  path: '/customers',
-                  currentPath: currentPath,
-                ),
-                _buildDrawerItem(
-                  context: context,
-                  icon: Icons.point_of_sale,
-                  title: 'Ventas (POS)',
-                  path: '/sales',
-                  currentPath: currentPath,
-                ),
-                _buildDrawerItem(
-                  context: context,
-                  icon: Icons.receipt_long,
-                  title: 'Historial de Ventas',
-                  path: '/sales-history',
-                  currentPath: currentPath,
-                ),
-                const SizedBox(height: 24),
-                _buildSectionHeader('Administración'),
-                _buildDrawerItem(
-                  context: context,
-                  icon: Icons.badge_rounded,
-                  title: 'Cajeros',
-                  path: '/cashiers',
-                  currentPath: currentPath,
-                ),
+
+                if (hasAccess(PermissionConstants.catalogManage) ||
+                    hasAccess(PermissionConstants.inventoryView) ||
+                    hasAccess(PermissionConstants.customerManage))
+                  _buildSectionHeader('Gestión de Catálogo'),
+
+                if (hasAccess(PermissionConstants.catalogManage)) ...[
+                  _buildDrawerItem(
+                    context: context,
+                    icon: Icons.inventory_2_rounded,
+                    title: 'Productos',
+                    path: '/products',
+                    currentPath: currentPath,
+                  ),
+                  _buildDrawerItem(
+                    context: context,
+                    icon: Icons.store_rounded,
+                    title: 'Departamentos',
+                    path: '/departments',
+                    currentPath: currentPath,
+                  ),
+                  _buildDrawerItem(
+                    context: context,
+                    icon: Icons.category_rounded,
+                    title: 'Categorías',
+                    path: '/categories',
+                    currentPath: currentPath,
+                  ),
+                  _buildDrawerItem(
+                    context: context,
+                    icon: Icons.label_rounded,
+                    title: 'Marcas',
+                    path: '/brands',
+                    currentPath: currentPath,
+                  ),
+                  _buildDrawerItem(
+                    context: context,
+                    icon: Icons.local_shipping_rounded,
+                    title: 'Proveedores',
+                    path: '/suppliers',
+                    currentPath: currentPath,
+                  ),
+                  _buildDrawerItem(
+                    context: context,
+                    icon: Icons.shopping_cart_rounded,
+                    title: 'Compras',
+                    path: '/purchases',
+                    currentPath: currentPath,
+                  ),
+                  _buildDrawerItem(
+                    context: context,
+                    icon: Icons.receipt_rounded,
+                    title: 'Artículos de Compra',
+                    path: '/purchase-items',
+                    currentPath: currentPath,
+                  ),
+                  _buildDrawerItem(
+                    context: context,
+                    icon: Icons.warehouse_rounded,
+                    title: 'Almacenes',
+                    path: '/warehouses',
+                    currentPath: currentPath,
+                  ),
+                  _buildDrawerItem(
+                    context: context,
+                    icon: Icons.price_change_rounded,
+                    title: 'Tasas de Impuesto',
+                    path: '/tax-rates',
+                    currentPath: currentPath,
+                  ),
+                ],
+
+                if (hasAccess(PermissionConstants.inventoryView))
+                  _buildDrawerItem(
+                    context: context,
+                    icon: Icons.inventory_2_rounded,
+                    title: 'Inventario',
+                    path: '/inventory',
+                    currentPath: currentPath,
+                  ),
+
+                if (hasAccess(PermissionConstants.customerManage))
+                  _buildDrawerItem(
+                    context: context,
+                    icon: Icons.people_rounded,
+                    title: 'Clientes',
+                    path: '/customers',
+                    currentPath: currentPath,
+                  ),
+
+                if (hasAccess(PermissionConstants.posAccess) ||
+                    hasAccess(PermissionConstants.reportsView))
+                  const SizedBox(height: 24),
+
+                if (hasAccess(PermissionConstants.posAccess))
+                  _buildDrawerItem(
+                    context: context,
+                    icon: Icons.point_of_sale,
+                    title: 'Ventas (POS)',
+                    path: '/sales',
+                    currentPath: currentPath,
+                  ),
+
+                if (hasAccess(PermissionConstants.reportsView))
+                  _buildDrawerItem(
+                    context: context,
+                    icon: Icons.receipt_long,
+                    title: 'Historial de Ventas',
+                    path: '/sales-history',
+                    currentPath: currentPath,
+                  ),
+
+                if (user?.role == UserRole.administrador) ...[
+                  const SizedBox(height: 24),
+                  _buildSectionHeader('Administración'),
+                  _buildDrawerItem(
+                    context: context,
+                    icon: Icons.badge_rounded,
+                    title: 'Cajeros',
+                    path: '/cashiers',
+                    currentPath: currentPath,
+                  ),
+                ],
               ],
             ),
           ),

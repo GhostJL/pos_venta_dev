@@ -5,6 +5,8 @@ import 'package:posventa/domain/entities/tax_rate.dart';
 import 'package:posventa/presentation/providers/tax_rate_provider.dart';
 import 'package:posventa/presentation/widgets/custom_data_table.dart';
 import 'package:posventa/presentation/widgets/tax_rate_form.dart';
+import 'package:posventa/core/constants/permission_constants.dart';
+import 'package:posventa/presentation/providers/permission_provider.dart';
 
 class TaxRatePage extends ConsumerStatefulWidget {
   const TaxRatePage({super.key});
@@ -19,6 +21,9 @@ class _TaxRatePageState extends ConsumerState<TaxRatePage> {
   @override
   Widget build(BuildContext context) {
     final taxRates = ref.watch(taxRateListProvider);
+    final hasManagePermission = ref.watch(
+      hasPermissionProvider(PermissionConstants.catalogManage),
+    );
 
     return Scaffold(
       body: taxRates.when(
@@ -94,33 +99,40 @@ class _TaxRatePageState extends ConsumerState<TaxRatePage> {
                           Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              IconButton(
-                                icon: Icon(
-                                  taxRate.isEditable
-                                      ? Icons.edit_rounded
-                                      : Icons.visibility_rounded,
-                                  color: taxRate.isEditable
-                                      ? AppTheme.primary
-                                      : AppTheme.textSecondary,
+                              if (hasManagePermission)
+                                IconButton(
+                                  icon: Icon(
+                                    taxRate.isEditable
+                                        ? Icons.edit_rounded
+                                        : Icons.visibility_rounded,
+                                    color: taxRate.isEditable
+                                        ? AppTheme.primary
+                                        : AppTheme.textSecondary,
+                                  ),
+                                  onPressed: () =>
+                                      _showTaxRateDialog(context, taxRate),
+                                  tooltip: taxRate.isEditable
+                                      ? 'Editar'
+                                      : 'Ver',
                                 ),
-                                onPressed: () =>
-                                    _showTaxRateDialog(context, taxRate),
-                                tooltip: taxRate.isEditable ? 'Editar' : 'Ver',
-                              ),
-                              IconButton(
-                                icon: const Icon(
-                                  Icons.delete_rounded,
-                                  color: AppTheme.error,
+                              if (hasManagePermission)
+                                IconButton(
+                                  icon: const Icon(
+                                    Icons.delete_rounded,
+                                    color: AppTheme.error,
+                                  ),
+                                  onPressed: taxRate.isEditable
+                                      ? () => _deleteTaxRate(
+                                          context,
+                                          ref,
+                                          taxRate,
+                                        )
+                                      : null, // Disable button if not editable
+                                  tooltip: taxRate.isEditable
+                                      ? 'Eliminar'
+                                      : 'No se puede eliminar',
                                 ),
-                                onPressed: taxRate.isEditable
-                                    ? () =>
-                                          _deleteTaxRate(context, ref, taxRate)
-                                    : null, // Disable button if not editable
-                                tooltip: taxRate.isEditable
-                                    ? 'Eliminar'
-                                    : 'No se puede eliminar',
-                              ),
-                              if (!taxRate.isDefault)
+                              if (hasManagePermission && !taxRate.isDefault)
                                 PopupMenuButton<String>(
                                   icon: const Icon(
                                     Icons.more_vert_rounded,
@@ -160,7 +172,9 @@ class _TaxRatePageState extends ConsumerState<TaxRatePage> {
                   )
                   .toList(),
               itemCount: filteredList.length,
-              onAddItem: () => _showTaxRateDialog(context),
+              onAddItem: hasManagePermission
+                  ? () => _showTaxRateDialog(context)
+                  : () {},
               searchQuery: _searchQuery,
               onSearch: (value) {
                 setState(() {

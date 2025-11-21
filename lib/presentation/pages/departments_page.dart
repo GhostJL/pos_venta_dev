@@ -5,6 +5,8 @@ import 'package:posventa/domain/entities/department.dart';
 import 'package:posventa/presentation/providers/department_providers.dart';
 import 'package:posventa/presentation/widgets/custom_data_table.dart';
 import 'package:posventa/presentation/widgets/department_form.dart';
+import 'package:posventa/core/constants/permission_constants.dart';
+import 'package:posventa/presentation/providers/permission_provider.dart';
 
 class DepartmentsPage extends ConsumerWidget {
   const DepartmentsPage({super.key});
@@ -12,6 +14,9 @@ class DepartmentsPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final departmentsAsync = ref.watch(departmentListProvider);
+    final hasManagePermission = ref.watch(
+      hasPermissionProvider(PermissionConstants.catalogManage),
+    );
 
     void navigateToForm([Department? department]) {
       Navigator.push(
@@ -102,25 +107,27 @@ class DepartmentsPage extends ConsumerWidget {
                 DataCell(
                   Row(
                     children: [
-                      IconButton(
-                        icon: const Icon(
-                          Icons.edit_rounded,
-                          color: AppTheme.primary,
-                          size: 20,
+                      if (hasManagePermission)
+                        IconButton(
+                          icon: const Icon(
+                            Icons.edit_rounded,
+                            color: AppTheme.primary,
+                            size: 20,
+                          ),
+                          tooltip: 'Editar Departamento',
+                          onPressed: () => navigateToForm(department),
                         ),
-                        tooltip: 'Editar Departamento',
-                        onPressed: () => navigateToForm(department),
-                      ),
-                      IconButton(
-                        icon: const Icon(
-                          Icons.delete_rounded,
-                          color: AppTheme.error,
-                          size: 20,
+                      if (hasManagePermission)
+                        IconButton(
+                          icon: const Icon(
+                            Icons.delete_rounded,
+                            color: AppTheme.error,
+                            size: 20,
+                          ),
+                          tooltip: 'Eliminar Departamento',
+                          onPressed: () =>
+                              confirmDelete(context, ref, department),
                         ),
-                        tooltip: 'Eliminar Departamento',
-                        onPressed: () =>
-                            confirmDelete(context, ref, department),
-                      ),
                     ],
                   ),
                 ),
@@ -128,7 +135,7 @@ class DepartmentsPage extends ConsumerWidget {
             );
           }).toList(),
           itemCount: departments.length,
-          onAddItem: () => navigateToForm(),
+          onAddItem: hasManagePermission ? () => navigateToForm() : () {},
           emptyText:
               'No se encontraron departamentos. ¡Añade uno para empezar!',
         ),

@@ -5,6 +5,8 @@ import 'package:posventa/domain/entities/brand.dart';
 import 'package:posventa/presentation/widgets/brand_form.dart'; // Actualizado
 import 'package:posventa/presentation/providers/brand_providers.dart';
 import 'package:posventa/presentation/widgets/custom_data_table.dart';
+import 'package:posventa/core/constants/permission_constants.dart';
+import 'package:posventa/presentation/providers/permission_provider.dart';
 
 class BrandsPage extends ConsumerWidget {
   const BrandsPage({super.key});
@@ -12,6 +14,9 @@ class BrandsPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final brandList = ref.watch(brandListProvider);
+    final hasManagePermission = ref.watch(
+      hasPermissionProvider(PermissionConstants.catalogManage),
+    );
 
     void navigateToForm([Brand? brand]) {
       Navigator.push(
@@ -94,24 +99,26 @@ class BrandsPage extends ConsumerWidget {
                 DataCell(
                   Row(
                     children: [
-                      IconButton(
-                        icon: const Icon(
-                          Icons.edit_rounded,
-                          color: AppTheme.primary,
-                          size: 20,
+                      if (hasManagePermission)
+                        IconButton(
+                          icon: const Icon(
+                            Icons.edit_rounded,
+                            color: AppTheme.primary,
+                            size: 20,
+                          ),
+                          tooltip: 'Editar Marca',
+                          onPressed: () => navigateToForm(brand),
                         ),
-                        tooltip: 'Editar Marca',
-                        onPressed: () => navigateToForm(brand),
-                      ),
-                      IconButton(
-                        icon: const Icon(
-                          Icons.delete_rounded,
-                          color: AppTheme.error,
-                          size: 20,
+                      if (hasManagePermission)
+                        IconButton(
+                          icon: const Icon(
+                            Icons.delete_rounded,
+                            color: AppTheme.error,
+                            size: 20,
+                          ),
+                          tooltip: 'Eliminar Marca',
+                          onPressed: () => confirmDelete(context, ref, brand),
                         ),
-                        tooltip: 'Eliminar Marca',
-                        onPressed: () => confirmDelete(context, ref, brand),
-                      ),
                     ],
                   ),
                 ),
@@ -119,7 +126,7 @@ class BrandsPage extends ConsumerWidget {
             );
           }).toList(),
           itemCount: brands.length,
-          onAddItem: () => navigateToForm(),
+          onAddItem: hasManagePermission ? () => navigateToForm() : () {},
           emptyText: 'No se encontraron marcas. ¡Añade una para empezar!',
         ),
         loading: () => const Center(child: CircularProgressIndicator()),

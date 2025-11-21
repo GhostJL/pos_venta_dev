@@ -5,6 +5,8 @@ import 'package:posventa/presentation/providers/inventory_providers.dart';
 import 'package:posventa/presentation/providers/product_provider.dart';
 import 'package:posventa/presentation/pages/inventory_form_page.dart';
 import 'package:posventa/presentation/pages/inventory_movements_page.dart';
+import 'package:posventa/core/constants/permission_constants.dart';
+import 'package:posventa/presentation/providers/permission_provider.dart';
 
 class InventoryPage extends ConsumerWidget {
   const InventoryPage({super.key});
@@ -14,6 +16,18 @@ class InventoryPage extends ConsumerWidget {
     final inventoryAsync = ref.watch(inventoryProvider);
     final productsAsync = ref.watch(productNotifierProvider);
     final warehousesAsync = ref.watch(warehousesProvider);
+    final hasViewAccess = ref.watch(
+      hasPermissionProvider(PermissionConstants.inventoryView),
+    );
+    final hasAdjustAccess = ref.watch(
+      hasPermissionProvider(PermissionConstants.inventoryAdjust),
+    );
+
+    if (!hasViewAccess) {
+      return const Scaffold(
+        body: Center(child: Text('No tienes acceso al inventario')),
+      );
+    }
 
     return Scaffold(
       backgroundColor: AppTheme.background,
@@ -143,10 +157,13 @@ class InventoryPage extends ConsumerWidget {
                               ),
                             ],
                           ),
-                          trailing: IconButton(
-                            icon: const Icon(Icons.more_vert_rounded),
-                            onPressed: () => _showActions(context, ref, item),
-                          ),
+                          trailing: hasAdjustAccess
+                              ? IconButton(
+                                  icon: const Icon(Icons.more_vert_rounded),
+                                  onPressed: () =>
+                                      _showActions(context, ref, item),
+                                )
+                              : null,
                         ),
                       );
                     },
@@ -166,16 +183,20 @@ class InventoryPage extends ConsumerWidget {
         error: (e, s) => Center(child: Text('Error cargando inventario: $e')),
       ),
 
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.of(context).push(
-            MaterialPageRoute(builder: (context) => const InventoryFormPage()),
-          );
-        },
-        backgroundColor: AppTheme.primary,
-        foregroundColor: Colors.white,
-        child: const Icon(Icons.add_rounded),
-      ),
+      floatingActionButton: hasAdjustAccess
+          ? FloatingActionButton(
+              onPressed: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => const InventoryFormPage(),
+                  ),
+                );
+              },
+              backgroundColor: AppTheme.primary,
+              foregroundColor: Colors.white,
+              child: const Icon(Icons.add_rounded),
+            )
+          : null,
     );
   }
 

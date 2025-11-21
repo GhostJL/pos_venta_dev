@@ -3,6 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:posventa/presentation/providers/auth_provider.dart';
 import 'package:posventa/presentation/providers/providers.dart';
 import 'package:posventa/presentation/providers/warehouse_providers.dart';
+import 'package:posventa/core/constants/permission_constants.dart';
+import 'package:posventa/presentation/providers/permission_provider.dart';
+import 'package:posventa/presentation/widgets/permission_denied_widget.dart';
 
 class CashSessionOpenPage extends ConsumerStatefulWidget {
   const CashSessionOpenPage({super.key});
@@ -81,6 +84,18 @@ class _CashSessionOpenPageState extends ConsumerState<CashSessionOpenPage> {
   Widget build(BuildContext context) {
     final warehousesAsync = ref.watch(warehouseProvider);
     final user = ref.watch(authProvider).user;
+    final hasOpenPermission = ref.watch(
+      hasPermissionProvider(PermissionConstants.cashOpen),
+    );
+
+    if (!hasOpenPermission) {
+      return PermissionDeniedWidget(
+        message:
+            'No tienes permiso para abrir sesiones de caja.\n\nContacta a un administrador para obtener acceso.',
+        icon: Icons.point_of_sale_outlined,
+        backRoute: '/home',
+      );
+    }
 
     return Scaffold(
       appBar: AppBar(

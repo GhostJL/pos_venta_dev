@@ -4,6 +4,7 @@ import 'package:posventa/domain/entities/user.dart';
 import 'package:posventa/presentation/pages/cashier/cashier_form_page.dart';
 import 'package:posventa/presentation/pages/cashier/cashier_permissions_page.dart';
 import 'package:posventa/presentation/providers/cashier_providers.dart';
+import 'package:posventa/presentation/providers/auth_provider.dart';
 
 class CashierListPage extends ConsumerWidget {
   const CashierListPage({super.key});
@@ -11,6 +12,13 @@ class CashierListPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final cashiersAsync = ref.watch(cashierListProvider);
+    final authState = ref.watch(authProvider);
+
+    if (authState.user?.role != UserRole.administrador) {
+      return const Scaffold(
+        body: Center(child: Text('Acceso denegado. Solo administradores.')),
+      );
+    }
 
     return Scaffold(
       appBar: AppBar(title: const Text('Gestión de Cajeros')),

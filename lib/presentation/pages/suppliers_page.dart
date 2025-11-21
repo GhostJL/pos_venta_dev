@@ -5,6 +5,8 @@ import 'package:posventa/domain/entities/supplier.dart';
 import 'package:posventa/presentation/widgets/supplier_form.dart';
 import 'package:posventa/presentation/providers/supplier_providers.dart';
 import 'package:posventa/presentation/widgets/custom_data_table.dart';
+import 'package:posventa/core/constants/permission_constants.dart';
+import 'package:posventa/presentation/providers/permission_provider.dart';
 
 class SuppliersPage extends ConsumerStatefulWidget {
   const SuppliersPage({super.key});
@@ -28,6 +30,9 @@ class SuppliersPageState extends ConsumerState<SuppliersPage> {
   @override
   Widget build(BuildContext context) {
     final suppliers = ref.watch(supplierListProvider);
+    final hasManagePermission = ref.watch(
+      hasPermissionProvider(PermissionConstants.catalogManage),
+    );
 
     return Scaffold(
       body: suppliers.when(
@@ -82,23 +87,25 @@ class SuppliersPageState extends ConsumerState<SuppliersPage> {
                           Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              IconButton(
-                                icon: const Icon(
-                                  Icons.edit_rounded,
-                                  color: AppTheme.primary,
+                              if (hasManagePermission)
+                                IconButton(
+                                  icon: const Icon(
+                                    Icons.edit_rounded,
+                                    color: AppTheme.primary,
+                                  ),
+                                  onPressed: () => _navigateToForm(supplier),
+                                  tooltip: 'Editar',
                                 ),
-                                onPressed: () => _navigateToForm(supplier),
-                                tooltip: 'Editar',
-                              ),
-                              IconButton(
-                                icon: const Icon(
-                                  Icons.delete_rounded,
-                                  color: AppTheme.error,
+                              if (hasManagePermission)
+                                IconButton(
+                                  icon: const Icon(
+                                    Icons.delete_rounded,
+                                    color: AppTheme.error,
+                                  ),
+                                  onPressed: () =>
+                                      _confirmDelete(context, ref, supplier),
+                                  tooltip: 'Eliminar',
                                 ),
-                                onPressed: () =>
-                                    _confirmDelete(context, ref, supplier),
-                                tooltip: 'Eliminar',
-                              ),
                             ],
                           ),
                         ),
@@ -107,7 +114,7 @@ class SuppliersPageState extends ConsumerState<SuppliersPage> {
                   )
                   .toList(),
               itemCount: filteredList.length,
-              onAddItem: () => _navigateToForm(),
+              onAddItem: hasManagePermission ? () => _navigateToForm() : () {},
               searchQuery: _searchQuery,
               onSearch: (value) {
                 setState(() {

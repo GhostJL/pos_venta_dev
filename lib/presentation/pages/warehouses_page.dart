@@ -4,6 +4,8 @@ import 'package:posventa/app/theme.dart';
 import 'package:posventa/domain/entities/warehouse.dart';
 import 'package:posventa/presentation/providers/warehouse_providers.dart';
 import 'package:posventa/presentation/widgets/custom_data_table.dart';
+import 'package:posventa/core/constants/permission_constants.dart';
+import 'package:posventa/presentation/providers/permission_provider.dart';
 
 class WarehousesPage extends ConsumerWidget {
   const WarehousesPage({super.key});
@@ -11,6 +13,9 @@ class WarehousesPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final warehousesAsync = ref.watch(warehouseProvider);
+    final hasManagePermission = ref.watch(
+      hasPermissionProvider(PermissionConstants.catalogManage),
+    );
 
     void showWarehouseForm([Warehouse? warehouse]) {
       showDialog(
@@ -32,7 +37,9 @@ class WarehousesPage extends ConsumerWidget {
           data: (warehouses) {
             return CustomDataTable<Warehouse>(
               itemCount: warehouses.length,
-              onAddItem: () => showWarehouseForm(),
+              onAddItem: hasManagePermission
+                  ? () => showWarehouseForm()
+                  : () {},
               emptyText: 'No hay almacenes registrados.',
               columns: const [
                 DataColumn(label: Text('NOMBRE')),
@@ -87,22 +94,24 @@ class WarehousesPage extends ConsumerWidget {
                     DataCell(
                       Row(
                         children: [
-                          IconButton(
-                            icon: const Icon(Icons.edit_outlined, size: 20),
-                            color: AppTheme.textSecondary,
-                            onPressed: () => showWarehouseForm(warehouse),
-                            tooltip: 'Editar',
-                          ),
-                          IconButton(
-                            icon: const Icon(Icons.delete_outline, size: 20),
-                            color: AppTheme.textSecondary,
-                            onPressed: () {
-                              ref
-                                  .read(warehouseProvider.notifier)
-                                  .removeWarehouse(warehouse.id!);
-                            },
-                            tooltip: 'Eliminar',
-                          ),
+                          if (hasManagePermission)
+                            IconButton(
+                              icon: const Icon(Icons.edit_outlined, size: 20),
+                              color: AppTheme.textSecondary,
+                              onPressed: () => showWarehouseForm(warehouse),
+                              tooltip: 'Editar',
+                            ),
+                          if (hasManagePermission)
+                            IconButton(
+                              icon: const Icon(Icons.delete_outline, size: 20),
+                              color: AppTheme.textSecondary,
+                              onPressed: () {
+                                ref
+                                    .read(warehouseProvider.notifier)
+                                    .removeWarehouse(warehouse.id!);
+                              },
+                              tooltip: 'Eliminar',
+                            ),
                         ],
                       ),
                     ),

@@ -4,6 +4,8 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:posventa/domain/entities/purchase.dart';
 import 'package:posventa/presentation/providers/purchase_providers.dart';
+import 'package:posventa/core/constants/permission_constants.dart';
+import 'package:posventa/presentation/providers/permission_provider.dart';
 
 class PurchasesPage extends ConsumerStatefulWidget {
   const PurchasesPage({super.key});
@@ -16,18 +18,22 @@ class _PurchasesPageState extends ConsumerState<PurchasesPage> {
   @override
   Widget build(BuildContext context) {
     final purchasesAsync = ref.watch(purchaseProvider);
+    final hasManagePermission = ref.watch(
+      hasPermissionProvider(PermissionConstants.catalogManage),
+    );
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Compras'),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.add),
-            onPressed: () {
-              context.push('/purchases/new');
-            },
-            tooltip: 'Nueva Compra',
-          ),
+          if (hasManagePermission)
+            IconButton(
+              icon: const Icon(Icons.add),
+              onPressed: () {
+                context.push('/purchases/new');
+              },
+              tooltip: 'Nueva Compra',
+            ),
         ],
       ),
       body: purchasesAsync.when(

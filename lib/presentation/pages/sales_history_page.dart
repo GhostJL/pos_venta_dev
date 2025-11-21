@@ -4,6 +4,9 @@ import 'package:go_router/go_router.dart';
 import 'package:posventa/domain/entities/sale.dart';
 import 'package:posventa/presentation/providers/providers.dart';
 import 'package:intl/intl.dart';
+import 'package:posventa/core/constants/permission_constants.dart';
+import 'package:posventa/presentation/providers/permission_provider.dart';
+import 'package:posventa/presentation/widgets/permission_denied_widget.dart';
 
 class SalesHistoryPage extends ConsumerStatefulWidget {
   const SalesHistoryPage({super.key});
@@ -49,6 +52,19 @@ class _SalesHistoryPageState extends ConsumerState<SalesHistoryPage> {
 
   @override
   Widget build(BuildContext context) {
+    final hasViewPermission = ref.watch(
+      hasPermissionProvider(PermissionConstants.reportsView),
+    );
+
+    if (!hasViewPermission) {
+      return PermissionDeniedWidget(
+        message:
+            'No tienes permiso para ver el historial de ventas.\n\nContacta a un administrador para obtener acceso.',
+        icon: Icons.assessment_outlined,
+        backRoute: '/home',
+      );
+    }
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Historial de Ventas'),

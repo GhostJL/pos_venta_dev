@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:posventa/presentation/providers/customer_providers.dart';
 import 'package:posventa/presentation/providers/pos_providers.dart';
 import 'package:posventa/presentation/widgets/pos/payment_dialog.dart';
+import 'package:posventa/core/constants/permission_constants.dart';
+import 'package:posventa/presentation/providers/permission_provider.dart';
 
 class CartSection extends ConsumerWidget {
   final bool isMobile;
@@ -13,6 +15,9 @@ class CartSection extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final posState = ref.watch(pOSProvider);
     final posNotifier = ref.read(pOSProvider.notifier);
+    final hasVoidPermission = ref.watch(
+      hasPermissionProvider(PermissionConstants.posVoidItem),
+    );
 
     return Container(
       decoration: BoxDecoration(
@@ -120,14 +125,18 @@ class CartSection extends ConsumerWidget {
                                     overflow: TextOverflow.ellipsis,
                                   ),
                                 ),
-                                IconButton(
-                                  icon: const Icon(Icons.close, size: 20),
-                                  onPressed: () {
-                                    posNotifier.removeFromCart(item.productId);
-                                  },
-                                  padding: EdgeInsets.zero,
-                                  constraints: const BoxConstraints(),
-                                ),
+
+                                if (hasVoidPermission)
+                                  IconButton(
+                                    icon: const Icon(Icons.close, size: 20),
+                                    onPressed: () {
+                                      posNotifier.removeFromCart(
+                                        item.productId,
+                                      );
+                                    },
+                                    padding: EdgeInsets.zero,
+                                    constraints: const BoxConstraints(),
+                                  ),
                               ],
                             ),
                             const SizedBox(height: 8),

@@ -5,6 +5,8 @@ import 'package:posventa/domain/entities/customer.dart';
 import 'package:posventa/presentation/providers/customer_providers.dart';
 import 'package:posventa/presentation/widgets/custom_data_table.dart';
 import 'package:posventa/presentation/widgets/customer_form.dart';
+import 'package:posventa/core/constants/permission_constants.dart';
+import 'package:posventa/presentation/providers/permission_provider.dart';
 
 class CustomersPage extends ConsumerStatefulWidget {
   const CustomersPage({super.key});
@@ -26,6 +28,9 @@ class CustomersPageState extends ConsumerState<CustomersPage> {
   @override
   Widget build(BuildContext context) {
     final customersAsync = ref.watch(customerProvider);
+    final hasManagePermission = ref.watch(
+      hasPermissionProvider(PermissionConstants.customerManage),
+    );
 
     return Scaffold(
       body: customersAsync.when(
@@ -60,21 +65,23 @@ class CustomersPageState extends ConsumerState<CustomersPage> {
                       Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          IconButton(
-                            icon: const Icon(
-                              Icons.edit,
-                              color: AppTheme.primary,
+                          if (hasManagePermission)
+                            IconButton(
+                              icon: const Icon(
+                                Icons.edit,
+                                color: AppTheme.primary,
+                              ),
+                              onPressed: () => _navigateToForm(customer),
                             ),
-                            onPressed: () => _navigateToForm(customer),
-                          ),
-                          IconButton(
-                            icon: const Icon(
-                              Icons.delete,
-                              color: AppTheme.error,
+                          if (hasManagePermission)
+                            IconButton(
+                              icon: const Icon(
+                                Icons.delete,
+                                color: AppTheme.error,
+                              ),
+                              onPressed: () =>
+                                  _confirmDelete(context, ref, customer),
                             ),
-                            onPressed: () =>
-                                _confirmDelete(context, ref, customer),
-                          ),
                         ],
                       ),
                     ),
@@ -82,7 +89,7 @@ class CustomersPageState extends ConsumerState<CustomersPage> {
                 );
               }).toList(),
               itemCount: filteredList.length,
-              onAddItem: () => _navigateToForm(),
+              onAddItem: hasManagePermission ? () => _navigateToForm() : () {},
               searchQuery: _searchQuery,
               onSearch: (value) {
                 setState(() {

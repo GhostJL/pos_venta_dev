@@ -8,6 +8,8 @@ import 'package:posventa/presentation/providers/category_providers.dart';
 import 'package:posventa/presentation/providers/department_providers.dart';
 import 'package:posventa/presentation/providers/product_provider.dart';
 import 'package:posventa/presentation/providers/supplier_providers.dart';
+import 'package:posventa/core/constants/permission_constants.dart';
+import 'package:posventa/presentation/providers/permission_provider.dart';
 
 class ProductsPage extends ConsumerStatefulWidget {
   const ProductsPage({super.key});
@@ -36,6 +38,9 @@ class ProductsPageState extends ConsumerState<ProductsPage> {
   @override
   Widget build(BuildContext context) {
     final products = ref.watch(productNotifierProvider);
+    final hasManagePermission = ref.watch(
+      hasPermissionProvider(PermissionConstants.catalogManage),
+    );
 
     return Scaffold(
       appBar: AppBar(
@@ -229,16 +234,20 @@ class ProductsPageState extends ConsumerState<ProductsPage> {
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.of(context).push(
-            MaterialPageRoute(builder: (context) => const ProductFormPage()),
-          );
-        },
-        backgroundColor: AppTheme.primary,
-        foregroundColor: Colors.white,
-        child: const Icon(Icons.add_rounded),
-      ),
+      floatingActionButton: hasManagePermission
+          ? FloatingActionButton(
+              onPressed: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => const ProductFormPage(),
+                  ),
+                );
+              },
+              backgroundColor: AppTheme.primary,
+              foregroundColor: Colors.white,
+              child: const Icon(Icons.add_rounded),
+            )
+          : null,
     );
   }
 
@@ -583,6 +592,10 @@ class ProductsPageState extends ConsumerState<ProductsPage> {
   }
 
   void _showActions(BuildContext context, Product product) {
+    final hasManagePermission = ref.watch(
+      hasPermissionProvider(PermissionConstants.catalogManage),
+    );
+
     showModalBottomSheet(
       context: context,
       backgroundColor: AppTheme.background,
@@ -604,91 +617,98 @@ class ProductsPageState extends ConsumerState<ProductsPage> {
                 ),
               ),
               const SizedBox(height: 24),
-              ListTile(
-                leading: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: AppTheme.primary.withAlpha(20),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const Icon(
-                    Icons.edit_rounded,
-                    color: AppTheme.primary,
-                  ),
-                ),
-                title: const Text(
-                  'Editar Producto',
-                  style: TextStyle(fontWeight: FontWeight.bold),
-                ),
-                onTap: () {
-                  Navigator.pop(context);
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (context) => ProductFormPage(product: product),
+              if (hasManagePermission)
+                ListTile(
+                  leading: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: AppTheme.primary.withAlpha(20),
+                      borderRadius: BorderRadius.circular(8),
                     ),
-                  );
-                },
-              ),
-              const SizedBox(height: 8),
-              ListTile(
-                leading: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: AppTheme.secondary.withAlpha(20),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const Icon(
-                    Icons.copy_rounded,
-                    color: AppTheme.secondary,
-                  ),
-                ),
-                title: const Text(
-                  'Duplicar Producto',
-                  style: TextStyle(fontWeight: FontWeight.bold),
-                ),
-                onTap: () {
-                  Navigator.pop(context);
-                  final newProduct = product.copyWith(
-                    id: null,
-                    name: '${product.name} (Copia)',
-                  );
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (context) =>
-                          ProductFormPage(product: newProduct),
+                    child: const Icon(
+                      Icons.edit_rounded,
+                      color: AppTheme.primary,
                     ),
-                  );
-                },
-              ),
-              const SizedBox(height: 8),
-              ListTile(
-                leading: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color:
-                        (product.isActive ? AppTheme.error : AppTheme.success)
-                            .withAlpha(20),
-                    borderRadius: BorderRadius.circular(8),
                   ),
-                  child: Icon(
-                    Icons.power_settings_new_rounded,
-                    color: product.isActive ? AppTheme.error : AppTheme.success,
+                  title: const Text(
+                    'Editar Producto',
+                    style: TextStyle(fontWeight: FontWeight.bold),
                   ),
+                  onTap: () {
+                    Navigator.pop(context);
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => ProductFormPage(product: product),
+                      ),
+                    );
+                  },
                 ),
-                title: Text(
-                  product.isActive ? 'Desactivar Producto' : 'Activar Producto',
-                  style: const TextStyle(fontWeight: FontWeight.bold),
+              if (hasManagePermission) const SizedBox(height: 8),
+              if (hasManagePermission)
+                ListTile(
+                  leading: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: AppTheme.secondary.withAlpha(20),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Icon(
+                      Icons.copy_rounded,
+                      color: AppTheme.secondary,
+                    ),
+                  ),
+                  title: const Text(
+                    'Duplicar Producto',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  onTap: () {
+                    Navigator.pop(context);
+                    final newProduct = product.copyWith(
+                      id: null,
+                      name: '${product.name} (Copia)',
+                    );
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) =>
+                            ProductFormPage(product: newProduct),
+                      ),
+                    );
+                  },
                 ),
-                onTap: () {
-                  Navigator.pop(context);
-                  final updatedProduct = product.copyWith(
-                    isActive: !product.isActive,
-                  );
-                  ref
-                      .read(productNotifierProvider.notifier)
-                      .updateProduct(updatedProduct);
-                },
-              ),
+              if (hasManagePermission) const SizedBox(height: 8),
+              if (hasManagePermission)
+                ListTile(
+                  leading: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color:
+                          (product.isActive ? AppTheme.error : AppTheme.success)
+                              .withAlpha(20),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Icon(
+                      Icons.power_settings_new_rounded,
+                      color: product.isActive
+                          ? AppTheme.error
+                          : AppTheme.success,
+                    ),
+                  ),
+                  title: Text(
+                    product.isActive
+                        ? 'Desactivar Producto'
+                        : 'Activar Producto',
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  onTap: () {
+                    Navigator.pop(context);
+                    final updatedProduct = product.copyWith(
+                      isActive: !product.isActive,
+                    );
+                    ref
+                        .read(productNotifierProvider.notifier)
+                        .updateProduct(updatedProduct);
+                  },
+                ),
             ],
           ),
         );

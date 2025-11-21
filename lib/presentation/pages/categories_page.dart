@@ -6,6 +6,8 @@ import 'package:posventa/presentation/providers/category_providers.dart';
 import 'package:posventa/presentation/providers/department_providers.dart';
 import 'package:posventa/presentation/widgets/category_form.dart';
 import 'package:posventa/presentation/widgets/custom_data_table.dart';
+import 'package:posventa/core/constants/permission_constants.dart';
+import 'package:posventa/presentation/providers/permission_provider.dart';
 
 class CategoriesPage extends ConsumerWidget {
   const CategoriesPage({super.key});
@@ -14,6 +16,9 @@ class CategoriesPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final categoriesAsync = ref.watch(categoryListProvider);
     final departments = ref.watch(departmentListProvider);
+    final hasManagePermission = ref.watch(
+      hasPermissionProvider(PermissionConstants.catalogManage),
+    );
 
     void navigateToForm([Category? category]) {
       Navigator.push(
@@ -112,24 +117,27 @@ class CategoriesPage extends ConsumerWidget {
                 DataCell(
                   Row(
                     children: [
-                      IconButton(
-                        icon: const Icon(
-                          Icons.edit_rounded,
-                          color: AppTheme.primary,
-                          size: 20,
+                      if (hasManagePermission)
+                        IconButton(
+                          icon: const Icon(
+                            Icons.edit_rounded,
+                            color: AppTheme.primary,
+                            size: 20,
+                          ),
+                          tooltip: 'Editar Categoría',
+                          onPressed: () => navigateToForm(category),
                         ),
-                        tooltip: 'Editar Categoría',
-                        onPressed: () => navigateToForm(category),
-                      ),
-                      IconButton(
-                        icon: const Icon(
-                          Icons.delete_rounded,
-                          color: AppTheme.error,
-                          size: 20,
+                      if (hasManagePermission)
+                        IconButton(
+                          icon: const Icon(
+                            Icons.delete_rounded,
+                            color: AppTheme.error,
+                            size: 20,
+                          ),
+                          tooltip: 'Eliminar Categoría',
+                          onPressed: () =>
+                              confirmDelete(context, ref, category),
                         ),
-                        tooltip: 'Eliminar Categoría',
-                        onPressed: () => confirmDelete(context, ref, category),
-                      ),
                     ],
                   ),
                 ),
@@ -137,7 +145,7 @@ class CategoriesPage extends ConsumerWidget {
             );
           }).toList(),
           itemCount: categories.length,
-          onAddItem: () => navigateToForm(),
+          onAddItem: hasManagePermission ? () => navigateToForm() : () {},
           emptyText: 'No se encontraron categorías. ¡Añade una para empezar!',
         ),
         loading: () => const Center(child: CircularProgressIndicator()),

@@ -14,7 +14,7 @@ class DatabaseHelper {
 
   // Database configuration
   static const _databaseName = "pos.db";
-  static const _databaseVersion = 12; // Incremented for permissions
+  static const _databaseVersion = 13; // Incremented for new permissions
 
   // Table names
   static const tableUsers = 'users';
@@ -242,6 +242,31 @@ class DatabaseHelper {
     if (oldVersion < 12) {
       await _createPermissionsTable(db);
       await _createUserPermissionsTable(db);
+    }
+    if (oldVersion < 13) {
+      // Insert new permissions for Catalog and Customer management
+      final newPermissions = [
+        {
+          'name': 'Gestionar Catálogo',
+          'code': 'CATALOG_MANAGE',
+          'module': 'CATALOG',
+          'description': 'Permite administrar productos, categorías, etc.',
+        },
+        {
+          'name': 'Gestionar Clientes',
+          'code': 'CUSTOMER_MANAGE',
+          'module': 'CUSTOMERS',
+          'description': 'Permite administrar clientes',
+        },
+      ];
+
+      for (final perm in newPermissions) {
+        await db.insert(
+          tablePermissions,
+          perm,
+          conflictAlgorithm: ConflictAlgorithm.ignore,
+        );
+      }
     }
   }
 
@@ -785,6 +810,18 @@ class DatabaseHelper {
         'code': 'REPORTS_VIEW',
         'module': 'REPORTS',
         'description': 'Permite ver reportes de ventas',
+      },
+      {
+        'name': 'Gestionar Catálogo',
+        'code': 'CATALOG_MANAGE',
+        'module': 'CATALOG',
+        'description': 'Permite administrar productos, categorías, etc.',
+      },
+      {
+        'name': 'Gestionar Clientes',
+        'code': 'CUSTOMER_MANAGE',
+        'module': 'CUSTOMERS',
+        'description': 'Permite administrar clientes',
       },
     ];
 

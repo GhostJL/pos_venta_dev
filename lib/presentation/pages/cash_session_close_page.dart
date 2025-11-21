@@ -3,6 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:posventa/presentation/providers/providers.dart';
 import 'package:posventa/presentation/providers/auth_provider.dart';
+import 'package:posventa/core/constants/permission_constants.dart';
+import 'package:posventa/presentation/providers/permission_provider.dart';
+import 'package:posventa/presentation/widgets/permission_denied_widget.dart';
 
 class CashSessionClosePage extends ConsumerStatefulWidget {
   final bool isLogoutIntent;
@@ -214,6 +217,18 @@ class _CashSessionClosePageState extends ConsumerState<CashSessionClosePage> {
     }
 
     final sessionAsync = ref.watch(currentCashSessionProvider);
+    final hasClosePermission = ref.watch(
+      hasPermissionProvider(PermissionConstants.cashClose),
+    );
+
+    if (!hasClosePermission) {
+      return PermissionDeniedWidget(
+        message:
+            'No tienes permiso para cerrar sesiones de caja.\n\nContacta a un administrador para obtener acceso.',
+        icon: Icons.point_of_sale_outlined,
+        backRoute: '/home',
+      );
+    }
 
     return Scaffold(
       appBar: AppBar(title: const Text('Cierre de Caja'), centerTitle: true),
