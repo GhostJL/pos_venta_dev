@@ -7,6 +7,11 @@ class PermissionDeniedWidget extends StatelessWidget {
   final IconData icon;
   final String? backRoute;
   final VoidCallback? onBackPressed;
+  final String? primaryButtonText;
+  final VoidCallback? onPrimaryPressed;
+  final String? secondaryButtonText;
+  final VoidCallback? onSecondaryPressed;
+  final bool showSecondaryButton;
 
   const PermissionDeniedWidget({
     super.key,
@@ -14,6 +19,11 @@ class PermissionDeniedWidget extends StatelessWidget {
     this.icon = Icons.lock_outline,
     this.backRoute,
     this.onBackPressed,
+    this.primaryButtonText,
+    this.onPrimaryPressed,
+    this.secondaryButtonText,
+    this.onSecondaryPressed,
+    this.showSecondaryButton = true,
   });
 
   @override
@@ -30,7 +40,11 @@ class PermissionDeniedWidget extends StatelessWidget {
             } else if (backRoute != null) {
               context.go(backRoute!);
             } else {
-              context.go('/home');
+              if (context.canPop()) {
+                context.pop();
+              } else {
+                context.go('/home');
+              }
             }
           },
         ),
@@ -70,33 +84,43 @@ class PermissionDeniedWidget extends StatelessWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  OutlinedButton.icon(
-                    onPressed: () {
-                      if (onBackPressed != null) {
-                        onBackPressed!();
-                      } else if (backRoute != null) {
-                        context.go(backRoute!);
-                      } else {
-                        context.go('/home');
-                      }
-                    },
-                    icon: const Icon(Icons.arrow_back),
-                    label: const Text('Volver'),
-                    style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 32,
-                        vertical: 16,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                  if (showSecondaryButton) ...[
+                    OutlinedButton.icon(
+                      onPressed:
+                          onSecondaryPressed ??
+                          () {
+                            if (onBackPressed != null) {
+                              onBackPressed!();
+                            } else if (backRoute != null) {
+                              context.go(backRoute!);
+                            } else {
+                              if (context.canPop()) {
+                                context.pop();
+                              } else {
+                                context.go('/home');
+                              }
+                            }
+                          },
+                      icon: const Icon(Icons.arrow_back),
+                      label: Text(secondaryButtonText ?? 'Volver'),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 32,
+                          vertical: 16,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                       ),
                     ),
-                  ),
-                  const SizedBox(width: 16),
+                    const SizedBox(width: 16),
+                  ],
                   ElevatedButton.icon(
-                    onPressed: () => context.go('/home'),
-                    icon: const Icon(Icons.home),
-                    label: const Text('Ir al Inicio'),
+                    onPressed: onPrimaryPressed ?? () => context.go('/home'),
+                    icon: Icon(
+                      onPrimaryPressed != null ? Icons.check : Icons.home,
+                    ), // Dynamic icon
+                    label: Text(primaryButtonText ?? 'Ir al Inicio'),
                     style: ElevatedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 32,

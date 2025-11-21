@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:posventa/presentation/providers/auth_provider.dart';
 import 'package:posventa/presentation/providers/providers.dart';
 import 'package:posventa/presentation/providers/warehouse_providers.dart';
 import 'package:posventa/core/constants/permission_constants.dart';
 import 'package:posventa/presentation/providers/permission_provider.dart';
 import 'package:posventa/presentation/widgets/permission_denied_widget.dart';
+import 'package:posventa/domain/entities/user.dart';
+import 'package:posventa/presentation/widgets/warehouse_form_widget.dart';
 
 class CashSessionOpenPage extends ConsumerStatefulWidget {
   const CashSessionOpenPage({super.key});
@@ -91,9 +94,14 @@ class _CashSessionOpenPageState extends ConsumerState<CashSessionOpenPage> {
     if (!hasOpenPermission) {
       return PermissionDeniedWidget(
         message:
-            'No tienes permiso para abrir sesiones de caja.\n\nContacta a un administrador para obtener acceso.',
-        icon: Icons.point_of_sale_outlined,
-        backRoute: '/home',
+            'No puedes iniciar el sistema.\n\nContacta a un administrador para obtener acceso.',
+        icon: Icons.lock_outline,
+        primaryButtonText: 'Cerrar sesión e ir al login',
+        onPrimaryPressed: () async {
+          await ref.read(authProvider.notifier).logout();
+          if (context.mounted) context.go('/login');
+        },
+        showSecondaryButton: false,
       );
     }
 
@@ -154,6 +162,40 @@ class _CashSessionOpenPageState extends ConsumerState<CashSessionOpenPage> {
                     warehousesAsync.when(
                       data: (warehouses) {
                         if (warehouses.isEmpty) {
+                          final isAdmin = user?.role == UserRole.administrador;
+                          if (isAdmin) {
+                            return Column(
+                              children: [
+                                const Text(
+                                  'No hay sucursales registradas.',
+                                  style: TextStyle(color: Colors.red),
+                                  textAlign: TextAlign.center,
+                                ),
+                                const SizedBox(height: 8),
+                                ElevatedButton.icon(
+                                  onPressed: () {
+                                    showDialog(
+                                      context: context,
+                                      builder: (context) => WarehouseFormWidget(
+                                        onSuccess: () {
+                                          Navigator.of(context).pop();
+                                          ref.invalidate(warehouseProvider);
+                                        },
+                                      ),
+                                    );
+                                  },
+                                  icon: const Icon(Icons.add),
+                                  label: const Text('Crear Sucursal'),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Theme.of(
+                                      context,
+                                    ).primaryColor,
+                                    foregroundColor: Colors.white,
+                                  ),
+                                ),
+                              ],
+                            );
+                          }
                           return const Text(
                             'No hay sucursales disponibles',
                             style: TextStyle(color: Colors.red),

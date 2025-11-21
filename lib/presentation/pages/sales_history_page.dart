@@ -59,7 +59,7 @@ class _SalesHistoryPageState extends ConsumerState<SalesHistoryPage> {
     if (!hasViewPermission) {
       return PermissionDeniedWidget(
         message:
-            'No tienes permiso para ver el historial de ventas.\n\nContacta a un administrador para obtener acceso.',
+            'No puedes entrar a este módulo.\n\nContacta a un administrador para obtener acceso.',
         icon: Icons.assessment_outlined,
         backRoute: '/home',
       );
