@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
-import 'package:posventa/app/theme.dart';
+import 'package:posventa/core/theme/theme.dart';
 import 'package:posventa/presentation/widgets/dashboard_card.dart';
 
 class DashboardScreen extends StatelessWidget {

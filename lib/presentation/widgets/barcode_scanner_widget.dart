@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
-import 'package:posventa/app/theme.dart';
+import 'package:posventa/core/theme/theme.dart';
 
 class BarcodeScannerWidget extends StatefulWidget {
   final Function(BuildContext context, String barcode) onBarcodeScanned;

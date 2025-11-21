@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:posventa/domain/entities/tax_rate.dart';
 import 'package:posventa/presentation/providers/tax_rate_provider.dart';
-import 'package:posventa/app/theme.dart';
+import 'package:posventa/core/theme/theme.dart';
 
 class TaxRateForm extends ConsumerStatefulWidget {
   final TaxRate? taxRate;

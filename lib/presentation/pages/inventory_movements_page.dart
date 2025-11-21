@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import 'package:posventa/app/theme.dart';
+import 'package:posventa/core/theme/theme.dart';
 import 'package:posventa/presentation/providers/inventory_movement_providers.dart';
 import 'package:posventa/presentation/providers/product_provider.dart';
 import 'package:posventa/presentation/providers/warehouse_providers.dart';

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:posventa/app/theme.dart';
+import 'package:posventa/core/theme/theme.dart';
 
 class PermissionDeniedWidget extends StatelessWidget {
   final String message;

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:posventa/app/theme.dart';
+import 'package:posventa/core/theme/theme.dart';
 import 'package:posventa/domain/entities/category.dart';
 import 'package:posventa/presentation/providers/category_providers.dart';
 import 'package:posventa/presentation/providers/department_providers.dart';

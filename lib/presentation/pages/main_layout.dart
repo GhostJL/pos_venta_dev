@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:posventa/presentation/widgets/side_menu.dart';
-import 'package:posventa/app/theme.dart';
+import 'package:posventa/core/theme/theme.dart';
 
 class MainLayout extends StatelessWidget {
   final Widget child;

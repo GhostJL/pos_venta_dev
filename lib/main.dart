@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:posventa/app/router.dart';
-import 'package:posventa/app/theme.dart';
+import 'package:posventa/core/router/router.dart';
+import 'package:posventa/core/theme/theme.dart';
 import 'package:posventa/data/datasources/database_helper.dart';
 
 void main() async {

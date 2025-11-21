@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:posventa/app/theme.dart';
+import 'package:posventa/core/theme/theme.dart';
 
 class OnboardingLayout extends StatelessWidget {
   final String title;

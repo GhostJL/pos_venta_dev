@@ -10,7 +10,7 @@ import 'package:posventa/presentation/providers/department_providers.dart';
 import 'package:posventa/presentation/providers/supplier_providers.dart';
 import 'package:posventa/presentation/providers/tax_rate_provider.dart';
 import 'package:posventa/presentation/providers/providers.dart'; // For productRepositoryProvider
-import 'package:posventa/app/theme.dart';
+import 'package:posventa/core/theme/theme.dart';
 import 'package:posventa/presentation/widgets/barcode_scanner_widget.dart';
 
 class ProductFormPage extends ConsumerStatefulWidget {
