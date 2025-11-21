@@ -159,7 +159,8 @@ class SideMenu extends ConsumerWidget {
                     currentPath: currentPath,
                   ),
 
-                if (hasAccess(PermissionConstants.reportsView))
+                if (hasAccess(PermissionConstants.reportsView)) ...[
+                  _buildSectionHeader('Reportes / Finanzas'),
                   _buildDrawerItem(
                     context: context,
                     icon: Icons.receipt_long,
@@ -167,6 +168,21 @@ class SideMenu extends ConsumerWidget {
                     path: '/sales-history',
                     currentPath: currentPath,
                   ),
+                  _buildDrawerItem(
+                    context: context,
+                    icon: Icons.history_edu,
+                    title: 'Historial de Sesiones',
+                    path: '/cash-sessions-history',
+                    currentPath: currentPath,
+                  ),
+                  _buildDrawerItem(
+                    context: context,
+                    icon: Icons.monetization_on,
+                    title: 'Reporte de Movimientos',
+                    path: '/cash-movements-report',
+                    currentPath: currentPath,
+                  ),
+                ],
 
                 if (user?.role == UserRole.administrador) ...[
                   const SizedBox(height: 24),

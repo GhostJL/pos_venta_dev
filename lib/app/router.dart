@@ -35,6 +35,8 @@ import 'package:posventa/presentation/providers/auth_provider.dart';
 import 'package:posventa/presentation/providers/transaction_provider.dart';
 
 import 'package:posventa/presentation/pages/cashier/cashier_list_page.dart';
+import 'package:posventa/presentation/pages/cash_session_history_page.dart';
+import 'package:posventa/presentation/pages/cash_movements_report_page.dart';
 
 final GlobalKey<NavigatorState> _rootNavigatorKey = GlobalKey<NavigatorState>();
 
@@ -208,6 +210,16 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: '/cashiers',
             pageBuilder: (context, state) =>
                 const NoTransitionPage(child: CashierListPage()),
+          ),
+          GoRoute(
+            path: '/cash-sessions-history',
+            pageBuilder: (context, state) =>
+                const NoTransitionPage(child: CashSessionHistoryPage()),
+          ),
+          GoRoute(
+            path: '/cash-movements-report',
+            pageBuilder: (context, state) =>
+                const NoTransitionPage(child: CashMovementsReportPage()),
           ),
         ],
       ),

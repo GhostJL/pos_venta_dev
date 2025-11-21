@@ -3,6 +3,11 @@ import 'package:posventa/data/models/cash_session_model.dart';
 import 'package:posventa/domain/entities/cash_session.dart';
 import 'package:posventa/domain/repositories/cash_session_repository.dart';
 
+import 'package:posventa/data/models/cash_movement_model.dart';
+import 'package:posventa/data/models/sale_payment_model.dart';
+import 'package:posventa/domain/entities/cash_movement.dart';
+import 'package:posventa/domain/entities/sale_payment.dart';
+
 class CashSessionRepositoryImpl implements CashSessionRepository {
   final DatabaseHelper _databaseHelper;
   final int _userId; // The ID of the authenticated user
@@ -146,5 +151,111 @@ class CashSessionRepositoryImpl implements CashSessionRepository {
       return CashSessionModel.fromMap(result.first);
     }
     return null;
+  }
+
+  @override
+  Future<List<CashSession>> getSessions({
+    int? userId,
+    int? warehouseId,
+    DateTime? startDate,
+    DateTime? endDate,
+  }) async {
+    final db = await _databaseHelper.database;
+    String whereClause = '1=1';
+    List<dynamic> whereArgs = [];
+
+    if (userId != null) {
+      whereClause += ' AND user_id = ?';
+      whereArgs.add(userId);
+    }
+    if (warehouseId != null) {
+      whereClause += ' AND warehouse_id = ?';
+      whereArgs.add(warehouseId);
+    }
+    if (startDate != null) {
+      whereClause += ' AND opened_at >= ?';
+      whereArgs.add(startDate.toIso8601String());
+    }
+    if (endDate != null) {
+      whereClause += ' AND opened_at <= ?';
+      whereArgs.add(endDate.toIso8601String());
+    }
+
+    final result = await db.query(
+      'cash_sessions',
+      where: whereClause,
+      whereArgs: whereArgs,
+      orderBy: 'opened_at DESC',
+    );
+
+    return result.map((e) => CashSessionModel.fromMap(e)).toList();
+  }
+
+  @override
+  Future<List<CashMovement>> getSessionMovements(int sessionId) async {
+    final db = await _databaseHelper.database;
+    final result = await db.query(
+      'cash_movements',
+      where: 'cash_session_id = ?',
+      whereArgs: [sessionId],
+    );
+    return result.map((e) => CashMovementModel.fromMap(e)).toList();
+  }
+
+  @override
+  Future<List<CashMovement>> getAllMovements({
+    DateTime? startDate,
+    DateTime? endDate,
+  }) async {
+    final db = await _databaseHelper.database;
+    String whereClause = '1=1';
+    List<dynamic> whereArgs = [];
+
+    if (startDate != null) {
+      whereClause += ' AND movement_date >= ?';
+      whereArgs.add(startDate.toIso8601String());
+    }
+    if (endDate != null) {
+      whereClause += ' AND movement_date <= ?';
+      whereArgs.add(endDate.toIso8601String());
+    }
+
+    final result = await db.query(
+      'cash_movements',
+      where: whereClause,
+      whereArgs: whereArgs,
+      orderBy: 'movement_date DESC',
+    );
+    return result.map((e) => CashMovementModel.fromMap(e)).toList();
+  }
+
+  @override
+  Future<List<SalePayment>> getSessionPayments(int sessionId) async {
+    final db = await _databaseHelper.database;
+    final sessionResult = await db.query(
+      'cash_sessions',
+      where: 'id = ?',
+      whereArgs: [sessionId],
+    );
+    if (sessionResult.isEmpty) return [];
+    final session = CashSessionModel.fromMap(sessionResult.first);
+
+    final endTime =
+        session.closedAt?.toIso8601String() ?? DateTime.now().toIso8601String();
+
+    final result = await db.rawQuery(
+      '''
+        SELECT sp.* 
+        FROM sale_payments sp
+        JOIN sales s ON sp.sale_id = s.id
+        WHERE s.cashier_id = ?
+        AND s.sale_date >= ?
+        AND s.sale_date <= ?
+        AND sp.payment_method = 'Efectivo' 
+      ''',
+      [session.userId, session.openedAt.toIso8601String(), endTime],
+    );
+
+    return result.map((e) => SalePaymentModel.fromJson(e)).toList();
   }
 }
