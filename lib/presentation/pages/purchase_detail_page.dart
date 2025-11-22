@@ -542,20 +542,107 @@ class _PurchaseReceptionDialogState extends State<PurchaseReceptionDialog> {
 
   @override
   Widget build(BuildContext context) {
+    // Calculate totals
+    double totalOrdered = 0;
+    double totalReceived = 0;
+    double totalPending = 0;
+
+    for (final item in widget.purchase.items) {
+      totalOrdered += item.quantity;
+      totalReceived += item.quantityReceived;
+      final remaining = item.quantity - item.quantityReceived;
+      if (remaining > 0) {
+        totalPending += _quantities[item.id!] ?? 0;
+      }
+    }
+
     return AlertDialog(
-      title: const Text('Recibir Mercancía'),
+      title: Row(
+        children: [
+          const Icon(Icons.inventory_2, color: Colors.blue),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('Recibir Mercancía'),
+                Text(
+                  'Compra #${widget.purchase.purchaseNumber}',
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
       content: SizedBox(
         width: double.maxFinite,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
+            // Summary Card
+            Card(
+              color: Colors.blue.shade50,
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Column(
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text('Total Pedido:'),
+                        Text(
+                          '${totalOrdered.toStringAsFixed(totalOrdered % 1 == 0 ? 0 : 2)} unidades',
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text('Ya Recibido:'),
+                        Text(
+                          '${totalReceived.toStringAsFixed(totalReceived % 1 == 0 ? 0 : 2)} unidades',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.green.shade700,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text('A Recibir Ahora:'),
+                        Text(
+                          '${totalPending.toStringAsFixed(totalPending % 1 == 0 ? 0 : 2)} unidades',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.orange.shade700,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 8),
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
-                TextButton(onPressed: _clearAll, child: const Text('Limpiar')),
-                TextButton(
+                TextButton.icon(
+                  onPressed: _clearAll,
+                  icon: const Icon(Icons.clear_all, size: 18),
+                  label: const Text('Limpiar'),
+                ),
+                const SizedBox(width: 8),
+                ElevatedButton.icon(
                   onPressed: _receiveAll,
-                  child: const Text('Recibir Todo'),
+                  icon: const Icon(Icons.done_all, size: 18),
+                  label: const Text('Recibir Todo'),
                 ),
               ],
             ),
@@ -570,56 +657,79 @@ class _PurchaseReceptionDialogState extends State<PurchaseReceptionDialog> {
 
                   if (remaining <= 0) return const SizedBox.shrink();
 
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 8),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          flex: 3,
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                  return Card(
+                    margin: const EdgeInsets.symmetric(vertical: 4),
+                    child: Padding(
+                      padding: const EdgeInsets.all(12),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            item.productName ?? 'Producto',
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 15,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Row(
                             children: [
-                              Text(
-                                item.productName ?? 'Producto',
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.w500,
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    _buildInfoRow(
+                                      'Pedido:',
+                                      '${item.quantity.toStringAsFixed(item.quantity % 1 == 0 ? 0 : 2)} ${item.unitOfMeasure}',
+                                      Colors.grey.shade700,
+                                    ),
+                                    if (item.quantityReceived > 0) ...[
+                                      const SizedBox(height: 4),
+                                      _buildInfoRow(
+                                        'Recibido:',
+                                        '${item.quantityReceived.toStringAsFixed(item.quantityReceived % 1 == 0 ? 0 : 2)} ${item.unitOfMeasure}',
+                                        Colors.green.shade700,
+                                      ),
+                                    ],
+                                    const SizedBox(height: 4),
+                                    _buildInfoRow(
+                                      'Pendiente:',
+                                      '${remaining.toStringAsFixed(remaining % 1 == 0 ? 0 : 2)} ${item.unitOfMeasure}',
+                                      Colors.orange.shade700,
+                                    ),
+                                  ],
                                 ),
                               ),
-                              Text(
-                                'Pendiente: $remaining ${item.unitOfMeasure}',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: Colors.grey.shade600,
+                              const SizedBox(width: 16),
+                              SizedBox(
+                                width: 100,
+                                child: TextField(
+                                  controller: _controllers[item.id],
+                                  keyboardType:
+                                      const TextInputType.numberWithOptions(
+                                        decimal: true,
+                                      ),
+                                  decoration: InputDecoration(
+                                    labelText: 'Recibir',
+                                    suffixText: item.unitOfMeasure,
+                                    border: const OutlineInputBorder(),
+                                    contentPadding: const EdgeInsets.symmetric(
+                                      horizontal: 8,
+                                      vertical: 12,
+                                    ),
+                                  ),
+                                  onChanged: (value) {
+                                    final qty = double.tryParse(value) ?? 0;
+                                    setState(() {
+                                      _quantities[item.id!] = qty;
+                                    });
+                                  },
                                 ),
                               ),
                             ],
                           ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          flex: 2,
-                          child: TextField(
-                            controller: _controllers[item.id],
-                            keyboardType: const TextInputType.numberWithOptions(
-                              decimal: true,
-                            ),
-                            decoration: const InputDecoration(
-                              labelText: 'Recibir',
-                              border: OutlineInputBorder(),
-                              contentPadding: EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 8,
-                              ),
-                            ),
-                            onChanged: (value) {
-                              final qty = double.tryParse(value) ?? 0;
-                              setState(() {
-                                _quantities[item.id!] = qty;
-                              });
-                            },
-                          ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   );
                 },
@@ -633,7 +743,7 @@ class _PurchaseReceptionDialogState extends State<PurchaseReceptionDialog> {
           onPressed: () => Navigator.pop(context),
           child: const Text('Cancelar'),
         ),
-        ElevatedButton(
+        ElevatedButton.icon(
           onPressed: () {
             // Validate
             bool hasError = false;
@@ -660,9 +770,37 @@ class _PurchaseReceptionDialogState extends State<PurchaseReceptionDialog> {
             final result = Map<int, double>.from(_quantities)
               ..removeWhere((key, value) => value <= 0);
 
+            if (result.isEmpty) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Debes recibir al menos un producto'),
+                  backgroundColor: Colors.orange,
+                ),
+              );
+              return;
+            }
+
             Navigator.pop(context, result);
           },
-          child: const Text('Confirmar'),
+          icon: const Icon(Icons.check_circle),
+          label: const Text('Confirmar Recepción'),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildInfoRow(String label, String value, Color valueColor) {
+    return Row(
+      children: [
+        Text(label, style: const TextStyle(fontSize: 12)),
+        const SizedBox(width: 4),
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+            color: valueColor,
+          ),
         ),
       ],
     );
