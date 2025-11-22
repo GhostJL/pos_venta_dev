@@ -6,6 +6,7 @@ class PurchaseItemModel extends PurchaseItem {
     super.purchaseId,
     required super.productId,
     required super.quantity,
+    super.quantityReceived,
     required super.unitOfMeasure,
     required super.unitCostCents,
     required super.subtotalCents,
@@ -25,6 +26,9 @@ class PurchaseItemModel extends PurchaseItem {
       quantity: json['quantity'] is int
           ? (json['quantity'] as int).toDouble()
           : json['quantity'],
+      quantityReceived: json['quantity_received'] is int
+          ? (json['quantity_received'] as int).toDouble()
+          : (json['quantity_received'] ?? 0.0),
       unitOfMeasure: json['unit_of_measure'],
       unitCostCents: json['unit_cost_cents'],
       subtotalCents: json['subtotal_cents'],
@@ -45,6 +49,7 @@ class PurchaseItemModel extends PurchaseItem {
       'purchase_id': purchaseId,
       'product_id': productId,
       'quantity': quantity,
+      'quantity_received': quantityReceived,
       'unit_of_measure': unitOfMeasure,
       'unit_cost_cents': unitCostCents,
       'subtotal_cents': subtotalCents,
@@ -62,6 +67,7 @@ class PurchaseItemModel extends PurchaseItem {
       purchaseId: item.purchaseId,
       productId: item.productId,
       quantity: item.quantity,
+      quantityReceived: item.quantityReceived,
       unitOfMeasure: item.unitOfMeasure,
       unitCostCents: item.unitCostCents,
       subtotalCents: item.subtotalCents,

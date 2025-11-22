@@ -14,8 +14,17 @@ class ReceivePurchaseUseCase {
 
   /// Receive a purchase by ID
   /// [purchaseId] - The ID of the purchase to receive
+  /// [receivedQuantities] - Map of Item ID to Quantity Received
   /// [receivedBy] - The user ID who is receiving the purchase
-  Future<void> call(int purchaseId, int receivedBy) async {
-    return await repository.receivePurchase(purchaseId, receivedBy);
+  Future<void> call(
+    int purchaseId,
+    Map<int, double> receivedQuantities,
+    int receivedBy,
+  ) async {
+    return await repository.receivePurchase(
+      purchaseId,
+      receivedQuantities,
+      receivedBy,
+    );
   }
 }

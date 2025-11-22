@@ -14,7 +14,8 @@ class DatabaseHelper {
 
   // Database configuration
   static const _databaseName = "pos.db";
-  static const _databaseVersion = 13; // Incremented for new permissions
+  static const _databaseVersion =
+      14; // Incremented for purchase partial reception
 
   // Table names
   static const tableUsers = 'users';
@@ -267,6 +268,12 @@ class DatabaseHelper {
           conflictAlgorithm: ConflictAlgorithm.ignore,
         );
       }
+    }
+    if (oldVersion < 14) {
+      await db.execute('''
+        ALTER TABLE $tablePurchaseItems 
+        ADD COLUMN quantity_received REAL NOT NULL DEFAULT 0
+      ''');
     }
   }
 

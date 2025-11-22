@@ -23,7 +23,8 @@ class PurchaseDetailPage extends ConsumerWidget {
           purchaseAsync.when(
             data: (purchase) {
               if (purchase != null &&
-                  purchase.status == PurchaseStatus.pending) {
+                  (purchase.status == PurchaseStatus.pending ||
+                      purchase.status == PurchaseStatus.partial)) {
                 return IconButton(
                   icon: const Icon(Icons.check_circle),
                   tooltip: 'Recibir Compra',
@@ -55,103 +56,13 @@ class PurchaseDetailPage extends ConsumerWidget {
     WidgetRef ref,
     Purchase purchase,
   ) async {
-    // Show detailed confirmation dialog
-    final confirmed = await showDialog<bool>(
+    // Show partial reception dialog
+    final receivedQuantities = await showDialog<Map<int, double>>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Recibir Compra'),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                '¿Confirma que ha recibido la mercancía de la compra ${purchase.purchaseNumber}?',
-                style: const TextStyle(fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 16),
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.blue.shade50,
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.blue.shade200),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.info_outline,
-                          color: Colors.blue.shade700,
-                          size: 20,
-                        ),
-                        const SizedBox(width: 8),
-                        const Text(
-                          'Esta acción realizará:',
-                          style: TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    _buildActionItem(
-                      'Actualizar inventario con las cantidades recibidas',
-                    ),
-                    _buildActionItem('Registrar movimientos en el Kardex'),
-                    _buildActionItem(
-                      'Actualizar costos de productos (Último Costo)',
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 16),
-              const Text(
-                'Productos a recibir:',
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 8),
-              ...purchase.items.map(
-                (item) => Padding(
-                  padding: const EdgeInsets.only(bottom: 8),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          '• ${item.productName ?? "Producto"}',
-                          style: const TextStyle(fontSize: 13),
-                        ),
-                      ),
-                      Text(
-                        '${item.quantity} ${item.unitOfMeasure}',
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: Colors.grey.shade700,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancelar'),
-          ),
-          ElevatedButton.icon(
-            onPressed: () => Navigator.pop(context, true),
-            icon: const Icon(Icons.check_circle),
-            label: const Text('Confirmar Recepción'),
-          ),
-        ],
-      ),
+      builder: (context) => PurchaseReceptionDialog(purchase: purchase),
     );
 
-    if (confirmed != true) return;
+    if (receivedQuantities == null || receivedQuantities.isEmpty) return;
 
     try {
       final user = ref.read(authProvider).user;
@@ -161,7 +72,7 @@ class PurchaseDetailPage extends ConsumerWidget {
 
       await ref
           .read(purchaseProvider.notifier)
-          .receivePurchase(purchase.id!, user.id!);
+          .receivePurchase(purchase.id!, receivedQuantities, user.id!);
 
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -170,7 +81,7 @@ class PurchaseDetailPage extends ConsumerWidget {
               children: [
                 Icon(Icons.check_circle, color: Colors.white),
                 SizedBox(width: 8),
-                Expanded(child: Text('Compra recibida exitosamente')),
+                Expanded(child: Text('Recepción registrada exitosamente')),
               ],
             ),
             backgroundColor: Colors.green,
@@ -195,19 +106,6 @@ class PurchaseDetailPage extends ConsumerWidget {
         );
       }
     }
-  }
-
-  Widget _buildActionItem(String text) {
-    return Padding(
-      padding: const EdgeInsets.only(left: 28, bottom: 4),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text('• ', style: TextStyle(fontSize: 13)),
-          Expanded(child: Text(text, style: const TextStyle(fontSize: 13))),
-        ],
-      ),
-    );
   }
 }
 
@@ -255,7 +153,7 @@ class _PurchaseDetailContent extends StatelessWidget {
                     ),
                   if (purchase.receivedDate != null)
                     _buildInfoRow(
-                      'Recibido:',
+                      'Última Recepción:',
                       dateFormat.format(purchase.receivedDate!),
                     ),
                 ],
@@ -315,6 +213,10 @@ class _PurchaseDetailContent extends StatelessWidget {
       case PurchaseStatus.cancelled:
         color = Colors.red;
         text = 'CANCELADA';
+        break;
+      case PurchaseStatus.partial:
+        color = Colors.blue;
+        text = 'PARCIAL';
         break;
     }
 
@@ -391,6 +293,10 @@ class _PurchaseItemTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isFullyReceived = item.quantityReceived >= item.quantity;
+    final isPartiallyReceived =
+        item.quantityReceived > 0 && item.quantityReceived < item.quantity;
+
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
@@ -408,6 +314,32 @@ class _PurchaseItemTile extends StatelessWidget {
                   '${item.quantity} ${item.unitOfMeasure} x \$${(item.unitCostCents / 100).toStringAsFixed(2)}',
                   style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
                 ),
+                if (item.quantityReceived > 0)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 4),
+                    child: Row(
+                      children: [
+                        Icon(
+                          isFullyReceived
+                              ? Icons.check_circle
+                              : Icons.timelapse,
+                          size: 14,
+                          color: isFullyReceived ? Colors.green : Colors.orange,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          'Recibido: ${item.quantityReceived} / ${item.quantity}',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: isFullyReceived
+                                ? Colors.green
+                                : Colors.orange,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
               ],
             ),
           ),
@@ -417,6 +349,194 @@ class _PurchaseItemTile extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+class PurchaseReceptionDialog extends StatefulWidget {
+  final Purchase purchase;
+
+  const PurchaseReceptionDialog({super.key, required this.purchase});
+
+  @override
+  State<PurchaseReceptionDialog> createState() =>
+      _PurchaseReceptionDialogState();
+}
+
+class _PurchaseReceptionDialogState extends State<PurchaseReceptionDialog> {
+  final Map<int, TextEditingController> _controllers = {};
+  final Map<int, double> _quantities = {};
+
+  @override
+  void initState() {
+    super.initState();
+    for (final item in widget.purchase.items) {
+      final remaining = item.quantity - item.quantityReceived;
+      if (remaining > 0) {
+        _quantities[item.id!] = remaining;
+        _controllers[item.id!] = TextEditingController(
+          text: remaining.toStringAsFixed(remaining % 1 == 0 ? 0 : 2),
+        );
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    for (final controller in _controllers.values) {
+      controller.dispose();
+    }
+    super.dispose();
+  }
+
+  void _receiveAll() {
+    setState(() {
+      for (final item in widget.purchase.items) {
+        final remaining = item.quantity - item.quantityReceived;
+        if (remaining > 0) {
+          _quantities[item.id!] = remaining;
+          _controllers[item.id!]?.text = remaining.toStringAsFixed(
+            remaining % 1 == 0 ? 0 : 2,
+          );
+        }
+      }
+    });
+  }
+
+  void _clearAll() {
+    setState(() {
+      for (final key in _quantities.keys) {
+        _quantities[key] = 0;
+        _controllers[key]?.text = '0';
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Recibir Mercancía'),
+      content: SizedBox(
+        width: double.maxFinite,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                TextButton(onPressed: _clearAll, child: const Text('Limpiar')),
+                TextButton(
+                  onPressed: _receiveAll,
+                  child: const Text('Recibir Todo'),
+                ),
+              ],
+            ),
+            const Divider(),
+            Flexible(
+              child: ListView.builder(
+                shrinkWrap: true,
+                itemCount: widget.purchase.items.length,
+                itemBuilder: (context, index) {
+                  final item = widget.purchase.items[index];
+                  final remaining = item.quantity - item.quantityReceived;
+
+                  if (remaining <= 0) return const SizedBox.shrink();
+
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          flex: 3,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                item.productName ?? 'Producto',
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                              Text(
+                                'Pendiente: $remaining ${item.unitOfMeasure}',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.grey.shade600,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          flex: 2,
+                          child: TextField(
+                            controller: _controllers[item.id],
+                            keyboardType: const TextInputType.numberWithOptions(
+                              decimal: true,
+                            ),
+                            decoration: const InputDecoration(
+                              labelText: 'Recibir',
+                              border: OutlineInputBorder(),
+                              contentPadding: EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 8,
+                              ),
+                            ),
+                            onChanged: (value) {
+                              final qty = double.tryParse(value) ?? 0;
+                              setState(() {
+                                _quantities[item.id!] = qty;
+                              });
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Cancelar'),
+        ),
+        ElevatedButton(
+          onPressed: () {
+            // Validate
+            bool hasError = false;
+            for (final item in widget.purchase.items) {
+              final remaining = item.quantity - item.quantityReceived;
+              final toReceive = _quantities[item.id!] ?? 0;
+              if (toReceive > remaining) {
+                hasError = true;
+                break;
+              }
+            }
+
+            if (hasError) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('No puedes recibir más de lo pendiente'),
+                  backgroundColor: Colors.red,
+                ),
+              );
+              return;
+            }
+
+            // Filter out 0s
+            final result = Map<int, double>.from(_quantities)
+              ..removeWhere((key, value) => value <= 0);
+
+            Navigator.pop(context, result);
+          },
+          child: const Text('Confirmar'),
+        ),
+      ],
     );
   }
 }

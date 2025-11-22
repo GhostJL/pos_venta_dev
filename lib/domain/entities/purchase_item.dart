@@ -11,6 +11,7 @@ class PurchaseItem {
   final int totalCents;
   final String? lotNumber;
   final DateTime? expirationDate;
+  final double quantityReceived;
   final DateTime createdAt;
 
   const PurchaseItem({
@@ -19,6 +20,7 @@ class PurchaseItem {
     required this.productId,
     this.productName,
     required this.quantity,
+    this.quantityReceived = 0,
     required this.unitOfMeasure,
     required this.unitCostCents,
     required this.subtotalCents,

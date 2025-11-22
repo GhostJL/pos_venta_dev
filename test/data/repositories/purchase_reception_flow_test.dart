@@ -120,7 +120,13 @@ void main() {
       final purchaseId = await purchaseRepository.createPurchase(purchase);
 
       // 2. Receive Purchase
-      await purchaseRepository.receivePurchase(purchaseId, 1);
+      // Get the item ID first
+      final purchaseDetails = await purchaseRepository.getPurchaseById(
+        purchaseId,
+      );
+      final itemId = purchaseDetails!.items.first.id!;
+
+      await purchaseRepository.receivePurchase(purchaseId, {itemId: 50.0}, 1);
 
       // 3. Verify Product Cost Update (Rule: Update Cost)
       final product = await db.query(

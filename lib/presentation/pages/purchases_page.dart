@@ -49,6 +49,8 @@ class _PurchasesPageState extends ConsumerState<PurchasesPage> {
                   const SizedBox(width: 8),
                   _buildFilterChip('Pendiente', PurchaseStatus.pending),
                   const SizedBox(width: 8),
+                  _buildFilterChip('Parcial', PurchaseStatus.partial),
+                  const SizedBox(width: 8),
                   _buildFilterChip('Recibida', PurchaseStatus.completed),
                   const SizedBox(width: 8),
                   _buildFilterChip('Cancelada', PurchaseStatus.cancelled),
@@ -126,6 +128,9 @@ class _PurchasesPageState extends ConsumerState<PurchasesPage> {
         case PurchaseStatus.pending:
           chipColor = Colors.orange;
           break;
+        case PurchaseStatus.partial:
+          chipColor = Colors.blue;
+          break;
         case PurchaseStatus.completed:
           chipColor = Colors.green;
           break;
@@ -156,6 +161,8 @@ class _PurchasesPageState extends ConsumerState<PurchasesPage> {
     switch (status) {
       case PurchaseStatus.pending:
         return 'PENDIENTE';
+      case PurchaseStatus.partial:
+        return 'PARCIAL';
       case PurchaseStatus.completed:
         return 'RECIBIDA';
       case PurchaseStatus.cancelled:
@@ -183,6 +190,9 @@ class _PurchaseCard extends StatelessWidget {
     } else if (isCancelled) {
       statusColor = Colors.red;
       statusText = 'CANCELADA';
+    } else if (purchase.status == PurchaseStatus.partial) {
+      statusColor = Colors.blue;
+      statusText = 'PARCIAL';
     } else {
       statusColor = Colors.green;
       statusText = 'COMPLETADA';

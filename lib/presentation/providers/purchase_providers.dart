@@ -41,12 +41,18 @@ class PurchaseNotifier extends _$PurchaseNotifier {
   /// 2. Inventory stock increase
   /// 3. Kardex movement creation
   /// 4. Product cost update (Last Cost policy)
-  Future<void> receivePurchase(int purchaseId, int receivedBy) async {
+  /// Receive a purchase and update inventory (Partial or Complete)
+  /// [receivedQuantities] - Map of Item ID to Quantity Received
+  Future<void> receivePurchase(
+    int purchaseId,
+    Map<int, double> receivedQuantities,
+    int receivedBy,
+  ) async {
     state = const AsyncValue.loading();
     state = await AsyncValue.guard(() async {
       await ref
           .read(receivePurchaseUseCaseProvider)
-          .call(purchaseId, receivedBy);
+          .call(purchaseId, receivedQuantities, receivedBy);
       return ref.read(getPurchasesUseCaseProvider).call();
     });
   }

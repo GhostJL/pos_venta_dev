@@ -1,6 +1,6 @@
 import 'package:posventa/domain/entities/purchase_item.dart';
 
-enum PurchaseStatus { pending, completed, cancelled }
+enum PurchaseStatus { pending, partial, completed, cancelled }
 
 class Purchase {
   final int? id;
