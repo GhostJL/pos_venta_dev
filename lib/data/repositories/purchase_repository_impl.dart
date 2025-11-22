@@ -295,4 +295,82 @@ class PurchaseRepositoryImpl implements PurchaseRepository {
       );
     });
   }
+
+  @override
+  Future<void> cancelPurchase(int purchaseId, int userId) async {
+    final db = await _databaseHelper.database;
+    await db.transaction((txn) async {
+      // 1. Get purchase items to reverse inventory
+      final itemsResult = await txn.query(
+        DatabaseHelper.tablePurchaseItems,
+        where: 'purchase_id = ?',
+        whereArgs: [purchaseId],
+      );
+
+      final purchaseResult = await txn.query(
+        DatabaseHelper.tablePurchases,
+        where: 'id = ?',
+        whereArgs: [purchaseId],
+      );
+
+      if (purchaseResult.isEmpty) {
+        throw Exception('Purchase not found');
+      }
+
+      final purchase = purchaseResult.first;
+      final warehouseId = purchase['warehouse_id'] as int;
+
+      // 2. Reverse inventory for received items
+      for (final item in itemsResult) {
+        final quantityReceived = item['quantity_received'] as double;
+        final productId = item['product_id'] as int;
+
+        if (quantityReceived > 0) {
+          // Deduct from inventory
+          await txn.rawUpdate(
+            '''
+            UPDATE ${DatabaseHelper.tableInventory}
+            SET quantity_on_hand = quantity_on_hand - ?
+            WHERE product_id = ? AND warehouse_id = ?
+          ''',
+            [quantityReceived, productId, warehouseId],
+          );
+
+          // Create adjustment movement
+          // Get current stock for movement record
+          final inventoryResult = await txn.query(
+            DatabaseHelper.tableInventory,
+            where: 'product_id = ? AND warehouse_id = ?',
+            whereArgs: [productId, warehouseId],
+          );
+
+          final currentStock = inventoryResult.isNotEmpty
+              ? (inventoryResult.first['quantity_on_hand'] as double)
+              : 0.0;
+
+          await txn.insert(DatabaseHelper.tableInventoryMovements, {
+            'product_id': productId,
+            'warehouse_id': warehouseId,
+            'movement_type': 'adjustment', // Using adjustment for cancellation
+            'quantity': -quantityReceived,
+            'quantity_before': currentStock + quantityReceived,
+            'quantity_after': currentStock,
+            'reference_type': 'purchase_cancellation',
+            'reference_id': purchaseId,
+            'reason': 'Cancelación de Compra',
+            'performed_by': userId,
+            'movement_date': DateTime.now().toIso8601String(),
+          });
+        }
+      }
+
+      // 3. Update purchase status
+      await txn.update(
+        DatabaseHelper.tablePurchases,
+        {'status': 'cancelled', 'cancelled_by': userId},
+        where: 'id = ?',
+        whereArgs: [purchaseId],
+      );
+    });
+  }
 }

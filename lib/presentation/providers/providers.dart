@@ -63,6 +63,7 @@ import 'package:posventa/domain/use_cases/purchase/create_purchase_usecase.dart'
 import 'package:posventa/domain/use_cases/purchase/update_purchase_usecase.dart';
 import 'package:posventa/domain/use_cases/purchase/delete_purchase_usecase.dart';
 import 'package:posventa/domain/use_cases/purchase/receive_purchase_usecase.dart';
+import 'package:posventa/domain/use_cases/purchase/cancel_purchase_usecase.dart';
 import 'package:posventa/domain/repositories/purchase_item_repository.dart';
 import 'package:posventa/data/repositories/purchase_item_repository_impl.dart';
 import 'package:posventa/domain/use_cases/purchase_item/get_purchase_items_usecase.dart';
@@ -327,6 +328,10 @@ DeletePurchaseUseCase deletePurchaseUseCase(ref) =>
 @riverpod
 ReceivePurchaseUseCase receivePurchaseUseCase(ref) =>
     ReceivePurchaseUseCase(ref.watch(purchaseRepositoryProvider));
+
+@riverpod
+CancelPurchaseUseCase cancelPurchaseUseCase(ref) =>
+    CancelPurchaseUseCase(ref.watch(purchaseRepositoryProvider));
 
 // --- Purchase Item Providers ---
 

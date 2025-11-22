@@ -16,4 +16,9 @@ abstract class PurchaseRepository {
     Map<int, double> receivedQuantities,
     int receivedBy,
   );
+
+  /// Cancel a purchase
+  /// [purchaseId] - The ID of the purchase to cancel
+  /// [userId] - The ID of the user cancelling the purchase
+  Future<void> cancelPurchase(int purchaseId, int userId);
 }

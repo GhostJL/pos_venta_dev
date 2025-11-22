@@ -15,7 +15,7 @@ class DatabaseHelper {
   // Database configuration
   static const _databaseName = "pos.db";
   static const _databaseVersion =
-      14; // Incremented for purchase partial reception
+      16; // Incremented to ensure cancelled_by column addition
 
   // Table names
   static const tableUsers = 'users';
@@ -27,10 +27,10 @@ class DatabaseHelper {
   static const tableSuppliers = 'suppliers';
   static const tableWarehouses = 'warehouses';
   static const tableTaxRates = 'tax_rates';
-  static const tableProducts = 'products'; // New table
-  static const tableProductTaxes = 'product_taxes'; // New table
-  static const tableInventory = 'inventory'; // New table
-  static const tableInventoryMovements = 'inventory_movements'; // Kardex table
+  static const tableProducts = 'products';
+  static const tableProductTaxes = 'product_taxes';
+  static const tableInventory = 'inventory';
+  static const tableInventoryMovements = 'inventory_movements';
   static const tableCustomers = 'customers';
   static const tableSales = 'sales';
   static const tableSaleItems = 'sale_items';
@@ -203,6 +203,11 @@ class DatabaseHelper {
     // Permissions tables
     await _createPermissionsTable(db);
     await _createUserPermissionsTable(db);
+
+    // Insert default user and assign permissions
+    await _insertDefaultUser(db);
+    // Assuming the default user has ID 1
+    await _assignAllPermissionsToAdmin(db, 1);
   }
 
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
@@ -273,6 +278,12 @@ class DatabaseHelper {
       await db.execute('''
         ALTER TABLE $tablePurchaseItems 
         ADD COLUMN quantity_received REAL NOT NULL DEFAULT 0
+      ''');
+    }
+    if (oldVersion < 16) {
+      await db.execute('''
+        ALTER TABLE $tablePurchases 
+        ADD COLUMN cancelled_by INTEGER REFERENCES $tableUsers(id) ON DELETE SET NULL
       ''');
     }
   }
@@ -610,11 +621,13 @@ class DatabaseHelper {
         supplier_invoice_number TEXT,
         requested_by INTEGER NOT NULL,
         received_by INTEGER,
+        cancelled_by INTEGER,
         created_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
         FOREIGN KEY (supplier_id) REFERENCES $tableSuppliers(id) ON DELETE RESTRICT,
         FOREIGN KEY (warehouse_id) REFERENCES $tableWarehouses(id) ON DELETE RESTRICT,
         FOREIGN KEY (requested_by) REFERENCES $tableUsers(id) ON DELETE RESTRICT,
-        FOREIGN KEY (received_by) REFERENCES $tableUsers(id) ON DELETE SET NULL
+        FOREIGN KEY (received_by) REFERENCES $tableUsers(id) ON DELETE SET NULL,
+        FOREIGN KEY (cancelled_by) REFERENCES $tableUsers(id) ON DELETE SET NULL
       )
     ''');
     await db.execute(
@@ -638,6 +651,7 @@ class DatabaseHelper {
         purchase_id INTEGER NOT NULL,
         product_id INTEGER NOT NULL,
         quantity REAL NOT NULL,
+        quantity_received REAL NOT NULL DEFAULT 0,
         unit_of_measure TEXT NOT NULL,
         unit_cost_cents INTEGER NOT NULL,
         subtotal_cents INTEGER NOT NULL,
@@ -945,5 +959,31 @@ class DatabaseHelper {
   Future<int> delete(String table, int id) async {
     final db = await database;
     return await db.delete(table, where: 'id = ?', whereArgs: [id]);
+  }
+
+  Future<void> _insertDefaultUser(Database db) async {
+    await db.insert(tableUsers, {
+      'username': 'admin',
+      'password_hash': _hashData(
+        'admin123',
+      ), // In a real app, use a proper salt/hash
+      'first_name': 'Admin',
+      'last_name': 'User',
+      'email': 'admin@example.com',
+      'role': 'admin',
+      'is_active': 1,
+      'created_at': DateTime.now().toIso8601String(),
+      'updated_at': DateTime.now().toIso8601String(),
+    });
+  }
+
+  Future<void> _assignAllPermissionsToAdmin(Database db, int userId) async {
+    final permissions = await db.query(tablePermissions);
+    for (final perm in permissions) {
+      await db.insert(tableUserPermissions, {
+        'user_id': userId,
+        'permission_id': perm['id'],
+      });
+    }
   }
 }

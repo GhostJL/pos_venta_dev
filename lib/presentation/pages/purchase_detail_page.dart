@@ -19,19 +19,51 @@ class PurchaseDetailPage extends ConsumerWidget {
       appBar: AppBar(
         title: const Text('Detalle de Compra'),
         actions: [
-          // Show receive button only for pending purchases
+          // Show receive button only for pending or partial purchases
           purchaseAsync.when(
             data: (purchase) {
-              if (purchase != null &&
-                  (purchase.status == PurchaseStatus.pending ||
-                      purchase.status == PurchaseStatus.partial)) {
-                return IconButton(
-                  icon: const Icon(Icons.check_circle),
-                  tooltip: 'Recibir Compra',
-                  onPressed: () => _receivePurchase(context, ref, purchase),
-                );
-              }
-              return const SizedBox.shrink();
+              if (purchase == null) return const SizedBox.shrink();
+
+              final canReceive =
+                  purchase.status == PurchaseStatus.pending ||
+                  purchase.status == PurchaseStatus.partial;
+
+              final canCancel = purchase.status != PurchaseStatus.cancelled;
+
+              return Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (canReceive)
+                    IconButton(
+                      icon: const Icon(Icons.check_circle),
+                      tooltip: 'Recibir Compra',
+                      onPressed: () => _receivePurchase(context, ref, purchase),
+                    ),
+                  if (canCancel)
+                    PopupMenuButton<String>(
+                      onSelected: (value) {
+                        if (value == 'cancel') {
+                          _cancelPurchase(context, ref, purchase);
+                        }
+                      },
+                      itemBuilder: (context) => [
+                        const PopupMenuItem(
+                          value: 'cancel',
+                          child: Row(
+                            children: [
+                              Icon(Icons.cancel, color: Colors.red),
+                              SizedBox(width: 8),
+                              Text(
+                                'Cancelar Compra',
+                                style: TextStyle(color: Colors.red),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                ],
+              );
             },
             loading: () => const SizedBox.shrink(),
             error: (_, __) => const SizedBox.shrink(),
@@ -49,6 +81,102 @@ class PurchaseDetailPage extends ConsumerWidget {
         error: (error, stack) => Center(child: Text('Error: $error')),
       ),
     );
+  }
+
+  Future<void> _cancelPurchase(
+    BuildContext context,
+    WidgetRef ref,
+    Purchase purchase,
+  ) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Cancelar Compra'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              '¿Está seguro de cancelar la compra #${purchase.purchaseNumber}?',
+            ),
+            if (purchase.status == PurchaseStatus.partial ||
+                purchase.status == PurchaseStatus.completed) ...[
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.orange.shade50,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.orange.shade200),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.warning_amber_rounded,
+                      color: Colors.orange.shade800,
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        'Esta compra tiene items recibidos. Al cancelar, se revertirá el inventario recibido.',
+                        style: TextStyle(
+                          color: Colors.orange.shade900,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('No, Salir'),
+          ),
+          ElevatedButton.icon(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+            ),
+            icon: const Icon(Icons.cancel),
+            label: const Text('Sí, Cancelar'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+
+    try {
+      final user = ref.read(authProvider).user;
+      if (user == null) throw Exception('Usuario no autenticado');
+
+      await ref
+          .read(purchaseProvider.notifier)
+          .cancelPurchase(purchase.id!, user.id!);
+
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Compra cancelada exitosamente'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error al cancelar: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 
   Future<void> _receivePurchase(

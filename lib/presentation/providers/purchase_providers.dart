@@ -56,6 +56,14 @@ class PurchaseNotifier extends _$PurchaseNotifier {
       return ref.read(getPurchasesUseCaseProvider).call();
     });
   }
+
+  Future<void> cancelPurchase(int purchaseId, int userId) async {
+    state = const AsyncValue.loading();
+    state = await AsyncValue.guard(() async {
+      await ref.read(cancelPurchaseUseCaseProvider).call(purchaseId, userId);
+      return ref.read(getPurchasesUseCaseProvider).call();
+    });
+  }
 }
 
 @riverpod
