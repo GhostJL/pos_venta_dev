@@ -612,6 +612,9 @@ class ProductsPageState extends ConsumerState<ProductsPage> {
   }
 
   void _confirmDelete(BuildContext context, Product product) {
+    // Cache ScaffoldMessenger BEFORE opening dialog to avoid context issues
+    final messenger = ScaffoldMessenger.of(context);
+
     showDialog(
       context: context,
       builder: (BuildContext dialogContext) {
@@ -646,20 +649,22 @@ class ProductsPageState extends ConsumerState<ProductsPage> {
                 ),
               ),
               child: const Text('Eliminar'),
-              onPressed: () {
-                ref
+              onPressed: () async {
+                // Delete product
+                await ref
                     .read(productNotifierProvider.notifier)
                     .deleteProduct(product.id!);
+
+                // Close dialog
                 Navigator.of(dialogContext).pop();
 
-                if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Producto eliminado correctamente'),
-                      backgroundColor: AppTheme.success,
-                    ),
-                  );
-                }
+                // Show snackbar using cached messenger
+                messenger.showSnackBar(
+                  const SnackBar(
+                    content: Text('Producto eliminado correctamente'),
+                    backgroundColor: AppTheme.success,
+                  ),
+                );
               },
             ),
           ],
