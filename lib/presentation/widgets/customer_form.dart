@@ -5,6 +5,7 @@ import 'package:posventa/presentation/providers/customer_providers.dart';
 import 'package:posventa/presentation/providers/providers.dart';
 import 'package:posventa/presentation/widgets/common/generic_form_scaffold.dart';
 import 'package:posventa/core/theme/theme.dart';
+import 'package:posventa/core/constants/ui_constants.dart';
 
 class CustomerForm extends ConsumerStatefulWidget {
   final Customer? customer;
@@ -136,7 +137,7 @@ class CustomerFormState extends ConsumerState<CustomerForm> {
               return null;
             },
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: UIConstants.spacingMedium),
           Row(
             children: [
               Expanded(
@@ -180,7 +181,7 @@ class CustomerFormState extends ConsumerState<CustomerForm> {
               ),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: UIConstants.spacingMedium),
           TextFormField(
             initialValue: _phone,
             decoration: const InputDecoration(
@@ -190,7 +191,7 @@ class CustomerFormState extends ConsumerState<CustomerForm> {
             keyboardType: TextInputType.phone,
             onSaved: (value) => _phone = value,
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: UIConstants.spacingMedium),
           TextFormField(
             initialValue: _email,
             decoration: const InputDecoration(
@@ -208,7 +209,7 @@ class CustomerFormState extends ConsumerState<CustomerForm> {
             },
             onSaved: (value) => _email = value,
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: UIConstants.spacingMedium),
           TextFormField(
             initialValue: _address,
             decoration: const InputDecoration(
@@ -218,7 +219,7 @@ class CustomerFormState extends ConsumerState<CustomerForm> {
             maxLines: 2,
             onSaved: (value) => _address = value,
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: UIConstants.spacingMedium),
           TextFormField(
             initialValue: _taxId,
             decoration: const InputDecoration(
@@ -227,7 +228,7 @@ class CustomerFormState extends ConsumerState<CustomerForm> {
             ),
             onSaved: (value) => _taxId = value,
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: UIConstants.spacingMedium),
           TextFormField(
             initialValue: _businessName,
             decoration: const InputDecoration(

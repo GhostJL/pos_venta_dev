@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:posventa/core/theme/theme.dart';
+import 'package:posventa/core/constants/ui_constants.dart';
 
 class GenericFormScaffold extends StatelessWidget {
   final String title;
@@ -29,7 +30,7 @@ class GenericFormScaffold extends StatelessWidget {
             key: formKey,
             autovalidateMode: AutovalidateMode.onUserInteraction,
             child: SingleChildScrollView(
-              padding: const EdgeInsets.all(24.0),
+              padding: const EdgeInsets.all(UIConstants.paddingLarge),
               child: child,
             ),
           ),
@@ -42,17 +43,21 @@ class GenericFormScaffold extends StatelessWidget {
       ),
       bottomNavigationBar: Padding(
         padding: EdgeInsets.fromLTRB(
-          24,
-          8,
-          24,
-          24 + MediaQuery.of(context).viewInsets.bottom,
+          UIConstants.paddingLarge,
+          UIConstants.paddingSmall,
+          UIConstants.paddingLarge,
+          UIConstants.paddingLarge + MediaQuery.of(context).viewInsets.bottom,
         ),
         child: ElevatedButton(
           onPressed: isLoading ? null : onSubmit,
           style: ElevatedButton.styleFrom(
-            padding: const EdgeInsets.symmetric(vertical: 16),
+            padding: const EdgeInsets.symmetric(
+              vertical: UIConstants.paddingMedium,
+            ),
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(
+                UIConstants.borderRadiusMedium,
+              ),
             ),
             elevation: 0,
             backgroundColor: AppTheme.primary,
@@ -61,8 +66,8 @@ class GenericFormScaffold extends StatelessWidget {
           ),
           child: isLoading
               ? const SizedBox(
-                  height: 20,
-                  width: 20,
+                  height: UIConstants.iconSizeSmall,
+                  width: UIConstants.iconSizeSmall,
                   child: CircularProgressIndicator(
                     strokeWidth: 2,
                     valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
@@ -71,7 +76,7 @@ class GenericFormScaffold extends StatelessWidget {
               : Text(
                   submitButtonText,
                   style: const TextStyle(
-                    fontSize: 16,
+                    fontSize: UIConstants.fontSizeLarge,
                     fontWeight: FontWeight.bold,
                   ),
                 ),

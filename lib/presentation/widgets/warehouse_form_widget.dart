@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:posventa/core/theme/theme.dart';
 import 'package:posventa/domain/entities/warehouse.dart';
 import 'package:posventa/presentation/providers/warehouse_providers.dart';
+import 'package:posventa/core/constants/ui_constants.dart';
 
 class WarehouseFormWidget extends ConsumerStatefulWidget {
   final Warehouse? warehouse;
@@ -96,7 +97,9 @@ class _WarehouseFormWidgetState extends ConsumerState<WarehouseFormWidget> {
     final textTheme = Theme.of(context).textTheme;
 
     return AlertDialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(UIConstants.borderRadiusLarge),
+      ),
       elevation: 0,
       backgroundColor: AppTheme.background,
       title: Padding(
@@ -128,7 +131,7 @@ class _WarehouseFormWidgetState extends ConsumerState<WarehouseFormWidget> {
                       : null,
                   onSaved: (value) => _name = value!,
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: UIConstants.spacingMedium),
                 TextFormField(
                   initialValue: _code,
                   decoration: const InputDecoration(labelText: 'Código Único'),
@@ -137,7 +140,7 @@ class _WarehouseFormWidgetState extends ConsumerState<WarehouseFormWidget> {
                       : null,
                   onSaved: (value) => _code = value!,
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: UIConstants.spacingMedium),
                 TextFormField(
                   initialValue: _address,
                   decoration: const InputDecoration(
@@ -145,7 +148,7 @@ class _WarehouseFormWidgetState extends ConsumerState<WarehouseFormWidget> {
                   ),
                   onSaved: (value) => _address = value,
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: UIConstants.spacingMedium),
                 TextFormField(
                   initialValue: _phone,
                   decoration: const InputDecoration(

@@ -5,6 +5,7 @@ import 'package:posventa/presentation/providers/brand_providers.dart';
 import 'package:posventa/presentation/providers/category_providers.dart';
 import 'package:posventa/presentation/providers/department_providers.dart';
 import 'package:posventa/presentation/providers/supplier_providers.dart';
+import 'package:posventa/core/constants/ui_constants.dart';
 
 class ProductFilterSheet extends ConsumerStatefulWidget {
   final int? departmentFilter;
@@ -66,10 +67,10 @@ class _ProductFilterSheetState extends ConsumerState<ProductFilterSheet> {
 
     return Padding(
       padding: EdgeInsets.fromLTRB(
-        24,
-        24,
-        24,
-        24 + MediaQuery.of(context).viewInsets.bottom,
+        UIConstants.paddingLarge,
+        UIConstants.paddingLarge,
+        UIConstants.paddingLarge,
+        UIConstants.paddingLarge + MediaQuery.of(context).viewInsets.bottom,
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
