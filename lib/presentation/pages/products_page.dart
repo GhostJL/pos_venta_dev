@@ -12,6 +12,7 @@ import 'package:posventa/presentation/widgets/product_active_filters.dart';
 import 'package:posventa/presentation/widgets/product_search_bar.dart';
 import 'package:posventa/presentation/widgets/product_actions_sheet.dart';
 import 'package:posventa/presentation/utils/product_filter_utils.dart';
+import 'package:posventa/presentation/widgets/common/empty_state_widget.dart';
 
 class ProductsPage extends ConsumerStatefulWidget {
   const ProductsPage({super.key});
@@ -161,22 +162,9 @@ class ProductsPageState extends ConsumerState<ProductsPage> {
   }
 
   Widget _buildEmptyState() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            Icons.inventory_2_outlined,
-            size: 64,
-            color: AppTheme.textSecondary.withAlpha(100),
-          ),
-          const SizedBox(height: 16),
-          const Text(
-            'No se encontraron productos',
-            style: TextStyle(fontSize: 18, color: AppTheme.textSecondary),
-          ),
-        ],
-      ),
+    return const EmptyStateWidget(
+      icon: Icons.inventory_2_outlined,
+      message: 'No se encontraron productos',
     );
   }
 

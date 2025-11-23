@@ -7,6 +7,9 @@ import 'package:posventa/presentation/widgets/custom_data_table.dart';
 import 'package:go_router/go_router.dart';
 import 'package:posventa/core/constants/permission_constants.dart';
 import 'package:posventa/presentation/providers/permission_provider.dart';
+import 'package:posventa/presentation/widgets/common/confirm_delete_dialog.dart';
+import 'package:posventa/presentation/widgets/common/status_chip.dart';
+import 'package:posventa/presentation/widgets/common/data_table_actions.dart';
 
 class DepartmentsPage extends ConsumerWidget {
   const DepartmentsPage({super.key});
@@ -27,50 +30,16 @@ class DepartmentsPage extends ConsumerWidget {
       WidgetRef ref,
       Department department,
     ) {
-      showDialog(
+      ConfirmDeleteDialog.show(
         context: context,
-        builder: (BuildContext dialogContext) {
-          return AlertDialog(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
-            ),
-            title: const Text('Confirmar Eliminación'),
-            content: Text(
-              '¿Estás seguro de que quieres eliminar el departamento "${department.name}"?',
-              style: Theme.of(context).textTheme.bodyMedium,
-            ),
-            actionsPadding: const EdgeInsets.all(20),
-            actions: <Widget>[
-              TextButton(
-                child: const Text('Cancelar'),
-                onPressed: () => Navigator.of(dialogContext).pop(),
-              ),
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppTheme.error,
-                  foregroundColor: Colors.white,
-                  elevation: 0,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                child: const Text('Eliminar'),
-                onPressed: () {
-                  ref
-                      .read(departmentListProvider.notifier)
-                      .deleteDepartment(department.id!);
-                  Navigator.of(dialogContext).pop();
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Departamento eliminado correctamente'),
-                      backgroundColor: AppTheme.success,
-                    ),
-                  );
-                },
-              ),
-            ],
-          );
+        itemName: department.name,
+        itemType: 'el departamento',
+        onConfirm: () {
+          ref
+              .read(departmentListProvider.notifier)
+              .deleteDepartment(department.id!);
         },
+        successMessage: 'Departamento eliminado correctamente',
       );
     }
 
@@ -104,32 +73,15 @@ class DepartmentsPage extends ConsumerWidget {
                     ),
                   ),
                 ),
-                DataCell(_buildStatusChip(department.isActive)),
+                DataCell(StatusChip(isActive: department.isActive)),
                 DataCell(
-                  Row(
-                    children: [
-                      if (hasManagePermission)
-                        IconButton(
-                          icon: const Icon(
-                            Icons.edit_rounded,
-                            color: AppTheme.primary,
-                            size: 20,
-                          ),
-                          tooltip: 'Editar Departamento',
-                          onPressed: () => navigateToForm(department),
-                        ),
-                      if (hasManagePermission)
-                        IconButton(
-                          icon: const Icon(
-                            Icons.delete_rounded,
-                            color: AppTheme.error,
-                            size: 20,
-                          ),
-                          tooltip: 'Eliminar Departamento',
-                          onPressed: () =>
-                              confirmDelete(context, ref, department),
-                        ),
-                    ],
+                  DataTableActions(
+                    hasEditPermission: hasManagePermission,
+                    hasDeletePermission: hasManagePermission,
+                    onEdit: () => navigateToForm(department),
+                    onDelete: () => confirmDelete(context, ref, department),
+                    editTooltip: 'Editar Departamento',
+                    deleteTooltip: 'Eliminar Departamento',
                   ),
                 ),
               ],
@@ -142,31 +94,6 @@ class DepartmentsPage extends ConsumerWidget {
         ),
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (err, stack) => Center(child: Text('Error: $err')),
-      ),
-    );
-  }
-
-  Widget _buildStatusChip(bool isActive) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      decoration: BoxDecoration(
-        color: isActive
-            ? AppTheme.success.withAlpha(20)
-            : AppTheme.error.withAlpha(20),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: isActive
-              ? AppTheme.success.withAlpha(50)
-              : AppTheme.error.withAlpha(50),
-        ),
-      ),
-      child: Text(
-        isActive ? 'Activo' : 'Inactivo',
-        style: TextStyle(
-          color: isActive ? AppTheme.success : AppTheme.error,
-          fontWeight: FontWeight.bold,
-          fontSize: 12,
-        ),
       ),
     );
   }

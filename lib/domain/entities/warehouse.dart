@@ -1,4 +1,3 @@
-
 class Warehouse {
   final int? id;
   final String name;
@@ -44,7 +43,7 @@ class Warehouse {
   }
 
   @override
-bool operator ==(Object other) {
+  bool operator ==(Object other) {
     if (identical(this, other)) return true;
 
     return other is Warehouse &&
@@ -55,10 +54,10 @@ bool operator ==(Object other) {
         other.phone == phone &&
         other.isMain == isMain &&
         other.isActive == isActive;
-}
+  }
 
-@override
-int get hashCode {
+  @override
+  int get hashCode {
     return id.hashCode ^
         name.hashCode ^
         code.hashCode ^
@@ -66,5 +65,5 @@ int get hashCode {
         phone.hashCode ^
         isMain.hashCode ^
         isActive.hashCode;
-}
+  }
 }

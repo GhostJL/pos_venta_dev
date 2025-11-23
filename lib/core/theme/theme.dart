@@ -86,7 +86,10 @@ class AppTheme {
         shadowColor: primary.withAlpha(40),
         elevation: 8,
         textStyle: const TextStyle(
-            fontFamily: 'Lato', fontSize: 16, fontWeight: FontWeight.bold),
+          fontFamily: 'Lato',
+          fontSize: 16,
+          fontWeight: FontWeight.bold,
+        ),
       ),
     ),
 
@@ -96,7 +99,10 @@ class AppTheme {
       fillColor: inputBackground,
       labelStyle: TextStyle(color: textSecondary),
       hintStyle: TextStyle(
-          fontFamily: 'Lato', color: textSecondary, fontSize: 14),
+        fontFamily: 'Lato',
+        color: textSecondary,
+        fontSize: 14,
+      ),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.all(Radius.circular(12)),
         borderSide: BorderSide.none,

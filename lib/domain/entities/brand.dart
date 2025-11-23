@@ -11,12 +11,7 @@ class Brand {
     this.isActive = true,
   });
 
-   Brand copyWith({
-    int? id,
-    String? name,
-    String? code,
-    bool? isActive,
-  }) {
+  Brand copyWith({int? id, String? name, String? code, bool? isActive}) {
     return Brand(
       id: id ?? this.id,
       name: name ?? this.name,

@@ -1,10 +1,7 @@
 import 'package:posventa/domain/entities/product_tax.dart';
 
 class ProductTaxModel extends ProductTax {
-  const ProductTaxModel({
-    required super.taxRateId,
-    required super.applyOrder,
-  });
+  const ProductTaxModel({required super.taxRateId, required super.applyOrder});
 
   factory ProductTaxModel.fromEntity(ProductTax productTax) {
     return ProductTaxModel(
@@ -21,9 +18,6 @@ class ProductTaxModel extends ProductTax {
   }
 
   Map<String, dynamic> toMap() {
-    return {
-      'tax_rate_id': taxRateId,
-      'apply_order': applyOrder,
-    };
+    return {'tax_rate_id': taxRateId, 'apply_order': applyOrder};
   }
 }

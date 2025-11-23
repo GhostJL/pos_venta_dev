@@ -8,6 +8,8 @@ import 'package:go_router/go_router.dart';
 import 'package:posventa/presentation/widgets/custom_data_table.dart';
 import 'package:posventa/core/constants/permission_constants.dart';
 import 'package:posventa/presentation/providers/permission_provider.dart';
+import 'package:posventa/presentation/widgets/common/confirm_delete_dialog.dart';
+import 'package:posventa/presentation/widgets/common/data_table_actions.dart';
 
 class CategoriesPage extends ConsumerWidget {
   const CategoriesPage({super.key});
@@ -25,50 +27,14 @@ class CategoriesPage extends ConsumerWidget {
     }
 
     void confirmDelete(BuildContext context, WidgetRef ref, Category category) {
-      showDialog(
+      ConfirmDeleteDialog.show(
         context: context,
-        builder: (BuildContext dialogContext) {
-          return AlertDialog(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
-            ),
-            title: const Text('Confirmar Eliminación'),
-            content: Text(
-              '¿Estás seguro de que quieres eliminar la categoría "${category.name}"?',
-              style: Theme.of(context).textTheme.bodyMedium,
-            ),
-            actionsPadding: const EdgeInsets.all(20),
-            actions: <Widget>[
-              TextButton(
-                child: const Text('Cancelar'),
-                onPressed: () => Navigator.of(dialogContext).pop(),
-              ),
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppTheme.error,
-                  foregroundColor: Colors.white,
-                  elevation: 0,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                child: const Text('Eliminar'),
-                onPressed: () {
-                  ref
-                      .read(categoryListProvider.notifier)
-                      .deleteCategory(category.id!);
-                  Navigator.of(dialogContext).pop();
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Categoría eliminada correctamente'),
-                      backgroundColor: AppTheme.success,
-                    ),
-                  );
-                },
-              ),
-            ],
-          );
+        itemName: category.name,
+        itemType: 'la categoría',
+        onConfirm: () {
+          ref.read(categoryListProvider.notifier).deleteCategory(category.id!);
         },
+        successMessage: 'Categoría eliminada correctamente',
       );
     }
 
@@ -116,30 +82,13 @@ class CategoriesPage extends ConsumerWidget {
                   ),
                 ),
                 DataCell(
-                  Row(
-                    children: [
-                      if (hasManagePermission)
-                        IconButton(
-                          icon: const Icon(
-                            Icons.edit_rounded,
-                            color: AppTheme.primary,
-                            size: 20,
-                          ),
-                          tooltip: 'Editar Categoría',
-                          onPressed: () => navigateToForm(category),
-                        ),
-                      if (hasManagePermission)
-                        IconButton(
-                          icon: const Icon(
-                            Icons.delete_rounded,
-                            color: AppTheme.error,
-                            size: 20,
-                          ),
-                          tooltip: 'Eliminar Categoría',
-                          onPressed: () =>
-                              confirmDelete(context, ref, category),
-                        ),
-                    ],
+                  DataTableActions(
+                    hasEditPermission: hasManagePermission,
+                    hasDeletePermission: hasManagePermission,
+                    onEdit: () => navigateToForm(category),
+                    onDelete: () => confirmDelete(context, ref, category),
+                    editTooltip: 'Editar Categoría',
+                    deleteTooltip: 'Eliminar Categoría',
                   ),
                 ),
               ],

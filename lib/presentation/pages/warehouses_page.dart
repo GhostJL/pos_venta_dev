@@ -6,6 +6,8 @@ import 'package:posventa/presentation/providers/warehouse_providers.dart';
 import 'package:posventa/presentation/widgets/custom_data_table.dart';
 import 'package:posventa/core/constants/permission_constants.dart';
 import 'package:posventa/presentation/providers/permission_provider.dart';
+import 'package:posventa/presentation/widgets/common/status_chip.dart';
+import 'package:posventa/presentation/widgets/common/data_table_actions.dart';
 
 import 'package:posventa/presentation/widgets/warehouse_form_widget.dart';
 
@@ -75,46 +77,24 @@ class WarehousesPage extends ConsumerWidget {
                       ),
                     ),
                     DataCell(
-                      Chip(
-                        label: Text(warehouse.isActive ? 'Activo' : 'Inactivo'),
-                        backgroundColor: warehouse.isActive
-                            ? AppTheme.success.withAlpha(25)
-                            : AppTheme.error.withAlpha(25),
-                        labelStyle: TextStyle(
-                          color: warehouse.isActive
-                              ? AppTheme.success
-                              : AppTheme.error,
-                          fontWeight: FontWeight.w600,
-                        ),
-                        side: BorderSide.none,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 2,
-                        ),
+                      StatusChip(
+                        isActive: warehouse.isActive,
+                        activeText: 'Activo',
+                        inactiveText: 'Inactivo',
                       ),
                     ),
                     DataCell(
-                      Row(
-                        children: [
-                          if (hasManagePermission)
-                            IconButton(
-                              icon: const Icon(Icons.edit_outlined, size: 20),
-                              color: AppTheme.textSecondary,
-                              onPressed: () => showWarehouseForm(warehouse),
-                              tooltip: 'Editar',
-                            ),
-                          if (hasManagePermission)
-                            IconButton(
-                              icon: const Icon(Icons.delete_outline, size: 20),
-                              color: AppTheme.textSecondary,
-                              onPressed: () {
-                                ref
-                                    .read(warehouseProvider.notifier)
-                                    .removeWarehouse(warehouse.id!);
-                              },
-                              tooltip: 'Eliminar',
-                            ),
-                        ],
+                      DataTableActions(
+                        hasEditPermission: hasManagePermission,
+                        hasDeletePermission: hasManagePermission,
+                        onEdit: () => showWarehouseForm(warehouse),
+                        onDelete: () {
+                          ref
+                              .read(warehouseProvider.notifier)
+                              .removeWarehouse(warehouse.id!);
+                        },
+                        editTooltip: 'Editar',
+                        deleteTooltip: 'Eliminar',
                       ),
                     ),
                   ],

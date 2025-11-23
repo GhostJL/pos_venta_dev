@@ -6,6 +6,8 @@ import 'package:posventa/presentation/providers/auth_provider.dart';
 import 'package:posventa/core/constants/permission_constants.dart';
 import 'package:posventa/presentation/providers/permission_provider.dart';
 import 'package:posventa/presentation/widgets/permission_denied_widget.dart';
+import 'package:posventa/presentation/widgets/common/error_message_box.dart';
+import 'package:posventa/presentation/widgets/common/money_input_field.dart';
 
 class CashSessionClosePage extends ConsumerStatefulWidget {
   final bool isLogoutIntent;
@@ -368,77 +370,18 @@ class _CashSessionClosePageState extends ConsumerState<CashSessionClosePage> {
                         const SizedBox(height: 24),
 
                         // Conteo de efectivo
-                        const Text(
-                          'Conteo de Efectivo',
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        TextField(
+                        MoneyInputField(
                           controller: _amountController,
-                          keyboardType: const TextInputType.numberWithOptions(
-                            decimal: true,
-                          ),
-                          style: const TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                          ),
-                          decoration: InputDecoration(
-                            prefixText: '\$ ',
-                            prefixStyle: const TextStyle(
-                              fontSize: 24,
-                              fontWeight: FontWeight.bold,
-                            ),
-                            hintText: '0.00',
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 16,
-                            ),
-                          ),
+                          label: 'Conteo de Efectivo',
+                          helpText:
+                              'Ingrese el total de efectivo contado en caja',
                           autofocus: true,
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          'Ingrese el total de efectivo contado en caja',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.grey[600],
-                          ),
                         ),
                         const SizedBox(height: 24),
 
                         // Mensaje de error
                         if (_errorMessage != null) ...[
-                          Container(
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: Colors.red.shade50,
-                              borderRadius: BorderRadius.circular(8),
-                              border: Border.all(color: Colors.red.shade200),
-                            ),
-                            child: Row(
-                              children: [
-                                Icon(
-                                  Icons.error_outline,
-                                  color: Colors.red.shade700,
-                                ),
-                                const SizedBox(width: 8),
-                                Expanded(
-                                  child: Text(
-                                    _errorMessage!,
-                                    style: TextStyle(
-                                      color: Colors.red.shade700,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
+                          ErrorMessageBox(message: _errorMessage!),
                           const SizedBox(height: 16),
                         ],
 

@@ -1,5 +1,3 @@
-
-
 enum TransactionType { entrada, salida }
 
 class Transaction {
@@ -35,7 +33,9 @@ class Transaction {
       id: map['id'] as int?,
       userId: map['user_id'] as int,
       amount: map['amount'] as double,
-      type: TransactionType.values.firstWhere((e) => e.name == map['type']), // Use .name for comparison
+      type: TransactionType.values.firstWhere(
+        (e) => e.name == map['type'],
+      ), // Use .name for comparison
       timestamp: DateTime.parse(map['timestamp'] as String),
       description: map['description'] as String,
     );

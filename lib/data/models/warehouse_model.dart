@@ -1,4 +1,3 @@
-
 import 'package:posventa/domain/entities/warehouse.dart';
 
 class WarehouseModel extends Warehouse {

@@ -1,5 +1,3 @@
-
-
 import 'package:posventa/domain/entities/warehouse.dart';
 import 'package:posventa/domain/repositories/warehouse_repository.dart';
 

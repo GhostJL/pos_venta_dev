@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:posventa/core/theme/theme.dart';
+
 import 'package:posventa/domain/entities/customer.dart';
 import 'package:posventa/presentation/providers/customer_providers.dart';
 import 'package:posventa/presentation/widgets/custom_data_table.dart';
 import 'package:go_router/go_router.dart';
 import 'package:posventa/core/constants/permission_constants.dart';
 import 'package:posventa/presentation/providers/permission_provider.dart';
+import 'package:posventa/presentation/widgets/common/confirm_delete_dialog.dart';
+import 'package:posventa/presentation/widgets/common/data_table_actions.dart';
 
 class CustomersPage extends ConsumerStatefulWidget {
   const CustomersPage({super.key});
@@ -59,27 +61,11 @@ class CustomersPageState extends ConsumerState<CustomersPage> {
                     DataCell(Text(customer.phone ?? '-')),
                     DataCell(Text(customer.email ?? '-')),
                     DataCell(
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          if (hasManagePermission)
-                            IconButton(
-                              icon: const Icon(
-                                Icons.edit,
-                                color: AppTheme.primary,
-                              ),
-                              onPressed: () => _navigateToForm(customer),
-                            ),
-                          if (hasManagePermission)
-                            IconButton(
-                              icon: const Icon(
-                                Icons.delete,
-                                color: AppTheme.error,
-                              ),
-                              onPressed: () =>
-                                  _confirmDelete(context, ref, customer),
-                            ),
-                        ],
+                      DataTableActions(
+                        hasEditPermission: hasManagePermission,
+                        hasDeletePermission: hasManagePermission,
+                        onEdit: () => _navigateToForm(customer),
+                        onDelete: () => _confirmDelete(context, ref, customer),
                       ),
                     ),
                   ],
@@ -103,35 +89,14 @@ class CustomersPageState extends ConsumerState<CustomersPage> {
   }
 
   void _confirmDelete(BuildContext context, WidgetRef ref, Customer customer) {
-    showDialog(
+    ConfirmDeleteDialog.show(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Confirmar Eliminación'),
-        content: Text('¿Eliminar cliente ${customer.fullName}?'),
-        actions: [
-          TextButton(
-            onPressed: () => context.pop(),
-            child: const Text('Cancelar'),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: AppTheme.error),
-            onPressed: () {
-              ref.read(customerProvider.notifier).deleteCustomer(customer.id!);
-              context.pop();
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Cliente eliminado correctamente'),
-                  backgroundColor: AppTheme.success,
-                ),
-              );
-            },
-            child: const Text(
-              'Eliminar',
-              style: TextStyle(color: Colors.white),
-            ),
-          ),
-        ],
-      ),
+      itemName: customer.fullName,
+      itemType: 'el cliente',
+      onConfirm: () {
+        ref.read(customerProvider.notifier).deleteCustomer(customer.id!);
+      },
+      successMessage: 'Cliente eliminado correctamente',
     );
   }
 }

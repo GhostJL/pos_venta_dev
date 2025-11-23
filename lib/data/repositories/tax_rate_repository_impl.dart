@@ -12,7 +12,10 @@ class TaxRateRepositoryImpl implements TaxRateRepository {
   Future<TaxRate> createTaxRate(TaxRate taxRate) async {
     try {
       final taxRateModel = TaxRateModel.fromEntity(taxRate);
-      final id = await databaseHelper.insert('tax_rates', taxRateModel.toJson());
+      final id = await databaseHelper.insert(
+        'tax_rates',
+        taxRateModel.toJson(),
+      );
       return taxRate.copyWith(id: id);
     } catch (e) {
       throw Exception('Failed to create tax rate: $e');
@@ -32,7 +35,9 @@ class TaxRateRepositoryImpl implements TaxRateRepository {
   Future<List<TaxRate>> getAllTaxRates() async {
     try {
       final maps = await databaseHelper.queryAll('tax_rates');
-      final taxRates = maps.map((map) => TaxRateModel.fromJson(map).toEntity()).toList();
+      final taxRates = maps
+          .map((map) => TaxRateModel.fromJson(map).toEntity())
+          .toList();
       return taxRates;
     } catch (e) {
       throw Exception('Failed to get all tax rates: $e');
@@ -60,7 +65,12 @@ class TaxRateRepositoryImpl implements TaxRateRepository {
       final db = await databaseHelper.database;
       await db.transaction((txn) async {
         await txn.update('tax_rates', {'is_default': 0});
-        await txn.update('tax_rates', {'is_default': 1}, where: 'id = ?', whereArgs: [id]);
+        await txn.update(
+          'tax_rates',
+          {'is_default': 1},
+          where: 'id = ?',
+          whereArgs: [id],
+        );
       });
     } catch (e) {
       throw Exception('Failed to set default tax rate: $e');
