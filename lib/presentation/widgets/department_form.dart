@@ -4,6 +4,7 @@ import 'package:posventa/domain/entities/department.dart';
 import 'package:posventa/presentation/providers/department_providers.dart';
 import 'package:posventa/presentation/widgets/common/generic_form_scaffold.dart';
 import 'package:posventa/core/theme/theme.dart';
+import 'package:posventa/core/constants/ui_constants.dart';
 
 class DepartmentForm extends ConsumerStatefulWidget {
   final Department? department;
@@ -105,7 +106,7 @@ class DepartmentFormState extends ConsumerState<DepartmentForm> {
             },
             onSaved: (value) => _name = value!,
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: UIConstants.spacingLarge),
           TextFormField(
             initialValue: _code,
             decoration: const InputDecoration(
