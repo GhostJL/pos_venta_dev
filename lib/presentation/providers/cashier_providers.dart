@@ -1,5 +1,4 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-
+import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:posventa/data/datasources/database_helper.dart';
 import 'package:posventa/data/repositories/cashier_repository_impl.dart';
 import 'package:posventa/data/repositories/permission_repository_impl.dart';
@@ -8,72 +7,79 @@ import 'package:posventa/domain/entities/user.dart';
 import 'package:posventa/domain/repositories/cashier_repository.dart';
 import 'package:posventa/domain/repositories/permission_repository.dart';
 import 'package:posventa/domain/usecases/cashier/cashier_usecases.dart';
+import 'package:posventa/presentation/providers/auth_provider.dart';
+
+part 'cashier_providers.g.dart';
 
 // Repositories
-final cashierRepositoryProvider = Provider<CashierRepository>((ref) {
+@riverpod
+CashierRepository cashierRepository(Ref ref) {
   return CashierRepositoryImpl(DatabaseHelper.instance);
-});
+}
 
-final permissionRepositoryProvider = Provider<PermissionRepository>((ref) {
+@riverpod
+PermissionRepository permissionRepository(Ref ref) {
   return PermissionRepositoryImpl(DatabaseHelper.instance);
-});
+}
 
 // Use Cases
-final getCashiersUseCaseProvider = Provider<GetCashiersUseCase>((ref) {
+@riverpod
+GetCashiersUseCase getCashiersUseCase(Ref ref) {
   return GetCashiersUseCase(ref.watch(cashierRepositoryProvider));
-});
+}
 
-final createCashierUseCaseProvider = Provider<CreateCashierUseCase>((ref) {
+@riverpod
+CreateCashierUseCase createCashierUseCase(Ref ref) {
   return CreateCashierUseCase(ref.watch(cashierRepositoryProvider));
-});
+}
 
-final updateCashierUseCaseProvider = Provider<UpdateCashierUseCase>((ref) {
+@riverpod
+UpdateCashierUseCase updateCashierUseCase(Ref ref) {
   return UpdateCashierUseCase(ref.watch(cashierRepositoryProvider));
-});
+}
 
-final deleteCashierUseCaseProvider = Provider<DeleteCashierUseCase>((ref) {
+@riverpod
+DeleteCashierUseCase deleteCashierUseCase(Ref ref) {
   return DeleteCashierUseCase(ref.watch(cashierRepositoryProvider));
-});
+}
 
-final getCashierPermissionsUseCaseProvider =
-    Provider<GetCashierPermissionsUseCase>((ref) {
-      return GetCashierPermissionsUseCase(ref.watch(cashierRepositoryProvider));
-    });
+@riverpod
+GetCashierPermissionsUseCase getCashierPermissionsUseCase(Ref ref) {
+  return GetCashierPermissionsUseCase(ref.watch(cashierRepositoryProvider));
+}
 
-final updateCashierPermissionsUseCaseProvider =
-    Provider<UpdateCashierPermissionsUseCase>((ref) {
-      return UpdateCashierPermissionsUseCase(
-        ref.watch(cashierRepositoryProvider),
-      );
-    });
+@riverpod
+UpdateCashierPermissionsUseCase updateCashierPermissionsUseCase(Ref ref) {
+  return UpdateCashierPermissionsUseCase(ref.watch(cashierRepositoryProvider));
+}
 
-final getAllPermissionsUseCaseProvider = Provider<GetAllPermissionsUseCase>((
-  ref,
-) {
+@riverpod
+GetAllPermissionsUseCase getAllPermissionsUseCase(Ref ref) {
   return GetAllPermissionsUseCase(ref.watch(permissionRepositoryProvider));
-});
+}
 
 // Data Providers
-final cashierListProvider = FutureProvider<List<User>>((ref) async {
+@riverpod
+Future<List<User>> cashierList(Ref ref) async {
   final useCase = ref.watch(getCashiersUseCaseProvider);
   return useCase();
-});
+}
 
-final allPermissionsProvider = FutureProvider<List<Permission>>((ref) async {
+@riverpod
+Future<List<Permission>> allPermissions(Ref ref) async {
   final useCase = ref.watch(getAllPermissionsUseCaseProvider);
   return useCase();
-});
+}
 
-final cashierPermissionsProvider = FutureProvider.family<List<Permission>, int>(
-  (ref, cashierId) async {
-    final useCase = ref.watch(getCashierPermissionsUseCaseProvider);
-    return useCase(cashierId);
-  },
-);
+@riverpod
+Future<List<Permission>> cashierPermissions(Ref ref, int cashierId) async {
+  final useCase = ref.watch(getCashierPermissionsUseCaseProvider);
+  return useCase(cashierId);
+}
 
 // Controller for Actions
-// Controller for Actions
-class CashierController extends AsyncNotifier<void> {
+@riverpod
+class CashierController extends _$CashierController {
   @override
   Future<void> build() async {
     // Initial state
@@ -104,24 +110,16 @@ class CashierController extends AsyncNotifier<void> {
     });
   }
 
-  Future<void> updatePermissions(
-    int cashierId,
-    List<int> permissionIds,
-    int? grantedBy,
-  ) async {
+  Future<void> updatePermissions(int cashierId, List<int> permissionIds) async {
     state = const AsyncValue.loading();
     state = await AsyncValue.guard(() async {
+      final currentUser = ref.read(authProvider).user;
       await ref.read(updateCashierPermissionsUseCaseProvider)(
         cashierId,
         permissionIds,
-        grantedBy,
+        currentUser?.id,
       );
       ref.invalidate(cashierPermissionsProvider(cashierId));
     });
   }
 }
-
-final cashierControllerProvider =
-    AsyncNotifierProvider<CashierController, void>(() {
-      return CashierController();
-    });

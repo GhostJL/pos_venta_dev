@@ -41,9 +41,7 @@ class _PurchaseItemFormPageState extends ConsumerState<PurchaseItemFormPage> {
 
     // Load existing item data if editing
     if (widget.itemId != null) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        _loadItemData();
-      });
+      _loadItemData();
     }
   }
 

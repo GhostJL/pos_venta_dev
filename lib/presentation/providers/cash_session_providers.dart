@@ -1,4 +1,4 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:posventa/data/datasources/database_helper.dart';
 import 'package:posventa/data/repositories/cash_session_repository_impl.dart';
 import 'package:posventa/domain/entities/cash_movement.dart';
@@ -9,17 +9,21 @@ import 'package:posventa/presentation/providers/auth_provider.dart';
 import 'package:posventa/presentation/providers/providers.dart';
 import 'package:posventa/domain/entities/warehouse.dart';
 
+part 'cash_session_providers.g.dart';
+
 // Repository Provider
-final cashSessionRepositoryProvider = Provider<CashSessionRepository>((ref) {
+@riverpod
+CashSessionRepository cashSessionRepository(Ref ref) {
   final authState = ref.watch(authProvider);
   final userId = authState.user?.id ?? 0;
   return CashSessionRepositoryImpl(DatabaseHelper.instance, userId);
-});
+}
 
-final warehouseListProvider = FutureProvider<List<Warehouse>>((ref) async {
+@riverpod
+Future<List<Warehouse>> warehouseList(Ref ref) async {
   final useCase = ref.watch(getAllWarehousesProvider);
   return useCase();
-});
+}
 
 // Filter Classes
 class CashSessionFilter {
@@ -76,43 +80,43 @@ class CashMovementFilter {
 
 // Providers
 
-final cashSessionListProvider =
-    FutureProvider.family<List<CashSession>, CashSessionFilter>((
-      ref,
-      filter,
-    ) async {
-      final repo = ref.watch(cashSessionRepositoryProvider);
-      return repo.getSessions(
-        userId: filter.userId,
-        warehouseId: filter.warehouseId,
-        startDate: filter.startDate,
-        endDate: filter.endDate,
-      );
-    });
+@riverpod
+Future<List<CashSession>> cashSessionList(
+  Ref ref,
+  CashSessionFilter filter,
+) async {
+  final repo = ref.watch(cashSessionRepositoryProvider);
+  return repo.getSessions(
+    userId: filter.userId,
+    warehouseId: filter.warehouseId,
+    startDate: filter.startDate,
+    endDate: filter.endDate,
+  );
+}
 
-final cashSessionMovementsProvider =
-    FutureProvider.family<List<CashMovement>, int>((ref, sessionId) async {
-      final repo = ref.watch(cashSessionRepositoryProvider);
-      return repo.getSessionMovements(sessionId);
-    });
+@riverpod
+Future<List<CashMovement>> cashSessionMovements(Ref ref, int sessionId) async {
+  final repo = ref.watch(cashSessionRepositoryProvider);
+  return repo.getSessionMovements(sessionId);
+}
 
-final cashSessionPaymentsProvider =
-    FutureProvider.family<List<SalePayment>, int>((ref, sessionId) async {
-      final repo = ref.watch(cashSessionRepositoryProvider);
-      return repo.getSessionPayments(sessionId);
-    });
+@riverpod
+Future<List<SalePayment>> cashSessionPayments(Ref ref, int sessionId) async {
+  final repo = ref.watch(cashSessionRepositoryProvider);
+  return repo.getSessionPayments(sessionId);
+}
 
-final allCashMovementsProvider =
-    FutureProvider.family<List<CashMovement>, CashMovementFilter>((
-      ref,
-      filter,
-    ) async {
-      final repo = ref.watch(cashSessionRepositoryProvider);
-      return repo.getAllMovements(
-        startDate: filter.startDate,
-        endDate: filter.endDate,
-      );
-    });
+@riverpod
+Future<List<CashMovement>> allCashMovements(
+  Ref ref,
+  CashMovementFilter filter,
+) async {
+  final repo = ref.watch(cashSessionRepositoryProvider);
+  return repo.getAllMovements(
+    startDate: filter.startDate,
+    endDate: filter.endDate,
+  );
+}
 
 // Detail Provider (Composite)
 class CashSessionDetail {
@@ -131,19 +135,22 @@ class CashSessionDetail {
       movements.fold(0, (sum, m) => sum + m.amountCents);
 }
 
-final cashSessionDetailProvider =
-    FutureProvider.family<CashSessionDetail, CashSession>((ref, session) async {
-      final repo = ref.watch(cashSessionRepositoryProvider);
+@riverpod
+Future<CashSessionDetail> cashSessionDetail(
+  Ref ref,
+  CashSession session,
+) async {
+  final repo = ref.watch(cashSessionRepositoryProvider);
 
-      // Fetch in parallel
-      final results = await Future.wait([
-        repo.getSessionMovements(session.id!),
-        repo.getSessionPayments(session.id!),
-      ]);
+  // Fetch in parallel
+  final results = await Future.wait([
+    repo.getSessionMovements(session.id!),
+    repo.getSessionPayments(session.id!),
+  ]);
 
-      return CashSessionDetail(
-        session: session,
-        movements: results[0] as List<CashMovement>,
-        payments: results[1] as List<SalePayment>,
-      );
-    });
+  return CashSessionDetail(
+    session: session,
+    movements: results[0] as List<CashMovement>,
+    payments: results[1] as List<SalePayment>,
+  );
+}

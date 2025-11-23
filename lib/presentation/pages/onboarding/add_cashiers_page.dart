@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:posventa/presentation/providers/onboarding_state.dart';
 import 'package:go_router/go_router.dart';
 import 'package:posventa/core/theme/theme.dart';
 import 'package:posventa/presentation/pages/onboarding/onboarding_layout.dart';
-import 'package:posventa/presentation/providers/onboarding_state.dart';
 
 class AddCashiersPage extends ConsumerWidget {
   const AddCashiersPage({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final onboardingState = ref.watch(onboardingNotifierProvider);
+    final onboardingState = ref.watch(onboardingProvider);
     final cashiers = onboardingState.cashiers;
     final canAddMore = cashiers.length < 10;
     final membersText = cashiers.length == 1 ? 'miembro' : 'miembros';
@@ -111,7 +111,7 @@ class AddCashiersPage extends ConsumerWidget {
                             tooltip: 'Eliminar a ${cashier.username}',
                             onPressed: () {
                               ref
-                                  .read(onboardingNotifierProvider.notifier)
+                                  .read(onboardingProvider.notifier)
                                   .removeCashier(cashier);
                             },
                           ),

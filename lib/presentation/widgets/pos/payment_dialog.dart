@@ -17,11 +17,9 @@ class _PaymentDialogState extends ConsumerState<PaymentDialog> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final total = ref.read(pOSProvider).total;
-      _amountController.text = total.toStringAsFixed(2);
-      _calculateChange(total);
-    });
+    final total = ref.read(pOSProvider).total;
+    _amountController.text = total.toStringAsFixed(2);
+    _calculateChange(total);
   }
 
   @override

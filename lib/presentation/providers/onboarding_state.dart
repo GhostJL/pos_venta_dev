@@ -1,5 +1,7 @@
-import 'package:flutter_riverpod/legacy.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:posventa/domain/entities/user.dart';
+
+part 'onboarding_state.g.dart';
 
 class OnboardingState {
   final User? adminUser;
@@ -29,8 +31,12 @@ class OnboardingState {
   }
 }
 
-class OnboardingNotifier extends StateNotifier<OnboardingState> {
-  OnboardingNotifier() : super(OnboardingState());
+@riverpod
+class OnboardingNotifier extends _$OnboardingNotifier {
+  @override
+  OnboardingState build() {
+    return OnboardingState();
+  }
 
   void setAdmin(User admin, String password) {
     state = state.copyWith(adminUser: admin, adminPassword: password);
@@ -54,8 +60,3 @@ class OnboardingNotifier extends StateNotifier<OnboardingState> {
     state = OnboardingState();
   }
 }
-
-final onboardingNotifierProvider =
-    StateNotifierProvider<OnboardingNotifier, OnboardingState>((ref) {
-      return OnboardingNotifier();
-    });

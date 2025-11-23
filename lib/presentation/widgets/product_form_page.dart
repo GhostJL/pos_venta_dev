@@ -84,6 +84,25 @@ class ProductFormPageState extends ConsumerState<ProductFormPage> {
 
     // Initialize flag. If editing (product != null), we consider defaults "initialized" (or not needed)
     _defaultsInitialized = widget.product != null;
+
+    // Try to initialize defaults if data is already there
+    if (!_defaultsInitialized) {
+      final taxRates = ref.read(taxRateListProvider).asData?.value;
+      if (taxRates != null) {
+        final defaultTaxes = taxRates.where((t) => t.isDefault).toList();
+        for (final tax in defaultTaxes) {
+          if (!_selectedTaxes.any((t) => t.taxRateId == tax.id)) {
+            _selectedTaxes.add(
+              ProductTax(
+                taxRateId: tax.id!,
+                applyOrder: _selectedTaxes.length + 1,
+              ),
+            );
+          }
+        }
+        _defaultsInitialized = true;
+      }
+    }
   }
 
   @override
@@ -213,31 +232,25 @@ class ProductFormPageState extends ConsumerState<ProductFormPage> {
   Widget build(BuildContext context) {
     final taxRatesAsync = ref.watch(taxRateListProvider);
 
-    // Initialize default taxes if needed
-    if (!_defaultsInitialized &&
-        widget.product == null &&
-        taxRatesAsync.hasValue) {
-      final taxRates = taxRatesAsync.value!;
-      // Schedule update to avoid setState during build
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted && !_defaultsInitialized) {
-          setState(() {
-            final defaultTaxes = taxRates.where((t) => t.isDefault).toList();
-            for (final tax in defaultTaxes) {
-              if (!_selectedTaxes.any((t) => t.taxRateId == tax.id)) {
-                _selectedTaxes.add(
-                  ProductTax(
-                    taxRateId: tax.id!,
-                    applyOrder: _selectedTaxes.length + 1,
-                  ),
-                );
-              }
+    ref.listen(taxRateListProvider, (previous, next) {
+      if (!_defaultsInitialized && widget.product == null && next.hasValue) {
+        final taxRates = next.value!;
+        setState(() {
+          final defaultTaxes = taxRates.where((t) => t.isDefault).toList();
+          for (final tax in defaultTaxes) {
+            if (!_selectedTaxes.any((t) => t.taxRateId == tax.id)) {
+              _selectedTaxes.add(
+                ProductTax(
+                  taxRateId: tax.id!,
+                  applyOrder: _selectedTaxes.length + 1,
+                ),
+              );
             }
-            _defaultsInitialized = true;
-          });
-        }
-      });
-    }
+          }
+          _defaultsInitialized = true;
+        });
+      }
+    });
 
     return Scaffold(
       appBar: AppBar(

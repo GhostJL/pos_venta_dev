@@ -1,12 +1,12 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_riverpod/legacy.dart';
-import 'package:posventa/data/repositories/auth_repository_impl.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:posventa/domain/entities/user.dart';
 import 'package:posventa/domain/repositories/auth_repository.dart';
-import 'package:posventa/presentation/providers/transaction_provider.dart'; // Import centralized provider
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:posventa/data/repositories/auth_repository_impl.dart';
+import 'package:posventa/presentation/providers/providers.dart';
 
-// Defines the authentication state of the app
+part 'auth_provider.g.dart';
+
 enum AuthStatus { initial, authenticated, unauthenticated, loading, error }
 
 class AuthState {
@@ -26,12 +26,23 @@ class AuthState {
       AuthState._(status: AuthStatus.error, errorMessage: message);
 }
 
-// Notifier for authentication logic
-class AuthNotifier extends StateNotifier<AuthState> {
-  final AuthRepository _authRepository;
+// Provider for AuthRepository
+@riverpod
+AuthRepository authRepository(Ref ref) {
+  final dbHelper = ref.watch(databaseHelperProvider);
+  return AuthRepositoryImpl(dbHelper);
+}
 
-  AuthNotifier(this._authRepository) : super(AuthState.initial()) {
+// Notifier for authentication logic
+@Riverpod(keepAlive: true)
+class Auth extends _$Auth {
+  late final AuthRepository _authRepository;
+
+  @override
+  AuthState build() {
+    _authRepository = ref.watch(authRepositoryProvider);
     _loadSession();
+    return AuthState.initial();
   }
 
   Future<void> _loadSession() async {
@@ -83,15 +94,3 @@ class AuthNotifier extends StateNotifier<AuthState> {
     state = AuthState.unauthenticated();
   }
 }
-
-// Provider for AuthRepository
-final authRepositoryProvider = Provider<AuthRepository>((ref) {
-  final dbHelper = ref.watch(databaseHelperProvider);
-  return AuthRepositoryImpl(dbHelper);
-});
-
-// Provider for AuthNotifier
-final authProvider = StateNotifierProvider<AuthNotifier, AuthState>((ref) {
-  final repo = ref.watch(authRepositoryProvider);
-  return AuthNotifier(repo);
-});

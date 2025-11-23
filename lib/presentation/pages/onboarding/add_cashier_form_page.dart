@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:posventa/presentation/providers/onboarding_state.dart';
 import 'package:go_router/go_router.dart';
 import 'package:posventa/domain/entities/user.dart';
 import 'package:posventa/presentation/pages/onboarding/onboarding_layout.dart';
-import 'package:posventa/presentation/providers/onboarding_state.dart';
 
 class AddCashierFormPage extends ConsumerStatefulWidget {
   const AddCashierFormPage({super.key});
@@ -53,7 +53,7 @@ class _AddCashierFormPageState extends ConsumerState<AddCashierFormPage> {
       updatedAt: DateTime.now(),
     );
 
-    ref.read(onboardingNotifierProvider.notifier).addCashier(newUser);
+    ref.read(onboardingProvider.notifier).addCashier(newUser);
     _cashierCounter++;
 
     if (mounted) {

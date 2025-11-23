@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:posventa/presentation/providers/onboarding_state.dart';
 import 'package:go_router/go_router.dart';
 import 'package:posventa/domain/entities/user.dart';
 import 'package:posventa/presentation/pages/onboarding/onboarding_layout.dart';
-import 'package:posventa/presentation/providers/onboarding_state.dart';
 
 class AdminSetupPage extends ConsumerStatefulWidget {
   const AdminSetupPage({super.key});
@@ -47,7 +47,7 @@ class _AdminSetupPageState extends ConsumerState<AdminSetupPage> {
     );
 
     ref
-        .read(onboardingNotifierProvider.notifier)
+        .read(onboardingProvider.notifier)
         .setAdmin(adminUser, _passwordController.text);
     context.push('/add-cashiers');
   }

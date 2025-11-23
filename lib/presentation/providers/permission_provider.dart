@@ -1,12 +1,12 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:posventa/core/constants/permission_constants.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:posventa/domain/entities/user.dart';
 import 'package:posventa/presentation/providers/auth_provider.dart';
 import 'package:posventa/presentation/providers/cashier_providers.dart';
 
-final currentUserPermissionsProvider = FutureProvider<List<String>>((
-  ref,
-) async {
+part 'permission_provider.g.dart';
+
+@riverpod
+Future<List<String>> currentUserPermissions(Ref ref) async {
   final authState = ref.watch(authProvider);
   final user = authState.user;
 
@@ -14,43 +14,30 @@ final currentUserPermissionsProvider = FutureProvider<List<String>>((
     return [];
   }
 
+  // If user is admin, they have all permissions
   if (user.role == UserRole.administrador) {
-    // Admin has all permissions
-    // We return all defined constants to ensure they have access to everything
-    return [
-      PermissionConstants.posAccess,
-      PermissionConstants.posDiscount,
-      PermissionConstants.posRefund,
-      PermissionConstants.posVoidItem,
-      PermissionConstants.cashOpen,
-      PermissionConstants.cashClose,
-      PermissionConstants.cashMovement,
-      PermissionConstants.inventoryView,
-      PermissionConstants.inventoryAdjust,
-      PermissionConstants.catalogManage,
-      PermissionConstants.customerManage,
-      PermissionConstants.reportsView,
-    ];
+    final allPerms = await ref.watch(allPermissionsProvider.future);
+    return allPerms.map((p) => p.code).toList();
+  } else {
+    // Cashier permissions
+    if (user.id != null) {
+      final perms = await ref.watch(
+        cashierPermissionsProvider(user.id!).future,
+      );
+      return perms.map((p) => p.code).toList();
+    }
+    return [];
   }
+}
 
-  // For cashier, fetch specific permissions
-  final permissions = await ref.watch(
-    cashierPermissionsProvider(user.id!).future,
-  );
-  return permissions.map((p) => p.code).toList();
-});
-
-// Helper to check if user has a specific permission
-// Usage: final hasAccess = ref.watch(hasPermissionProvider(PermissionConstants.posAccess));
-final hasPermissionProvider = Provider.family<bool, String>((
-  ref,
-  permissionCode,
-) {
+// Helper to check if current user has a specific permission
+@riverpod
+bool hasPermission(Ref ref, String permissionCode) {
   final permissionsAsync = ref.watch(currentUserPermissionsProvider);
 
   return permissionsAsync.when(
     data: (permissions) => permissions.contains(permissionCode),
-    loading: () => false, // Default to false while loading
-    error: (_, __) => false, // Default to false on error
+    loading: () => false,
+    error: (_, __) => false,
   );
-});
+}

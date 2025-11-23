@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:posventa/presentation/providers/onboarding_state.dart';
+import 'package:posventa/presentation/providers/providers.dart';
 import 'package:go_router/go_router.dart';
 import 'package:posventa/core/router/router.dart';
 import 'package:posventa/core/theme/theme.dart';
 import 'package:posventa/presentation/pages/onboarding/onboarding_layout.dart';
-import 'package:posventa/presentation/providers/onboarding_state.dart';
-import 'package:posventa/presentation/providers/transaction_provider.dart';
 
 class SetAccessKeyPage extends ConsumerStatefulWidget {
   const SetAccessKeyPage({super.key});
@@ -31,7 +31,7 @@ class _SetAccessKeyPageState extends ConsumerState<SetAccessKeyPage> {
 
     setState(() => _isLoading = true);
 
-    final onboardingState = ref.read(onboardingNotifierProvider);
+    final onboardingState = ref.read(onboardingProvider);
     final finalState = onboardingState.copyWith(
       accessKey: _accessKeyController.text,
     );
@@ -53,7 +53,7 @@ class _SetAccessKeyPageState extends ConsumerState<SetAccessKeyPage> {
       final dbHelper = ref.read(databaseHelperProvider);
       await dbHelper.setupInitialData(finalState);
 
-      ref.read(onboardingNotifierProvider.notifier).reset();
+      ref.read(onboardingProvider.notifier).reset();
       ref.invalidate(onboardingCompletedProvider);
 
       if (mounted) {

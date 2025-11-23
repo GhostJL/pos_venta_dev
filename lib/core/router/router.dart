@@ -1,14 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:posventa/presentation/pages/products_page.dart';
 import 'package:posventa/domain/entities/user.dart';
-import 'package:posventa/presentation/pages/tax_rate_page.dart';
-import 'package:posventa/presentation/pages/brands_page.dart';
-import 'package:posventa/presentation/pages/cashier_home_page.dart';
-import 'package:posventa/presentation/pages/categories_page.dart';
-import 'package:posventa/presentation/pages/dashboard_screen.dart';
-import 'package:posventa/presentation/pages/departments_page.dart';
+import 'package:posventa/presentation/providers/providers.dart';
 import 'package:posventa/presentation/pages/login_page.dart';
 import 'package:posventa/presentation/widgets/cash_session_guard.dart';
 import 'package:posventa/presentation/pages/onboarding/add_cashier_form_page.dart';
@@ -33,7 +27,14 @@ import 'package:posventa/presentation/pages/purchase_item_form_page.dart';
 import 'package:posventa/presentation/pages/cash_session_open_page.dart';
 import 'package:posventa/presentation/pages/cash_session_close_page.dart';
 import 'package:posventa/presentation/providers/auth_provider.dart';
-import 'package:posventa/presentation/providers/transaction_provider.dart';
+
+import 'package:posventa/presentation/pages/dashboard_screen.dart';
+import 'package:posventa/presentation/pages/cashier_home_page.dart';
+import 'package:posventa/presentation/pages/products_page.dart';
+import 'package:posventa/presentation/pages/departments_page.dart';
+import 'package:posventa/presentation/pages/categories_page.dart';
+import 'package:posventa/presentation/pages/brands_page.dart';
+import 'package:posventa/presentation/pages/tax_rate_page.dart';
 
 import 'package:posventa/presentation/pages/cashier/cashier_list_page.dart';
 import 'package:posventa/presentation/pages/cash_session_history_page.dart';

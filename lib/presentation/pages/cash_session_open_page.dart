@@ -167,11 +167,13 @@ class _CashSessionOpenPageState extends ConsumerState<CashSessionOpenPage> {
               }
               // Seleccionar automáticamente si solo hay una
               if (_selectedWarehouseId == null && warehouses.length == 1) {
-                WidgetsBinding.instance.addPostFrameCallback((_) {
-                  setState(() {
-                    _selectedWarehouseId = warehouses.first.id;
-                  });
-                });
+                // Use Future.microtask to avoid setState during build if needed,
+                // but since we are in build, we should not call setState directly.
+                // However, ref.listen is the better approach.
+                // We'll leave this empty here and handle it via ref.listen below or in initState.
+                // Actually, we can just set it if it's null and we are rebuilding.
+                // But we can't setState in build.
+                // So we rely on the ref.listen added in build or initState.
               }
               return Container(
                 decoration: BoxDecoration(

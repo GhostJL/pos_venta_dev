@@ -123,10 +123,6 @@ class _CashierPermissionsPageState
 
     ref
         .read(cashierControllerProvider.notifier)
-        .updatePermissions(
-          widget.cashier.id!,
-          _selectedPermissionIds.toList(),
-          currentUserId,
-        );
+        .updatePermissions(widget.cashier.id!, _selectedPermissionIds.toList());
   }
 }
