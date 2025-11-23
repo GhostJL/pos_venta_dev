@@ -11,6 +11,7 @@ import 'package:posventa/domain/entities/user.dart';
 import 'package:posventa/presentation/widgets/warehouse_form_widget.dart';
 import 'package:posventa/presentation/widgets/common/error_message_box.dart';
 import 'package:posventa/presentation/widgets/common/money_input_field.dart';
+import 'package:posventa/presentation/widgets/common/centered_form_card.dart';
 
 class CashSessionOpenPage extends ConsumerStatefulWidget {
   const CashSessionOpenPage({super.key});
@@ -113,198 +114,147 @@ class _CashSessionOpenPageState extends ConsumerState<CashSessionOpenPage> {
         centerTitle: true,
         automaticallyImplyLeading: false, // No permitir cerrar sin abrir caja
       ),
-      body: Center(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
-          child: Container(
-            constraints: const BoxConstraints(maxWidth: 500),
-            child: Card(
-              elevation: 4,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    // Icono y título
-                    Icon(
-                      Icons.account_balance_wallet,
-                      size: 64,
-                      color: Theme.of(context).primaryColor,
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      'Apertura de Turno',
-                      style: Theme.of(context).textTheme.headlineSmall
-                          ?.copyWith(fontWeight: FontWeight.bold),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Bienvenido, ${user?.firstName ?? 'Usuario'}',
-                      style: Theme.of(
-                        context,
-                      ).textTheme.bodyLarge?.copyWith(color: Colors.grey[600]),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 32),
-
-                    // Selección de sucursal
-                    const Text(
-                      'Sucursal',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
+      body: CenteredFormCard(
+        icon: Icons.account_balance_wallet,
+        title: 'Apertura de Turno',
+        subtitle: 'Bienvenido, ${user?.firstName ?? 'Usuario'}',
+        children: [
+          // Selección de sucursal
+          const Text(
+            'Sucursal',
+            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+          ),
+          const SizedBox(height: 8),
+          warehousesAsync.when(
+            data: (warehouses) {
+              if (warehouses.isEmpty) {
+                final isAdmin = user?.role == UserRole.administrador;
+                if (isAdmin) {
+                  return Column(
+                    children: [
+                      const Text(
+                        'No hay sucursales registradas.',
+                        style: TextStyle(color: Colors.red),
+                        textAlign: TextAlign.center,
                       ),
-                    ),
-                    const SizedBox(height: 8),
-                    warehousesAsync.when(
-                      data: (warehouses) {
-                        if (warehouses.isEmpty) {
-                          final isAdmin = user?.role == UserRole.administrador;
-                          if (isAdmin) {
-                            return Column(
-                              children: [
-                                const Text(
-                                  'No hay sucursales registradas.',
-                                  style: TextStyle(color: Colors.red),
-                                  textAlign: TextAlign.center,
-                                ),
-                                const SizedBox(height: 8),
-                                ElevatedButton.icon(
-                                  onPressed: () {
-                                    showDialog(
-                                      context: context,
-                                      builder: (context) => WarehouseFormWidget(
-                                        onSuccess: () {
-                                          Navigator.of(context).pop();
-                                          ref.invalidate(warehouseProvider);
-                                        },
-                                      ),
-                                    );
-                                  },
-                                  icon: const Icon(Icons.add),
-                                  label: const Text('Crear Sucursal'),
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: Theme.of(
-                                      context,
-                                    ).primaryColor,
-                                    foregroundColor: Colors.white,
-                                  ),
-                                ),
-                              ],
-                            );
-                          }
-                          return const Text(
-                            'No hay sucursales disponibles',
-                            style: TextStyle(color: Colors.red),
-                          );
-                        }
-                        // Seleccionar automáticamente si solo hay una
-                        if (_selectedWarehouseId == null &&
-                            warehouses.length == 1) {
-                          WidgetsBinding.instance.addPostFrameCallback((_) {
-                            setState(() {
-                              _selectedWarehouseId = warehouses.first.id;
-                            });
-                          });
-                        }
-                        return Container(
-                          decoration: BoxDecoration(
-                            border: Border.all(color: Colors.grey.shade300),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: DropdownButtonHideUnderline(
-                            child: DropdownButton<int>(
-                              value: _selectedWarehouseId,
-                              isExpanded: true,
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 16,
-                              ),
-                              hint: const Text('Seleccione una sucursal'),
-                              items: warehouses
-                                  .map(
-                                    (warehouse) => DropdownMenuItem(
-                                      value: warehouse.id,
-                                      child: Text(warehouse.name),
-                                    ),
-                                  )
-                                  .toList(),
-                              onChanged: (value) {
-                                setState(() {
-                                  _selectedWarehouseId = value;
-                                });
+                      const SizedBox(height: 8),
+                      ElevatedButton.icon(
+                        onPressed: () {
+                          showDialog(
+                            context: context,
+                            builder: (context) => WarehouseFormWidget(
+                              onSuccess: () {
+                                Navigator.of(context).pop();
+                                ref.invalidate(warehouseProvider);
                               },
                             ),
-                          ),
-                        );
-                      },
-                      loading: () =>
-                          const Center(child: CircularProgressIndicator()),
-                      error: (err, stack) => Text(
-                        'Error: $err',
-                        style: const TextStyle(color: Colors.red),
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-
-                    // Fondo inicial
-                    MoneyInputField(
-                      controller: _amountController,
-                      label: 'Fondo Inicial de Caja',
-                      helpText:
-                          'Ingrese el monto en efectivo con el que inicia su turno',
-                      autofocus: true,
-                    ),
-                    const SizedBox(height: 24),
-
-                    // Mensaje de error
-                    if (_errorMessage != null) ...[
-                      ErrorMessageBox(message: _errorMessage!),
-                      const SizedBox(height: 16),
-                    ],
-
-                    // Botón de apertura
-                    SizedBox(
-                      height: 50,
-                      child: ElevatedButton(
-                        onPressed: _isLoading ? null : _openSession,
+                          );
+                        },
+                        icon: const Icon(Icons.add),
+                        label: const Text('Crear Sucursal'),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Theme.of(context).primaryColor,
                           foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          elevation: 0,
                         ),
-                        child: _isLoading
-                            ? const SizedBox(
-                                width: 20,
-                                height: 20,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  color: Colors.white,
-                                ),
-                              )
-                            : const Text(
-                                'ABRIR CAJA',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                  letterSpacing: 0.5,
-                                ),
-                              ),
+                      ),
+                    ],
+                  );
+                }
+                return const Text(
+                  'No hay sucursales disponibles',
+                  style: TextStyle(color: Colors.red),
+                );
+              }
+              // Seleccionar automáticamente si solo hay una
+              if (_selectedWarehouseId == null && warehouses.length == 1) {
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  setState(() {
+                    _selectedWarehouseId = warehouses.first.id;
+                  });
+                });
+              }
+              return Container(
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.grey.shade300),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: DropdownButtonHideUnderline(
+                  child: DropdownButton<int>(
+                    value: _selectedWarehouseId,
+                    isExpanded: true,
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    hint: const Text('Seleccione una sucursal'),
+                    items: warehouses
+                        .map(
+                          (warehouse) => DropdownMenuItem(
+                            value: warehouse.id,
+                            child: Text(warehouse.name),
+                          ),
+                        )
+                        .toList(),
+                    onChanged: (value) {
+                      setState(() {
+                        _selectedWarehouseId = value;
+                      });
+                    },
+                  ),
+                ),
+              );
+            },
+            loading: () => const Center(child: CircularProgressIndicator()),
+            error: (err, stack) =>
+                Text('Error: $err', style: const TextStyle(color: Colors.red)),
+          ),
+          const SizedBox(height: 24),
+
+          // Fondo inicial
+          MoneyInputField(
+            controller: _amountController,
+            label: 'Fondo Inicial de Caja',
+            helpText: 'Ingrese el monto en efectivo con el que inicia su turno',
+            autofocus: true,
+          ),
+          const SizedBox(height: 24),
+
+          // Mensaje de error
+          if (_errorMessage != null) ...[
+            ErrorMessageBox(message: _errorMessage!),
+            const SizedBox(height: 16),
+          ],
+
+          // Botón de apertura
+          SizedBox(
+            height: 50,
+            child: ElevatedButton(
+              onPressed: _isLoading ? null : _openSession,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Theme.of(context).primaryColor,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                elevation: 0,
+              ),
+              child: _isLoading
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : const Text(
+                      'ABRIR CAJA',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 0.5,
                       ),
                     ),
-                  ],
-                ),
-              ),
             ),
           ),
-        ),
+        ],
       ),
     );
   }

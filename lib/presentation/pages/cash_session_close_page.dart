@@ -8,6 +8,7 @@ import 'package:posventa/presentation/providers/permission_provider.dart';
 import 'package:posventa/presentation/widgets/permission_denied_widget.dart';
 import 'package:posventa/presentation/widgets/common/error_message_box.dart';
 import 'package:posventa/presentation/widgets/common/money_input_field.dart';
+import 'package:posventa/presentation/widgets/common/centered_form_card.dart';
 
 class CashSessionClosePage extends ConsumerStatefulWidget {
   final bool isLogoutIntent;
@@ -297,132 +298,93 @@ class _CashSessionClosePageState extends ConsumerState<CashSessionClosePage> {
           final hours = duration.inHours;
           final minutes = duration.inMinutes.remainder(60);
 
-          return Center(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(24),
-              child: Container(
-                constraints: const BoxConstraints(maxWidth: 500),
-                child: Card(
-                  elevation: 4,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(24),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
+          return CenteredFormCard(
+            icon: Icons.lock_clock,
+            title: 'Cierre de Turno',
+            children: [
+              // Información de la sesión
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade100,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Column(
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        // Icono y título
-                        Icon(
-                          Icons.lock_clock,
-                          size: 64,
-                          color: Theme.of(context).primaryColor,
-                        ),
-                        const SizedBox(height: 16),
+                        const Text('Fondo Inicial:'),
                         Text(
-                          'Cierre de Turno',
-                          style: Theme.of(context).textTheme.headlineSmall
-                              ?.copyWith(fontWeight: FontWeight.bold),
-                          textAlign: TextAlign.center,
-                        ),
-                        const SizedBox(height: 32),
-
-                        // Información de la sesión
-                        Container(
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: Colors.grey.shade100,
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Column(
-                            children: [
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  const Text('Fondo Inicial:'),
-                                  Text(
-                                    '\$${openingBalance.toStringAsFixed(2)}',
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 8),
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  const Text('Tiempo de turno:'),
-                                  Text(
-                                    '${hours}h ${minutes}m',
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 24),
-
-                        // Conteo de efectivo
-                        MoneyInputField(
-                          controller: _amountController,
-                          label: 'Conteo de Efectivo',
-                          helpText:
-                              'Ingrese el total de efectivo contado en caja',
-                          autofocus: true,
-                        ),
-                        const SizedBox(height: 24),
-
-                        // Mensaje de error
-                        if (_errorMessage != null) ...[
-                          ErrorMessageBox(message: _errorMessage!),
-                          const SizedBox(height: 16),
-                        ],
-
-                        // Botón de cierre
-                        SizedBox(
-                          height: 50,
-                          child: ElevatedButton(
-                            onPressed: _isLoading ? null : _closeSession,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.red.shade700,
-                              foregroundColor: Colors.white,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              elevation: 0,
-                            ),
-                            child: _isLoading
-                                ? const SizedBox(
-                                    width: 20,
-                                    height: 20,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                      color: Colors.white,
-                                    ),
-                                  )
-                                : const Text(
-                                    'CERRAR CAJA',
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold,
-                                      letterSpacing: 0.5,
-                                    ),
-                                  ),
-                          ),
+                          '\$${openingBalance.toStringAsFixed(2)}',
+                          style: const TextStyle(fontWeight: FontWeight.bold),
                         ),
                       ],
                     ),
-                  ),
+                    const SizedBox(height: 8),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text('Tiempo de turno:'),
+                        Text(
+                          '${hours}h ${minutes}m',
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
               ),
-            ),
+              const SizedBox(height: 24),
+
+              // Conteo de efectivo
+              MoneyInputField(
+                controller: _amountController,
+                label: 'Conteo de Efectivo',
+                helpText: 'Ingrese el total de efectivo contado en caja',
+                autofocus: true,
+              ),
+              const SizedBox(height: 24),
+
+              // Mensaje de error
+              if (_errorMessage != null) ...[
+                ErrorMessageBox(message: _errorMessage!),
+                const SizedBox(height: 16),
+              ],
+
+              // Botón de cierre
+              SizedBox(
+                height: 50,
+                child: ElevatedButton(
+                  onPressed: _isLoading ? null : _closeSession,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.red.shade700,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    elevation: 0,
+                  ),
+                  child: _isLoading
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                      : const Text(
+                          'CERRAR CAJA',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                ),
+              ),
+            ],
           );
         },
       ),
