@@ -4,6 +4,8 @@ import 'package:posventa/domain/entities/category.dart';
 import 'package:posventa/domain/entities/department.dart';
 import 'package:posventa/presentation/providers/category_providers.dart';
 import 'package:posventa/presentation/providers/department_providers.dart';
+import 'package:posventa/presentation/widgets/common/generic_form_scaffold.dart';
+import 'package:posventa/core/theme/theme.dart';
 
 class CategoryForm extends ConsumerStatefulWidget {
   final Category? category;
@@ -19,6 +21,7 @@ class CategoryFormState extends ConsumerState<CategoryForm> {
   late String _name;
   late String _code;
   int? _selectedDepartmentId;
+  bool _isLoading = false;
 
   @override
   void initState() {
@@ -28,22 +31,47 @@ class CategoryFormState extends ConsumerState<CategoryForm> {
     _selectedDepartmentId = widget.category?.departmentId;
   }
 
-  void _submit() {
+  Future<void> _submit() async {
     if (_formKey.currentState!.validate()) {
       _formKey.currentState!.save();
-      final category = Category(
-        id: widget.category?.id,
-        name: _name,
-        code: _code,
-        departmentId: _selectedDepartmentId!,
-      );
-      if (widget.category == null) {
-        ref.read(categoryListProvider.notifier).addCategory(category);
-      } else {
-        ref.read(categoryListProvider.notifier).updateCategory(category);
-      }
-      if (mounted) {
-        Navigator.of(context).pop();
+      setState(() => _isLoading = true);
+
+      try {
+        final category = Category(
+          id: widget.category?.id,
+          name: _name,
+          code: _code,
+          departmentId: _selectedDepartmentId!,
+        );
+        if (widget.category == null) {
+          await ref.read(categoryListProvider.notifier).addCategory(category);
+        } else {
+          await ref
+              .read(categoryListProvider.notifier)
+              .updateCategory(category);
+        }
+        if (mounted) {
+          Navigator.of(context).pop();
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Categoría guardada correctamente'),
+              backgroundColor: AppTheme.success,
+            ),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Error al guardar la categoría: $e'),
+              backgroundColor: AppTheme.error,
+            ),
+          );
+        }
+      } finally {
+        if (mounted) {
+          setState(() => _isLoading = false);
+        }
       }
     }
   }
@@ -52,107 +80,80 @@ class CategoryFormState extends ConsumerState<CategoryForm> {
   Widget build(BuildContext context) {
     final departmentsAsync = ref.watch(departmentListProvider);
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          widget.category == null ? 'Nueva Categoría' : 'Editar Categoría',
-        ),
-        centerTitle: true,
-      ),
-      body: Form(
-        key: _formKey,
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              TextFormField(
-                initialValue: _name,
-                decoration: const InputDecoration(
-                  labelText: 'Nombre de la Categoría',
-                  prefixIcon: Icon(Icons.category_rounded),
-                ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Por favor, introduce un nombre de categoría';
-                  }
-                  return null;
-                },
-                onSaved: (value) => _name = value!,
-              ),
-              const SizedBox(height: 20),
-              TextFormField(
-                initialValue: _code,
-                decoration: const InputDecoration(
-                  labelText: 'Código de la Categoría',
-                  prefixIcon: Icon(Icons.qr_code_rounded),
-                ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Por favor, introduce un código de categoría';
-                  }
-                  return null;
-                },
-                onSaved: (value) => _code = value!,
-              ),
-              const SizedBox(height: 20),
-              departmentsAsync.when(
-                data: (departments) {
-                  return DropdownButtonFormField<int>(
-                    initialValue: _selectedDepartmentId,
-                    decoration: const InputDecoration(
-                      labelText: 'Departamento',
-                      prefixIcon: Icon(Icons.business_rounded),
-                    ),
-                    items: departments
-                        .map(
-                          (Department department) => DropdownMenuItem<int>(
-                            value: department.id,
-                            child: Text(department.name),
-                          ),
-                        )
-                        .toList(),
-                    onChanged: (int? newValue) {
-                      setState(() {
-                        _selectedDepartmentId = newValue;
-                      });
-                    },
-                    validator: (value) => value == null
-                        ? 'Por favor, selecciona un departamento'
-                        : null,
-                  );
-                },
-                loading: () => const Center(child: CircularProgressIndicator()),
-                error: (err, stack) =>
-                    Text('Error al cargar departamentos: $err'),
-              ),
-            ],
-          ),
-        ),
-      ),
-      bottomNavigationBar: Padding(
-        padding: EdgeInsets.fromLTRB(
-          24,
-          8,
-          24,
-          24 + MediaQuery.of(context).viewInsets.bottom,
-        ),
-        child: ElevatedButton(
-          onPressed: _submit,
-          style: ElevatedButton.styleFrom(
-            padding: const EdgeInsets.symmetric(vertical: 16),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
+    return GenericFormScaffold(
+      title: widget.category == null ? 'Nueva Categoría' : 'Editar Categoría',
+      isLoading: _isLoading,
+      onSubmit: _submit,
+      submitButtonText: widget.category == null
+          ? 'Crear Categoría'
+          : 'Actualizar Categoría',
+      formKey: _formKey,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          TextFormField(
+            initialValue: _name,
+            decoration: const InputDecoration(
+              labelText: 'Nombre de la Categoría',
+              prefixIcon: Icon(Icons.category_rounded),
             ),
-            elevation: 0,
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return 'Por favor, introduce un nombre de categoría';
+              }
+              if (value.length < 2) {
+                return 'El nombre debe tener al menos 2 caracteres';
+              }
+              return null;
+            },
+            onSaved: (value) => _name = value!,
           ),
-          child: Text(
-            widget.category == null
-                ? 'Crear Categoría'
-                : 'Actualizar Categoría',
-            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          const SizedBox(height: 20),
+          TextFormField(
+            initialValue: _code,
+            decoration: const InputDecoration(
+              labelText: 'Código de la Categoría',
+              prefixIcon: Icon(Icons.qr_code_rounded),
+            ),
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return 'Por favor, introduce un código de categoría';
+              }
+              return null;
+            },
+            onSaved: (value) => _code = value!,
           ),
-        ),
+          const SizedBox(height: 20),
+          departmentsAsync.when(
+            data: (departments) {
+              return DropdownButtonFormField<int>(
+                initialValue: _selectedDepartmentId,
+                decoration: const InputDecoration(
+                  labelText: 'Departamento',
+                  prefixIcon: Icon(Icons.business_rounded),
+                ),
+                items: departments
+                    .map(
+                      (Department department) => DropdownMenuItem<int>(
+                        value: department.id,
+                        child: Text(department.name),
+                      ),
+                    )
+                    .toList(),
+                onChanged: (int? newValue) {
+                  setState(() {
+                    _selectedDepartmentId = newValue;
+                  });
+                },
+                validator: (value) => value == null
+                    ? 'Por favor, selecciona un departamento'
+                    : null,
+              );
+            },
+            loading: () => const Center(child: CircularProgressIndicator()),
+            error: (err, stack) => Text('Error al cargar departamentos: $err'),
+          ),
+        ],
       ),
     );
   }

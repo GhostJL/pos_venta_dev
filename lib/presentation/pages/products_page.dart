@@ -10,6 +10,7 @@ import 'package:posventa/presentation/providers/product_provider.dart';
 import 'package:posventa/presentation/providers/supplier_providers.dart';
 import 'package:posventa/core/constants/permission_constants.dart';
 import 'package:posventa/presentation/providers/permission_provider.dart';
+import 'package:posventa/presentation/widgets/product_filter_sheet.dart';
 
 class ProductsPage extends ConsumerStatefulWidget {
   const ProductsPage({super.key});
@@ -431,200 +432,20 @@ class ProductsPageState extends ConsumerState<ProductsPage> {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
-      builder: (context) {
-        return StatefulBuilder(
-          builder: (BuildContext context, StateSetter setSheetState) {
-            final departments = ref.watch(departmentListProvider);
-            final categories = ref.watch(categoryListProvider);
-            final brands = ref.watch(brandListProvider);
-            final suppliers = ref.watch(supplierListProvider);
-
-            return Padding(
-              padding: EdgeInsets.fromLTRB(
-                24,
-                24,
-                24,
-                24 + MediaQuery.of(context).viewInsets.bottom,
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        'Filtrar y Ordenar',
-                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.close_rounded),
-                        onPressed: () => context.pop(),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 24),
-
-                  // Dropdowns for filtering
-                  departments.when(
-                    data: (data) => _buildFilterDropdown(
-                      data,
-                      'Departamento',
-                      _departmentFilter,
-                      (val) {
-                        setSheetState(() => _departmentFilter = val);
-                      },
-                      Icons.business_rounded,
-                    ),
-                    loading: () =>
-                        const Center(child: CircularProgressIndicator()),
-                    error: (e, s) => Text('Error: $e'),
-                  ),
-                  const SizedBox(height: 16),
-                  categories.when(
-                    data: (data) => _buildFilterDropdown(
-                      data,
-                      'Categoría',
-                      _categoryFilter,
-                      (val) {
-                        setSheetState(() => _categoryFilter = val);
-                      },
-                      Icons.category_rounded,
-                    ),
-                    loading: () =>
-                        const Center(child: CircularProgressIndicator()),
-                    error: (e, s) => Text('Error: $e'),
-                  ),
-                  const SizedBox(height: 16),
-                  brands.when(
-                    data: (data) => _buildFilterDropdown(
-                      data,
-                      'Marca',
-                      _brandFilter,
-                      (val) {
-                        setSheetState(() => _brandFilter = val);
-                      },
-                      Icons.branding_watermark_rounded,
-                    ),
-                    loading: () =>
-                        const Center(child: CircularProgressIndicator()),
-                    error: (e, s) => Text('Error: $e'),
-                  ),
-                  const SizedBox(height: 16),
-                  suppliers.when(
-                    data: (data) => _buildFilterDropdown(
-                      data,
-                      'Proveedor',
-                      _supplierFilter,
-                      (val) {
-                        setSheetState(() => _supplierFilter = val);
-                      },
-                      Icons.local_shipping_rounded,
-                    ),
-                    loading: () =>
-                        const Center(child: CircularProgressIndicator()),
-                    error: (e, s) => Text('Error: $e'),
-                  ),
-                  const SizedBox(height: 24),
-
-                  // Sort Order
-                  DropdownButtonFormField<String>(
-                    initialValue: _sortOrder,
-                    decoration: const InputDecoration(
-                      labelText: 'Ordenar por',
-                      prefixIcon: Icon(Icons.sort_rounded),
-                    ),
-                    items: const [
-                      DropdownMenuItem(value: 'name', child: Text('Nombre')),
-                      DropdownMenuItem(value: 'price', child: Text('Precio')),
-                      DropdownMenuItem(
-                        value: 'created_at',
-                        child: Text('Fecha'),
-                      ),
-                    ],
-                    onChanged: (value) {
-                      if (value != null) {
-                        setSheetState(() {
-                          _sortOrder = value;
-                        });
-                      }
-                    },
-                  ),
-                  const SizedBox(height: 32),
-
-                  // Action Buttons
-                  Row(
-                    children: [
-                      Expanded(
-                        child: OutlinedButton(
-                          onPressed: () {
-                            setSheetState(() {
-                              _departmentFilter = null;
-                              _categoryFilter = null;
-                              _brandFilter = null;
-                              _supplierFilter = null;
-                            });
-                          },
-                          style: OutlinedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
-                          child: const Text('Limpiar todo'),
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: ElevatedButton(
-                          onPressed: () {
-                            setState(
-                              () {},
-                            ); // This triggers the main page to rebuild with the new filters
-                            context.pop();
-                          },
-                          style: ElevatedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            elevation: 0,
-                          ),
-                          child: const Text('Aplicar Filtros'),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            );
-          },
-        );
-      },
-    );
-  }
-
-  Widget _buildFilterDropdown(
-    List<dynamic> items,
-    String label,
-    int? currentValue,
-    void Function(int?) onChanged,
-    IconData icon,
-  ) {
-    return DropdownButtonFormField<int>(
-      initialValue: currentValue,
-      decoration: InputDecoration(labelText: label, prefixIcon: Icon(icon)),
-      items: items
-          .map(
-            (e) => DropdownMenuItem(
-              value: e.id as int,
-              child: Text(e.name as String),
-            ),
-          )
-          .toList(),
-      onChanged: onChanged,
+      builder: (context) => ProductFilterSheet(
+        departmentFilter: _departmentFilter,
+        categoryFilter: _categoryFilter,
+        brandFilter: _brandFilter,
+        supplierFilter: _supplierFilter,
+        sortOrder: _sortOrder,
+        onDepartmentChanged: (val) => _departmentFilter = val,
+        onCategoryChanged: (val) => _categoryFilter = val,
+        onBrandChanged: (val) => _brandFilter = val,
+        onSupplierChanged: (val) => _supplierFilter = val,
+        onSortOrderChanged: (val) => _sortOrder = val,
+        onClearFilters: _clearFilters,
+        onApplyFilters: () => setState(() {}),
+      ),
     );
   }
 
@@ -727,28 +548,36 @@ class ProductsPageState extends ConsumerState<ProductsPage> {
                         : 'Activar Producto',
                     style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
-                  onTap: () {
+                  onTap: () async {
                     context.pop();
-                    final updatedProduct = product.copyWith(
-                      isActive: !product.isActive,
-                    );
-                    ref
-                        .read(productNotifierProvider.notifier)
-                        .updateProduct(updatedProduct);
+                    try {
+                      await ref
+                          .read(productNotifierProvider.notifier)
+                          .toggleProductActive(product.id!);
 
-                    if (mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(
-                            updatedProduct.isActive
-                                ? 'Producto activado'
-                                : 'Producto desactivado',
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              !product.isActive
+                                  ? 'Producto activado'
+                                  : 'Producto desactivado',
+                            ),
+                            backgroundColor: !product.isActive
+                                ? AppTheme.success
+                                : AppTheme.textSecondary,
                           ),
-                          backgroundColor: updatedProduct.isActive
-                              ? AppTheme.success
-                              : AppTheme.textSecondary,
-                        ),
-                      );
+                        );
+                      }
+                    } catch (e) {
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('Error al cambiar estado: $e'),
+                            backgroundColor: AppTheme.error,
+                          ),
+                        );
+                      }
                     }
                   },
                 ),

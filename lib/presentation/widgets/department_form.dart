@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:posventa/domain/entities/department.dart';
 import 'package:posventa/presentation/providers/department_providers.dart';
+import 'package:posventa/presentation/widgets/common/generic_form_scaffold.dart';
+import 'package:posventa/core/theme/theme.dart';
 
 class DepartmentForm extends ConsumerStatefulWidget {
   final Department? department;
@@ -16,6 +18,7 @@ class DepartmentFormState extends ConsumerState<DepartmentForm> {
   final _formKey = GlobalKey<FormState>();
   late String _name;
   late String _code;
+  bool _isLoading = false;
 
   @override
   void initState() {
@@ -24,99 +27,100 @@ class DepartmentFormState extends ConsumerState<DepartmentForm> {
     _code = widget.department?.code ?? '';
   }
 
-  void _submit() {
+  Future<void> _submit() async {
     if (_formKey.currentState!.validate()) {
       _formKey.currentState!.save();
-      final department = Department(
-        id: widget.department?.id,
-        name: _name,
-        code: _code,
-      );
-      if (widget.department == null) {
-        ref.read(departmentListProvider.notifier).addDepartment(department);
-      } else {
-        ref.read(departmentListProvider.notifier).updateDepartment(department);
-      }
-      if (mounted) {
-        Navigator.of(context).pop();
+      setState(() => _isLoading = true);
+
+      try {
+        final department = Department(
+          id: widget.department?.id,
+          name: _name,
+          code: _code,
+        );
+        if (widget.department == null) {
+          await ref
+              .read(departmentListProvider.notifier)
+              .addDepartment(department);
+        } else {
+          await ref
+              .read(departmentListProvider.notifier)
+              .updateDepartment(department);
+        }
+        if (mounted) {
+          Navigator.of(context).pop();
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Departamento guardado correctamente'),
+              backgroundColor: AppTheme.success,
+            ),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Error al guardar el departamento: $e'),
+              backgroundColor: AppTheme.error,
+            ),
+          );
+        }
+      } finally {
+        if (mounted) {
+          setState(() => _isLoading = false);
+        }
       }
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          widget.department == null
-              ? 'Nuevo Departamento'
-              : 'Editar Departamento',
-        ),
-        centerTitle: true,
-      ),
-      body: Form(
-        key: _formKey,
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              TextFormField(
-                initialValue: _name,
-                decoration: const InputDecoration(
-                  labelText: 'Nombre del Departamento',
-                  prefixIcon: Icon(Icons.business_rounded),
-                ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Por favor, introduce un nombre de departamento';
-                  }
-                  return null;
-                },
-                onSaved: (value) => _name = value!,
-              ),
-              const SizedBox(height: 20),
-              TextFormField(
-                initialValue: _code,
-                decoration: const InputDecoration(
-                  labelText: 'Código del Departamento',
-                  prefixIcon: Icon(Icons.qr_code_rounded),
-                ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Por favor, introduce un código de departamento';
-                  }
-                  return null;
-                },
-                onSaved: (value) => _code = value!,
-              ),
-            ],
-          ),
-        ),
-      ),
-      bottomNavigationBar: Padding(
-        padding: EdgeInsets.fromLTRB(
-          24,
-          8,
-          24,
-          24 + MediaQuery.of(context).viewInsets.bottom,
-        ),
-        child: ElevatedButton(
-          onPressed: _submit,
-          style: ElevatedButton.styleFrom(
-            padding: const EdgeInsets.symmetric(vertical: 16),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
+    return GenericFormScaffold(
+      title: widget.department == null
+          ? 'Nuevo Departamento'
+          : 'Editar Departamento',
+      isLoading: _isLoading,
+      onSubmit: _submit,
+      submitButtonText: widget.department == null
+          ? 'Crear Departamento'
+          : 'Actualizar Departamento',
+      formKey: _formKey,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          TextFormField(
+            initialValue: _name,
+            decoration: const InputDecoration(
+              labelText: 'Nombre del Departamento',
+              prefixIcon: Icon(Icons.business_rounded),
             ),
-            elevation: 0,
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return 'Por favor, introduce un nombre de departamento';
+              }
+              if (value.length < 2) {
+                return 'El nombre debe tener al menos 2 caracteres';
+              }
+              return null;
+            },
+            onSaved: (value) => _name = value!,
           ),
-          child: Text(
-            widget.department == null
-                ? 'Crear Departamento'
-                : 'Actualizar Departamento',
-            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          const SizedBox(height: 20),
+          TextFormField(
+            initialValue: _code,
+            decoration: const InputDecoration(
+              labelText: 'Código del Departamento',
+              prefixIcon: Icon(Icons.qr_code_rounded),
+            ),
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return 'Por favor, introduce un código de departamento';
+              }
+              return null;
+            },
+            onSaved: (value) => _code = value!,
           ),
-        ),
+        ],
       ),
     );
   }

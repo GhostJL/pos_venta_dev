@@ -71,6 +71,20 @@ class ProductNotifier extends StateNotifier<AsyncValue<List<Product>>> {
       return _getAllProducts();
     });
   }
+
+  Future<void> toggleProductActive(int productId) async {
+    final currentState = state.asData?.value;
+    if (currentState == null) return;
+
+    try {
+      final product = currentState.firstWhere((p) => p.id == productId);
+      final updatedProduct = product.copyWith(isActive: !product.isActive);
+      await updateProduct(updatedProduct);
+    } catch (e) {
+      // Handle error or rethrow
+      rethrow;
+    }
+  }
 }
 
 final productNotifierProvider =
