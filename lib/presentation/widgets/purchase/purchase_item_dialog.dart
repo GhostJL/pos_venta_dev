@@ -3,8 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:posventa/domain/entities/product.dart';
 import 'package:posventa/domain/entities/purchase_item.dart';
-import 'package:posventa/domain/utils/purchase_calculations.dart';
-import 'package:posventa/presentation/utils/purchase_validators.dart';
+import 'package:posventa/core/utils/purchase_calculations.dart';
+import 'package:posventa/core/utils/purchase_validators.dart';
 
 /// Unified dialog for adding or editing purchase items
 class PurchaseItemDialog extends ConsumerStatefulWidget {

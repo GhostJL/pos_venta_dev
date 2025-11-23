@@ -11,7 +11,7 @@ import 'package:posventa/presentation/widgets/product_list_item.dart';
 import 'package:posventa/presentation/widgets/product_active_filters.dart';
 import 'package:posventa/presentation/widgets/product_search_bar.dart';
 import 'package:posventa/presentation/widgets/product_actions_sheet.dart';
-import 'package:posventa/presentation/utils/product_filter_utils.dart';
+import 'package:posventa/core/utils/product_filter_utils.dart';
 import 'package:posventa/presentation/widgets/common/empty_state_widget.dart';
 
 class ProductsPage extends ConsumerStatefulWidget {
