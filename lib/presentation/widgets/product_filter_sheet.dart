@@ -173,7 +173,7 @@ class _ProductFilterSheetState extends ConsumerState<ProductFilterSheet> {
     IconData icon,
   ) {
     return DropdownButtonFormField<int>(
-      value: currentValue,
+      initialValue: currentValue,
       decoration: InputDecoration(labelText: label, prefixIcon: Icon(icon)),
       items: items
           .map(
@@ -189,7 +189,7 @@ class _ProductFilterSheetState extends ConsumerState<ProductFilterSheet> {
 
   Widget _buildSortDropdown() {
     return DropdownButtonFormField<String>(
-      value: _sortOrder,
+      initialValue: _sortOrder,
       decoration: const InputDecoration(
         labelText: 'Ordenar por',
         prefixIcon: Icon(Icons.sort_rounded),
