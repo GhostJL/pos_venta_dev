@@ -20,10 +20,6 @@ class _ProductGridSectionState extends ConsumerState<ProductGridSection> {
   @override
   void initState() {
     super.initState();
-    // Reload products when this widget is shown
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(productListProvider.notifier).reload();
-    });
   }
 
   @override

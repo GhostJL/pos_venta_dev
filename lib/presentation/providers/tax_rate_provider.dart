@@ -1,100 +1,54 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_riverpod/legacy.dart';
-import 'package:posventa/data/datasources/database_helper.dart';
-import 'package:posventa/data/repositories/tax_rate_repository_impl.dart';
 import 'package:posventa/domain/entities/tax_rate.dart';
-import 'package:posventa/domain/use_cases/tax_rate/create_tax_rate.dart';
-import 'package:posventa/domain/use_cases/tax_rate/delete_tax_rate.dart';
+import 'package:posventa/presentation/providers/providers.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:posventa/domain/repositories/tax_rate_repository.dart';
+import 'package:posventa/data/repositories/tax_rate_repository_impl.dart';
 import 'package:posventa/domain/use_cases/tax_rate/get_all_tax_rates.dart';
-import 'package:posventa/domain/use_cases/tax_rate/set_default_tax_rate.dart';
+import 'package:posventa/domain/use_cases/tax_rate/create_tax_rate.dart';
 import 'package:posventa/domain/use_cases/tax_rate/update_tax_rate.dart';
+import 'package:posventa/domain/use_cases/tax_rate/delete_tax_rate.dart';
+import 'package:posventa/domain/use_cases/tax_rate/set_default_tax_rate.dart';
 
-final taxRateRepositoryProvider = Provider((ref) {
-  final dbHelper = DatabaseHelper.instance;
-  return TaxRateRepositoryImpl(dbHelper);
-});
+part 'tax_rate_provider.g.dart';
 
-final getAllTaxRatesProvider = Provider((ref) {
-  final repository = ref.watch(taxRateRepositoryProvider);
-  return GetAllTaxRates(repository);
-});
-
-final createTaxRateProvider = Provider((ref) {
-  final repository = ref.watch(taxRateRepositoryProvider);
-  return CreateTaxRate(repository);
-});
-
-final updateTaxRateProvider = Provider((ref) {
-  final repository = ref.watch(taxRateRepositoryProvider);
-  return UpdateTaxRate(repository);
-});
-
-final deleteTaxRateProvider = Provider((ref) {
-  final repository = ref.watch(taxRateRepositoryProvider);
-  return DeleteTaxRate(repository);
-});
-
-final setDefaultTaxRateProvider = Provider((ref) {
-  final repository = ref.watch(taxRateRepositoryProvider);
-  return SetDefaultTaxRate(repository);
-});
-
-final taxRateListProvider =
-    StateNotifierProvider<TaxRateNotifier, AsyncValue<List<TaxRate>>>((ref) {
-      return TaxRateNotifier(ref);
-    });
-
-class TaxRateNotifier extends StateNotifier<AsyncValue<List<TaxRate>>> {
-  final Ref _ref;
-
-  TaxRateNotifier(this._ref) : super(const AsyncValue.loading()) {
-    fetchTaxRates();
-  }
-
-  Future<void> fetchTaxRates() async {
-    state = const AsyncValue.loading();
-    try {
-      final taxRates = await _ref.read(getAllTaxRatesProvider)();
-      state = AsyncValue.data(taxRates);
-    } catch (e, s) {
-      state = AsyncValue.error(e, s);
-    }
+@riverpod
+class TaxRateList extends _$TaxRateList {
+  @override
+  Future<List<TaxRate>> build() async {
+    final getAllTaxRates = ref.watch(getAllTaxRatesProvider);
+    return getAllTaxRates();
   }
 
   Future<void> addTaxRate(TaxRate taxRate) async {
-    try {
-      await _ref.read(createTaxRateProvider)(taxRate);
-      await fetchTaxRates();
-    } catch (e, s) {
-      state = AsyncValue.error(e, s);
-    }
+    state = const AsyncValue.loading();
+    state = await AsyncValue.guard(() async {
+      await ref.read(createTaxRateProvider).call(taxRate);
+      return ref.read(getAllTaxRatesProvider).call();
+    });
   }
 
   Future<void> updateTaxRate(TaxRate taxRate) async {
-    try {
-      await _ref.read(updateTaxRateProvider)(taxRate);
-      await fetchTaxRates();
-    } catch (e, s) {
-      state = AsyncValue.error(e, s);
-    }
+    state = const AsyncValue.loading();
+    state = await AsyncValue.guard(() async {
+      await ref.read(updateTaxRateProvider).call(taxRate);
+      return ref.read(getAllTaxRatesProvider).call();
+    });
   }
 
   Future<void> deleteTaxRate(int id) async {
-    try {
-      await _ref.read(deleteTaxRateProvider)(id);
-      await fetchTaxRates();
-    } catch (e, s) {
-      state = AsyncValue.error(e, s);
-    }
+    state = const AsyncValue.loading();
+    state = await AsyncValue.guard(() async {
+      await ref.read(deleteTaxRateProvider).call(id);
+      return ref.read(getAllTaxRatesProvider).call();
+    });
   }
 
   Future<void> setDefaultTaxRate(int id) async {
-    try {
-      await _ref.read(setDefaultTaxRateProvider)(id);
-      await fetchTaxRates();
-    } catch (e, s) {
-      state = AsyncValue.error(e, s);
-    }
+    state = const AsyncValue.loading();
+    state = await AsyncValue.guard(() async {
+      await ref.read(setDefaultTaxRateProvider).call(id);
+      return ref.read(getAllTaxRatesProvider).call();
+    });
   }
 
   bool isDuplicateName(String name, int? excludeId) {
@@ -110,4 +64,48 @@ class TaxRateNotifier extends StateNotifier<AsyncValue<List<TaxRate>>> {
       (t) => t.code.toLowerCase() == code.toLowerCase() && t.id != excludeId,
     );
   }
+}
+
+// We need to export the manual providers that were previously defined here if they are used elsewhere.
+// However, providers.dart seems to define the use cases, but NOT the repository provider for TaxRate?
+// Let's check providers.dart again. It does NOT seem to have TaxRate providers.
+// The previous file defined: taxRateRepositoryProvider, getAllTaxRatesProvider, etc.
+// I need to keep these or move them to providers.dart or keep them here using riverpod_generator.
+
+// Re-implementing the use case providers using riverpod_generator in this file for now to avoid breaking changes in other files that might import them from here.
+
+@riverpod
+TaxRateRepository taxRateRepository(ref) {
+  final dbHelper = ref.watch(databaseHelperProvider);
+  return TaxRateRepositoryImpl(dbHelper);
+}
+
+@riverpod
+GetAllTaxRates getAllTaxRates(ref) {
+  final repository = ref.watch(taxRateRepositoryProvider);
+  return GetAllTaxRates(repository);
+}
+
+@riverpod
+CreateTaxRate createTaxRate(ref) {
+  final repository = ref.watch(taxRateRepositoryProvider);
+  return CreateTaxRate(repository);
+}
+
+@riverpod
+UpdateTaxRate updateTaxRate(ref) {
+  final repository = ref.watch(taxRateRepositoryProvider);
+  return UpdateTaxRate(repository);
+}
+
+@riverpod
+DeleteTaxRate deleteTaxRate(ref) {
+  final repository = ref.watch(taxRateRepositoryProvider);
+  return DeleteTaxRate(repository);
+}
+
+@riverpod
+SetDefaultTaxRate setDefaultTaxRate(ref) {
+  final repository = ref.watch(taxRateRepositoryProvider);
+  return SetDefaultTaxRate(repository);
 }

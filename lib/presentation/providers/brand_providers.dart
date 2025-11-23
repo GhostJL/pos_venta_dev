@@ -1,95 +1,70 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_riverpod/legacy.dart';
-import 'package:posventa/data/datasources/database_helper.dart';
-import 'package:posventa/data/repositories/brand_repository_impl.dart';
 import 'package:posventa/domain/entities/brand.dart';
+import 'package:posventa/presentation/providers/providers.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:posventa/domain/repositories/brand_repository.dart';
+import 'package:posventa/data/repositories/brand_repository_impl.dart';
 import 'package:posventa/domain/use_cases/brand/create_brand.dart';
 import 'package:posventa/domain/use_cases/brand/delete_brand.dart';
 import 'package:posventa/domain/use_cases/brand/get_all_brands.dart';
 import 'package:posventa/domain/use_cases/brand/update_brand.dart';
 
-final databaseHelperProvider = Provider<DatabaseHelper>((ref) {
-  return DatabaseHelper();
-});
+part 'brand_providers.g.dart';
 
-final brandRepositoryProvider = Provider<BrandRepository>((ref) {
+@riverpod
+BrandRepository brandRepository(ref) {
   final dbHelper = ref.watch(databaseHelperProvider);
   return BrandRepositoryImpl(dbHelper);
-});
+}
 
-final getAllBrandsUseCaseProvider = Provider(
-  (ref) => GetAllBrands(ref.watch(brandRepositoryProvider)),
-);
+@riverpod
+GetAllBrands getAllBrandsUseCase(ref) {
+  return GetAllBrands(ref.watch(brandRepositoryProvider));
+}
 
-final createBrandUseCaseProvider = Provider(
-  (ref) => CreateBrand(ref.watch(brandRepositoryProvider)),
-);
+@riverpod
+CreateBrand createBrandUseCase(ref) {
+  return CreateBrand(ref.watch(brandRepositoryProvider));
+}
 
-final updateBrandUseCaseProvider = Provider(
-  (ref) => UpdateBrand(ref.watch(brandRepositoryProvider)),
-);
+@riverpod
+UpdateBrand updateBrandUseCase(ref) {
+  return UpdateBrand(ref.watch(brandRepositoryProvider));
+}
 
-final deleteBrandUseCaseProvider = Provider(
-  (ref) => DeleteBrand(ref.watch(brandRepositoryProvider)),
-);
+@riverpod
+DeleteBrand deleteBrandUseCase(ref) {
+  return DeleteBrand(ref.watch(brandRepositoryProvider));
+}
 
-class BrandListNotifier extends StateNotifier<AsyncValue<List<Brand>>> {
-  final GetAllBrands _getAllBrands;
-  final CreateBrand _createBrand;
-  final UpdateBrand _updateBrand;
-  final DeleteBrand _deleteBrand;
-
-  BrandListNotifier(
-    this._getAllBrands,
-    this._createBrand,
-    this._updateBrand,
-    this._deleteBrand,
-  ) : super(const AsyncValue.loading()) {
-    loadBrands();
-  }
-
-  Future<void> loadBrands() async {
-    state = const AsyncValue.loading();
-    try {
-      final brands = await _getAllBrands();
-      state = AsyncValue.data(brands);
-    } catch (e, s) {
-      state = AsyncValue.error(e, s);
-    }
+@riverpod
+class BrandList extends _$BrandList {
+  @override
+  Future<List<Brand>> build() async {
+    final getAllBrands = ref.watch(getAllBrandsUseCaseProvider);
+    return getAllBrands();
   }
 
   Future<void> addBrand(Brand brand) async {
-    try {
-      await _createBrand(brand);
-    } finally {
-      await loadBrands();
-    }
+    state = const AsyncValue.loading();
+    state = await AsyncValue.guard(() async {
+      await ref.read(createBrandUseCaseProvider).call(brand);
+      return ref.read(getAllBrandsUseCaseProvider).call();
+    });
   }
 
   Future<void> updateBrand(Brand brand) async {
-    try {
-      await _updateBrand(brand);
-    } finally {
-      await loadBrands();
-    }
+    state = const AsyncValue.loading();
+    state = await AsyncValue.guard(() async {
+      await ref.read(updateBrandUseCaseProvider).call(brand);
+      return ref.read(getAllBrandsUseCaseProvider).call();
+    });
   }
 
   Future<void> deleteBrand(int id) async {
-    try {
-      await _deleteBrand(id);
-    } finally {
-      await loadBrands();
-    }
+    state = const AsyncValue.loading();
+    state = await AsyncValue.guard(() async {
+      await ref.read(deleteBrandUseCaseProvider).call(id);
+      return ref.read(getAllBrandsUseCaseProvider).call();
+    });
   }
 }
-
-final brandListProvider =
-    StateNotifierProvider<BrandListNotifier, AsyncValue<List<Brand>>>((ref) {
-      return BrandListNotifier(
-        ref.watch(getAllBrandsUseCaseProvider),
-        ref.watch(createBrandUseCaseProvider),
-        ref.watch(updateBrandUseCaseProvider),
-        ref.watch(deleteBrandUseCaseProvider),
-      );
-    });
