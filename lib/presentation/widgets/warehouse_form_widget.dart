@@ -23,6 +23,7 @@ class _WarehouseFormWidgetState extends ConsumerState<WarehouseFormWidget> {
   String? _phone;
   late bool _isMain;
   late bool _isActive;
+  bool _isLoading = false;
 
   @override
   void initState() {
@@ -35,30 +36,56 @@ class _WarehouseFormWidgetState extends ConsumerState<WarehouseFormWidget> {
     _isActive = widget.warehouse?.isActive ?? true;
   }
 
-  void _submit() {
+  Future<void> _submit() async {
     if (_formKey.currentState!.validate()) {
       _formKey.currentState!.save();
-      final newWarehouse = Warehouse(
-        id: widget.warehouse?.id,
-        name: _name,
-        code: _code,
-        address: _address,
-        phone: _phone,
-        isMain: _isMain,
-        isActive: _isActive,
-      );
+      setState(() => _isLoading = true);
 
-      final notifier = ref.read(warehouseProvider.notifier);
-      if (widget.warehouse == null) {
-        notifier.addWarehouse(newWarehouse);
-      } else {
-        notifier.editWarehouse(newWarehouse);
-      }
+      try {
+        final newWarehouse = Warehouse(
+          id: widget.warehouse?.id,
+          name: _name,
+          code: _code,
+          address: _address,
+          phone: _phone,
+          isMain: _isMain,
+          isActive: _isActive,
+        );
 
-      if (widget.onSuccess != null) {
-        widget.onSuccess!();
-      } else {
-        Navigator.of(context).pop();
+        final notifier = ref.read(warehouseProvider.notifier);
+        if (widget.warehouse == null) {
+          await notifier.addWarehouse(newWarehouse);
+        } else {
+          await notifier.editWarehouse(newWarehouse);
+        }
+
+        if (mounted) {
+          if (widget.onSuccess != null) {
+            widget.onSuccess!();
+          } else {
+            Navigator.of(context).pop();
+          }
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Almacén guardado correctamente'),
+              backgroundColor: AppTheme.success,
+            ),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Error al guardar el almacén: $e'),
+              backgroundColor: AppTheme.error,
+            ),
+          );
+        }
+      } finally {
+        if (mounted) {
+          setState(() => _isLoading = false);
+        }
       }
     }
   }
@@ -162,8 +189,14 @@ class _WarehouseFormWidgetState extends ConsumerState<WarehouseFormWidget> {
               const SizedBox(width: 12),
               Expanded(
                 child: ElevatedButton(
-                  onPressed: _submit,
-                  child: Text(isCreating ? 'Guardar' : 'Actualizar'),
+                  onPressed: _isLoading ? null : _submit,
+                  child: _isLoading
+                      ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : Text(isCreating ? 'Guardar' : 'Actualizar'),
                 ),
               ),
             ],

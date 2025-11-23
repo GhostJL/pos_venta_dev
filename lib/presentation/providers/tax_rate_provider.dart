@@ -96,4 +96,18 @@ class TaxRateNotifier extends StateNotifier<AsyncValue<List<TaxRate>>> {
       state = AsyncValue.error(e, s);
     }
   }
+
+  bool isDuplicateName(String name, int? excludeId) {
+    final taxRates = state.asData?.value ?? [];
+    return taxRates.any(
+      (t) => t.name.toLowerCase() == name.toLowerCase() && t.id != excludeId,
+    );
+  }
+
+  bool isDuplicateCode(String code, int? excludeId) {
+    final taxRates = state.asData?.value ?? [];
+    return taxRates.any(
+      (t) => t.code.toLowerCase() == code.toLowerCase() && t.id != excludeId,
+    );
+  }
 }

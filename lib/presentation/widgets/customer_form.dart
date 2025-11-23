@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:posventa/domain/entities/customer.dart';
 import 'package:posventa/presentation/providers/customer_providers.dart';
 import 'package:posventa/presentation/providers/providers.dart';
+import 'package:posventa/presentation/widgets/common/generic_form_scaffold.dart';
+import 'package:posventa/core/theme/theme.dart';
 
 class CustomerForm extends ConsumerStatefulWidget {
   final Customer? customer;
@@ -23,6 +25,7 @@ class CustomerFormState extends ConsumerState<CustomerForm> {
   String? _address;
   String? _taxId;
   String? _businessName;
+  bool _isLoading = false;
 
   @override
   void initState() {
@@ -45,187 +48,195 @@ class CustomerFormState extends ConsumerState<CustomerForm> {
     final nextCode = await ref
         .read(generateNextCustomerCodeUseCaseProvider)
         .call();
-    setState(() {
-      _code = nextCode;
-    });
+    if (mounted) {
+      setState(() {
+        _code = nextCode;
+      });
+    }
   }
 
-  void _submit() {
+  Future<void> _submit() async {
     if (_formKey.currentState!.validate()) {
       _formKey.currentState!.save();
-      final customer = Customer(
-        id: widget.customer?.id,
-        code: _code,
-        firstName: _firstName,
-        lastName: _lastName,
-        phone: _phone,
-        email: _email,
-        address: _address,
-        taxId: _taxId,
-        businessName: _businessName,
-        isActive: widget.customer?.isActive ?? true,
-        createdAt: widget.customer?.createdAt ?? DateTime.now(),
-        updatedAt: DateTime.now(),
-      );
-      if (widget.customer == null) {
-        ref.read(customerProvider.notifier).addCustomer(customer);
-      } else {
-        ref.read(customerProvider.notifier).updateCustomer(customer);
-      }
-      if (mounted) {
-        Navigator.of(context).pop();
+      setState(() => _isLoading = true);
+
+      try {
+        final customer = Customer(
+          id: widget.customer?.id,
+          code: _code,
+          firstName: _firstName,
+          lastName: _lastName,
+          phone: _phone,
+          email: _email,
+          address: _address,
+          taxId: _taxId,
+          businessName: _businessName,
+          isActive: widget.customer?.isActive ?? true,
+          createdAt: widget.customer?.createdAt ?? DateTime.now(),
+          updatedAt: DateTime.now(),
+        );
+
+        if (widget.customer == null) {
+          await ref.read(customerProvider.notifier).addCustomer(customer);
+        } else {
+          await ref.read(customerProvider.notifier).updateCustomer(customer);
+        }
+
+        if (mounted) {
+          Navigator.of(context).pop();
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Cliente guardado correctamente'),
+              backgroundColor: AppTheme.success,
+            ),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Error al guardar el cliente: $e'),
+              backgroundColor: AppTheme.error,
+            ),
+          );
+        }
+      } finally {
+        if (mounted) {
+          setState(() => _isLoading = false);
+        }
       }
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          widget.customer == null ? 'Nuevo Cliente' : 'Editar Cliente',
-        ),
-        centerTitle: true,
-      ),
-      body: Form(
-        key: _formKey,
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
+    return GenericFormScaffold(
+      title: widget.customer == null ? 'Nuevo Cliente' : 'Editar Cliente',
+      isLoading: _isLoading,
+      onSubmit: _submit,
+      submitButtonText: widget.customer == null
+          ? 'Crear Cliente'
+          : 'Actualizar Cliente',
+      formKey: _formKey,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          TextFormField(
+            controller: TextEditingController(text: _code),
+            readOnly: true,
+            enabled: false,
+            decoration: const InputDecoration(
+              labelText: 'Código (Auto-generado)',
+              prefixIcon: Icon(Icons.qr_code),
+            ),
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return 'Generando código...';
+              }
+              return null;
+            },
+          ),
+          const SizedBox(height: 16),
+          Row(
             children: [
-              TextFormField(
-                controller: TextEditingController(text: _code),
-                readOnly:
-                    widget.customer == null, // Read-only for new customers
-                enabled:
-                    widget.customer !=
-                    null, // Editable only for existing? Or always read-only?
-                // Usually code is unique and shouldn't change easily, but let's allow edit if existing,
-                // or maybe just read-only always if auto-generated.
-                // The user asked for auto-increment to avoid errors, implying they shouldn't touch it.
-                // I'll make it read-only always for now, or maybe just for new.
-                // If I make it read-only, I need a controller to update the text when state changes.
-                decoration: const InputDecoration(
-                  labelText: 'Código (Auto-generado)',
-                  prefixIcon: Icon(Icons.qr_code),
-                ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Generando código...';
-                  }
-                  return null;
-                },
-                onSaved: (value) => _code = value!,
-              ),
-              const SizedBox(height: 16),
-              Row(
-                children: [
-                  Expanded(
-                    child: TextFormField(
-                      initialValue: _firstName,
-                      decoration: const InputDecoration(
-                        labelText: 'Nombre',
-                        prefixIcon: Icon(Icons.person),
-                      ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Requerido';
-                        }
-                        return null;
-                      },
-                      onSaved: (value) => _firstName = value!,
-                    ),
+              Expanded(
+                child: TextFormField(
+                  initialValue: _firstName,
+                  decoration: const InputDecoration(
+                    labelText: 'Nombre',
+                    prefixIcon: Icon(Icons.person),
                   ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: TextFormField(
-                      initialValue: _lastName,
-                      decoration: const InputDecoration(
-                        labelText: 'Apellido',
-                        prefixIcon: Icon(Icons.person_outline),
-                      ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Requerido';
-                        }
-                        return null;
-                      },
-                      onSaved: (value) => _lastName = value!,
-                    ),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'El nombre es requerido';
+                    }
+                    if (value.length < 2) {
+                      return 'El nombre debe tener al menos 2 caracteres';
+                    }
+                    return null;
+                  },
+                  onSaved: (value) => _firstName = value!,
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: TextFormField(
+                  initialValue: _lastName,
+                  decoration: const InputDecoration(
+                    labelText: 'Apellido',
+                    prefixIcon: Icon(Icons.person_outline),
                   ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                initialValue: _phone,
-                decoration: const InputDecoration(
-                  labelText: 'Teléfono',
-                  prefixIcon: Icon(Icons.phone),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'El apellido es requerido';
+                    }
+                    if (value.length < 2) {
+                      return 'El apellido debe tener al menos 2 caracteres';
+                    }
+                    return null;
+                  },
+                  onSaved: (value) => _lastName = value!,
                 ),
-                onSaved: (value) => _phone = value,
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                initialValue: _email,
-                decoration: const InputDecoration(
-                  labelText: 'Email',
-                  prefixIcon: Icon(Icons.email),
-                ),
-                onSaved: (value) => _email = value,
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                initialValue: _address,
-                decoration: const InputDecoration(
-                  labelText: 'Dirección',
-                  prefixIcon: Icon(Icons.location_on),
-                ),
-                maxLines: 2,
-                onSaved: (value) => _address = value,
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                initialValue: _taxId,
-                decoration: const InputDecoration(
-                  labelText: 'RFC / Tax ID',
-                  prefixIcon: Icon(Icons.receipt_long),
-                ),
-                onSaved: (value) => _taxId = value,
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                initialValue: _businessName,
-                decoration: const InputDecoration(
-                  labelText: 'Razón Social (Opcional)',
-                  prefixIcon: Icon(Icons.business),
-                ),
-                onSaved: (value) => _businessName = value,
               ),
             ],
           ),
-        ),
-      ),
-      bottomNavigationBar: Padding(
-        padding: EdgeInsets.fromLTRB(
-          24,
-          8,
-          24,
-          24 + MediaQuery.of(context).viewInsets.bottom,
-        ),
-        child: ElevatedButton(
-          onPressed: _submit,
-          style: ElevatedButton.styleFrom(
-            padding: const EdgeInsets.symmetric(vertical: 16),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
+          const SizedBox(height: 16),
+          TextFormField(
+            initialValue: _phone,
+            decoration: const InputDecoration(
+              labelText: 'Teléfono',
+              prefixIcon: Icon(Icons.phone),
             ),
+            keyboardType: TextInputType.phone,
+            onSaved: (value) => _phone = value,
           ),
-          child: Text(
-            widget.customer == null ? 'Crear Cliente' : 'Actualizar Cliente',
-            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          const SizedBox(height: 16),
+          TextFormField(
+            initialValue: _email,
+            decoration: const InputDecoration(
+              labelText: 'Email',
+              prefixIcon: Icon(Icons.email),
+            ),
+            keyboardType: TextInputType.emailAddress,
+            validator: (value) {
+              if (value != null && value.isNotEmpty) {
+                if (!value.contains('@') || !value.contains('.')) {
+                  return 'Por favor, introduce un email válido';
+                }
+              }
+              return null;
+            },
+            onSaved: (value) => _email = value,
           ),
-        ),
+          const SizedBox(height: 16),
+          TextFormField(
+            initialValue: _address,
+            decoration: const InputDecoration(
+              labelText: 'Dirección',
+              prefixIcon: Icon(Icons.location_on),
+            ),
+            maxLines: 2,
+            onSaved: (value) => _address = value,
+          ),
+          const SizedBox(height: 16),
+          TextFormField(
+            initialValue: _taxId,
+            decoration: const InputDecoration(
+              labelText: 'RFC / Tax ID',
+              prefixIcon: Icon(Icons.receipt_long),
+            ),
+            onSaved: (value) => _taxId = value,
+          ),
+          const SizedBox(height: 16),
+          TextFormField(
+            initialValue: _businessName,
+            decoration: const InputDecoration(
+              labelText: 'Razón Social (Opcional)',
+              prefixIcon: Icon(Icons.business),
+            ),
+            onSaved: (value) => _businessName = value,
+          ),
+        ],
       ),
     );
   }
