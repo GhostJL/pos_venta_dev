@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:posventa/domain/entities/user.dart';
 import 'package:posventa/presentation/providers/cashier_providers.dart';
 
@@ -56,7 +57,7 @@ class _CashierFormPageState extends ConsumerState<CashierFormPage> {
 
     ref.listen(cashierControllerProvider, (previous, next) {
       if (next is AsyncData && !next.isLoading) {
-        Navigator.pop(context);
+        context.pop();
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(isEditing ? 'Cajero actualizado' : 'Cajero creado'),

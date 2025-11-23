@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:posventa/domain/entities/purchase.dart';
 import 'package:posventa/domain/entities/purchase_item.dart';
@@ -133,11 +134,11 @@ class PurchaseDetailPage extends ConsumerWidget {
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context, false),
+            onPressed: () => context.pop(false),
             child: const Text('No, Salir'),
           ),
           ElevatedButton.icon(
-            onPressed: () => Navigator.pop(context, true),
+            onPressed: () => context.pop(true),
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.red,
               foregroundColor: Colors.white,
@@ -740,7 +741,7 @@ class _PurchaseReceptionDialogState extends State<PurchaseReceptionDialog> {
       ),
       actions: [
         TextButton(
-          onPressed: () => Navigator.pop(context),
+          onPressed: () => context.pop(),
           child: const Text('Cancelar'),
         ),
         ElevatedButton.icon(
@@ -780,7 +781,7 @@ class _PurchaseReceptionDialogState extends State<PurchaseReceptionDialog> {
               return;
             }
 
-            Navigator.pop(context, result);
+            context.pop(result);
           },
           icon: const Icon(Icons.check_circle),
           label: const Text('Confirmar Recepción'),

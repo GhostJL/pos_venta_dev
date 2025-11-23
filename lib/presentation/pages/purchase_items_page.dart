@@ -162,30 +162,37 @@ class _PurchaseItemsPageState extends ConsumerState<PurchaseItemsPage> {
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            RadioListTile<String>(
+            ListTile(
               title: const Text('Todos'),
-              value: 'all',
-              groupValue: _filterType,
-              onChanged: (value) {
-                setState(() => _filterType = value!);
-                Navigator.pop(context);
+              leading: Icon(
+                _filterType == 'all'
+                    ? Icons.radio_button_checked
+                    : Icons.radio_button_unchecked,
+                color: Theme.of(context).primaryColor,
+              ),
+              onTap: () {
+                setState(() => _filterType = 'all');
+                context.pop();
               },
             ),
-            RadioListTile<String>(
+            ListTile(
               title: const Text('Recientes (últimos 50)'),
-              value: 'recent',
-              groupValue: _filterType,
-              onChanged: (value) {
-                setState(() => _filterType = value!);
-                Navigator.pop(context);
-                // TODO: Implement recent filter
+              leading: Icon(
+                _filterType == 'recent'
+                    ? Icons.radio_button_checked
+                    : Icons.radio_button_unchecked,
+                color: Theme.of(context).primaryColor,
+              ),
+              onTap: () {
+                setState(() => _filterType = 'recent');
+                context.pop();
               },
             ),
           ],
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => context.pop(),
             child: const Text('Cerrar'),
           ),
         ],

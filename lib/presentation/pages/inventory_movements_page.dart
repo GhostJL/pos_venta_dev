@@ -6,7 +6,7 @@ import 'package:posventa/presentation/providers/inventory_movement_providers.dar
 import 'package:posventa/presentation/providers/product_provider.dart';
 import 'package:posventa/presentation/providers/warehouse_providers.dart';
 import 'package:posventa/presentation/providers/user_provider.dart';
-import 'package:posventa/presentation/pages/inventory_movement_form_page.dart';
+import 'package:go_router/go_router.dart';
 
 class InventoryMovementsPage extends ConsumerWidget {
   const InventoryMovementsPage({super.key});
@@ -174,11 +174,7 @@ class InventoryMovementsPage extends ConsumerWidget {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (context) => const InventoryMovementFormPage(),
-            ),
-          );
+          context.push('/inventory/movements/new');
         },
         backgroundColor: AppTheme.primary,
         foregroundColor: Colors.white,

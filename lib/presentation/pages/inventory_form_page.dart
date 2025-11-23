@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:posventa/core/theme/theme.dart';
 import 'package:posventa/domain/entities/inventory.dart';
 import 'package:posventa/presentation/providers/inventory_providers.dart';
@@ -243,7 +244,7 @@ class _InventoryFormPageState extends ConsumerState<InventoryFormPage> {
       } else {
         await ref.read(inventoryProvider.notifier).updateInventory(inventory);
       }
-      if (mounted) Navigator.pop(context);
+      if (mounted) context.pop();
     } catch (e) {
       if (mounted) {
         String errorMessage = 'Error al guardar: $e';

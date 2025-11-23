@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:posventa/core/theme/theme.dart';
 import 'package:posventa/domain/entities/inventory_movement.dart';
 import 'package:posventa/domain/entities/product.dart';
@@ -498,7 +499,7 @@ class _InventoryMovementFormPageState
       }
 
       if (mounted) {
-        Navigator.pop(context);
+        context.pop();
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(

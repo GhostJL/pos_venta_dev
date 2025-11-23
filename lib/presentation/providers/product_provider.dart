@@ -4,6 +4,7 @@ import 'package:posventa/domain/entities/product.dart';
 import 'package:posventa/domain/use_cases/product/get_all_products.dart';
 import 'package:posventa/domain/use_cases/product/create_product.dart';
 import 'package:posventa/domain/use_cases/product/update_product.dart';
+import 'package:posventa/domain/use_cases/product/delete_product.dart';
 import 'package:posventa/domain/use_cases/product/search_products.dart';
 import 'package:posventa/presentation/providers/providers.dart';
 
@@ -11,16 +12,19 @@ class ProductNotifier extends StateNotifier<AsyncValue<List<Product>>> {
   final GetAllProducts _getAllProducts;
   final CreateProduct _createProduct;
   final UpdateProduct _updateProduct;
+  final DeleteProduct _deleteProduct;
   final SearchProducts _searchProducts;
 
   ProductNotifier({
     required GetAllProducts getAllProducts,
     required CreateProduct createProduct,
     required UpdateProduct updateProduct,
+    required DeleteProduct deleteProduct,
     required SearchProducts searchProducts,
   }) : _getAllProducts = getAllProducts,
        _createProduct = createProduct,
        _updateProduct = updateProduct,
+       _deleteProduct = deleteProduct,
        _searchProducts = searchProducts,
        super(const AsyncValue.loading()) {
     _loadProducts();
@@ -59,6 +63,14 @@ class ProductNotifier extends StateNotifier<AsyncValue<List<Product>>> {
       return _getAllProducts();
     });
   }
+
+  Future<void> deleteProduct(int id) async {
+    state = const AsyncValue.loading();
+    state = await AsyncValue.guard(() async {
+      await _deleteProduct(id);
+      return _getAllProducts();
+    });
+  }
 }
 
 final productNotifierProvider =
@@ -66,12 +78,14 @@ final productNotifierProvider =
       final getAllProducts = ref.watch(getAllProductsProvider);
       final createProduct = ref.watch(createProductProvider);
       final updateProduct = ref.watch(updateProductProvider);
+      final deleteProduct = ref.watch(deleteProductProvider);
       final searchProducts = ref.watch(searchProductsProvider);
 
       return ProductNotifier(
         getAllProducts: getAllProducts,
         createProduct: createProduct,
         updateProduct: updateProduct,
+        deleteProduct: deleteProduct,
         searchProducts: searchProducts,
       );
     });

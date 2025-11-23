@@ -9,7 +9,7 @@ import 'package:posventa/domain/entities/warehouse.dart';
 import 'package:posventa/presentation/providers/auth_provider.dart';
 import 'package:posventa/presentation/providers/product_provider.dart';
 import 'package:posventa/presentation/providers/purchase_providers.dart';
-import 'package:posventa/presentation/widgets/barcode_scanner_widget.dart';
+
 import 'package:uuid/uuid.dart';
 
 class PurchaseFormPage extends ConsumerStatefulWidget {
@@ -71,43 +71,28 @@ class _PurchaseFormPageState extends ConsumerState<PurchaseFormPage> {
   }
 
   Future<void> _scanProduct(List<Product> products) async {
-    await Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => BarcodeScannerWidget(
-          title: 'Escanear Producto',
-          hint: 'Escanea el código de barras del producto',
-          onBarcodeScanned: (ctx, barcode) async {
-            final product = products
-                .where((p) => p.barcode == barcode)
-                .firstOrNull;
-            if (product != null) {
-              Navigator.pop(ctx);
-              if (mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('Producto encontrado: ${product.name}'),
-                    backgroundColor: Colors.green,
-                    duration: const Duration(seconds: 2),
-                  ),
-                );
-                _openAddItemDialog(product);
-              }
-            } else {
-              Navigator.pop(ctx);
-              if (mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Producto no encontrado'),
-                    backgroundColor: Colors.orange,
-                  ),
-                );
-              }
-            }
-          },
-        ),
-      ),
-    );
+    final barcode = await context.push<String>('/scanner');
+
+    if (barcode != null && mounted) {
+      final product = products.where((p) => p.barcode == barcode).firstOrNull;
+      if (product != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Producto encontrado: ${product.name}'),
+            backgroundColor: Colors.green,
+            duration: const Duration(seconds: 2),
+          ),
+        );
+        _openAddItemDialog(product);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Producto no encontrado'),
+            backgroundColor: Colors.orange,
+          ),
+        );
+      }
+    }
   }
 
   Future<void> _editItem(int index) async {
@@ -698,7 +683,7 @@ class _AddItemDialogState extends ConsumerState<_AddItemDialog> {
       ),
       actions: [
         TextButton(
-          onPressed: () => Navigator.pop(context),
+          onPressed: () => context.pop(),
           child: const Text('Cancelar'),
         ),
         ElevatedButton(
@@ -725,7 +710,7 @@ class _AddItemDialogState extends ConsumerState<_AddItemDialog> {
                 totalCents: totalCents,
                 createdAt: DateTime.now(),
               );
-              Navigator.pop(context, item);
+              context.pop(item);
             }
           },
           child: const Text('Agregar'),
@@ -823,7 +808,7 @@ class _EditItemDialogState extends ConsumerState<_EditItemDialog> {
       ),
       actions: [
         TextButton(
-          onPressed: () => Navigator.pop(context),
+          onPressed: () => context.pop(),
           child: const Text('Cancelar'),
         ),
         ElevatedButton(
@@ -853,7 +838,7 @@ class _EditItemDialogState extends ConsumerState<_EditItemDialog> {
                 createdAt: widget.existingItem.createdAt,
               );
 
-              Navigator.pop(context, updatedItem);
+              context.pop(updatedItem);
             }
           },
           child: const Text('Guardar'),

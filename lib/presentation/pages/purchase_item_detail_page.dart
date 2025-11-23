@@ -326,12 +326,12 @@ class PurchaseItemDetailPage extends ConsumerWidget {
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
+            onPressed: () => context.pop(dialogContext),
             child: const Text('Cancelar'),
           ),
           ElevatedButton(
             onPressed: () async {
-              Navigator.pop(dialogContext);
+              context.pop(dialogContext);
               try {
                 await ref
                     .read(purchaseItemProvider.notifier)

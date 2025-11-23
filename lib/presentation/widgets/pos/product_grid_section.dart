@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:posventa/presentation/providers/pos_providers.dart';
 import 'package:posventa/presentation/providers/product_provider.dart';
 import 'package:posventa/domain/entities/product.dart';
-import 'package:posventa/presentation/widgets/barcode_scanner_widget.dart';
+import 'package:go_router/go_router.dart';
 
 class ProductGridSection extends ConsumerStatefulWidget {
   final bool isMobile;
@@ -32,19 +32,11 @@ class _ProductGridSectionState extends ConsumerState<ProductGridSection> {
     super.dispose();
   }
 
-  void _openScanner() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => BarcodeScannerWidget(
-          title: 'Escanear Productos',
-          hint: 'Escanea códigos de barras para agregar al carrito',
-          onBarcodeScanned: (context, barcode) {
-            _handleScannedBarcode(context, barcode);
-          },
-        ),
-      ),
-    );
+  void _openScanner() async {
+    final barcode = await context.push<String>('/scanner');
+    if (barcode != null && mounted) {
+      _handleScannedBarcode(context, barcode);
+    }
   }
 
   void _handleScannedBarcode(

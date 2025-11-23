@@ -3,8 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:posventa/core/theme/theme.dart';
 import 'package:posventa/presentation/providers/inventory_providers.dart';
 import 'package:posventa/presentation/providers/product_provider.dart';
-import 'package:posventa/presentation/pages/inventory_form_page.dart';
-import 'package:posventa/presentation/pages/inventory_movements_page.dart';
+
+import 'package:go_router/go_router.dart';
 import 'package:posventa/core/constants/permission_constants.dart';
 import 'package:posventa/presentation/providers/permission_provider.dart';
 
@@ -40,11 +40,7 @@ class InventoryPage extends ConsumerWidget {
           IconButton(
             icon: const Icon(Icons.history_rounded),
             onPressed: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (context) => const InventoryMovementsPage(),
-                ),
-              );
+              context.push('/inventory/movements');
             },
             tooltip: 'Ver Kardex',
           ),
@@ -186,11 +182,7 @@ class InventoryPage extends ConsumerWidget {
       floatingActionButton: hasAdjustAccess
           ? FloatingActionButton(
               onPressed: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (context) => const InventoryFormPage(),
-                  ),
-                );
+                context.push('/inventory/form');
               },
               backgroundColor: AppTheme.primary,
               foregroundColor: Colors.white,
@@ -258,12 +250,8 @@ class InventoryPage extends ConsumerWidget {
                   style: TextStyle(fontWeight: FontWeight.bold),
                 ),
                 onTap: () {
-                  Navigator.pop(context);
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (context) => InventoryFormPage(inventory: item),
-                    ),
-                  );
+                  context.pop();
+                  context.push('/inventory/form', extra: item);
                 },
               ),
               const SizedBox(height: 8),
@@ -284,7 +272,7 @@ class InventoryPage extends ConsumerWidget {
                   style: TextStyle(fontWeight: FontWeight.bold),
                 ),
                 onTap: () {
-                  Navigator.pop(context);
+                  context.pop();
                   _showAdjustStockDialog(context, ref, item);
                 },
               ),
@@ -306,7 +294,7 @@ class InventoryPage extends ConsumerWidget {
                   style: TextStyle(fontWeight: FontWeight.bold),
                 ),
                 onTap: () {
-                  Navigator.pop(context);
+                  context.pop();
                   _confirmDelete(context, ref, item);
                 },
               ),
@@ -391,7 +379,7 @@ class InventoryPage extends ConsumerWidget {
               ),
               actions: [
                 TextButton(
-                  onPressed: () => Navigator.pop(context),
+                  onPressed: () => context.pop(),
                   child: const Text('Cancelar'),
                 ),
                 ElevatedButton(
@@ -430,7 +418,7 @@ class InventoryPage extends ConsumerWidget {
                         .read(inventoryProvider.notifier)
                         .updateInventory(updatedInventory);
 
-                    Navigator.pop(context);
+                    context.pop();
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
                         content: Text(
@@ -472,13 +460,13 @@ class InventoryPage extends ConsumerWidget {
           ),
           actions: [
             TextButton(
-              onPressed: () => Navigator.pop(context),
+              onPressed: () => context.pop(),
               child: const Text('Cancelar'),
             ),
             ElevatedButton(
               onPressed: () {
                 ref.read(inventoryProvider.notifier).deleteInventory(item.id!);
-                Navigator.pop(context);
+                context.pop();
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
                     content: Text('Inventario eliminado'),

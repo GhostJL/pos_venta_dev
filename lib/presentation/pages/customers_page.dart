@@ -4,7 +4,7 @@ import 'package:posventa/core/theme/theme.dart';
 import 'package:posventa/domain/entities/customer.dart';
 import 'package:posventa/presentation/providers/customer_providers.dart';
 import 'package:posventa/presentation/widgets/custom_data_table.dart';
-import 'package:posventa/presentation/widgets/customer_form.dart';
+import 'package:go_router/go_router.dart';
 import 'package:posventa/core/constants/permission_constants.dart';
 import 'package:posventa/presentation/providers/permission_provider.dart';
 
@@ -19,10 +19,7 @@ class CustomersPageState extends ConsumerState<CustomersPage> {
   String _searchQuery = '';
 
   void _navigateToForm([Customer? customer]) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => CustomerForm(customer: customer)),
-    );
+    context.push('/customers/form', extra: customer);
   }
 
   @override
@@ -113,14 +110,20 @@ class CustomersPageState extends ConsumerState<CustomersPage> {
         content: Text('¿Eliminar cliente ${customer.fullName}?'),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => context.pop(),
             child: const Text('Cancelar'),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: AppTheme.error),
             onPressed: () {
               ref.read(customerProvider.notifier).deleteCustomer(customer.id!);
-              Navigator.pop(context);
+              context.pop();
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Cliente eliminado correctamente'),
+                  backgroundColor: AppTheme.success,
+                ),
+              );
             },
             child: const Text(
               'Eliminar',

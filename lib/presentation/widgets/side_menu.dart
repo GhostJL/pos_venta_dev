@@ -367,12 +367,12 @@ class SideMenu extends ConsumerWidget {
                 ),
                 actions: [
                   TextButton(
-                    onPressed: () => Navigator.pop(context),
+                    onPressed: () => context.pop(),
                     child: const Text('Cancelar'),
                   ),
                   FilledButton(
                     onPressed: () {
-                      Navigator.pop(context);
+                      context.pop();
                       context.go('/cash-session-close?intent=logout');
                     },
                     style: FilledButton.styleFrom(

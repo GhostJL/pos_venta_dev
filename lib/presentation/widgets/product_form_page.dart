@@ -11,7 +11,7 @@ import 'package:posventa/presentation/providers/supplier_providers.dart';
 import 'package:posventa/presentation/providers/tax_rate_provider.dart';
 import 'package:posventa/presentation/providers/providers.dart'; // For productRepositoryProvider
 import 'package:posventa/core/theme/theme.dart';
-import 'package:posventa/presentation/widgets/barcode_scanner_widget.dart';
+import 'package:go_router/go_router.dart';
 
 class ProductFormPage extends ConsumerStatefulWidget {
   final Product? product;
@@ -99,18 +99,7 @@ class ProductFormPageState extends ConsumerState<ProductFormPage> {
   }
 
   void _openBarcodeScanner() async {
-    final result = await Navigator.push<String>(
-      context,
-      MaterialPageRoute(
-        builder: (context) => BarcodeScannerWidget(
-          title: 'Escanear Código de Barras',
-          hint: 'Escanea el código de barras del producto',
-          onBarcodeScanned: (context, barcode) {
-            Navigator.pop(context, barcode);
-          },
-        ),
-      ),
-    );
+    final result = await context.push<String>('/scanner');
 
     if (result != null && mounted) {
       setState(() {

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:posventa/domain/entities/cash_session.dart';
-import 'package:posventa/presentation/pages/cash_session_detail_page.dart';
+import 'package:go_router/go_router.dart';
 import 'package:posventa/presentation/providers/cash_session_providers.dart';
 import 'package:posventa/presentation/providers/cashier_providers.dart';
 
@@ -162,14 +162,14 @@ class _CashSessionHistoryPageState
                       _selectedWarehouseId = null;
                       _selectedDateRange = null;
                     });
-                    Navigator.pop(context);
+                    context.pop();
                   },
                   child: const Text('Limpiar'),
                 ),
                 ElevatedButton(
                   onPressed: () {
                     setState(() {}); // Trigger rebuild of parent
-                    Navigator.pop(context);
+                    context.pop();
                   },
                   child: const Text('Aplicar'),
                 ),
@@ -242,12 +242,7 @@ class _SessionCard extends StatelessWidget {
           ],
         ),
         onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => CashSessionDetailPage(session: session),
-            ),
-          );
+          context.push('/cash-sessions/detail', extra: session);
         },
       ),
     );

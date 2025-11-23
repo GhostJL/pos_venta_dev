@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:posventa/core/theme/theme.dart';
 import 'package:posventa/domain/entities/brand.dart';
-import 'package:posventa/presentation/widgets/brand_form.dart'; // Actualizado
+import 'package:go_router/go_router.dart';
 import 'package:posventa/presentation/providers/brand_providers.dart';
 import 'package:posventa/presentation/widgets/custom_data_table.dart';
 import 'package:posventa/core/constants/permission_constants.dart';
@@ -19,10 +19,7 @@ class BrandsPage extends ConsumerWidget {
     );
 
     void navigateToForm([Brand? brand]) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => BrandForm(brand: brand)),
-      );
+      context.push('/brands/form', extra: brand);
     }
 
     void confirmDelete(BuildContext context, WidgetRef ref, Brand brand) {
@@ -57,6 +54,12 @@ class BrandsPage extends ConsumerWidget {
                 onPressed: () {
                   ref.read(brandListProvider.notifier).deleteBrand(brand.id!);
                   Navigator.of(dialogContext).pop();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Marca eliminada correctamente'),
+                      backgroundColor: AppTheme.success,
+                    ),
+                  );
                 },
               ),
             ],

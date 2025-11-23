@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:posventa/core/theme/theme.dart';
 import 'package:posventa/domain/entities/supplier.dart';
-import 'package:posventa/presentation/widgets/supplier_form.dart';
+import 'package:go_router/go_router.dart';
 import 'package:posventa/presentation/providers/supplier_providers.dart';
 import 'package:posventa/presentation/widgets/custom_data_table.dart';
 import 'package:posventa/core/constants/permission_constants.dart';
@@ -19,12 +19,7 @@ class SuppliersPageState extends ConsumerState<SuppliersPage> {
   String _searchQuery = '';
 
   void _navigateToForm([Supplier? supplier]) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => SupplierForm(supplier: supplier), // Actualizado
-      ),
-    );
+    context.push('/suppliers/form', extra: supplier);
   }
 
   @override
@@ -170,6 +165,12 @@ class SuppliersPageState extends ConsumerState<SuppliersPage> {
                     .read(supplierListProvider.notifier)
                     .deleteSupplier(supplier.id!);
                 Navigator.of(dialogContext).pop();
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Proveedor eliminado correctamente'),
+                    backgroundColor: AppTheme.success,
+                  ),
+                );
               },
             ),
           ],

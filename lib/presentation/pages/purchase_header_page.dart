@@ -100,7 +100,7 @@ class _PurchaseHeaderPageState extends ConsumerState<PurchaseHeaderPage> {
               suppliersAsync.when(
                 data: (suppliers) {
                   return DropdownButtonFormField<Supplier>(
-                    value: _selectedSupplier,
+                    initialValue: _selectedSupplier,
                     decoration: const InputDecoration(
                       labelText: 'Proveedor *',
                       border: OutlineInputBorder(),
@@ -126,7 +126,7 @@ class _PurchaseHeaderPageState extends ConsumerState<PurchaseHeaderPage> {
               warehousesAsync.when(
                 data: (warehouses) {
                   return DropdownButtonFormField<Warehouse>(
-                    value: _selectedWarehouse,
+                    initialValue: _selectedWarehouse,
                     decoration: const InputDecoration(
                       labelText: 'Almacén Destino *',
                       border: OutlineInputBorder(),

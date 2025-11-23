@@ -38,6 +38,26 @@ import 'package:posventa/presentation/providers/transaction_provider.dart';
 import 'package:posventa/presentation/pages/cashier/cashier_list_page.dart';
 import 'package:posventa/presentation/pages/cash_session_history_page.dart';
 import 'package:posventa/presentation/pages/cash_movements_report_page.dart';
+import 'package:posventa/presentation/widgets/product_form_page.dart';
+import 'package:posventa/presentation/widgets/brand_form.dart';
+import 'package:posventa/presentation/widgets/category_form.dart';
+import 'package:posventa/presentation/widgets/customer_form.dart';
+import 'package:posventa/presentation/widgets/department_form.dart';
+import 'package:posventa/presentation/widgets/supplier_form.dart';
+import 'package:posventa/presentation/pages/inventory_movements_page.dart';
+import 'package:posventa/presentation/pages/inventory_form_page.dart';
+import 'package:posventa/presentation/pages/cashier/cashier_form_page.dart';
+import 'package:posventa/presentation/pages/cashier/cashier_permissions_page.dart';
+import 'package:posventa/presentation/pages/cash_session_detail_page.dart';
+import 'package:posventa/presentation/widgets/barcode_scanner_widget.dart';
+import 'package:posventa/presentation/pages/inventory_movement_form_page.dart';
+import 'package:posventa/domain/entities/product.dart';
+import 'package:posventa/domain/entities/cash_session.dart';
+import 'package:posventa/domain/entities/brand.dart';
+import 'package:posventa/domain/entities/category.dart';
+import 'package:posventa/domain/entities/customer.dart';
+import 'package:posventa/domain/entities/department.dart';
+import 'package:posventa/domain/entities/supplier.dart';
 
 final GlobalKey<NavigatorState> _rootNavigatorKey = GlobalKey<NavigatorState>();
 
@@ -232,6 +252,107 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: '/cash-movements-report',
             pageBuilder: (context, state) =>
                 const NoTransitionPage(child: CashMovementsReportPage()),
+          ),
+          // Form Routes
+          GoRoute(
+            path: '/products/form',
+            pageBuilder: (context, state) {
+              final product = state.extra as Product?;
+              return NoTransitionPage(child: ProductFormPage(product: product));
+            },
+          ),
+          GoRoute(
+            path: '/suppliers/form',
+            pageBuilder: (context, state) {
+              final supplier = state.extra as Supplier?;
+              return NoTransitionPage(child: SupplierForm(supplier: supplier));
+            },
+          ),
+          GoRoute(
+            path: '/departments/form',
+            pageBuilder: (context, state) {
+              final department = state.extra as Department?;
+              return NoTransitionPage(
+                child: DepartmentForm(department: department),
+              );
+            },
+          ),
+          GoRoute(
+            path: '/customers/form',
+            pageBuilder: (context, state) {
+              final customer = state.extra as Customer?;
+              return NoTransitionPage(child: CustomerForm(customer: customer));
+            },
+          ),
+          GoRoute(
+            path: '/categories/form',
+            pageBuilder: (context, state) {
+              final category = state.extra as Category?;
+              return NoTransitionPage(child: CategoryForm(category: category));
+            },
+          ),
+          GoRoute(
+            path: '/brands/form',
+            pageBuilder: (context, state) {
+              final brand = state.extra as Brand?;
+              return NoTransitionPage(child: BrandForm(brand: brand));
+            },
+          ),
+          GoRoute(
+            path: '/inventory/movements',
+            pageBuilder: (context, state) =>
+                const NoTransitionPage(child: InventoryMovementsPage()),
+          ),
+          GoRoute(
+            path: '/inventory/form',
+            pageBuilder: (context, state) {
+              final inventory = state.extra as dynamic;
+              return NoTransitionPage(
+                child: InventoryFormPage(inventory: inventory),
+              );
+            },
+          ),
+          GoRoute(
+            path: '/cashiers/form',
+            pageBuilder: (context, state) {
+              final cashier = state.extra as User?;
+              return NoTransitionPage(child: CashierFormPage(cashier: cashier));
+            },
+          ),
+          GoRoute(
+            path: '/cashiers/permissions',
+            pageBuilder: (context, state) {
+              final cashier = state.extra as User;
+              return NoTransitionPage(
+                child: CashierPermissionsPage(cashier: cashier),
+              );
+            },
+          ),
+          GoRoute(
+            path: '/cash-sessions/detail',
+            pageBuilder: (context, state) {
+              final session = state.extra as CashSession;
+              return NoTransitionPage(
+                child: CashSessionDetailPage(session: session),
+              );
+            },
+          ),
+          GoRoute(
+            path: '/scanner',
+            pageBuilder: (context, state) {
+              return NoTransitionPage(
+                child: BarcodeScannerWidget(
+                  onBarcodeScanned: (context, barcode) {
+                    context.pop(barcode);
+                  },
+                ),
+              );
+            },
+          ),
+          GoRoute(
+            path: '/inventory/movements/new',
+            pageBuilder: (context, state) =>
+                const NoTransitionPage(child: InventoryMovementFormPage()),
           ),
         ],
       ),

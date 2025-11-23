@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:posventa/core/theme/theme.dart';
 import 'package:posventa/domain/entities/product.dart';
-import 'package:posventa/presentation/widgets/product_form_page.dart';
+import 'package:go_router/go_router.dart';
 import 'package:posventa/presentation/providers/brand_providers.dart';
 import 'package:posventa/presentation/providers/category_providers.dart';
 import 'package:posventa/presentation/providers/department_providers.dart';
@@ -10,7 +10,6 @@ import 'package:posventa/presentation/providers/product_provider.dart';
 import 'package:posventa/presentation/providers/supplier_providers.dart';
 import 'package:posventa/core/constants/permission_constants.dart';
 import 'package:posventa/presentation/providers/permission_provider.dart';
-import 'package:posventa/presentation/widgets/barcode_scanner_widget.dart';
 
 class ProductsPage extends ConsumerStatefulWidget {
   const ProductsPage({super.key});
@@ -44,18 +43,7 @@ class ProductsPageState extends ConsumerState<ProductsPage> {
   }
 
   void _openScanner() async {
-    final result = await Navigator.push<String>(
-      context,
-      MaterialPageRoute(
-        builder: (context) => BarcodeScannerWidget(
-          title: 'Buscar Producto',
-          hint: 'Escanea el código de barras del producto',
-          onBarcodeScanned: (context, barcode) {
-            Navigator.pop(context, barcode);
-          },
-        ),
-      ),
-    );
+    final result = await context.push<String>('/scanner');
 
     if (result != null && mounted) {
       setState(() {
@@ -289,11 +277,7 @@ class ProductsPageState extends ConsumerState<ProductsPage> {
       floatingActionButton: hasManagePermission
           ? FloatingActionButton(
               onPressed: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (context) => const ProductFormPage(),
-                  ),
-                );
+                context.push('/products/form');
               },
               backgroundColor: AppTheme.primary,
               foregroundColor: Colors.white,
@@ -477,7 +461,7 @@ class ProductsPageState extends ConsumerState<ProductsPage> {
                       ),
                       IconButton(
                         icon: const Icon(Icons.close_rounded),
-                        onPressed: () => Navigator.pop(context),
+                        onPressed: () => context.pop(),
                       ),
                     ],
                   ),
@@ -599,7 +583,7 @@ class ProductsPageState extends ConsumerState<ProductsPage> {
                             setState(
                               () {},
                             ); // This triggers the main page to rebuild with the new filters
-                            Navigator.pop(context);
+                            context.pop();
                           },
                           style: ElevatedButton.styleFrom(
                             padding: const EdgeInsets.symmetric(vertical: 16),
@@ -688,12 +672,8 @@ class ProductsPageState extends ConsumerState<ProductsPage> {
                     style: TextStyle(fontWeight: FontWeight.bold),
                   ),
                   onTap: () {
-                    Navigator.pop(context);
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (context) => ProductFormPage(product: product),
-                      ),
-                    );
+                    context.pop();
+                    context.push('/products/form', extra: product);
                   },
                 ),
               if (hasManagePermission) const SizedBox(height: 8),
@@ -715,17 +695,12 @@ class ProductsPageState extends ConsumerState<ProductsPage> {
                     style: TextStyle(fontWeight: FontWeight.bold),
                   ),
                   onTap: () {
-                    Navigator.pop(context);
+                    context.pop();
                     final newProduct = product.copyWith(
                       id: null,
                       name: '${product.name} (Copia)',
                     );
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (context) =>
-                            ProductFormPage(product: newProduct),
-                      ),
-                    );
+                    context.push('/products/form', extra: newProduct);
                   },
                 ),
               if (hasManagePermission) const SizedBox(height: 8),
@@ -753,17 +728,112 @@ class ProductsPageState extends ConsumerState<ProductsPage> {
                     style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
                   onTap: () {
-                    Navigator.pop(context);
+                    context.pop();
                     final updatedProduct = product.copyWith(
                       isActive: !product.isActive,
                     );
                     ref
                         .read(productNotifierProvider.notifier)
                         .updateProduct(updatedProduct);
+
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            updatedProduct.isActive
+                                ? 'Producto activado'
+                                : 'Producto desactivado',
+                          ),
+                          backgroundColor: updatedProduct.isActive
+                              ? AppTheme.success
+                              : AppTheme.textSecondary,
+                        ),
+                      );
+                    }
+                  },
+                ),
+              if (hasManagePermission) const SizedBox(height: 8),
+              if (hasManagePermission)
+                ListTile(
+                  leading: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: AppTheme.error.withAlpha(20),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Icon(
+                      Icons.delete_rounded,
+                      color: AppTheme.error,
+                    ),
+                  ),
+                  title: const Text(
+                    'Eliminar Producto',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  onTap: () {
+                    context.pop();
+                    _confirmDelete(context, product);
                   },
                 ),
             ],
           ),
+        );
+      },
+    );
+  }
+
+  void _confirmDelete(BuildContext context, Product product) {
+    showDialog(
+      context: context,
+      builder: (BuildContext dialogContext) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          title: const Text(
+            'Confirmar Eliminación',
+            style: TextStyle(fontWeight: FontWeight.bold),
+          ),
+          content: Text(
+            '¿Estás seguro de que quieres eliminar el producto "${product.name}"?',
+            style: const TextStyle(fontSize: 16),
+          ),
+          actionsPadding: const EdgeInsets.all(16),
+          actions: <Widget>[
+            TextButton(
+              child: const Text(
+                'Cancelar',
+                style: TextStyle(color: AppTheme.textSecondary),
+              ),
+              onPressed: () => Navigator.of(dialogContext).pop(),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.error,
+                foregroundColor: Colors.white,
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              child: const Text('Eliminar'),
+              onPressed: () {
+                ref
+                    .read(productNotifierProvider.notifier)
+                    .deleteProduct(product.id!);
+                Navigator.of(dialogContext).pop();
+
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Producto eliminado correctamente'),
+                      backgroundColor: AppTheme.success,
+                    ),
+                  );
+                }
+              },
+            ),
+          ],
         );
       },
     );

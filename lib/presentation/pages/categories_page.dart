@@ -4,7 +4,7 @@ import 'package:posventa/core/theme/theme.dart';
 import 'package:posventa/domain/entities/category.dart';
 import 'package:posventa/presentation/providers/category_providers.dart';
 import 'package:posventa/presentation/providers/department_providers.dart';
-import 'package:posventa/presentation/widgets/category_form.dart';
+import 'package:go_router/go_router.dart';
 import 'package:posventa/presentation/widgets/custom_data_table.dart';
 import 'package:posventa/core/constants/permission_constants.dart';
 import 'package:posventa/presentation/providers/permission_provider.dart';
@@ -21,12 +21,7 @@ class CategoriesPage extends ConsumerWidget {
     );
 
     void navigateToForm([Category? category]) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => CategoryForm(category: category),
-        ),
-      );
+      context.push('/categories/form', extra: category);
     }
 
     void confirmDelete(BuildContext context, WidgetRef ref, Category category) {
@@ -63,6 +58,12 @@ class CategoriesPage extends ConsumerWidget {
                       .read(categoryListProvider.notifier)
                       .deleteCategory(category.id!);
                   Navigator.of(dialogContext).pop();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Categoría eliminada correctamente'),
+                      backgroundColor: AppTheme.success,
+                    ),
+                  );
                 },
               ),
             ],

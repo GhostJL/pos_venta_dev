@@ -4,7 +4,7 @@ import 'package:posventa/core/theme/theme.dart';
 import 'package:posventa/domain/entities/department.dart';
 import 'package:posventa/presentation/providers/department_providers.dart';
 import 'package:posventa/presentation/widgets/custom_data_table.dart';
-import 'package:posventa/presentation/widgets/department_form.dart';
+import 'package:go_router/go_router.dart';
 import 'package:posventa/core/constants/permission_constants.dart';
 import 'package:posventa/presentation/providers/permission_provider.dart';
 
@@ -19,12 +19,7 @@ class DepartmentsPage extends ConsumerWidget {
     );
 
     void navigateToForm([Department? department]) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => DepartmentForm(department: department),
-        ),
-      );
+      context.push('/departments/form', extra: department);
     }
 
     void confirmDelete(
@@ -65,6 +60,12 @@ class DepartmentsPage extends ConsumerWidget {
                       .read(departmentListProvider.notifier)
                       .deleteDepartment(department.id!);
                   Navigator.of(dialogContext).pop();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Departamento eliminado correctamente'),
+                      backgroundColor: AppTheme.success,
+                    ),
+                  );
                 },
               ),
             ],

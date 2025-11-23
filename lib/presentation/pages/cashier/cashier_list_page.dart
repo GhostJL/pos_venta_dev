@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:posventa/domain/entities/user.dart';
-import 'package:posventa/presentation/pages/cashier/cashier_form_page.dart';
-import 'package:posventa/presentation/pages/cashier/cashier_permissions_page.dart';
+import 'package:go_router/go_router.dart';
 import 'package:posventa/presentation/providers/cashier_providers.dart';
 import 'package:posventa/presentation/providers/auth_provider.dart';
 
@@ -46,26 +45,14 @@ class CashierListPage extends ConsumerWidget {
                         icon: const Icon(Icons.security),
                         tooltip: 'Permisos',
                         onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) =>
-                                  CashierPermissionsPage(cashier: cashier),
-                            ),
-                          );
+                          context.push('/cashiers/permissions', extra: cashier);
                         },
                       ),
                       IconButton(
                         icon: const Icon(Icons.edit),
                         tooltip: 'Editar',
                         onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) =>
-                                  CashierFormPage(cashier: cashier),
-                            ),
-                          );
+                          context.push('/cashiers/form', extra: cashier);
                         },
                       ),
                       IconButton(
@@ -85,10 +72,7 @@ class CashierListPage extends ConsumerWidget {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => const CashierFormPage()),
-          );
+          context.push('/cashiers/form');
         },
         child: const Icon(Icons.add),
       ),
@@ -105,7 +89,7 @@ class CashierListPage extends ConsumerWidget {
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => context.pop(),
             child: const Text('Cancelar'),
           ),
           TextButton(
@@ -113,7 +97,13 @@ class CashierListPage extends ConsumerWidget {
               ref
                   .read(cashierControllerProvider.notifier)
                   .deleteCashier(cashier.id!);
-              Navigator.pop(context);
+              context.pop();
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Cajero eliminado correctamente'),
+                  backgroundColor: Colors.green,
+                ),
+              );
             },
             child: const Text('Eliminar', style: TextStyle(color: Colors.red)),
           ),
