@@ -5,9 +5,12 @@ import 'package:posventa/core/theme/theme.dart';
 import 'package:posventa/domain/entities/user.dart';
 import 'package:posventa/presentation/providers/auth_provider.dart';
 import 'package:posventa/presentation/providers/providers.dart';
-import 'package:posventa/core/constants/permission_constants.dart';
 import 'package:posventa/presentation/providers/permission_provider.dart';
+import 'package:posventa/core/config/menu_config.dart';
+import 'package:posventa/presentation/widgets/menu/menu_group_widget.dart';
+import 'package:posventa/presentation/widgets/menu/menu_item_widget.dart';
 
+/// Main side menu navigation widget with role-based access control
 class SideMenu extends ConsumerWidget {
   const SideMenu({super.key});
 
@@ -22,14 +25,8 @@ class SideMenu extends ConsumerWidget {
     final permissionsAsync = ref.watch(currentUserPermissionsProvider);
     final permissions = permissionsAsync.asData?.value ?? [];
 
-    // Helper to check permission
-    bool hasAccess(String permission) {
-      if (user?.role == UserRole.administrador) return true;
-      return permissions.contains(permission);
-    }
-
     return Container(
-      width: 280, // Slightly wider for better readability
+      width: 280,
       decoration: BoxDecoration(
         color: AppTheme.background,
         boxShadow: [
@@ -43,167 +40,128 @@ class SideMenu extends ConsumerWidget {
       child: Column(
         children: [
           _buildDrawerHeader(context, user),
-          Expanded(
-            child: ListView(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-              children: [
-                _buildSectionHeader('General'),
-                _buildDrawerItem(
-                  context: context,
-                  icon: Icons.dashboard_rounded,
-                  title: 'Panel de Control',
-                  path: '/',
-                  currentPath: currentPath,
-                ),
-                const SizedBox(height: 24),
-
-                if (hasAccess(PermissionConstants.catalogManage) ||
-                    hasAccess(PermissionConstants.inventoryView) ||
-                    hasAccess(PermissionConstants.customerManage))
-                  _buildSectionHeader('Gestión de Catálogo'),
-
-                if (hasAccess(PermissionConstants.catalogManage)) ...[
-                  _buildDrawerItem(
-                    context: context,
-                    icon: Icons.inventory_2_rounded,
-                    title: 'Productos',
-                    path: '/products',
-                    currentPath: currentPath,
-                  ),
-                  _buildDrawerItem(
-                    context: context,
-                    icon: Icons.store_rounded,
-                    title: 'Departamentos',
-                    path: '/departments',
-                    currentPath: currentPath,
-                  ),
-                  _buildDrawerItem(
-                    context: context,
-                    icon: Icons.category_rounded,
-                    title: 'Categorías',
-                    path: '/categories',
-                    currentPath: currentPath,
-                  ),
-                  _buildDrawerItem(
-                    context: context,
-                    icon: Icons.label_rounded,
-                    title: 'Marcas',
-                    path: '/brands',
-                    currentPath: currentPath,
-                  ),
-                  _buildDrawerItem(
-                    context: context,
-                    icon: Icons.local_shipping_rounded,
-                    title: 'Proveedores',
-                    path: '/suppliers',
-                    currentPath: currentPath,
-                  ),
-                  _buildDrawerItem(
-                    context: context,
-                    icon: Icons.shopping_cart_rounded,
-                    title: 'Compras',
-                    path: '/purchases',
-                    currentPath: currentPath,
-                  ),
-                  _buildDrawerItem(
-                    context: context,
-                    icon: Icons.receipt_rounded,
-                    title: 'Artículos de Compra',
-                    path: '/purchase-items',
-                    currentPath: currentPath,
-                  ),
-                  _buildDrawerItem(
-                    context: context,
-                    icon: Icons.warehouse_rounded,
-                    title: 'Almacenes',
-                    path: '/warehouses',
-                    currentPath: currentPath,
-                  ),
-                  _buildDrawerItem(
-                    context: context,
-                    icon: Icons.price_change_rounded,
-                    title: 'Tasas de Impuesto',
-                    path: '/tax-rates',
-                    currentPath: currentPath,
-                  ),
-                ],
-
-                if (hasAccess(PermissionConstants.inventoryView))
-                  _buildDrawerItem(
-                    context: context,
-                    icon: Icons.inventory_2_rounded,
-                    title: 'Inventario',
-                    path: '/inventory',
-                    currentPath: currentPath,
-                  ),
-
-                if (hasAccess(PermissionConstants.customerManage))
-                  _buildDrawerItem(
-                    context: context,
-                    icon: Icons.people_rounded,
-                    title: 'Clientes',
-                    path: '/customers',
-                    currentPath: currentPath,
-                  ),
-
-                if (hasAccess(PermissionConstants.posAccess) ||
-                    hasAccess(PermissionConstants.reportsView))
-                  const SizedBox(height: 24),
-
-                if (hasAccess(PermissionConstants.posAccess))
-                  _buildDrawerItem(
-                    context: context,
-                    icon: Icons.point_of_sale,
-                    title: 'Ventas (POS)',
-                    path: '/sales',
-                    currentPath: currentPath,
-                  ),
-
-                if (hasAccess(PermissionConstants.reportsView)) ...[
-                  _buildSectionHeader('Reportes / Finanzas'),
-                  _buildDrawerItem(
-                    context: context,
-                    icon: Icons.receipt_long,
-                    title: 'Historial de Ventas',
-                    path: '/sales-history',
-                    currentPath: currentPath,
-                  ),
-                  _buildDrawerItem(
-                    context: context,
-                    icon: Icons.history_edu,
-                    title: 'Historial de Sesiones',
-                    path: '/cash-sessions-history',
-                    currentPath: currentPath,
-                  ),
-                  _buildDrawerItem(
-                    context: context,
-                    icon: Icons.monetization_on,
-                    title: 'Reporte de Movimientos',
-                    path: '/cash-movements-report',
-                    currentPath: currentPath,
-                  ),
-                ],
-
-                if (user?.role == UserRole.administrador) ...[
-                  const SizedBox(height: 24),
-                  _buildSectionHeader('Administración'),
-                  _buildDrawerItem(
-                    context: context,
-                    icon: Icons.badge_rounded,
-                    title: 'Cajeros',
-                    path: '/cashiers',
-                    currentPath: currentPath,
-                  ),
-                ],
-              ],
-            ),
-          ),
+          Expanded(child: _buildMenuContent(user, permissions, currentPath)),
           _buildLogoutSection(context, ref),
         ],
       ),
     );
   }
 
+  /// Build menu content based on user role
+  Widget _buildMenuContent(
+    User? user,
+    List<String> permissions,
+    String currentPath,
+  ) {
+    if (user == null) {
+      return const Center(child: Text('No user logged in'));
+    }
+
+    final menuData = MenuConfig.getMenuForUser(user);
+    final useGroups = MenuConfig.shouldUseGroups(user);
+
+    return ListView(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      children: [
+        if (useGroups)
+          ..._buildGroupedMenu(
+            menuData as List<MenuGroup>,
+            user,
+            permissions,
+            currentPath,
+          )
+        else
+          ..._buildFlatMenu(
+            menuData as List<MenuItem>,
+            user,
+            permissions,
+            currentPath,
+          ),
+      ],
+    );
+  }
+
+  /// Build grouped menu for administrators
+  List<Widget> _buildGroupedMenu(
+    List<MenuGroup> groups,
+    User user,
+    List<String> permissions,
+    String currentPath,
+  ) {
+    final widgets = <Widget>[];
+
+    for (int i = 0; i < groups.length; i++) {
+      final group = groups[i];
+
+      // Check if group should be visible
+      if (!group.isVisible(user, permissions)) continue;
+
+      // Get accessible items
+      final accessibleItems = group.getAccessibleItems(user, permissions);
+      if (accessibleItems.isEmpty) continue;
+
+      // Create a filtered group with only accessible items
+      final filteredGroup = MenuGroup(
+        title: group.title,
+        groupIcon: group.groupIcon,
+        items: accessibleItems,
+        collapsible: group.collapsible,
+        defaultExpanded: group.defaultExpanded,
+      );
+
+      // Add spacing before group (except first one)
+      if (i > 0) {
+        widgets.add(const SizedBox(height: 24));
+      }
+
+      // Add the group widget
+      widgets.add(
+        MenuGroupWidget(menuGroup: filteredGroup, currentPath: currentPath),
+      );
+    }
+
+    return widgets;
+  }
+
+  /// Build flat menu for cashiers
+  List<Widget> _buildFlatMenu(
+    List<MenuItem> items,
+    User user,
+    List<String> permissions,
+    String currentPath,
+  ) {
+    final widgets = <Widget>[];
+
+    // Add section header for cashiers
+    widgets.add(
+      Padding(
+        padding: const EdgeInsets.only(left: 12, bottom: 8, top: 4),
+        child: Text(
+          'MENÚ PRINCIPAL',
+          style: TextStyle(
+            color: AppTheme.textSecondary,
+            fontWeight: FontWeight.bold,
+            fontSize: 11,
+            letterSpacing: 1.2,
+          ),
+        ),
+      ),
+    );
+
+    // Filter items based on permissions
+    final accessibleItems = items
+        .where((item) => item.hasAccess(user, permissions))
+        .toList();
+
+    // Add menu items
+    for (final item in accessibleItems) {
+      widgets.add(MenuItemWidget(menuItem: item, currentPath: currentPath));
+    }
+
+    return widgets;
+  }
+
+  /// Build drawer header with user info
   Widget _buildDrawerHeader(BuildContext context, User? user) {
     final accountName = user?.firstName ?? 'Usuario';
     final accountLastName = user?.lastName ?? 'N.';
@@ -274,61 +232,7 @@ class SideMenu extends ConsumerWidget {
     );
   }
 
-  Widget _buildSectionHeader(String title) {
-    return Padding(
-      padding: const EdgeInsets.only(left: 12, bottom: 8, top: 4),
-      child: Text(
-        title.toUpperCase(),
-        style: TextStyle(
-          color: AppTheme.textSecondary,
-          fontWeight: FontWeight.bold,
-          fontSize: 11,
-          letterSpacing: 1.2,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildDrawerItem({
-    required BuildContext context,
-    required IconData icon,
-    required String title,
-    required String path,
-    required String currentPath,
-  }) {
-    final bool isSelected = currentPath == path;
-    return Container(
-      margin: const EdgeInsets.only(bottom: 4),
-      child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-        leading: Icon(
-          icon,
-          color: isSelected ? AppTheme.primary : AppTheme.textSecondary,
-          size: 22,
-        ),
-        title: Text(
-          title,
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-            color: isSelected ? AppTheme.primary : AppTheme.textPrimary,
-            fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-            fontSize: 14,
-          ),
-        ),
-        onTap: () {
-          context.go(path);
-          if (Scaffold.of(context).isDrawerOpen) {
-            Scaffold.of(context).closeDrawer();
-          }
-        },
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        tileColor: isSelected
-            ? AppTheme.primary.withAlpha(15)
-            : Colors.transparent,
-        hoverColor: AppTheme.primary.withAlpha(5),
-      ),
-    );
-  }
-
+  /// Build logout section at the bottom
   Widget _buildLogoutSection(BuildContext context, WidgetRef ref) {
     return Container(
       padding: const EdgeInsets.all(24.0),
@@ -341,19 +245,19 @@ class SideMenu extends ConsumerWidget {
             Scaffold.of(context).closeDrawer();
           }
 
-          // Verificar si hay sesión de caja abierta
+          // Check for open cash session
           final session = await ref
               .read(getCurrentCashSessionUseCaseProvider)
               .call();
 
           if (session != null && context.mounted) {
-            // Mostrar diálogo obligando a cerrar caja
+            // Show dialog requiring cash session closure
             showDialog(
               context: context,
               builder: (context) => AlertDialog(
                 title: const Text('Caja Abierta'),
                 content: const Text(
-                  'Tienes una sesión de caja abierta.\nDebe cerrarla antes de cerrar sesión.',
+                  'Tienes una sesión de caja abierta.\\nDebe cerrarla antes de cerrar sesión.',
                 ),
                 actions: [
                   TextButton(

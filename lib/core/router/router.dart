@@ -52,7 +52,15 @@ import 'package:posventa/presentation/pages/cashier/cashier_permissions_page.dar
 import 'package:posventa/presentation/pages/cash_session_detail_page.dart';
 import 'package:posventa/presentation/widgets/barcode_scanner_widget.dart';
 import 'package:posventa/presentation/pages/inventory_movement_form_page.dart';
+import 'package:posventa/presentation/pages/returns_management_page.dart';
+import 'package:posventa/presentation/pages/inventory_adjustments_page.dart';
+import 'package:posventa/presentation/pages/kardex_page.dart';
+import 'package:posventa/presentation/pages/users_permissions_page.dart';
+import 'package:posventa/presentation/pages/tax_store_config_page.dart';
+import 'package:posventa/presentation/pages/reports_analytics_page.dart';
+import 'package:posventa/presentation/pages/shift_close_page.dart';
 import 'package:posventa/domain/entities/product.dart';
+
 import 'package:posventa/domain/entities/cash_session.dart';
 import 'package:posventa/domain/entities/brand.dart';
 import 'package:posventa/domain/entities/category.dart';
@@ -354,6 +362,42 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: '/inventory/movements/new',
             pageBuilder: (context, state) =>
                 const NoTransitionPage(child: InventoryMovementFormPage()),
+          ),
+          // New Module Routes
+          GoRoute(
+            path: '/returns',
+            pageBuilder: (context, state) =>
+                const NoTransitionPage(child: ReturnsManagementPage()),
+          ),
+          GoRoute(
+            path: '/inventory-adjustments',
+            pageBuilder: (context, state) =>
+                const NoTransitionPage(child: InventoryAdjustmentsPage()),
+          ),
+          GoRoute(
+            path: '/kardex',
+            pageBuilder: (context, state) =>
+                const NoTransitionPage(child: KardexPage()),
+          ),
+          GoRoute(
+            path: '/users-permissions',
+            pageBuilder: (context, state) =>
+                const NoTransitionPage(child: UsersPermissionsPage()),
+          ),
+          GoRoute(
+            path: '/tax-store-config',
+            pageBuilder: (context, state) =>
+                const NoTransitionPage(child: TaxStoreConfigPage()),
+          ),
+          GoRoute(
+            path: '/reports-analytics',
+            pageBuilder: (context, state) =>
+                const NoTransitionPage(child: ReportsAnalyticsPage()),
+          ),
+          GoRoute(
+            path: '/shift-close',
+            pageBuilder: (context, state) =>
+                const NoTransitionPage(child: ShiftClosePage()),
           ),
         ],
       ),
