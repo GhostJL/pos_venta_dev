@@ -31,7 +31,7 @@ class OnboardingState {
   }
 }
 
-@riverpod
+@Riverpod(keepAlive: true)
 class OnboardingNotifier extends _$OnboardingNotifier {
   @override
   OnboardingState build() {

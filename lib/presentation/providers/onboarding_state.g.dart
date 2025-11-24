@@ -20,7 +20,7 @@ final class OnboardingNotifierProvider
         argument: null,
         retry: null,
         name: r'onboardingProvider',
-        isAutoDispose: true,
+        isAutoDispose: false,
         dependencies: null,
         $allTransitiveDependencies: null,
       );
@@ -42,7 +42,7 @@ final class OnboardingNotifierProvider
 }
 
 String _$onboardingNotifierHash() =>
-    r'1d6b6bba9f8b430265457eb6a13a7c33bab3e593';
+    r'0da373e809eba06ae907ec325dd5a5f1bb5ff000';
 
 abstract class _$OnboardingNotifier extends $Notifier<OnboardingState> {
   OnboardingState build();

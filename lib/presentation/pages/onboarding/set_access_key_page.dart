@@ -73,6 +73,7 @@ class _SetAccessKeyPageState extends ConsumerState<SetAccessKeyPage> {
           SnackBar(content: Text('Ocurrió un error inesperado: $e')),
         );
       }
+      debugPrint('Error al configurar la base de datos: $e');
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);

@@ -621,7 +621,7 @@ final class CashierControllerProvider
   CashierController create() => CashierController();
 }
 
-String _$cashierControllerHash() => r'dda7f59434de8c4dd5e9d94343b23b574f4d839c';
+String _$cashierControllerHash() => r'a2834d7d529466a81533535ba052f45afb1ff889';
 
 abstract class _$CashierController extends $AsyncNotifier<void> {
   FutureOr<void> build();
