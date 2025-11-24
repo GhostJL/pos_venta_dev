@@ -1,196 +1,354 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:intl/intl.dart';
 import 'package:posventa/core/theme/theme.dart';
+import 'package:posventa/domain/entities/user.dart';
+import 'package:posventa/presentation/providers/auth_provider.dart';
+import 'package:posventa/presentation/providers/providers.dart';
 import 'package:posventa/presentation/widgets/dashboard_card.dart';
+import 'package:posventa/presentation/widgets/dashboard/clock_widget.dart';
+import 'package:posventa/presentation/widgets/dashboard/dashboard_search_delegate.dart';
 
-class DashboardScreen extends StatelessWidget {
+class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final isSmallScreen = MediaQuery.of(context).size.width < 800;
+    final user = ref.watch(authProvider).user;
 
-    return ListView(
-      padding: const EdgeInsets.all(24.0),
-      children: [
-        _buildHeader(context),
-        const SizedBox(height: 24),
-        _buildKpiSection(context, isSmallScreen),
-        const SizedBox(height: 32),
-        _buildQuickAccessSection(context, isSmallScreen),
-        const SizedBox(height: 32),
-        _buildRecentActivitySection(context),
-      ],
+    return Scaffold(
+      backgroundColor: AppTheme.background,
+      appBar: AppBar(
+        backgroundColor: AppTheme.background,
+        elevation: 0,
+        toolbarHeight: 80,
+        title: Container(
+          constraints: const BoxConstraints(maxWidth: 600),
+          child: InkWell(
+            onTap: () async {
+              final result = await showSearch(
+                context: context,
+                delegate: DashboardSearchDelegate(),
+              );
+              if (result != null && context.mounted) {
+                context.go(result);
+              }
+            },
+            borderRadius: BorderRadius.circular(12),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              decoration: BoxDecoration(
+                color: AppTheme.cardBackground,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: AppTheme.borders.withAlpha(50)),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withAlpha(5),
+                    blurRadius: 10,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.search_rounded, color: AppTheme.primary),
+                  const SizedBox(width: 12),
+                  Text(
+                    'Buscar (Ctrl + K)...',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: AppTheme.textSecondary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+        actions: [
+          IconButton(
+            onPressed: () {
+              _confirmLogout(context, ref);
+            },
+            icon: const Icon(Icons.logout_rounded),
+            tooltip: 'Cerrar Sesión',
+            style: IconButton.styleFrom(
+              backgroundColor: AppTheme.cardBackground,
+              foregroundColor: AppTheme.error,
+              padding: const EdgeInsets.all(12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+                side: BorderSide(color: AppTheme.borders.withAlpha(50)),
+              ),
+            ),
+          ),
+          const SizedBox(width: 24),
+        ],
+      ),
+      body: ListView(
+        padding: const EdgeInsets.all(16.0),
+        children: [
+          // 1. Welcome Message
+          _buildWelcomeMessage(context, user?.firstName),
+          const SizedBox(height: 32),
+          //2.Cash Session Status
+          _buildClockWidget(context, ref),
+          const SizedBox(height: 24),
+
+          // 3. Operations Section
+          _buildOperationsSection(context, isSmallScreen),
+          const SizedBox(height: 32),
+
+          // 4. Management Section
+          _buildManagementSection(context, isSmallScreen),
+        ],
+      ),
     );
   }
 
-  Widget _buildHeader(BuildContext context) {
+  Widget _buildClockWidget(BuildContext context, WidgetRef ref) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      decoration: BoxDecoration(
+        color: AppTheme.cardBackground,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppTheme.borders.withAlpha(50)),
+      ),
+      child: Row(
+        crossAxisAlignment: .center,
+        children: [
+          _buildCashSessionStatus(context, ref),
+          Spacer(),
+          const ClockWidget(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCashSessionStatus(BuildContext context, WidgetRef ref) {
+    final sessionAsync = ref.watch(currentCashSessionProvider);
+    final user = ref.watch(authProvider).user;
+
+    return sessionAsync.when(
+      data: (session) {
+        if (session == null) {
+          return Align(
+            alignment: Alignment.centerLeft,
+            child: _buildStatusChip(
+              context,
+              cashStatus: 'Caja Cerrada',
+              cashRole: 'Rol no disponible',
+              color: Colors.red.shade50,
+              textColor: Colors.red.shade700,
+            ),
+          );
+        }
+
+        final accountEmail = user != null
+            ? (user.role == UserRole.administrador ? 'Administrador' : 'Cajero')
+            : 'Rol no disponible';
+
+        return Align(
+          alignment: Alignment.centerLeft,
+          child: _buildStatusChip(
+            context,
+            cashStatus: 'Caja Abierta',
+            cashRole: 'Rol: $accountEmail',
+            color: Colors.green.shade50,
+            textColor: Colors.green.shade700,
+          ),
+        );
+      },
+      loading: () => const SizedBox(
+        height: 40,
+        child: Align(
+          alignment: Alignment.centerLeft,
+          child: SizedBox(
+            width: 24,
+            height: 24,
+            child: CircularProgressIndicator(strokeWidth: 2),
+          ),
+        ),
+      ),
+      error: (_, __) => const SizedBox.shrink(),
+    );
+  }
+
+  Widget _buildWelcomeMessage(BuildContext context, String? firstName) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          '¡Buenos días, Administrador!',
+          '¡Hola, ${firstName ?? 'Usuario'}!',
           style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-            fontWeight: FontWeight.bold,
+            fontWeight: FontWeight.w800,
             color: AppTheme.textPrimary,
+            letterSpacing: -0.5,
           ),
         ),
         const SizedBox(height: 8),
         Text(
-          'Aquí tienes el resumen de tu tienda para hoy.',
-          style: Theme.of(
-            context,
-          ).textTheme.bodyLarge?.copyWith(color: AppTheme.textSecondary),
+          'Bienvenido a tu panel de control.',
+          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+            color: AppTheme.textSecondary,
+            fontSize: 16,
+          ),
         ),
       ],
     );
   }
 
-  Widget _buildSectionTitle(BuildContext context, String title) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 16.0),
-      child: Text(
-        title,
-        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-          fontWeight: FontWeight.bold,
-          color: AppTheme.textPrimary,
+  Widget _buildStatusChip(
+    BuildContext context, {
+    required String cashStatus,
+    required String cashRole,
+    required Color color,
+    required Color textColor,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        const SizedBox(width: 8),
+        Text(
+          cashStatus,
+          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+            fontWeight: FontWeight.bold,
+            color: textColor,
+            fontFeatures: [const FontFeature.tabularFigures()],
+          ),
         ),
-      ),
+        Text(
+          cashRole,
+          style: TextStyle(
+            color: textColor,
+            fontWeight: FontWeight.w700,
+            fontSize: 13,
+          ),
+        ),
+      ],
     );
   }
 
-  Widget _buildKpiSection(BuildContext context, bool isSmallScreen) {
-    final kpiCards = [
-      DashboardCard(
-        title: "Ventas de Hoy",
-        value: NumberFormat.currency(
-          symbol: '\$',
-          decimalDigits: 2,
-        ).format(1250.75),
-        icon: Icons.monetization_on_rounded,
-        iconColor: AppTheme.success,
-        isKpi: true,
-      ),
-      DashboardCard(
-        title: 'Transacciones',
-        value: '82',
-        icon: Icons.receipt_long_rounded,
-        iconColor: Colors.orange.shade700,
-        isKpi: true,
-      ),
-      DashboardCard(
-        title: 'Ticket Promedio',
-        value: NumberFormat.currency(
-          symbol: '\$',
-          decimalDigits: 2,
-        ).format(15.25),
-        icon: Icons.show_chart_rounded,
-        iconColor: Colors.blue.shade700,
-        isKpi: true,
-      ),
-    ];
+  Future<void> _confirmLogout(BuildContext context, WidgetRef ref) async {
+    // 1. Check for open cash session first
+    final session = await ref.read(getCurrentCashSessionUseCaseProvider).call();
 
-    if (isSmallScreen) {
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+    if (session != null && context.mounted) {
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Caja Abierta'),
+          content: const Text(
+            'Tienes una sesión de caja abierta.\nDebes cerrarla antes de cerrar sesión.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancelar'),
+            ),
+            FilledButton(
+              onPressed: () {
+                Navigator.pop(context);
+                context.go('/cash-session-close?intent=logout');
+              },
+              style: FilledButton.styleFrom(backgroundColor: Colors.orange),
+              child: const Text('Ir a Cerrar Caja'),
+            ),
+          ],
+        ),
+      );
+      return;
+    }
+
+    if (!context.mounted) return;
+
+    final shouldLogout = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Cerrar Sesión'),
+        content: const Text('¿Estás seguro de que quieres salir del sistema?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancelar'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: FilledButton.styleFrom(backgroundColor: AppTheme.error),
+            child: const Text('Salir'),
+          ),
+        ],
+      ),
+    );
+
+    if (shouldLogout == true && context.mounted) {
+      ref.read(authProvider.notifier).logout();
+      context.go('/login');
+    }
+  }
+
+  Widget _buildSectionTitle(BuildContext context, String title, IconData icon) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 20.0),
+      child: Row(
         children: [
-          _buildSectionTitle(context, 'Resumen Diario'),
-          ...kpiCards.map(
-            (card) => Padding(
-              padding: const EdgeInsets.only(bottom: 12.0),
-              child: SizedBox(width: double.infinity, child: card),
+          Icon(icon, color: AppTheme.primary, size: 24),
+          const SizedBox(width: 12),
+          Text(
+            title,
+            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+              fontWeight: FontWeight.bold,
+              color: AppTheme.textPrimary,
+              letterSpacing: -0.5,
             ),
           ),
         ],
-      );
-    }
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _buildSectionTitle(context, 'Resumen Diario'),
-        Row(
-          children:
-              kpiCards
-                  .map(
-                    (card) => Expanded(
-                      child: Padding(
-                        padding: const EdgeInsets.only(right: 16.0),
-                        child: card,
-                      ),
-                    ),
-                  )
-                  .toList()
-                ..last = Expanded(
-                  child: kpiCards.last,
-                ), // Remove padding from last item
-        ),
-      ],
+      ),
     );
   }
 
-  Widget _buildQuickAccessSection(BuildContext context, bool isSmallScreen) {
+  Widget _buildOperationsSection(BuildContext context, bool isSmallScreen) {
     final actionCards = [
       DashboardCard(
         title: 'Punto de Venta',
         value: 'Iniciar Venta',
-        icon: Icons.point_of_sale,
+        icon: Icons.point_of_sale_rounded,
         iconColor: AppTheme.primary,
-        onTap: () {
-          context.go('/sales');
-        },
+        onTap: () => context.go('/sales'),
       ),
       DashboardCard(
         title: 'Historial de Ventas',
-        value: 'Ver Ventas',
-        icon: Icons.receipt_long,
-        iconColor: Colors.green.shade600,
-        onTap: () {
-          context.go('/sales-history');
-        },
+        value: 'Ver Registros',
+        icon: Icons.receipt_long_rounded,
+        iconColor: Colors.blue.shade600,
+        onTap: () => context.go('/sales-history'),
       ),
       DashboardCard(
-        title: 'Gestionar Inventario',
-        value: 'Productos y Stock',
-        icon: Icons.inventory_2_rounded,
+        title: 'Cortes de Caja',
+        value: 'Historial Sesiones',
+        icon: Icons.history_edu_rounded,
         iconColor: Colors.orange.shade600,
-        onTap: () {
-          context.go('/inventory');
-        },
-      ),
-      DashboardCard(
-        title: 'Clientes',
-        value: 'Gestionar Clientes',
-        icon: Icons.people_alt_rounded,
-        iconColor: Colors.purple.shade600,
-        onTap: () {
-          context.go('/customers');
-        },
-      ),
-      DashboardCard(
-        title: 'Compras',
-        value: 'Gestionar Compras',
-        icon: Icons.shopping_cart_rounded,
-        iconColor: Colors.teal.shade600,
-        onTap: () {
-          context.go('/purchases');
-        },
+        onTap: () => context.go('/cash-sessions-history'),
       ),
     ];
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildSectionTitle(context, 'Accesos Rápido'),
+        _buildSectionTitle(
+          context,
+          'Operaciones Diarias',
+          Icons.storefront_rounded,
+        ),
         GridView.builder(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: isSmallScreen ? 1 : 2,
-            childAspectRatio: isSmallScreen ? 3.5 : 3,
-            crossAxisSpacing: 16,
-            mainAxisSpacing: 16,
+            crossAxisCount: isSmallScreen ? 1 : 3,
+            childAspectRatio: isSmallScreen ? 3.5 : 2.5,
+            crossAxisSpacing: 24,
+            mainAxisSpacing: 24,
           ),
           itemCount: actionCards.length,
           itemBuilder: (context, index) => actionCards[index],
@@ -199,128 +357,50 @@ class DashboardScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildRecentActivitySection(BuildContext context) {
+  Widget _buildManagementSection(BuildContext context, bool isSmallScreen) {
+    final actionCards = [
+      DashboardCard(
+        title: 'Inventario',
+        value: 'Productos y Stock',
+        icon: Icons.inventory_2_rounded,
+        iconColor: Colors.indigo.shade600,
+        onTap: () => context.go('/inventory'),
+      ),
+      DashboardCard(
+        title: 'Clientes',
+        value: 'Base de Datos',
+        icon: Icons.people_alt_rounded,
+        iconColor: Colors.purple.shade600,
+        onTap: () => context.go('/customers'),
+      ),
+      DashboardCard(
+        title: 'Compras',
+        value: 'Proveedores',
+        icon: Icons.shopping_cart_rounded,
+        iconColor: Colors.teal.shade600,
+        onTap: () => context.go('/purchases'),
+      ),
+    ];
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildSectionTitle(context, 'Actividad Reciente'),
-        Container(
-          decoration: BoxDecoration(
-            color: AppTheme.cardBackground,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: AppTheme.textPrimary.withAlpha(10),
-                blurRadius: 20,
-                offset: const Offset(0, 4),
-              ),
-            ],
-            border: Border.all(color: AppTheme.borders.withAlpha(50)),
+        _buildSectionTitle(
+          context,
+          'Gestión y Administración',
+          Icons.admin_panel_settings_rounded,
+        ),
+        GridView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: isSmallScreen ? 1 : 3,
+            childAspectRatio: isSmallScreen ? 3.5 : 2.5,
+            crossAxisSpacing: 24,
+            mainAxisSpacing: 24,
           ),
-          child: ListView.separated(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            padding: const EdgeInsets.symmetric(vertical: 8),
-            itemCount: 5,
-            separatorBuilder: (context, index) => Divider(
-              height: 1,
-              thickness: 1,
-              color: AppTheme.borders.withAlpha(50),
-              indent: 80,
-              endIndent: 24,
-            ),
-            itemBuilder: (context, index) {
-              final amount = 10.0 + (index * 5.5);
-              final time = TimeOfDay(
-                hour: 14 - index,
-                minute: 30 - (index * 5),
-              );
-
-              return Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 24.0,
-                  vertical: 16.0,
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 48,
-                      height: 48,
-                      decoration: BoxDecoration(
-                        color: AppTheme.success.withAlpha(20),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: const Icon(
-                        Icons.receipt_long_rounded,
-                        color: AppTheme.success,
-                        size: 24,
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                'Venta #${120 - index}',
-                                style: Theme.of(context).textTheme.bodyLarge
-                                    ?.copyWith(
-                                      fontWeight: FontWeight.w600,
-                                      color: AppTheme.textPrimary,
-                                    ),
-                              ),
-                              Text(
-                                NumberFormat.currency(
-                                  symbol: '\$',
-                                  decimalDigits: 2,
-                                ).format(amount),
-                                style: Theme.of(context).textTheme.bodyLarge
-                                    ?.copyWith(
-                                      fontWeight: FontWeight.bold,
-                                      color: AppTheme.success,
-                                    ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 4),
-                          Row(
-                            children: [
-                              Icon(
-                                Icons.person_outline_rounded,
-                                size: 14,
-                                color: AppTheme.textSecondary,
-                              ),
-                              const SizedBox(width: 4),
-                              Text(
-                                'Ana',
-                                style: Theme.of(context).textTheme.bodyMedium
-                                    ?.copyWith(color: AppTheme.textSecondary),
-                              ),
-                              const SizedBox(width: 16),
-                              Icon(
-                                Icons.access_time_rounded,
-                                size: 14,
-                                color: AppTheme.textSecondary,
-                              ),
-                              const SizedBox(width: 4),
-                              Text(
-                                time.format(context),
-                                style: Theme.of(context).textTheme.bodyMedium
-                                    ?.copyWith(color: AppTheme.textSecondary),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            },
-          ),
+          itemCount: actionCards.length,
+          itemBuilder: (context, index) => actionCards[index],
         ),
       ],
     );

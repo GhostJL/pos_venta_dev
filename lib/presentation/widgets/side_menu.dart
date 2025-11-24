@@ -258,23 +258,13 @@ class SideMenu extends ConsumerWidget {
                   overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 4),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 2,
+                Text(
+                  accountEmail,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: AppTheme.primary,
+                    fontWeight: FontWeight.w600,
                   ),
-                  decoration: BoxDecoration(
-                    color: AppTheme.primary.withAlpha(10),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(
-                    accountEmail,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: AppTheme.primary,
-                      fontWeight: FontWeight.w600,
-                    ),
-                    overflow: TextOverflow.ellipsis,
-                  ),
+                  overflow: TextOverflow.ellipsis,
                 ),
               ],
             ),

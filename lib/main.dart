@@ -4,8 +4,11 @@ import 'package:posventa/core/router/router.dart';
 import 'package:posventa/core/theme/theme.dart';
 import 'package:posventa/data/datasources/database_helper.dart';
 
+import 'package:intl/date_symbol_data_local.dart';
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await initializeDateFormatting();
   await DatabaseHelper().database;
   runApp(const ProviderScope(child: MyApp()));
 }
