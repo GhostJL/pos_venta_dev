@@ -37,7 +37,7 @@ class _ClockWidgetState extends State<ClockWidget> {
     final dateFormat = DateFormat('EEEE, d MMMM yyyy', 'es');
 
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.end,
+      crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
         Text(

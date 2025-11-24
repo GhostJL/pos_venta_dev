@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:posventa/core/theme/theme.dart';
-import 'package:posventa/domain/entities/user.dart';
 import 'package:posventa/presentation/providers/auth_provider.dart';
 import 'package:posventa/presentation/providers/providers.dart';
 import 'package:posventa/presentation/widgets/dashboard_card.dart';
@@ -14,7 +13,6 @@ class DashboardScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final isSmallScreen = MediaQuery.of(context).size.width < 800;
     final user = ref.watch(authProvider).user;
 
     return Scaffold(
@@ -85,92 +83,49 @@ class DashboardScreen extends ConsumerWidget {
           const SizedBox(width: 24),
         ],
       ),
-      body: ListView(
-        padding: const EdgeInsets.all(16.0),
-        children: [
-          // 1. Welcome Message
-          _buildWelcomeMessage(context, user?.firstName),
-          const SizedBox(height: 32),
-          //2.Cash Session Status
-          _buildClockWidget(context, ref),
-          const SizedBox(height: 24),
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          // Determine column count based on width
+          int crossAxisCount = 1;
+          double childAspectRatio = 3.0;
 
-          // 3. Operations Section
-          _buildOperationsSection(context, isSmallScreen),
-          const SizedBox(height: 32),
+          if (constraints.maxWidth >= 1100) {
+            crossAxisCount = 3;
+            childAspectRatio = 2.5;
+          } else if (constraints.maxWidth >= 700) {
+            crossAxisCount = 2;
+            childAspectRatio = 2.2; // Slightly taller for tablets
+          }
 
-          // 4. Management Section
-          _buildManagementSection(context, isSmallScreen),
-        ],
-      ),
-    );
-  }
+          return ListView(
+            padding: const EdgeInsets.all(32.0),
+            children: [
+              // 1. Welcome Message
+              _buildWelcomeMessage(context, user?.firstName),
+              const SizedBox(height: 24),
 
-  Widget _buildClockWidget(BuildContext context, WidgetRef ref) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      decoration: BoxDecoration(
-        color: AppTheme.cardBackground,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppTheme.borders.withAlpha(50)),
-      ),
-      child: Row(
-        crossAxisAlignment: .center,
-        children: [
-          _buildCashSessionStatus(context, ref),
-          Spacer(),
-          const ClockWidget(),
-        ],
-      ),
-    );
-  }
+              // 2. Cash Session Status & Clock (Redesigned)
+              _buildStatusSection(context, ref),
+              const SizedBox(height: 32),
 
-  Widget _buildCashSessionStatus(BuildContext context, WidgetRef ref) {
-    final sessionAsync = ref.watch(currentCashSessionProvider);
-    final user = ref.watch(authProvider).user;
+              // 3. Operations Section
+              _buildOperationsSection(
+                context,
+                crossAxisCount,
+                childAspectRatio,
+              ),
+              const SizedBox(height: 32),
 
-    return sessionAsync.when(
-      data: (session) {
-        if (session == null) {
-          return Align(
-            alignment: Alignment.centerLeft,
-            child: _buildStatusChip(
-              context,
-              cashStatus: 'Caja Cerrada',
-              cashRole: 'Rol no disponible',
-              color: Colors.red.shade50,
-              textColor: Colors.red.shade700,
-            ),
+              // 4. Management Section
+              _buildManagementSection(
+                context,
+                crossAxisCount,
+                childAspectRatio,
+              ),
+            ],
           );
-        }
-
-        final accountEmail = user != null
-            ? (user.role == UserRole.administrador ? 'Administrador' : 'Cajero')
-            : 'Rol no disponible';
-
-        return Align(
-          alignment: Alignment.centerLeft,
-          child: _buildStatusChip(
-            context,
-            cashStatus: 'Caja Abierta',
-            cashRole: 'Rol: $accountEmail',
-            color: Colors.green.shade50,
-            textColor: Colors.green.shade700,
-          ),
-        );
-      },
-      loading: () => const SizedBox(
-        height: 40,
-        child: Align(
-          alignment: Alignment.centerLeft,
-          child: SizedBox(
-            width: 24,
-            height: 24,
-            child: CircularProgressIndicator(strokeWidth: 2),
-          ),
-        ),
+        },
       ),
-      error: (_, __) => const SizedBox.shrink(),
     );
   }
 
@@ -198,40 +153,127 @@ class DashboardScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildStatusChip(
-    BuildContext context, {
-    required String cashStatus,
-    required String cashRole,
-    required Color color,
-    required Color textColor,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        const SizedBox(width: 8),
-        Text(
-          cashStatus,
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-            fontWeight: FontWeight.bold,
-            color: textColor,
-            fontFeatures: [const FontFeature.tabularFigures()],
+  Widget _buildStatusSection(BuildContext context, WidgetRef ref) {
+    final sessionAsync = ref.watch(currentCashSessionProvider);
+    final user = ref.watch(authProvider).user;
+    final isSmall = MediaQuery.of(context).size.width < 600;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+      decoration: BoxDecoration(
+        color: AppTheme.cardBackground,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppTheme.borders.withAlpha(50)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withAlpha(5),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
           ),
-        ),
-        Text(
-          cashRole,
-          style: TextStyle(
-            color: textColor,
-            fontWeight: FontWeight.w700,
-            fontSize: 13,
+        ],
+      ),
+      child: Flex(
+        direction: isSmall ? Axis.vertical : Axis.horizontal,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        crossAxisAlignment: isSmall
+            ? CrossAxisAlignment.start
+            : CrossAxisAlignment.center,
+        children: [
+          // Clock Section
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: AppTheme.primary.withAlpha(10),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: const Icon(
+                  Icons.calendar_today_rounded,
+                  color: AppTheme.primary,
+                  size: 24,
+                ),
+              ),
+              const SizedBox(width: 16),
+              const ClockWidget(),
+            ],
           ),
-        ),
-      ],
+
+          if (isSmall) const SizedBox(height: 20),
+
+          // Session Status Section
+          sessionAsync.when(
+            data: (session) {
+              final isOpen = session != null;
+              final statusColor = isOpen ? Colors.green : Colors.red;
+
+              final roleName = user?.role.name ?? '';
+              final displayRole = roleName.isNotEmpty
+                  ? '${roleName[0].toUpperCase()}${roleName.substring(1)}'
+                  : 'Usuario';
+
+              final statusText = isOpen
+                  ? 'Caja Abierta: $displayRole'
+                  : 'Caja Cerrada';
+
+              return Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 10,
+                ),
+                decoration: BoxDecoration(
+                  color: statusColor.withAlpha(10),
+                  borderRadius: BorderRadius.circular(30),
+                  border: Border.all(color: statusColor.withAlpha(30)),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: 10,
+                      height: 10,
+                      decoration: BoxDecoration(
+                        color: statusColor,
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: statusColor.withAlpha(100),
+                            blurRadius: 6,
+                            spreadRadius: 1,
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Flexible(
+                      child: Text(
+                        statusText,
+                        style: TextStyle(
+                          color: statusColor.shade700,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 14,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
+            loading: () => const SizedBox(
+              width: 24,
+              height: 24,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            ),
+            error: (_, __) => const SizedBox.shrink(),
+          ),
+        ],
+      ),
     );
   }
 
   Future<void> _confirmLogout(BuildContext context, WidgetRef ref) async {
-    // 1. Check for open cash session first
     final session = await ref.read(getCurrentCashSessionUseCaseProvider).call();
 
     if (session != null && context.mounted) {
@@ -295,12 +337,15 @@ class DashboardScreen extends ConsumerWidget {
         children: [
           Icon(icon, color: AppTheme.primary, size: 24),
           const SizedBox(width: 12),
-          Text(
-            title,
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-              fontWeight: FontWeight.bold,
-              color: AppTheme.textPrimary,
-              letterSpacing: -0.5,
+          Expanded(
+            child: Text(
+              title,
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: AppTheme.textPrimary,
+                letterSpacing: -0.5,
+              ),
+              overflow: TextOverflow.ellipsis,
             ),
           ),
         ],
@@ -308,7 +353,11 @@ class DashboardScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildOperationsSection(BuildContext context, bool isSmallScreen) {
+  Widget _buildOperationsSection(
+    BuildContext context,
+    int crossAxisCount,
+    double childAspectRatio,
+  ) {
     final actionCards = [
       DashboardCard(
         title: 'Punto de Venta',
@@ -345,8 +394,8 @@ class DashboardScreen extends ConsumerWidget {
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: isSmallScreen ? 1 : 3,
-            childAspectRatio: isSmallScreen ? 3.5 : 2.5,
+            crossAxisCount: crossAxisCount,
+            childAspectRatio: childAspectRatio,
             crossAxisSpacing: 24,
             mainAxisSpacing: 24,
           ),
@@ -357,7 +406,11 @@ class DashboardScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildManagementSection(BuildContext context, bool isSmallScreen) {
+  Widget _buildManagementSection(
+    BuildContext context,
+    int crossAxisCount,
+    double childAspectRatio,
+  ) {
     final actionCards = [
       DashboardCard(
         title: 'Inventario',
@@ -394,8 +447,8 @@ class DashboardScreen extends ConsumerWidget {
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: isSmallScreen ? 1 : 3,
-            childAspectRatio: isSmallScreen ? 3.5 : 2.5,
+            crossAxisCount: crossAxisCount,
+            childAspectRatio: childAspectRatio,
             crossAxisSpacing: 24,
             mainAxisSpacing: 24,
           ),
