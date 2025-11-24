@@ -145,6 +145,64 @@ class InventoryRepositoryImpl implements InventoryRepository {
   }
 
   @override
+  Future<void> adjustInventoryBatch(List<InventoryMovement> movements) async {
+    final db = await _databaseHelper.database;
+    await db.transaction((txn) async {
+      for (final movement in movements) {
+        // 1. Get current inventory
+        final inventoryResult = await txn.query(
+          DatabaseHelper.tableInventory,
+          where: 'product_id = ? AND warehouse_id = ?',
+          whereArgs: [movement.productId, movement.warehouseId],
+        );
+
+        if (inventoryResult.isEmpty) {
+          // If no inventory exists, create it (assuming starting from 0)
+          await txn.insert(DatabaseHelper.tableInventory, {
+            'product_id': movement.productId,
+            'warehouse_id': movement.warehouseId,
+            'quantity_on_hand': movement.quantity,
+            'quantity_reserved': 0,
+            'updated_at': DateTime.now().toIso8601String(),
+          });
+        } else {
+          // Update existing inventory
+          await txn.rawUpdate(
+            '''
+            UPDATE ${DatabaseHelper.tableInventory}
+            SET quantity_on_hand = quantity_on_hand + ?,
+                updated_at = ?
+            WHERE product_id = ? AND warehouse_id = ?
+          ''',
+            [
+              movement.quantity,
+              DateTime.now().toIso8601String(),
+              movement.productId,
+              movement.warehouseId,
+            ],
+          );
+        }
+
+        // 2. Create Movement Record
+        await txn.insert(DatabaseHelper.tableInventoryMovements, {
+          'product_id': movement.productId,
+          'warehouse_id': movement.warehouseId,
+          'movement_type': movement.movementType.value,
+          'quantity': movement.quantity,
+          'quantity_before': movement.quantityBefore,
+          'quantity_after': movement.quantityAfter,
+          'reference_type': movement.referenceType,
+          'reference_id': movement.referenceId,
+          'lot_number': movement.lotNumber,
+          'reason': movement.reason,
+          'performed_by': movement.performedBy,
+          'movement_date': DateTime.now().toIso8601String(),
+        });
+      }
+    });
+  }
+
+  @override
   Future<void> transferInventory({
     required int fromWarehouseId,
     required int toWarehouseId,

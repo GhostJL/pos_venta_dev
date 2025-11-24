@@ -3247,3 +3247,52 @@ final class TransferInventoryProvider
 }
 
 String _$transferInventoryHash() => r'd97a74e84d6173fa3beb448e7a3f22ba0fd74077';
+
+@ProviderFor(adjustInventoryBatchUseCase)
+const adjustInventoryBatchUseCaseProvider =
+    AdjustInventoryBatchUseCaseProvider._();
+
+final class AdjustInventoryBatchUseCaseProvider
+    extends
+        $FunctionalProvider<
+          AdjustInventoryBatchUseCase,
+          AdjustInventoryBatchUseCase,
+          AdjustInventoryBatchUseCase
+        >
+    with $Provider<AdjustInventoryBatchUseCase> {
+  const AdjustInventoryBatchUseCaseProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'adjustInventoryBatchUseCaseProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$adjustInventoryBatchUseCaseHash();
+
+  @$internal
+  @override
+  $ProviderElement<AdjustInventoryBatchUseCase> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  AdjustInventoryBatchUseCase create(Ref ref) {
+    return adjustInventoryBatchUseCase(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(AdjustInventoryBatchUseCase value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<AdjustInventoryBatchUseCase>(value),
+    );
+  }
+}
+
+String _$adjustInventoryBatchUseCaseHash() =>
+    r'ec46648cb45628f24b9d893d93113751d473093f';

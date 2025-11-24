@@ -10,6 +10,7 @@ abstract class InventoryRepository {
   Future<void> updateInventory(Inventory inventory);
   Future<void> deleteInventory(int id);
   Future<void> adjustInventory(InventoryMovement movement);
+  Future<void> adjustInventoryBatch(List<InventoryMovement> movements);
   Future<void> transferInventory({
     required int fromWarehouseId,
     required int toWarehouseId,

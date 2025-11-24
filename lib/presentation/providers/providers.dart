@@ -77,6 +77,7 @@ import 'package:posventa/domain/use_cases/purchase_item/get_purchase_items_by_da
 import 'package:posventa/domain/use_cases/purchase_item/get_recent_purchase_items_usecase.dart';
 import 'package:posventa/presentation/providers/auth_provider.dart';
 import 'package:posventa/domain/use_cases/inventory/adjust_inventory_use_case.dart';
+import 'package:posventa/domain/use_cases/inventory/adjust_inventory_batch_use_case.dart';
 import 'package:posventa/domain/use_cases/inventory/transfer_inventory_use_case.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -389,4 +390,9 @@ AdjustInventoryUseCase adjustInventory(ref) {
 @riverpod
 TransferInventoryUseCase transferInventory(ref) {
   return TransferInventoryUseCase(ref.watch(inventoryRepositoryProvider));
+}
+
+@riverpod
+AdjustInventoryBatchUseCase adjustInventoryBatchUseCase(ref) {
+  return AdjustInventoryBatchUseCase(ref.watch(inventoryRepositoryProvider));
 }
