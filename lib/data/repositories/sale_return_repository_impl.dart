@@ -218,6 +218,11 @@ class SaleReturnRepositoryImpl implements SaleReturnRepository {
         );
       }
 
+      // 4. Create cash movement if refund method is cash
+      if (saleReturn.refundMethod == RefundMethod.cash) {
+        await _createCashMovement(txn, saleReturn, returnId);
+      }
+
       return returnId;
     });
   }
@@ -281,6 +286,52 @@ class SaleReturnRepositoryImpl implements SaleReturnRepository {
         whereArgs: [item.productId, warehouseId],
       );
     }
+  }
+
+  Future<void> _createCashMovement(
+    Transaction txn,
+    SaleReturn saleReturn,
+    int returnId,
+  ) async {
+    // Get active cash session for the warehouse
+    final sessionResults = await txn.query(
+      DatabaseHelper.tableCashSessions,
+      where: 'warehouse_id = ? AND status = ?',
+      whereArgs: [saleReturn.warehouseId, 'open'],
+    );
+
+    if (sessionResults.isEmpty) {
+      throw Exception(
+        'No hay sesión de caja abierta en esta sucursal. '
+        'Abre una sesión de caja antes de procesar devoluciones.',
+      );
+    }
+
+    final session = sessionResults.first;
+    final sessionId = session['id'] as int;
+    final currentBalance =
+        (session['expected_balance_cents'] as int?) ??
+        (session['opening_balance_cents'] as int);
+
+    // Insert cash movement (egreso/outflow)
+    await txn.insert(DatabaseHelper.tableCashMovements, {
+      'cash_session_id': sessionId,
+      'movement_type': 'egreso',
+      'amount_cents': saleReturn.totalCents,
+      'reason': 'Devolución',
+      'description':
+          'Devolución ${saleReturn.returnNumber} - ${saleReturn.reason}',
+      'performed_by': saleReturn.processedBy,
+      'movement_date': DateTime.now().toIso8601String(),
+    });
+
+    // Update expected balance of cash session
+    await txn.update(
+      DatabaseHelper.tableCashSessions,
+      {'expected_balance_cents': currentBalance - saleReturn.totalCents},
+      where: 'id = ?',
+      whereArgs: [sessionId],
+    );
   }
 
   @override
