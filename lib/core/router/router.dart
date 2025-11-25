@@ -54,6 +54,9 @@ import 'package:posventa/presentation/widgets/barcode_scanner_widget.dart';
 import 'package:posventa/presentation/pages/inventory_movement_form_page.dart';
 import 'package:posventa/presentation/pages/returns_management_page.dart';
 import 'package:posventa/presentation/pages/inventory_adjustments_page.dart';
+import 'package:posventa/presentation/pages/inventory_adjustments_menu_page.dart';
+import 'package:posventa/presentation/pages/adjustments/physical_inventory_adjustment_page.dart';
+import 'package:posventa/presentation/pages/adjustments/coming_soon_page.dart';
 import 'package:posventa/presentation/pages/kardex_page.dart';
 import 'package:posventa/presentation/pages/users_permissions_page.dart';
 import 'package:posventa/presentation/pages/tax_store_config_page.dart';
@@ -373,6 +376,115 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: '/inventory-adjustments',
             pageBuilder: (context, state) =>
                 const NoTransitionPage(child: InventoryAdjustmentsPage()),
+          ),
+          GoRoute(
+            path: '/inventory-adjustments-menu',
+            pageBuilder: (context, state) =>
+                const NoTransitionPage(child: InventoryAdjustmentsMenuPage()),
+          ),
+          GoRoute(
+            path: '/adjustments/physical-inventory',
+            pageBuilder: (context, state) => const NoTransitionPage(
+              child: PhysicalInventoryAdjustmentPage(),
+            ),
+          ),
+          // Transaction Correction Routes
+          GoRoute(
+            path: '/adjustments/transaction-void',
+            pageBuilder: (context, state) => const NoTransitionPage(
+              child: ComingSoonPage(
+                title: 'Anulación de Transacción',
+                description:
+                    'Anular ventas incorrectas o canceladas por el cliente',
+                icon: Icons.cancel_rounded,
+                iconColor: Colors.red,
+              ),
+            ),
+          ),
+          GoRoute(
+            path: '/adjustments/price-adjustment',
+            pageBuilder: (context, state) => const NoTransitionPage(
+              child: ComingSoonPage(
+                title: 'Ajuste de Precios',
+                description:
+                    'Corregir precios o descuentos aplicados en ventas',
+                icon: Icons.price_change_rounded,
+                iconColor: Colors.blue,
+              ),
+            ),
+          ),
+          GoRoute(
+            path: '/adjustments/payment-correction',
+            pageBuilder: (context, state) => const NoTransitionPage(
+              child: ComingSoonPage(
+                title: 'Corrección de Forma de Pago',
+                description:
+                    'Modificar la forma de pago registrada en una venta',
+                icon: Icons.payment_rounded,
+                iconColor: Colors.purple,
+              ),
+            ),
+          ),
+          GoRoute(
+            path: '/adjustments/return-processing',
+            pageBuilder: (context, state) => const NoTransitionPage(
+              child: ComingSoonPage(
+                title: 'Procesamiento de Devolución',
+                description: 'Registrar devoluciones de productos vendidos',
+                icon: Icons.keyboard_return_rounded,
+                iconColor: Colors.orange,
+              ),
+            ),
+          ),
+          // Physical Inventory Routes
+          GoRoute(
+            path: '/adjustments/inventory-reversal',
+            pageBuilder: (context, state) => const NoTransitionPage(
+              child: ComingSoonPage(
+                title: 'Reversión por Devolución',
+                description:
+                    'Devolver productos al inventario tras una devolución',
+                icon: Icons.undo_rounded,
+                iconColor: Colors.teal,
+              ),
+            ),
+          ),
+          GoRoute(
+            path: '/adjustments/damage-loss',
+            pageBuilder: (context, state) => const NoTransitionPage(
+              child: ComingSoonPage(
+                title: 'Registro de Mermas',
+                description:
+                    'Registrar productos dañados, caducados o perdidos',
+                icon: Icons.delete_sweep_rounded,
+                iconColor: Colors.red,
+              ),
+            ),
+          ),
+          // Cash Control Routes
+          GoRoute(
+            path: '/adjustments/cash-movements',
+            pageBuilder: (context, state) => const NoTransitionPage(
+              child: ComingSoonPage(
+                title: 'Ingresos/Egresos de Caja',
+                description:
+                    'Registrar movimientos de efectivo no relacionados con ventas',
+                icon: Icons.swap_vert_rounded,
+                iconColor: Colors.orange,
+              ),
+            ),
+          ),
+          GoRoute(
+            path: '/adjustments/cash-adjustment',
+            pageBuilder: (context, state) => const NoTransitionPage(
+              child: ComingSoonPage(
+                title: 'Ajuste de Recibidos',
+                description:
+                    'Corregir montos recibidos en caja por errores de cambio',
+                icon: Icons.account_balance_rounded,
+                iconColor: Colors.deepOrange,
+              ),
+            ),
           ),
           GoRoute(
             path: '/kardex',

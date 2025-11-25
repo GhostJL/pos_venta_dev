@@ -152,7 +152,7 @@ class MenuConfig {
           const MenuItem(
             title: 'Ajustes de Inventario',
             icon: Icons.tune_rounded,
-            route: '/inventory-adjustments',
+            route: '/inventory-adjustments-menu',
             requiredPermissions: [PermissionConstants.inventoryView],
           ),
           const MenuItem(
