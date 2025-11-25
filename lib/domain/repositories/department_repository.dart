@@ -6,4 +6,5 @@ abstract class DepartmentRepository {
   Future<List<Department>> getAllDepartments();
   Future<void> updateDepartment(Department department);
   Future<void> deleteDepartment(int id);
+  Future<bool> isCodeUnique(String code, {int? excludeId});
 }

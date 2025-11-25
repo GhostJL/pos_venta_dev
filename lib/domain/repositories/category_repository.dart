@@ -6,4 +6,5 @@ abstract class CategoryRepository {
   Future<List<Category>> getAllCategories();
   Future<void> updateCategory(Category category);
   Future<void> deleteCategory(int id);
+  Future<bool> isCodeUnique(String code, {int? excludeId});
 }

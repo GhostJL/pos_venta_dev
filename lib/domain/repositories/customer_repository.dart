@@ -9,4 +9,5 @@ abstract class CustomerRepository {
   Future<int> deleteCustomer(int id);
   Future<List<Customer>> searchCustomers(String query);
   Future<String> generateNextCustomerCode();
+  Future<bool> isCodeUnique(String code, {int? excludeId});
 }

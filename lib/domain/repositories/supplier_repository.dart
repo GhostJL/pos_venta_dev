@@ -5,4 +5,5 @@ abstract class SupplierRepository {
   Future<Supplier> createSupplier(Supplier supplier);
   Future<Supplier> updateSupplier(Supplier supplier);
   Future<void> deleteSupplier(int supplierId);
+  Future<bool> isCodeUnique(String code, {int? excludeId});
 }

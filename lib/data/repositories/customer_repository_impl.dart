@@ -1,3 +1,4 @@
+import 'package:posventa/core/utils/database_validators.dart';
 import 'package:posventa/data/datasources/database_helper.dart';
 import 'package:posventa/data/models/customer_model.dart';
 import 'package:posventa/domain/entities/customer.dart';
@@ -128,5 +129,17 @@ class CustomerRepositoryImpl implements CustomerRepository {
     }
 
     return code;
+  }
+
+  @override
+  Future<bool> isCodeUnique(String code, {int? excludeId}) async {
+    final db = await _databaseHelper.database;
+    return DatabaseValidators.isFieldUnique(
+      db: db,
+      tableName: DatabaseHelper.tableCustomers,
+      fieldName: 'code',
+      value: code,
+      excludeId: excludeId,
+    );
   }
 }

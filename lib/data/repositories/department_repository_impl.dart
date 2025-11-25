@@ -1,3 +1,4 @@
+import 'package:posventa/core/utils/database_validators.dart';
 import 'package:posventa/data/datasources/database_helper.dart';
 import 'package:posventa/data/models/department_model.dart';
 import 'package:posventa/domain/entities/department.dart';
@@ -65,5 +66,17 @@ class DepartmentRepositoryImpl implements DepartmentRepository {
   Future<void> deleteDepartment(int id) async {
     final db = await databaseHelper.database;
     await db.delete('departments', where: 'id = ?', whereArgs: [id]);
+  }
+
+  @override
+  Future<bool> isCodeUnique(String code, {int? excludeId}) async {
+    final db = await databaseHelper.database;
+    return DatabaseValidators.isFieldUnique(
+      db: db,
+      tableName: DatabaseHelper.tableDepartments,
+      fieldName: 'code',
+      value: code,
+      excludeId: excludeId,
+    );
   }
 }

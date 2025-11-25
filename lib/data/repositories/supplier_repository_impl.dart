@@ -1,3 +1,4 @@
+import 'package:posventa/core/utils/database_validators.dart';
 import 'package:posventa/data/datasources/database_helper.dart';
 import 'package:posventa/data/models/supplier_model.dart';
 import 'package:posventa/domain/entities/supplier.dart';
@@ -88,5 +89,17 @@ class SupplierRepositoryImpl implements SupplierRepository {
     } else {
       throw Exception('ID $id no encontrado');
     }
+  }
+
+  @override
+  Future<bool> isCodeUnique(String code, {int? excludeId}) async {
+    final db = await _dbHelper.database;
+    return DatabaseValidators.isFieldUnique(
+      db: db,
+      tableName: DatabaseHelper.tableSuppliers,
+      fieldName: 'code',
+      value: code,
+      excludeId: excludeId,
+    );
   }
 }

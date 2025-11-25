@@ -1,3 +1,4 @@
+import 'package:posventa/core/utils/database_validators.dart';
 import 'package:posventa/data/datasources/database_helper.dart';
 import 'package:posventa/data/models/category_model.dart';
 import 'package:posventa/domain/entities/category.dart';
@@ -65,5 +66,17 @@ class CategoryRepositoryImpl implements CategoryRepository {
   Future<void> deleteCategory(int id) async {
     final db = await _databaseHelper.database;
     await db.delete('categories', where: 'id = ?', whereArgs: [id]);
+  }
+
+  @override
+  Future<bool> isCodeUnique(String code, {int? excludeId}) async {
+    final db = await _databaseHelper.database;
+    return DatabaseValidators.isFieldUnique(
+      db: db,
+      tableName: DatabaseHelper.tableCategories,
+      fieldName: 'code',
+      value: code,
+      excludeId: excludeId,
+    );
   }
 }
