@@ -68,28 +68,45 @@ class ProductRepositoryImpl implements ProductRepository {
   @override
   Future<List<Product>> getAllProducts() async {
     final db = await databaseHelper.database;
-    // Join with inventory to get stock
-    final List<Map<String, dynamic>> maps = await db.rawQuery('''
+
+    // Query 1: Get all products with stock
+    final List<Map<String, dynamic>> productMaps = await db.rawQuery('''
       SELECT p.*, (SELECT SUM(quantity_on_hand) FROM inventory WHERE product_id = p.id) as stock
       FROM ${DatabaseHelper.tableProducts} p
       WHERE p.is_active = 1
     ''');
 
-    // Load taxes for each product
-    final products = <Product>[];
-    for (final map in maps) {
-      final product = ProductModel.fromMap(map);
-      final taxes = await getTaxesForProduct(product.id!);
-      products.add(product.copyWith(productTaxes: taxes.cast<ProductTax>()));
+    if (productMaps.isEmpty) return [];
+
+    // Query 2: Get all taxes for these products in one query
+    final productIds = productMaps.map((m) => m['id'] as int).toList();
+    final taxMaps = await db.query(
+      DatabaseHelper.tableProductTaxes,
+      where: 'product_id IN (${productIds.join(',')})',
+    );
+
+    // Group taxes by product_id
+    final taxesByProduct = <int, List<ProductTax>>{};
+    for (final taxMap in taxMaps) {
+      final productId = taxMap['product_id'] as int;
+      taxesByProduct.putIfAbsent(productId, () => []);
+      taxesByProduct[productId]!.add(ProductTaxModel.fromMap(taxMap));
     }
 
-    return products;
+    // Build products with their taxes
+    return productMaps.map((map) {
+      final product = ProductModel.fromMap(map);
+      final taxes = taxesByProduct[product.id!] ?? [];
+      return product.copyWith(productTaxes: taxes.cast<ProductTax>());
+    }).toList();
   }
 
   @override
   Future<List<Product>> searchProducts(String query) async {
     final db = await databaseHelper.database;
-    final List<Map<String, dynamic>> maps = await db.rawQuery(
+
+    // Query 1: Search products with stock
+    final List<Map<String, dynamic>> productMaps = await db.rawQuery(
       '''
       SELECT p.*, (SELECT SUM(quantity_on_hand) FROM inventory WHERE product_id = p.id) as stock
       FROM ${DatabaseHelper.tableProducts} p
@@ -102,15 +119,29 @@ class ProductRepositoryImpl implements ProductRepository {
       ['%$query%', '%$query%', '%$query%'],
     );
 
-    // Load taxes for each product
-    final products = <Product>[];
-    for (final map in maps) {
-      final product = ProductModel.fromMap(map);
-      final taxes = await getTaxesForProduct(product.id!);
-      products.add(product.copyWith(productTaxes: taxes.cast<ProductTax>()));
+    if (productMaps.isEmpty) return [];
+
+    // Query 2: Get all taxes for these products in one query
+    final productIds = productMaps.map((m) => m['id'] as int).toList();
+    final taxMaps = await db.query(
+      DatabaseHelper.tableProductTaxes,
+      where: 'product_id IN (${productIds.join(',')})',
+    );
+
+    // Group taxes by product_id
+    final taxesByProduct = <int, List<ProductTax>>{};
+    for (final taxMap in taxMaps) {
+      final productId = taxMap['product_id'] as int;
+      taxesByProduct.putIfAbsent(productId, () => []);
+      taxesByProduct[productId]!.add(ProductTaxModel.fromMap(taxMap));
     }
 
-    return products;
+    // Build products with their taxes
+    return productMaps.map((map) {
+      final product = ProductModel.fromMap(map);
+      final taxes = taxesByProduct[product.id!] ?? [];
+      return product.copyWith(productTaxes: taxes.cast<ProductTax>());
+    }).toList();
   }
 
   @override
