@@ -1,5 +1,5 @@
+import 'package:posventa/core/utils/database_validators.dart';
 import 'package:posventa/data/datasources/database_helper.dart';
-import 'package:sqflite/sqflite.dart';
 import 'package:posventa/data/models/product_model.dart';
 import 'package:posventa/data/models/product_tax_model.dart';
 import 'package:posventa/domain/entities/product.dart';
@@ -215,42 +215,24 @@ class ProductRepositoryImpl implements ProductRepository {
   @override
   Future<bool> isCodeUnique(String code, {int? excludeId}) async {
     final db = await databaseHelper.database;
-    final List<Object> whereArgs = [code];
-    var whereClause = 'code = ?';
-
-    if (excludeId != null) {
-      whereClause += ' AND id != ?';
-      whereArgs.add(excludeId);
-    }
-
-    final count = Sqflite.firstIntValue(
-      await db.rawQuery(
-        'SELECT COUNT(*) FROM ${DatabaseHelper.tableProducts} WHERE $whereClause',
-        whereArgs,
-      ),
+    return DatabaseValidators.isFieldUnique(
+      db: db,
+      tableName: DatabaseHelper.tableProducts,
+      fieldName: 'code',
+      value: code,
+      excludeId: excludeId,
     );
-
-    return count == 0;
   }
 
   @override
   Future<bool> isBarcodeUnique(String barcode, {int? excludeId}) async {
     final db = await databaseHelper.database;
-    final List<Object> whereArgs = [barcode];
-    var whereClause = 'barcode = ?';
-
-    if (excludeId != null) {
-      whereClause += ' AND id != ?';
-      whereArgs.add(excludeId);
-    }
-
-    final count = Sqflite.firstIntValue(
-      await db.rawQuery(
-        'SELECT COUNT(*) FROM ${DatabaseHelper.tableProducts} WHERE $whereClause',
-        whereArgs,
-      ),
+    return DatabaseValidators.isFieldUnique(
+      db: db,
+      tableName: DatabaseHelper.tableProducts,
+      fieldName: 'barcode',
+      value: barcode,
+      excludeId: excludeId,
     );
-
-    return count == 0;
   }
 }
