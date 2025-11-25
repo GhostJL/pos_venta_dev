@@ -227,6 +227,13 @@ class SaleDetailPage extends ConsumerWidget {
                                 color: Colors.grey.shade700,
                               ),
                             ),
+                            Text(
+                              'Procesado por: ${returnItem.processedByName ?? 'Usuario #${returnItem.processedBy}'}',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey.shade700,
+                              ),
+                            ),
                           ],
                         ),
                       ),

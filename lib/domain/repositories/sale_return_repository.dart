@@ -27,4 +27,10 @@ abstract class SaleReturnRepository {
   /// Get already returned quantities for each sale item
   /// Returns Map with saleItemId as key and returnedQuantity as value
   Future<Map<int, double>> getReturnedQuantities(int saleId);
+
+  /// Get statistics for returns within a date range
+  Future<Map<String, dynamic>> getReturnsStats({
+    required DateTime startDate,
+    required DateTime endDate,
+  });
 }

@@ -420,6 +420,13 @@ class DashboardScreen extends ConsumerWidget {
         onTap: () => context.go('/inventory'),
       ),
       DashboardCard(
+        title: 'Reportes',
+        value: 'Reportes',
+        icon: Icons.report_rounded,
+        iconColor: Colors.indigo.shade600,
+        onTap: () => context.go('/reports/returns'),
+      ),
+      DashboardCard(
         title: 'Ajustes de Inventario',
         value: 'Correcciones y Ajustes',
         icon: Icons.tune_rounded,

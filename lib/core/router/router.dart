@@ -59,6 +59,7 @@ import 'package:posventa/presentation/pages/adjustments/physical_inventory_adjus
 import 'package:posventa/presentation/pages/adjustments/transaction_void_page.dart';
 import 'package:posventa/presentation/pages/adjustments/return_processing_page.dart';
 import 'package:posventa/presentation/pages/adjustments/coming_soon_page.dart';
+import 'package:posventa/presentation/pages/reports/returns_report_page.dart';
 import 'package:posventa/presentation/pages/kardex_page.dart';
 import 'package:posventa/presentation/pages/users_permissions_page.dart';
 import 'package:posventa/presentation/pages/tax_store_config_page.dart';
@@ -424,6 +425,11 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: '/adjustments/return-processing',
             pageBuilder: (context, state) =>
                 const NoTransitionPage(child: ReturnProcessingPage()),
+          ),
+          GoRoute(
+            path: '/reports/returns',
+            pageBuilder: (context, state) =>
+                const NoTransitionPage(child: ReturnsReportPage()),
           ),
           // Physical Inventory Routes
           GoRoute(

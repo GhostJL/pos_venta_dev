@@ -407,6 +407,71 @@ class SaleReturnRepositoryImpl implements SaleReturnRepository {
     return returnedQty;
   }
 
+  @override
+  Future<Map<String, dynamic>> getReturnsStats({
+    required DateTime startDate,
+    required DateTime endDate,
+  }) async {
+    final db = await _dbHelper.database;
+    final startStr = startDate.toIso8601String();
+    final endStr = endDate.toIso8601String();
+
+    // 1. Total Returns and Amount
+    final totalResults = await db.rawQuery(
+      '''
+      SELECT 
+        COUNT(*) as count,
+        SUM(total_cents) as total_amount
+      FROM ${DatabaseHelper.tableSaleReturns}
+      WHERE return_date BETWEEN ? AND ? AND status = 'completed'
+    ''',
+      [startStr, endStr],
+    );
+
+    final totalCount = (totalResults.first['count'] as int?) ?? 0;
+    final totalAmount = (totalResults.first['total_amount'] as int?) ?? 0;
+
+    // 2. Returns by Reason
+    final reasonResults = await db.rawQuery(
+      '''
+      SELECT 
+        reason,
+        COUNT(*) as count,
+        SUM(total_cents) as total_amount
+      FROM ${DatabaseHelper.tableSaleReturns}
+      WHERE return_date BETWEEN ? AND ? AND status = 'completed'
+      GROUP BY reason
+      ORDER BY total_amount DESC
+    ''',
+      [startStr, endStr],
+    );
+
+    // 3. Top Returned Products
+    final productResults = await db.rawQuery(
+      '''
+      SELECT 
+        p.name as product_name,
+        SUM(sri.quantity) as total_quantity,
+        SUM(sri.total_cents) as total_amount
+      FROM ${DatabaseHelper.tableSaleReturnItems} sri
+      JOIN ${DatabaseHelper.tableSaleReturns} sr ON sri.sale_return_id = sr.id
+      LEFT JOIN ${DatabaseHelper.tableProducts} p ON sri.product_id = p.id
+      WHERE sr.return_date BETWEEN ? AND ? AND sr.status = 'completed'
+      GROUP BY sri.product_id
+      ORDER BY total_amount DESC
+      LIMIT 5
+    ''',
+      [startStr, endStr],
+    );
+
+    return {
+      'totalCount': totalCount,
+      'totalAmount': totalAmount,
+      'byReason': reasonResults,
+      'topProducts': productResults,
+    };
+  }
+
   Future<List<SaleReturnItem>> _getSaleReturnItems(
     Database db,
     int returnId,

@@ -1,9 +1,11 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 import 'package:posventa/data/repositories/sale_return_repository_impl.dart';
 import 'package:posventa/domain/repositories/sale_return_repository.dart';
 import 'package:posventa/domain/use_cases/sale_return/create_sale_return_use_case.dart';
 import 'package:posventa/domain/use_cases/sale_return/generate_next_return_number_use_case.dart';
+import 'package:posventa/domain/use_cases/sale_return/get_returns_stats_use_case.dart';
 import 'package:posventa/domain/use_cases/sale_return/get_sale_return_by_id_use_case.dart';
 import 'package:posventa/domain/use_cases/sale_return/get_sale_returns_use_case.dart';
 import 'package:posventa/domain/use_cases/sale_return/validate_return_eligibility_use_case.dart';
@@ -330,6 +332,11 @@ final validateReturnEligibilityUseCaseProvider = Provider((ref) {
   return ValidateReturnEligibilityUseCase(repository);
 });
 
+final getReturnsStatsUseCaseProvider = Provider((ref) {
+  final repository = ref.watch(saleReturnRepositoryProvider);
+  return GetReturnsStatsUseCase(repository);
+});
+
 // State Notifier Provider
 final returnProcessingNotifierProvider =
     StateNotifierProvider.autoDispose<
@@ -380,3 +387,13 @@ final saleReturnsForSaleProvider = FutureProvider.family<List<SaleReturn>, int>(
     return allReturns.where((r) => r.saleId == saleId).toList();
   },
 );
+
+// Returns Stats Provider
+final returnsStatsProvider =
+    FutureProvider.family<Map<String, dynamic>, DateTimeRange>((
+      ref,
+      dateRange,
+    ) async {
+      final useCase = ref.watch(getReturnsStatsUseCaseProvider);
+      return await useCase(startDate: dateRange.start, endDate: dateRange.end);
+    });
