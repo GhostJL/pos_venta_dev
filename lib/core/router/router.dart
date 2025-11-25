@@ -56,6 +56,7 @@ import 'package:posventa/presentation/pages/returns_management_page.dart';
 import 'package:posventa/presentation/pages/inventory_adjustments_page.dart';
 import 'package:posventa/presentation/pages/inventory_adjustments_menu_page.dart';
 import 'package:posventa/presentation/pages/adjustments/physical_inventory_adjustment_page.dart';
+import 'package:posventa/presentation/pages/adjustments/transaction_void_page.dart';
 import 'package:posventa/presentation/pages/adjustments/coming_soon_page.dart';
 import 'package:posventa/presentation/pages/kardex_page.dart';
 import 'package:posventa/presentation/pages/users_permissions_page.dart';
@@ -391,15 +392,8 @@ final routerProvider = Provider<GoRouter>((ref) {
           // Transaction Correction Routes
           GoRoute(
             path: '/adjustments/transaction-void',
-            pageBuilder: (context, state) => const NoTransitionPage(
-              child: ComingSoonPage(
-                title: 'Anulación de Transacción',
-                description:
-                    'Anular ventas incorrectas o canceladas por el cliente',
-                icon: Icons.cancel_rounded,
-                iconColor: Colors.red,
-              ),
-            ),
+            pageBuilder: (context, state) =>
+                const NoTransitionPage(child: TransactionVoidPage()),
           ),
           GoRoute(
             path: '/adjustments/price-adjustment',
