@@ -57,6 +57,7 @@ import 'package:posventa/presentation/pages/inventory_adjustments_page.dart';
 import 'package:posventa/presentation/pages/inventory_adjustments_menu_page.dart';
 import 'package:posventa/presentation/pages/adjustments/physical_inventory_adjustment_page.dart';
 import 'package:posventa/presentation/pages/adjustments/transaction_void_page.dart';
+import 'package:posventa/presentation/pages/adjustments/return_processing_page.dart';
 import 'package:posventa/presentation/pages/adjustments/coming_soon_page.dart';
 import 'package:posventa/presentation/pages/kardex_page.dart';
 import 'package:posventa/presentation/pages/users_permissions_page.dart';
@@ -421,14 +422,8 @@ final routerProvider = Provider<GoRouter>((ref) {
           ),
           GoRoute(
             path: '/adjustments/return-processing',
-            pageBuilder: (context, state) => const NoTransitionPage(
-              child: ComingSoonPage(
-                title: 'Procesamiento de Devolución',
-                description: 'Registrar devoluciones de productos vendidos',
-                icon: Icons.keyboard_return_rounded,
-                iconColor: Colors.orange,
-              ),
-            ),
+            pageBuilder: (context, state) =>
+                const NoTransitionPage(child: ReturnProcessingPage()),
           ),
           // Physical Inventory Routes
           GoRoute(

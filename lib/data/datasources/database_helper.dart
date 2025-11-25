@@ -15,7 +15,7 @@ class DatabaseHelper {
   // Database configuration
   static const _databaseName = "pos.db";
   static const _databaseVersion =
-      16; // Incremented to ensure cancelled_by column addition
+      17; // Added sale_returns and sale_return_items tables
 
   // Table names
   static const tableUsers = 'users';
@@ -43,6 +43,8 @@ class DatabaseHelper {
   static const tableAuditLogs = 'audit_logs';
   static const tablePermissions = 'permissions';
   static const tableUserPermissions = 'user_permissions';
+  static const tableSaleReturns = 'sale_returns';
+  static const tableSaleReturnItems = 'sale_return_items';
 
   static Database? _database;
 
@@ -203,6 +205,9 @@ class DatabaseHelper {
     // Permissions tables
     await _createPermissionsTable(db);
     await _createUserPermissionsTable(db);
+    // Sale Returns tables
+    await _createSaleReturnsTable(db);
+    await _createSaleReturnItemsTable(db);
 
     // Insert default user and assign permissions
     await _insertDefaultUser(db);
@@ -285,6 +290,10 @@ class DatabaseHelper {
         ALTER TABLE $tablePurchases 
         ADD COLUMN cancelled_by INTEGER REFERENCES $tableUsers(id) ON DELETE SET NULL
       ''');
+    }
+    if (oldVersion < 17) {
+      await _createSaleReturnsTable(db);
+      await _createSaleReturnItemsTable(db);
     }
   }
 
@@ -870,7 +879,78 @@ class DatabaseHelper {
     ''');
   }
 
-  // Onboarding methods
+  Future<void> _createSaleReturnsTable(Database db) async {
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS $tableSaleReturns (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        return_number TEXT NOT NULL UNIQUE,
+        sale_id INTEGER NOT NULL,
+        warehouse_id INTEGER NOT NULL,
+        customer_id INTEGER,
+        processed_by INTEGER NOT NULL,
+        subtotal_cents INTEGER NOT NULL,
+        tax_cents INTEGER NOT NULL DEFAULT 0,
+        total_cents INTEGER NOT NULL,
+        refund_method TEXT NOT NULL,
+        reason TEXT NOT NULL,
+        notes TEXT,
+        status TEXT NOT NULL DEFAULT 'completed',
+        return_date TEXT NOT NULL,
+        created_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
+        FOREIGN KEY (sale_id) REFERENCES $tableSales(id) ON DELETE RESTRICT,
+        FOREIGN KEY (warehouse_id) REFERENCES $tableWarehouses(id) ON DELETE RESTRICT,
+        FOREIGN KEY (customer_id) REFERENCES $tableCustomers(id) ON DELETE SET NULL,
+        FOREIGN KEY (processed_by) REFERENCES $tableUsers(id) ON DELETE RESTRICT
+      )
+    ''');
+
+    // Create indexes for better query performance
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_sale_returns_number ON $tableSaleReturns(return_number)',
+    );
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_sale_returns_sale ON $tableSaleReturns(sale_id)',
+    );
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_sale_returns_date ON $tableSaleReturns(return_date)',
+    );
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_sale_returns_status ON $tableSaleReturns(status)',
+    );
+  }
+
+  Future<void> _createSaleReturnItemsTable(Database db) async {
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS $tableSaleReturnItems (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        sale_return_id INTEGER NOT NULL,
+        sale_item_id INTEGER NOT NULL,
+        product_id INTEGER NOT NULL,
+        quantity REAL NOT NULL,
+        unit_price_cents INTEGER NOT NULL,
+        subtotal_cents INTEGER NOT NULL,
+        tax_cents INTEGER NOT NULL DEFAULT 0,
+        total_cents INTEGER NOT NULL,
+        reason TEXT,
+        created_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
+        FOREIGN KEY (sale_return_id) REFERENCES $tableSaleReturns(id) ON DELETE CASCADE,
+        FOREIGN KEY (sale_item_id) REFERENCES $tableSaleItems(id) ON DELETE RESTRICT,
+        FOREIGN KEY (product_id) REFERENCES $tableProducts(id) ON DELETE RESTRICT
+      )
+    ''');
+
+    // Create indexes
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_sale_return_items_return ON $tableSaleReturnItems(sale_return_id)',
+    );
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_sale_return_items_sale_item ON $tableSaleReturnItems(sale_item_id)',
+    );
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_sale_return_items_product ON $tableSaleReturnItems(product_id)',
+    );
+  }
+
   Future<bool> onboardingCompleted() async {
     final db = await database;
     final result = await db.query(
