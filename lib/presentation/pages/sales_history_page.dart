@@ -7,6 +7,7 @@ import 'package:intl/intl.dart';
 import 'package:posventa/core/constants/permission_constants.dart';
 import 'package:posventa/presentation/providers/permission_provider.dart';
 import 'package:posventa/presentation/widgets/permission_denied_widget.dart';
+import 'package:posventa/presentation/providers/return_processing_provider.dart';
 
 class SalesHistoryPage extends ConsumerStatefulWidget {
   const SalesHistoryPage({super.key});
@@ -151,15 +152,16 @@ class _SalesHistoryPageState extends ConsumerState<SalesHistoryPage> {
   }
 }
 
-class _SaleCard extends StatelessWidget {
+class _SaleCard extends ConsumerWidget {
   final Sale sale;
 
   const _SaleCard({required this.sale});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final dateFormat = DateFormat('dd/MM/yyyy HH:mm');
     final isCancelled = sale.status == SaleStatus.cancelled;
+    final returnsAsync = ref.watch(saleReturnsForSaleProvider(sale.id!));
 
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
@@ -245,6 +247,54 @@ class _SaleCard extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 12),
+
+              // Return Indicator
+              returnsAsync.when(
+                data: (returns) {
+                  if (returns.isEmpty) return const SizedBox.shrink();
+
+                  final totalReturned = returns.fold<int>(
+                    0,
+                    (sum, r) => sum + r.totalCents,
+                  );
+
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.orange.shade50,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.orange.shade200),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.keyboard_return,
+                            size: 14,
+                            color: Colors.orange.shade700,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            '${returns.length} devolución(es) • -\$${(totalReturned / 100).toStringAsFixed(2)}',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: Colors.orange.shade700,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+                loading: () => const SizedBox.shrink(),
+                error: (_, __) => const SizedBox.shrink(),
+              ),
 
               const Divider(),
               const SizedBox(height: 8),

@@ -371,3 +371,12 @@ final todayReturnsStatsProvider =
         'total': totalAmountCents / 100.0,
       };
     });
+
+// Returns for a specific sale Provider
+final saleReturnsForSaleProvider = FutureProvider.family<List<SaleReturn>, int>(
+  (ref, saleId) async {
+    final repository = ref.watch(saleReturnRepositoryProvider);
+    final allReturns = await repository.getSaleReturns();
+    return allReturns.where((r) => r.saleId == saleId).toList();
+  },
+);

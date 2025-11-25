@@ -5,6 +5,7 @@ import 'package:posventa/presentation/providers/providers.dart';
 import 'package:posventa/presentation/providers/auth_provider.dart';
 import 'package:intl/intl.dart';
 import 'package:go_router/go_router.dart';
+import 'package:posventa/presentation/providers/return_processing_provider.dart';
 
 class SaleDetailPage extends ConsumerWidget {
   final int saleId;
@@ -64,6 +65,7 @@ class SaleDetailPage extends ConsumerWidget {
   Widget _buildSaleDetail(BuildContext context, WidgetRef ref, Sale sale) {
     final dateFormat = DateFormat('dd/MM/yyyy HH:mm');
     final isCancelled = sale.status == SaleStatus.cancelled;
+    final returnsAsync = ref.watch(saleReturnsForSaleProvider(sale.id!));
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
@@ -149,6 +151,119 @@ class SaleDetailPage extends ConsumerWidget {
             ),
           ),
           const SizedBox(height: 20),
+
+          // Returns Section
+          returnsAsync.when(
+            data: (returns) {
+              if (returns.isEmpty) return const SizedBox.shrink();
+
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.keyboard_return,
+                        color: Colors.orange.shade600,
+                      ),
+                      const SizedBox(width: 8),
+                      const Text(
+                        'Devoluciones',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  ...returns.map(
+                    (returnItem) => Card(
+                      margin: const EdgeInsets.only(bottom: 8),
+                      color: Colors.orange.shade50,
+                      child: Padding(
+                        padding: const EdgeInsets.all(12),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  returnItem.returnNumber,
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                Text(
+                                  '-\$${(returnItem.totalCents / 100).toStringAsFixed(2)}',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.red.shade700,
+                                    fontSize: 16,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              'Fecha: ${dateFormat.format(returnItem.returnDate)}',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey.shade700,
+                              ),
+                            ),
+                            Text(
+                              'Motivo: ${returnItem.reason}',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey.shade700,
+                              ),
+                            ),
+                            Text(
+                              'Método: ${returnItem.refundMethod.displayName}',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey.shade700,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  // Net Total
+                  Card(
+                    color: Colors.blue.shade50,
+                    child: Padding(
+                      padding: const EdgeInsets.all(12),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text(
+                            'Total Neto (después de devoluciones):',
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          Text(
+                            '\$${((sale.totalCents - returns.fold<int>(0, (sum, r) => sum + r.totalCents)) / 100).toStringAsFixed(2)}',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 18,
+                              color: Colors.blue.shade700,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                ],
+              );
+            },
+            loading: () => const Center(child: CircularProgressIndicator()),
+            error: (_, __) => const SizedBox.shrink(),
+          ),
 
           // Items Section
           const Text(
@@ -373,6 +488,22 @@ class SaleDetailPage extends ConsumerWidget {
 
           // Actions
           if (!isCancelled) ...[
+            SizedBox(
+              width: double.infinity,
+              height: 50,
+              child: ElevatedButton.icon(
+                onPressed: () {
+                  context.push('/adjustments/return-processing', extra: sale);
+                },
+                icon: const Icon(Icons.keyboard_return),
+                label: const Text('Procesar Devolución'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.orange.shade600,
+                  foregroundColor: Colors.white,
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
             SizedBox(
               width: double.infinity,
               height: 50,
