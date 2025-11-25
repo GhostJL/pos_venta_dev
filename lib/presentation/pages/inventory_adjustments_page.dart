@@ -38,14 +38,14 @@ class InventoryAdjustmentsPage extends ConsumerWidget {
                   Icon(
                     Icons.playlist_add,
                     size: 64,
-                    color: Colors.grey.withOpacity(0.5),
+                    color: Colors.grey.withValues(alpha: 0.5),
                   ),
                   const SizedBox(height: 16),
                   Text(
                     'No hay ajustes pendientes',
                     style: TextStyle(
                       fontSize: 18,
-                      color: Colors.grey.withOpacity(0.8),
+                      color: Colors.grey.withValues(alpha: 0.8),
                     ),
                   ),
                   const SizedBox(height: 8),
