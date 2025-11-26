@@ -9,6 +9,13 @@ abstract class SaleReturnRepository {
     int? offset,
   });
 
+  Stream<List<SaleReturn>> getSaleReturnsStream({
+    DateTime? startDate,
+    DateTime? endDate,
+    int? limit,
+    int? offset,
+  });
+
   /// Get a specific sale return by ID with all items
   Future<SaleReturn?> getSaleReturnById(int id);
 

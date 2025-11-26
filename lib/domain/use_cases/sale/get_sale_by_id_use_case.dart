@@ -9,4 +9,8 @@ class GetSaleByIdUseCase {
   Future<Sale?> call(int id) async {
     return await _repository.getSaleById(id);
   }
+
+  Stream<Sale?> stream(int id) {
+    return _repository.getSaleByIdStream(id);
+  }
 }

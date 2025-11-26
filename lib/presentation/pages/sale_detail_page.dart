@@ -31,8 +31,8 @@ class SaleDetailPage extends ConsumerWidget {
           ),
         ],
       ),
-      body: FutureBuilder<Sale?>(
-        future: ref.read(getSaleByIdUseCaseProvider).call(saleId),
+      body: StreamBuilder<Sale?>(
+        stream: ref.read(getSaleByIdUseCaseProvider).stream(saleId),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());

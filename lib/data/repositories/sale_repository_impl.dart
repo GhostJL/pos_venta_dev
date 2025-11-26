@@ -378,4 +378,17 @@ class SaleRepositoryImpl implements SaleRepository {
     }
     return 'S-${nextId.toString().padLeft(6, '0')}';
   }
+
+  @override
+  Stream<Sale?> getSaleByIdStream(int id) async* {
+    yield await getSaleById(id);
+
+    await for (final table in _databaseHelper.tableUpdateStream) {
+      if (table == DatabaseHelper.tableSales ||
+          table == DatabaseHelper.tableSaleItems ||
+          table == DatabaseHelper.tableSaleReturns) {
+        yield await getSaleById(id);
+      }
+    }
+  }
 }

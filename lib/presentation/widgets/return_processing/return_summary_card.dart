@@ -119,7 +119,7 @@ class _ReturnSummaryCardState extends ConsumerState<ReturnSummaryCard> {
             // Reason
             DropdownButtonFormField<ReturnReason>(
               isExpanded: true,
-              value: _reasonController.text.isNotEmpty
+              initialValue: _reasonController.text.isNotEmpty
                   ? ReturnReason.values.firstWhere(
                       (e) => e.label == _reasonController.text,
                       orElse: () => ReturnReason.other,

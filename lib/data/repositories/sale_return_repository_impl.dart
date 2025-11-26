@@ -86,6 +86,33 @@ class SaleReturnRepositoryImpl implements SaleReturnRepository {
   }
 
   @override
+  Stream<List<SaleReturn>> getSaleReturnsStream({
+    DateTime? startDate,
+    DateTime? endDate,
+    int? limit,
+    int? offset,
+  }) async* {
+    yield await getSaleReturns(
+      startDate: startDate,
+      endDate: endDate,
+      limit: limit,
+      offset: offset,
+    );
+
+    await for (final table in _dbHelper.tableUpdateStream) {
+      if (table == DatabaseHelper.tableSaleReturns ||
+          table == DatabaseHelper.tableSaleReturnItems) {
+        yield await getSaleReturns(
+          startDate: startDate,
+          endDate: endDate,
+          limit: limit,
+          offset: offset,
+        );
+      }
+    }
+  }
+
+  @override
   Future<SaleReturn?> getSaleReturnById(int id) async {
     final db = await _dbHelper.database;
 
@@ -173,7 +200,7 @@ class SaleReturnRepositoryImpl implements SaleReturnRepository {
   Future<int> createSaleReturn(SaleReturn saleReturn) async {
     final db = await _dbHelper.database;
 
-    return await db.transaction((txn) async {
+    final returnId = await db.transaction((txn) async {
       // 1. Insert sale return
       final returnId = await txn.insert(DatabaseHelper.tableSaleReturns, {
         'return_number': saleReturn.returnNumber,
@@ -225,6 +252,13 @@ class SaleReturnRepositoryImpl implements SaleReturnRepository {
 
       return returnId;
     });
+
+    _dbHelper.notifyTableChanged(DatabaseHelper.tableSaleReturns);
+    _dbHelper.notifyTableChanged(DatabaseHelper.tableInventory);
+    _dbHelper.notifyTableChanged(DatabaseHelper.tableCashSessions);
+    _dbHelper.notifyTableChanged(DatabaseHelper.tableSales);
+
+    return returnId;
   }
 
   Future<void> _createInventoryMovement(
