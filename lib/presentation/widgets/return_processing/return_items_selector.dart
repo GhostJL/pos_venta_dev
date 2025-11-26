@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:posventa/core/theme/theme.dart';
 import 'package:posventa/domain/entities/sale_item.dart';
+import 'package:posventa/domain/entities/return_reason.dart';
 import 'package:posventa/presentation/providers/return_processing_provider.dart';
 
 class ReturnItemsSelector extends ConsumerStatefulWidget {
@@ -185,12 +186,13 @@ class _ReturnItemsSelectorState extends ConsumerState<ReturnItemsSelector> {
                 children: [
                   Expanded(
                     flex: 2,
-                    child: TextField(
+                    child: TextFormField(
                       controller: _quantityControllers[item.id],
                       decoration: InputDecoration(
-                        labelText: 'Cantidad a devolver',
+                        labelText: 'Cantidad',
                         border: const OutlineInputBorder(),
                         suffixText: item.unitOfMeasure,
+                        errorMaxLines: 2,
                       ),
                       keyboardType: const TextInputType.numberWithOptions(
                         decimal: true,
@@ -200,6 +202,23 @@ class _ReturnItemsSelectorState extends ConsumerState<ReturnItemsSelector> {
                           RegExp(r'^\d+\.?\d{0,2}'),
                         ),
                       ],
+                      autovalidateMode: AutovalidateMode.onUserInteraction,
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Requerido';
+                        }
+                        final qty = double.tryParse(value);
+                        if (qty == null) {
+                          return 'Inválido';
+                        }
+                        if (qty <= 0) {
+                          return 'Debe ser > 0';
+                        }
+                        if (qty > maxQuantity) {
+                          return 'Máx: $maxQuantity';
+                        }
+                        return null;
+                      },
                       onChanged: (value) {
                         final qty = double.tryParse(value);
                         if (qty != null) {
@@ -213,16 +232,36 @@ class _ReturnItemsSelectorState extends ConsumerState<ReturnItemsSelector> {
                   const SizedBox(width: 12),
                   Expanded(
                     flex: 3,
-                    child: TextField(
-                      controller: _reasonControllers[item.id],
+                    child: DropdownButtonFormField<ReturnReason>(
+                      isExpanded: true,
+                      initialValue:
+                          _reasonControllers[item.id]?.text.isNotEmpty == true
+                          ? ReturnReason.values.firstWhere(
+                              (e) =>
+                                  e.label == _reasonControllers[item.id]?.text,
+                              orElse: () => ReturnReason.other,
+                            )
+                          : null,
                       decoration: const InputDecoration(
-                        labelText: 'Motivo (opcional)',
+                        labelText: 'Motivo',
                         border: OutlineInputBorder(),
                       ),
+                      items: ReturnReason.values.map((reason) {
+                        return DropdownMenuItem(
+                          value: reason,
+                          child: Text(
+                            reason.label,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        );
+                      }).toList(),
                       onChanged: (value) {
-                        ref
-                            .read(returnProcessingNotifierProvider.notifier)
-                            .updateItemReason(item.id!, value);
+                        if (value != null) {
+                          _reasonControllers[item.id]?.text = value.label;
+                          ref
+                              .read(returnProcessingNotifierProvider.notifier)
+                              .updateItemReason(item.id!, value.label);
+                        }
                       },
                     ),
                   ),

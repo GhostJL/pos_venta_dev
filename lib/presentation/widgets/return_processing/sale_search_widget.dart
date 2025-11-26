@@ -16,6 +16,7 @@ class _SaleSearchWidgetState extends ConsumerState<SaleSearchWidget> {
   final _searchController = TextEditingController();
   bool _isSearching = false;
   List<Sale> _searchResults = [];
+  int _selectedDaysLimit = 30; // Default to 30 days
 
   @override
   void dispose() {
@@ -37,7 +38,17 @@ class _SaleSearchWidgetState extends ConsumerState<SaleSearchWidget> {
     try {
       // Fetch all sales using the getSalesUseCase
       final getSalesUseCase = ref.read(getSalesUseCaseProvider);
-      final sales = await getSalesUseCase();
+
+      // Calculate start date based on selected limit
+      final startDate = DateTime.now().subtract(
+        Duration(days: _selectedDaysLimit),
+      );
+
+      // Pass startDate to use case (assuming repository handles filtering or we filter manually if not)
+      // Since we are filtering in memory in the original code, we should ideally pass this to the use case
+      // to avoid fetching all sales. However, based on the previous code, it seemed to fetch all.
+      // We will pass it to the use case now.
+      final sales = await getSalesUseCase(startDate: startDate);
 
       // Filter sales by sale number or customer name
       final filtered = sales.where((sale) {
@@ -100,6 +111,26 @@ class _SaleSearchWidgetState extends ConsumerState<SaleSearchWidget> {
           onChanged: (value) {
             _searchSales(value);
           },
+        ),
+        const SizedBox(height: 16),
+
+        // Time limit selector
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: [
+              const Text(
+                'Mostrar ventas de:',
+                style: TextStyle(fontWeight: FontWeight.w500),
+              ),
+              const SizedBox(width: 12),
+              _buildTimeLimitChip(15, '15 días'),
+              const SizedBox(width: 8),
+              _buildTimeLimitChip(30, '30 días'),
+              const SizedBox(width: 8),
+              _buildTimeLimitChip(45, '45 días'),
+            ],
+          ),
         ),
         const SizedBox(height: 16),
 
@@ -316,5 +347,30 @@ class _SaleSearchWidgetState extends ConsumerState<SaleSearchWidget> {
 
     // Select the sale
     ref.read(returnProcessingNotifierProvider.notifier).selectSale(sale);
+  }
+
+  Widget _buildTimeLimitChip(int days, String label) {
+    final isSelected = _selectedDaysLimit == days;
+    return FilterChip(
+      label: Text(label),
+      selected: isSelected,
+      onSelected: (selected) {
+        if (selected) {
+          setState(() {
+            _selectedDaysLimit = days;
+          });
+          // Re-trigger search if there is a query, or just clear results if not
+          if (_searchController.text.isNotEmpty) {
+            _searchSales(_searchController.text);
+          }
+        }
+      },
+      selectedColor: Colors.orange.shade100,
+      checkmarkColor: Colors.orange.shade700,
+      labelStyle: TextStyle(
+        color: isSelected ? Colors.orange.shade900 : AppTheme.textSecondary,
+        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+      ),
+    );
   }
 }

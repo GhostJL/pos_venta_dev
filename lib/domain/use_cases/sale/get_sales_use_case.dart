@@ -11,8 +11,8 @@ class GetSalesUseCase {
     DateTime? endDate,
     int? limit,
     int? offset,
-  }) async {
-    return await _repository.getSales(
+  }) {
+    return _repository.getSales(
       startDate: startDate,
       endDate: endDate,
       limit: limit,

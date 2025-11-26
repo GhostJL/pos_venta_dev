@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:posventa/core/theme/theme.dart';
 import 'package:posventa/domain/entities/sale_return.dart';
+import 'package:posventa/domain/entities/return_reason.dart';
 import 'package:posventa/presentation/providers/return_processing_provider.dart';
 
 class ReturnSummaryCard extends ConsumerStatefulWidget {
@@ -115,18 +116,32 @@ class _ReturnSummaryCardState extends ConsumerState<ReturnSummaryCard> {
             const SizedBox(height: 24),
 
             // Reason
-            TextField(
-              controller: _reasonController,
+            // Reason
+            DropdownButtonFormField<ReturnReason>(
+              isExpanded: true,
+              value: _reasonController.text.isNotEmpty
+                  ? ReturnReason.values.firstWhere(
+                      (e) => e.label == _reasonController.text,
+                      orElse: () => ReturnReason.other,
+                    )
+                  : null,
               decoration: const InputDecoration(
                 labelText: 'Motivo de la Devolución *',
-                hintText: 'Ej: Producto defectuoso, cambio de opinión...',
                 border: OutlineInputBorder(),
               ),
-              maxLines: 2,
+              items: ReturnReason.values.map((reason) {
+                return DropdownMenuItem(
+                  value: reason,
+                  child: Text(reason.label, overflow: TextOverflow.ellipsis),
+                );
+              }).toList(),
               onChanged: (value) {
-                ref
-                    .read(returnProcessingNotifierProvider.notifier)
-                    .setGeneralReason(value);
+                if (value != null) {
+                  _reasonController.text = value.label;
+                  ref
+                      .read(returnProcessingNotifierProvider.notifier)
+                      .setGeneralReason(value.label);
+                }
               },
             ),
             const SizedBox(height: 16),
