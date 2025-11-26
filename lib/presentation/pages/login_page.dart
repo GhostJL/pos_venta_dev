@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:posventa/core/theme/theme.dart';
 import 'package:posventa/presentation/providers/auth_provider.dart';
 
@@ -171,6 +172,11 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
+                        ),
+                        const SizedBox(height: 16),
+                        TextButton(
+                          onPressed: () => context.go('/create-account'),
+                          child: const Text('Crear Cuenta'),
                         ),
                       ],
                     ),

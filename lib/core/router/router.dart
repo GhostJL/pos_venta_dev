@@ -2,14 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:posventa/domain/entities/user.dart';
-import 'package:posventa/presentation/providers/providers.dart';
+
 import 'package:posventa/presentation/pages/login_page.dart';
+import 'package:posventa/presentation/pages/create_account_page.dart';
 import 'package:posventa/presentation/widgets/cash_session_guard.dart';
-import 'package:posventa/presentation/pages/onboarding/add_cashier_form_page.dart';
-import 'package:posventa/presentation/pages/onboarding/add_cashiers_page.dart';
-// Onboarding Pages
-import 'package:posventa/presentation/pages/onboarding/admin_setup_page.dart';
-import 'package:posventa/presentation/pages/onboarding/set_access_key_page.dart';
+
 import 'package:posventa/presentation/pages/suppliers_page.dart';
 import 'package:posventa/presentation/pages/warehouses_page.dart';
 import 'package:posventa/presentation/pages/inventory_page.dart';
@@ -59,11 +56,10 @@ import 'package:posventa/presentation/pages/adjustments/physical_inventory_adjus
 import 'package:posventa/presentation/pages/adjustments/transaction_void_page.dart';
 import 'package:posventa/presentation/pages/adjustments/return_processing_page.dart';
 import 'package:posventa/presentation/pages/adjustments/coming_soon_page.dart';
-import 'package:posventa/presentation/pages/reports/returns_report_page.dart';
-import 'package:posventa/presentation/pages/kardex_page.dart';
+
 import 'package:posventa/presentation/pages/users_permissions_page.dart';
 import 'package:posventa/presentation/pages/tax_store_config_page.dart';
-import 'package:posventa/presentation/pages/reports_analytics_page.dart';
+
 import 'package:posventa/presentation/pages/shift_close_page.dart';
 import 'package:posventa/domain/entities/product.dart';
 
@@ -81,8 +77,6 @@ final routerProvider = Provider<GoRouter>((ref) {
   final refreshNotifier = ValueNotifier<int>(0);
   ref.listen(authProvider, (_, __) => refreshNotifier.value++);
 
-  final onboardingCheck = ref.watch(onboardingCompletedProvider);
-
   return GoRouter(
     navigatorKey: _rootNavigatorKey,
     refreshListenable: refreshNotifier,
@@ -99,21 +93,10 @@ final routerProvider = Provider<GoRouter>((ref) {
             const Scaffold(body: Center(child: Text('An error occurred'))),
       ),
       // Onboarding Routes
+      // Create Account Route
       GoRoute(
-        path: '/setup-admin',
-        builder: (context, state) => const AdminSetupPage(),
-      ),
-      GoRoute(
-        path: '/add-cashiers',
-        builder: (context, state) => const AddCashiersPage(),
-      ),
-      GoRoute(
-        path: '/add-cashier-form',
-        builder: (context, state) => const AddCashierFormPage(),
-      ),
-      GoRoute(
-        path: '/set-access-key',
-        builder: (context, state) => const SetAccessKeyPage(),
+        path: '/create-account',
+        builder: (context, state) => const CreateAccountPage(),
       ),
       // Login Route
       GoRoute(path: '/login', builder: (context, state) => const LoginPage()),
@@ -426,11 +409,7 @@ final routerProvider = Provider<GoRouter>((ref) {
             pageBuilder: (context, state) =>
                 const NoTransitionPage(child: ReturnProcessingPage()),
           ),
-          GoRoute(
-            path: '/reports/returns',
-            pageBuilder: (context, state) =>
-                const NoTransitionPage(child: ReturnsReportPage()),
-          ),
+
           // Physical Inventory Routes
           GoRoute(
             path: '/adjustments/inventory-reversal',
@@ -481,11 +460,7 @@ final routerProvider = Provider<GoRouter>((ref) {
               ),
             ),
           ),
-          GoRoute(
-            path: '/kardex',
-            pageBuilder: (context, state) =>
-                const NoTransitionPage(child: KardexPage()),
-          ),
+
           GoRoute(
             path: '/users-permissions',
             pageBuilder: (context, state) =>
@@ -496,11 +471,7 @@ final routerProvider = Provider<GoRouter>((ref) {
             pageBuilder: (context, state) =>
                 const NoTransitionPage(child: TaxStoreConfigPage()),
           ),
-          GoRoute(
-            path: '/reports-analytics',
-            pageBuilder: (context, state) =>
-                const NoTransitionPage(child: ReportsAnalyticsPage()),
-          ),
+
           GoRoute(
             path: '/shift-close',
             pageBuilder: (context, state) =>
@@ -514,36 +485,21 @@ final routerProvider = Provider<GoRouter>((ref) {
       final location = state.matchedLocation;
 
       final authLoading = authState.status == AuthStatus.loading;
-      final onboardingLoading = onboardingCheck.isLoading;
-      final loggedIn = authState.status == AuthStatus.authenticated;
-      final needsOnboarding = !(onboardingCheck.asData?.value ?? true);
 
-      if (authLoading || onboardingLoading) {
+      final loggedIn = authState.status == AuthStatus.authenticated;
+      final isAtLogin = location == '/login';
+      final isAtCreateAccount = location == '/create-account';
+      final isAtSplash = location == '/splash';
+
+      if (authLoading) {
         return '/splash';
       }
-
-      // --- Onboarding Logic ---
-      final isDuringOnboarding =
-          location == '/setup-admin' ||
-          location == '/add-cashiers' ||
-          location == '/add-cashier-form' ||
-          location == '/set-access-key';
-      if (needsOnboarding) {
-        return isDuringOnboarding ? null : '/setup-admin';
-      }
-      if (!needsOnboarding && isDuringOnboarding) {
-        return '/login';
-      }
-      // --- End of Onboarding Logic ---
-
-      final isAtLogin = location == '/login';
-      final isAtSplash = location == '/splash';
 
       if (loggedIn) {
         final isAdmin = authState.user?.role == UserRole.administrador;
         final targetHome = isAdmin ? '/' : '/home';
 
-        if (isAtLogin || isAtSplash) {
+        if (isAtLogin || isAtSplash || isAtCreateAccount) {
           return targetHome;
         }
 
@@ -556,18 +512,13 @@ final routerProvider = Provider<GoRouter>((ref) {
         return null;
       }
 
-      if (!isAtLogin) {
+      if (!isAtLogin && !isAtCreateAccount) {
         return '/login';
       }
 
       return null; // No redirection needed
     },
   );
-});
-
-final onboardingCompletedProvider = FutureProvider<bool>((ref) async {
-  final dbHelper = ref.watch(databaseHelperProvider);
-  return await dbHelper.onboardingCompleted();
 });
 
 class NoTransitionPage<T> extends CustomTransitionPage<T> {

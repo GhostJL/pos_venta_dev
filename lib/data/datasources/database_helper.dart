@@ -3,7 +3,7 @@ import 'dart:convert';
 
 import 'package:crypto/crypto.dart';
 import 'package:path/path.dart';
-import 'package:posventa/presentation/providers/onboarding_state.dart';
+
 import 'package:sqflite/sqflite.dart';
 
 class DatabaseHelper {
@@ -958,84 +958,6 @@ class DatabaseHelper {
     await db.execute(
       'CREATE INDEX IF NOT EXISTS idx_sale_return_items_product ON $tableSaleReturnItems(product_id)',
     );
-  }
-
-  Future<bool> onboardingCompleted() async {
-    final db = await database;
-    final result = await db.query(
-      tableAppMeta,
-      where: 'key = ?',
-      whereArgs: ['onboarding_completed'],
-    );
-    return result.isNotEmpty && result.first['value'] == '1';
-  }
-
-  Future<void> setupInitialData(OnboardingState state) async {
-    final db = await database;
-
-    await db.transaction((txn) async {
-      // 0. Clear existing data to prevent conflicts (e.g. default admin from _onCreate)
-      await txn.delete(tableUserPermissions);
-      await txn.delete(tableUsers);
-      await txn.delete(
-        tableAppMeta,
-        where: 'key = ? OR key = ?',
-        whereArgs: ['onboarding_completed', 'app_access_key_hash'],
-      );
-
-      // 1. Insert Admin User
-      var adminMap = state.adminUser!.toMap();
-      // Remove ID to allow autoincrement if it's 0 or null, or keep it if we want to force it.
-      // Since we deleted everything, we can let it autoincrement or force 1.
-      // The error showed ID 0 being passed. Let's remove 'id' from map to let SQLite assign 1.
-      adminMap.remove('id');
-      adminMap['password_hash'] = _hashData(state.adminPassword!);
-
-      // Insert and get the new ID
-      final adminId = await txn.insert(tableUsers, adminMap);
-
-      // 1.1 Re-assign permissions to the new admin
-      // We need to get all permissions and assign them to this new adminId
-      final permissions = await txn.query(tablePermissions);
-      for (final perm in permissions) {
-        await txn.insert(tableUserPermissions, {
-          'user_id': adminId,
-          'permission_id': perm['id'],
-        });
-      }
-
-      // 2. Insert Cashier Users
-      for (final cashier in state.cashiers) {
-        final cashierMap = cashier.toMap();
-        cashierMap.remove('id'); // Let SQLite assign IDs
-        final rawPassword = cashier.passwordHash ?? '';
-        if (rawPassword.isEmpty) {
-          throw Exception(
-            'Error de incorporación: la contraseña del cajero para ${cashier.username} está vacía.',
-          );
-        }
-        cashierMap['password_hash'] = _hashData(rawPassword);
-        await txn.insert(tableUsers, cashierMap);
-      }
-
-      // 3. Mark Onboarding as Completed
-      await txn.insert(tableAppMeta, {
-        'key': 'onboarding_completed',
-        'value': '1',
-      }, conflictAlgorithm: ConflictAlgorithm.replace);
-
-      // 4. Save the hashed App Access Key
-      if (state.accessKey != null && state.accessKey!.isNotEmpty) {
-        await txn.insert(tableAppMeta, {
-          'key': 'app_access_key_hash',
-          'value': _hashData(state.accessKey!),
-        }, conflictAlgorithm: ConflictAlgorithm.replace);
-      } else {
-        throw Exception(
-          'Error de incorporación: falta la clave de acceso a la aplicación.',
-        );
-      }
-    });
   }
 
   // Database reset method

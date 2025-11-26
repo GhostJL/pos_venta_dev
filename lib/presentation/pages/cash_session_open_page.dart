@@ -77,12 +77,19 @@ class _CashSessionOpenPageState extends ConsumerState<CashSessionOpenPage> {
         );
         // Invalidar el provider para que el Guard detecte la nueva sesión
         ref.invalidate(currentCashSessionProvider);
+
+        // Reset loading state
+        setState(() {
+          _isLoading = false;
+        });
       }
     } catch (e) {
-      setState(() {
-        _errorMessage = e.toString().replaceAll('Exception: ', '');
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _errorMessage = e.toString().replaceAll('Exception: ', '');
+          _isLoading = false;
+        });
+      }
     }
   }
 

@@ -1385,6 +1385,102 @@ final class DeleteUserProvider
 
 String _$deleteUserHash() => r'75ab4530a0645fe2c2ac76bc69aa750a11d1259b';
 
+@ProviderFor(permissionRepository)
+const permissionRepositoryProvider = PermissionRepositoryProvider._();
+
+final class PermissionRepositoryProvider
+    extends
+        $FunctionalProvider<
+          PermissionRepository,
+          PermissionRepository,
+          PermissionRepository
+        >
+    with $Provider<PermissionRepository> {
+  const PermissionRepositoryProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'permissionRepositoryProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$permissionRepositoryHash();
+
+  @$internal
+  @override
+  $ProviderElement<PermissionRepository> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  PermissionRepository create(Ref ref) {
+    return permissionRepository(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(PermissionRepository value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<PermissionRepository>(value),
+    );
+  }
+}
+
+String _$permissionRepositoryHash() =>
+    r'ba1c758a97fb68c62d3fb8cb39a419ba963207b6';
+
+@ProviderFor(userPermissionRepository)
+const userPermissionRepositoryProvider = UserPermissionRepositoryProvider._();
+
+final class UserPermissionRepositoryProvider
+    extends
+        $FunctionalProvider<
+          UserPermissionRepository,
+          UserPermissionRepository,
+          UserPermissionRepository
+        >
+    with $Provider<UserPermissionRepository> {
+  const UserPermissionRepositoryProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'userPermissionRepositoryProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$userPermissionRepositoryHash();
+
+  @$internal
+  @override
+  $ProviderElement<UserPermissionRepository> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  UserPermissionRepository create(Ref ref) {
+    return userPermissionRepository(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(UserPermissionRepository value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<UserPermissionRepository>(value),
+    );
+  }
+}
+
+String _$userPermissionRepositoryHash() =>
+    r'3b50fb2bb73cd2a79830430308a50f30b42a767f';
+
 @ProviderFor(customerRepository)
 const customerRepositoryProvider = CustomerRepositoryProvider._();
 

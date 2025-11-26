@@ -155,12 +155,6 @@ class MenuConfig {
             route: '/inventory-adjustments-menu',
             requiredPermissions: [PermissionConstants.inventoryView],
           ),
-          const MenuItem(
-            title: 'Kardex (Movimientos)',
-            icon: Icons.history_rounded,
-            route: '/kardex',
-            requiredPermissions: [PermissionConstants.inventoryView],
-          ),
         ],
       ),
 
@@ -203,12 +197,6 @@ class MenuConfig {
             icon: Icons.settings_rounded,
             route: '/tax-store-config',
             customAccessCheck: (user) => user?.role == UserRole.administrador,
-          ),
-          const MenuItem(
-            title: 'Reportes y Análisis',
-            icon: Icons.analytics_rounded,
-            route: '/reports-analytics',
-            requiredPermissions: [PermissionConstants.reportsView],
           ),
         ],
       ),
