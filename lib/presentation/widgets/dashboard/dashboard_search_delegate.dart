@@ -14,7 +14,6 @@ class DashboardSearchDelegate extends SearchDelegate<String?> {
     {'term': 'Marcas', 'route': '/brands'},
     {'term': 'Almacenes', 'route': '/warehouses'},
     {'term': 'Cajeros', 'route': '/cashiers'},
-    {'term': 'Reporte de Movimientos', 'route': '/cash-movements-report'},
     {'term': 'Historial de Sesiones', 'route': '/cash-sessions-history'},
   ];
 

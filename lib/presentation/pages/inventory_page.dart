@@ -36,15 +36,6 @@ class InventoryPage extends ConsumerWidget {
         centerTitle: true,
         backgroundColor: AppTheme.background,
         elevation: 0,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.history_rounded),
-            onPressed: () {
-              context.push('/inventory/movements');
-            },
-            tooltip: 'Ver Kardex',
-          ),
-        ],
       ),
       body: inventoryAsync.when(
         data: (inventoryList) {

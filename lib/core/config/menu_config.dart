@@ -114,18 +114,12 @@ class MenuConfig {
       MenuGroup(
         title: 'Gestión de Efectivo',
         groupIcon: Icons.account_balance_wallet_rounded,
-        defaultExpanded: true,
+        defaultExpanded: false,
         items: [
           const MenuItem(
             title: 'Gestión de Sesiones de Caja',
             icon: Icons.history_edu_rounded,
             route: '/cash-sessions-history',
-            requiredPermissions: [PermissionConstants.reportsView],
-          ),
-          const MenuItem(
-            title: 'Movimientos de Caja',
-            icon: Icons.monetization_on_rounded,
-            route: '/cash-movements-report',
             requiredPermissions: [PermissionConstants.reportsView],
           ),
         ],
@@ -135,7 +129,7 @@ class MenuConfig {
       MenuGroup(
         title: 'Inventario y Compras',
         groupIcon: Icons.inventory_rounded,
-        defaultExpanded: true,
+        defaultExpanded: false,
         items: [
           const MenuItem(
             title: 'Catálogo de Productos',
@@ -162,7 +156,7 @@ class MenuConfig {
       MenuGroup(
         title: 'Catálogos Base',
         groupIcon: Icons.folder_rounded,
-        defaultExpanded: true,
+        defaultExpanded: false,
         items: [
           const MenuItem(
             title: 'Clientes',
@@ -183,7 +177,7 @@ class MenuConfig {
       MenuGroup(
         title: 'Administración',
         groupIcon: Icons.admin_panel_settings_rounded,
-        defaultExpanded: true,
+        defaultExpanded: false,
         visibilityCheck: (user) => user?.role == UserRole.administrador,
         items: [
           MenuItem(
@@ -244,12 +238,7 @@ class MenuConfig {
             route: '/inventory',
             requiredPermissions: [PermissionConstants.inventoryView],
           ),
-          const MenuItem(
-            title: 'Movimientos de Inventario',
-            icon: Icons.swap_horiz_rounded,
-            route: '/inventory/movements',
-            requiredPermissions: [PermissionConstants.inventoryView],
-          ),
+
           MenuItem(
             title: 'Cajeros',
             icon: Icons.person_rounded,
@@ -276,12 +265,7 @@ class MenuConfig {
         route: '/returns',
         requiredPermissions: [PermissionConstants.posAccess],
       ),
-      const MenuItem(
-        title: 'Movimientos de Caja',
-        icon: Icons.monetization_on_rounded,
-        route: '/cash-movements-report',
-        requiredPermissions: [PermissionConstants.reportsView],
-      ),
+
       const MenuItem(
         title: 'Cierre de Turno',
         icon: Icons.lock_clock_rounded,

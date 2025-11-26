@@ -35,20 +35,20 @@ import 'package:posventa/presentation/pages/tax_rate_page.dart';
 
 import 'package:posventa/presentation/pages/cashier/cashier_list_page.dart';
 import 'package:posventa/presentation/pages/cash_session_history_page.dart';
-import 'package:posventa/presentation/pages/cash_movements_report_page.dart';
+
 import 'package:posventa/presentation/widgets/product_form_page.dart';
 import 'package:posventa/presentation/widgets/brand_form.dart';
 import 'package:posventa/presentation/widgets/category_form.dart';
 import 'package:posventa/presentation/widgets/customer_form.dart';
 import 'package:posventa/presentation/widgets/department_form.dart';
 import 'package:posventa/presentation/widgets/supplier_form.dart';
-import 'package:posventa/presentation/pages/inventory_movements_page.dart';
+
 import 'package:posventa/presentation/pages/inventory_form_page.dart';
 import 'package:posventa/presentation/pages/cashier/cashier_form_page.dart';
 import 'package:posventa/presentation/pages/cashier/cashier_permissions_page.dart';
 import 'package:posventa/presentation/pages/cash_session_detail_page.dart';
 import 'package:posventa/presentation/widgets/barcode_scanner_widget.dart';
-import 'package:posventa/presentation/pages/inventory_movement_form_page.dart';
+
 import 'package:posventa/presentation/pages/returns_management_page.dart';
 import 'package:posventa/presentation/pages/inventory_adjustments_page.dart';
 import 'package:posventa/presentation/pages/inventory_adjustments_menu_page.dart';
@@ -246,11 +246,7 @@ final routerProvider = Provider<GoRouter>((ref) {
             pageBuilder: (context, state) =>
                 const NoTransitionPage(child: CashSessionHistoryPage()),
           ),
-          GoRoute(
-            path: '/cash-movements-report',
-            pageBuilder: (context, state) =>
-                const NoTransitionPage(child: CashMovementsReportPage()),
-          ),
+
           // Form Routes
           GoRoute(
             path: '/products/form',
@@ -296,11 +292,7 @@ final routerProvider = Provider<GoRouter>((ref) {
               return NoTransitionPage(child: BrandForm(brand: brand));
             },
           ),
-          GoRoute(
-            path: '/inventory/movements',
-            pageBuilder: (context, state) =>
-                const NoTransitionPage(child: InventoryMovementsPage()),
-          ),
+
           GoRoute(
             path: '/inventory/form',
             pageBuilder: (context, state) {
@@ -347,11 +339,7 @@ final routerProvider = Provider<GoRouter>((ref) {
               );
             },
           ),
-          GoRoute(
-            path: '/inventory/movements/new',
-            pageBuilder: (context, state) =>
-                const NoTransitionPage(child: InventoryMovementFormPage()),
-          ),
+
           // New Module Routes
           GoRoute(
             path: '/returns',
