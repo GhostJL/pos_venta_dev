@@ -9,4 +9,8 @@ class GetAllInventory {
   Future<List<Inventory>> call() async {
     return await repository.getAllInventory();
   }
+
+  Stream<List<Inventory>> stream() {
+    return repository.getAllInventoryStream();
+  }
 }

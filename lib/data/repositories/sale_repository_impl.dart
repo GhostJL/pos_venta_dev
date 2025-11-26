@@ -157,9 +157,38 @@ class SaleRepositoryImpl implements SaleRepository {
   }
 
   @override
+  Stream<List<Sale>> getSalesStream({
+    DateTime? startDate,
+    DateTime? endDate,
+    int? limit,
+    int? offset,
+  }) async* {
+    // Yield initial data
+    yield await getSales(
+      startDate: startDate,
+      endDate: endDate,
+      limit: limit,
+      offset: offset,
+    );
+
+    // Listen for updates
+    await for (final table in _databaseHelper.tableUpdateStream) {
+      if (table == DatabaseHelper.tableSales ||
+          table == DatabaseHelper.tableSaleItems) {
+        yield await getSales(
+          startDate: startDate,
+          endDate: endDate,
+          limit: limit,
+          offset: offset,
+        );
+      }
+    }
+  }
+
+  @override
   Future<int> createSale(Sale sale) async {
     final db = await _databaseHelper.database;
-    return await db.transaction((txn) async {
+    final saleId = await db.transaction((txn) async {
       // 1. Insert Sale
       final saleModel = SaleModel.fromEntity(sale);
       final saleId = await txn.insert(
@@ -250,6 +279,10 @@ class SaleRepositoryImpl implements SaleRepository {
 
       return saleId;
     });
+
+    _databaseHelper.notifyTableChanged(DatabaseHelper.tableSales);
+    _databaseHelper.notifyTableChanged(DatabaseHelper.tableInventory);
+    return saleId;
   }
 
   @override
@@ -328,6 +361,8 @@ class SaleRepositoryImpl implements SaleRepository {
         });
       }
     });
+    _databaseHelper.notifyTableChanged(DatabaseHelper.tableSales);
+    _databaseHelper.notifyTableChanged(DatabaseHelper.tableInventory);
   }
 
   @override

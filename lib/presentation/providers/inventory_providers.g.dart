@@ -13,7 +13,7 @@ part of 'inventory_providers.dart';
 const inventoryProvider = InventoryNotifierProvider._();
 
 final class InventoryNotifierProvider
-    extends $AsyncNotifierProvider<InventoryNotifier, List<Inventory>> {
+    extends $StreamNotifierProvider<InventoryNotifier, List<Inventory>> {
   const InventoryNotifierProvider._()
     : super(
         from: null,
@@ -33,10 +33,10 @@ final class InventoryNotifierProvider
   InventoryNotifier create() => InventoryNotifier();
 }
 
-String _$inventoryNotifierHash() => r'65339f3de9e1c0084e5377e0badfff80d9a5ddcc';
+String _$inventoryNotifierHash() => r'5c249965437c49e0a926fa8217500c68ecb44c73';
 
-abstract class _$InventoryNotifier extends $AsyncNotifier<List<Inventory>> {
-  FutureOr<List<Inventory>> build();
+abstract class _$InventoryNotifier extends $StreamNotifier<List<Inventory>> {
+  Stream<List<Inventory>> build();
   @$mustCallSuper
   @override
   void runBuild() {
@@ -138,9 +138,9 @@ final class ProductsProvider
         $FunctionalProvider<
           AsyncValue<List<Product>>,
           List<Product>,
-          FutureOr<List<Product>>
+          Stream<List<Product>>
         >
-    with $FutureModifier<List<Product>>, $FutureProvider<List<Product>> {
+    with $FutureModifier<List<Product>>, $StreamProvider<List<Product>> {
   const ProductsProvider._()
     : super(
         from: null,
@@ -157,17 +157,17 @@ final class ProductsProvider
 
   @$internal
   @override
-  $FutureProviderElement<List<Product>> $createElement(
+  $StreamProviderElement<List<Product>> $createElement(
     $ProviderPointer pointer,
-  ) => $FutureProviderElement(pointer);
+  ) => $StreamProviderElement(pointer);
 
   @override
-  FutureOr<List<Product>> create(Ref ref) {
+  Stream<List<Product>> create(Ref ref) {
     return products(ref);
   }
 }
 
-String _$productsHash() => r'a51f5d7c08848bd6e8ba86e0049e88c41516342b';
+String _$productsHash() => r'8b519285c4b15197119be5649e7befc9d9b2ecbe';
 
 @ProviderFor(warehouses)
 const warehousesProvider = WarehousesProvider._();

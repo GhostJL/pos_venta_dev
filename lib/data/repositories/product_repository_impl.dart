@@ -14,6 +14,17 @@ class ProductRepositoryImpl implements ProductRepository {
   ProductRepositoryImpl(this.databaseHelper);
 
   @override
+  Stream<List<Product>> getAllProductsStream() async* {
+    yield await getAllProducts();
+    await for (final table in databaseHelper.tableUpdateStream) {
+      if (table == DatabaseHelper.tableProducts ||
+          table == DatabaseHelper.tableInventory) {
+        yield await getAllProducts();
+      }
+    }
+  }
+
+  @override
   Future<int> createProduct(Product product) async {
     final db = await databaseHelper.database;
     final productModel = ProductModel.fromEntity(product);
@@ -52,6 +63,7 @@ class ProductRepositoryImpl implements ProductRepository {
       }
     }
 
+    databaseHelper.notifyTableChanged(DatabaseHelper.tableProducts);
     return productId;
   }
 
@@ -63,6 +75,7 @@ class ProductRepositoryImpl implements ProductRepository {
       where: 'id = ?',
       whereArgs: [id],
     );
+    databaseHelper.notifyTableChanged(DatabaseHelper.tableProducts);
   }
 
   @override
@@ -197,6 +210,7 @@ class ProductRepositoryImpl implements ProductRepository {
         }
       }
     });
+    databaseHelper.notifyTableChanged(DatabaseHelper.tableProducts);
   }
 
   @override
@@ -204,6 +218,7 @@ class ProductRepositoryImpl implements ProductRepository {
     final db = await databaseHelper.database;
     final productTaxModel = ProductTaxModel.fromEntity(productTax);
     await db.insert(DatabaseHelper.tableProductTaxes, productTaxModel.toMap());
+    databaseHelper.notifyTableChanged(DatabaseHelper.tableProducts);
   }
 
   @override
@@ -225,6 +240,7 @@ class ProductRepositoryImpl implements ProductRepository {
       where: 'product_id = ? AND tax_rate_id = ?',
       whereArgs: [productId, taxRateId],
     );
+    databaseHelper.notifyTableChanged(DatabaseHelper.tableProducts);
   }
 
   @override

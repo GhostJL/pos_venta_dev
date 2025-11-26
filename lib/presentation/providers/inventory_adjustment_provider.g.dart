@@ -43,7 +43,7 @@ final class InventoryAdjustmentNotifierProvider
 }
 
 String _$inventoryAdjustmentNotifierHash() =>
-    r'37453c6770124d440f4196142108f5970402369b';
+    r'4e4ace0075fdad6c4122e8e93492a064fa9d7ac2';
 
 abstract class _$InventoryAdjustmentNotifier
     extends $Notifier<List<AdjustmentItem>> {

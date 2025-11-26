@@ -3,6 +3,7 @@ import 'package:posventa/domain/entities/inventory_movement.dart';
 
 abstract class InventoryRepository {
   Future<List<Inventory>> getAllInventory();
+  Stream<List<Inventory>> getAllInventoryStream();
   Future<List<Inventory>> getInventoryByProduct(int productId);
   Future<List<Inventory>> getInventoryByWarehouse(int warehouseId);
   Future<Inventory?> getInventoryById(int id);

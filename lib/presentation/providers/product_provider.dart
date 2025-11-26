@@ -6,51 +6,56 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 part 'product_provider.g.dart';
 
 @riverpod
-class ProductList extends _$ProductList {
+class ProductSearchQuery extends _$ProductSearchQuery {
   @override
-  Future<List<Product>> build() async {
-    final getAllProducts = ref.watch(getAllProductsProvider);
-    return getAllProducts();
+  String build() {
+    return '';
   }
 
-  Future<void> searchProducts(String query) async {
+  void setQuery(String query) {
+    state = query;
+  }
+}
+
+@riverpod
+class ProductList extends _$ProductList {
+  @override
+  Stream<List<Product>> build() {
+    final query = ref.watch(productSearchQueryProvider);
     if (query.isEmpty) {
-      ref.invalidateSelf();
-      return;
+      final getAllProducts = ref.watch(getAllProductsProvider);
+      return getAllProducts.stream();
+    } else {
+      return Stream.fromFuture(_searchProducts(query));
     }
-    state = const AsyncValue.loading();
-    state = await AsyncValue.guard(() async {
-      final searchProducts = ref.read(searchProductsProvider);
-      return searchProducts(query);
-    });
+  }
+
+  Future<List<Product>> _searchProducts(String query) async {
+    final searchProducts = ref.read(searchProductsProvider);
+    return searchProducts(query);
+  }
+
+  void searchProducts(String query) {
+    ref.read(productSearchQueryProvider.notifier).setQuery(query);
   }
 
   Future<void> addProduct(Product product) async {
-    state = const AsyncValue.loading();
-    state = await AsyncValue.guard(() async {
-      await ref.read(createProductProvider).call(product);
-      return ref.read(getAllProductsProvider).call();
-    });
+    await ref.read(createProductProvider).call(product);
+    // Stream will auto-update
   }
 
   Future<void> updateProduct(Product product) async {
-    state = const AsyncValue.loading();
-    state = await AsyncValue.guard(() async {
-      await ref.read(updateProductProvider).call(product);
-      return ref.read(getAllProductsProvider).call();
-    });
+    await ref.read(updateProductProvider).call(product);
+    // Stream will auto-update
   }
 
   Future<void> deleteProduct(int id) async {
-    state = const AsyncValue.loading();
-    state = await AsyncValue.guard(() async {
-      await ref.read(deleteProductProvider).call(id);
-      return ref.read(getAllProductsProvider).call();
-    });
+    await ref.read(deleteProductProvider).call(id);
+    // Stream will auto-update
   }
 
   Future<void> toggleProductActive(int productId) async {
-    final currentState = state.asData?.value;
+    final currentState = state.value;
     if (currentState == null) return;
 
     try {

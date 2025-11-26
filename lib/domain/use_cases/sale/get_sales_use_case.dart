@@ -19,4 +19,18 @@ class GetSalesUseCase {
       offset: offset,
     );
   }
+
+  Stream<List<Sale>> stream({
+    DateTime? startDate,
+    DateTime? endDate,
+    int? limit,
+    int? offset,
+  }) {
+    return _repository.getSalesStream(
+      startDate: startDate,
+      endDate: endDate,
+      limit: limit,
+      offset: offset,
+    );
+  }
 }

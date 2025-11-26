@@ -7,6 +7,12 @@ abstract class SaleRepository {
     int? limit,
     int? offset,
   });
+  Stream<List<Sale>> getSalesStream({
+    DateTime? startDate,
+    DateTime? endDate,
+    int? limit,
+    int? offset,
+  });
   Future<Sale?> getSaleById(int id);
   Future<Sale?> getSaleByNumber(String saleNumber);
   Future<int> createSale(Sale sale);

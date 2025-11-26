@@ -9,4 +9,8 @@ class GetAllProducts {
   Future<List<Product>> call() {
     return repository.getAllProducts();
   }
+
+  Stream<List<Product>> stream() {
+    return repository.getAllProductsStream();
+  }
 }

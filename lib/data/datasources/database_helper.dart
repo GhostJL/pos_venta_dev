@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:crypto/crypto.dart';
@@ -47,6 +48,14 @@ class DatabaseHelper {
   static const tableSaleReturnItems = 'sale_return_items';
 
   static Database? _database;
+
+  // Stream controller for table updates
+  final _tableUpdateController = StreamController<String>.broadcast();
+  Stream<String> get tableUpdateStream => _tableUpdateController.stream;
+
+  void notifyTableChanged(String tableName) {
+    _tableUpdateController.add(tableName);
+  }
 
   Future<Database> get database async {
     if (_database != null) return _database!;

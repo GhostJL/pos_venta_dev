@@ -10,6 +10,16 @@ class InventoryRepositoryImpl implements InventoryRepository {
   InventoryRepositoryImpl(this._databaseHelper);
 
   @override
+  Stream<List<Inventory>> getAllInventoryStream() async* {
+    yield await getAllInventory();
+    await for (final table in _databaseHelper.tableUpdateStream) {
+      if (table == DatabaseHelper.tableInventory) {
+        yield await getAllInventory();
+      }
+    }
+  }
+
+  @override
   Future<void> createInventory(Inventory inventory) async {
     final model = InventoryModel.fromEntity(inventory);
     final map = model.toJson();
@@ -22,11 +32,13 @@ class InventoryRepositoryImpl implements InventoryRepository {
     map['updated_at'] = DateTime.now().toIso8601String();
 
     await _databaseHelper.insert(DatabaseHelper.tableInventory, map);
+    _databaseHelper.notifyTableChanged(DatabaseHelper.tableInventory);
   }
 
   @override
   Future<void> deleteInventory(int id) async {
     await _databaseHelper.delete(DatabaseHelper.tableInventory, id);
+    _databaseHelper.notifyTableChanged(DatabaseHelper.tableInventory);
   }
 
   @override
@@ -85,6 +97,7 @@ class InventoryRepositoryImpl implements InventoryRepository {
     map['updated_at'] = DateTime.now().toIso8601String();
 
     await _databaseHelper.update(DatabaseHelper.tableInventory, map);
+    _databaseHelper.notifyTableChanged(DatabaseHelper.tableInventory);
   }
 
   @override
@@ -142,6 +155,7 @@ class InventoryRepositoryImpl implements InventoryRepository {
         'movement_date': DateTime.now().toIso8601String(),
       });
     });
+    _databaseHelper.notifyTableChanged(DatabaseHelper.tableInventory);
   }
 
   @override
@@ -200,6 +214,7 @@ class InventoryRepositoryImpl implements InventoryRepository {
         });
       }
     });
+    _databaseHelper.notifyTableChanged(DatabaseHelper.tableInventory);
   }
 
   @override
@@ -315,5 +330,6 @@ class InventoryRepositoryImpl implements InventoryRepository {
         'movement_date': DateTime.now().toIso8601String(),
       });
     });
+    _databaseHelper.notifyTableChanged(DatabaseHelper.tableInventory);
   }
 }

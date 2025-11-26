@@ -6,6 +6,7 @@ abstract class ProductRepository {
   Future<int> createProduct(Product product);
   Future<Product?> getProductById(int id);
   Future<List<Product>> getAllProducts();
+  Stream<List<Product>> getAllProductsStream();
   Future<List<Product>> searchProducts(String query);
   Future<void> updateProduct(Product product);
   Future<void> deleteProduct(int id);

@@ -89,10 +89,10 @@ class _SalesHistoryPageState extends ConsumerState<SalesHistoryPage> {
             ),
         ],
       ),
-      body: FutureBuilder<List<Sale>>(
-        future: ref
+      body: StreamBuilder<List<Sale>>(
+        stream: ref
             .read(getSalesUseCaseProvider)
-            .call(startDate: _startDate, endDate: _endDate),
+            .stream(startDate: _startDate, endDate: _endDate),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
