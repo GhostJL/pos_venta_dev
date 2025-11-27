@@ -368,14 +368,14 @@ class DashboardScreen extends ConsumerWidget {
       ),
       DashboardCard(
         title: 'Historial de Ventas',
-        value: 'Ver Registros',
+        value: 'Ver Registros y detalles',
         icon: Icons.receipt_long_rounded,
         iconColor: Colors.blue.shade600,
         onTap: () => context.go('/sales-history'),
       ),
       DashboardCard(
         title: 'Cortes de Caja',
-        value: 'Historial Sesiones',
+        value: 'Sesiones de Caja y detalles',
         icon: Icons.history_edu_rounded,
         iconColor: Colors.orange.shade600,
         onTap: () => context.go('/cash-sessions-history'),
@@ -420,13 +420,6 @@ class DashboardScreen extends ConsumerWidget {
         onTap: () => context.go('/inventory'),
       ),
       DashboardCard(
-        title: 'Reportes',
-        value: 'Reportes',
-        icon: Icons.report_rounded,
-        iconColor: Colors.indigo.shade600,
-        onTap: () => context.go('/reports/returns'),
-      ),
-      DashboardCard(
         title: 'Ajustes de Inventario',
         value: 'Correcciones y Ajustes',
         icon: Icons.tune_rounded,
@@ -435,14 +428,14 @@ class DashboardScreen extends ConsumerWidget {
       ),
       DashboardCard(
         title: 'Clientes',
-        value: 'Base de Datos',
+        value: 'Informacion y detalles',
         icon: Icons.people_alt_rounded,
         iconColor: Colors.purple.shade600,
         onTap: () => context.go('/customers'),
       ),
       DashboardCard(
         title: 'Compras',
-        value: 'Proveedores',
+        value: 'Proveedores y Productos',
         icon: Icons.shopping_cart_rounded,
         iconColor: Colors.teal.shade600,
         onTap: () => context.go('/purchases'),

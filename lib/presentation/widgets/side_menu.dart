@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:animate_do/animate_do.dart';
 import 'package:posventa/core/theme/theme.dart';
 import 'package:posventa/domain/entities/user.dart';
 import 'package:posventa/presentation/providers/auth_provider.dart';
@@ -134,7 +135,7 @@ class _SideMenuState extends ConsumerState<SideMenu> {
         decoration: InputDecoration(
           hintText: 'Buscar en menú...',
           hintStyle: TextStyle(
-            color: AppTheme.textSecondary.withOpacity(0.6),
+            color: AppTheme.textSecondary.withValues(alpha: 0.6),
             fontSize: 14,
           ),
           prefixIcon: Icon(
@@ -269,7 +270,7 @@ class _SideMenuState extends ConsumerState<SideMenu> {
               Icon(
                 Icons.search_off_rounded,
                 size: 48,
-                color: AppTheme.textSecondary.withOpacity(0.5),
+                color: AppTheme.textSecondary.withValues(alpha: 0.5),
               ),
               const SizedBox(height: 16),
               Text(
@@ -337,7 +338,7 @@ class _SideMenuState extends ConsumerState<SideMenu> {
               Icon(
                 Icons.search_off_rounded,
                 size: 48,
-                color: AppTheme.textSecondary.withOpacity(0.5),
+                color: AppTheme.textSecondary.withValues(alpha: 0.5),
               ),
               const SizedBox(height: 16),
               Text(
@@ -587,9 +588,10 @@ class _QuickActionButtonState extends State<_QuickActionButton> {
       onEnter: (_) => setState(() => _isHovered = true),
       onExit: (_) => setState(() => _isHovered = false),
       cursor: SystemMouseCursors.click,
-      child: AnimatedContainer(
+      child: ZoomIn(
         duration: const Duration(milliseconds: 200),
-        transform: Matrix4.identity()..scale(_isHovered ? 1.05 : 1.0),
+        from: _isHovered ? 1.0 : 1.05,
+        animate: true,
         child: InkWell(
           onTap: widget.onTap,
           borderRadius: BorderRadius.circular(12),

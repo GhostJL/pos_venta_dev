@@ -109,7 +109,7 @@ class _MenuGroupWidgetState extends ConsumerState<MenuGroupWidget>
                         widget.menuGroup.groupIcon,
                         size: _isHovered ? 20 : 18,
                         color: _isHovered
-                            ? AppTheme.primary.withOpacity(0.8)
+                            ? AppTheme.primary.withValues(alpha: 0.8)
                             : AppTheme.textSecondary,
                       ),
                     ),
@@ -120,7 +120,7 @@ class _MenuGroupWidgetState extends ConsumerState<MenuGroupWidget>
                       duration: const Duration(milliseconds: 200),
                       style: TextStyle(
                         color: _isHovered
-                            ? AppTheme.primary.withOpacity(0.8)
+                            ? AppTheme.primary.withValues(alpha: 0.8)
                             : AppTheme.textSecondary,
                         fontWeight: FontWeight.bold,
                         fontSize: 11,
@@ -137,7 +137,7 @@ class _MenuGroupWidgetState extends ConsumerState<MenuGroupWidget>
                         Icons.expand_more,
                         size: 20,
                         color: _isHovered
-                            ? AppTheme.primary.withOpacity(0.8)
+                            ? AppTheme.primary.withValues(alpha: 0.8)
                             : AppTheme.textSecondary,
                       ),
                     ),

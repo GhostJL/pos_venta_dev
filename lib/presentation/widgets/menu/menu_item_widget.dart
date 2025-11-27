@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:animate_do/animate_do.dart';
 import 'package:posventa/core/theme/theme.dart';
 import 'package:posventa/core/config/menu_config.dart';
 
@@ -33,11 +34,10 @@ class _MenuItemWidgetState extends State<MenuItemWidget> {
         onEnter: (_) => setState(() => _isHovered = true),
         onExit: (_) => setState(() => _isHovered = false),
         cursor: SystemMouseCursors.click,
-        child: AnimatedContainer(
+        child: SlideInLeft(
           duration: const Duration(milliseconds: 200),
-          curve: Curves.easeOut,
-          transform: Matrix4.identity()
-            ..translate(_isHovered && !isSelected ? 4.0 : 0.0, 0.0),
+          from: _isHovered && !isSelected ? -4 : 0,
+          animate: true,
           child: Stack(
             children: [
               // Barra lateral izquierda para indicar selección
@@ -46,11 +46,14 @@ class _MenuItemWidgetState extends State<MenuItemWidget> {
                   left: 0,
                   top: 0,
                   bottom: 0,
-                  child: Container(
-                    width: 4,
-                    decoration: BoxDecoration(
-                      color: AppTheme.primary,
-                      borderRadius: BorderRadius.circular(2),
+                  child: FadeIn(
+                    duration: const Duration(milliseconds: 200),
+                    child: Container(
+                      width: 4,
+                      decoration: BoxDecoration(
+                        color: AppTheme.primary,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
                     ),
                   ),
                 ),
@@ -66,7 +69,7 @@ class _MenuItemWidgetState extends State<MenuItemWidget> {
                     color: isSelected
                         ? AppTheme.primary
                         : _isHovered
-                        ? AppTheme.primary.withOpacity(0.7)
+                        ? AppTheme.primary.withValues(alpha: 0.7)
                         : AppTheme.textSecondary,
                     size: _isHovered ? 24 : 22,
                   ),
@@ -80,7 +83,7 @@ class _MenuItemWidgetState extends State<MenuItemWidget> {
                           color: isSelected
                               ? AppTheme.primary
                               : _isHovered
-                              ? AppTheme.primary.withOpacity(0.7)
+                              ? AppTheme.primary.withValues(alpha: 0.7)
                               : AppTheme.textPrimary,
                           fontWeight: isSelected
                               ? FontWeight.bold
@@ -92,21 +95,25 @@ class _MenuItemWidgetState extends State<MenuItemWidget> {
                     ),
                     if (widget.menuItem.badgeCount != null &&
                         widget.menuItem.badgeCount! > 0)
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 2,
-                        ),
-                        decoration: BoxDecoration(
-                          color: AppTheme.error,
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Text(
-                          '${widget.menuItem.badgeCount}',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 11,
-                            fontWeight: FontWeight.bold,
+                      Pulse(
+                        infinite: true,
+                        duration: const Duration(seconds: 2),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 2,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppTheme.error,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Text(
+                            '${widget.menuItem.badgeCount}',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ),
                       ),
