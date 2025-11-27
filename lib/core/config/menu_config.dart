@@ -22,29 +22,22 @@ class MenuItem {
 
   /// Check if the user has access to this menu item
   bool hasAccess(User? user, List<String> userPermissions) {
-    // Administrators always have access
     if (user?.role == UserRole.administrador) return true;
-
-    // Custom access check takes precedence
     if (customAccessCheck != null) {
       return customAccessCheck!(user);
     }
-
-    // Check required permissions
     if (requiredPermissions != null && requiredPermissions!.isNotEmpty) {
       return requiredPermissions!.any(
         (permission) => userPermissions.contains(permission),
       );
     }
-
-    // No restrictions, allow access
     return true;
   }
 }
 
 /// Represents a group of menu items
 class MenuGroup {
-  final String id; // ID único para el grupo
+  final String id;
   final String title;
   final IconData? groupIcon;
   final List<MenuItem> items;
@@ -53,7 +46,7 @@ class MenuGroup {
   final bool Function(User?)? visibilityCheck;
 
   const MenuGroup({
-    required this.id, // Nuevo campo requerido
+    required this.id,
     required this.title,
     required this.items,
     this.groupIcon,
@@ -62,18 +55,13 @@ class MenuGroup {
     this.visibilityCheck,
   });
 
-  /// Check if this group should be visible to the user
   bool isVisible(User? user, List<String> userPermissions) {
-    // Custom visibility check
     if (visibilityCheck != null) {
       return visibilityCheck!(user);
     }
-
-    // Group is visible if at least one item is accessible
     return items.any((item) => item.hasAccess(user, userPermissions));
   }
 
-  /// Get filtered items that the user can access
   List<MenuItem> getAccessibleItems(User? user, List<String> userPermissions) {
     return items
         .where((item) => item.hasAccess(user, userPermissions))
@@ -86,11 +74,13 @@ class MenuConfig {
   /// Get the complete administrator menu
   static List<MenuGroup> getAdministratorMenu() {
     return [
-      // Grupo 1: Inicio y Transacciones
+      // ═══════════════════════════════════════════════════════════
+      // SECCIÓN 1: OPERACIONES DIARIAS (Más usado)
+      // ═══════════════════════════════════════════════════════════
       MenuGroup(
-        id: 'home_transactions',
-        title: 'Inicio y Operaciones',
-        groupIcon: Icons.home_rounded,
+        id: 'daily_operations',
+        title: 'Operaciones Diarias',
+        groupIcon: Icons.store_rounded,
         defaultExpanded: true,
         items: [
           const MenuItem(
@@ -105,43 +95,40 @@ class MenuConfig {
             requiredPermissions: [PermissionConstants.posAccess],
           ),
           const MenuItem(
-            title: 'Sesiones de caja',
-            icon: Icons.history_edu_rounded,
-            route: '/cash-sessions-history',
-            requiredPermissions: [PermissionConstants.reportsView],
-          ),
-          const MenuItem(
             title: 'Historial de Ventas',
             icon: Icons.receipt_long_rounded,
             route: '/sales-history',
             requiredPermissions: [PermissionConstants.reportsView],
           ),
+          const MenuItem(
+            title: 'Sesiones de Caja',
+            icon: Icons.account_balance_wallet_rounded,
+            route: '/cash-sessions-history',
+            requiredPermissions: [PermissionConstants.reportsView],
+          ),
         ],
       ),
-      // Grupo 3: Inventario y Compras
+
+      // ═══════════════════════════════════════════════════════════
+      // SECCIÓN 2: INVENTARIO Y PRODUCTOS (Segunda más usada)
+      // ═══════════════════════════════════════════════════════════
       MenuGroup(
-        id: 'inventory_purchases',
-        title: 'Inventario y Compras',
-        groupIcon: Icons.inventory_rounded,
+        id: 'inventory_management',
+        title: 'Inventario y Productos',
+        groupIcon: Icons.inventory_2_rounded,
         defaultExpanded: false,
         items: [
           const MenuItem(
-            title: 'Inventario (Stock)',
-            icon: Icons.inventory_rounded,
-            route: '/inventory',
-            requiredPermissions: [PermissionConstants.inventoryView],
-          ),
-          const MenuItem(
-            title: 'Productos',
-            icon: Icons.inventory_2_rounded,
+            title: 'Catálogo de Productos',
+            icon: Icons.shopping_bag_rounded,
             route: '/products',
             requiredPermissions: [PermissionConstants.catalogManage],
           ),
           const MenuItem(
-            title: 'Órdenes de Compra (OCs)',
-            icon: Icons.shopping_cart_rounded,
-            route: '/purchases',
-            requiredPermissions: [PermissionConstants.catalogManage],
+            title: 'Stock Actual',
+            icon: Icons.inventory_rounded,
+            route: '/inventory',
+            requiredPermissions: [PermissionConstants.inventoryView],
           ),
           const MenuItem(
             title: 'Ajustes de Inventario',
@@ -149,19 +136,27 @@ class MenuConfig {
             route: '/inventory-adjustments-menu',
             requiredPermissions: [PermissionConstants.inventoryView],
           ),
+          const MenuItem(
+            title: 'Órdenes de Compra',
+            icon: Icons.shopping_cart_rounded,
+            route: '/purchases',
+            requiredPermissions: [PermissionConstants.catalogManage],
+          ),
         ],
       ),
 
-      // Grupo 4: Catálogos Base
+      // ═══════════════════════════════════════════════════════════
+      // SECCIÓN 3: RELACIONES COMERCIALES
+      // ═══════════════════════════════════════════════════════════
       MenuGroup(
-        id: 'clients_suppliers',
-        title: 'Clientes y proveedores',
-        groupIcon: Icons.folder_rounded,
+        id: 'business_relations',
+        title: 'Clientes y Proveedores',
+        groupIcon: Icons.people_rounded,
         defaultExpanded: false,
         items: [
           const MenuItem(
             title: 'Clientes',
-            icon: Icons.people_rounded,
+            icon: Icons.person_rounded,
             route: '/customers',
             requiredPermissions: [PermissionConstants.customerManage],
           ),
@@ -174,46 +169,56 @@ class MenuConfig {
         ],
       ),
 
-      // Grupo 5: Administración
+      // ═══════════════════════════════════════════════════════════
+      // SECCIÓN 4: CONFIGURACIÓN DEL SISTEMA (Solo Admin)
+      // ═══════════════════════════════════════════════════════════
       MenuGroup(
-        id: 'configuration',
-        title: 'Configuración',
-        groupIcon: Icons.admin_panel_settings_rounded,
+        id: 'system_configuration',
+        title: 'Configuración del Sistema',
+        groupIcon: Icons.settings_rounded,
         defaultExpanded: false,
         visibilityCheck: (user) => user?.role == UserRole.administrador,
         items: [
           MenuItem(
-            title: 'Perfil y tienda',
-            icon: Icons.badge_rounded,
+            title: 'Mi Tienda',
+            icon: Icons.store_mall_directory_rounded,
             route: '/profile',
             customAccessCheck: (user) => user?.role == UserRole.administrador,
           ),
           MenuItem(
-            title: 'Cajeros y permisos',
-            icon: Icons.person_rounded,
+            title: 'Usuarios y Permisos',
+            icon: Icons.admin_panel_settings_rounded,
             route: '/cashiers',
             customAccessCheck: (user) => user?.role == UserRole.administrador,
           ),
           MenuItem(
-            title: 'Configuración de Impuestos',
-            icon: Icons.settings_rounded,
+            title: 'Impuestos',
+            icon: Icons.percent_rounded,
             route: '/tax-store-config',
             customAccessCheck: (user) => user?.role == UserRole.administrador,
+          ),
+          const MenuItem(
+            title: 'Tasas de Impuesto',
+            icon: Icons.price_change_rounded,
+            route: '/tax-rates',
+            requiredPermissions: [PermissionConstants.catalogManage],
           ),
         ],
       ),
 
-      // Grupo 6: Configuración Avanzada
+      // ═══════════════════════════════════════════════════════════
+      // SECCIÓN 5: CATÁLOGOS BASE (Solo Admin - Menos usado)
+      // ═══════════════════════════════════════════════════════════
       MenuGroup(
         id: 'base_catalogs',
-        title: 'Catalogo base',
-        groupIcon: Icons.settings_applications_rounded,
+        title: 'Catálogos Base',
+        groupIcon: Icons.category_rounded,
         defaultExpanded: false,
         visibilityCheck: (user) => user?.role == UserRole.administrador,
         items: [
           const MenuItem(
             title: 'Departamentos',
-            icon: Icons.store_rounded,
+            icon: Icons.apartment_rounded,
             route: '/departments',
             requiredPermissions: [PermissionConstants.catalogManage],
           ),
@@ -235,12 +240,6 @@ class MenuConfig {
             route: '/warehouses',
             requiredPermissions: [PermissionConstants.catalogManage],
           ),
-          const MenuItem(
-            title: 'Tasas de Impuesto',
-            icon: Icons.price_change_rounded,
-            route: '/tax-rates',
-            requiredPermissions: [PermissionConstants.catalogManage],
-          ),
         ],
       ),
     ];
@@ -254,6 +253,12 @@ class MenuConfig {
         icon: Icons.point_of_sale_rounded,
         route: '/sales',
         requiredPermissions: [PermissionConstants.posAccess],
+      ),
+      const MenuItem(
+        title: 'Historial de Ventas',
+        icon: Icons.receipt_long_rounded,
+        route: '/sales-history',
+        requiredPermissions: [PermissionConstants.reportsView],
       ),
       const MenuItem(
         title: 'Gestión de Devoluciones',

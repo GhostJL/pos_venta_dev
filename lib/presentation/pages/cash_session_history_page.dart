@@ -35,7 +35,7 @@ class _CashSessionHistoryPageState
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Historial de Sesiones'),
+        title: const Text('Sesiones de Caja'),
         actions: [
           IconButton(
             icon: const Icon(Icons.filter_list),
