@@ -89,12 +89,12 @@ class MenuConfig {
       // Grupo 1: Inicio y Transacciones
       MenuGroup(
         id: 'home_transactions',
-        title: 'Inicio y Transacciones',
+        title: 'Inicio y Operaciones',
         groupIcon: Icons.home_rounded,
         defaultExpanded: true,
         items: [
           const MenuItem(
-            title: 'Dashboard Principal',
+            title: 'Dashboard',
             icon: Icons.dashboard_rounded,
             route: '/',
           ),
@@ -105,6 +105,12 @@ class MenuConfig {
             requiredPermissions: [PermissionConstants.posAccess],
           ),
           const MenuItem(
+            title: 'Sesiones de caja',
+            icon: Icons.history_edu_rounded,
+            route: '/cash-sessions-history',
+            requiredPermissions: [PermissionConstants.reportsView],
+          ),
+          const MenuItem(
             title: 'Historial de Ventas',
             icon: Icons.receipt_long_rounded,
             route: '/sales-history',
@@ -112,23 +118,6 @@ class MenuConfig {
           ),
         ],
       ),
-
-      // Grupo 2: Gestión de Efectivo
-      MenuGroup(
-        id: 'cash_management',
-        title: 'Gestión de Efectivo',
-        groupIcon: Icons.account_balance_wallet_rounded,
-        defaultExpanded: false,
-        items: [
-          const MenuItem(
-            title: 'Gestión de Sesiones de Caja',
-            icon: Icons.history_edu_rounded,
-            route: '/cash-sessions-history',
-            requiredPermissions: [PermissionConstants.reportsView],
-          ),
-        ],
-      ),
-
       // Grupo 3: Inventario y Compras
       MenuGroup(
         id: 'inventory_purchases',
@@ -137,7 +126,13 @@ class MenuConfig {
         defaultExpanded: false,
         items: [
           const MenuItem(
-            title: 'Catálogo de Productos',
+            title: 'Inventario (Stock)',
+            icon: Icons.inventory_rounded,
+            route: '/inventory',
+            requiredPermissions: [PermissionConstants.inventoryView],
+          ),
+          const MenuItem(
+            title: 'Productos',
             icon: Icons.inventory_2_rounded,
             route: '/products',
             requiredPermissions: [PermissionConstants.catalogManage],
@@ -159,8 +154,8 @@ class MenuConfig {
 
       // Grupo 4: Catálogos Base
       MenuGroup(
-        id: 'base_catalogs',
-        title: 'Catálogos Base',
+        id: 'clients_suppliers',
+        title: 'Clientes y proveedores',
         groupIcon: Icons.folder_rounded,
         defaultExpanded: false,
         items: [
@@ -181,20 +176,26 @@ class MenuConfig {
 
       // Grupo 5: Administración
       MenuGroup(
-        id: 'administration',
-        title: 'Administración',
+        id: 'configuration',
+        title: 'Configuración',
         groupIcon: Icons.admin_panel_settings_rounded,
         defaultExpanded: false,
         visibilityCheck: (user) => user?.role == UserRole.administrador,
         items: [
           MenuItem(
-            title: 'Usuarios y Permisos',
+            title: 'Perfil y tienda',
             icon: Icons.badge_rounded,
-            route: '/users-permissions',
+            route: '/profile',
             customAccessCheck: (user) => user?.role == UserRole.administrador,
           ),
           MenuItem(
-            title: 'Configuración de Impuestos y Tiendas',
+            title: 'Cajeros y permisos',
+            icon: Icons.person_rounded,
+            route: '/cashiers',
+            customAccessCheck: (user) => user?.role == UserRole.administrador,
+          ),
+          MenuItem(
+            title: 'Configuración de Impuestos',
             icon: Icons.settings_rounded,
             route: '/tax-store-config',
             customAccessCheck: (user) => user?.role == UserRole.administrador,
@@ -204,8 +205,8 @@ class MenuConfig {
 
       // Grupo 6: Configuración Avanzada
       MenuGroup(
-        id: 'advanced_config',
-        title: 'Configuración Avanzada',
+        id: 'base_catalogs',
+        title: 'Catalogo base',
         groupIcon: Icons.settings_applications_rounded,
         defaultExpanded: false,
         visibilityCheck: (user) => user?.role == UserRole.administrador,
@@ -239,18 +240,6 @@ class MenuConfig {
             icon: Icons.price_change_rounded,
             route: '/tax-rates',
             requiredPermissions: [PermissionConstants.catalogManage],
-          ),
-          const MenuItem(
-            title: 'Inventario (Stock)',
-            icon: Icons.inventory_rounded,
-            route: '/inventory',
-            requiredPermissions: [PermissionConstants.inventoryView],
-          ),
-          MenuItem(
-            title: 'Cajeros',
-            icon: Icons.person_rounded,
-            route: '/cashiers',
-            customAccessCheck: (user) => user?.role == UserRole.administrador,
           ),
         ],
       ),

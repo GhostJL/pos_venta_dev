@@ -10,12 +10,26 @@ import 'package:posventa/core/config/menu_config.dart';
 import 'package:posventa/presentation/widgets/menu/menu_group_widget.dart';
 import 'package:posventa/presentation/widgets/menu/menu_item_widget.dart';
 
-/// Main side menu navigation widget with role-based access control
-class SideMenu extends ConsumerWidget {
+/// Main side menu navigation widget with enhanced UX for POS
+class SideMenu extends ConsumerStatefulWidget {
   const SideMenu({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<SideMenu> createState() => _SideMenuState();
+}
+
+class _SideMenuState extends ConsumerState<SideMenu> {
+  String _searchQuery = '';
+  final TextEditingController _searchController = TextEditingController();
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final authState = ref.watch(authProvider);
     final user = authState.user;
     final currentPath = GoRouter.of(
@@ -40,9 +54,121 @@ class SideMenu extends ConsumerWidget {
       child: Column(
         children: [
           _buildDrawerHeader(context, user),
+          _buildQuickActions(context, user),
+          _buildSearchBar(),
           Expanded(child: _buildMenuContent(user, permissions, currentPath)),
           _buildLogoutSection(context, ref),
         ],
+      ),
+    );
+  }
+
+  /// Build quick action buttons for common tasks
+  Widget _buildQuickActions(BuildContext context, User? user) {
+    if (user?.role == UserRole.cajero) {
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          border: Border(
+            bottom: BorderSide(color: AppTheme.borders.withAlpha(100)),
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'ACCIONES RÁPIDAS',
+              style: TextStyle(
+                color: AppTheme.textSecondary,
+                fontWeight: FontWeight.bold,
+                fontSize: 10,
+                letterSpacing: 1.2,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Expanded(
+                  child: _QuickActionButton(
+                    icon: Icons.point_of_sale_rounded,
+                    label: 'POS',
+                    color: Colors.green,
+                    onTap: () => context.go('/sales'),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: _QuickActionButton(
+                    icon: Icons.keyboard_return_rounded,
+                    label: 'Devolución',
+                    color: Colors.orange,
+                    onTap: () => context.go('/returns'),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      );
+    }
+
+    return const SizedBox.shrink();
+  }
+
+  /// Build search bar for menu filtering
+  Widget _buildSearchBar() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        border: Border(
+          bottom: BorderSide(color: AppTheme.borders.withAlpha(100)),
+        ),
+      ),
+      child: TextField(
+        controller: _searchController,
+        onChanged: (value) {
+          setState(() {
+            _searchQuery = value.toLowerCase();
+          });
+        },
+        decoration: InputDecoration(
+          hintText: 'Buscar en menú...',
+          hintStyle: TextStyle(
+            color: AppTheme.textSecondary.withOpacity(0.6),
+            fontSize: 14,
+          ),
+          prefixIcon: Icon(
+            Icons.search_rounded,
+            color: AppTheme.textSecondary,
+            size: 20,
+          ),
+          suffixIcon: _searchQuery.isNotEmpty
+              ? IconButton(
+                  icon: Icon(
+                    Icons.clear_rounded,
+                    color: AppTheme.textSecondary,
+                    size: 18,
+                  ),
+                  onPressed: () {
+                    _searchController.clear();
+                    setState(() {
+                      _searchQuery = '';
+                    });
+                  },
+                )
+              : null,
+          filled: true,
+          fillColor: AppTheme.cardBackground,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide.none,
+          ),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 12,
+          ),
+        ),
+        style: const TextStyle(fontSize: 14),
       ),
     );
   }
@@ -97,12 +223,24 @@ class SideMenu extends ConsumerWidget {
       if (!group.isVisible(user, permissions)) continue;
 
       // Get accessible items
-      final accessibleItems = group.getAccessibleItems(user, permissions);
+      var accessibleItems = group.getAccessibleItems(user, permissions);
+
+      // Filter by search query
+      if (_searchQuery.isNotEmpty) {
+        accessibleItems = accessibleItems
+            .where(
+              (item) =>
+                  item.title.toLowerCase().contains(_searchQuery) ||
+                  group.title.toLowerCase().contains(_searchQuery),
+            )
+            .toList();
+      }
+
       if (accessibleItems.isEmpty) continue;
 
       // Create a filtered group with only accessible items
       final filteredGroup = MenuGroup(
-        id: group.id, // Usar el ID del grupo original
+        id: group.id,
         title: group.title,
         groupIcon: group.groupIcon,
         items: accessibleItems,
@@ -118,6 +256,30 @@ class SideMenu extends ConsumerWidget {
       // Add the group widget
       widgets.add(
         MenuGroupWidget(menuGroup: filteredGroup, currentPath: currentPath),
+      );
+    }
+
+    // Show "no results" message if search yields nothing
+    if (widgets.isEmpty && _searchQuery.isNotEmpty) {
+      widgets.add(
+        Padding(
+          padding: const EdgeInsets.all(32),
+          child: Column(
+            children: [
+              Icon(
+                Icons.search_off_rounded,
+                size: 48,
+                color: AppTheme.textSecondary.withOpacity(0.5),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'No se encontraron resultados',
+                style: TextStyle(color: AppTheme.textSecondary, fontSize: 14),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+        ),
       );
     }
 
@@ -149,87 +311,174 @@ class SideMenu extends ConsumerWidget {
       ),
     );
 
-    // Filter items based on permissions
-    final accessibleItems = items
+    // Filter items based on permissions and search
+    var accessibleItems = items
         .where((item) => item.hasAccess(user, permissions))
         .toList();
+
+    if (_searchQuery.isNotEmpty) {
+      accessibleItems = accessibleItems
+          .where((item) => item.title.toLowerCase().contains(_searchQuery))
+          .toList();
+    }
 
     // Add menu items
     for (final item in accessibleItems) {
       widgets.add(MenuItemWidget(menuItem: item, currentPath: currentPath));
     }
 
+    // Show "no results" message if search yields nothing
+    if (accessibleItems.isEmpty && _searchQuery.isNotEmpty) {
+      widgets.add(
+        Padding(
+          padding: const EdgeInsets.all(32),
+          child: Column(
+            children: [
+              Icon(
+                Icons.search_off_rounded,
+                size: 48,
+                color: AppTheme.textSecondary.withOpacity(0.5),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'No se encontraron resultados',
+                style: TextStyle(color: AppTheme.textSecondary, fontSize: 14),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
     return widgets;
   }
 
-  /// Build drawer header with user info
+  /// Build drawer header with user info and cash session status
   Widget _buildDrawerHeader(BuildContext context, User? user) {
     final accountName = user?.firstName ?? 'Usuario';
     final accountLastName = user?.lastName ?? 'N.';
-
     final accountEmail = user != null
         ? (user.role == UserRole.administrador ? 'Administrador' : 'Cajero')
         : 'Rol no disponible';
 
     return Container(
-      padding: const EdgeInsets.fromLTRB(24, 60, 24, 30),
+      padding: const EdgeInsets.fromLTRB(24, 60, 24, 24),
       decoration: BoxDecoration(
         color: AppTheme.cardBackground,
         border: Border(
           bottom: BorderSide(color: AppTheme.borders.withAlpha(100)),
         ),
       ),
-      child: Row(
+      child: Column(
         children: [
-          Container(
-            padding: const EdgeInsets.all(2),
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(
-                color: AppTheme.primary.withAlpha(50),
-                width: 2,
-              ),
-            ),
-            child: CircleAvatar(
-              radius: 28,
-              backgroundColor: AppTheme.primary.withAlpha(20),
-              child: Text(
-                accountName.isNotEmpty ? accountName[0].toUpperCase() : 'U',
-                style: const TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: AppTheme.primary,
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  '$accountName $accountLastName',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: AppTheme.textPrimary,
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(2),
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: AppTheme.primary.withAlpha(50),
+                    width: 2,
                   ),
-                  overflow: TextOverflow.ellipsis,
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  accountEmail,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: AppTheme.primary,
-                    fontWeight: FontWeight.w600,
+                child: CircleAvatar(
+                  radius: 28,
+                  backgroundColor: AppTheme.primary.withAlpha(20),
+                  child: Text(
+                    accountName.isNotEmpty ? accountName[0].toUpperCase() : 'U',
+                    style: const TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: AppTheme.primary,
+                    ),
                   ),
-                  overflow: TextOverflow.ellipsis,
                 ),
-              ],
-            ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '$accountName $accountLastName',
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: AppTheme.textPrimary,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      accountEmail,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: AppTheme.primary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
+          // Cash session status indicator
+          if (user?.role == UserRole.cajero) ...[
+            const SizedBox(height: 16),
+            _buildCashSessionStatus(ref),
+          ],
         ],
       ),
+    );
+  }
+
+  /// Build cash session status indicator
+  Widget _buildCashSessionStatus(WidgetRef ref) {
+    return FutureBuilder(
+      future: ref.read(getCurrentCashSessionUseCaseProvider).call(),
+      builder: (context, snapshot) {
+        final hasOpenSession = snapshot.data != null;
+
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          decoration: BoxDecoration(
+            color: hasOpenSession
+                ? Colors.green.withAlpha(20)
+                : Colors.orange.withAlpha(20),
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(
+              color: hasOpenSession
+                  ? Colors.green.withAlpha(50)
+                  : Colors.orange.withAlpha(50),
+              width: 1,
+            ),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 8,
+                height: 8,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: hasOpenSession ? Colors.green : Colors.orange,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  hasOpenSession ? 'Caja Abierta' : 'Caja Cerrada',
+                  style: TextStyle(
+                    color: hasOpenSession ? Colors.green : Colors.orange,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 12,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 
@@ -248,13 +497,11 @@ class SideMenu extends ConsumerWidget {
               Scaffold.of(context).closeDrawer();
             }
 
-            // Check for open cash session
             final session = await ref
                 .read(getCurrentCashSessionUseCaseProvider)
                 .call();
 
             if (session != null && context.mounted) {
-              // Show dialog requiring cash session closure
               showDialog(
                 context: context,
                 builder: (context) => AlertDialog(
@@ -303,6 +550,71 @@ class SideMenu extends ConsumerWidget {
                     fontWeight: FontWeight.bold,
                     fontSize: 14,
                   ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Quick action button widget
+class _QuickActionButton extends StatefulWidget {
+  final IconData icon;
+  final String label;
+  final Color color;
+  final VoidCallback onTap;
+
+  const _QuickActionButton({
+    required this.icon,
+    required this.label,
+    required this.color,
+    required this.onTap,
+  });
+
+  @override
+  State<_QuickActionButton> createState() => _QuickActionButtonState();
+}
+
+class _QuickActionButtonState extends State<_QuickActionButton> {
+  bool _isHovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return MouseRegion(
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      cursor: SystemMouseCursors.click,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        transform: Matrix4.identity()..scale(_isHovered ? 1.05 : 1.0),
+        child: InkWell(
+          onTap: widget.onTap,
+          borderRadius: BorderRadius.circular(12),
+          child: Container(
+            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+            decoration: BoxDecoration(
+              color: widget.color.withAlpha(20),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: widget.color.withAlpha(_isHovered ? 100 : 50),
+                width: 2,
+              ),
+            ),
+            child: Column(
+              children: [
+                Icon(widget.icon, color: widget.color, size: 24),
+                const SizedBox(height: 4),
+                Text(
+                  widget.label,
+                  style: TextStyle(
+                    color: widget.color,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 11,
+                  ),
+                  textAlign: TextAlign.center,
                 ),
               ],
             ),
