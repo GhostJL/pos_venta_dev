@@ -102,6 +102,7 @@ class SideMenu extends ConsumerWidget {
 
       // Create a filtered group with only accessible items
       final filteredGroup = MenuGroup(
+        id: group.id, // Usar el ID del grupo original
         title: group.title,
         groupIcon: group.groupIcon,
         items: accessibleItems,
@@ -111,7 +112,7 @@ class SideMenu extends ConsumerWidget {
 
       // Add spacing before group (except first one)
       if (i > 0) {
-        widgets.add(const SizedBox(height: 24));
+        widgets.add(const SizedBox(height: 20));
       }
 
       // Add the group widget
@@ -239,69 +240,72 @@ class SideMenu extends ConsumerWidget {
       decoration: BoxDecoration(
         border: Border(top: BorderSide(color: AppTheme.borders.withAlpha(100))),
       ),
-      child: InkWell(
-        onTap: () async {
-          if (Scaffold.of(context).isDrawerOpen) {
-            Scaffold.of(context).closeDrawer();
-          }
+      child: MouseRegion(
+        cursor: SystemMouseCursors.click,
+        child: InkWell(
+          onTap: () async {
+            if (Scaffold.of(context).isDrawerOpen) {
+              Scaffold.of(context).closeDrawer();
+            }
 
-          // Check for open cash session
-          final session = await ref
-              .read(getCurrentCashSessionUseCaseProvider)
-              .call();
+            // Check for open cash session
+            final session = await ref
+                .read(getCurrentCashSessionUseCaseProvider)
+                .call();
 
-          if (session != null && context.mounted) {
-            // Show dialog requiring cash session closure
-            showDialog(
-              context: context,
-              builder: (context) => AlertDialog(
-                title: const Text('Caja Abierta'),
-                content: const Text(
-                  'Tienes una sesión de caja abierta.\\nDebe cerrarla antes de cerrar sesión.',
-                ),
-                actions: [
-                  TextButton(
-                    onPressed: () => context.pop(),
-                    child: const Text('Cancelar'),
+            if (session != null && context.mounted) {
+              // Show dialog requiring cash session closure
+              showDialog(
+                context: context,
+                builder: (context) => AlertDialog(
+                  title: const Text('Caja Abierta'),
+                  content: const Text(
+                    'Tienes una sesión de caja abierta.\nDebe cerrarla antes de cerrar sesión.',
                   ),
-                  FilledButton(
-                    onPressed: () {
-                      context.pop();
-                      context.go('/cash-session-close?intent=logout');
-                    },
-                    style: FilledButton.styleFrom(
-                      backgroundColor: Colors.orange,
+                  actions: [
+                    TextButton(
+                      onPressed: () => context.pop(),
+                      child: const Text('Cancelar'),
                     ),
-                    child: const Text('Ir a Cerrar Caja'),
-                  ),
-                ],
-              ),
-            );
-          } else {
-            ref.read(authProvider.notifier).logout();
-          }
-        },
-        borderRadius: BorderRadius.circular(12),
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-          decoration: BoxDecoration(
-            color: AppTheme.error.withAlpha(10),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: const [
-              Icon(Icons.logout_rounded, color: AppTheme.error, size: 20),
-              SizedBox(width: 8),
-              Text(
-                'Cerrar Sesión',
-                style: TextStyle(
-                  color: AppTheme.error,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 14,
+                    FilledButton(
+                      onPressed: () {
+                        context.pop();
+                        context.go('/cash-session-close?intent=logout');
+                      },
+                      style: FilledButton.styleFrom(
+                        backgroundColor: Colors.orange,
+                      ),
+                      child: const Text('Ir a Cerrar Caja'),
+                    ),
+                  ],
                 ),
-              ),
-            ],
+              );
+            } else {
+              ref.read(authProvider.notifier).logout();
+            }
+          },
+          borderRadius: BorderRadius.circular(12),
+          child: Container(
+            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+            decoration: BoxDecoration(
+              color: AppTheme.error.withAlpha(10),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: const [
+                Icon(Icons.logout_rounded, color: AppTheme.error, size: 20),
+                SizedBox(width: 8),
+                Text(
+                  'Cerrar Sesión',
+                  style: TextStyle(
+                    color: AppTheme.error,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),

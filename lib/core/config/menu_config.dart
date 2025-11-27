@@ -44,6 +44,7 @@ class MenuItem {
 
 /// Represents a group of menu items
 class MenuGroup {
+  final String id; // ID único para el grupo
   final String title;
   final IconData? groupIcon;
   final List<MenuItem> items;
@@ -52,6 +53,7 @@ class MenuGroup {
   final bool Function(User?)? visibilityCheck;
 
   const MenuGroup({
+    required this.id, // Nuevo campo requerido
     required this.title,
     required this.items,
     this.groupIcon,
@@ -86,6 +88,7 @@ class MenuConfig {
     return [
       // Grupo 1: Inicio y Transacciones
       MenuGroup(
+        id: 'home_transactions',
         title: 'Inicio y Transacciones',
         groupIcon: Icons.home_rounded,
         defaultExpanded: true,
@@ -112,6 +115,7 @@ class MenuConfig {
 
       // Grupo 2: Gestión de Efectivo
       MenuGroup(
+        id: 'cash_management',
         title: 'Gestión de Efectivo',
         groupIcon: Icons.account_balance_wallet_rounded,
         defaultExpanded: false,
@@ -127,6 +131,7 @@ class MenuConfig {
 
       // Grupo 3: Inventario y Compras
       MenuGroup(
+        id: 'inventory_purchases',
         title: 'Inventario y Compras',
         groupIcon: Icons.inventory_rounded,
         defaultExpanded: false,
@@ -154,6 +159,7 @@ class MenuConfig {
 
       // Grupo 4: Catálogos Base
       MenuGroup(
+        id: 'base_catalogs',
         title: 'Catálogos Base',
         groupIcon: Icons.folder_rounded,
         defaultExpanded: false,
@@ -175,6 +181,7 @@ class MenuConfig {
 
       // Grupo 5: Administración
       MenuGroup(
+        id: 'administration',
         title: 'Administración',
         groupIcon: Icons.admin_panel_settings_rounded,
         defaultExpanded: false,
@@ -195,8 +202,9 @@ class MenuConfig {
         ],
       ),
 
-      // Grupo 6: Configuración Avanzada (Collapsed by default)
+      // Grupo 6: Configuración Avanzada
       MenuGroup(
+        id: 'advanced_config',
         title: 'Configuración Avanzada',
         groupIcon: Icons.settings_applications_rounded,
         defaultExpanded: false,
@@ -238,7 +246,6 @@ class MenuConfig {
             route: '/inventory',
             requiredPermissions: [PermissionConstants.inventoryView],
           ),
-
           MenuItem(
             title: 'Cajeros',
             icon: Icons.person_rounded,
@@ -265,7 +272,6 @@ class MenuConfig {
         route: '/returns',
         requiredPermissions: [PermissionConstants.posAccess],
       ),
-
       const MenuItem(
         title: 'Cierre de Turno',
         icon: Icons.lock_clock_rounded,
