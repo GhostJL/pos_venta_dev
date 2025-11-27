@@ -49,6 +49,8 @@ import 'package:posventa/domain/use_cases/sale/get_sales_use_case.dart';
 import 'package:posventa/domain/use_cases/sale/get_sale_by_id_use_case.dart';
 import 'package:posventa/domain/use_cases/sale/generate_next_sale_number_use_case.dart';
 import 'package:posventa/domain/use_cases/sale/cancel_sale_use_case.dart';
+import 'package:posventa/domain/entities/sale.dart';
+
 import 'package:posventa/domain/repositories/cash_session_repository.dart';
 import 'package:posventa/data/repositories/cash_session_repository_impl.dart';
 import 'package:posventa/domain/use_cases/cash_movement/get_current_session.dart';
@@ -80,6 +82,7 @@ import 'package:posventa/domain/use_cases/inventory/adjust_inventory_use_case.da
 import 'package:posventa/domain/use_cases/inventory/adjust_inventory_batch_use_case.dart';
 import 'package:posventa/domain/use_cases/inventory/transfer_inventory_use_case.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 part 'providers.g.dart';
 
@@ -396,3 +399,11 @@ TransferInventoryUseCase transferInventory(ref) {
 AdjustInventoryBatchUseCase adjustInventoryBatchUseCase(ref) {
   return AdjustInventoryBatchUseCase(ref.watch(inventoryRepositoryProvider));
 }
+
+// Stream providers for real-time updates
+final saleDetailStreamProvider = StreamProvider.family<Sale?, int>((
+  ref,
+  saleId,
+) {
+  return ref.watch(getSaleByIdUseCaseProvider).stream(saleId);
+});

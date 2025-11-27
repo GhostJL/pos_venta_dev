@@ -14,6 +14,8 @@ class SaleDetailPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final saleAsync = ref.watch(saleDetailStreamProvider(saleId));
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Detalle de Venta'),
@@ -31,33 +33,24 @@ class SaleDetailPage extends ConsumerWidget {
           ),
         ],
       ),
-      body: StreamBuilder<Sale?>(
-        stream: ref.read(getSaleByIdUseCaseProvider).stream(saleId),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-
-          if (snapshot.hasError) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(Icons.error_outline, size: 64, color: Colors.red),
-                  const SizedBox(height: 16),
-                  Text('Error: ${snapshot.error}'),
-                ],
-              ),
-            );
-          }
-
-          final sale = snapshot.data;
+      body: saleAsync.when(
+        data: (sale) {
           if (sale == null) {
             return const Center(child: Text('Venta no encontrada'));
           }
-
           return _buildSaleDetail(context, ref, sale);
         },
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (error, stack) => Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.error_outline, size: 64, color: Colors.red),
+              const SizedBox(height: 16),
+              Text('Error: $error'),
+            ],
+          ),
+        ),
       ),
     );
   }
