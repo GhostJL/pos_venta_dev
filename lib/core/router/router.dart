@@ -131,7 +131,7 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/products',
             pageBuilder: (context, state) =>
-                const NoTransitionPage(child: ProductsPage()),
+                NoTransitionPage(child: ProductsPage()),
           ),
           GoRoute(
             path: '/departments',

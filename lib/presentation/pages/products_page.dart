@@ -8,11 +8,11 @@ import 'package:posventa/core/constants/permission_constants.dart';
 import 'package:posventa/presentation/providers/permission_provider.dart';
 import 'package:posventa/presentation/widgets/product_filter_sheet.dart';
 import 'package:posventa/presentation/widgets/product_list_item.dart';
-import 'package:posventa/presentation/widgets/product_active_filters.dart';
 import 'package:posventa/presentation/widgets/product_search_bar.dart';
 import 'package:posventa/presentation/widgets/product_actions_sheet.dart';
 import 'package:posventa/core/utils/product_filter_utils.dart';
 import 'package:posventa/presentation/widgets/common/empty_state_widget.dart';
+import 'package:posventa/presentation/widgets/products/chip_filter_widget.dart';
 
 class ProductsPage extends ConsumerStatefulWidget {
   const ProductsPage({super.key});
@@ -51,85 +51,61 @@ class ProductsPageState extends ConsumerState<ProductsPage> {
     );
 
     return Scaffold(
-      appBar: _buildAppBar(),
-      body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 24.0),
-        child: Column(
-          children: [
-            const SizedBox(height: 24),
-            ProductSearchBar(
-              controller: _searchController,
-              onChanged: (value) => setState(() => _searchQuery = value),
-              onScannerPressed: _openScanner,
-            ),
-            const SizedBox(height: 16),
-            ProductActiveFilters(
-              departmentFilter: _departmentFilter,
-              categoryFilter: _categoryFilter,
-              brandFilter: _brandFilter,
-              supplierFilter: _supplierFilter,
-              onDepartmentRemoved: (val) =>
-                  setState(() => _departmentFilter = val),
-              onCategoryRemoved: (val) => setState(() => _categoryFilter = val),
-              onBrandRemoved: (val) => setState(() => _brandFilter = val),
-              onSupplierRemoved: (val) => setState(() => _supplierFilter = val),
-            ),
-            const SizedBox(height: 16),
-            Expanded(
-              child: products.when(
-                data: (productList) => _buildProductList(productList),
-                loading: () => const Center(child: CircularProgressIndicator()),
-                error: (error, stack) => Center(child: Text('Error: $error')),
-              ),
-            ),
-            const SizedBox(height: 24),
-          ],
-        ),
-      ),
-      floatingActionButton: hasManagePermission
-          ? FloatingActionButton(
+      appBar: AppBar(
+        title: const Text('Productos'),
+        centerTitle: true,
+        actions: [
+          if (hasManagePermission)
+            IconButton(
+              icon: const Icon(Icons.add_rounded),
               onPressed: () => context.push('/products/form'),
-              backgroundColor: AppTheme.primary,
-              foregroundColor: Colors.white,
-              child: const Icon(Icons.add_rounded),
-            )
-          : null,
-    );
-  }
+            ),
+        ],
+      ),
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24.0),
+          child: Column(
+            crossAxisAlignment: .start,
+            children: [
+              const SizedBox(height: 12),
+              ProductSearchBar(
+                controller: _searchController,
+                onChanged: (value) => setState(() => _searchQuery = value),
+                onScannerPressed: _openScanner,
+              ),
+              const SizedBox(height: 4),
 
-  PreferredSizeWidget _buildAppBar() {
-    return AppBar(
-      title: const Text('Productos'),
-      centerTitle: true,
-      actions: [
-        Padding(
-          padding: const EdgeInsets.only(right: 8.0),
-          child: FilterChip(
-            label: Text('Filtros ($_activeFilterCount)'),
-            selected: _activeFilterCount > 0,
-            onSelected: (selected) {
-              if (selected) {
-                _showFilterSheet();
-              } else {
-                _clearFilters();
-              }
-            },
-            backgroundColor: AppTheme.inputBackground,
-            selectedColor: AppTheme.primary.withAlpha(50),
-            checkmarkColor: AppTheme.primary,
-            labelStyle: TextStyle(
-              color: _activeFilterCount > 0
-                  ? AppTheme.primary
-                  : AppTheme.textPrimary,
-              fontWeight: FontWeight.bold,
-            ),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
-            ),
-            side: BorderSide.none,
+              Row(
+                mainAxisAlignment: .end,
+                children: [
+                  ChipFilterWidget(
+                    label: 'Filtros ($_activeFilterCount)',
+                    activeFilterCount: _activeFilterCount,
+                    onSelected: () {
+                      if (_activeFilterCount > 0) {
+                        _clearFilters();
+                      } else {
+                        _showFilterSheet();
+                      }
+                    },
+                  ),
+                ],
+              ),
+              const SizedBox(height: 4),
+
+              Expanded(
+                child: products.when(
+                  data: (productList) => _buildProductList(productList),
+                  loading: () =>
+                      const Center(child: CircularProgressIndicator()),
+                  error: (error, stack) => Center(child: Text('Error: $error')),
+                ),
+              ),
+            ],
           ),
         ),
-      ],
+      ),
     );
   }
 
@@ -192,10 +168,12 @@ class ProductsPageState extends ConsumerState<ProductsPage> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: AppTheme.background,
+      backgroundColor: Colors.white,
+      barrierColor: Colors.transparent,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        borderRadius: BorderRadius.all(Radius.circular(24)),
       ),
+      showDragHandle: true,
       builder: (context) => ProductFilterSheet(
         departmentFilter: _departmentFilter,
         categoryFilter: _categoryFilter,

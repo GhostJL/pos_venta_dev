@@ -65,44 +65,26 @@ class _ProductFilterSheetState extends ConsumerState<ProductFilterSheet> {
     final brands = ref.watch(brandListProvider);
     final suppliers = ref.watch(supplierListProvider);
 
-    return Padding(
-      padding: EdgeInsets.fromLTRB(
-        UIConstants.paddingLarge,
-        UIConstants.paddingLarge,
-        UIConstants.paddingLarge,
-        UIConstants.paddingLarge + MediaQuery.of(context).viewInsets.bottom,
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          _buildHeader(context),
-          const SizedBox(height: 24),
-          _buildFilterDropdowns(departments, categories, brands, suppliers),
-          const SizedBox(height: 24),
-          _buildSortDropdown(),
-          const SizedBox(height: 32),
-          _buildActionButtons(context),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildHeader(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(
-          'Filtrar y Ordenar',
-          style: Theme.of(
-            context,
-          ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+    return SafeArea(
+      child: Padding(
+        padding: EdgeInsets.fromLTRB(
+          UIConstants.paddingLarge,
+          0,
+          UIConstants.paddingLarge,
+          UIConstants.paddingLarge + MediaQuery.of(context).viewInsets.bottom,
         ),
-        IconButton(
-          icon: const Icon(Icons.close_rounded),
-          onPressed: () => context.pop(),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            _buildFilterDropdowns(departments, categories, brands, suppliers),
+            const SizedBox(height: 24),
+            _buildSortDropdown(),
+            const SizedBox(height: 32),
+            _buildActionButtons(context),
+          ],
         ),
-      ],
+      ),
     );
   }
 
@@ -114,6 +96,17 @@ class _ProductFilterSheetState extends ConsumerState<ProductFilterSheet> {
   ) {
     return Column(
       children: [
+        Row(
+          children: [
+            Text(
+              'Filtrar y ordenar',
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+            ),
+          ],
+        ),
+        SizedBox(height: 12),
         departments.when(
           data: (data) => _buildFilterDropdown(
             data,
@@ -174,7 +167,12 @@ class _ProductFilterSheetState extends ConsumerState<ProductFilterSheet> {
   ) {
     return DropdownButtonFormField<int>(
       initialValue: currentValue,
-      decoration: InputDecoration(labelText: label, prefixIcon: Icon(icon)),
+      decoration: InputDecoration(
+        labelText: label,
+        prefixIcon: Icon(icon, size: 20),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      ),
       items: items
           .map(
             (e) => DropdownMenuItem(
@@ -190,9 +188,11 @@ class _ProductFilterSheetState extends ConsumerState<ProductFilterSheet> {
   Widget _buildSortDropdown() {
     return DropdownButtonFormField<String>(
       initialValue: _sortOrder,
-      decoration: const InputDecoration(
+      decoration: InputDecoration(
         labelText: 'Ordenar por',
-        prefixIcon: Icon(Icons.sort_rounded),
+        prefixIcon: const Icon(Icons.sort_rounded, size: 20),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       ),
       items: const [
         DropdownMenuItem(value: 'name', child: Text('Nombre')),
@@ -211,7 +211,7 @@ class _ProductFilterSheetState extends ConsumerState<ProductFilterSheet> {
     return Row(
       children: [
         Expanded(
-          child: OutlinedButton(
+          child: TextButton(
             onPressed: () {
               setState(() {
                 _departmentFilter = null;
@@ -219,8 +219,9 @@ class _ProductFilterSheetState extends ConsumerState<ProductFilterSheet> {
                 _brandFilter = null;
                 _supplierFilter = null;
               });
+              widget.onClearFilters();
             },
-            style: OutlinedButton.styleFrom(
+            style: TextButton.styleFrom(
               padding: const EdgeInsets.symmetric(vertical: 16),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
@@ -231,7 +232,7 @@ class _ProductFilterSheetState extends ConsumerState<ProductFilterSheet> {
         ),
         const SizedBox(width: 16),
         Expanded(
-          child: ElevatedButton(
+          child: FilledButton(
             onPressed: () {
               widget.onDepartmentChanged(_departmentFilter);
               widget.onCategoryChanged(_categoryFilter);
@@ -241,14 +242,13 @@ class _ProductFilterSheetState extends ConsumerState<ProductFilterSheet> {
               widget.onApplyFilters();
               context.pop();
             },
-            style: ElevatedButton.styleFrom(
+            style: FilledButton.styleFrom(
               padding: const EdgeInsets.symmetric(vertical: 16),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
-              elevation: 0,
             ),
-            child: const Text('Aplicar Filtros'),
+            child: const Text('Aplicar filtros'),
           ),
         ),
       ],

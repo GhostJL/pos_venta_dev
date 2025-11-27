@@ -5,37 +5,35 @@ import 'package:posventa/domain/entities/product.dart';
 class ProductListItem extends StatelessWidget {
   final Product product;
   final VoidCallback onMorePressed;
+  final VoidCallback? onTap;
 
   const ProductListItem({
     super.key,
     required this.product,
     required this.onMorePressed,
+    this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: AppTheme.cardBackground,
+    return Card(
+      elevation: 0,
+      color: AppTheme.cardBackground,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: InkWell(
         borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withAlpha(10),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            children: [
+              _buildProductIcon(),
+              const SizedBox(width: 12),
+              Expanded(child: _buildProductInfo(context)),
+              _buildTrailing(context),
+            ],
           ),
-        ],
-        border: Border.all(color: AppTheme.borders.withAlpha(50)),
-      ),
-      child: ListTile(
-        contentPadding: const EdgeInsets.all(16),
-        leading: _buildProductIcon(),
-        title: Text(
-          product.name,
-          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
         ),
-        subtitle: _buildProductSubtitle(),
-        trailing: _buildTrailing(),
       ),
     );
   }
@@ -45,39 +43,35 @@ class ProductListItem extends StatelessWidget {
       width: 48,
       height: 48,
       decoration: BoxDecoration(
-        color: AppTheme.primary.withAlpha(20),
+        color: AppTheme.primary.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(12),
       ),
       child: const Icon(Icons.inventory_2_rounded, color: AppTheme.primary),
     );
   }
 
-  Widget _buildProductSubtitle() {
+  Widget _buildProductInfo(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const SizedBox(height: 4),
+        Text(
+          product.name,
+          style: Theme.of(
+            context,
+          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
+        const SizedBox(height: 6),
         Row(
           children: [
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-              decoration: BoxDecoration(
-                color: AppTheme.background,
-                borderRadius: BorderRadius.circular(4),
-                border: Border.all(color: AppTheme.borders),
-              ),
-              child: Text(
-                product.code,
-                style: const TextStyle(fontSize: 12, fontFamily: 'Monospace'),
-              ),
-            ),
+            _buildStockBadge(context),
             const SizedBox(width: 8),
             Text(
               product.unitOfMeasure,
-              style: const TextStyle(
-                fontSize: 12,
-                color: AppTheme.textSecondary,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(color: AppTheme.textSecondary),
             ),
           ],
         ),
@@ -85,21 +79,44 @@ class ProductListItem extends StatelessWidget {
     );
   }
 
-  Widget _buildTrailing() {
+  Widget _buildStockBadge(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
+      decoration: BoxDecoration(
+        color: AppTheme.primary.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Text(
+        '${product.stock}',
+        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+          fontWeight: FontWeight.w500,
+          color: AppTheme.primary,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTrailing(BuildContext context) {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Text(
-          '\$${(product.salePriceCents / 100).toStringAsFixed(2)}',
-          style: const TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: 16,
-            color: AppTheme.primary,
+        AnimatedSwitcher(
+          duration: const Duration(milliseconds: 300),
+          transitionBuilder: (child, anim) =>
+              ScaleTransition(scale: anim, child: child),
+          child: Text(
+            '\$${(product.salePriceCents / 100).toStringAsFixed(2)}',
+            key: ValueKey(product.salePriceCents),
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.bold,
+              color: AppTheme.primary,
+            ),
           ),
         ),
-        const SizedBox(width: 8),
         IconButton(
           icon: const Icon(Icons.more_vert_rounded),
+          splashRadius: 20,
+          tooltip: 'Más opciones',
           onPressed: onMorePressed,
         ),
       ],
