@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:posventa/core/theme/theme.dart';
 import 'package:posventa/presentation/widgets/pos/cart_section.dart';
 import 'package:posventa/presentation/widgets/pos/product_grid_section.dart';
 import 'package:posventa/core/constants/permission_constants.dart';
@@ -33,7 +34,6 @@ class SalesPage extends ConsumerWidget {
     }
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Punto de Venta'), elevation: 0),
       body: LayoutBuilder(
         builder: (context, constraints) {
           // Determinar si es móvil o tablet basado en el ancho
@@ -90,12 +90,13 @@ class _MobileLayoutState extends State<_MobileLayout>
     return Column(
       children: [
         Material(
-          color: Theme.of(context).primaryColor,
+          color: AppTheme.background,
           child: TabBar(
+            dividerHeight: 0,
             controller: _tabController,
-            indicatorColor: Colors.white,
-            labelColor: Colors.white,
-            unselectedLabelColor: Colors.white70,
+            indicatorColor: AppTheme.primary,
+            labelColor: AppTheme.textPrimary,
+            unselectedLabelColor: AppTheme.textSecondary,
             tabs: const [
               Tab(text: 'Productos'),
               Tab(text: 'Carrito'),
