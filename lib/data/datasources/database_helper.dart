@@ -1,7 +1,5 @@
 import 'dart:async';
-import 'dart:convert';
 
-import 'package:crypto/crypto.dart';
 import 'package:path/path.dart';
 
 import 'package:sqflite/sqflite.dart';
@@ -78,12 +76,6 @@ class DatabaseHelper {
 
   Future<void> _onConfigure(Database db) async {
     await db.execute('PRAGMA foreign_keys = ON');
-  }
-
-  String _hashData(String data) {
-    final bytes = utf8.encode(data);
-    final digest = sha256.convert(bytes);
-    return digest.toString();
   }
 
   Future<void> _onCreate(Database db, int version) async {
@@ -218,10 +210,8 @@ class DatabaseHelper {
     await _createSaleReturnsTable(db);
     await _createSaleReturnItemsTable(db);
 
-    // Insert default user and assign permissions
-    await _insertDefaultUser(db);
-    // Assuming the default user has ID 1
-    await _assignAllPermissionsToAdmin(db, 1);
+    // Default user creation removed as per requirements
+    // The first user created via the app will be the admin
   }
 
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
@@ -996,31 +986,5 @@ class DatabaseHelper {
   Future<int> delete(String table, int id) async {
     final db = await database;
     return await db.delete(table, where: 'id = ?', whereArgs: [id]);
-  }
-
-  Future<void> _insertDefaultUser(Database db) async {
-    await db.insert(tableUsers, {
-      'username': 'admin',
-      'password_hash': _hashData(
-        'admin123',
-      ), // In a real app, use a proper salt/hash
-      'first_name': 'Admin',
-      'last_name': 'User',
-      'email': 'admin@example.com',
-      'role': 'admin',
-      'is_active': 1,
-      'created_at': DateTime.now().toIso8601String(),
-      'updated_at': DateTime.now().toIso8601String(),
-    });
-  }
-
-  Future<void> _assignAllPermissionsToAdmin(Database db, int userId) async {
-    final permissions = await db.query(tablePermissions);
-    for (final perm in permissions) {
-      await db.insert(tableUserPermissions, {
-        'user_id': userId,
-        'permission_id': perm['id'],
-      });
-    }
   }
 }
