@@ -14,7 +14,7 @@ class MenuState {
 /// Notifier para gestionar el estado del menú
 class MenuStateNotifier extends StateNotifier<MenuState> {
   MenuStateNotifier()
-    : super(const MenuState(expandedGroupId: 'home_transactions'));
+    : super(const MenuState(expandedGroupId: 'daily_operations'));
 
   /// Alterna el estado de un grupo
   void toggleGroup(String groupId) {
