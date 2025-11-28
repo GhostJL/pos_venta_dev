@@ -34,6 +34,7 @@ import 'package:posventa/domain/use_cases/user/get_all_users.dart';
 import 'package:posventa/domain/use_cases/user/create_user.dart';
 import 'package:posventa/domain/use_cases/user/update_user.dart';
 import 'package:posventa/domain/use_cases/user/delete_user.dart';
+import 'package:posventa/domain/use_cases/user/has_users_use_case.dart';
 import 'package:posventa/domain/repositories/customer_repository.dart';
 import 'package:posventa/data/repositories/customer_repository_impl.dart';
 import 'package:posventa/domain/use_cases/customer/get_customers_use_case.dart';
@@ -218,6 +219,10 @@ UpdateUser updateUser(ref) => UpdateUser(ref.watch(userRepositoryProvider));
 
 @riverpod
 DeleteUser deleteUser(ref) => DeleteUser(ref.watch(userRepositoryProvider));
+
+@riverpod
+HasUsersUseCase hasUsersUseCase(ref) =>
+    HasUsersUseCase(ref.watch(userRepositoryProvider));
 
 // Permission Providers
 @riverpod

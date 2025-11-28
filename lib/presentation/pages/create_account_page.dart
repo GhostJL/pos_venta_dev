@@ -43,6 +43,14 @@ class _CreateAccountPageState extends ConsumerState<CreateAccountPage> {
     setState(() => _isLoading = true);
 
     try {
+      // 0. Security check: Ensure no users exist
+      final hasUsers = await ref.read(hasUsersUseCaseProvider).call();
+      if (hasUsers) {
+        throw Exception(
+          'Ya existe un usuario administrador. No se pueden crear más cuentas de este tipo.',
+        );
+      }
+
       final username = _usernameController.text.trim();
       final password = _passwordController.text;
       final firstName = _firstNameController.text.trim();

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:posventa/core/theme/theme.dart';
 import 'package:posventa/presentation/providers/auth_provider.dart';
+import 'package:posventa/presentation/providers/providers.dart';
 
 class LoginPage extends ConsumerStatefulWidget {
   const LoginPage({super.key});
@@ -174,9 +175,18 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                                 ),
                         ),
                         const SizedBox(height: 16),
-                        TextButton(
-                          onPressed: () => context.go('/create-account'),
-                          child: const Text('Crear Cuenta'),
+                        const SizedBox(height: 16),
+                        FutureBuilder<bool>(
+                          future: ref.read(hasUsersUseCaseProvider).call(),
+                          builder: (context, snapshot) {
+                            if (snapshot.hasData && snapshot.data == false) {
+                              return TextButton(
+                                onPressed: () => context.go('/create-account'),
+                                child: const Text('Crear Cuenta'),
+                              );
+                            }
+                            return const SizedBox.shrink();
+                          },
                         ),
                       ],
                     ),

@@ -5,6 +5,7 @@ import 'package:posventa/data/datasources/database_helper.dart';
 import 'package:posventa/domain/entities/user.dart';
 import 'package:posventa/domain/repositories/auth_repository.dart';
 import 'package:posventa/domain/repositories/user_repository.dart';
+import 'package:sqflite/sqflite.dart';
 
 class AuthRepositoryImpl implements AuthRepository, UserRepository {
   final DatabaseHelper _databaseHelper;
@@ -109,5 +110,14 @@ class AuthRepositoryImpl implements AuthRepository, UserRepository {
       where: 'id = ?',
       whereArgs: [user.id],
     );
+  }
+
+  @override
+  Future<bool> hasUsers() async {
+    final db = await _databaseHelper.database;
+    final count = Sqflite.firstIntValue(
+      await db.rawQuery('SELECT COUNT(*) FROM users'),
+    );
+    return (count ?? 0) > 0;
   }
 }

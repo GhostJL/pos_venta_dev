@@ -1385,6 +1385,48 @@ final class DeleteUserProvider
 
 String _$deleteUserHash() => r'75ab4530a0645fe2c2ac76bc69aa750a11d1259b';
 
+@ProviderFor(hasUsersUseCase)
+const hasUsersUseCaseProvider = HasUsersUseCaseProvider._();
+
+final class HasUsersUseCaseProvider
+    extends
+        $FunctionalProvider<HasUsersUseCase, HasUsersUseCase, HasUsersUseCase>
+    with $Provider<HasUsersUseCase> {
+  const HasUsersUseCaseProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'hasUsersUseCaseProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$hasUsersUseCaseHash();
+
+  @$internal
+  @override
+  $ProviderElement<HasUsersUseCase> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  HasUsersUseCase create(Ref ref) {
+    return hasUsersUseCase(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(HasUsersUseCase value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<HasUsersUseCase>(value),
+    );
+  }
+}
+
+String _$hasUsersUseCaseHash() => r'207dd61e8ac2406bdd7ca4ad578e88a6e3e01190';
+
 @ProviderFor(permissionRepository)
 const permissionRepositoryProvider = PermissionRepositoryProvider._();
 
