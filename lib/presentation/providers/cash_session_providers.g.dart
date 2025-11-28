@@ -471,7 +471,7 @@ final class CashSessionDetailProvider
   }
 }
 
-String _$cashSessionDetailHash() => r'38dd1844f998a9ca24c8352fc20855b5858c63dc';
+String _$cashSessionDetailHash() => r'6ee486bffe5ba3792be7fee4a83a449ac4ec0e33';
 
 final class CashSessionDetailFamily extends $Family
     with $FunctionalFamilyOverride<FutureOr<CashSessionDetail>, CashSession> {

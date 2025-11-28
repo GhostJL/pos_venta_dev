@@ -18,4 +18,5 @@ abstract class CashSessionRepository {
     DateTime? endDate,
   });
   Future<List<SalePayment>> getSessionPayments(int sessionId);
+  Future<List<SalePayment>> getAllSessionPayments(int sessionId);
 }

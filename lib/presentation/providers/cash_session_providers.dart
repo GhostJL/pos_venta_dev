@@ -130,7 +130,10 @@ class CashSessionDetail {
     required this.payments,
   });
 
-  int get totalCashSales => payments.fold(0, (sum, p) => sum + p.amountCents);
+  int get totalCashSales => payments
+      .where((p) => p.paymentMethod == 'Efectivo')
+      .fold(0, (sum, p) => sum + p.amountCents);
+  int get totalSales => payments.fold(0, (sum, p) => sum + p.amountCents);
   int get totalManualMovements =>
       movements.fold(0, (sum, m) => sum + m.amountCents);
 }
@@ -145,7 +148,7 @@ Future<CashSessionDetail> cashSessionDetail(
   // Fetch in parallel
   final results = await Future.wait([
     repo.getSessionMovements(session.id!),
-    repo.getSessionPayments(session.id!),
+    repo.getAllSessionPayments(session.id!),
   ]);
 
   return CashSessionDetail(

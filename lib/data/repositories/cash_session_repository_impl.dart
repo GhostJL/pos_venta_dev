@@ -259,4 +259,34 @@ class CashSessionRepositoryImpl implements CashSessionRepository {
 
     return result.map((e) => SalePaymentModel.fromJson(e)).toList();
   }
+
+  @override
+  Future<List<SalePayment>> getAllSessionPayments(int sessionId) async {
+    final db = await _databaseHelper.database;
+    final sessionResult = await db.query(
+      'cash_sessions',
+      where: 'id = ?',
+      whereArgs: [sessionId],
+    );
+    if (sessionResult.isEmpty) return [];
+    final session = CashSessionModel.fromMap(sessionResult.first);
+
+    final endTime =
+        session.closedAt?.toIso8601String() ?? DateTime.now().toIso8601String();
+
+    final result = await db.rawQuery(
+      '''
+        SELECT sp.* 
+        FROM sale_payments sp
+        JOIN sales s ON sp.sale_id = s.id
+        WHERE s.cashier_id = ?
+        AND s.sale_date >= ?
+        AND s.sale_date <= ?
+        AND s.status = 'completed'
+      ''',
+      [session.userId, session.openedAt.toIso8601String(), endTime],
+    );
+
+    return result.map((e) => SalePaymentModel.fromJson(e)).toList();
+  }
 }
