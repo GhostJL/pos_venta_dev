@@ -87,7 +87,7 @@ class ProductListItem extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
       ),
       child: Text(
-        '${product.stock}',
+        '${product.stock?.toInt() ?? 0.toInt()}',
         style: Theme.of(context).textTheme.bodySmall?.copyWith(
           fontWeight: FontWeight.w500,
           color: AppTheme.primary,
