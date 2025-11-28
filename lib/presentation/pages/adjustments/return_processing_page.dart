@@ -18,11 +18,11 @@ class ReturnProcessingPage extends ConsumerStatefulWidget {
 class _ReturnProcessingPageState extends ConsumerState<ReturnProcessingPage> {
   @override
   Widget build(BuildContext context) {
-    final state = ref.watch(returnProcessingNotifierProvider);
+    final state = ref.watch(returnProcessingProvider);
     final statsAsync = ref.watch(todayReturnsStatsProvider);
 
     // Listen for errors and success messages
-    ref.listen<ReturnProcessingState>(returnProcessingNotifierProvider, (
+    ref.listen<ReturnProcessingState>(returnProcessingProvider, (
       previous,
       next,
     ) {
@@ -34,7 +34,7 @@ class _ReturnProcessingPageState extends ConsumerState<ReturnProcessingPage> {
             behavior: SnackBarBehavior.floating,
           ),
         );
-        ref.read(returnProcessingNotifierProvider.notifier).clearError();
+        ref.read(returnProcessingProvider.notifier).clearError();
       }
 
       if (next.successMessage != null &&
@@ -46,12 +46,12 @@ class _ReturnProcessingPageState extends ConsumerState<ReturnProcessingPage> {
             behavior: SnackBarBehavior.floating,
           ),
         );
-        ref.read(returnProcessingNotifierProvider.notifier).clearSuccess();
+        ref.read(returnProcessingProvider.notifier).clearSuccess();
 
         // Reset and go back after success
         Future.delayed(const Duration(seconds: 2), () {
           if (mounted) {
-            ref.read(returnProcessingNotifierProvider.notifier).reset();
+            ref.read(returnProcessingProvider.notifier).reset();
           }
         });
       }
@@ -252,7 +252,7 @@ class _ReturnProcessingPageState extends ConsumerState<ReturnProcessingPage> {
                 ),
                 TextButton.icon(
                   onPressed: () {
-                    ref.read(returnProcessingNotifierProvider.notifier).reset();
+                    ref.read(returnProcessingProvider.notifier).reset();
                   },
                   icon: const Icon(Icons.close, size: 18),
                   label: const Text('Cambiar'),
@@ -315,7 +315,7 @@ class _ReturnProcessingPageState extends ConsumerState<ReturnProcessingPage> {
           FilledButton(
             onPressed: () {
               Navigator.of(context).pop();
-              ref.read(returnProcessingNotifierProvider.notifier).reset();
+              ref.read(returnProcessingProvider.notifier).reset();
               context.pop();
             },
             style: FilledButton.styleFrom(backgroundColor: Colors.red.shade600),

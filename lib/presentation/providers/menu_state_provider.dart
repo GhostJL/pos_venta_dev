@@ -1,35 +1,39 @@
-import 'package:flutter_riverpod/legacy.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
+
+part 'menu_state_provider.g.dart';
 
 /// Estado del menú para controlar qué grupo está expandido
-class MenuState {
+class MenuStateData {
   final String? expandedGroupId;
 
-  const MenuState({this.expandedGroupId});
+  const MenuStateData({this.expandedGroupId});
 
-  MenuState copyWith({String? expandedGroupId}) {
-    return MenuState(expandedGroupId: expandedGroupId);
+  MenuStateData copyWith({String? expandedGroupId}) {
+    return MenuStateData(expandedGroupId: expandedGroupId);
   }
 }
 
 /// Notifier para gestionar el estado del menú
-class MenuStateNotifier extends StateNotifier<MenuState> {
-  MenuStateNotifier()
-    : super(const MenuState(expandedGroupId: 'daily_operations'));
+@riverpod
+class MenuState extends _$MenuState {
+  @override
+  MenuStateData build() =>
+      const MenuStateData(expandedGroupId: 'daily_operations');
 
   /// Alterna el estado de un grupo
   void toggleGroup(String groupId) {
     if (state.expandedGroupId == groupId) {
       // Si el grupo actual está abierto, lo cerramos
-      state = MenuState(expandedGroupId: null);
+      state = const MenuStateData(expandedGroupId: null);
     } else {
       // Abrimos el nuevo grupo (automáticamente cierra cualquier otro)
-      state = MenuState(expandedGroupId: groupId);
+      state = MenuStateData(expandedGroupId: groupId);
     }
   }
 
   /// Establece un grupo específico como expandido
   void setExpandedGroup(String? groupId) {
-    state = MenuState(expandedGroupId: groupId);
+    state = MenuStateData(expandedGroupId: groupId);
   }
 
   /// Verifica si un grupo específico está expandido
@@ -39,11 +43,6 @@ class MenuStateNotifier extends StateNotifier<MenuState> {
 
   /// Cierra todos los grupos
   void closeAllGroups() {
-    state = const MenuState(expandedGroupId: null);
+    state = const MenuStateData(expandedGroupId: null);
   }
 }
-
-/// Provider para el estado del menú
-final menuStateProvider = StateNotifierProvider<MenuStateNotifier, MenuState>(
-  (ref) => MenuStateNotifier(),
-);

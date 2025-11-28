@@ -25,7 +25,7 @@ class _ReturnSummaryCardState extends ConsumerState<ReturnSummaryCard> {
 
   @override
   Widget build(BuildContext context) {
-    final state = ref.watch(returnProcessingNotifierProvider);
+    final state = ref.watch(returnProcessingProvider);
 
     return Card(
       elevation: 4,
@@ -97,7 +97,7 @@ class _ReturnSummaryCardState extends ConsumerState<ReturnSummaryCard> {
                   onSelected: (selected) {
                     if (selected) {
                       ref
-                          .read(returnProcessingNotifierProvider.notifier)
+                          .read(returnProcessingProvider.notifier)
                           .setRefundMethod(method);
                     }
                   },
@@ -139,7 +139,7 @@ class _ReturnSummaryCardState extends ConsumerState<ReturnSummaryCard> {
                 if (value != null) {
                   _reasonController.text = value.label;
                   ref
-                      .read(returnProcessingNotifierProvider.notifier)
+                      .read(returnProcessingProvider.notifier)
                       .setGeneralReason(value.label);
                 }
               },
@@ -156,9 +156,7 @@ class _ReturnSummaryCardState extends ConsumerState<ReturnSummaryCard> {
               ),
               maxLines: 3,
               onChanged: (value) {
-                ref
-                    .read(returnProcessingNotifierProvider.notifier)
-                    .setNotes(value);
+                ref.read(returnProcessingProvider.notifier).setNotes(value);
               },
             ),
             const SizedBox(height: 24),
@@ -225,7 +223,7 @@ class _ReturnSummaryCardState extends ConsumerState<ReturnSummaryCard> {
 
   Future<void> _processReturn() async {
     final success = await ref
-        .read(returnProcessingNotifierProvider.notifier)
+        .read(returnProcessingProvider.notifier)
         .processReturn();
 
     if (success && mounted) {

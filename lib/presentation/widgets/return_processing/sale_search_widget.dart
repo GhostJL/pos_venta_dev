@@ -346,7 +346,7 @@ class _SaleSearchWidgetState extends ConsumerState<SaleSearchWidget> {
     }
 
     // Select the sale
-    ref.read(returnProcessingNotifierProvider.notifier).selectSale(sale);
+    ref.read(returnProcessingProvider.notifier).selectSale(sale);
   }
 
   Widget _buildTimeLimitChip(int days, String label) {

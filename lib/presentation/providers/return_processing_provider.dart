@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_riverpod/legacy.dart';
 import 'package:posventa/data/repositories/sale_return_repository_impl.dart';
 import 'package:posventa/domain/repositories/sale_return_repository.dart';
 import 'package:posventa/domain/use_cases/sale_return/create_sale_return_use_case.dart';
@@ -15,6 +14,9 @@ import 'package:posventa/domain/entities/sale_return.dart';
 import 'package:posventa/domain/entities/sale_return_item.dart';
 import 'package:posventa/presentation/providers/providers.dart';
 import 'package:posventa/presentation/providers/auth_provider.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
+
+part 'return_processing_provider.g.dart';
 
 // ============================================================================
 // Data Classes
@@ -127,13 +129,13 @@ class ReturnProcessingState {
 }
 
 // ============================================================================
-// State Notifier
+// Notifier
 // ============================================================================
 
-class ReturnProcessingNotifier extends StateNotifier<ReturnProcessingState> {
-  final Ref _ref;
-
-  ReturnProcessingNotifier(this._ref) : super(const ReturnProcessingState());
+@riverpod
+class ReturnProcessing extends _$ReturnProcessing {
+  @override
+  ReturnProcessingState build() => const ReturnProcessingState();
 
   void selectSale(Sale sale) {
     state = state.copyWith(
@@ -215,11 +217,11 @@ class ReturnProcessingNotifier extends StateNotifier<ReturnProcessingState> {
     state = state.copyWith(isProcessing: true, clearError: true);
 
     try {
-      final createUseCase = _ref.read(createSaleReturnUseCaseProvider);
-      final generateNumberUseCase = _ref.read(
+      final createUseCase = ref.read(createSaleReturnUseCaseProvider);
+      final generateNumberUseCase = ref.read(
         generateNextReturnNumberUseCaseProvider,
       );
-      final authState = _ref.read(authProvider);
+      final authState = ref.read(authProvider);
 
       if (authState.user == null) {
         throw Exception('Usuario no autenticado');
@@ -269,9 +271,15 @@ class ReturnProcessingNotifier extends StateNotifier<ReturnProcessingState> {
         successMessage: 'Devolución procesada exitosamente: $returnNumber',
       );
 
-      // Refresh returns list
-      _ref.invalidate(saleReturnsProvider);
-      _ref.invalidate(todayReturnsStatsProvider);
+      // Refresh returns list and sales list for real-time updates
+      ref.invalidate(saleReturnsProvider);
+      ref.invalidate(todayReturnsStatsProvider);
+
+      // Invalidate sales streams to update sales history in real-time
+      ref.invalidate(salesListStreamProvider);
+      if (state.selectedSale?.id != null) {
+        ref.invalidate(saleDetailStreamProvider(state.selectedSale!.id!));
+      }
 
       return true;
     } catch (e) {
@@ -337,23 +345,17 @@ final getReturnsStatsUseCaseProvider = Provider((ref) {
   return GetReturnsStatsUseCase(repository);
 });
 
-// State Notifier Provider
-final returnProcessingNotifierProvider =
-    StateNotifierProvider.autoDispose<
-      ReturnProcessingNotifier,
-      ReturnProcessingState
-    >((ref) => ReturnProcessingNotifier(ref));
-
-// Returns List Provider
-final saleReturnsProvider = FutureProvider.autoDispose<List<SaleReturn>>((
-  ref,
-) async {
-  final useCase = ref.watch(getSaleReturnsUseCaseProvider);
+// Returns List Provider - Now using StreamProvider for real-time updates
+final saleReturnsProvider = StreamProvider.autoDispose<List<SaleReturn>>((ref) {
+  final repository = ref.watch(saleReturnRepositoryProvider);
   final now = DateTime.now();
   final startOfDay = DateTime(now.year, now.month, now.day);
   final endOfDay = DateTime(now.year, now.month, now.day, 23, 59, 59);
 
-  return await useCase(startDate: startOfDay, endDate: endOfDay);
+  return repository.getSaleReturnsStream(
+    startDate: startOfDay,
+    endDate: endOfDay,
+  );
 });
 
 // Today's Returns Stats Provider

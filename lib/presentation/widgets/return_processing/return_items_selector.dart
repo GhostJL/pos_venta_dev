@@ -31,7 +31,7 @@ class _ReturnItemsSelectorState extends ConsumerState<ReturnItemsSelector> {
 
   @override
   Widget build(BuildContext context) {
-    final state = ref.watch(returnProcessingNotifierProvider);
+    final state = ref.watch(returnProcessingProvider);
     final sale = state.selectedSale;
 
     if (sale == null || sale.items.isEmpty) {
@@ -142,7 +142,7 @@ class _ReturnItemsSelectorState extends ConsumerState<ReturnItemsSelector> {
                   value: isSelected,
                   onChanged: (value) {
                     ref
-                        .read(returnProcessingNotifierProvider.notifier)
+                        .read(returnProcessingProvider.notifier)
                         .toggleItem(item, value ?? false, maxQuantity);
                   },
                 ),
@@ -223,7 +223,7 @@ class _ReturnItemsSelectorState extends ConsumerState<ReturnItemsSelector> {
                         final qty = double.tryParse(value);
                         if (qty != null) {
                           ref
-                              .read(returnProcessingNotifierProvider.notifier)
+                              .read(returnProcessingProvider.notifier)
                               .updateItemQuantity(item.id!, qty);
                         }
                       },
@@ -259,7 +259,7 @@ class _ReturnItemsSelectorState extends ConsumerState<ReturnItemsSelector> {
                         if (value != null) {
                           _reasonControllers[item.id]?.text = value.label;
                           ref
-                              .read(returnProcessingNotifierProvider.notifier)
+                              .read(returnProcessingProvider.notifier)
                               .updateItemReason(item.id!, value.label);
                         }
                       },
