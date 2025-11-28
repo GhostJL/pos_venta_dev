@@ -38,6 +38,15 @@ class ProductsPageState extends ConsumerState<ProductsPage> {
   );
 
   @override
+  void initState() {
+    super.initState();
+    // Auto-refresh products when entering the page
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.invalidate(productNotifierProvider);
+    });
+  }
+
+  @override
   void dispose() {
     _searchController.dispose();
     super.dispose();

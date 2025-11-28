@@ -288,6 +288,16 @@ GenerateNextSaleNumberUseCase generateNextSaleNumberUseCase(ref) =>
 CancelSaleUseCase cancelSaleUseCase(ref) =>
     CancelSaleUseCase(ref.watch(saleRepositoryProvider));
 
+final salesListStreamProvider = StreamProvider.autoDispose
+    .family<List<Sale>, ({DateTime? startDate, DateTime? endDate})>((
+      ref,
+      args,
+    ) {
+      return ref
+          .watch(getSalesUseCaseProvider)
+          .stream(startDate: args.startDate, endDate: args.endDate);
+    });
+
 // --- Cash Session Providers ---
 
 @riverpod

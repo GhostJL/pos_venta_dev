@@ -11,32 +11,45 @@ import 'package:posventa/presentation/providers/permission_provider.dart';
 import 'package:posventa/presentation/widgets/common/confirm_delete_dialog.dart';
 import 'package:posventa/presentation/widgets/common/data_table_actions.dart';
 
-class CategoriesPage extends ConsumerWidget {
+class CategoriesPage extends ConsumerStatefulWidget {
   const CategoriesPage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<CategoriesPage> createState() => _CategoriesPageState();
+}
+
+class _CategoriesPageState extends ConsumerState<CategoriesPage> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.invalidate(categoryListProvider);
+    });
+  }
+
+  void _navigateToForm([Category? category]) {
+    context.push('/categories/form', extra: category);
+  }
+
+  void _confirmDelete(BuildContext context, WidgetRef ref, Category category) {
+    ConfirmDeleteDialog.show(
+      context: context,
+      itemName: category.name,
+      itemType: 'la categoría',
+      onConfirm: () {
+        ref.read(categoryListProvider.notifier).deleteCategory(category.id!);
+      },
+      successMessage: 'Categoría eliminada correctamente',
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final categoriesAsync = ref.watch(categoryListProvider);
     final departments = ref.watch(departmentListProvider);
     final hasManagePermission = ref.watch(
       hasPermissionProvider(PermissionConstants.catalogManage),
     );
-
-    void navigateToForm([Category? category]) {
-      context.push('/categories/form', extra: category);
-    }
-
-    void confirmDelete(BuildContext context, WidgetRef ref, Category category) {
-      ConfirmDeleteDialog.show(
-        context: context,
-        itemName: category.name,
-        itemType: 'la categoría',
-        onConfirm: () {
-          ref.read(categoryListProvider.notifier).deleteCategory(category.id!);
-        },
-        successMessage: 'Categoría eliminada correctamente',
-      );
-    }
 
     return Padding(
       padding: const EdgeInsets.all(24.0),
@@ -85,8 +98,8 @@ class CategoriesPage extends ConsumerWidget {
                   DataTableActions(
                     hasEditPermission: hasManagePermission,
                     hasDeletePermission: hasManagePermission,
-                    onEdit: () => navigateToForm(category),
-                    onDelete: () => confirmDelete(context, ref, category),
+                    onEdit: () => _navigateToForm(category),
+                    onDelete: () => _confirmDelete(context, ref, category),
                     editTooltip: 'Editar Categoría',
                     deleteTooltip: 'Eliminar Categoría',
                   ),
@@ -95,7 +108,7 @@ class CategoriesPage extends ConsumerWidget {
             );
           }).toList(),
           itemCount: categories.length,
-          onAddItem: hasManagePermission ? () => navigateToForm() : () {},
+          onAddItem: hasManagePermission ? () => _navigateToForm() : () {},
           emptyText: 'No se encontraron categorías. ¡Añade una para empezar!',
         ),
         loading: () => const Center(child: CircularProgressIndicator()),

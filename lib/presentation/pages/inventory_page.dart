@@ -9,11 +9,24 @@ import 'package:posventa/core/constants/permission_constants.dart';
 import 'package:posventa/presentation/providers/permission_provider.dart';
 import 'package:posventa/presentation/widgets/inventory/show_actions_widget.dart';
 
-class InventoryPage extends ConsumerWidget {
+class InventoryPage extends ConsumerStatefulWidget {
   const InventoryPage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<InventoryPage> createState() => _InventoryPageState();
+}
+
+class _InventoryPageState extends ConsumerState<InventoryPage> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.invalidate(inventoryProvider);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final inventoryAsync = ref.watch(inventoryProvider);
     final productsAsync = ref.watch(productNotifierProvider);
     final warehousesAsync = ref.watch(warehousesProvider);
@@ -74,7 +87,7 @@ class InventoryPage extends ConsumerWidget {
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(16),
                           side: BorderSide(
-                            color: AppTheme.borders.withOpacity(0.2),
+                            color: AppTheme.borders.withValues(alpha: 0.2),
                           ),
                         ),
                         child: InkWell(
@@ -183,7 +196,7 @@ class InventoryPage extends ConsumerWidget {
           Icon(
             Icons.inventory_2_outlined,
             size: 72,
-            color: AppTheme.textSecondary.withOpacity(0.4),
+            color: AppTheme.textSecondary.withValues(alpha: 0.4),
           ),
           const SizedBox(height: 16),
           Text(
@@ -202,7 +215,7 @@ class InventoryPage extends ConsumerWidget {
       width: 48,
       height: 48,
       decoration: BoxDecoration(
-        color: AppTheme.primary.withOpacity(0.1),
+        color: AppTheme.primary.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
       ),
       child: const Icon(Icons.inventory_2_rounded, color: AppTheme.primary),
@@ -213,7 +226,7 @@ class InventoryPage extends ConsumerWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Text(

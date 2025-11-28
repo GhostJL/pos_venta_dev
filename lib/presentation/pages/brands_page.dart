@@ -11,31 +11,44 @@ import 'package:posventa/presentation/widgets/common/status_chip.dart';
 import 'package:posventa/presentation/widgets/common/data_table_actions.dart';
 import 'package:posventa/presentation/providers/permission_provider.dart';
 
-class BrandsPage extends ConsumerWidget {
+class BrandsPage extends ConsumerStatefulWidget {
   const BrandsPage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<BrandsPage> createState() => _BrandsPageState();
+}
+
+class _BrandsPageState extends ConsumerState<BrandsPage> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.invalidate(brandListProvider);
+    });
+  }
+
+  void _navigateToForm([Brand? brand]) {
+    context.push('/brands/form', extra: brand);
+  }
+
+  void _confirmDelete(BuildContext context, WidgetRef ref, Brand brand) {
+    ConfirmDeleteDialog.show(
+      context: context,
+      itemName: brand.name,
+      itemType: 'la marca',
+      onConfirm: () {
+        ref.read(brandListProvider.notifier).deleteBrand(brand.id!);
+      },
+      successMessage: 'Marca eliminada correctamente',
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final brandList = ref.watch(brandListProvider);
     final hasManagePermission = ref.watch(
       hasPermissionProvider(PermissionConstants.catalogManage),
     );
-
-    void navigateToForm([Brand? brand]) {
-      context.push('/brands/form', extra: brand);
-    }
-
-    void confirmDelete(BuildContext context, WidgetRef ref, Brand brand) {
-      ConfirmDeleteDialog.show(
-        context: context,
-        itemName: brand.name,
-        itemType: 'la marca',
-        onConfirm: () {
-          ref.read(brandListProvider.notifier).deleteBrand(brand.id!);
-        },
-        successMessage: 'Marca eliminada correctamente',
-      );
-    }
 
     return Padding(
       padding: const EdgeInsets.all(24.0),
@@ -72,8 +85,8 @@ class BrandsPage extends ConsumerWidget {
                   DataTableActions(
                     hasEditPermission: hasManagePermission,
                     hasDeletePermission: hasManagePermission,
-                    onEdit: () => navigateToForm(brand),
-                    onDelete: () => confirmDelete(context, ref, brand),
+                    onEdit: () => _navigateToForm(brand),
+                    onDelete: () => _confirmDelete(context, ref, brand),
                     editTooltip: 'Editar Marca',
                     deleteTooltip: 'Eliminar Marca',
                   ),
@@ -82,7 +95,7 @@ class BrandsPage extends ConsumerWidget {
             );
           }).toList(),
           itemCount: brands.length,
-          onAddItem: hasManagePermission ? () => navigateToForm() : () {},
+          onAddItem: hasManagePermission ? () => _navigateToForm() : () {},
           emptyText: 'No se encontraron marcas. ¡Añade una para empezar!',
         ),
         loading: () => const Center(child: CircularProgressIndicator()),

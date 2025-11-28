@@ -25,6 +25,15 @@ class CustomersPageState extends ConsumerState<CustomersPage> {
   }
 
   @override
+  void initState() {
+    super.initState();
+    // Auto-refresh customers when entering the page
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.invalidate(customerProvider);
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     final customersAsync = ref.watch(customerProvider);
     final hasManagePermission = ref.watch(

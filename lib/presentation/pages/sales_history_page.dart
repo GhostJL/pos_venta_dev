@@ -23,13 +23,11 @@ class _SalesHistoryPageState extends ConsumerState<SalesHistoryPage> {
   @override
   void initState() {
     super.initState();
-    _loadSales();
-  }
-
-  Future<void> _loadSales() async {
-    await ref
-        .read(getSalesUseCaseProvider)
-        .call(startDate: _startDate, endDate: _endDate);
+    // Auto-refresh sales when entering the page
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      // Invalidate the provider to force a refresh
+      ref.invalidate(salesListStreamProvider);
+    });
   }
 
   Future<void> _selectDateRange() async {
@@ -47,7 +45,6 @@ class _SalesHistoryPageState extends ConsumerState<SalesHistoryPage> {
         _startDate = picked.start;
         _endDate = picked.end;
       });
-      _loadSales();
     }
   }
 
@@ -55,6 +52,10 @@ class _SalesHistoryPageState extends ConsumerState<SalesHistoryPage> {
   Widget build(BuildContext context) {
     final hasViewPermission = ref.watch(
       hasPermissionProvider(PermissionConstants.reportsView),
+    );
+
+    final salesAsync = ref.watch(
+      salesListStreamProvider((startDate: _startDate, endDate: _endDate)),
     );
 
     if (!hasViewPermission) {
@@ -83,41 +84,13 @@ class _SalesHistoryPageState extends ConsumerState<SalesHistoryPage> {
                   _startDate = null;
                   _endDate = null;
                 });
-                _loadSales();
               },
               tooltip: 'Limpiar filtro',
             ),
         ],
       ),
-      body: StreamBuilder<List<Sale>>(
-        stream: ref
-            .read(getSalesUseCaseProvider)
-            .stream(startDate: _startDate, endDate: _endDate),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-
-          if (snapshot.hasError) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(Icons.error_outline, size: 64, color: Colors.red),
-                  const SizedBox(height: 16),
-                  Text('Error: ${snapshot.error}'),
-                  const SizedBox(height: 16),
-                  ElevatedButton(
-                    onPressed: () => setState(() {}),
-                    child: const Text('Reintentar'),
-                  ),
-                ],
-              ),
-            );
-          }
-
-          final sales = snapshot.data ?? [];
-
+      body: salesAsync.when(
+        data: (sales) {
           if (sales.isEmpty) {
             return Center(
               child: Column(
@@ -138,15 +111,36 @@ class _SalesHistoryPageState extends ConsumerState<SalesHistoryPage> {
             );
           }
 
-          return ListView.builder(
-            padding: const EdgeInsets.all(16),
-            itemCount: sales.length,
-            itemBuilder: (context, index) {
-              final sale = sales[index];
-              return _SaleCard(sale: sale);
+          return RefreshIndicator(
+            onRefresh: () async {
+              ref.invalidate(salesListStreamProvider);
             },
+            child: ListView.builder(
+              padding: const EdgeInsets.all(16),
+              itemCount: sales.length,
+              itemBuilder: (context, index) {
+                final sale = sales[index];
+                return _SaleCard(sale: sale);
+              },
+            ),
           );
         },
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (error, stack) => Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.error_outline, size: 64, color: Colors.red),
+              const SizedBox(height: 16),
+              Text('Error: $error'),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: () => ref.invalidate(salesListStreamProvider),
+                child: const Text('Reintentar'),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

@@ -18,6 +18,14 @@ class _PurchasesPageState extends ConsumerState<PurchasesPage> {
   PurchaseStatus? _selectedFilter;
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.invalidate(purchaseProvider);
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     final purchasesAsync = ref.watch(purchaseProvider);
     final hasManagePermission = ref.watch(

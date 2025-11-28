@@ -21,6 +21,16 @@ class _CashSessionHistoryPageState
   DateTimeRange? _selectedDateRange;
 
   @override
+  void initState() {
+    super.initState();
+    // Auto-refresh sessions when entering the page
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      // Invalidate with default filter (nulls) as that's what the page starts with
+      ref.invalidate(cashSessionListProvider(CashSessionFilter()));
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     final filter = CashSessionFilter(
       userId: _selectedUserId,

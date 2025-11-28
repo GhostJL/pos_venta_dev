@@ -11,22 +11,35 @@ import 'package:posventa/presentation/widgets/common/data_table_actions.dart';
 
 import 'package:posventa/presentation/widgets/warehouse_form_widget.dart';
 
-class WarehousesPage extends ConsumerWidget {
+class WarehousesPage extends ConsumerStatefulWidget {
   const WarehousesPage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<WarehousesPage> createState() => _WarehousesPageState();
+}
+
+class _WarehousesPageState extends ConsumerState<WarehousesPage> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.invalidate(warehouseProvider);
+    });
+  }
+
+  void _showWarehouseForm([Warehouse? warehouse]) {
+    showDialog(
+      context: context,
+      builder: (context) => WarehouseFormWidget(warehouse: warehouse),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final warehousesAsync = ref.watch(warehouseProvider);
     final hasManagePermission = ref.watch(
       hasPermissionProvider(PermissionConstants.catalogManage),
     );
-
-    void showWarehouseForm([Warehouse? warehouse]) {
-      showDialog(
-        context: context,
-        builder: (context) => WarehouseFormWidget(warehouse: warehouse),
-      );
-    }
 
     return Scaffold(
       appBar: AppBar(
@@ -42,7 +55,7 @@ class WarehousesPage extends ConsumerWidget {
             return CustomDataTable<Warehouse>(
               itemCount: warehouses.length,
               onAddItem: hasManagePermission
-                  ? () => showWarehouseForm()
+                  ? () => _showWarehouseForm()
                   : () {},
               emptyText: 'No hay almacenes registrados.',
               columns: const [
@@ -87,7 +100,7 @@ class WarehousesPage extends ConsumerWidget {
                       DataTableActions(
                         hasEditPermission: hasManagePermission,
                         hasDeletePermission: hasManagePermission,
-                        onEdit: () => showWarehouseForm(warehouse),
+                        onEdit: () => _showWarehouseForm(warehouse),
                         onDelete: () {
                           ref
                               .read(warehouseProvider.notifier)

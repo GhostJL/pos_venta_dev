@@ -11,37 +11,50 @@ import 'package:posventa/presentation/widgets/common/confirm_delete_dialog.dart'
 import 'package:posventa/presentation/widgets/common/status_chip.dart';
 import 'package:posventa/presentation/widgets/common/data_table_actions.dart';
 
-class DepartmentsPage extends ConsumerWidget {
+class DepartmentsPage extends ConsumerStatefulWidget {
   const DepartmentsPage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<DepartmentsPage> createState() => _DepartmentsPageState();
+}
+
+class _DepartmentsPageState extends ConsumerState<DepartmentsPage> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.invalidate(departmentListProvider);
+    });
+  }
+
+  void _navigateToForm([Department? department]) {
+    context.push('/departments/form', extra: department);
+  }
+
+  void _confirmDelete(
+    BuildContext context,
+    WidgetRef ref,
+    Department department,
+  ) {
+    ConfirmDeleteDialog.show(
+      context: context,
+      itemName: department.name,
+      itemType: 'el departamento',
+      onConfirm: () {
+        ref
+            .read(departmentListProvider.notifier)
+            .deleteDepartment(department.id!);
+      },
+      successMessage: 'Departamento eliminado correctamente',
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final departmentsAsync = ref.watch(departmentListProvider);
     final hasManagePermission = ref.watch(
       hasPermissionProvider(PermissionConstants.catalogManage),
     );
-
-    void navigateToForm([Department? department]) {
-      context.push('/departments/form', extra: department);
-    }
-
-    void confirmDelete(
-      BuildContext context,
-      WidgetRef ref,
-      Department department,
-    ) {
-      ConfirmDeleteDialog.show(
-        context: context,
-        itemName: department.name,
-        itemType: 'el departamento',
-        onConfirm: () {
-          ref
-              .read(departmentListProvider.notifier)
-              .deleteDepartment(department.id!);
-        },
-        successMessage: 'Departamento eliminado correctamente',
-      );
-    }
 
     return Padding(
       padding: const EdgeInsets.all(24.0),
@@ -78,8 +91,8 @@ class DepartmentsPage extends ConsumerWidget {
                   DataTableActions(
                     hasEditPermission: hasManagePermission,
                     hasDeletePermission: hasManagePermission,
-                    onEdit: () => navigateToForm(department),
-                    onDelete: () => confirmDelete(context, ref, department),
+                    onEdit: () => _navigateToForm(department),
+                    onDelete: () => _confirmDelete(context, ref, department),
                     editTooltip: 'Editar Departamento',
                     deleteTooltip: 'Eliminar Departamento',
                   ),
@@ -88,7 +101,7 @@ class DepartmentsPage extends ConsumerWidget {
             );
           }).toList(),
           itemCount: departments.length,
-          onAddItem: hasManagePermission ? () => navigateToForm() : () {},
+          onAddItem: hasManagePermission ? () => _navigateToForm() : () {},
           emptyText:
               'No se encontraron departamentos. ¡Añade uno para empezar!',
         ),

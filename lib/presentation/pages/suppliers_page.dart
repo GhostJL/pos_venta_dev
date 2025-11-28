@@ -25,6 +25,15 @@ class SuppliersPageState extends ConsumerState<SuppliersPage> {
   }
 
   @override
+  void initState() {
+    super.initState();
+    // Auto-refresh suppliers when entering the page
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.invalidate(supplierListProvider);
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     final suppliers = ref.watch(supplierListProvider);
     final hasManagePermission = ref.watch(
