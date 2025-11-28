@@ -55,7 +55,7 @@ class _CashSessionHistoryPageState
             separatorBuilder: (_, __) => const SizedBox(height: 8),
             itemBuilder: (context, index) {
               final session = sessions[index];
-              return _SessionCard(session: session);
+              return SessionCard(session: session);
             },
           );
         },
@@ -182,68 +182,139 @@ class _CashSessionHistoryPageState
   }
 }
 
-class _SessionCard extends StatelessWidget {
+class SessionCard extends StatelessWidget {
   final CashSession session;
 
-  const _SessionCard({required this.session});
+  const SessionCard({super.key, required this.session});
 
   @override
   Widget build(BuildContext context) {
     final isOpen = session.status == 'open';
-    final color = isOpen ? Colors.green : Colors.grey;
+    final statusColor = isOpen ? Colors.green : Colors.grey;
     final currencyFormat = NumberFormat.currency(symbol: '\$');
 
     return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: ListTile(
-        leading: CircleAvatar(
-          backgroundColor: color.withAlpha(10),
-          child: Icon(Icons.point_of_sale, color: color),
-        ),
-        title: Text(
-          'Sesión #${session.id} - ${isOpen ? "Abierta" : "Cerrada"}',
-        ),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Apertura: ${DateFormat('dd/MM/yyyy HH:mm').format(session.openedAt)}',
-            ),
-            if (session.closedAt != null)
-              Text(
-                'Cierre: ${DateFormat('dd/MM/yyyy HH:mm').format(session.closedAt!)}',
+      elevation: 0,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16),
+        onTap: () => context.push('/cash-sessions/detail', extra: session),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              /// Header: Sesión + Estado
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Sesión #${session.id}',
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  Row(
+                    children: [
+                      Icon(Icons.circle, color: statusColor, size: 10),
+                      const SizedBox(width: 6),
+                      Text(
+                        isOpen ? 'Abierta' : 'Cerrada',
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: statusColor,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
-            Text('Usuario ID: ${session.userId}'), // Ideally fetch username
-          ],
-        ),
-        trailing: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            Text(
-              isOpen
-                  ? 'Inicio: ${currencyFormat.format(session.openingBalanceCents / 100)}'
-                  : 'Cierre: ${currencyFormat.format((session.closingBalanceCents ?? 0) / 100)}',
-              style: const TextStyle(fontWeight: FontWeight.bold),
-            ),
-            if (!isOpen &&
-                session.differenceCents != null &&
-                session.differenceCents != 0)
-              Text(
-                'Dif: ${currencyFormat.format(session.differenceCents! / 100)}',
-                style: TextStyle(
-                  color: session.differenceCents! < 0
-                      ? Colors.red
-                      : Colors.green,
-                  fontSize: 12,
+
+              const SizedBox(height: 12),
+
+              /// Apertura y cierre
+              Row(
+                children: [
+                  Icon(
+                    Icons.login_rounded,
+                    size: 16,
+                    color: Theme.of(context).hintColor,
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    DateFormat('dd/MM/yyyy HH:mm').format(session.openedAt),
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                ],
+              ),
+              if (session.closedAt != null) ...[
+                const SizedBox(height: 6),
+                Row(
+                  children: [
+                    Icon(
+                      Icons.logout_rounded,
+                      size: 16,
+                      color: Theme.of(context).hintColor,
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      DateFormat('dd/MM/yyyy HH:mm').format(session.closedAt!),
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                  ],
                 ),
+              ],
+
+              const SizedBox(height: 12),
+
+              /// Usuario
+              Row(
+                children: [
+                  Icon(
+                    Icons.person_outline,
+                    size: 16,
+                    color: Theme.of(context).hintColor,
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    session.userName ?? 'ID: ${session.userId}',
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                ],
               ),
-          ],
+
+              const SizedBox(height: 16),
+
+              /// Balances
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    isOpen
+                        ? 'Inicio: ${currencyFormat.format(session.openingBalanceCents / 100)}'
+                        : 'Cierre: ${currencyFormat.format((session.closingBalanceCents ?? 0) / 100)}',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+                  ),
+                  if (!isOpen &&
+                      session.differenceCents != null &&
+                      session.differenceCents != 0)
+                    Text(
+                      'Dif: ${currencyFormat.format(session.differenceCents! / 100)}',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: session.differenceCents! < 0
+                            ? Colors.red
+                            : Colors.green,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                ],
+              ),
+            ],
+          ),
         ),
-        onTap: () {
-          context.push('/cash-sessions/detail', extra: session);
-        },
       ),
     );
   }

@@ -13,6 +13,7 @@ class CashSessionModel extends CashSession {
     required super.openedAt,
     super.closedAt,
     super.notes,
+    super.userName,
   });
 
   factory CashSessionModel.fromMap(Map<String, dynamic> map) {
@@ -30,7 +31,22 @@ class CashSessionModel extends CashSession {
           ? DateTime.parse(map['closed_at'])
           : null,
       notes: map['notes'],
+      userName: _buildUserName(map),
     );
+  }
+
+  static String? _buildUserName(Map<String, dynamic> map) {
+    final firstName = map['first_name'] as String?;
+    final lastName = map['last_name'] as String?;
+    final username = map['username'] as String?;
+
+    if (firstName != null && firstName.isNotEmpty) {
+      if (lastName != null && lastName.isNotEmpty) {
+        return '$firstName $lastName';
+      }
+      return firstName;
+    }
+    return username;
   }
 
   Map<String, dynamic> toMap() {

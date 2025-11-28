@@ -10,6 +10,7 @@ class CashSession {
   final DateTime openedAt;
   final DateTime? closedAt;
   final String? notes;
+  final String? userName;
 
   CashSession({
     this.id,
@@ -23,6 +24,7 @@ class CashSession {
     required this.openedAt,
     this.closedAt,
     this.notes,
+    this.userName,
   });
 
   int get currentBalanceCents {

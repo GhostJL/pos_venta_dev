@@ -181,12 +181,13 @@ class CashSessionRepositoryImpl implements CashSessionRepository {
       whereArgs.add(endDate.toIso8601String());
     }
 
-    final result = await db.query(
-      'cash_sessions',
-      where: whereClause,
-      whereArgs: whereArgs,
-      orderBy: 'opened_at DESC',
-    );
+    final result = await db.rawQuery('''
+      SELECT cs.*, u.username, u.first_name, u.last_name
+      FROM cash_sessions cs
+      LEFT JOIN users u ON cs.user_id = u.id
+      WHERE $whereClause
+      ORDER BY cs.opened_at DESC
+      ''', whereArgs);
 
     return result.map((e) => CashSessionModel.fromMap(e)).toList();
   }
