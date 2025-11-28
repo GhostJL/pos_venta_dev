@@ -78,6 +78,11 @@ class _CashSessionOpenPageState extends ConsumerState<CashSessionOpenPage> {
         // Invalidar el provider para que el Guard detecte la nueva sesión
         ref.invalidate(currentCashSessionProvider);
 
+        // Navigate to dashboard
+        if (mounted) {
+          context.go('/');
+        }
+
         // Reset loading state
         setState(() {
           _isLoading = false;
