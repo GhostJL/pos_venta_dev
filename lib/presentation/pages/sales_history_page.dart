@@ -23,9 +23,7 @@ class _SalesHistoryPageState extends ConsumerState<SalesHistoryPage> {
   @override
   void initState() {
     super.initState();
-    // Auto-refresh sales when entering the page
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      // Invalidate the provider to force a refresh
       ref.invalidate(salesListStreamProvider);
     });
   }
@@ -38,6 +36,18 @@ class _SalesHistoryPageState extends ConsumerState<SalesHistoryPage> {
       initialDateRange: _startDate != null && _endDate != null
           ? DateTimeRange(start: _startDate!, end: _endDate!)
           : null,
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: ColorScheme.light(
+              primary: Colors.grey.shade800,
+              onPrimary: Colors.white,
+              surface: Colors.white,
+            ),
+          ),
+          child: child!,
+        );
+      },
     );
 
     if (picked != null) {
@@ -69,24 +79,67 @@ class _SalesHistoryPageState extends ConsumerState<SalesHistoryPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Historial de Ventas'),
+        elevation: 0,
+        surfaceTintColor: Colors.transparent,
+        title: const Text(
+          'Historial de Ventas',
+          style: TextStyle(fontWeight: FontWeight.w600),
+        ),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.date_range),
-            onPressed: _selectDateRange,
-            tooltip: 'Filtrar por fecha',
-          ),
-          if (_startDate != null || _endDate != null)
-            IconButton(
-              icon: const Icon(Icons.clear),
-              onPressed: () {
-                setState(() {
-                  _startDate = null;
-                  _endDate = null;
-                });
-              },
-              tooltip: 'Limpiar filtro',
+          if (_startDate != null && _endDate != null)
+            Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: Center(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade100,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.date_range,
+                        size: 14,
+                        color: Colors.grey.shade700,
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        '${DateFormat('dd/MM').format(_startDate!)} - ${DateFormat('dd/MM').format(_endDate!)}',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.grey.shade700,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
             ),
+          IconButton(
+            icon: Icon(
+              _startDate != null && _endDate != null
+                  ? Icons.close
+                  : Icons.filter_list_outlined,
+              size: 22,
+            ),
+            onPressed: _startDate != null && _endDate != null
+                ? () {
+                    setState(() {
+                      _startDate = null;
+                      _endDate = null;
+                    });
+                  }
+                : _selectDateRange,
+            tooltip: _startDate != null && _endDate != null
+                ? 'Limpiar filtro'
+                : 'Filtrar por fecha',
+          ),
         ],
       ),
       body: salesAsync.when(
@@ -97,15 +150,29 @@ class _SalesHistoryPageState extends ConsumerState<SalesHistoryPage> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Icon(
-                    Icons.receipt_long,
+                    Icons.receipt_long_outlined,
                     size: 64,
-                    color: Colors.grey.shade400,
+                    color: Colors.grey.shade300,
                   ),
                   const SizedBox(height: 16),
                   Text(
                     'No hay ventas registradas',
-                    style: TextStyle(color: Colors.grey.shade600, fontSize: 16),
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: Colors.grey.shade500,
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
+                  if (_startDate != null && _endDate != null) ...[
+                    const SizedBox(height: 8),
+                    Text(
+                      'Intenta con otro rango de fechas',
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: Colors.grey.shade400,
+                      ),
+                    ),
+                  ],
                 ],
               ),
             );
@@ -115,6 +182,7 @@ class _SalesHistoryPageState extends ConsumerState<SalesHistoryPage> {
             onRefresh: () async {
               ref.invalidate(salesListStreamProvider);
             },
+            color: Colors.grey.shade800,
             child: ListView.builder(
               padding: const EdgeInsets.all(16),
               itemCount: sales.length,
@@ -130,13 +198,40 @@ class _SalesHistoryPageState extends ConsumerState<SalesHistoryPage> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.error_outline, size: 64, color: Colors.red),
+              Icon(Icons.error_outline, size: 64, color: Colors.grey.shade400),
               const SizedBox(height: 16),
-              Text('Error: $error'),
-              const SizedBox(height: 16),
+              Text(
+                'Error al cargar',
+                style: TextStyle(
+                  fontSize: 16,
+                  color: Colors.grey.shade600,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Intenta de nuevo',
+                style: TextStyle(fontSize: 13, color: Colors.grey.shade500),
+              ),
+              const SizedBox(height: 24),
               ElevatedButton(
                 onPressed: () => ref.invalidate(salesListStreamProvider),
-                child: const Text('Reintentar'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.grey.shade800,
+                  foregroundColor: Colors.white,
+                  elevation: 0,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 12,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+                child: const Text(
+                  'Reintentar',
+                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+                ),
               ),
             ],
           ),
@@ -153,15 +248,18 @@ class _SaleCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final dateFormat = DateFormat('dd/MM/yyyy HH:mm');
+    final dateFormat = DateFormat('dd/MM/yyyy · HH:mm');
     final isCancelled = sale.status == SaleStatus.cancelled;
     final isReturned = sale.status == SaleStatus.returned;
     final returnsAsync = ref.watch(saleReturnsForSaleProvider(sale.id!));
 
-    return Card(
+    return Container(
       margin: const EdgeInsets.only(bottom: 12),
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey.shade200),
+      ),
       child: InkWell(
         onTap: () {
           context.push('/sale-detail/${sale.id}');
@@ -174,19 +272,47 @@ class _SaleCard extends ConsumerWidget {
             children: [
               // Header
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
-                    sale.saleNumber,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 18,
+                  Container(
+                    width: 3,
+                    height: 36,
+                    decoration: BoxDecoration(
+                      color: isCancelled
+                          ? Colors.red.shade400
+                          : isReturned
+                          ? Colors.orange.shade400
+                          : Colors.green.shade400,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          sale.saleNumber,
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            letterSpacing: -0.2,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          dateFormat.format(sale.saleDate),
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey.shade600,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                   Container(
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 6,
+                      horizontal: 10,
+                      vertical: 5,
                     ),
                     decoration: BoxDecoration(
                       color: isCancelled
@@ -194,62 +320,51 @@ class _SaleCard extends ConsumerWidget {
                           : isReturned
                           ? Colors.orange.shade50
                           : Colors.green.shade50,
-                      borderRadius: BorderRadius.circular(20),
+                      borderRadius: BorderRadius.circular(6),
+                      border: Border.all(
+                        color: isCancelled
+                            ? Colors.red.shade200
+                            : isReturned
+                            ? Colors.orange.shade200
+                            : Colors.green.shade200,
+                      ),
                     ),
                     child: Text(
                       isCancelled
-                          ? 'CANCELADA'
+                          ? 'Cancelada'
                           : isReturned
-                          ? 'DEVUELTA'
-                          : 'COMPLETADA',
+                          ? 'Devuelta'
+                          : 'Completada',
                       style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
                         color: isCancelled
                             ? Colors.red.shade700
                             : isReturned
                             ? Colors.orange.shade700
                             : Colors.green.shade700,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 12,
                       ),
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 16),
 
-              // Date
+              // Info Row
               Row(
                 children: [
                   Icon(
-                    Icons.calendar_today,
-                    size: 16,
-                    color: Colors.grey.shade600,
+                    Icons.shopping_bag_outlined,
+                    size: 14,
+                    color: Colors.grey.shade500,
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: 6),
                   Text(
-                    dateFormat.format(sale.saleDate),
-                    style: TextStyle(color: Colors.grey.shade600),
+                    '${sale.items.length} ${sale.items.length == 1 ? 'producto' : 'productos'}',
+                    style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
                   ),
                 ],
               ),
-              const SizedBox(height: 8),
-
-              // Items count
-              Row(
-                children: [
-                  Icon(
-                    Icons.shopping_cart,
-                    size: 16,
-                    color: Colors.grey.shade600,
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    '${sale.items.length} producto(s)',
-                    style: TextStyle(color: Colors.grey.shade600),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
 
               // Return Indicator
               returnsAsync.when(
@@ -262,28 +377,27 @@ class _SaleCard extends ConsumerWidget {
                   );
 
                   return Padding(
-                    padding: const EdgeInsets.only(bottom: 12),
+                    padding: const EdgeInsets.only(top: 12),
                     child: Container(
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 4,
+                        horizontal: 10,
+                        vertical: 6,
                       ),
                       decoration: BoxDecoration(
                         color: Colors.orange.shade50,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: Colors.orange.shade200),
+                        borderRadius: BorderRadius.circular(6),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Icon(
-                            Icons.keyboard_return,
+                            Icons.keyboard_return_outlined,
                             size: 14,
                             color: Colors.orange.shade700,
                           ),
-                          const SizedBox(width: 4),
+                          const SizedBox(width: 6),
                           Text(
-                            '${returns.length} devolución(es) • -\$${(totalReturned / 100).toStringAsFixed(2)}',
+                            '${returns.length} ${returns.length == 1 ? 'devolución' : 'devoluciones'} · -\$${(totalReturned / 100).toStringAsFixed(2)}',
                             style: TextStyle(
                               fontSize: 11,
                               color: Colors.orange.shade700,
@@ -299,46 +413,79 @@ class _SaleCard extends ConsumerWidget {
                 error: (_, __) => const SizedBox.shrink(),
               ),
 
-              const Divider(),
-              const SizedBox(height: 8),
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                child: Divider(height: 1, color: Colors.grey.shade200),
+              ),
 
-              // Totals
+              // Totals - Compact
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text('Subtotal:', style: TextStyle(fontSize: 14)),
-                  Text(
-                    '\$${(sale.subtotalCents / 100).toStringAsFixed(2)}',
-                    style: const TextStyle(fontSize: 14),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Subtotal',
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: Colors.grey.shade600,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        '\$${(sale.subtotalCents / 100).toStringAsFixed(2)}',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.grey.shade700,
+                        ),
+                      ),
+                    ],
                   ),
-                ],
-              ),
-              const SizedBox(height: 4),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text('Impuestos:', style: TextStyle(fontSize: 14)),
-                  Text(
-                    '\$${(sale.taxCents / 100).toStringAsFixed(2)}',
-                    style: const TextStyle(fontSize: 14),
+                  Container(width: 1, height: 28, color: Colors.grey.shade200),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Impuestos',
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: Colors.grey.shade600,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        '\$${(sale.taxCents / 100).toStringAsFixed(2)}',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.grey.shade700,
+                        ),
+                      ),
+                    ],
                   ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    'TOTAL:',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                  Text(
-                    '\$${(sale.totalCents / 100).toStringAsFixed(2)}',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Theme.of(context).primaryColor,
-                    ),
+                  Container(width: 1, height: 28, color: Colors.grey.shade200),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text(
+                        'Total',
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: Colors.grey.shade600,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        '\$${(sale.totalCents / 100).toStringAsFixed(2)}',
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: -0.3,
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
