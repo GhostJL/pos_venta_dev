@@ -41,10 +41,16 @@ class _ReturnProcessingPageState extends ConsumerState<ReturnProcessingPage> {
           next.successMessage != previous?.successMessage) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(next.successMessage!),
+            content: Row(
+              children: [
+                const Icon(Icons.check_circle, color: Colors.white),
+                const SizedBox(width: 12),
+                Expanded(child: Text(next.successMessage!)),
+              ],
+            ),
             backgroundColor: Colors.green.shade600,
             behavior: SnackBarBehavior.floating,
-            duration: const Duration(seconds: 2),
+            duration: const Duration(milliseconds: 1200),
           ),
         );
         ref.read(returnProcessingProvider.notifier).clearSuccess();
@@ -52,8 +58,8 @@ class _ReturnProcessingPageState extends ConsumerState<ReturnProcessingPage> {
         // Capture router before async gap to avoid context usage warning
         final router = GoRouter.of(context);
 
-        // Navigate back to sales history after showing success message
-        Future.delayed(const Duration(milliseconds: 1500), () {
+        // Navigate back to sales history immediately after showing success
+        Future.delayed(const Duration(milliseconds: 800), () {
           if (!mounted) return;
 
           ref.read(returnProcessingProvider.notifier).reset();
