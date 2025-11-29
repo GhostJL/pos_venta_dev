@@ -44,15 +44,21 @@ class _ReturnProcessingPageState extends ConsumerState<ReturnProcessingPage> {
             content: Text(next.successMessage!),
             backgroundColor: Colors.green.shade600,
             behavior: SnackBarBehavior.floating,
+            duration: const Duration(seconds: 2),
           ),
         );
         ref.read(returnProcessingProvider.notifier).clearSuccess();
 
-        // Reset and go back after success
-        Future.delayed(const Duration(seconds: 2), () {
-          if (mounted) {
-            ref.read(returnProcessingProvider.notifier).reset();
-          }
+        // Capture router before async gap to avoid context usage warning
+        final router = GoRouter.of(context);
+
+        // Navigate back to sales history after showing success message
+        Future.delayed(const Duration(milliseconds: 1500), () {
+          if (!mounted) return;
+
+          ref.read(returnProcessingProvider.notifier).reset();
+          // Use go instead of pop to ensure fresh navigation and data reload
+          router.go('/sales-history');
         });
       }
     });

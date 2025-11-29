@@ -381,14 +381,15 @@ final todayReturnsStatsProvider =
       };
     });
 
-// Returns for a specific sale Provider
-final saleReturnsForSaleProvider = FutureProvider.family<List<SaleReturn>, int>(
-  (ref, saleId) async {
-    final repository = ref.watch(saleReturnRepositoryProvider);
-    final allReturns = await repository.getSaleReturns();
-    return allReturns.where((r) => r.saleId == saleId).toList();
-  },
-);
+// Returns for a specific sale Provider - Now using StreamProvider for real-time updates
+final saleReturnsForSaleProvider = StreamProvider.autoDispose
+    .family<List<SaleReturn>, int>((ref, saleId) {
+      final repository = ref.watch(saleReturnRepositoryProvider);
+      // Use the stream method for real-time updates
+      return repository.getSaleReturnsStream().map(
+        (allReturns) => allReturns.where((r) => r.saleId == saleId).toList(),
+      );
+    });
 
 // Returns Stats Provider
 final returnsStatsProvider =
