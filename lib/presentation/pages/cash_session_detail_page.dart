@@ -262,7 +262,7 @@ class CashSessionDetailPage extends ConsumerWidget {
             _buildFinancialRow(
               context,
               'Balance Esperado',
-              session.expectedBalanceCents ?? 0,
+              detail.expectedBalance,
               currencyFormat,
               isBold: true,
             ),

@@ -83,7 +83,11 @@ class CashSessionRepositoryImpl implements CashSessionRepository {
       // 2b. Sumar movimientos de efectivo (entradas - salidas)
       final cashMovementsResult = await txn.rawQuery(
         '''
-        SELECT COALESCE(SUM(amount_cents), 0) as total
+        SELECT COALESCE(
+          SUM(CASE 
+            WHEN movement_type = 'entry' THEN amount_cents 
+            ELSE -amount_cents 
+          END), 0) as total
         FROM cash_movements
         WHERE cash_session_id = ?
       ''',

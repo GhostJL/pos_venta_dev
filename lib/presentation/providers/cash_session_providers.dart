@@ -134,8 +134,19 @@ class CashSessionDetail {
       .where((p) => p.paymentMethod == 'Efectivo')
       .fold(0, (sum, p) => sum + p.amountCents);
   int get totalSales => payments.fold(0, (sum, p) => sum + p.amountCents);
-  int get totalManualMovements =>
-      movements.fold(0, (sum, m) => sum + m.amountCents);
+  int get totalManualMovements => movements.fold(0, (sum, m) {
+    // Align with UI logic: 'entry' is deposit, everything else is withdrawal
+    final isEntry = m.movementType == 'entry';
+    return isEntry ? sum + m.amountCents : sum - m.amountCents;
+  });
+
+  int get expectedBalance {
+    if (session.status == 'closed') {
+      return session.expectedBalanceCents ?? 0;
+    }
+    // For open sessions, calculate dynamically
+    return session.openingBalanceCents + totalCashSales + totalManualMovements;
+  }
 }
 
 @riverpod
