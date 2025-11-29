@@ -79,11 +79,14 @@ class CartSection extends ConsumerWidget {
                             item.quantity - 1,
                           );
                         },
-                        onTapMoreProduct: () {
-                          posNotifier.updateQuantity(
+                        onTapMoreProduct: () async {
+                          final error = await posNotifier.updateQuantity(
                             item.productId,
                             item.quantity + 1,
                           );
+                          if (error != null && context.mounted) {
+                            _showStockError(context, error);
+                          }
                         },
                         quantity: item.quantity,
                         unitPrice: item.unitPrice,
@@ -193,6 +196,32 @@ class CartSection extends ConsumerWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  void _showStockError(BuildContext context, String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            const Icon(Icons.warning_amber, color: Colors.white, size: 18),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(message, style: const TextStyle(fontSize: 13)),
+            ),
+          ],
+        ),
+        backgroundColor: Colors.orange.shade700,
+        duration: const Duration(seconds: 2),
+        behavior: SnackBarBehavior.floating,
+        margin: EdgeInsets.only(
+          bottom: MediaQuery.of(context).size.height - 100,
+          left: 16,
+          right: 16,
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       ),
     );
   }

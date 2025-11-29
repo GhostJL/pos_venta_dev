@@ -64,7 +64,13 @@ class POSNotifier extends _$POSNotifier {
     return const POSState();
   }
 
-  Future<void> addToCart(Product product) async {
+  Future<String?> addToCart(Product product) async {
+    // Validate stock availability
+    final stockError = await _validateStock(product.id!, 1.0);
+    if (stockError != null) {
+      return stockError;
+    }
+
     // Check if product already in cart
     final existingIndex = state.cart.indexWhere(
       (item) => item.productId == product.id,
@@ -159,6 +165,58 @@ class POSNotifier extends _$POSNotifier {
     }
 
     state = state.copyWith(cart: newCart);
+    return null; // Success
+  }
+
+  /// Validates if there's enough stock for the requested quantity
+  /// Returns error message if insufficient stock, null if OK
+  Future<String?> _validateStock(
+    int productId,
+    double additionalQuantity,
+  ) async {
+    try {
+      // Get current warehouse from active session
+      final currentSession = await ref.read(getCurrentSessionProvider).call();
+      if (currentSession == null) {
+        return 'No hay sesión de caja activa';
+      }
+
+      // Get inventory for this product in current warehouse
+      final inventories = await ref
+          .read(getInventoryByProductProvider)
+          .call(productId);
+
+      final inventory = inventories.firstWhere(
+        (inv) => inv.warehouseId == currentSession.warehouseId,
+        orElse: () => throw Exception('No inventory'),
+      );
+
+      // Calculate total quantity needed (existing in cart + new)
+      final existingItem = state.cart.firstWhere(
+        (item) => item.productId == productId,
+        orElse: () => SaleItem(
+          productId: productId,
+          quantity: 0,
+          unitOfMeasure: '',
+          unitPriceCents: 0,
+          subtotalCents: 0,
+          taxCents: 0,
+          totalCents: 0,
+          costPriceCents: 0,
+        ),
+      );
+
+      final totalNeeded = existingItem.quantity + additionalQuantity;
+
+      // Check if enough stock
+      if (inventory.quantityOnHand < totalNeeded) {
+        return 'Stock insuficiente (disponible: ${inventory.quantityOnHand.toStringAsFixed(0)})';
+      }
+
+      return null; // Stock OK
+    } catch (e) {
+      return 'Producto sin inventario registrado';
+    }
   }
 
   void removeFromCart(int productId) {
@@ -168,15 +226,24 @@ class POSNotifier extends _$POSNotifier {
     state = state.copyWith(cart: newCart);
   }
 
-  void updateQuantity(int productId, double quantity) {
+  Future<String?> updateQuantity(int productId, double quantity) async {
     if (quantity <= 0) {
       removeFromCart(productId);
-      return;
+      return null;
     }
 
     final index = state.cart.indexWhere((item) => item.productId == productId);
     if (index >= 0) {
       final existingItem = state.cart[index];
+
+      // Validate stock if increasing quantity
+      if (quantity > existingItem.quantity) {
+        final additionalNeeded = quantity - existingItem.quantity;
+        final stockError = await _validateStock(productId, additionalNeeded);
+        if (stockError != null) {
+          return stockError;
+        }
+      }
 
       final unitPriceCents = existingItem.unitPriceCents;
       final subtotalCents = (unitPriceCents * quantity).round();
@@ -216,6 +283,7 @@ class POSNotifier extends _$POSNotifier {
       newCart[index] = updatedItem;
       state = state.copyWith(cart: newCart);
     }
+    return null;
   }
 
   void selectCustomer(Customer? customer) {

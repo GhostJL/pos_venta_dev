@@ -42,50 +42,23 @@ class _ProductGridSectionState extends ConsumerState<ProductGridSection> {
     // Buscar producto por código de barras
     final productsAsync = ref.read(productListProvider);
 
-    productsAsync.whenData((products) {
+    productsAsync.whenData((products) async {
       final product = products.where((p) => p.barcode == barcode).firstOrNull;
 
       if (product != null) {
-        // Agregar al carrito
-        ref.read(pOSProvider.notifier).addToCart(product);
+        // Agregar al carrito con validación de stock
+        final error = await ref.read(pOSProvider.notifier).addToCart(product);
 
-        // Mostrar feedback
-        ScaffoldMessenger.of(scannerContext).showSnackBar(
-          SnackBar(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(14),
-            ),
-            content: Row(
-              children: [
-                const Icon(Icons.check_circle, color: Colors.white),
-                const SizedBox(width: 12),
-                Expanded(child: Text('${product.name} agregado')),
-              ],
-            ),
-            backgroundColor: Colors.green,
-            duration: const Duration(seconds: 1),
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
-      } else {
+        if (error != null && scannerContext.mounted) {
+          // Mostrar error de stock
+          _showStockError(scannerContext, error);
+        } else if (scannerContext.mounted) {
+          // Mostrar feedback de éxito
+          _showProductAdded(scannerContext, product.name);
+        }
+      } else if (scannerContext.mounted) {
         // Producto no encontrado
-        ScaffoldMessenger.of(scannerContext).showSnackBar(
-          SnackBar(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(14),
-            ),
-            content: Row(
-              children: [
-                const Icon(Icons.error_outline, color: Colors.white),
-                const SizedBox(width: 12),
-                Expanded(child: Text('Producto no encontrado: $barcode')),
-              ],
-            ),
-            backgroundColor: Colors.red,
-            duration: const Duration(seconds: 1),
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
+        _showStockError(scannerContext, 'Producto no encontrado: $barcode');
       }
     });
   }
@@ -183,30 +156,20 @@ class _ProductGridSectionState extends ConsumerState<ProductGridSection> {
                   return ProductCard(
                     product: product,
                     isMobile: widget.isMobile,
-                    onTap: () {
-                      ref.read(pOSProvider.notifier).addToCart(product);
+                    onTap: () async {
+                      final error = await ref
+                          .read(pOSProvider.notifier)
+                          .addToCart(product);
 
-                      // Mostrar feedback
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(14),
-                          ),
-                          content: Row(
-                            children: [
-                              const Icon(
-                                Icons.check_circle,
-                                color: Colors.white,
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(child: Text('${product.name} agregado')),
-                            ],
-                          ),
-                          backgroundColor: Colors.green,
-                          duration: const Duration(seconds: 1),
-                          behavior: SnackBarBehavior.floating,
-                        ),
-                      );
+                      if (context.mounted) {
+                        if (error != null) {
+                          // Mostrar error de stock
+                          _showStockError(context, error);
+                        } else {
+                          // Mostrar feedback de éxito
+                          _showProductAdded(context, product.name);
+                        }
+                      }
                     },
                   );
                 },
@@ -226,6 +189,61 @@ class _ProductGridSectionState extends ConsumerState<ProductGridSection> {
           ),
         ),
       ],
+    );
+  }
+
+  void _showProductAdded(BuildContext context, String productName) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.check_circle, color: Colors.white, size: 16),
+            const SizedBox(width: 8),
+            Text(
+              productName,
+              style: const TextStyle(fontSize: 13),
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
+        ),
+        backgroundColor: Colors.grey.shade800,
+        duration: const Duration(milliseconds: 800),
+        behavior: SnackBarBehavior.floating,
+        margin: EdgeInsets.only(
+          bottom: MediaQuery.of(context).size.height - 100,
+          left: 16,
+          right: 16,
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      ),
+    );
+  }
+
+  void _showStockError(BuildContext context, String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            const Icon(Icons.warning_amber, color: Colors.white, size: 18),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(message, style: const TextStyle(fontSize: 13)),
+            ),
+          ],
+        ),
+        backgroundColor: Colors.orange.shade700,
+        duration: const Duration(seconds: 2),
+        behavior: SnackBarBehavior.floating,
+        margin: EdgeInsets.only(
+          bottom: MediaQuery.of(context).size.height - 100,
+          left: 16,
+          right: 16,
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      ),
     );
   }
 }
