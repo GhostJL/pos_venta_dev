@@ -6,6 +6,7 @@ import 'package:posventa/presentation/providers/auth_provider.dart';
 import 'package:intl/intl.dart';
 import 'package:go_router/go_router.dart';
 import 'package:posventa/presentation/providers/return_processing_provider.dart';
+import 'package:posventa/presentation/widgets/transaction_void/transaction_void_dialog.dart';
 
 class SaleDetailPage extends ConsumerWidget {
   final int saleId;
@@ -597,84 +598,38 @@ class SaleDetailPage extends ConsumerWidget {
     }
   }
 
-  void _showCancelDialog(BuildContext context, WidgetRef ref, Sale sale) {
-    final reasonController = TextEditingController();
+  Future<void> _showCancelDialog(
+    BuildContext context,
+    WidgetRef ref,
+    Sale sale,
+  ) async {
+    final reason = await TransactionVoidDialog.show(context, sale);
 
-    showDialog(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('Cancelar Venta'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text('¿Estás seguro de que deseas cancelar esta venta?'),
-            const SizedBox(height: 16),
-            TextField(
-              controller: reasonController,
-              decoration: const InputDecoration(
-                labelText: 'Motivo de cancelación',
-                border: OutlineInputBorder(),
-              ),
-              maxLines: 3,
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(),
-            child: const Text('No'),
+    if (reason == null || !context.mounted) return;
+
+    try {
+      final user = ref.read(authProvider).user;
+      if (user == null) throw Exception('Usuario no autenticado');
+
+      await ref
+          .read(cancelSaleUseCaseProvider)
+          .call(sale.id!, user.id!, reason);
+
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Venta cancelada exitosamente'),
+            backgroundColor: Colors.green,
           ),
-          ElevatedButton(
-            onPressed: () async {
-              if (reasonController.text.trim().isEmpty) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Debes proporcionar un motivo'),
-                    backgroundColor: Colors.red,
-                  ),
-                );
-                return;
-              }
-
-              try {
-                final user = ref.read(authProvider).user;
-                if (user == null) throw Exception('Usuario no autenticado');
-
-                await ref
-                    .read(cancelSaleUseCaseProvider)
-                    .call(sale.id!, user.id!, reasonController.text.trim());
-
-                if (dialogContext.mounted) {
-                  Navigator.of(dialogContext).pop();
-                }
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Venta cancelada exitosamente'),
-                      backgroundColor: Colors.green,
-                    ),
-                  );
-                  context.pop(); // Volver al historial
-                }
-              } catch (e) {
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Error: $e'),
-                      backgroundColor: Colors.red,
-                    ),
-                  );
-                }
-              }
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-              foregroundColor: Colors.white,
-            ),
-            child: const Text('Sí, Cancelar'),
-          ),
-        ],
-      ),
-    );
+        );
+        context.pop(); // Volver al historial
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+        );
+      }
+    }
   }
 }

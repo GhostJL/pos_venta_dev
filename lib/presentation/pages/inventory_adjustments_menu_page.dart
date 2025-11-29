@@ -21,17 +21,6 @@ class InventoryAdjustmentsMenuPage extends StatelessWidget {
           _buildHeader(context),
           const SizedBox(height: 32),
 
-          // Section 1: Transaction Correction
-          _buildSectionTitle(
-            context,
-            'Corrección de Transacciones',
-            Icons.receipt_long_rounded,
-            Colors.blue.shade600,
-          ),
-          const SizedBox(height: 16),
-          _buildTransactionCorrectionCards(context),
-          const SizedBox(height: 32),
-
           // Section 2: Physical Inventory Adjustment
           _buildSectionTitle(
             context,
@@ -133,56 +122,6 @@ class InventoryAdjustmentsMenuPage extends StatelessWidget {
           ),
         ),
       ],
-    );
-  }
-
-  Widget _buildTransactionCorrectionCards(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final crossAxisCount = constraints.maxWidth > 900 ? 2 : 1;
-        return GridView.count(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          crossAxisCount: crossAxisCount,
-          childAspectRatio: 3.5,
-          crossAxisSpacing: 16,
-          mainAxisSpacing: 16,
-          children: [
-            _buildAdjustmentCard(
-              context,
-              title: 'Anulación de Transacción',
-              description: 'Anular ventas incorrectas o canceladas',
-              icon: Icons.cancel_rounded,
-              color: Colors.red.shade600,
-              onTap: () => context.push('/adjustments/transaction-void'),
-            ),
-            _buildAdjustmentCard(
-              context,
-              title: 'Ajuste de Precios',
-              description: 'Corregir precios o descuentos aplicados',
-              icon: Icons.price_change_rounded,
-              color: Colors.blue.shade600,
-              onTap: () => context.push('/adjustments/price-adjustment'),
-            ),
-            _buildAdjustmentCard(
-              context,
-              title: 'Corrección de Pago',
-              description: 'Modificar forma de pago registrada',
-              icon: Icons.payment_rounded,
-              color: Colors.purple.shade600,
-              onTap: () => context.push('/adjustments/payment-correction'),
-            ),
-            _buildAdjustmentCard(
-              context,
-              title: 'Procesamiento de Devolución',
-              description: 'Registrar devoluciones de productos',
-              icon: Icons.keyboard_return_rounded,
-              color: Colors.orange.shade600,
-              onTap: () => context.push('/adjustments/return-processing'),
-            ),
-          ],
-        );
-      },
     );
   }
 

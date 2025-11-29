@@ -53,7 +53,7 @@ import 'package:posventa/presentation/pages/returns_management_page.dart';
 import 'package:posventa/presentation/pages/inventory_adjustments_page.dart';
 import 'package:posventa/presentation/pages/inventory_adjustments_menu_page.dart';
 import 'package:posventa/presentation/pages/adjustments/physical_inventory_adjustment_page.dart';
-import 'package:posventa/presentation/pages/adjustments/transaction_void_page.dart';
+
 import 'package:posventa/presentation/pages/adjustments/return_processing_page.dart';
 import 'package:posventa/presentation/pages/adjustments/coming_soon_page.dart';
 
@@ -362,12 +362,7 @@ final routerProvider = Provider<GoRouter>((ref) {
               child: PhysicalInventoryAdjustmentPage(),
             ),
           ),
-          // Transaction Correction Routes
-          GoRoute(
-            path: '/adjustments/transaction-void',
-            pageBuilder: (context, state) =>
-                const NoTransitionPage(child: TransactionVoidPage()),
-          ),
+
           GoRoute(
             path: '/adjustments/price-adjustment',
             pageBuilder: (context, state) => const NoTransitionPage(
