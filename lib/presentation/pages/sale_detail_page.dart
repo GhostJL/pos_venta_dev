@@ -155,115 +155,142 @@ class SaleDetailPage extends ConsumerWidget {
           ),
           const SizedBox(height: 20),
 
-          // Returns Section
+          // Returns Section - Compact Summary
           returnsAsync.when(
             data: (returns) {
               if (returns.isEmpty) return const SizedBox.shrink();
 
+              final totalReturnedCents = returns.fold<int>(
+                0,
+                (sum, r) => sum + r.totalCents,
+              );
+              final netTotalCents = sale.totalCents - totalReturnedCents;
+
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.keyboard_return,
-                        color: Colors.orange.shade600,
-                      ),
-                      const SizedBox(width: 8),
-                      const Text(
-                        'Devoluciones',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
+                  InkWell(
+                    onTap: () {
+                      context.push(
+                        '/sale-returns-detail/${sale.id}',
+                        extra: sale,
+                      );
+                    },
+                    borderRadius: BorderRadius.circular(12),
+                    child: Card(
+                      elevation: 2,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        side: BorderSide(
+                          color: Colors.orange.shade300,
+                          width: 2,
                         ),
                       ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  ...returns.map(
-                    (returnItem) => Card(
-                      margin: const EdgeInsets.only(bottom: 8),
-                      color: Colors.orange.shade50,
-                      child: Padding(
-                        padding: const EdgeInsets.all(12),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(12),
+                          gradient: LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [
+                              Colors.orange.shade50,
+                              Colors.orange.shade100,
+                            ],
+                          ),
+                        ),
+                        padding: const EdgeInsets.all(16),
                         child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
+                            Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(10),
+                                  decoration: BoxDecoration(
+                                    color: Colors.orange.shade600,
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  child: const Icon(
+                                    Icons.keyboard_return,
+                                    color: Colors.white,
+                                    size: 24,
+                                  ),
+                                ),
+                                const SizedBox(width: 16),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      const Text(
+                                        'Devoluciones Aplicadas',
+                                        style: TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        '${returns.length} ${returns.length == 1 ? 'devolución' : 'devoluciones'}',
+                                        style: TextStyle(
+                                          fontSize: 13,
+                                          color: Colors.grey.shade700,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                Icon(
+                                  Icons.chevron_right,
+                                  color: Colors.orange.shade700,
+                                  size: 28,
+                                ),
+                              ],
+                            ),
+                            const Divider(height: 24),
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 Text(
-                                  returnItem.returnNumber,
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.bold,
+                                  'Total Devuelto:',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.grey.shade700,
                                   ),
                                 ),
                                 Text(
-                                  '-\$${(returnItem.totalCents / 100).toStringAsFixed(2)}',
+                                  '-\$${(totalReturnedCents / 100).toStringAsFixed(2)}',
                                   style: TextStyle(
+                                    fontSize: 16,
                                     fontWeight: FontWeight.bold,
                                     color: Colors.red.shade700,
-                                    fontSize: 16,
                                   ),
                                 ),
                               ],
                             ),
                             const SizedBox(height: 8),
-                            Text(
-                              'Fecha: ${dateFormat.format(returnItem.returnDate)}',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Colors.grey.shade700,
-                              ),
-                            ),
-                            Text(
-                              'Motivo: ${returnItem.reason}',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Colors.grey.shade700,
-                              ),
-                            ),
-                            Text(
-                              'Método: ${returnItem.refundMethod.displayName}',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Colors.grey.shade700,
-                              ),
-                            ),
-                            Text(
-                              'Procesado por: ${returnItem.processedByName ?? 'Usuario #${returnItem.processedBy}'}',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Colors.grey.shade700,
-                              ),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                const Text(
+                                  'Total Neto:',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                Text(
+                                  '\$${(netTotalCents / 100).toStringAsFixed(2)}',
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.blue.shade700,
+                                  ),
+                                ),
+                              ],
                             ),
                           ],
                         ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  // Net Total
-                  Card(
-                    color: Colors.blue.shade50,
-                    child: Padding(
-                      padding: const EdgeInsets.all(12),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          const Text(
-                            'Total Neto (después de devoluciones):',
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                          Text(
-                            '\$${((sale.totalCents - returns.fold<int>(0, (sum, r) => sum + r.totalCents)) / 100).toStringAsFixed(2)}',
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 18,
-                              color: Colors.blue.shade700,
-                            ),
-                          ),
-                        ],
                       ),
                     ),
                   ),
@@ -271,7 +298,7 @@ class SaleDetailPage extends ConsumerWidget {
                 ],
               );
             },
-            loading: () => const Center(child: CircularProgressIndicator()),
+            loading: () => const SizedBox.shrink(),
             error: (_, __) => const SizedBox.shrink(),
           ),
 
