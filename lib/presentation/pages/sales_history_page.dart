@@ -155,6 +155,7 @@ class _SaleCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final dateFormat = DateFormat('dd/MM/yyyy HH:mm');
     final isCancelled = sale.status == SaleStatus.cancelled;
+    final isReturned = sale.status == SaleStatus.returned;
     final returnsAsync = ref.watch(saleReturnsForSaleProvider(sale.id!));
 
     return Card(
@@ -190,14 +191,22 @@ class _SaleCard extends ConsumerWidget {
                     decoration: BoxDecoration(
                       color: isCancelled
                           ? Colors.red.shade50
+                          : isReturned
+                          ? Colors.orange.shade50
                           : Colors.green.shade50,
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Text(
-                      isCancelled ? 'CANCELADA' : 'COMPLETADA',
+                      isCancelled
+                          ? 'CANCELADA'
+                          : isReturned
+                          ? 'DEVUELTA'
+                          : 'COMPLETADA',
                       style: TextStyle(
                         color: isCancelled
                             ? Colors.red.shade700
+                            : isReturned
+                            ? Colors.orange.shade700
                             : Colors.green.shade700,
                         fontWeight: FontWeight.bold,
                         fontSize: 12,

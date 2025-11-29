@@ -152,7 +152,8 @@ class ReturnProcessing extends _$ReturnProcessing {
     if (selected) {
       newItems[item.id!] = ReturnItemData(
         saleItem: item,
-        returnQuantity: item.quantity,
+        returnQuantity:
+            maxQuantity, // Use maxQuantity (available to return) not item.quantity (original sale quantity)
         maxQuantity: maxQuantity,
       );
     } else {

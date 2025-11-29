@@ -35,6 +35,9 @@ abstract class SaleReturnRepository {
   /// Returns Map with saleItemId as key and returnedQuantity as value
   Future<Map<int, double>> getReturnedQuantities(int saleId);
 
+  /// Checks if all items from a sale have been fully returned
+  Future<bool> isSaleFullyReturned(int saleId);
+
   /// Get statistics for returns within a date range
   Future<Map<String, dynamic>> getReturnsStats({
     required DateTime startDate,

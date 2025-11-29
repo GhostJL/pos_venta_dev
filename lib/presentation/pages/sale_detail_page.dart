@@ -59,6 +59,7 @@ class SaleDetailPage extends ConsumerWidget {
   Widget _buildSaleDetail(BuildContext context, WidgetRef ref, Sale sale) {
     final dateFormat = DateFormat('dd/MM/yyyy HH:mm');
     final isCancelled = sale.status == SaleStatus.cancelled;
+    final isReturned = sale.status == SaleStatus.returned;
     final returnsAsync = ref.watch(saleReturnsForSaleProvider(sale.id!));
 
     return SingleChildScrollView(
@@ -108,14 +109,22 @@ class SaleDetailPage extends ConsumerWidget {
                         decoration: BoxDecoration(
                           color: isCancelled
                               ? Colors.red.shade50
+                              : isReturned
+                              ? Colors.orange.shade50
                               : Colors.green.shade50,
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: Text(
-                          isCancelled ? 'CANCELADA' : 'COMPLETADA',
+                          isCancelled
+                              ? 'CANCELADA'
+                              : isReturned
+                              ? 'DEVUELTA'
+                              : 'COMPLETADA',
                           style: TextStyle(
                             color: isCancelled
                                 ? Colors.red.shade700
+                                : isReturned
+                                ? Colors.orange.shade700
                                 : Colors.green.shade700,
                             fontWeight: FontWeight.bold,
                           ),
@@ -488,7 +497,7 @@ class SaleDetailPage extends ConsumerWidget {
           const SizedBox(height: 20),
 
           // Actions
-          if (!isCancelled) ...[
+          if (!isCancelled && !isReturned) ...[
             SizedBox(
               width: double.infinity,
               height: 50,

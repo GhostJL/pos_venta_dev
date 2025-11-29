@@ -250,6 +250,58 @@ class SaleReturnRepositoryImpl implements SaleReturnRepository {
         await _createCashMovement(txn, saleReturn, returnId);
       }
 
+      // 5. Check if sale is now fully returned and update status
+      final saleItemsResults = await txn.query(
+        DatabaseHelper.tableSaleItems,
+        columns: ['id', 'quantity'],
+        where: 'sale_id = ?',
+        whereArgs: [saleReturn.saleId],
+      );
+
+      // Get all returned quantities for this sale (including current return)
+      final returnedQtyResults = await txn.rawQuery(
+        '''
+        SELECT 
+          sri.sale_item_id,
+          SUM(sri.quantity) as total_returned
+        FROM ${DatabaseHelper.tableSaleReturnItems} sri
+        INNER JOIN ${DatabaseHelper.tableSaleReturns} sr ON sri.sale_return_id = sr.id
+        WHERE sr.sale_id = ? AND sr.status = 'completed'
+        GROUP BY sri.sale_item_id
+      ''',
+        [saleReturn.saleId],
+      );
+
+      final returnedQty = <int, double>{};
+      for (final row in returnedQtyResults) {
+        final saleItemId = row['sale_item_id'] as int;
+        final totalReturned = row['total_returned'] as double;
+        returnedQty[saleItemId] = totalReturned;
+      }
+
+      // Check if all items are fully returned
+      bool isFullyReturned = true;
+      for (final saleItem in saleItemsResults) {
+        final saleItemId = saleItem['id'] as int;
+        final originalQty = saleItem['quantity'] as double;
+        final returnedQuantity = returnedQty[saleItemId] ?? 0.0;
+
+        if (returnedQuantity < originalQty) {
+          isFullyReturned = false;
+          break;
+        }
+      }
+
+      // Update sale status if fully returned
+      if (isFullyReturned) {
+        await txn.update(
+          DatabaseHelper.tableSales,
+          {'status': 'returned'},
+          where: 'id = ?',
+          whereArgs: [saleReturn.saleId],
+        );
+      }
+
       return returnId;
     });
 
@@ -439,6 +491,40 @@ class SaleReturnRepositoryImpl implements SaleReturnRepository {
     }
 
     return returnedQty;
+  }
+
+  @override
+  Future<bool> isSaleFullyReturned(int saleId) async {
+    final db = await _dbHelper.database;
+
+    // Get all sale items with their quantities
+    final saleItemsResults = await db.query(
+      DatabaseHelper.tableSaleItems,
+      columns: ['id', 'quantity'],
+      where: 'sale_id = ?',
+      whereArgs: [saleId],
+    );
+
+    if (saleItemsResults.isEmpty) {
+      return false; // No items means not fully returned
+    }
+
+    // Get returned quantities
+    final returnedQty = await getReturnedQuantities(saleId);
+
+    // Check if all items have been fully returned
+    for (final saleItem in saleItemsResults) {
+      final saleItemId = saleItem['id'] as int;
+      final originalQty = saleItem['quantity'] as double;
+      final returnedQuantity = returnedQty[saleItemId] ?? 0.0;
+
+      // If any item has not been fully returned, return false
+      if (returnedQuantity < originalQty) {
+        return false;
+      }
+    }
+
+    return true; // All items have been fully returned
   }
 
   @override

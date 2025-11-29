@@ -1,7 +1,7 @@
 import 'package:posventa/domain/entities/sale_item.dart';
 import 'package:posventa/domain/entities/sale_payment.dart';
 
-enum SaleStatus { completed, pending, cancelled }
+enum SaleStatus { completed, pending, cancelled, returned }
 
 class Sale {
   final int? id;

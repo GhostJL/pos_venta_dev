@@ -35,10 +35,13 @@ class SaleModel extends Sale {
       discountCents: json['discount_cents'] ?? 0,
       taxCents: json['tax_cents'] ?? 0,
       totalCents: json['total_cents'],
-      status: SaleStatus.values.firstWhere(
-        (e) => e.name == json['status'],
-        orElse: () => SaleStatus.completed,
-      ),
+      status: json['status'] == 'completed'
+          ? SaleStatus.completed
+          : json['status'] == 'pending'
+          ? SaleStatus.pending
+          : json['status'] == 'returned'
+          ? SaleStatus.returned
+          : SaleStatus.cancelled,
       saleDate: DateTime.parse(json['sale_date']),
       createdAt: DateTime.parse(json['created_at']),
       cancelledBy: json['cancelled_by'],
