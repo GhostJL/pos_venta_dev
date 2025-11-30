@@ -155,15 +155,18 @@ class ProductRepositoryImpl implements ProductRepository {
     // Query 1: Search products with stock
     final List<Map<String, dynamic>> productMaps = await db.rawQuery(
       '''
-      SELECT p.*, (SELECT SUM(quantity_on_hand) FROM inventory WHERE product_id = p.id) as stock
+      SELECT DISTINCT p.*, (SELECT SUM(quantity_on_hand) FROM inventory WHERE product_id = p.id) as stock
       FROM ${DatabaseHelper.tableProducts} p
+      LEFT JOIN ${DatabaseHelper.tableProductVariants} pv ON p.id = pv.product_id AND pv.is_active = 1
       WHERE p.is_active = 1 AND (
         p.name LIKE ? OR 
         p.code LIKE ? OR 
-        p.barcode LIKE ?
+        p.barcode LIKE ? OR
+        pv.barcode LIKE ? OR
+        pv.description LIKE ?
       )
     ''',
-      ['%$query%', '%$query%', '%$query%'],
+      ['%$query%', '%$query%', '%$query%', '%$query%', '%$query%'],
     );
 
     if (productMaps.isEmpty) return [];

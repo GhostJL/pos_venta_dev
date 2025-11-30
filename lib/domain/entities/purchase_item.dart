@@ -12,12 +12,14 @@ class PurchaseItem {
   final String? lotNumber;
   final DateTime? expirationDate;
   final double quantityReceived;
+  final int? variantId;
   final DateTime createdAt;
 
   const PurchaseItem({
     this.id,
     this.purchaseId,
     required this.productId,
+    this.variantId,
     this.productName,
     required this.quantity,
     this.quantityReceived = 0,

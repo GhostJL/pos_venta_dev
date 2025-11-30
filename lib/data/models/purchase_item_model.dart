@@ -5,6 +5,7 @@ class PurchaseItemModel extends PurchaseItem {
     super.id,
     super.purchaseId,
     required super.productId,
+    super.variantId,
     required super.quantity,
     super.quantityReceived,
     required super.unitOfMeasure,
@@ -23,6 +24,7 @@ class PurchaseItemModel extends PurchaseItem {
       id: json['id'],
       purchaseId: json['purchase_id'],
       productId: json['product_id'],
+      variantId: json['variant_id'],
       quantity: json['quantity'] is int
           ? (json['quantity'] as int).toDouble()
           : json['quantity'],
@@ -48,6 +50,7 @@ class PurchaseItemModel extends PurchaseItem {
       'id': id,
       'purchase_id': purchaseId,
       'product_id': productId,
+      'variant_id': variantId,
       'quantity': quantity,
       'quantity_received': quantityReceived,
       'unit_of_measure': unitOfMeasure,
@@ -66,6 +69,7 @@ class PurchaseItemModel extends PurchaseItem {
       id: item.id,
       purchaseId: item.purchaseId,
       productId: item.productId,
+      variantId: item.variantId,
       quantity: item.quantity,
       quantityReceived: item.quantityReceived,
       unitOfMeasure: item.unitOfMeasure,

@@ -305,6 +305,12 @@ class DatabaseHelper {
         ADD COLUMN is_for_sale INTEGER NOT NULL DEFAULT 1
       ''');
     }
+    if (oldVersion < 20) {
+      await db.execute('''
+        ALTER TABLE $tablePurchaseItems 
+        ADD COLUMN variant_id INTEGER REFERENCES $tableProductVariants(id) ON DELETE SET NULL
+      ''');
+    }
   }
 
   Future<void> _createProductVariantsTable(Database db) async {
@@ -596,7 +602,8 @@ class DatabaseHelper {
         lot_number TEXT,
         created_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
         FOREIGN KEY (sale_id) REFERENCES $tableSales(id) ON DELETE CASCADE,
-        FOREIGN KEY (product_id) REFERENCES $tableProducts(id) ON DELETE RESTRICT
+        FOREIGN KEY (product_id) REFERENCES $tableProducts(id) ON DELETE RESTRICT,
+        FOREIGN KEY (variant_id) REFERENCES $tableProductVariants(id) ON DELETE SET NULL
       )
     ''');
     await db.execute(
@@ -692,6 +699,7 @@ class DatabaseHelper {
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         purchase_id INTEGER NOT NULL,
         product_id INTEGER NOT NULL,
+        variant_id INTEGER,
         quantity REAL NOT NULL,
         quantity_received REAL NOT NULL DEFAULT 0,
         unit_of_measure TEXT NOT NULL,
@@ -703,7 +711,8 @@ class DatabaseHelper {
         expiration_date TEXT,
         created_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
         FOREIGN KEY (purchase_id) REFERENCES $tablePurchases(id) ON DELETE CASCADE,
-        FOREIGN KEY (product_id) REFERENCES $tableProducts(id) ON DELETE RESTRICT
+        FOREIGN KEY (product_id) REFERENCES $tableProducts(id) ON DELETE RESTRICT,
+        FOREIGN KEY (variant_id) REFERENCES $tableProductVariants(id) ON DELETE SET NULL
       )
     ''');
     await db.execute(

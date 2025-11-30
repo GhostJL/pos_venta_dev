@@ -15,12 +15,13 @@ class PurchaseItemRepositoryImpl implements PurchaseItemRepository {
     final db = await _databaseHelper.database;
     final result = await db.rawQuery('''
       SELECT pi.*, 
-             pr.name as product_name,
+             pr.name || COALESCE(' (' || pv.description || ')', '') as product_name,
              p.purchase_number,
              p.purchase_date,
              s.name as supplier_name
       FROM ${DatabaseHelper.tablePurchaseItems} pi
       LEFT JOIN ${DatabaseHelper.tableProducts} pr ON pi.product_id = pr.id
+      LEFT JOIN ${DatabaseHelper.tableProductVariants} pv ON pi.variant_id = pv.id
       LEFT JOIN ${DatabaseHelper.tablePurchases} p ON pi.purchase_id = p.id
       LEFT JOIN ${DatabaseHelper.tableSuppliers} s ON p.supplier_id = s.id
       ORDER BY pi.created_at DESC
@@ -37,12 +38,13 @@ class PurchaseItemRepositoryImpl implements PurchaseItemRepository {
     final result = await db.rawQuery(
       '''
       SELECT pi.*, 
-             pr.name as product_name,
+             pr.name || COALESCE(' (' || pv.description || ')', '') as product_name,
              p.purchase_number,
              p.purchase_date,
              s.name as supplier_name
       FROM ${DatabaseHelper.tablePurchaseItems} pi
       LEFT JOIN ${DatabaseHelper.tableProducts} pr ON pi.product_id = pr.id
+      LEFT JOIN ${DatabaseHelper.tableProductVariants} pv ON pi.variant_id = pv.id
       LEFT JOIN ${DatabaseHelper.tablePurchases} p ON pi.purchase_id = p.id
       LEFT JOIN ${DatabaseHelper.tableSuppliers} s ON p.supplier_id = s.id
       WHERE pi.purchase_id = ?
@@ -60,7 +62,7 @@ class PurchaseItemRepositoryImpl implements PurchaseItemRepository {
     final result = await db.rawQuery(
       '''
       SELECT pi.*, 
-             pr.name as product_name,
+             pr.name || COALESCE(' (' || pv.description || ')', '') as product_name,
              pr.code as product_code,
              pr.barcode as product_barcode,
              p.purchase_number,
@@ -69,6 +71,7 @@ class PurchaseItemRepositoryImpl implements PurchaseItemRepository {
              w.name as warehouse_name
       FROM ${DatabaseHelper.tablePurchaseItems} pi
       LEFT JOIN ${DatabaseHelper.tableProducts} pr ON pi.product_id = pr.id
+      LEFT JOIN ${DatabaseHelper.tableProductVariants} pv ON pi.variant_id = pv.id
       LEFT JOIN ${DatabaseHelper.tablePurchases} p ON pi.purchase_id = p.id
       LEFT JOIN ${DatabaseHelper.tableSuppliers} s ON p.supplier_id = s.id
       LEFT JOIN ${DatabaseHelper.tableWarehouses} w ON p.warehouse_id = w.id
@@ -87,12 +90,13 @@ class PurchaseItemRepositoryImpl implements PurchaseItemRepository {
     final result = await db.rawQuery(
       '''
       SELECT pi.*, 
-             pr.name as product_name,
+             pr.name || COALESCE(' (' || pv.description || ')', '') as product_name,
              p.purchase_number,
              p.purchase_date,
              s.name as supplier_name
       FROM ${DatabaseHelper.tablePurchaseItems} pi
       LEFT JOIN ${DatabaseHelper.tableProducts} pr ON pi.product_id = pr.id
+      LEFT JOIN ${DatabaseHelper.tableProductVariants} pv ON pi.variant_id = pv.id
       LEFT JOIN ${DatabaseHelper.tablePurchases} p ON pi.purchase_id = p.id
       LEFT JOIN ${DatabaseHelper.tableSuppliers} s ON p.supplier_id = s.id
       WHERE pi.product_id = ?
@@ -145,12 +149,13 @@ class PurchaseItemRepositoryImpl implements PurchaseItemRepository {
     final result = await db.rawQuery(
       '''
       SELECT pi.*, 
-             pr.name as product_name,
+             pr.name || COALESCE(' (' || pv.description || ')', '') as product_name,
              p.purchase_number,
              p.purchase_date,
              s.name as supplier_name
       FROM ${DatabaseHelper.tablePurchaseItems} pi
       LEFT JOIN ${DatabaseHelper.tableProducts} pr ON pi.product_id = pr.id
+      LEFT JOIN ${DatabaseHelper.tableProductVariants} pv ON pi.variant_id = pv.id
       LEFT JOIN ${DatabaseHelper.tablePurchases} p ON pi.purchase_id = p.id
       LEFT JOIN ${DatabaseHelper.tableSuppliers} s ON p.supplier_id = s.id
       WHERE pi.created_at BETWEEN ? AND ?
@@ -168,12 +173,13 @@ class PurchaseItemRepositoryImpl implements PurchaseItemRepository {
     final result = await db.rawQuery(
       '''
       SELECT pi.*, 
-             pr.name as product_name,
+             pr.name || COALESCE(' (' || pv.description || ')', '') as product_name,
              p.purchase_number,
              p.purchase_date,
              s.name as supplier_name
       FROM ${DatabaseHelper.tablePurchaseItems} pi
       LEFT JOIN ${DatabaseHelper.tableProducts} pr ON pi.product_id = pr.id
+      LEFT JOIN ${DatabaseHelper.tableProductVariants} pv ON pi.variant_id = pv.id
       LEFT JOIN ${DatabaseHelper.tablePurchases} p ON pi.purchase_id = p.id
       LEFT JOIN ${DatabaseHelper.tableSuppliers} s ON p.supplier_id = s.id
       ORDER BY pi.created_at DESC

@@ -2,10 +2,45 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:posventa/domain/entities/product.dart';
+import 'package:posventa/domain/entities/product_variant.dart';
 import 'package:posventa/domain/entities/purchase_item.dart';
 import 'package:posventa/presentation/providers/product_provider.dart';
 import 'package:posventa/presentation/providers/purchase_item_providers.dart';
 import 'package:posventa/presentation/providers/purchase_providers.dart';
+
+/// Helper class to represent a product or product variant as a single selectable item
+class ProductVariantItem {
+  final Product product;
+  final ProductVariant? variant;
+
+  ProductVariantItem({required this.product, this.variant});
+
+  String get displayName {
+    if (variant != null) {
+      return '${product.name} - ${variant!.description} (Factor: ${variant!.quantity})';
+    }
+    return product.name;
+  }
+
+  int get costPriceCents {
+    return variant?.costPriceCents ?? product.costPriceCents;
+  }
+
+  String get unitOfMeasure {
+    return product.unitOfMeasure;
+  }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is ProductVariantItem &&
+          runtimeType == other.runtimeType &&
+          product.id == other.product.id &&
+          variant?.id == other.variant?.id;
+
+  @override
+  int get hashCode => product.id.hashCode ^ (variant?.id.hashCode ?? 0);
+}
 
 /// Form page for creating or editing a purchase item
 /// Can be used standalone or as part of a purchase creation flow
@@ -29,7 +64,7 @@ class _PurchaseItemFormPageState extends ConsumerState<PurchaseItemFormPage> {
   final _lotNumberController = TextEditingController();
 
   // Form state
-  Product? _selectedProduct;
+  ProductVariantItem? _selectedItem;
   int? _selectedPurchaseId;
   DateTime? _expirationDate;
   bool _isLoading = false;
@@ -57,6 +92,9 @@ class _PurchaseItemFormPageState extends ConsumerState<PurchaseItemFormPage> {
         _selectedPurchaseId = item.purchaseId;
         _expirationDate = item.expirationDate;
         // Note: We can't set _selectedProduct here without loading products
+        // But we can store the variantId to set it later if needed,
+        // or rely on the user re-selecting if they edit.
+        // Ideally we should load the product and variant.
       });
     }
   }
@@ -72,7 +110,7 @@ class _PurchaseItemFormPageState extends ConsumerState<PurchaseItemFormPage> {
   Future<void> _saveItem() async {
     if (!_formKey.currentState!.validate()) return;
 
-    if (_selectedProduct == null) {
+    if (_selectedItem == null) {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text('Seleccione un producto')));
@@ -101,10 +139,11 @@ class _PurchaseItemFormPageState extends ConsumerState<PurchaseItemFormPage> {
       final item = PurchaseItem(
         id: widget.itemId,
         purchaseId: _selectedPurchaseId,
-        productId: _selectedProduct!.id!,
-        productName: _selectedProduct!.name,
+        productId: _selectedItem!.product.id!,
+        variantId: _selectedItem!.variant?.id,
+        productName: _selectedItem!.product.name,
         quantity: quantity,
-        unitOfMeasure: _selectedProduct!.unitOfMeasure,
+        unitOfMeasure: _selectedItem!.unitOfMeasure,
         unitCostCents: unitCostCents,
         subtotalCents: subtotalCents,
         taxCents: taxCents,
@@ -185,30 +224,54 @@ class _PurchaseItemFormPageState extends ConsumerState<PurchaseItemFormPage> {
                       style: Theme.of(context).textTheme.titleMedium,
                     ),
                     const SizedBox(height: 12),
-                    DropdownButtonFormField<Product>(
-                      initialValue: _selectedProduct,
+                    DropdownButtonFormField<ProductVariantItem>(
+                      initialValue: _selectedItem,
                       decoration: const InputDecoration(
-                        labelText: 'Producto *',
+                        labelText: 'Producto / Variante *',
                         border: OutlineInputBorder(),
                         prefixIcon: Icon(Icons.shopping_bag),
                       ),
                       items: productsAsync.when(
-                        data: (products) => products
-                            .map(
-                              (p) => DropdownMenuItem(
-                                value: p,
-                                child: Text(p.name),
-                              ),
-                            )
-                            .toList(),
+                        data: (products) {
+                          // Flatten products and variants into a single list
+                          final List<ProductVariantItem> items = [];
+                          for (final product in products) {
+                            if (product.variants != null &&
+                                product.variants!.isNotEmpty) {
+                              // Add each variant as a separate item
+                              for (final variant in product.variants!) {
+                                items.add(
+                                  ProductVariantItem(
+                                    product: product,
+                                    variant: variant,
+                                  ),
+                                );
+                              }
+                            } else {
+                              // Add product without variant
+                              items.add(ProductVariantItem(product: product));
+                            }
+                          }
+                          return items
+                              .map(
+                                (item) => DropdownMenuItem(
+                                  value: item,
+                                  child: Text(
+                                    item.displayName,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              )
+                              .toList();
+                        },
                         loading: () => [],
                         error: (_, __) => [],
                       ),
                       onChanged: (value) {
                         setState(() {
-                          _selectedProduct = value;
+                          _selectedItem = value;
                           if (value != null) {
-                            // Pre-fill cost from product
+                            // Pre-fill cost from product or variant
                             _unitCostController.text =
                                 (value.costPriceCents / 100).toStringAsFixed(2);
                           }
