@@ -6,7 +6,34 @@ import 'package:go_router/go_router.dart';
 import 'package:posventa/presentation/widgets/pos/product_cart_widget.dart';
 import 'package:posventa/domain/entities/product.dart';
 import 'package:posventa/domain/entities/product_variant.dart';
-import 'package:posventa/presentation/widgets/pos/variant_selection_dialog.dart';
+
+/// Helper class to represent a product or variant as a single grid item
+class ProductGridItem {
+  final Product product;
+  final ProductVariant? variant;
+
+  ProductGridItem({required this.product, this.variant});
+
+  String get displayName {
+    if (variant != null) {
+      return '${product.name}\n${variant!.description}';
+    }
+    return product.name;
+  }
+
+  int get priceCents => variant?.priceCents ?? product.salePriceCents;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is ProductGridItem &&
+          runtimeType == other.runtimeType &&
+          product.id == other.product.id &&
+          variant?.id == other.variant?.id;
+
+  @override
+  int get hashCode => product.id.hashCode ^ (variant?.id.hashCode ?? 0);
+}
 
 class ProductGridSection extends ConsumerStatefulWidget {
   final bool isMobile;
@@ -168,6 +195,25 @@ class _ProductGridSectionState extends ConsumerState<ProductGridSection> {
                 );
               }
 
+              // Flatten products and variants into grid items
+              final List<ProductGridItem> gridItems = [];
+              for (final product in products) {
+                final sellableVariants =
+                    product.variants?.where((v) => v.isForSale).toList() ?? [];
+
+                if (sellableVariants.isNotEmpty) {
+                  // Add each sellable variant as a separate grid item
+                  for (final variant in sellableVariants) {
+                    gridItems.add(
+                      ProductGridItem(product: product, variant: variant),
+                    );
+                  }
+                } else {
+                  // Add product without variant
+                  gridItems.add(ProductGridItem(product: product));
+                }
+              }
+
               // Determinar número de columnas según el tamaño
               final crossAxisCount = widget.isMobile ? 2 : 4;
 
@@ -179,61 +225,23 @@ class _ProductGridSectionState extends ConsumerState<ProductGridSection> {
                   crossAxisSpacing: 2,
                   mainAxisSpacing: 2,
                 ),
-                itemCount: products.length,
+                itemCount: gridItems.length,
                 itemBuilder: (context, index) {
-                  final product = products[index];
+                  final item = gridItems[index];
                   return ProductCard(
-                    product: product,
+                    product: item.product,
+                    variant: item.variant,
                     isMobile: widget.isMobile,
                     onTap: () async {
-                      ProductVariant? selectedVariant;
-                      final sellableVariants =
-                          product.variants
-                              ?.where((v) => v.isForSale)
-                              .toList() ??
-                          [];
-
-                      if (sellableVariants.isNotEmpty) {
-                        selectedVariant = await showDialog<ProductVariant>(
-                          context: context,
-                          builder: (context) => VariantSelectionDialog(
-                            product: product.copyWith(
-                              variants: sellableVariants,
-                            ),
-                          ),
-                        );
-                        // If user cancelled dialog (returned null), do nothing
-                        if (selectedVariant == null && context.mounted) {
-                          // Check if user cancelled or just clicked outside
-                          // But wait, if they cancel, we shouldn't add anything.
-                          // However, maybe they want to add the base product?
-                          // Usually if there are variants, they MUST select one?
-                          // Or is the base product also sellable as unit?
-                          // "Caja con 12" implies base is unit.
-                          // Let's assume if they cancel, they cancel the action.
-                          return;
-                        }
-                      }
-
-                      if (!context.mounted) return;
-
+                      // Add directly to cart without dialog
                       final error = await ref
                           .read(pOSProvider.notifier)
-                          .addToCart(product, variant: selectedVariant);
+                          .addToCart(item.product, variant: item.variant);
 
-                      if (context.mounted) {
-                        if (error != null) {
-                          // Mostrar error de stock
-                          _showStockError(context, error);
-                        } else {
-                          // Mostrar feedback de éxito
-                          _showProductAdded(
-                            context,
-                            selectedVariant != null
-                                ? '${product.name} (${selectedVariant.description})'
-                                : product.name,
-                          );
-                        }
+                      if (error != null && context.mounted) {
+                        _showStockError(context, error);
+                      } else if (context.mounted) {
+                        _showProductAdded(context, item.displayName);
                       }
                     },
                   );

@@ -1,14 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:posventa/domain/entities/product.dart';
+import 'package:posventa/domain/entities/product_variant.dart';
 
 class ProductCard extends StatelessWidget {
   final Product product;
+  final ProductVariant? variant;
   final bool isMobile;
   final VoidCallback onTap;
 
   const ProductCard({
     super.key,
     required this.product,
+    this.variant,
     required this.isMobile,
     required this.onTap,
   });
@@ -16,6 +19,12 @@ class ProductCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final hasStock = (product.stock ?? 0) > 0;
+    final displayName = variant != null
+        ? '${product.name}\n${variant!.description}'
+        : product.name;
+    final displayPrice = variant != null
+        ? (variant!.priceCents / 100)
+        : product.price;
 
     return Card(
       elevation: 1,
@@ -31,7 +40,7 @@ class ProductCard extends StatelessWidget {
             children: [
               // Nombre del producto (simplificado)
               Text(
-                product.name,
+                displayName,
                 style: TextStyle(
                   fontWeight: FontWeight.w600,
                   fontSize: isMobile ? 13 : 14,
@@ -76,7 +85,7 @@ class ProductCard extends StatelessWidget {
 
                   // Precio
                   Text(
-                    '\$${product.price.toStringAsFixed(2)}',
+                    '\$${displayPrice.toStringAsFixed(2)}',
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: isMobile ? 15 : 16,
