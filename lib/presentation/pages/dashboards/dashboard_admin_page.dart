@@ -8,8 +8,8 @@ import 'package:posventa/presentation/widgets/dashboard_card.dart';
 import 'package:posventa/presentation/widgets/dashboard/clock_widget.dart';
 import 'package:posventa/presentation/widgets/dashboard/dashboard_search_delegate.dart';
 
-class DashboardScreen extends ConsumerWidget {
-  const DashboardScreen({super.key});
+class DashboardAdminPage extends ConsumerWidget {
+  const DashboardAdminPage({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

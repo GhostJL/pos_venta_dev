@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:posventa/core/theme/theme.dart';
-import 'package:posventa/presentation/widgets/pos/cart_section.dart';
+import 'package:posventa/presentation/widgets/pos/sale/cart_section.dart';
 import 'package:posventa/presentation/widgets/pos/product_grid_section.dart';
 import 'package:posventa/core/constants/permission_constants.dart';
 import 'package:posventa/presentation/providers/permission_provider.dart';
 
-class SalesPage extends ConsumerWidget {
-  const SalesPage({super.key});
+class PosSalesPage extends ConsumerWidget {
+  const PosSalesPage({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

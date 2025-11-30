@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-class CashierHomePage extends StatelessWidget {
-  const CashierHomePage({super.key});
+class DashboardCashierPage extends StatelessWidget {
+  const DashboardCashierPage({super.key});
 
   @override
   Widget build(BuildContext context) {

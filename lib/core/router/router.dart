@@ -3,40 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:posventa/domain/entities/user.dart';
 
-import 'package:posventa/presentation/pages/login_page.dart';
-import 'package:posventa/presentation/pages/create_account_page.dart';
+import 'package:posventa/presentation/pages/screens.dart';
+import 'package:posventa/presentation/widgets/barcode_scanner_widget.dart';
 import 'package:posventa/presentation/widgets/cash_session_guard.dart';
 
-import 'package:posventa/presentation/pages/suppliers_page.dart';
-import 'package:posventa/presentation/pages/warehouses_page.dart';
-import 'package:posventa/presentation/pages/inventory_page.dart';
-import 'package:posventa/presentation/pages/customers_page.dart';
-import 'package:posventa/presentation/pages/sales_page.dart';
-import 'package:posventa/presentation/pages/sales_history_page.dart';
-import 'package:posventa/presentation/pages/sale_detail_page.dart';
-import 'package:posventa/presentation/pages/sale_returns_detail_page.dart';
 import 'package:posventa/domain/entities/sale.dart';
-import 'package:posventa/presentation/pages/purchases_page.dart';
-import 'package:posventa/presentation/pages/purchase_detail_page.dart';
-import 'package:posventa/presentation/pages/purchase_form_page.dart';
-import 'package:posventa/presentation/pages/purchase_header_page.dart';
-import 'package:posventa/presentation/pages/purchase_items_page.dart';
-import 'package:posventa/presentation/pages/purchase_item_detail_page.dart';
-import 'package:posventa/presentation/pages/purchase_item_form_page.dart';
-import 'package:posventa/presentation/pages/cash_session_open_page.dart';
-import 'package:posventa/presentation/pages/cash_session_close_page.dart';
 import 'package:posventa/presentation/providers/auth_provider.dart';
-
-import 'package:posventa/presentation/pages/dashboard_screen.dart';
-import 'package:posventa/presentation/pages/cashier_home_page.dart';
-import 'package:posventa/presentation/pages/products_page.dart';
-import 'package:posventa/presentation/pages/departments_page.dart';
-import 'package:posventa/presentation/pages/categories_page.dart';
-import 'package:posventa/presentation/pages/brands_page.dart';
-import 'package:posventa/presentation/pages/tax_rate_page.dart';
-
-import 'package:posventa/presentation/pages/cashier/cashier_list_page.dart';
-import 'package:posventa/presentation/pages/cash_session_history_page.dart';
 
 import 'package:posventa/presentation/widgets/product_form_page.dart';
 import 'package:posventa/presentation/widgets/brand_form.dart';
@@ -45,24 +17,6 @@ import 'package:posventa/presentation/widgets/customer_form.dart';
 import 'package:posventa/presentation/widgets/department_form.dart';
 import 'package:posventa/presentation/widgets/supplier_form.dart';
 
-import 'package:posventa/presentation/pages/inventory_form_page.dart';
-import 'package:posventa/presentation/pages/cashier/cashier_form_page.dart';
-import 'package:posventa/presentation/pages/cashier/cashier_permissions_page.dart';
-import 'package:posventa/presentation/pages/cash_session_detail_page.dart';
-import 'package:posventa/presentation/widgets/barcode_scanner_widget.dart';
-
-import 'package:posventa/presentation/pages/returns_management_page.dart';
-import 'package:posventa/presentation/pages/inventory_adjustments_page.dart';
-import 'package:posventa/presentation/pages/inventory_adjustments_menu_page.dart';
-import 'package:posventa/presentation/pages/adjustments/physical_inventory_adjustment_page.dart';
-
-import 'package:posventa/presentation/pages/adjustments/return_processing_page.dart';
-import 'package:posventa/presentation/pages/adjustments/coming_soon_page.dart';
-
-import 'package:posventa/presentation/pages/users_permissions_page.dart';
-import 'package:posventa/presentation/pages/tax_store_config_page.dart';
-
-import 'package:posventa/presentation/pages/shift_close_page.dart';
 import 'package:posventa/domain/entities/product.dart';
 
 import 'package:posventa/domain/entities/cash_session.dart';
@@ -123,12 +77,12 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/', // Admin dashboard
             pageBuilder: (context, state) =>
-                const NoTransitionPage(child: DashboardScreen()),
+                const NoTransitionPage(child: DashboardAdminPage()),
           ),
           GoRoute(
             path: '/home', // Cashier home
             pageBuilder: (context, state) =>
-                const NoTransitionPage(child: CashierHomePage()),
+                const NoTransitionPage(child: DashboardCashierPage()),
           ),
           GoRoute(
             path: '/products',
@@ -178,7 +132,7 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/sales',
             pageBuilder: (context, state) =>
-                const NoTransitionPage(child: SalesPage()),
+                const NoTransitionPage(child: PosSalesPage()),
           ),
           GoRoute(
             path: '/sales-history',

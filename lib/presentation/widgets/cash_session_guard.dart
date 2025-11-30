@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:posventa/presentation/pages/cash_session_open_page.dart';
-import 'package:posventa/presentation/pages/main_layout.dart';
+import 'package:posventa/presentation/pages/cash/cash_session_open_page.dart';
+import 'package:posventa/presentation/pages/shared/main_layout.dart';
 import 'package:posventa/presentation/providers/auth_provider.dart';
 import 'package:posventa/presentation/providers/providers.dart';
 import 'package:posventa/domain/entities/user.dart';
