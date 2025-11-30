@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:posventa/domain/entities/product_tax.dart';
+import 'package:posventa/domain/entities/product_variant.dart';
 
 @immutable
 class Product {
@@ -19,6 +20,7 @@ class Product {
   final int? wholesalePriceCents;
   final bool isActive;
   final List<ProductTax>? productTaxes;
+  final List<ProductVariant>? variants;
   final double? stock;
 
   const Product({
@@ -38,6 +40,7 @@ class Product {
     this.wholesalePriceCents,
     this.isActive = true,
     this.productTaxes,
+    this.variants,
     this.stock,
   });
 
@@ -61,6 +64,7 @@ class Product {
     int? wholesalePriceCents,
     bool? isActive,
     List<ProductTax>? productTaxes,
+    List<ProductVariant>? variants,
     double? stock,
   }) {
     return Product(
@@ -80,6 +84,7 @@ class Product {
       wholesalePriceCents: wholesalePriceCents ?? this.wholesalePriceCents,
       isActive: isActive ?? this.isActive,
       productTaxes: productTaxes ?? this.productTaxes,
+      variants: variants ?? this.variants,
       stock: stock ?? this.stock,
     );
   }

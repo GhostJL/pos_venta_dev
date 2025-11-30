@@ -4,6 +4,7 @@ class SaleItem {
   final int? id;
   final int? saleId;
   final int productId;
+  final int? variantId;
   final double quantity;
   final String unitOfMeasure;
   final int unitPriceCents;
@@ -19,6 +20,7 @@ class SaleItem {
     this.id,
     this.saleId,
     required this.productId,
+    this.variantId,
     required this.quantity,
     required this.unitOfMeasure,
     required this.unitPriceCents,

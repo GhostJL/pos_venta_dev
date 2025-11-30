@@ -215,6 +215,22 @@ class SaleRepositoryImpl implements SaleRepository {
           await txn.insert(DatabaseHelper.tableSaleItemTaxes, taxMap);
         }
 
+        // Calculate quantity to deduct (handle variants)
+        double quantityToDeduct = item.quantity;
+        if (item.variantId != null) {
+          final variantResult = await txn.query(
+            DatabaseHelper.tableProductVariants,
+            columns: ['quantity'],
+            where: 'id = ?',
+            whereArgs: [item.variantId],
+          );
+          if (variantResult.isNotEmpty) {
+            final variantQuantity = (variantResult.first['quantity'] as num)
+                .toDouble();
+            quantityToDeduct = item.quantity * variantQuantity;
+          }
+        }
+
         // Update Inventory (Decrease stock)
         // Check if inventory exists
         final inventoryResult = await txn.query(
@@ -246,7 +262,7 @@ class SaleRepositoryImpl implements SaleRepository {
           WHERE product_id = ? AND warehouse_id = ?
         ''',
           [
-            item.quantity,
+            quantityToDeduct,
             DateTime.now().toIso8601String(),
             item.productId,
             sale.warehouseId,
@@ -258,9 +274,9 @@ class SaleRepositoryImpl implements SaleRepository {
           'product_id': item.productId,
           'warehouse_id': sale.warehouseId,
           'movement_type': 'sale',
-          'quantity': -item.quantity, // Negative for sale
+          'quantity': -quantityToDeduct, // Negative for sale
           'quantity_before': quantityBefore,
-          'quantity_after': quantityBefore - item.quantity,
+          'quantity_after': quantityBefore - quantityToDeduct,
           'reference_type': 'sale',
           'reference_id': saleId,
           'reason': 'Sale #$saleId',
@@ -320,7 +336,24 @@ class SaleRepositoryImpl implements SaleRepository {
 
       for (final item in items) {
         final productId = item['product_id'] as int;
+        final variantId = item['variant_id'] as int?;
         final quantity = item['quantity'] as double;
+
+        // Calculate quantity to restore (handle variants)
+        double quantityToRestore = quantity;
+        if (variantId != null) {
+          final variantResult = await txn.query(
+            DatabaseHelper.tableProductVariants,
+            columns: ['quantity'],
+            where: 'id = ?',
+            whereArgs: [variantId],
+          );
+          if (variantResult.isNotEmpty) {
+            final variantQuantity = (variantResult.first['quantity'] as num)
+                .toDouble();
+            quantityToRestore = quantity * variantQuantity;
+          }
+        }
 
         // Get current inventory
         final inventoryResult = await txn.query(
@@ -342,7 +375,12 @@ class SaleRepositoryImpl implements SaleRepository {
               updated_at = ?
           WHERE product_id = ? AND warehouse_id = ?
         ''',
-          [quantity, DateTime.now().toIso8601String(), productId, warehouseId],
+          [
+            quantityToRestore,
+            DateTime.now().toIso8601String(),
+            productId,
+            warehouseId,
+          ],
         );
 
         // Record Movement (Return/Cancel)
@@ -350,9 +388,9 @@ class SaleRepositoryImpl implements SaleRepository {
           'product_id': productId,
           'warehouse_id': warehouseId,
           'movement_type': 'return',
-          'quantity': quantity, // Positive for return
+          'quantity': quantityToRestore, // Positive for return
           'quantity_before': quantityBefore,
-          'quantity_after': quantityBefore + quantity,
+          'quantity_after': quantityBefore + quantityToRestore,
           'reference_type': 'sale',
           'reference_id': saleId,
           'reason': reason.isNotEmpty ? reason : 'Sale Cancelled',

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:posventa/domain/entities/product.dart';
 import 'package:posventa/domain/entities/product_tax.dart';
+import 'package:posventa/domain/entities/product_variant.dart';
 import 'package:posventa/domain/entities/tax_rate.dart';
 import 'package:posventa/presentation/providers/product_provider.dart';
 import 'package:posventa/presentation/providers/brand_providers.dart';
@@ -42,6 +43,7 @@ class ProductFormPageState extends ConsumerState<ProductFormPage> {
   bool _isActive = true;
 
   List<ProductTax> _selectedTaxes = [];
+  List<ProductVariant> _variants = [];
   bool _defaultsInitialized = false;
 
   @override
@@ -81,6 +83,7 @@ class ProductFormPageState extends ConsumerState<ProductFormPage> {
     // Fix TypeError: Create a new mutable list from the source
     // This ensures we are working with List<ProductTax> and not a restricted subtype list
     _selectedTaxes = List<ProductTax>.from(widget.product?.productTaxes ?? []);
+    _variants = List<ProductVariant>.from(widget.product?.variants ?? []);
 
     // Initialize flag. If editing (product != null), we consider defaults "initialized" (or not needed)
     _defaultsInitialized = widget.product != null;
@@ -125,6 +128,154 @@ class ProductFormPageState extends ConsumerState<ProductFormPage> {
         _barcodeController.text = result;
       });
     }
+  }
+
+  Future<void> _showVariantDialog({ProductVariant? variant, int? index}) async {
+    final isEditing = variant != null;
+    final descriptionController = TextEditingController(
+      text: variant?.description,
+    );
+    final quantityController = TextEditingController(
+      text: variant?.quantity.toString() ?? '1',
+    );
+    final priceController = TextEditingController(
+      text: variant != null
+          ? (variant.priceCents / 100).toStringAsFixed(2)
+          : '',
+    );
+    final costController = TextEditingController(
+      text: variant != null
+          ? (variant.costPriceCents / 100).toStringAsFixed(2)
+          : '',
+    );
+    final barcodeController = TextEditingController(text: variant?.barcode);
+
+    await showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(
+          isEditing ? 'Editar Variante' : 'Nueva Variante',
+          style: const TextStyle(fontWeight: FontWeight.bold),
+        ),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextFormField(
+                controller: descriptionController,
+                decoration: const InputDecoration(
+                  labelText: 'Descripción (ej. Caja con 12)',
+                  prefixIcon: Icon(Icons.description),
+                ),
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: quantityController,
+                decoration: const InputDecoration(
+                  labelText: 'Cantidad / Factor',
+                  helperText: 'Cuántas unidades del producto base contiene',
+                  prefixIcon: Icon(Icons.numbers),
+                ),
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextFormField(
+                      controller: costController,
+                      decoration: const InputDecoration(
+                        labelText: 'Costo',
+                        prefixText: '\$ ',
+                      ),
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: TextFormField(
+                      controller: priceController,
+                      decoration: const InputDecoration(
+                        labelText: 'Precio Venta',
+                        prefixText: '\$ ',
+                      ),
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: barcodeController,
+                decoration: InputDecoration(
+                  labelText: 'Código de Barras (Opcional)',
+                  prefixIcon: const Icon(Icons.qr_code),
+                  suffixIcon: IconButton(
+                    icon: const Icon(Icons.qr_code_scanner),
+                    onPressed: () async {
+                      final result = await context.push<String>('/scanner');
+                      if (result != null) {
+                        barcodeController.text = result;
+                      }
+                    },
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancelar'),
+          ),
+          FilledButton(
+            onPressed: () {
+              if (descriptionController.text.isEmpty ||
+                  quantityController.text.isEmpty ||
+                  priceController.text.isEmpty ||
+                  costController.text.isEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Por favor complete los campos requeridos'),
+                  ),
+                );
+                return;
+              }
+
+              final newVariant = ProductVariant(
+                id: variant?.id,
+                productId: widget.product?.id ?? 0, // Temp ID
+                description: descriptionController.text,
+                quantity: double.parse(quantityController.text),
+                priceCents: (double.parse(priceController.text) * 100).toInt(),
+                costPriceCents: (double.parse(costController.text) * 100)
+                    .toInt(),
+                barcode: barcodeController.text.isNotEmpty
+                    ? barcodeController.text
+                    : null,
+              );
+
+              setState(() {
+                if (isEditing && index != null) {
+                  _variants[index] = newVariant;
+                } else {
+                  _variants.add(newVariant);
+                }
+              });
+              Navigator.pop(context);
+            },
+            child: const Text('Guardar'),
+          ),
+        ],
+      ),
+    );
   }
 
   Future<void> _submit() async {
@@ -213,6 +364,7 @@ class ProductFormPageState extends ConsumerState<ProductFormPage> {
         wholesalePriceCents:
             (double.parse(_wholesalePriceController.text) * 100).toInt(),
         productTaxes: _selectedTaxes,
+        variants: _variants,
         isActive: _isActive,
       );
 
@@ -620,6 +772,92 @@ class ProductFormPageState extends ConsumerState<ProductFormPage> {
                     loading: () =>
                         const Center(child: CircularProgressIndicator()),
                     error: (e, s) => Text('Error al cargar impuestos: $e'),
+                  ),
+                  const SizedBox(height: 24),
+                  const SizedBox(height: 24),
+                  _buildSectionTitle('Variantes / Presentaciones'),
+                  const SizedBox(height: 8),
+                  Card(
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      side: const BorderSide(color: AppTheme.borders),
+                    ),
+                    child: Column(
+                      children: [
+                        if (_variants.isEmpty)
+                          const Padding(
+                            padding: EdgeInsets.all(16.0),
+                            child: Text(
+                              'No hay variantes agregadas',
+                              style: TextStyle(color: Colors.grey),
+                            ),
+                          )
+                        else
+                          ListView.separated(
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            itemCount: _variants.length,
+                            separatorBuilder: (context, index) =>
+                                const Divider(height: 1),
+                            itemBuilder: (context, index) {
+                              final variant = _variants[index];
+                              return ListTile(
+                                title: Text(
+                                  variant.description ?? 'Sin descripción',
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                                subtitle: Text(
+                                  'Factor: ${variant.quantity} | Precio: \$${variant.price.toStringAsFixed(2)}',
+                                ),
+                                trailing: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    IconButton(
+                                      icon: const Icon(
+                                        Icons.edit,
+                                        color: AppTheme.primary,
+                                      ),
+                                      onPressed: () => _showVariantDialog(
+                                        variant: variant,
+                                        index: index,
+                                      ),
+                                    ),
+                                    IconButton(
+                                      icon: const Icon(
+                                        Icons.delete,
+                                        color: Colors.red,
+                                      ),
+                                      onPressed: () {
+                                        setState(() {
+                                          _variants.removeAt(index);
+                                        });
+                                      },
+                                    ),
+                                  ],
+                                ),
+                              );
+                            },
+                          ),
+                        const Divider(height: 1),
+                        ListTile(
+                          leading: const Icon(
+                            Icons.add_circle_outline,
+                            color: AppTheme.primary,
+                          ),
+                          title: const Text(
+                            'Agregar Variante',
+                            style: TextStyle(
+                              color: AppTheme.primary,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          onTap: () => _showVariantDialog(),
+                        ),
+                      ],
+                    ),
                   ),
                   const SizedBox(height: 24),
                   SwitchListTile(

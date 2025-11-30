@@ -18,6 +18,7 @@ class ProductModel extends Product {
     super.wholesalePriceCents,
     required super.isActive,
     super.productTaxes,
+    super.variants,
     super.stock,
   });
 
@@ -39,6 +40,7 @@ class ProductModel extends Product {
       wholesalePriceCents: product.wholesalePriceCents,
       isActive: product.isActive,
       productTaxes: product.productTaxes,
+      variants: product.variants,
       stock: product.stock,
     );
   }

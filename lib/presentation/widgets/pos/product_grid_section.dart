@@ -4,6 +4,9 @@ import 'package:posventa/presentation/providers/pos_providers.dart';
 import 'package:posventa/presentation/providers/product_provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:posventa/presentation/widgets/pos/product_cart_widget.dart';
+import 'package:posventa/domain/entities/product.dart';
+import 'package:posventa/domain/entities/product_variant.dart';
+import 'package:posventa/presentation/widgets/pos/variant_selection_dialog.dart';
 
 class ProductGridSection extends ConsumerStatefulWidget {
   final bool isMobile;
@@ -43,18 +46,44 @@ class _ProductGridSectionState extends ConsumerState<ProductGridSection> {
     final productsAsync = ref.read(productListProvider);
 
     productsAsync.whenData((products) async {
-      final product = products.where((p) => p.barcode == barcode).firstOrNull;
+      // Find product by its barcode OR by one of its variants' barcode
+      Product? product;
+      ProductVariant? matchedVariant;
+
+      for (final p in products) {
+        if (p.barcode == barcode) {
+          product = p;
+          break;
+        }
+        if (p.variants != null) {
+          final variant = p.variants!
+              .where((v) => v.barcode == barcode)
+              .firstOrNull;
+          if (variant != null) {
+            product = p;
+            matchedVariant = variant;
+            break;
+          }
+        }
+      }
 
       if (product != null) {
         // Agregar al carrito con validación de stock
-        final error = await ref.read(pOSProvider.notifier).addToCart(product);
+        final error = await ref
+            .read(pOSProvider.notifier)
+            .addToCart(product, variant: matchedVariant);
 
         if (error != null && scannerContext.mounted) {
           // Mostrar error de stock
           _showStockError(scannerContext, error);
         } else if (scannerContext.mounted) {
           // Mostrar feedback de éxito
-          _showProductAdded(scannerContext, product.name);
+          _showProductAdded(
+            scannerContext,
+            matchedVariant != null
+                ? '${product.name} (${matchedVariant.description})'
+                : product.name,
+          );
         }
       } else if (scannerContext.mounted) {
         // Producto no encontrado
@@ -157,9 +186,32 @@ class _ProductGridSectionState extends ConsumerState<ProductGridSection> {
                     product: product,
                     isMobile: widget.isMobile,
                     onTap: () async {
+                      ProductVariant? selectedVariant;
+                      if (product.variants != null &&
+                          product.variants!.isNotEmpty) {
+                        selectedVariant = await showDialog<ProductVariant>(
+                          context: context,
+                          builder: (context) =>
+                              VariantSelectionDialog(product: product),
+                        );
+                        // If user cancelled dialog (returned null), do nothing
+                        if (selectedVariant == null && context.mounted) {
+                          // Check if user cancelled or just clicked outside
+                          // But wait, if they cancel, we shouldn't add anything.
+                          // However, maybe they want to add the base product?
+                          // Usually if there are variants, they MUST select one?
+                          // Or is the base product also sellable as unit?
+                          // "Caja con 12" implies base is unit.
+                          // Let's assume if they cancel, they cancel the action.
+                          return;
+                        }
+                      }
+
+                      if (!context.mounted) return;
+
                       final error = await ref
                           .read(pOSProvider.notifier)
-                          .addToCart(product);
+                          .addToCart(product, variant: selectedVariant);
 
                       if (context.mounted) {
                         if (error != null) {
@@ -167,7 +219,12 @@ class _ProductGridSectionState extends ConsumerState<ProductGridSection> {
                           _showStockError(context, error);
                         } else {
                           // Mostrar feedback de éxito
-                          _showProductAdded(context, product.name);
+                          _showProductAdded(
+                            context,
+                            selectedVariant != null
+                                ? '${product.name} (${selectedVariant.description})'
+                                : product.name,
+                          );
                         }
                       }
                     },

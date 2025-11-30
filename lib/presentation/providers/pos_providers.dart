@@ -1,5 +1,6 @@
 import 'package:posventa/domain/entities/customer.dart';
 import 'package:posventa/domain/entities/product.dart';
+import 'package:posventa/domain/entities/product_variant.dart';
 import 'package:posventa/domain/entities/sale.dart';
 import 'package:posventa/domain/entities/sale_item.dart';
 import 'package:posventa/domain/entities/sale_item_tax.dart';
@@ -64,16 +65,22 @@ class POSNotifier extends _$POSNotifier {
     return const POSState();
   }
 
-  Future<String?> addToCart(Product product) async {
+  Future<String?> addToCart(Product product, {ProductVariant? variant}) async {
+    // Calculate quantity multiplier (how much stock to deduct per unit sold)
+    final quantityMultiplier = variant?.quantity ?? 1.0;
+
     // Validate stock availability
-    final stockError = await _validateStock(product.id!, 1.0);
+    final stockError = await _validateStock(
+      product.id!,
+      1.0 * quantityMultiplier,
+    );
     if (stockError != null) {
       return stockError;
     }
 
-    // Check if product already in cart
+    // Check if product (and variant) already in cart
     final existingIndex = state.cart.indexWhere(
-      (item) => item.productId == product.id,
+      (item) => item.productId == product.id && item.variantId == variant?.id,
     );
 
     List<SaleItem> newCart;
@@ -83,7 +90,8 @@ class POSNotifier extends _$POSNotifier {
       final newQuantity = existingItem.quantity + 1;
 
       // Recalculate totals for item
-      final unitPriceCents = (product.price * 100).round();
+      // Use existing item's unit price to respect variant price
+      final unitPriceCents = existingItem.unitPriceCents;
       final subtotalCents = (unitPriceCents * newQuantity).round();
 
       int taxCents = 0;
@@ -106,14 +114,15 @@ class POSNotifier extends _$POSNotifier {
       final updatedItem = SaleItem(
         id: existingItem.id,
         productId: product.id!,
+        variantId: variant?.id,
         quantity: newQuantity,
         unitOfMeasure: product.unitOfMeasure,
         unitPriceCents: unitPriceCents,
         subtotalCents: subtotalCents,
         taxCents: taxCents,
         totalCents: totalCents,
-        costPriceCents: (product.costPrice * 100).round(),
-        productName: product.name,
+        costPriceCents: existingItem.costPriceCents,
+        productName: existingItem.productName,
         taxes: taxes,
       );
 
@@ -127,7 +136,16 @@ class POSNotifier extends _$POSNotifier {
         product.id!,
       );
 
-      final unitPriceCents = (product.price * 100).round();
+      final unitPriceCents = variant != null
+          ? variant.priceCents
+          : (product.price * 100).round();
+      final costPriceCents = variant != null
+          ? variant.costPriceCents
+          : (product.costPrice * 100).round();
+      final productName = variant != null
+          ? '${product.name} (${variant.description})'
+          : product.name;
+
       final quantity = 1.0;
       final subtotalCents = (unitPriceCents * quantity).round();
 
@@ -150,14 +168,15 @@ class POSNotifier extends _$POSNotifier {
 
       final newItem = SaleItem(
         productId: product.id!,
+        variantId: variant?.id,
         quantity: quantity,
         unitOfMeasure: product.unitOfMeasure,
         unitPriceCents: unitPriceCents,
         subtotalCents: subtotalCents,
         taxCents: taxCents,
         totalCents: totalCents,
-        costPriceCents: (product.costPrice * 100).round(),
-        productName: product.name,
+        costPriceCents: costPriceCents,
+        productName: productName,
         taxes: taxes,
       );
 

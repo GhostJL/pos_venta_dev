@@ -13,8 +13,7 @@ class DatabaseHelper {
 
   // Database configuration
   static const _databaseName = "pos.db";
-  static const _databaseVersion =
-      17; // Added sale_returns and sale_return_items tables
+  static const _databaseVersion = 18; // Added product_variants table
 
   // Table names
   static const tableUsers = 'users';
@@ -44,6 +43,7 @@ class DatabaseHelper {
   static const tableUserPermissions = 'user_permissions';
   static const tableSaleReturns = 'sale_returns';
   static const tableSaleReturnItems = 'sale_return_items';
+  static const tableProductVariants = 'product_variants';
 
   static Database? _database;
 
@@ -209,6 +209,8 @@ class DatabaseHelper {
     // Sale Returns tables
     await _createSaleReturnsTable(db);
     await _createSaleReturnItemsTable(db);
+    // Product Variants table
+    await _createProductVariantsTable(db);
 
     // Default user creation removed as per requirements
     // The first user created via the app will be the admin
@@ -293,6 +295,9 @@ class DatabaseHelper {
     if (oldVersion < 17) {
       await _createSaleReturnsTable(db);
       await _createSaleReturnItemsTable(db);
+    }
+    if (oldVersion < 18) {
+      await _createProductVariantsTable(db);
     }
   }
 
@@ -798,7 +803,6 @@ class DatabaseHelper {
         'module': 'POS',
         'description': 'Permite eliminar items del carrito',
       },
-
       // Cash Module
       {
         'name': 'Abrir Caja',
@@ -986,5 +990,27 @@ class DatabaseHelper {
   Future<int> delete(String table, int id) async {
     final db = await database;
     return await db.delete(table, where: 'id = ?', whereArgs: [id]);
+  }
+
+  Future<void> _createProductVariantsTable(Database db) async {
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS $tableProductVariants (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        product_id INTEGER NOT NULL,
+        barcode TEXT UNIQUE,
+        description TEXT,
+        quantity REAL NOT NULL DEFAULT 1,
+        price_cents INTEGER NOT NULL,
+        cost_price_cents INTEGER NOT NULL,
+        is_active INTEGER NOT NULL DEFAULT 1,
+        FOREIGN KEY (product_id) REFERENCES $tableProducts(id) ON DELETE CASCADE
+      )
+    ''');
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_product_variants_product ON $tableProductVariants(product_id)',
+    );
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_product_variants_barcode ON $tableProductVariants(barcode)',
+    );
   }
 }

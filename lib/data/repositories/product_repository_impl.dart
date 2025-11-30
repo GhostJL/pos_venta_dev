@@ -2,8 +2,10 @@ import 'package:posventa/core/utils/database_validators.dart';
 import 'package:posventa/data/datasources/database_helper.dart';
 import 'package:posventa/data/models/product_model.dart';
 import 'package:posventa/data/models/product_tax_model.dart';
+import 'package:posventa/data/models/product_variant_model.dart';
 import 'package:posventa/domain/entities/product.dart';
 import 'package:posventa/domain/entities/product_tax.dart';
+import 'package:posventa/domain/entities/product_variant.dart';
 import 'package:posventa/domain/entities/tax_rate.dart';
 import 'package:posventa/data/models/tax_rate_model.dart';
 import 'package:posventa/domain/repositories/product_repository.dart';
@@ -63,6 +65,18 @@ class ProductRepositoryImpl implements ProductRepository {
       }
     }
 
+    // Save variants
+    if (product.variants != null && product.variants!.isNotEmpty) {
+      for (final variant in product.variants!) {
+        final variantModel = ProductVariantModel.fromEntity(variant);
+        final variantMap = variantModel.toMap();
+        variantMap['product_id'] = productId;
+        // Remove id to let autoincrement work
+        variantMap.remove('id');
+        await db.insert(DatabaseHelper.tableProductVariants, variantMap);
+      }
+    }
+
     databaseHelper.notifyTableChanged(DatabaseHelper.tableProducts);
     return productId;
   }
@@ -106,11 +120,31 @@ class ProductRepositoryImpl implements ProductRepository {
       taxesByProduct[productId]!.add(ProductTaxModel.fromMap(taxMap));
     }
 
-    // Build products with their taxes
+    // Query 3: Get all variants for these products
+    final variantMaps = await db.query(
+      DatabaseHelper.tableProductVariants,
+      where: 'product_id IN (${productIds.join(',')}) AND is_active = 1',
+    );
+
+    // Group variants by product_id
+    final variantsByProduct = <int, List<ProductVariantModel>>{};
+    for (final variantMap in variantMaps) {
+      final productId = variantMap['product_id'] as int;
+      variantsByProduct.putIfAbsent(productId, () => []);
+      variantsByProduct[productId]!.add(
+        ProductVariantModel.fromMap(variantMap),
+      );
+    }
+
+    // Build products with their taxes and variants
     return productMaps.map((map) {
       final product = ProductModel.fromMap(map);
       final taxes = taxesByProduct[product.id!] ?? [];
-      return product.copyWith(productTaxes: taxes.cast<ProductTax>());
+      final variants = variantsByProduct[product.id!] ?? [];
+      return product.copyWith(
+        productTaxes: taxes.cast<ProductTax>(),
+        variants: variants.cast<ProductVariant>(),
+      );
     }).toList();
   }
 
@@ -149,11 +183,31 @@ class ProductRepositoryImpl implements ProductRepository {
       taxesByProduct[productId]!.add(ProductTaxModel.fromMap(taxMap));
     }
 
-    // Build products with their taxes
+    // Query 3: Get all variants for these products
+    final variantMaps = await db.query(
+      DatabaseHelper.tableProductVariants,
+      where: 'product_id IN (${productIds.join(',')}) AND is_active = 1',
+    );
+
+    // Group variants by product_id
+    final variantsByProduct = <int, List<ProductVariantModel>>{};
+    for (final variantMap in variantMaps) {
+      final productId = variantMap['product_id'] as int;
+      variantsByProduct.putIfAbsent(productId, () => []);
+      variantsByProduct[productId]!.add(
+        ProductVariantModel.fromMap(variantMap),
+      );
+    }
+
+    // Build products with their taxes and variants
     return productMaps.map((map) {
       final product = ProductModel.fromMap(map);
       final taxes = taxesByProduct[product.id!] ?? [];
-      return product.copyWith(productTaxes: taxes.cast<ProductTax>());
+      final variants = variantsByProduct[product.id!] ?? [];
+      return product.copyWith(
+        productTaxes: taxes.cast<ProductTax>(),
+        variants: variants.cast<ProductVariant>(),
+      );
     }).toList();
   }
 
@@ -172,7 +226,21 @@ class ProductRepositoryImpl implements ProductRepository {
     if (maps.isNotEmpty) {
       final product = ProductModel.fromMap(maps.first);
       final taxes = await getTaxesForProduct(id);
-      return product.copyWith(productTaxes: taxes.cast<ProductTax>());
+
+      // Get variants
+      final variantMaps = await db.query(
+        DatabaseHelper.tableProductVariants,
+        where: 'product_id = ? AND is_active = 1',
+        whereArgs: [id],
+      );
+      final variants = variantMaps
+          .map((m) => ProductVariantModel.fromMap(m))
+          .toList();
+
+      return product.copyWith(
+        productTaxes: taxes.cast<ProductTax>(),
+        variants: variants.cast<ProductVariant>(),
+      );
     }
 
     return null;
@@ -207,6 +275,25 @@ class ProductRepositoryImpl implements ProductRepository {
             'tax_rate_id': tax.taxRateId,
             'apply_order': tax.applyOrder,
           });
+        }
+      }
+
+      // Delete existing variants
+      await txn.delete(
+        DatabaseHelper.tableProductVariants,
+        where: 'product_id = ?',
+        whereArgs: [product.id],
+      );
+
+      // Insert updated variants
+      if (product.variants != null && product.variants!.isNotEmpty) {
+        for (final variant in product.variants!) {
+          final variantModel = ProductVariantModel.fromEntity(variant);
+          final variantMap = variantModel.toMap();
+          variantMap['product_id'] = product.id;
+          // Remove id to let autoincrement work
+          variantMap.remove('id');
+          await txn.insert(DatabaseHelper.tableProductVariants, variantMap);
         }
       }
     });
@@ -274,12 +361,30 @@ class ProductRepositoryImpl implements ProductRepository {
   @override
   Future<bool> isBarcodeUnique(String barcode, {int? excludeId}) async {
     final db = await databaseHelper.database;
-    return DatabaseValidators.isFieldUnique(
+    final isUnique = await DatabaseValidators.isFieldUnique(
       db: db,
       tableName: DatabaseHelper.tableProducts,
       fieldName: 'barcode',
       value: barcode,
       excludeId: excludeId,
     );
+
+    if (!isUnique) return false;
+
+    // Also check in variants
+    final variantsResult = await db.query(
+      DatabaseHelper.tableProductVariants,
+      where: 'barcode = ? AND is_active = 1',
+      whereArgs: [barcode],
+    );
+
+    if (variantsResult.isNotEmpty) {
+      // If excludeId is provided, we need to check if the found variant belongs to the excluded product
+      // However, barcodes should generally be unique across the entire system.
+      // If we are editing a product and one of its variants has this barcode, it's a conflict if we try to assign it to the main product.
+      return false;
+    }
+
+    return true;
   }
 }
