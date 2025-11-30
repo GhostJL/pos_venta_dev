@@ -46,7 +46,7 @@ class PurchaseItemsListWidget extends StatelessWidget {
           surfaceTintColor: Colors.transparent,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
-            side: BorderSide(color: Colors.grey.withOpacity(0.2)),
+            side: BorderSide(color: Colors.grey.withValues(alpha: 0.2)),
           ),
           child: InkWell(
             borderRadius: BorderRadius.circular(12),

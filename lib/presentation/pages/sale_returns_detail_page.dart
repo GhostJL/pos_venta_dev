@@ -404,7 +404,7 @@ class SaleReturnsDetailPage extends ConsumerWidget {
                                   ),
                                   child: Center(
                                     child: Text(
-                                      '${item.quantity.toStringAsFixed(0)}',
+                                      item.quantity.toStringAsFixed(0),
                                       style: TextStyle(
                                         fontSize: 12,
                                         fontWeight: FontWeight.w600,
