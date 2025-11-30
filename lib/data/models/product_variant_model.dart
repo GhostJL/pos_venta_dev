@@ -10,6 +10,7 @@ class ProductVariantModel extends ProductVariant {
     required super.priceCents,
     required super.costPriceCents,
     required super.isActive,
+    required super.isForSale,
   });
 
   factory ProductVariantModel.fromEntity(ProductVariant variant) {
@@ -22,6 +23,7 @@ class ProductVariantModel extends ProductVariant {
       priceCents: variant.priceCents,
       costPriceCents: variant.costPriceCents,
       isActive: variant.isActive,
+      isForSale: variant.isForSale,
     );
   }
 
@@ -35,6 +37,7 @@ class ProductVariantModel extends ProductVariant {
       priceCents: map['price_cents'],
       costPriceCents: map['cost_price_cents'],
       isActive: map['is_active'] == 1,
+      isForSale: map['is_for_sale'] == null ? true : map['is_for_sale'] == 1,
     );
   }
 
@@ -48,6 +51,7 @@ class ProductVariantModel extends ProductVariant {
       'price_cents': priceCents,
       'cost_price_cents': costPriceCents,
       'is_active': isActive ? 1 : 0,
+      'is_for_sale': isForSale ? 1 : 0,
     };
   }
 }

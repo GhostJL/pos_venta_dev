@@ -80,15 +80,11 @@ class ProductFormPageState extends ConsumerState<ProductFormPage> {
     _isSoldByWeight = widget.product?.isSoldByWeight ?? false;
     _isActive = widget.product?.isActive ?? true;
 
-    // Fix TypeError: Create a new mutable list from the source
-    // This ensures we are working with List<ProductTax> and not a restricted subtype list
     _selectedTaxes = List<ProductTax>.from(widget.product?.productTaxes ?? []);
     _variants = List<ProductVariant>.from(widget.product?.variants ?? []);
 
-    // Initialize flag. If editing (product != null), we consider defaults "initialized" (or not needed)
     _defaultsInitialized = widget.product != null;
 
-    // Try to initialize defaults if data is already there
     if (!_defaultsInitialized) {
       final taxRates = ref.read(taxRateListProvider).asData?.value;
       if (taxRates != null) {
@@ -149,131 +145,154 @@ class ProductFormPageState extends ConsumerState<ProductFormPage> {
           : '',
     );
     final barcodeController = TextEditingController(text: variant?.barcode);
+    bool isForSale = variant?.isForSale ?? true;
 
     await showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text(
-          isEditing ? 'Editar Variante' : 'Nueva Variante',
-          style: const TextStyle(fontWeight: FontWeight.bold),
-        ),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextFormField(
-                controller: descriptionController,
-                decoration: const InputDecoration(
-                  labelText: 'Descripción (ej. Caja con 12)',
-                  prefixIcon: Icon(Icons.description),
-                ),
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: quantityController,
-                decoration: const InputDecoration(
-                  labelText: 'Cantidad / Factor',
-                  helperText: 'Cuántas unidades del producto base contiene',
-                  prefixIcon: Icon(Icons.numbers),
-                ),
-                keyboardType: const TextInputType.numberWithOptions(
-                  decimal: true,
-                ),
-              ),
-              const SizedBox(height: 16),
-              Row(
+      builder: (context) => StatefulBuilder(
+        builder: (context, setStateDialog) {
+          return AlertDialog(
+            title: Text(
+              isEditing ? 'Editar Variante' : 'Nueva Variante',
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  Expanded(
-                    child: TextFormField(
-                      controller: costController,
-                      decoration: const InputDecoration(
-                        labelText: 'Costo',
-                        prefixText: '\$ ',
+                  TextFormField(
+                    controller: descriptionController,
+                    decoration: const InputDecoration(
+                      labelText: 'Descripción (ej. Caja con 12)',
+                      prefixIcon: Icon(Icons.description),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: quantityController,
+                    decoration: const InputDecoration(
+                      labelText: 'Cantidad / Factor',
+                      helperText: 'Cuántas unidades del producto base contiene',
+                      prefixIcon: Icon(Icons.numbers),
+                    ),
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextFormField(
+                          controller: costController,
+                          decoration: const InputDecoration(
+                            labelText: 'Costo',
+                            prefixText: '\$ ',
+                          ),
+                          keyboardType: const TextInputType.numberWithOptions(
+                            decimal: true,
+                          ),
+                        ),
                       ),
-                      keyboardType: const TextInputType.numberWithOptions(
-                        decimal: true,
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: TextFormField(
+                          controller: priceController,
+                          decoration: const InputDecoration(
+                            labelText: 'Precio Venta',
+                            prefixText: '\$ ',
+                          ),
+                          keyboardType: const TextInputType.numberWithOptions(
+                            decimal: true,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: barcodeController,
+                    decoration: InputDecoration(
+                      labelText: 'Código de Barras (Opcional)',
+                      helperText: 'Puede repetirse para agrupar variantes',
+                      prefixIcon: const Icon(Icons.qr_code),
+                      suffixIcon: IconButton(
+                        icon: const Icon(Icons.qr_code_scanner),
+                        onPressed: () async {
+                          final result = await context.push<String>('/scanner');
+                          if (result != null) {
+                            barcodeController.text = result;
+                          }
+                        },
                       ),
                     ),
                   ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: TextFormField(
-                      controller: priceController,
-                      decoration: const InputDecoration(
-                        labelText: 'Precio Venta',
-                        prefixText: '\$ ',
-                      ),
-                      keyboardType: const TextInputType.numberWithOptions(
-                        decimal: true,
-                      ),
+                  const SizedBox(height: 16),
+                  SwitchListTile(
+                    title: const Text('Disponible para Venta'),
+                    subtitle: const Text(
+                      'Si se desactiva, solo servirá para abastecimiento',
                     ),
+                    value: isForSale,
+                    onChanged: (value) {
+                      setStateDialog(() {
+                        isForSale = value;
+                      });
+                    },
                   ),
                 ],
               ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: barcodeController,
-                decoration: InputDecoration(
-                  labelText: 'Código de Barras (Opcional)',
-                  prefixIcon: const Icon(Icons.qr_code),
-                  suffixIcon: IconButton(
-                    icon: const Icon(Icons.qr_code_scanner),
-                    onPressed: () async {
-                      final result = await context.push<String>('/scanner');
-                      if (result != null) {
-                        barcodeController.text = result;
-                      }
-                    },
-                  ),
-                ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Cancelar'),
+              ),
+              FilledButton(
+                onPressed: () {
+                  if (descriptionController.text.isEmpty ||
+                      quantityController.text.isEmpty ||
+                      priceController.text.isEmpty ||
+                      costController.text.isEmpty) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text(
+                          'Por favor complete los campos requeridos',
+                        ),
+                      ),
+                    );
+                    return;
+                  }
+
+                  final newVariant = ProductVariant(
+                    id: variant?.id,
+                    productId: widget.product?.id ?? 0, // Temp ID
+                    description: descriptionController.text,
+                    quantity: double.parse(quantityController.text),
+                    priceCents: (double.parse(priceController.text) * 100)
+                        .toInt(),
+                    costPriceCents: (double.parse(costController.text) * 100)
+                        .toInt(),
+                    barcode: barcodeController.text.isNotEmpty
+                        ? barcodeController.text
+                        : null,
+                    isForSale: isForSale,
+                  );
+
+                  setState(() {
+                    if (isEditing && index != null) {
+                      _variants[index] = newVariant;
+                    } else {
+                      _variants.add(newVariant);
+                    }
+                  });
+                  Navigator.pop(context);
+                },
+                child: const Text('Guardar'),
               ),
             ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancelar'),
-          ),
-          FilledButton(
-            onPressed: () {
-              if (descriptionController.text.isEmpty ||
-                  quantityController.text.isEmpty ||
-                  priceController.text.isEmpty ||
-                  costController.text.isEmpty) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Por favor complete los campos requeridos'),
-                  ),
-                );
-                return;
-              }
-
-              final newVariant = ProductVariant(
-                id: variant?.id,
-                productId: widget.product?.id ?? 0, // Temp ID
-                description: descriptionController.text,
-                quantity: double.parse(quantityController.text),
-                priceCents: (double.parse(priceController.text) * 100).toInt(),
-                costPriceCents: (double.parse(costController.text) * 100)
-                    .toInt(),
-                barcode: barcodeController.text.isNotEmpty
-                    ? barcodeController.text
-                    : null,
-              );
-
-              setState(() {
-                if (isEditing && index != null) {
-                  _variants[index] = newVariant;
-                } else {
-                  _variants.add(newVariant);
-                }
-              });
-              Navigator.pop(context);
-            },
-            child: const Text('Guardar'),
-          ),
-        ],
+          );
+        },
       ),
     );
   }
@@ -294,10 +313,8 @@ class ProductFormPageState extends ConsumerState<ProductFormPage> {
         return;
       }
 
-      // Validate Uniqueness
       final productRepo = ref.read(productRepositoryProvider);
 
-      // Check Code/SKU
       final isCodeUnique = await productRepo.isCodeUnique(
         _codeController.text,
         excludeId: widget.product?.id,
@@ -314,7 +331,6 @@ class ProductFormPageState extends ConsumerState<ProductFormPage> {
         return;
       }
 
-      // Check Barcode (if provided)
       if (_barcodeController.text.isNotEmpty) {
         final isBarcodeUnique = await productRepo.isBarcodeUnique(
           _barcodeController.text,
@@ -332,10 +348,6 @@ class ProductFormPageState extends ConsumerState<ProductFormPage> {
           return;
         }
       } else {
-        // User requirement: "el producto debe de tener un codigo de barras"
-        // If it's mandatory, we should enforce it here or in validator.
-        // The validator currently doesn't enforce it.
-        // I'll enforce it here if empty.
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
@@ -809,8 +821,21 @@ class ProductFormPageState extends ConsumerState<ProductFormPage> {
                                     fontWeight: FontWeight.w500,
                                   ),
                                 ),
-                                subtitle: Text(
-                                  'Factor: ${variant.quantity} | Precio: \$${variant.price.toStringAsFixed(2)}',
+                                subtitle: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Factor: ${variant.quantity} | Precio: \$${variant.price.toStringAsFixed(2)}',
+                                    ),
+                                    if (!variant.isForSale)
+                                      const Text(
+                                        'No disponible para venta',
+                                        style: TextStyle(
+                                          color: Colors.orange,
+                                          fontSize: 12,
+                                        ),
+                                      ),
+                                  ],
                                 ),
                                 trailing: Row(
                                   mainAxisSize: MainAxisSize.min,
@@ -926,187 +951,47 @@ class ProductFormPageState extends ConsumerState<ProductFormPage> {
             )
             .toList(),
         onChanged: onChanged,
-        validator: (value) {
-          if (!isOptional && value == null) {
-            return 'Requerido';
-          }
-          return null;
-        },
-        isExpanded: true,
+        validator: isOptional
+            ? null
+            : (value) => value == null ? 'Requerido' : null,
       ),
-      loading: () => const Center(
-        child: SizedBox(
-          height: 20,
-          width: 20,
-          child: CircularProgressIndicator(strokeWidth: 2),
-        ),
-      ),
+      loading: () => const LinearProgressIndicator(),
       error: (e, s) => Text('Error: $e'),
     );
   }
 
   Widget _buildTaxSelection(List<TaxRate> taxRates) {
-    final activeTaxRates = taxRates.where((t) => t.isActive).toList();
-    final isExempt = _selectedTaxes.any(
-      (pt) =>
-          taxRates
-              .firstWhere(
-                (t) => t.id == pt.taxRateId,
-                orElse: () => TaxRate(name: '', code: '', rate: 0),
-              )
-              .name ==
-          'Exento',
-    );
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildSectionTitle('Impuestos Aplicables'),
+        _buildSectionTitle('Impuestos'),
         const SizedBox(height: 8),
-        Card(
-          elevation: 0,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-            side: const BorderSide(color: AppTheme.borders),
-          ),
-          child: Column(
-            children: [
-              ...activeTaxRates.map((taxRate) {
-                final isDefault = taxRate.isDefault;
-                final isSelected = _selectedTaxes.any(
-                  (pt) => pt.taxRateId == taxRate.id,
-                );
-
-                final isExemptOption = taxRate.name == 'Exento';
-
-                // Logic for enabling/disabling checkboxes
-                bool isEnabled = true;
-
-                if (isExemptOption) {
-                  // Exempt option is always enabled
-                  isEnabled = true;
-                } else {
-                  if (isExempt) {
-                    // If Exempt is selected, others are disabled
-                    isEnabled = false;
-                  } else {
-                    // If not Exempt, Default taxes are mandatory (cannot be unchecked)
-                    if (isDefault) {
-                      isEnabled = false; // Disabled but checked
-                    } else {
-                      isEnabled = true;
-                    }
-                  }
-                }
-
-                return CheckboxListTile(
-                  title: Text(
-                    '${taxRate.name} (${(taxRate.rate * 100).toStringAsFixed(2)}%)',
-                  ),
-                  value: isSelected,
-                  activeColor: AppTheme.primary,
-                  onChanged: isEnabled
-                      ? (bool? value) {
-                          setState(() {
-                            if (value == true) {
-                              if (isExemptOption) {
-                                // If selecting Exempt, clear all others
-                                _selectedTaxes.clear();
-                              }
-                              _selectedTaxes.add(
-                                ProductTax(
-                                  taxRateId: taxRate.id!,
-                                  applyOrder: _selectedTaxes.length + 1,
-                                ),
-                              );
-                            } else {
-                              // Unchecking
-                              _selectedTaxes.removeWhere(
-                                (pt) => pt.taxRateId == taxRate.id,
-                              );
-
-                              if (isExemptOption) {
-                                // If unchecking Exempt, restore default taxes
-                                final defaultTaxes = taxRates
-                                    .where((t) => t.isDefault)
-                                    .toList();
-                                for (final dt in defaultTaxes) {
-                                  if (!_selectedTaxes.any(
-                                    (t) => t.taxRateId == dt.id,
-                                  )) {
-                                    _selectedTaxes.add(
-                                      ProductTax(
-                                        taxRateId: dt.id!,
-                                        applyOrder: _selectedTaxes.length + 1,
-                                      ),
-                                    );
-                                  }
-                                }
-                              }
-                            }
-                            _updateApplyOrder();
-                          });
-                        }
-                      : null,
-                );
-              }),
-            ],
-          ),
-        ),
-        if (_selectedTaxes.length > 1) ...[
-          const SizedBox(height: 16),
-          const Text(
-            'Orden de Aplicación (Arrastra para reordenar)',
-            style: TextStyle(fontSize: 12, color: AppTheme.textSecondary),
-          ),
-          const SizedBox(height: 8),
-          Container(
-            decoration: BoxDecoration(
-              border: Border.all(color: AppTheme.borders),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: ReorderableListView(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              onReorder: (oldIndex, newIndex) {
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: taxRates.map((tax) {
+            final isSelected = _selectedTaxes.any((t) => t.taxRateId == tax.id);
+            return FilterChip(
+              label: Text(tax.name),
+              selected: isSelected,
+              onSelected: (selected) {
                 setState(() {
-                  if (newIndex > oldIndex) {
-                    newIndex -= 1;
+                  if (selected) {
+                    _selectedTaxes.add(
+                      ProductTax(
+                        taxRateId: tax.id!,
+                        applyOrder: _selectedTaxes.length + 1,
+                      ),
+                    );
+                  } else {
+                    _selectedTaxes.removeWhere((t) => t.taxRateId == tax.id);
                   }
-                  final item = _selectedTaxes.removeAt(oldIndex);
-                  _selectedTaxes.insert(newIndex, item);
-                  _updateApplyOrder();
                 });
               },
-              children: _selectedTaxes.map((pt) {
-                final taxRate = taxRates.firstWhere(
-                  (t) => t.id == pt.taxRateId,
-                  orElse: () => TaxRate(name: 'Desconocido', code: '', rate: 0),
-                );
-                return ListTile(
-                  key: ValueKey(pt.taxRateId),
-                  leading: const Icon(Icons.drag_handle_rounded),
-                  title: Text('${taxRate.name} ${taxRate.rate}%'),
-                  trailing: Chip(
-                    label: Text('Orden: ${pt.applyOrder}'),
-                    backgroundColor: AppTheme.primary.withAlpha(20),
-                    labelStyle: const TextStyle(
-                      color: AppTheme.primary,
-                      fontSize: 12,
-                    ),
-                  ),
-                );
-              }).toList(),
-            ),
-          ),
-        ],
+            );
+          }).toList(),
+        ),
       ],
     );
-  }
-
-  void _updateApplyOrder() {
-    for (int i = 0; i < _selectedTaxes.length; i++) {
-      _selectedTaxes[i] = _selectedTaxes[i].copyWith(applyOrder: i + 1);
-    }
   }
 }

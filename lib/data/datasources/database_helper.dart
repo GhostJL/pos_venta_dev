@@ -13,7 +13,7 @@ class DatabaseHelper {
 
   // Database configuration
   static const _databaseName = "pos.db";
-  static const _databaseVersion = 18; // Added product_variants table
+  static const _databaseVersion = 19; // Added is_for_sale to product_variants
 
   // Table names
   static const tableUsers = 'users';
@@ -299,6 +299,35 @@ class DatabaseHelper {
     if (oldVersion < 18) {
       await _createProductVariantsTable(db);
     }
+    if (oldVersion < 19) {
+      await db.execute('''
+        ALTER TABLE $tableProductVariants 
+        ADD COLUMN is_for_sale INTEGER NOT NULL DEFAULT 1
+      ''');
+    }
+  }
+
+  Future<void> _createProductVariantsTable(Database db) async {
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS $tableProductVariants (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        product_id INTEGER NOT NULL,
+        barcode TEXT,
+        description TEXT,
+        quantity REAL NOT NULL DEFAULT 1,
+        price_cents INTEGER NOT NULL,
+        cost_price_cents INTEGER NOT NULL,
+        is_active INTEGER NOT NULL DEFAULT 1,
+        is_for_sale INTEGER NOT NULL DEFAULT 1,
+        FOREIGN KEY (product_id) REFERENCES $tableProducts(id) ON DELETE CASCADE
+      )
+    ''');
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_product_variants_product ON $tableProductVariants(product_id)',
+    );
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_product_variants_barcode ON $tableProductVariants(barcode)',
+    );
   }
 
   Future<void> _createWarehousesTable(Database db) async {
@@ -990,27 +1019,5 @@ class DatabaseHelper {
   Future<int> delete(String table, int id) async {
     final db = await database;
     return await db.delete(table, where: 'id = ?', whereArgs: [id]);
-  }
-
-  Future<void> _createProductVariantsTable(Database db) async {
-    await db.execute('''
-      CREATE TABLE IF NOT EXISTS $tableProductVariants (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        product_id INTEGER NOT NULL,
-        barcode TEXT UNIQUE,
-        description TEXT,
-        quantity REAL NOT NULL DEFAULT 1,
-        price_cents INTEGER NOT NULL,
-        cost_price_cents INTEGER NOT NULL,
-        is_active INTEGER NOT NULL DEFAULT 1,
-        FOREIGN KEY (product_id) REFERENCES $tableProducts(id) ON DELETE CASCADE
-      )
-    ''');
-    await db.execute(
-      'CREATE INDEX IF NOT EXISTS idx_product_variants_product ON $tableProductVariants(product_id)',
-    );
-    await db.execute(
-      'CREATE INDEX IF NOT EXISTS idx_product_variants_barcode ON $tableProductVariants(barcode)',
-    );
   }
 }

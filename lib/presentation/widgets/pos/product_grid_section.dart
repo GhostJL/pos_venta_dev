@@ -57,7 +57,7 @@ class _ProductGridSectionState extends ConsumerState<ProductGridSection> {
         }
         if (p.variants != null) {
           final variant = p.variants!
-              .where((v) => v.barcode == barcode)
+              .where((v) => v.barcode == barcode && v.isForSale)
               .firstOrNull;
           if (variant != null) {
             product = p;
@@ -187,12 +187,20 @@ class _ProductGridSectionState extends ConsumerState<ProductGridSection> {
                     isMobile: widget.isMobile,
                     onTap: () async {
                       ProductVariant? selectedVariant;
-                      if (product.variants != null &&
-                          product.variants!.isNotEmpty) {
+                      final sellableVariants =
+                          product.variants
+                              ?.where((v) => v.isForSale)
+                              .toList() ??
+                          [];
+
+                      if (sellableVariants.isNotEmpty) {
                         selectedVariant = await showDialog<ProductVariant>(
                           context: context,
-                          builder: (context) =>
-                              VariantSelectionDialog(product: product),
+                          builder: (context) => VariantSelectionDialog(
+                            product: product.copyWith(
+                              variants: sellableVariants,
+                            ),
+                          ),
                         );
                         // If user cancelled dialog (returned null), do nothing
                         if (selectedVariant == null && context.mounted) {

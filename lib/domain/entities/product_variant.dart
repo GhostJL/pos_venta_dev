@@ -10,6 +10,7 @@ class ProductVariant {
   final int priceCents;
   final int costPriceCents;
   final bool isActive;
+  final bool isForSale;
 
   const ProductVariant({
     this.id,
@@ -20,6 +21,7 @@ class ProductVariant {
     required this.priceCents,
     required this.costPriceCents,
     this.isActive = true,
+    this.isForSale = true,
   });
 
   double get price => priceCents / 100.0;
@@ -34,6 +36,7 @@ class ProductVariant {
     int? priceCents,
     int? costPriceCents,
     bool? isActive,
+    bool? isForSale,
   }) {
     return ProductVariant(
       id: id ?? this.id,
@@ -44,6 +47,7 @@ class ProductVariant {
       priceCents: priceCents ?? this.priceCents,
       costPriceCents: costPriceCents ?? this.costPriceCents,
       isActive: isActive ?? this.isActive,
+      isForSale: isForSale ?? this.isForSale,
     );
   }
 }
