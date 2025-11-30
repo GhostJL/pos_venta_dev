@@ -13,7 +13,8 @@ class DatabaseHelper {
 
   // Database configuration
   static const _databaseName = "pos.db";
-  static const _databaseVersion = 19; // Added is_for_sale to product_variants
+  static const _databaseVersion =
+      20; // Added variant_id to purchase_items and sale_items
 
   // Table names
   static const tableUsers = 'users';
@@ -310,6 +311,10 @@ class DatabaseHelper {
         ALTER TABLE $tablePurchaseItems 
         ADD COLUMN variant_id INTEGER REFERENCES $tableProductVariants(id) ON DELETE SET NULL
       ''');
+      await db.execute('''
+        ALTER TABLE $tableSaleItems 
+        ADD COLUMN variant_id INTEGER REFERENCES $tableProductVariants(id) ON DELETE SET NULL
+      ''');
     }
   }
 
@@ -591,6 +596,7 @@ class DatabaseHelper {
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         sale_id INTEGER NOT NULL,
         product_id INTEGER NOT NULL,
+        variant_id INTEGER,
         quantity REAL NOT NULL,
         unit_of_measure TEXT NOT NULL,
         unit_price_cents INTEGER NOT NULL,

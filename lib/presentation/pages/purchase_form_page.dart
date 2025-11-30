@@ -9,11 +9,13 @@ import 'package:posventa/domain/entities/warehouse.dart';
 import 'package:posventa/presentation/providers/auth_provider.dart';
 import 'package:posventa/presentation/providers/product_provider.dart';
 import 'package:posventa/presentation/providers/purchase_providers.dart';
-import 'package:posventa/presentation/widgets/purchase/product_search_bar.dart';
+import 'package:posventa/presentation/widgets/purchase/purchase_product_grid.dart';
 import 'package:posventa/presentation/widgets/purchase/purchase_header_card.dart';
 import 'package:posventa/presentation/widgets/purchase/purchase_item_dialog.dart';
 import 'package:posventa/presentation/widgets/purchase/purchase_items_list_widget.dart';
 import 'package:posventa/presentation/widgets/purchase/purchase_totals_footer.dart';
+import 'package:posventa/domain/entities/product_variant.dart';
+import 'package:posventa/core/utils/purchase_calculations.dart';
 import 'package:uuid/uuid.dart';
 
 class PurchaseFormPage extends ConsumerStatefulWidget {
@@ -60,46 +62,68 @@ class _PurchaseFormPageState extends ConsumerState<PurchaseFormPage> {
     });
   }
 
-  Future<void> _openAddItemDialog(Product product) async {
-    final result = await showDialog<PurchaseItem>(
-      context: context,
-      builder: (context) =>
-          PurchaseItemDialog(warehouseId: _warehouse.id!, product: product),
+  Future<void> _addItemDirectly(
+    Product product,
+    ProductVariant? variant,
+  ) async {
+    // Determine quantity to add (default 1, or variant multiplier)
+    final double quantityToAdd = variant?.quantity ?? 1.0;
+
+    // Determine UNIT cost (cost per single unit)
+    // If variant is selected, its costPriceCents is the cost of the PACK.
+    // So Unit Cost = Pack Cost / Pack Quantity.
+    final double unitCost;
+    if (variant != null) {
+      unitCost = (variant.costPriceCents / 100) / quantityToAdd;
+    } else {
+      unitCost = product.costPriceCents / 100;
+    }
+
+    // Check if item already exists
+    final existingIndex = _items.indexWhere(
+      (item) => item.productId == product.id && item.variantId == variant?.id,
     );
 
-    if (result != null) {
+    if (existingIndex != -1) {
+      // Update existing item
+      final existingItem = _items[existingIndex];
+      final newQuantity = existingItem.quantity + quantityToAdd;
+
+      final updatedItem = PurchaseCalculations.createPurchaseItem(
+        product: product,
+        quantity: newQuantity,
+        unitCost: unitCost,
+        existingItem: existingItem,
+        variant: variant,
+      );
+
       setState(() {
-        _items.add(result);
+        _items[existingIndex] = updatedItem;
       });
-    }
-  }
 
-  Future<void> _scanProduct(List<Product> products) async {
-    final barcode = await context.push<String>('/scanner');
-
-    if (barcode != null && mounted) {
-      final product = products.where((p) => p.barcode == barcode).firstOrNull;
-      if (product != null) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Producto encontrado: ${product.name}'),
-              backgroundColor: Colors.green,
-              duration: const Duration(seconds: 2),
+      if (mounted) {
+        ScaffoldMessenger.of(context).hideCurrentSnackBar();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Cantidad actualizada: ${product.name} (+${quantityToAdd.toStringAsFixed(0)})',
             ),
-          );
-          _openAddItemDialog(product);
-        }
-      } else {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Producto no encontrado'),
-              backgroundColor: Colors.orange,
-            ),
-          );
-        }
+            duration: const Duration(milliseconds: 500),
+          ),
+        );
       }
+    } else {
+      // Add new item
+      final newItem = PurchaseCalculations.createPurchaseItem(
+        product: product,
+        quantity: quantityToAdd,
+        unitCost: unitCost,
+        variant: variant,
+      );
+
+      setState(() {
+        _items.add(newItem);
+      });
     }
   }
 
@@ -182,6 +206,102 @@ class _PurchaseFormPageState extends ConsumerState<PurchaseFormPage> {
 
   @override
   Widget build(BuildContext context) {
+    final isMobile = MediaQuery.of(context).size.width < 800;
+
+    if (isMobile) {
+      return DefaultTabController(
+        length: 2,
+        child: Scaffold(
+          appBar: AppBar(
+            title: const Text('Nueva Compra'),
+            bottom: const TabBar(
+              tabs: [
+                Tab(text: 'Productos', icon: Icon(Icons.grid_view)),
+                Tab(text: 'Detalle', icon: Icon(Icons.receipt_long)),
+              ],
+            ),
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.save),
+                onPressed: _savePurchase,
+              ),
+            ],
+          ),
+          body: Form(
+            key: _formKey,
+            child: TabBarView(
+              children: [
+                // Tab 1: Product Grid
+                Column(
+                  children: [
+                    Expanded(
+                      child: PurchaseProductGrid(
+                        onProductSelected: _addItemDirectly,
+                      ),
+                    ),
+                    // Mini summary bar
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      color: Theme.of(context).primaryColor.withAlpha(20),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            '${_items.length} items',
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          Text(
+                            'Total: \$${_total.toStringAsFixed(2)}',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Theme.of(context).primaryColor,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+
+                // Tab 2: Order Details
+                Column(
+                  children: [
+                    Expanded(
+                      child: SingleChildScrollView(
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            PurchaseHeaderCard(
+                              supplier: _supplier,
+                              warehouse: _warehouse,
+                              invoiceNumber: _invoiceNumber,
+                              purchaseDate: _purchaseDate,
+                            ),
+                            const SizedBox(height: 24),
+                            PurchaseItemsListWidget(
+                              items: _items,
+                              onEditItem: _editItem,
+                              onRemoveItem: _removeItem,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    PurchaseTotalsFooter(
+                      subtotal: _subtotal,
+                      tax: _tax,
+                      total: _total,
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Nueva Compra'),
@@ -194,49 +314,91 @@ class _PurchaseFormPageState extends ConsumerState<PurchaseFormPage> {
         child: Column(
           children: [
             Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Header Info Card
-                    PurchaseHeaderCard(
-                      supplier: _supplier,
-                      warehouse: _warehouse,
-                      invoiceNumber: _invoiceNumber,
-                      purchaseDate: _purchaseDate,
-                    ),
-                    const SizedBox(height: 24),
-
-                    // Product Search
-                    ref
-                        .watch(productNotifierProvider)
-                        .when(
-                          data: (products) => ProductSearchBar(
-                            products: products,
-                            onProductSelected: _openAddItemDialog,
-                            onScanPressed: () => _scanProduct(products),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Left Side: Product Grid (60% width)
+                  Expanded(
+                    flex: 6,
+                    child: Container(
+                      padding: const EdgeInsets.all(12),
+                      color: Colors.grey.shade50,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Selección de Productos',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
-                          loading: () =>
-                              const Center(child: CircularProgressIndicator()),
-                          error: (_, __) =>
-                              const Text('Error al cargar productos'),
-                        ),
-                    const SizedBox(height: 16),
-
-                    // Items List
-                    PurchaseItemsListWidget(
-                      items: _items,
-                      onEditItem: _editItem,
-                      onRemoveItem: _removeItem,
+                          const SizedBox(height: 12),
+                          Expanded(
+                            child: PurchaseProductGrid(
+                              onProductSelected: _addItemDirectly,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                  ],
-                ),
+                  ),
+
+                  // Vertical Divider
+                  const VerticalDivider(width: 1),
+
+                  // Right Side: Order Details (40% width)
+                  Expanded(
+                    flex: 4,
+                    child: Column(
+                      children: [
+                        Expanded(
+                          child: SingleChildScrollView(
+                            padding: const EdgeInsets.all(16),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                // Header Info Card
+                                PurchaseHeaderCard(
+                                  supplier: _supplier,
+                                  warehouse: _warehouse,
+                                  invoiceNumber: _invoiceNumber,
+                                  purchaseDate: _purchaseDate,
+                                ),
+                                const SizedBox(height: 24),
+
+                                const Text(
+                                  'Items del Pedido',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+
+                                // Items List
+                                PurchaseItemsListWidget(
+                                  items: _items,
+                                  onEditItem: _editItem,
+                                  onRemoveItem: _removeItem,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+
+                        // Totals Footer
+                        PurchaseTotalsFooter(
+                          subtotal: _subtotal,
+                          tax: _tax,
+                          total: _total,
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
             ),
-
-            // Totals Footer
-            PurchaseTotalsFooter(subtotal: _subtotal, tax: _tax, total: _total),
           ],
         ),
       ),

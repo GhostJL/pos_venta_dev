@@ -1,5 +1,6 @@
 import 'package:posventa/domain/entities/product.dart';
 import 'package:posventa/domain/entities/purchase_item.dart';
+import 'package:posventa/domain/entities/product_variant.dart';
 
 /// Utility class for purchase-related calculations
 class PurchaseCalculations {
@@ -25,6 +26,7 @@ class PurchaseCalculations {
     required double quantity,
     required double unitCost,
     PurchaseItem? existingItem,
+    ProductVariant? variant,
   }) {
     final unitCostCents = (unitCost * 100).round();
     final subtotalCents = calculateSubtotalCents(unitCostCents, quantity);
@@ -34,11 +36,15 @@ class PurchaseCalculations {
     const taxCents = 0;
     final totalCents = calculateTotalCents(subtotalCents, taxCents);
 
+    final productName = variant != null
+        ? '${product.name} (${variant.description})'
+        : product.name;
+
     return PurchaseItem(
       id: existingItem?.id,
       purchaseId: existingItem?.purchaseId,
       productId: product.id!,
-      productName: product.name,
+      productName: productName,
       quantity: quantity,
       unitOfMeasure: product.unitOfMeasure,
       unitCostCents: unitCostCents,
