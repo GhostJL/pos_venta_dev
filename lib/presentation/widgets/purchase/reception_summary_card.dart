@@ -18,14 +18,22 @@ class ReceptionSummaryCard extends StatelessWidget {
     required this.totalPending,
   });
 
-  Widget _buildRow(String label, double value, Color valueColor) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  Widget _buildColumn(String label, double value, Color valueColor) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label),
         Text(
-          '${value.toStringAsFixed(value % 1 == 0 ? 0 : 2)} unidades',
-          style: TextStyle(fontWeight: FontWeight.bold, color: valueColor),
+          label,
+          style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
+        ),
+        const SizedBox(height: 2),
+        Text(
+          '${value.toStringAsFixed(value % 1 == 0 ? 0 : 2)} u',
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w700,
+            color: valueColor,
+          ),
         ),
       ],
     );
@@ -34,16 +42,22 @@ class ReceptionSummaryCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
-      color: Colors.blue.shade50,
+      elevation: 0,
+      surfaceTintColor: Colors.transparent,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(color: Colors.grey.shade200),
+      ),
       child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            _buildRow('Total Pedido:', totalOrdered, Colors.black),
-            const SizedBox(height: 4),
-            _buildRow('Ya Recibido:', totalReceived, Colors.green.shade700),
-            const SizedBox(height: 4),
-            _buildRow('A Recibir Ahora:', totalPending, Colors.orange.shade700),
+            _buildColumn('Total Pedido', totalOrdered, Colors.blue.shade700),
+            Container(width: 1, height: 28, color: Colors.grey.shade200),
+            _buildColumn('Ya Recibido', totalReceived, Colors.green.shade700),
+            Container(width: 1, height: 28, color: Colors.grey.shade200),
+            _buildColumn('A Recibir', totalPending, Colors.orange.shade700),
           ],
         ),
       ),
