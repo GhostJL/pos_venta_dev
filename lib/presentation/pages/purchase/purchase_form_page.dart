@@ -190,7 +190,7 @@ class _PurchaseFormPageState extends ConsumerState<PurchaseFormPage> {
     try {
       await ref.read(purchaseProvider.notifier).addPurchase(purchase);
       if (mounted) {
-        context.push('/purchases');
+        context.go('/purchases');
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             duration: Duration(milliseconds: 500),

@@ -38,32 +38,46 @@ class PurchaseDetailPage extends ConsumerWidget {
                 children: [
                   if (canReceive)
                     IconButton(
-                      icon: const Icon(Icons.check_circle),
+                      icon: const Icon(Icons.check_circle, color: Colors.green),
                       tooltip: 'Recibir Compra',
                       onPressed: () => _receivePurchase(context, ref, purchase),
                     ),
                   if (canCancel)
                     PopupMenuButton<String>(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      offset: const Offset(0, 40),
                       onSelected: (value) {
                         if (value == 'cancel') {
                           _cancelPurchase(context, ref, purchase);
                         }
                       },
                       itemBuilder: (context) => [
-                        const PopupMenuItem(
+                        PopupMenuItem(
                           value: 'cancel',
                           child: Row(
                             children: [
-                              Icon(Icons.cancel, color: Colors.red),
-                              SizedBox(width: 8),
+                              const Icon(
+                                Icons.cancel,
+                                color: Colors.red,
+                                size: 18,
+                              ),
+                              const SizedBox(width: 8),
                               Text(
                                 'Cancelar Compra',
-                                style: TextStyle(color: Colors.red),
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w500,
+                                  color: Colors.red.shade700,
+                                ),
                               ),
                             ],
                           ),
                         ),
                       ],
+                      icon: const Icon(Icons.more_vert, color: Colors.grey),
+                      tooltip: 'Más acciones',
                     ),
                 ],
               );
@@ -192,21 +206,26 @@ class _PurchaseDetailContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
+      physics: const BouncingScrollPhysics(),
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Header Info
           PurchaseInfoCard(purchase: purchase),
-          const SizedBox(height: 24),
+          const SizedBox(height: 12),
 
-          Text('Productos', style: Theme.of(context).textTheme.titleMedium),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8.0),
+            child: Text(
+              'Productos',
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+          ),
           const SizedBox(height: 8),
 
           // Items List
-          PurchaseItemsList(items: purchase.items),
-
-          const SizedBox(height: 24),
+          PurchaseItemsList(items: purchase.items, purchase: purchase),
 
           // Totals
           PurchaseTotalsCard(

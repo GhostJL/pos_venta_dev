@@ -21,7 +21,10 @@ class PurchasesPage extends ConsumerWidget {
     final selectedFilter = ref.watch(purchaseFilterProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Compras')),
+      appBar: AppBar(
+        title: const Text('Compras'),
+        forceMaterialTransparency: true,
+      ),
       floatingActionButton: hasManagePermission
           ? FloatingActionButton.extended(
               onPressed: () => context.push('/purchases/new'),
@@ -30,37 +33,40 @@ class PurchasesPage extends ConsumerWidget {
               tooltip: 'Crear Nueva Compra',
             )
           : null,
-      body: Column(
-        children: [
-          PurchaseFilterChips(selectedFilter: selectedFilter),
-          const Divider(height: 1),
-          Expanded(
-            child: purchasesAsync.when(
-              data: (purchases) {
-                final filtered = selectedFilter == null
-                    ? purchases
-                    : purchases
-                          .where((p) => p.status == selectedFilter)
-                          .toList();
+      body: SafeArea(
+        child: Column(
+          children: [
+            PurchaseFilterChips(selectedFilter: selectedFilter),
+            Expanded(
+              child: purchasesAsync.when(
+                data: (purchases) {
+                  final filtered = selectedFilter == null
+                      ? purchases
+                      : purchases
+                            .where((p) => p.status == selectedFilter)
+                            .toList();
 
-                if (filtered.isEmpty) {
-                  return const EmptyPurchasesView();
-                }
+                  if (filtered.isEmpty) {
+                    return const EmptyPurchasesView();
+                  }
 
-                return RefreshIndicator(
-                  onRefresh: () async => ref.invalidate(purchaseProvider),
-                  child: ListView.builder(
-                    padding: const EdgeInsets.all(16),
-                    itemCount: filtered.length,
-                    itemBuilder: (_, i) => PurchaseCard(purchase: filtered[i]),
-                  ),
-                );
-              },
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (e, _) => Center(child: Text('Error: $e')),
+                  return RefreshIndicator(
+                    onRefresh: () async => ref.invalidate(purchaseProvider),
+                    child: ListView.builder(
+                      physics: const BouncingScrollPhysics(),
+                      padding: const EdgeInsets.fromLTRB(16, 16, 16, 80),
+                      itemCount: filtered.length,
+                      itemBuilder: (_, i) =>
+                          PurchaseCard(purchase: filtered[i]),
+                    ),
+                  );
+                },
+                loading: () => const Center(child: CircularProgressIndicator()),
+                error: (e, _) => Center(child: Text('Error: $e')),
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

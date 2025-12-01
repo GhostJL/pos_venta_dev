@@ -16,6 +16,7 @@ class MainLayout extends StatelessWidget {
         if (isSmallScreen) {
           return Scaffold(
             appBar: AppBar(
+              forceMaterialTransparency: true,
               backgroundColor: AppTheme.background,
               elevation: 0,
               leading: Builder(
