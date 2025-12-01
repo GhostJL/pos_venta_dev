@@ -10,7 +10,7 @@ import 'package:posventa/presentation/providers/category_providers.dart';
 import 'package:posventa/presentation/providers/department_providers.dart';
 import 'package:posventa/presentation/providers/supplier_providers.dart';
 import 'package:posventa/presentation/providers/tax_rate_provider.dart';
-import 'package:posventa/presentation/providers/providers.dart'; // For productRepositoryProvider
+import 'package:posventa/presentation/providers/providers.dart'; // For productRepositoryProvider and unitListProvider
 import 'package:posventa/core/theme/theme.dart';
 import 'package:go_router/go_router.dart';
 
@@ -38,7 +38,7 @@ class ProductFormPageState extends ConsumerState<ProductFormPage> {
   int? _selectedCategory;
   int? _selectedBrand;
   int? _selectedSupplier;
-  String? _selectedUnit;
+  int? _selectedUnitId;
   bool _isSoldByWeight = false;
   bool _isActive = true;
 
@@ -76,7 +76,7 @@ class ProductFormPageState extends ConsumerState<ProductFormPage> {
     _selectedCategory = widget.product?.categoryId;
     _selectedBrand = widget.product?.brandId;
     _selectedSupplier = widget.product?.supplierId;
-    _selectedUnit = widget.product?.unitOfMeasure;
+    _selectedUnitId = widget.product?.unitId;
     _isSoldByWeight = widget.product?.isSoldByWeight ?? false;
     _isActive = widget.product?.isActive ?? true;
 
@@ -128,9 +128,7 @@ class ProductFormPageState extends ConsumerState<ProductFormPage> {
 
   Future<void> _showVariantDialog({ProductVariant? variant, int? index}) async {
     final isEditing = variant != null;
-    final descriptionController = TextEditingController(
-      text: variant?.description,
-    );
+    final nameController = TextEditingController(text: variant?.variantName);
     final quantityController = TextEditingController(
       text: variant?.quantity.toString() ?? '1',
     );
@@ -161,9 +159,9 @@ class ProductFormPageState extends ConsumerState<ProductFormPage> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   TextFormField(
-                    controller: descriptionController,
+                    controller: nameController,
                     decoration: const InputDecoration(
-                      labelText: 'Descripción (ej. Caja con 12)',
+                      labelText: 'Nombre Variante (ej. Caja con 12)',
                       prefixIcon: Icon(Icons.description),
                     ),
                   ),
@@ -250,7 +248,7 @@ class ProductFormPageState extends ConsumerState<ProductFormPage> {
               ),
               FilledButton(
                 onPressed: () {
-                  if (descriptionController.text.isEmpty ||
+                  if (nameController.text.isEmpty ||
                       quantityController.text.isEmpty ||
                       priceController.text.isEmpty ||
                       costController.text.isEmpty) {
@@ -267,7 +265,7 @@ class ProductFormPageState extends ConsumerState<ProductFormPage> {
                   final newVariant = ProductVariant(
                     id: variant?.id,
                     productId: widget.product?.id ?? 0, // Temp ID
-                    description: descriptionController.text,
+                    variantName: nameController.text,
                     quantity: double.parse(quantityController.text),
                     priceCents: (double.parse(priceController.text) * 100)
                         .toInt(),
@@ -359,31 +357,49 @@ class ProductFormPageState extends ConsumerState<ProductFormPage> {
         return;
       }
 
+      // Create main variant from form fields
+      final mainVariant = ProductVariant(
+        id: _variants.isNotEmpty ? _variants.first.id : null,
+        productId: widget.product?.id ?? 0,
+        variantName: 'Estándar', // Default name
+        quantity: 1.0,
+        priceCents: salePrice,
+        costPriceCents: costPrice,
+        wholesalePriceCents: _wholesalePriceController.text.isNotEmpty
+            ? (double.parse(_wholesalePriceController.text) * 100).toInt()
+            : null,
+        barcode: _barcodeController.text,
+        isForSale: true,
+      );
+
+      // Update variants list: Ensure the first variant reflects the main form fields
+      List<ProductVariant> finalVariants = List.from(_variants);
+      if (finalVariants.isEmpty) {
+        finalVariants.add(mainVariant);
+      } else {
+        finalVariants[0] = mainVariant;
+      }
+
       final newProduct = Product(
         id: widget.product?.id,
         name: _nameController.text,
         code: _codeController.text,
-        barcode: _barcodeController.text,
         description: _descriptionController.text,
         departmentId: _selectedDepartment!,
         categoryId: _selectedCategory!,
         brandId: _selectedBrand,
         supplierId: _selectedSupplier,
-        unitOfMeasure: _selectedUnit!,
+        unitId: _selectedUnitId!,
         isSoldByWeight: _isSoldByWeight,
-        costPriceCents: costPrice,
-        salePriceCents: salePrice,
-        wholesalePriceCents:
-            (double.parse(_wholesalePriceController.text) * 100).toInt(),
         productTaxes: _selectedTaxes,
-        variants: _variants,
+        variants: finalVariants,
         isActive: _isActive,
       );
 
       if (widget.product == null) {
-        ref.read(productNotifierProvider.notifier).addProduct(newProduct);
+        ref.read(productListProvider.notifier).addProduct(newProduct);
       } else {
-        ref.read(productNotifierProvider.notifier).updateProduct(newProduct);
+        ref.read(productListProvider.notifier).updateProduct(newProduct);
       }
 
       if (mounted) {
@@ -395,6 +411,7 @@ class ProductFormPageState extends ConsumerState<ProductFormPage> {
   @override
   Widget build(BuildContext context) {
     final taxRatesAsync = ref.watch(taxRateListProvider);
+    final unitsAsync = ref.watch(unitListProvider);
 
     ref.listen(taxRateListProvider, (previous, next) {
       if (!_defaultsInitialized && widget.product == null && next.hasValue) {
@@ -617,23 +634,28 @@ class ProductFormPageState extends ConsumerState<ProductFormPage> {
                   _buildSectionTitle('Precios y Unidad'),
                   const SizedBox(height: 16),
                   if (isSmallScreen) ...[
-                    DropdownButtonFormField<String>(
-                      initialValue: _selectedUnit,
-                      decoration: const InputDecoration(
-                        labelText: 'Unidad',
-                        prefixIcon: Icon(Icons.scale_rounded),
+                    unitsAsync.when(
+                      data: (units) => DropdownButtonFormField<int>(
+                        value: _selectedUnitId,
+                        decoration: const InputDecoration(
+                          labelText: 'Unidad',
+                          prefixIcon: Icon(Icons.scale_rounded),
+                        ),
+                        items: units
+                            .map(
+                              (unit) => DropdownMenuItem(
+                                value: unit.id,
+                                child: Text(unit.name),
+                              ),
+                            )
+                            .toList(),
+                        onChanged: (value) =>
+                            setState(() => _selectedUnitId = value),
+                        validator: (value) =>
+                            value == null ? 'Requerido' : null,
                       ),
-                      items: ['pieza', 'kg', 'litro', 'caja']
-                          .map(
-                            (unit) => DropdownMenuItem(
-                              value: unit,
-                              child: Text(unit),
-                            ),
-                          )
-                          .toList(),
-                      onChanged: (value) =>
-                          setState(() => _selectedUnit = value),
-                      validator: (value) => value == null ? 'Requerido' : null,
+                      loading: () => const CircularProgressIndicator(),
+                      error: (e, s) => Text('Error: $e'),
                     ),
                     const SizedBox(height: 16),
                     SwitchListTile(
@@ -650,24 +672,28 @@ class ProductFormPageState extends ConsumerState<ProductFormPage> {
                     Row(
                       children: [
                         Expanded(
-                          child: DropdownButtonFormField<String>(
-                            initialValue: _selectedUnit,
-                            decoration: const InputDecoration(
-                              labelText: 'Unidad',
-                              prefixIcon: Icon(Icons.scale_rounded),
+                          child: unitsAsync.when(
+                            data: (units) => DropdownButtonFormField<int>(
+                              value: _selectedUnitId,
+                              decoration: const InputDecoration(
+                                labelText: 'Unidad',
+                                prefixIcon: Icon(Icons.scale_rounded),
+                              ),
+                              items: units
+                                  .map(
+                                    (unit) => DropdownMenuItem(
+                                      value: unit.id,
+                                      child: Text(unit.name),
+                                    ),
+                                  )
+                                  .toList(),
+                              onChanged: (value) =>
+                                  setState(() => _selectedUnitId = value),
+                              validator: (value) =>
+                                  value == null ? 'Requerido' : null,
                             ),
-                            items: ['pieza', 'kg', 'litro', 'caja']
-                                .map(
-                                  (unit) => DropdownMenuItem(
-                                    value: unit,
-                                    child: Text(unit),
-                                  ),
-                                )
-                                .toList(),
-                            onChanged: (value) =>
-                                setState(() => _selectedUnit = value),
-                            validator: (value) =>
-                                value == null ? 'Requerido' : null,
+                            loading: () => const CircularProgressIndicator(),
+                            error: (e, s) => Text('Error: $e'),
                           ),
                         ),
                         const SizedBox(width: 16),
@@ -801,7 +827,7 @@ class ProductFormPageState extends ConsumerState<ProductFormPage> {
                           const Padding(
                             padding: EdgeInsets.all(16.0),
                             child: Text(
-                              'No hay variantes agregadas',
+                              'No hay variantes adicionales. Se usará la configuración principal.',
                               style: TextStyle(color: Colors.grey),
                             ),
                           )
@@ -815,46 +841,22 @@ class ProductFormPageState extends ConsumerState<ProductFormPage> {
                             itemBuilder: (context, index) {
                               final variant = _variants[index];
                               return ListTile(
-                                title: Text(
-                                  variant.description ?? 'Sin descripción',
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                                subtitle: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      'Factor: ${variant.quantity} | Precio: \$${variant.price.toStringAsFixed(2)}',
-                                    ),
-                                    if (!variant.isForSale)
-                                      const Text(
-                                        'No disponible para venta',
-                                        style: TextStyle(
-                                          color: Colors.orange,
-                                          fontSize: 12,
-                                        ),
-                                      ),
-                                  ],
+                                title: Text(variant.variantName),
+                                subtitle: Text(
+                                  '${variant.quantity} unidades - \$${(variant.priceCents / 100).toStringAsFixed(2)}',
                                 ),
                                 trailing: Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
                                     IconButton(
-                                      icon: const Icon(
-                                        Icons.edit,
-                                        color: AppTheme.primary,
-                                      ),
+                                      icon: const Icon(Icons.edit),
                                       onPressed: () => _showVariantDialog(
                                         variant: variant,
                                         index: index,
                                       ),
                                     ),
                                     IconButton(
-                                      icon: const Icon(
-                                        Icons.delete,
-                                        color: Colors.red,
-                                      ),
+                                      icon: const Icon(Icons.delete),
                                       onPressed: () {
                                         setState(() {
                                           _variants.removeAt(index);
@@ -866,46 +868,15 @@ class ProductFormPageState extends ConsumerState<ProductFormPage> {
                               );
                             },
                           ),
-                        const Divider(height: 1),
-                        ListTile(
-                          leading: const Icon(
-                            Icons.add_circle_outline,
-                            color: AppTheme.primary,
+                        Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: TextButton.icon(
+                            onPressed: () => _showVariantDialog(),
+                            icon: const Icon(Icons.add),
+                            label: const Text('Agregar Variante'),
                           ),
-                          title: const Text(
-                            'Agregar Variante',
-                            style: TextStyle(
-                              color: AppTheme.primary,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          onTap: () => _showVariantDialog(),
                         ),
                       ],
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                  SwitchListTile(
-                    title: const Text('Producto Activo'),
-                    value: _isActive,
-                    activeThumbColor: AppTheme.success,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      side: const BorderSide(color: AppTheme.borders),
-                    ),
-                    onChanged: (value) => setState(() => _isActive = value),
-                  ),
-                  const SizedBox(height: 32),
-                  ElevatedButton.icon(
-                    onPressed: _submit,
-                    icon: const Icon(Icons.save_rounded),
-                    label: const Text('Guardar Producto'),
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      elevation: 0,
                     ),
                   ),
                 ],
@@ -920,43 +891,45 @@ class ProductFormPageState extends ConsumerState<ProductFormPage> {
   Widget _buildSectionTitle(String title) {
     return Text(
       title,
-      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+      style: const TextStyle(
+        fontSize: 18,
         fontWeight: FontWeight.bold,
         color: AppTheme.primary,
       ),
     );
   }
 
-  Widget _buildDropdown(
-    AsyncValue<List<dynamic>> asyncValue,
+  Widget _buildDropdown<T>(
+    AsyncValue<List<T>> asyncValue,
     String label,
-    int? currentValue,
-    void Function(int?) onChanged, {
+    int? selectedValue,
+    Function(int?) onChanged, {
     bool isOptional = false,
-    IconData? icon,
+    required IconData icon,
   }) {
     return asyncValue.when(
-      data: (items) => DropdownButtonFormField<int>(
-        initialValue: currentValue,
-        decoration: InputDecoration(
-          labelText: label,
-          prefixIcon: icon != null ? Icon(icon) : null,
-        ),
-        items: items
-            .map(
-              (e) => DropdownMenuItem(
-                value: e.id as int,
-                child: Text(e.name as String, overflow: TextOverflow.ellipsis),
-              ),
-            )
-            .toList(),
-        onChanged: onChanged,
-        validator: isOptional
-            ? null
-            : (value) => value == null ? 'Requerido' : null,
-      ),
-      loading: () => const LinearProgressIndicator(),
-      error: (e, s) => Text('Error: $e'),
+      data: (items) {
+        return DropdownButtonFormField<int>(
+          value: selectedValue,
+          decoration: InputDecoration(labelText: label, prefixIcon: Icon(icon)),
+          items: items.map((item) {
+            // Assuming items have 'id' and 'name' properties
+            // We need to use dynamic or a common interface if we want to be type-safe
+            // For now, we'll cast to dynamic to access properties
+            final dynamicItem = item as dynamic;
+            return DropdownMenuItem<int>(
+              value: dynamicItem.id,
+              child: Text(dynamicItem.name),
+            );
+          }).toList(),
+          onChanged: onChanged,
+          validator: isOptional
+              ? null
+              : (value) => value == null ? 'Requerido' : null,
+        );
+      },
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (e, s) => Text('Error loading $label: $e'),
     );
   }
 
@@ -967,24 +940,27 @@ class ProductFormPageState extends ConsumerState<ProductFormPage> {
         _buildSectionTitle('Impuestos'),
         const SizedBox(height: 8),
         Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: taxRates.map((tax) {
-            final isSelected = _selectedTaxes.any((t) => t.taxRateId == tax.id);
+          spacing: 8.0,
+          children: taxRates.map((taxRate) {
+            final isSelected = _selectedTaxes.any(
+              (t) => t.taxRateId == taxRate.id,
+            );
             return FilterChip(
-              label: Text(tax.name),
+              label: Text('${taxRate.name} (${taxRate.rate * 100}%)'),
               selected: isSelected,
               onSelected: (selected) {
                 setState(() {
                   if (selected) {
                     _selectedTaxes.add(
                       ProductTax(
-                        taxRateId: tax.id!,
+                        taxRateId: taxRate.id!,
                         applyOrder: _selectedTaxes.length + 1,
                       ),
                     );
                   } else {
-                    _selectedTaxes.removeWhere((t) => t.taxRateId == tax.id);
+                    _selectedTaxes.removeWhere(
+                      (t) => t.taxRateId == taxRate.id,
+                    );
                   }
                 });
               },

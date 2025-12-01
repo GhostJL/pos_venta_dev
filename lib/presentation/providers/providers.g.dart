@@ -534,6 +534,95 @@ final class GetInventoryByProductProvider
 String _$getInventoryByProductHash() =>
     r'fbac78c7ac55ec962f3c22e2cae76d2652d0f046';
 
+@ProviderFor(unitOfMeasureRepository)
+const unitOfMeasureRepositoryProvider = UnitOfMeasureRepositoryProvider._();
+
+final class UnitOfMeasureRepositoryProvider
+    extends
+        $FunctionalProvider<
+          UnitOfMeasureRepository,
+          UnitOfMeasureRepository,
+          UnitOfMeasureRepository
+        >
+    with $Provider<UnitOfMeasureRepository> {
+  const UnitOfMeasureRepositoryProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'unitOfMeasureRepositoryProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$unitOfMeasureRepositoryHash();
+
+  @$internal
+  @override
+  $ProviderElement<UnitOfMeasureRepository> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  UnitOfMeasureRepository create(Ref ref) {
+    return unitOfMeasureRepository(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(UnitOfMeasureRepository value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<UnitOfMeasureRepository>(value),
+    );
+  }
+}
+
+String _$unitOfMeasureRepositoryHash() =>
+    r'8d195a40e2442b5efb5dbf42bf47b14c38161d7f';
+
+@ProviderFor(unitList)
+const unitListProvider = UnitListProvider._();
+
+final class UnitListProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<List<UnitOfMeasure>>,
+          List<UnitOfMeasure>,
+          FutureOr<List<UnitOfMeasure>>
+        >
+    with
+        $FutureModifier<List<UnitOfMeasure>>,
+        $FutureProvider<List<UnitOfMeasure>> {
+  const UnitListProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'unitListProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$unitListHash();
+
+  @$internal
+  @override
+  $FutureProviderElement<List<UnitOfMeasure>> $createElement(
+    $ProviderPointer pointer,
+  ) => $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<List<UnitOfMeasure>> create(Ref ref) {
+    return unitList(ref);
+  }
+}
+
+String _$unitListHash() => r'9cdd6ca6c9018e567a7a0a83abb16947514d8b92';
+
 @ProviderFor(productRepository)
 const productRepositoryProvider = ProductRepositoryProvider._();
 

@@ -14,7 +14,7 @@ class DatabaseHelper {
   // Database configuration
   static const _databaseName = "pos.db";
   static const _databaseVersion =
-      20; // Added variant_id to purchase_items and sale_items
+      21; // Refactored Products and Variants, added UnitsOfMeasure
 
   // Table names
   static const tableUsers = 'users';
@@ -45,6 +45,7 @@ class DatabaseHelper {
   static const tableSaleReturns = 'sale_returns';
   static const tableSaleReturnItems = 'sale_return_items';
   static const tableProductVariants = 'product_variants';
+  static const tableUnitsOfMeasure = 'units_of_measure';
 
   static Database? _database;
 
@@ -183,6 +184,8 @@ class DatabaseHelper {
 
     // Warehouses table
     await _createWarehousesTable(db);
+    // UnitsOfMeasure table
+    await _createUnitsOfMeasureTable(db);
     // TaxRates table
     await _createTaxRatesTable(db);
     // Products table
@@ -316,6 +319,26 @@ class DatabaseHelper {
         ADD COLUMN variant_id INTEGER REFERENCES $tableProductVariants(id) ON DELETE SET NULL
       ''');
     }
+    if (oldVersion < 21) {
+      // Destructive upgrade: Drop and recreate product-related tables
+      await db.execute('DROP TABLE IF EXISTS $tableSaleItems');
+      await db.execute('DROP TABLE IF EXISTS $tablePurchaseItems');
+      await db.execute('DROP TABLE IF EXISTS $tableInventoryMovements');
+      await db.execute('DROP TABLE IF EXISTS $tableInventory');
+      await db.execute('DROP TABLE IF EXISTS $tableProductTaxes');
+      await db.execute('DROP TABLE IF EXISTS $tableProductVariants');
+      await db.execute('DROP TABLE IF EXISTS $tableProducts');
+      await db.execute('DROP TABLE IF EXISTS $tableUnitsOfMeasure');
+
+      await _createUnitsOfMeasureTable(db);
+      await _createProductsTable(db);
+      await _createProductVariantsTable(db);
+      await _createProductTaxesTable(db);
+      await _createInventoryTable(db);
+      await _createInventoryMovementsTable(db);
+      await _createSaleItemsTable(db);
+      await _createPurchaseItemsTable(db);
+    }
   }
 
   Future<void> _createProductVariantsTable(Database db) async {
@@ -323,13 +346,16 @@ class DatabaseHelper {
       CREATE TABLE IF NOT EXISTS $tableProductVariants (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         product_id INTEGER NOT NULL,
-        barcode TEXT,
-        description TEXT,
+        variant_name TEXT NOT NULL,
+        barcode TEXT UNIQUE,
         quantity REAL NOT NULL DEFAULT 1,
-        price_cents INTEGER NOT NULL,
         cost_price_cents INTEGER NOT NULL,
-        is_active INTEGER NOT NULL DEFAULT 1,
-        is_for_sale INTEGER NOT NULL DEFAULT 1,
+        sale_price_cents INTEGER NOT NULL,
+        wholesale_price_cents INTEGER,
+        is_active INTEGER NOT NULL DEFAULT 1 CHECK (is_active IN (0,1)),
+        is_for_sale INTEGER NOT NULL DEFAULT 1 CHECK (is_for_sale IN (0,1)),
+        created_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
+        updated_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
         FOREIGN KEY (product_id) REFERENCES $tableProducts(id) ON DELETE CASCADE
       )
     ''');
@@ -339,6 +365,34 @@ class DatabaseHelper {
     await db.execute(
       'CREATE INDEX IF NOT EXISTS idx_product_variants_barcode ON $tableProductVariants(barcode)',
     );
+  }
+
+  Future<void> _createUnitsOfMeasureTable(Database db) async {
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS $tableUnitsOfMeasure (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        code TEXT NOT NULL UNIQUE,
+        name TEXT NOT NULL
+      )
+    ''');
+
+    // Insert default units
+    final defaultUnits = [
+      {'code': 'pz', 'name': 'Pieza'},
+      {'code': 'kg', 'name': 'Kilogramo'},
+      {'code': 'g', 'name': 'Gramo'},
+      {'code': 'lt', 'name': 'Litro'},
+      {'code': 'ml', 'name': 'Mililitro'},
+      {'code': 'm', 'name': 'Metro'},
+      {'code': 'cm', 'name': 'Centímetro'},
+      {'code': 'caja', 'name': 'Caja'},
+      {'code': 'paq', 'name': 'Paquete'},
+      {'code': 'srv', 'name': 'Servicio'},
+    ];
+
+    for (final unit in defaultUnits) {
+      await db.insert(tableUnitsOfMeasure, unit);
+    }
   }
 
   Future<void> _createWarehousesTable(Database db) async {
@@ -412,27 +466,34 @@ class DatabaseHelper {
       CREATE TABLE $tableProducts (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         code TEXT NOT NULL UNIQUE,
-        barcode TEXT UNIQUE,
         name TEXT NOT NULL,
         description TEXT,
         department_id INTEGER NOT NULL,
         category_id INTEGER NOT NULL,
         brand_id INTEGER,
         supplier_id INTEGER,
-        unit_of_measure TEXT NOT NULL DEFAULT 'pieza',
-        is_sold_by_weight INTEGER NOT NULL DEFAULT 0,
-        cost_price_cents INTEGER NOT NULL DEFAULT 0,
-        sale_price_cents INTEGER NOT NULL,
-        wholesale_price_cents INTEGER,
-        is_active INTEGER NOT NULL DEFAULT 1,
+        unit_id INTEGER NOT NULL,
+        is_sold_by_weight INTEGER NOT NULL DEFAULT 0 CHECK (is_sold_by_weight IN (0,1)),
+        is_active INTEGER NOT NULL DEFAULT 1 CHECK (is_active IN (0,1)),
         created_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
         updated_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
         FOREIGN KEY (department_id) REFERENCES $tableDepartments(id) ON DELETE RESTRICT,
         FOREIGN KEY (category_id) REFERENCES $tableCategories(id) ON DELETE RESTRICT,
         FOREIGN KEY (brand_id) REFERENCES $tableBrands(id) ON DELETE SET NULL,
-        FOREIGN KEY (supplier_id) REFERENCES $tableSuppliers(id) ON DELETE SET NULL
+        FOREIGN KEY (supplier_id) REFERENCES $tableSuppliers(id) ON DELETE SET NULL,
+        FOREIGN KEY (unit_id) REFERENCES $tableUnitsOfMeasure(id) ON DELETE RESTRICT
       )
     ''');
+
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_products_code ON $tableProducts(code)',
+    );
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_products_department ON $tableProducts(department_id)',
+    );
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_products_category ON $tableProducts(category_id)',
+    );
   }
 
   Future<void> _createProductTaxesTable(Database db) async {

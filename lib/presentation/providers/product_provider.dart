@@ -1,5 +1,6 @@
 import 'package:posventa/domain/entities/product.dart';
 import 'package:posventa/domain/entities/product_tax.dart';
+import 'package:posventa/domain/entities/product_variant.dart';
 import 'package:posventa/presentation/providers/providers.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -77,38 +78,32 @@ extension ProductCopyWith on Product {
   Product copyWith({
     int? id,
     String? code,
-    String? barcode,
     String? name,
     String? description,
     int? departmentId,
     int? categoryId,
     int? brandId,
     int? supplierId,
-    String? unitOfMeasure,
+    int? unitId,
     bool? isSoldByWeight,
-    int? costPriceCents,
-    int? salePriceCents,
-    int? wholesalePriceCents,
     bool? isActive,
     List<ProductTax>? productTaxes,
+    List<ProductVariant>? variants,
   }) {
     return Product(
       id: id ?? this.id,
       code: code ?? this.code,
-      barcode: barcode ?? this.barcode,
       name: name ?? this.name,
       description: description ?? this.description,
       departmentId: departmentId ?? this.departmentId,
       categoryId: categoryId ?? this.categoryId,
       brandId: brandId ?? this.brandId,
       supplierId: supplierId ?? this.supplierId,
-      unitOfMeasure: unitOfMeasure ?? this.unitOfMeasure,
+      unitId: unitId ?? this.unitId,
       isSoldByWeight: isSoldByWeight ?? this.isSoldByWeight,
-      costPriceCents: costPriceCents ?? this.costPriceCents,
-      salePriceCents: salePriceCents ?? this.salePriceCents,
-      wholesalePriceCents: wholesalePriceCents ?? this.wholesalePriceCents,
       isActive: isActive ?? this.isActive,
       productTaxes: productTaxes ?? this.productTaxes,
+      variants: variants ?? this.variants,
     );
   }
 }

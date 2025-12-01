@@ -20,7 +20,8 @@ class ProductRepositoryImpl implements ProductRepository {
     yield await getAllProducts();
     await for (final table in databaseHelper.tableUpdateStream) {
       if (table == DatabaseHelper.tableProducts ||
-          table == DatabaseHelper.tableInventory) {
+          table == DatabaseHelper.tableInventory ||
+          table == DatabaseHelper.tableProductVariants) {
         yield await getAllProducts();
       }
     }
@@ -98,8 +99,11 @@ class ProductRepositoryImpl implements ProductRepository {
 
     // Query 1: Get all products with stock
     final List<Map<String, dynamic>> productMaps = await db.rawQuery('''
-      SELECT p.*, (SELECT SUM(quantity_on_hand) FROM inventory WHERE product_id = p.id) as stock
+      SELECT p.*, 
+             (SELECT SUM(quantity_on_hand) FROM inventory WHERE product_id = p.id) as stock,
+             u.name as unit_name
       FROM ${DatabaseHelper.tableProducts} p
+      LEFT JOIN ${DatabaseHelper.tableUnitsOfMeasure} u ON p.unit_id = u.id
       WHERE p.is_active = 1
     ''');
 
@@ -155,18 +159,20 @@ class ProductRepositoryImpl implements ProductRepository {
     // Query 1: Search products with stock
     final List<Map<String, dynamic>> productMaps = await db.rawQuery(
       '''
-      SELECT DISTINCT p.*, (SELECT SUM(quantity_on_hand) FROM inventory WHERE product_id = p.id) as stock
+      SELECT DISTINCT p.*, 
+             (SELECT SUM(quantity_on_hand) FROM inventory WHERE product_id = p.id) as stock,
+             u.name as unit_name
       FROM ${DatabaseHelper.tableProducts} p
       LEFT JOIN ${DatabaseHelper.tableProductVariants} pv ON p.id = pv.product_id AND pv.is_active = 1
+      LEFT JOIN ${DatabaseHelper.tableUnitsOfMeasure} u ON p.unit_id = u.id
       WHERE p.is_active = 1 AND (
         p.name LIKE ? OR 
         p.code LIKE ? OR 
-        p.barcode LIKE ? OR
         pv.barcode LIKE ? OR
-        pv.description LIKE ?
+        pv.variant_name LIKE ?
       )
     ''',
-      ['%$query%', '%$query%', '%$query%', '%$query%', '%$query%'],
+      ['%$query%', '%$query%', '%$query%', '%$query%'],
     );
 
     if (productMaps.isEmpty) return [];
@@ -219,8 +225,11 @@ class ProductRepositoryImpl implements ProductRepository {
     final db = await databaseHelper.database;
     final maps = await db.rawQuery(
       '''
-      SELECT p.*, (SELECT SUM(quantity_on_hand) FROM inventory WHERE product_id = p.id) as stock
+      SELECT p.*, 
+             (SELECT SUM(quantity_on_hand) FROM inventory WHERE product_id = p.id) as stock,
+             u.name as unit_name
       FROM ${DatabaseHelper.tableProducts} p
+      LEFT JOIN ${DatabaseHelper.tableUnitsOfMeasure} u ON p.unit_id = u.id
       WHERE p.id = ?
     ''',
       [id],
@@ -364,17 +373,8 @@ class ProductRepositoryImpl implements ProductRepository {
   @override
   Future<bool> isBarcodeUnique(String barcode, {int? excludeId}) async {
     final db = await databaseHelper.database;
-    final isUnique = await DatabaseValidators.isFieldUnique(
-      db: db,
-      tableName: DatabaseHelper.tableProducts,
-      fieldName: 'barcode',
-      value: barcode,
-      excludeId: excludeId,
-    );
 
-    if (!isUnique) return false;
-
-    // Also check in variants
+    // Check in product variants
     final variantsResult = await db.query(
       DatabaseHelper.tableProductVariants,
       where: 'barcode = ? AND is_active = 1',
@@ -382,9 +382,30 @@ class ProductRepositoryImpl implements ProductRepository {
     );
 
     if (variantsResult.isNotEmpty) {
-      // If excludeId is provided, we need to check if the found variant belongs to the excluded product
-      // However, barcodes should generally be unique across the entire system.
-      // If we are editing a product and one of its variants has this barcode, it's a conflict if we try to assign it to the main product.
+      if (excludeId != null) {
+        // If we are checking for uniqueness but excluding a specific product,
+        // we need to check if the found variant belongs to a DIFFERENT product.
+        // However, barcodes are unique per variant, so if we find ANY variant with this barcode
+        // that is NOT the one we are editing (which is tricky because we don't have variant ID here),
+        // it's a duplicate.
+        // But wait, `excludeId` usually refers to the Product ID.
+        // If we are editing Product A, and Product A has a variant with Barcode X, that's fine.
+        // If Product B has a variant with Barcode X, that's a conflict.
+
+        final variant = variantsResult.first;
+        if (variant['product_id'] != excludeId) {
+          return false;
+        }
+        // If it belongs to the same product, it might be the same variant or another variant of the same product.
+        // But typically barcodes should be unique even within the same product's variants.
+        // For now, let's assume strict uniqueness across the whole table.
+        // If we are updating a product, we might be re-saving the same variant with the same barcode.
+        // This validation logic is a bit weak without variant ID.
+        // Ideally, we should check `isBarcodeUnique` at the Variant level.
+
+        // For now, let's return true if it belongs to the same product (assuming we are just updating it)
+        return true;
+      }
       return false;
     }
 

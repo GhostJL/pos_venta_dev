@@ -4,22 +4,24 @@ import 'package:flutter/foundation.dart';
 class ProductVariant {
   final int? id;
   final int productId;
+  final String variantName;
   final String? barcode;
-  final String? description;
   final double quantity;
-  final int priceCents;
+  final int priceCents; // sale_price_cents
   final int costPriceCents;
+  final int? wholesalePriceCents;
   final bool isActive;
   final bool isForSale;
 
   const ProductVariant({
     this.id,
     required this.productId,
+    required this.variantName,
     this.barcode,
-    this.description,
     this.quantity = 1.0,
     required this.priceCents,
     required this.costPriceCents,
+    this.wholesalePriceCents,
     this.isActive = true,
     this.isForSale = true,
   });
@@ -27,25 +29,30 @@ class ProductVariant {
   double get price => priceCents / 100.0;
   double get costPrice => costPriceCents / 100.0;
 
+  // Compatibility getter
+  String get description => variantName;
+
   ProductVariant copyWith({
     int? id,
     int? productId,
+    String? variantName,
     String? barcode,
-    String? description,
     double? quantity,
     int? priceCents,
     int? costPriceCents,
+    int? wholesalePriceCents,
     bool? isActive,
     bool? isForSale,
   }) {
     return ProductVariant(
       id: id ?? this.id,
       productId: productId ?? this.productId,
+      variantName: variantName ?? this.variantName,
       barcode: barcode ?? this.barcode,
-      description: description ?? this.description,
       quantity: quantity ?? this.quantity,
       priceCents: priceCents ?? this.priceCents,
       costPriceCents: costPriceCents ?? this.costPriceCents,
+      wholesalePriceCents: wholesalePriceCents ?? this.wholesalePriceCents,
       isActive: isActive ?? this.isActive,
       isForSale: isForSale ?? this.isForSale,
     );

@@ -26,7 +26,7 @@ class VariantSelectionDialog extends StatelessWidget {
             final variant = product.variants![index];
             return ListTile(
               title: Text(
-                variant.description ?? 'Sin descripción',
+                variant.description,
                 style: const TextStyle(fontWeight: FontWeight.w500),
               ),
               subtitle: Text(

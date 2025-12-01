@@ -19,6 +19,9 @@ import 'package:posventa/domain/use_cases/product/create_product.dart';
 import 'package:posventa/domain/use_cases/product/update_product.dart';
 import 'package:posventa/domain/use_cases/product/delete_product.dart';
 import 'package:posventa/domain/use_cases/product/search_products.dart';
+import 'package:posventa/domain/repositories/unit_of_measure_repository.dart';
+import 'package:posventa/data/repositories/unit_of_measure_repository_impl.dart';
+import 'package:posventa/domain/entities/unit_of_measure.dart';
 import 'package:posventa/domain/repositories/inventory_movement_repository.dart';
 import 'package:posventa/data/repositories/inventory_movement_repository_impl.dart';
 import 'package:posventa/domain/use_cases/inventory_movement/get_all_inventory_movements.dart';
@@ -138,6 +141,16 @@ DeleteInventory deleteInventory(ref) =>
 @riverpod
 GetInventoryByProduct getInventoryByProduct(ref) =>
     GetInventoryByProduct(ref.watch(inventoryRepositoryProvider));
+
+// Unit of Measure Providers
+@riverpod
+UnitOfMeasureRepository unitOfMeasureRepository(ref) =>
+    UnitOfMeasureRepositoryImpl(ref.watch(databaseHelperProvider));
+
+@riverpod
+Future<List<UnitOfMeasure>> unitList(ref) async {
+  return ref.watch(unitOfMeasureRepositoryProvider).getAllUnits();
+}
 
 // Product Providers
 @riverpod

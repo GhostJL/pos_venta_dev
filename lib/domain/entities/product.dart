@@ -6,18 +6,15 @@ import 'package:posventa/domain/entities/product_variant.dart';
 class Product {
   final int? id;
   final String code;
-  final String? barcode;
   final String name;
   final String? description;
   final int? departmentId;
   final int? categoryId;
   final int? brandId;
   final int? supplierId;
-  final String unitOfMeasure;
+  final int unitId;
+  final String? unitName; // Populated from join
   final bool isSoldByWeight;
-  final int costPriceCents;
-  final int salePriceCents;
-  final int? wholesalePriceCents;
   final bool isActive;
   final List<ProductTax>? productTaxes;
   final List<ProductVariant>? variants;
@@ -26,42 +23,82 @@ class Product {
   const Product({
     this.id,
     required this.code,
-    this.barcode,
     required this.name,
     this.description,
     this.departmentId,
     this.categoryId,
     this.brandId,
     this.supplierId,
-    required this.unitOfMeasure,
+    required this.unitId,
+    this.unitName,
     this.isSoldByWeight = false,
-    required this.costPriceCents,
-    required this.salePriceCents,
-    this.wholesalePriceCents,
     this.isActive = true,
     this.productTaxes,
     this.variants,
     this.stock,
   });
 
-  double get price => salePriceCents / 100.0;
-  double get costPrice => costPriceCents / 100.0;
+  // Helper getters to maintain compatibility or ease of use
+  // Returns the price of the first variant (default) or 0
+  double get price {
+    if (variants != null && variants!.isNotEmpty) {
+      return variants!.first.price;
+    }
+    return 0.0;
+  }
+
+  // Returns the cost price of the first variant or 0
+  double get costPrice {
+    if (variants != null && variants!.isNotEmpty) {
+      return variants!.first.costPrice;
+    }
+    return 0.0;
+  }
+
+  // Returns the barcode of the first variant or null
+  String? get barcode {
+    if (variants != null && variants!.isNotEmpty) {
+      return variants!.first.barcode;
+    }
+    return null;
+  }
+
+  // Compatibility getters
+  String get unitOfMeasure => unitName ?? 'pieza';
+
+  int get salePriceCents {
+    if (variants != null && variants!.isNotEmpty) {
+      return variants!.first.priceCents;
+    }
+    return 0;
+  }
+
+  int get costPriceCents {
+    if (variants != null && variants!.isNotEmpty) {
+      return variants!.first.costPriceCents;
+    }
+    return 0;
+  }
+
+  int? get wholesalePriceCents {
+    if (variants != null && variants!.isNotEmpty) {
+      return variants!.first.wholesalePriceCents;
+    }
+    return null;
+  }
 
   Product copyWith({
     int? id,
     String? code,
-    String? barcode,
     String? name,
     String? description,
     int? departmentId,
     int? categoryId,
     int? brandId,
     int? supplierId,
-    String? unitOfMeasure,
+    int? unitId,
+    String? unitName,
     bool? isSoldByWeight,
-    int? costPriceCents,
-    int? salePriceCents,
-    int? wholesalePriceCents,
     bool? isActive,
     List<ProductTax>? productTaxes,
     List<ProductVariant>? variants,
@@ -70,18 +107,15 @@ class Product {
     return Product(
       id: id ?? this.id,
       code: code ?? this.code,
-      barcode: barcode ?? this.barcode,
       name: name ?? this.name,
       description: description ?? this.description,
       departmentId: departmentId ?? this.departmentId,
       categoryId: categoryId ?? this.categoryId,
       brandId: brandId ?? this.brandId,
       supplierId: supplierId ?? this.supplierId,
-      unitOfMeasure: unitOfMeasure ?? this.unitOfMeasure,
+      unitId: unitId ?? this.unitId,
+      unitName: unitName ?? this.unitName,
       isSoldByWeight: isSoldByWeight ?? this.isSoldByWeight,
-      costPriceCents: costPriceCents ?? this.costPriceCents,
-      salePriceCents: salePriceCents ?? this.salePriceCents,
-      wholesalePriceCents: wholesalePriceCents ?? this.wholesalePriceCents,
       isActive: isActive ?? this.isActive,
       productTaxes: productTaxes ?? this.productTaxes,
       variants: variants ?? this.variants,
