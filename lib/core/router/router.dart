@@ -11,6 +11,7 @@ import 'package:posventa/domain/entities/sale.dart';
 import 'package:posventa/presentation/providers/auth_provider.dart';
 
 import 'package:posventa/presentation/widgets/product_form_page.dart';
+import 'package:posventa/presentation/widgets/product/variant_form_page.dart';
 import 'package:posventa/presentation/widgets/brand_form.dart';
 import 'package:posventa/presentation/widgets/category_form.dart';
 import 'package:posventa/presentation/widgets/customer_form.dart';
@@ -219,6 +220,19 @@ final routerProvider = Provider<GoRouter>((ref) {
             pageBuilder: (context, state) {
               final product = state.extra as Product?;
               return NoTransitionPage(child: ProductFormPage(product: product));
+            },
+          ),
+          GoRoute(
+            path: '/product-form/variant',
+            pageBuilder: (context, state) {
+              final extra = state.extra as Map<String, dynamic>?;
+              return NoTransitionPage(
+                child: VariantFormPage(
+                  variant: extra?['variant'],
+                  productId: extra?['productId'],
+                  existingBarcodes: extra?['existingBarcodes'],
+                ),
+              );
             },
           ),
           GoRoute(

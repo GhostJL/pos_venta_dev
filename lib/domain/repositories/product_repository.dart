@@ -17,5 +17,9 @@ abstract class ProductRepository {
   Future<List<TaxRate>> getTaxRatesForProduct(int productId);
 
   Future<bool> isCodeUnique(String code, {int? excludeId});
-  Future<bool> isBarcodeUnique(String barcode, {int? excludeId});
+  Future<bool> isBarcodeUnique(
+    String barcode, {
+    int? excludeId,
+    int? excludeVariantId,
+  });
 }

@@ -371,44 +371,46 @@ class ProductRepositoryImpl implements ProductRepository {
   }
 
   @override
-  Future<bool> isBarcodeUnique(String barcode, {int? excludeId}) async {
+  Future<bool> isBarcodeUnique(
+    String barcode, {
+    int? excludeId,
+    int? excludeVariantId,
+  }) async {
     final db = await databaseHelper.database;
 
-    // Check in product variants
+    // Check if barcode exists in product_variants table
     final variantsResult = await db.query(
       DatabaseHelper.tableProductVariants,
-      where: 'barcode = ? AND is_active = 1',
+      where: 'barcode = ?',
       whereArgs: [barcode],
     );
 
-    if (variantsResult.isNotEmpty) {
-      if (excludeId != null) {
-        // If we are checking for uniqueness but excluding a specific product,
-        // we need to check if the found variant belongs to a DIFFERENT product.
-        // However, barcodes are unique per variant, so if we find ANY variant with this barcode
-        // that is NOT the one we are editing (which is tricky because we don't have variant ID here),
-        // it's a duplicate.
-        // But wait, `excludeId` usually refers to the Product ID.
-        // If we are editing Product A, and Product A has a variant with Barcode X, that's fine.
-        // If Product B has a variant with Barcode X, that's a conflict.
-
-        final variant = variantsResult.first;
-        if (variant['product_id'] != excludeId) {
-          return false;
-        }
-        // If it belongs to the same product, it might be the same variant or another variant of the same product.
-        // But typically barcodes should be unique even within the same product's variants.
-        // For now, let's assume strict uniqueness across the whole table.
-        // If we are updating a product, we might be re-saving the same variant with the same barcode.
-        // This validation logic is a bit weak without variant ID.
-        // Ideally, we should check `isBarcodeUnique` at the Variant level.
-
-        // For now, let's return true if it belongs to the same product (assuming we are just updating it)
-        return true;
-      }
-      return false;
+    if (variantsResult.isEmpty) {
+      return true; // Barcode doesn't exist, it's unique
     }
 
-    return true;
+    // If we're excluding a specific variant (editing), check if the found barcode belongs to it
+    if (excludeVariantId != null) {
+      // Filter out the variant we're editing
+      final otherVariants = variantsResult
+          .where((v) => v['id'] != excludeVariantId)
+          .toList();
+
+      return otherVariants
+          .isEmpty; // Unique if no other variants have this barcode
+    }
+
+    // If we're excluding a product (for backward compatibility)
+    if (excludeId != null) {
+      // Check if all found variants belong to the product we're editing
+      final otherProductVariants = variantsResult
+          .where((v) => v['product_id'] != excludeId)
+          .toList();
+
+      return otherProductVariants.isEmpty;
+    }
+
+    // Barcode exists and we're not excluding anything
+    return false;
   }
 }
