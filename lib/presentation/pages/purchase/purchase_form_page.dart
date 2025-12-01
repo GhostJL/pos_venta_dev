@@ -190,9 +190,12 @@ class _PurchaseFormPageState extends ConsumerState<PurchaseFormPage> {
     try {
       await ref.read(purchaseProvider.notifier).addPurchase(purchase);
       if (mounted) {
-        context.pop();
+        context.push('/purchases');
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Compra registrada exitosamente')),
+          const SnackBar(
+            duration: Duration(milliseconds: 500),
+            content: Text('Compra registrada exitosamente'),
+          ),
         );
       }
     } catch (e) {
