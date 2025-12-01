@@ -321,6 +321,33 @@ class SaleReturnRepositoryImpl implements SaleReturnRepository {
     int returnId,
     String reason,
   ) async {
+    // Get the original sale item to check for variant_id
+    final saleItemResults = await txn.query(
+      DatabaseHelper.tableSaleItems,
+      columns: ['variant_id'],
+      where: 'id = ?',
+      whereArgs: [item.saleItemId],
+    );
+
+    // Calculate quantity to restore (handle variants)
+    double quantityToRestore = item.quantity;
+    if (saleItemResults.isNotEmpty) {
+      final variantId = saleItemResults.first['variant_id'] as int?;
+      if (variantId != null) {
+        final variantResult = await txn.query(
+          DatabaseHelper.tableProductVariants,
+          columns: ['quantity'],
+          where: 'id = ?',
+          whereArgs: [variantId],
+        );
+        if (variantResult.isNotEmpty) {
+          final variantQuantity = (variantResult.first['quantity'] as num)
+              .toDouble();
+          quantityToRestore = item.quantity * variantQuantity;
+        }
+      }
+    }
+
     // Get current inventory
     final inventoryResults = await txn.query(
       DatabaseHelper.tableInventory,
@@ -333,14 +360,14 @@ class SaleReturnRepositoryImpl implements SaleReturnRepository {
       quantityBefore = inventoryResults.first['quantity_on_hand'] as double;
     }
 
-    final quantityAfter = quantityBefore + item.quantity;
+    final quantityAfter = quantityBefore + quantityToRestore;
 
     // Insert inventory movement
     await txn.insert(DatabaseHelper.tableInventoryMovements, {
       'product_id': item.productId,
       'warehouse_id': warehouseId,
       'movement_type': MovementType.returnMovement.value,
-      'quantity': item.quantity,
+      'quantity': quantityToRestore,
       'quantity_before': quantityBefore,
       'quantity_after': quantityAfter,
       'reference_type': 'sale_return',
@@ -356,7 +383,7 @@ class SaleReturnRepositoryImpl implements SaleReturnRepository {
       await txn.insert(DatabaseHelper.tableInventory, {
         'product_id': item.productId,
         'warehouse_id': warehouseId,
-        'quantity_on_hand': item.quantity,
+        'quantity_on_hand': quantityToRestore,
         'quantity_reserved': 0,
         'updated_at': DateTime.now().toIso8601String(),
       });
