@@ -41,7 +41,7 @@ final class ReturnProcessingProvider
   }
 }
 
-String _$returnProcessingHash() => r'a29448d24cf4515fc0d683ba2cdbab90e6c3f48c';
+String _$returnProcessingHash() => r'1643c2850869e8d6145443e2a6c165d316a91cf6';
 
 abstract class _$ReturnProcessing extends $Notifier<ReturnProcessingState> {
   ReturnProcessingState build();
