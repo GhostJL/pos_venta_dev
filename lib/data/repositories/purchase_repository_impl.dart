@@ -266,15 +266,26 @@ class PurchaseRepositoryImpl implements PurchaseRepository {
           'movement_date': DateTime.now().toIso8601String(),
         });
 
-        // 3d. Update product cost (Last Cost / LIFO policy)
-        await txn.update(
-          DatabaseHelper.tableProducts,
-          {
-            'cost_price_cents': unitCostCents,
-            'updated_at': DateTime.now().toIso8601String(),
-          },
-          where: 'id = ?',
-          whereArgs: [productId],
+        // 3d. Update product variant cost (Last Cost / LIFO policy)
+        // Update the main variant's cost (first variant by ID)
+        await txn.rawUpdate(
+          '''
+          UPDATE ${DatabaseHelper.tableProductVariants}
+          SET cost_price_cents = ?,
+              updated_at = ?
+          WHERE product_id = ?
+            AND id = (
+              SELECT MIN(id) 
+              FROM ${DatabaseHelper.tableProductVariants} 
+              WHERE product_id = ?
+            )
+          ''',
+          [
+            unitCostCents,
+            DateTime.now().toIso8601String(),
+            productId,
+            productId,
+          ],
         );
       }
 
