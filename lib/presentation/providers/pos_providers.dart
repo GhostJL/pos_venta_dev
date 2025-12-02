@@ -124,6 +124,7 @@ class POSNotifier extends _$POSNotifier {
         costPriceCents: existingItem.costPriceCents,
         productName: existingItem.productName,
         taxes: taxes,
+        unitsPerPack: existingItem.unitsPerPack,
       );
 
       newCart = List<SaleItem>.from(state.cart);
@@ -178,6 +179,7 @@ class POSNotifier extends _$POSNotifier {
         costPriceCents: costPriceCents,
         productName: productName,
         taxes: taxes,
+        unitsPerPack: variant?.quantity ?? 1.0,
       );
 
       newCart = [...state.cart, newItem];
@@ -211,21 +213,11 @@ class POSNotifier extends _$POSNotifier {
       );
 
       // Calculate total quantity needed (existing in cart + new)
-      final existingItem = state.cart.firstWhere(
-        (item) => item.productId == productId,
-        orElse: () => SaleItem(
-          productId: productId,
-          quantity: 0,
-          unitOfMeasure: '',
-          unitPriceCents: 0,
-          subtotalCents: 0,
-          taxCents: 0,
-          totalCents: 0,
-          costPriceCents: 0,
-        ),
-      );
+      final currentStockInCart = state.cart
+          .where((item) => item.productId == productId)
+          .fold(0.0, (sum, item) => sum + (item.quantity * item.unitsPerPack));
 
-      final totalNeeded = existingItem.quantity + additionalQuantity;
+      final totalNeeded = currentStockInCart + additionalQuantity;
 
       // Check if enough stock
       if (inventory.quantityOnHand < totalNeeded) {
@@ -257,7 +249,8 @@ class POSNotifier extends _$POSNotifier {
 
       // Validate stock if increasing quantity
       if (quantity > existingItem.quantity) {
-        final additionalNeeded = quantity - existingItem.quantity;
+        final additionalNeeded =
+            (quantity - existingItem.quantity) * existingItem.unitsPerPack;
         final stockError = await _validateStock(productId, additionalNeeded);
         if (stockError != null) {
           return stockError;
@@ -296,6 +289,7 @@ class POSNotifier extends _$POSNotifier {
         costPriceCents: existingItem.costPriceCents,
         productName: existingItem.productName,
         taxes: taxes,
+        unitsPerPack: existingItem.unitsPerPack,
       );
 
       final newCart = List<SaleItem>.from(state.cart);

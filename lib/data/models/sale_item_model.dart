@@ -18,6 +18,7 @@ class SaleItemModel extends SaleItem {
     super.lotNumber,
     super.productName,
     super.taxes,
+    super.unitsPerPack,
   });
 
   factory SaleItemModel.fromJson(Map<String, dynamic> json) {
@@ -36,6 +37,7 @@ class SaleItemModel extends SaleItem {
       costPriceCents: json['cost_price_cents'],
       lotNumber: json['lot_number'],
       productName: json['product_name'], // Joined field
+      unitsPerPack: (json['units_per_pack'] as num?)?.toDouble() ?? 1.0,
     );
   }
 
@@ -74,6 +76,7 @@ class SaleItemModel extends SaleItem {
       lotNumber: item.lotNumber,
       productName: item.productName,
       taxes: item.taxes,
+      unitsPerPack: item.unitsPerPack,
     );
   }
 
@@ -93,6 +96,7 @@ class SaleItemModel extends SaleItem {
     String? lotNumber,
     String? productName,
     List<SaleItemTax>? taxes,
+    double? unitsPerPack,
   }) {
     return SaleItemModel(
       id: id ?? this.id,
@@ -110,6 +114,7 @@ class SaleItemModel extends SaleItem {
       lotNumber: lotNumber ?? this.lotNumber,
       productName: productName ?? this.productName,
       taxes: taxes ?? this.taxes,
+      unitsPerPack: unitsPerPack ?? this.unitsPerPack,
     );
   }
 }

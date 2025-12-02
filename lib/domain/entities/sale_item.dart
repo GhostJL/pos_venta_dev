@@ -32,9 +32,11 @@ class SaleItem {
     this.lotNumber,
     this.productName,
     this.taxes = const [],
+    this.unitsPerPack = 1.0,
   });
 
   final List<SaleItemTax> taxes;
+  final double unitsPerPack;
 
   double get unitPrice => unitPriceCents / 100.0;
   double get subtotal => subtotalCents / 100.0;
