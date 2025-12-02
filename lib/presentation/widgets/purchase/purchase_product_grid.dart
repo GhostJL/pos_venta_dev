@@ -202,7 +202,7 @@ class _PurchaseProductGridState extends ConsumerState<PurchaseProductGrid> {
               }
 
               // Determinar número de columnas según el tamaño
-              final crossAxisCount = isMobile ? 2 : 4;
+              final crossAxisCount = isMobile ? 2 : 3;
 
               return GridView.builder(
                 padding: const EdgeInsets.symmetric(vertical: 8),

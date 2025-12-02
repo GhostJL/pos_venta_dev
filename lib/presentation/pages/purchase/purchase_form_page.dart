@@ -69,11 +69,11 @@ class _PurchaseFormPageState extends ConsumerState<PurchaseFormPage> {
     // Determine quantity to add (default 1, or variant multiplier)
     final double quantityToAdd = variant?.quantity ?? 1.0;
 
-    // Determine UNIT cost (cost per single unit)
-    // If variant is selected, its costPriceCents is the cost of the PACK.
-    // So Unit Cost = Pack Cost / Pack Quantity.
+    // For variants, we need to calculate the unit cost from the pack cost
+    // but we'll use a special approach to avoid rounding errors
     final double unitCost;
     if (variant != null) {
+      // Calculate unit cost from pack cost, but we'll handle precision in createPurchaseItem
       unitCost = (variant.costPriceCents / 100) / quantityToAdd;
     } else {
       unitCost = product.costPriceCents / 100;
@@ -139,12 +139,21 @@ class _PurchaseFormPageState extends ConsumerState<PurchaseFormPage> {
         product = products.where((p) => p.id == item.productId).firstOrNull;
 
         if (product != null) {
+          // Find the variant if this item has a variantId
+          ProductVariant? variant;
+          if (item.variantId != null) {
+            variant = product!.variants
+                ?.where((v) => v.id == item.variantId)
+                .firstOrNull;
+          }
+
           final result = await showDialog<PurchaseItem>(
             context: context,
             builder: (context) => PurchaseItemDialog(
               warehouseId: _warehouse.id!,
               existingItem: item,
               product: product!,
+              variant: variant,
             ),
           );
 
@@ -291,11 +300,7 @@ class _PurchaseFormPageState extends ConsumerState<PurchaseFormPage> {
                         ),
                       ),
                     ),
-                    PurchaseTotalsFooter(
-                      subtotal: _subtotal,
-                      tax: _tax,
-                      total: _total,
-                    ),
+                    PurchaseTotalsFooter(subtotal: _subtotal, total: _total),
                   ],
                 ),
               ],
@@ -393,7 +398,6 @@ class _PurchaseFormPageState extends ConsumerState<PurchaseFormPage> {
                         // Totals Footer
                         PurchaseTotalsFooter(
                           subtotal: _subtotal,
-                          tax: _tax,
                           total: _total,
                         ),
                       ],

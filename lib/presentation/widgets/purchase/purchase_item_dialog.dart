@@ -3,18 +3,21 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:posventa/domain/entities/product.dart';
 import 'package:posventa/domain/entities/purchase_item.dart';
+import 'package:posventa/domain/entities/product_variant.dart';
 import 'package:posventa/core/utils/purchase_calculations.dart';
 import 'package:posventa/core/utils/purchase_validators.dart';
 
 /// Unified dialog for adding or editing purchase items
 class PurchaseItemDialog extends ConsumerStatefulWidget {
   final Product product;
+  final ProductVariant? variant;
   final int warehouseId;
   final PurchaseItem? existingItem;
 
   const PurchaseItemDialog({
     super.key,
     required this.product,
+    this.variant,
     required this.warehouseId,
     this.existingItem,
   });
@@ -36,16 +39,33 @@ class _PurchaseItemDialogState extends ConsumerState<PurchaseItemDialog> {
 
     // Initialize controllers based on whether we're editing or adding
     if (_isEditing) {
+      // If variant is present, convert base units to pack units for display
+      final displayQuantity = widget.variant != null
+          ? widget.existingItem!.quantity / widget.variant!.quantity
+          : widget.existingItem!.quantity;
+
+      // For variants, calculate pack cost from the precise subtotal
+      // to avoid rounding errors from unitCost
+      final displayCost = widget.variant != null
+          ? widget.existingItem!.subtotal / displayQuantity
+          : widget.existingItem!.unitCost;
+
       _quantityController = TextEditingController(
-        text: widget.existingItem!.quantity.toString(),
+        text: displayQuantity.toString(),
       );
       _costController = TextEditingController(
-        text: widget.existingItem!.unitCost.toStringAsFixed(2),
+        text: displayCost.toStringAsFixed(2),
       );
     } else {
       _quantityController = TextEditingController(text: '1');
+
+      // If variant is present, show pack cost. Otherwise show unit cost.
+      final initialCost = widget.variant != null
+          ? (widget.variant!.costPriceCents / 100)
+          : (widget.product.costPriceCents / 100);
+
       _costController = TextEditingController(
-        text: (widget.product.costPriceCents / 100).toStringAsFixed(2),
+        text: initialCost.toStringAsFixed(2),
       );
     }
   }
@@ -60,13 +80,23 @@ class _PurchaseItemDialogState extends ConsumerState<PurchaseItemDialog> {
   void _handleSave() {
     if (!_formKey.currentState!.validate()) return;
 
-    final quantity = double.parse(_quantityController.text);
-    final cost = double.parse(_costController.text);
+    final inputQuantity = double.parse(_quantityController.text);
+    final inputCost = double.parse(_costController.text);
+
+    // Convert back to base units if variant is present
+    final finalQuantity = widget.variant != null
+        ? inputQuantity * widget.variant!.quantity
+        : inputQuantity;
+
+    final finalUnitCost = widget.variant != null
+        ? inputCost / widget.variant!.quantity
+        : inputCost;
 
     final item = PurchaseCalculations.createPurchaseItem(
       product: widget.product,
-      quantity: quantity,
-      unitCost: cost,
+      variant: widget.variant,
+      quantity: finalQuantity,
+      unitCost: finalUnitCost,
       existingItem: widget.existingItem,
     );
 
@@ -78,8 +108,8 @@ class _PurchaseItemDialogState extends ConsumerState<PurchaseItemDialog> {
     return AlertDialog(
       title: Text(
         _isEditing
-            ? 'Editar ${widget.product.name}'
-            : 'Agregar ${widget.product.name}',
+            ? 'Editar ${widget.variant != null ? "${widget.product.name} (${widget.variant!.description})" : widget.product.name}'
+            : 'Agregar ${widget.variant != null ? "${widget.product.name} (${widget.variant!.description})" : widget.product.name}',
       ),
       content: Form(
         key: _formKey,
@@ -106,7 +136,7 @@ class _PurchaseItemDialogState extends ConsumerState<PurchaseItemDialog> {
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
-                          'Costo anterior: \$${(widget.product.costPriceCents / 100).toStringAsFixed(2)}',
+                          'Costo anterior: \$${(widget.variant != null ? (widget.variant!.costPriceCents / 100) : (widget.product.costPriceCents / 100)).toStringAsFixed(2)}',
                           style: TextStyle(
                             color: Colors.blue.shade900,
                             fontWeight: FontWeight.w500,

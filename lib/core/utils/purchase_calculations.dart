@@ -28,8 +28,28 @@ class PurchaseCalculations {
     PurchaseItem? existingItem,
     ProductVariant? variant,
   }) {
-    final unitCostCents = (unitCost * 100).round();
-    final subtotalCents = calculateSubtotalCents(unitCostCents, quantity);
+    int unitCostCents;
+    int subtotalCents;
+
+    // Special handling for variants to avoid rounding errors
+    if (variant != null) {
+      // For variants, we receive the unitCost (cost per individual unit)
+      // Calculate the pack cost from it
+      final packCostCents = (unitCost * 100 * variant.quantity).round();
+
+      // Calculate how many packs we have
+      final packQuantity = quantity / variant.quantity;
+
+      // Calculate subtotal directly from pack cost to maintain precision
+      subtotalCents = (packCostCents * packQuantity).round();
+
+      // Calculate unit cost from subtotal to maintain precision
+      unitCostCents = (subtotalCents / quantity).round();
+    } else {
+      // For regular products, use standard calculation
+      unitCostCents = (unitCost * 100).round();
+      subtotalCents = calculateSubtotalCents(unitCostCents, quantity);
+    }
 
     // For now, purchases don't have tax (or it's 0)
     // This can be modified if tax logic is needed
@@ -44,6 +64,7 @@ class PurchaseCalculations {
       id: existingItem?.id,
       purchaseId: existingItem?.purchaseId,
       productId: product.id!,
+      variantId: variant?.id ?? existingItem?.variantId,
       productName: productName,
       quantity: quantity,
       unitOfMeasure: product.unitOfMeasure,
