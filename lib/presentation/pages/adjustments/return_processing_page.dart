@@ -2,13 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:posventa/core/theme/theme.dart';
+import 'package:posventa/domain/entities/sale.dart';
 import 'package:posventa/presentation/providers/return_processing_provider.dart';
-import 'package:posventa/presentation/widgets/return_processing/sale_search_widget.dart';
 import 'package:posventa/presentation/widgets/return_processing/return_items_selector.dart';
 import 'package:posventa/presentation/widgets/return_processing/return_summary_card.dart';
 
 class ReturnProcessingPage extends ConsumerStatefulWidget {
-  const ReturnProcessingPage({super.key});
+  final Sale? sale;
+
+  const ReturnProcessingPage({super.key, this.sale});
 
   @override
   ConsumerState<ReturnProcessingPage> createState() =>
@@ -16,6 +18,16 @@ class ReturnProcessingPage extends ConsumerStatefulWidget {
 }
 
 class _ReturnProcessingPageState extends ConsumerState<ReturnProcessingPage> {
+  @override
+  void initState() {
+    super.initState();
+    if (widget.sale != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        ref.read(returnProcessingProvider.notifier).selectSale(widget.sale!);
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(returnProcessingProvider);
@@ -86,32 +98,7 @@ class _ReturnProcessingPageState extends ConsumerState<ReturnProcessingPage> {
           },
         ),
       ),
-      body: state.selectedSale == null
-          ? _buildSaleSelectionView(statsAsync)
-          : _buildReturnProcessingView(state),
-    );
-  }
-
-  Widget _buildSaleSelectionView(AsyncValue<Map<String, dynamic>> statsAsync) {
-    return ListView(
-      padding: const EdgeInsets.all(24.0),
-      children: [
-        // Header with stats
-        _buildHeader(statsAsync),
-        const SizedBox(height: 32),
-
-        // Search section
-        const Text(
-          'Buscar Venta',
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-            color: AppTheme.textPrimary,
-          ),
-        ),
-        const SizedBox(height: 16),
-        const SaleSearchWidget(),
-      ],
+      body: _buildReturnProcessingView(state),
     );
   }
 
@@ -120,7 +107,10 @@ class _ReturnProcessingPageState extends ConsumerState<ReturnProcessingPage> {
       padding: const EdgeInsets.all(24.0),
       children: [
         // Sale info card
-        _buildSaleInfoCard(state),
+        if (state.selectedSale == null)
+          const Center(child: CircularProgressIndicator())
+        else
+          _buildSaleInfoCard(state),
         const SizedBox(height: 24),
 
         // Items selector
@@ -142,81 +132,6 @@ class _ReturnProcessingPageState extends ConsumerState<ReturnProcessingPage> {
           const SizedBox(height: 24),
         ],
       ],
-    );
-  }
-
-  Widget _buildHeader(AsyncValue<Map<String, dynamic>> statsAsync) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Colors.orange.shade700, Colors.orange.shade500],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.orange.shade700.withValues(alpha: 0.3),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.2),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: const Icon(
-              Icons.keyboard_return_rounded,
-              color: Colors.white,
-              size: 32,
-            ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Devoluciones de Hoy',
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                statsAsync.when(
-                  data: (stats) => Text(
-                    '${stats['count']} devoluciones • \$${stats['total'].toStringAsFixed(2)}',
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Colors.white.withValues(alpha: 0.9),
-                    ),
-                  ),
-                  loading: () => const SizedBox(
-                    height: 16,
-                    width: 16,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                    ),
-                  ),
-                  error: (_, __) => Text(
-                    'Error al cargar estadísticas',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Colors.white.withValues(alpha: 0.7),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
     );
   }
 

@@ -369,8 +369,10 @@ final routerProvider = Provider<GoRouter>((ref) {
           ),
           GoRoute(
             path: '/adjustments/return-processing',
-            pageBuilder: (context, state) =>
-                const NoTransitionPage(child: ReturnProcessingPage()),
+            pageBuilder: (context, state) {
+              final sale = state.extra as Sale?;
+              return NoTransitionPage(child: ReturnProcessingPage(sale: sale));
+            },
           ),
 
           // Physical Inventory Routes
