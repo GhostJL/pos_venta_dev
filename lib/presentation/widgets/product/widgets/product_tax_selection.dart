@@ -52,7 +52,7 @@ class ProductTaxSelection extends StatelessWidget {
               label: Text('${taxRate.name} (${taxRate.rate}%)'),
               selected: isSelected,
               onSelected: (_) => _toggleTax(taxRate),
-              selectedColor: AppTheme.primary.withOpacity(0.2),
+              selectedColor: AppTheme.primary.withValues(alpha: 0.2),
               checkmarkColor: AppTheme.primary,
             );
           }).toList(),

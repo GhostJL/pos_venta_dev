@@ -33,7 +33,7 @@ class ProductPricingSection extends ConsumerWidget {
       children: [
         unitsAsync.when(
           data: (units) => DropdownButtonFormField<int>(
-            value: selectedUnitId,
+            initialValue: selectedUnitId,
             decoration: const InputDecoration(
               labelText: 'Unidad de Medida',
               prefixIcon: Icon(Icons.scale_rounded),
@@ -54,7 +54,7 @@ class ProductPricingSection extends ConsumerWidget {
         SwitchListTile(
           title: const Text('Venta por Peso'),
           value: isSoldByWeight,
-          activeColor: AppTheme.primary,
+          activeThumbColor: AppTheme.primary,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
             side: const BorderSide(color: AppTheme.borders),

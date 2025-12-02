@@ -299,7 +299,7 @@ class _VariantFormPageState extends ConsumerState<VariantFormPage> {
                 'Si se desactiva, solo servirá para abastecimiento',
               ),
               value: _isForSale,
-              activeColor: AppTheme.primary,
+              activeThumbColor: AppTheme.primary,
               onChanged: (value) => setState(() => _isForSale = value),
             ),
             const SizedBox(height: 32),

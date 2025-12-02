@@ -40,7 +40,7 @@ class ProductClassificationSection extends ConsumerWidget {
       children: [
         departmentsAsync.when(
           data: (departments) => DropdownButtonFormField<int>(
-            value: selectedDepartment,
+            initialValue: selectedDepartment,
             decoration: const InputDecoration(
               labelText: 'Departamento',
               prefixIcon: Icon(Icons.category),
@@ -60,7 +60,7 @@ class ProductClassificationSection extends ConsumerWidget {
         const SizedBox(height: 16),
         categoriesAsync.when(
           data: (categories) => DropdownButtonFormField<int>(
-            value: selectedCategory,
+            initialValue: selectedCategory,
             decoration: const InputDecoration(
               labelText: 'Categoría',
               prefixIcon: Icon(Icons.label),
@@ -80,7 +80,7 @@ class ProductClassificationSection extends ConsumerWidget {
         const SizedBox(height: 16),
         brandsAsync.when(
           data: (brands) => DropdownButtonFormField<int>(
-            value: selectedBrand,
+            initialValue: selectedBrand,
             decoration: const InputDecoration(
               labelText: 'Marca (Opcional)',
               prefixIcon: Icon(Icons.branding_watermark),
@@ -101,7 +101,7 @@ class ProductClassificationSection extends ConsumerWidget {
         const SizedBox(height: 16),
         suppliersAsync.when(
           data: (suppliers) => DropdownButtonFormField<int>(
-            value: selectedSupplier,
+            initialValue: selectedSupplier,
             decoration: const InputDecoration(
               labelText: 'Proveedor (Opcional)',
               prefixIcon: Icon(Icons.local_shipping),
