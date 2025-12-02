@@ -1,0 +1,31 @@
+class DatabaseConstants {
+  static const tableUsers = 'users';
+  static const tableAppMeta = 'app_meta';
+  static const tableTransactions = 'transactions';
+  static const tableDepartments = 'departments';
+  static const tableCategories = 'categories';
+  static const tableBrands = 'brands';
+  static const tableSuppliers = 'suppliers';
+  static const tableWarehouses = 'warehouses';
+  static const tableTaxRates = 'tax_rates';
+  static const tableProducts = 'products';
+  static const tableProductTaxes = 'product_taxes';
+  static const tableInventory = 'inventory';
+  static const tableInventoryMovements = 'inventory_movements';
+  static const tableCustomers = 'customers';
+  static const tableSales = 'sales';
+  static const tableSaleItems = 'sale_items';
+  static const tableSaleItemTaxes = 'sale_item_taxes';
+  static const tableSalePayments = 'sale_payments';
+  static const tablePurchases = 'purchases';
+  static const tablePurchaseItems = 'purchase_items';
+  static const tableCashSessions = 'cash_sessions';
+  static const tableCashMovements = 'cash_movements';
+  static const tableAuditLogs = 'audit_logs';
+  static const tablePermissions = 'permissions';
+  static const tableUserPermissions = 'user_permissions';
+  static const tableSaleReturns = 'sale_returns';
+  static const tableSaleReturnItems = 'sale_return_items';
+  static const tableProductVariants = 'product_variants';
+  static const tableUnitsOfMeasure = 'units_of_measure';
+}
