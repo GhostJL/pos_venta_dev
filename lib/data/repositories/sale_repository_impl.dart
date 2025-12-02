@@ -269,15 +269,58 @@ class SaleRepositoryImpl implements SaleRepository {
           ],
         );
 
-        // Update InventoryLots if lotId is present
-        if (item.lotId != null) {
+        // FIFO: Get available lots ordered by received_at (oldest first)
+        final lotsResult = await txn.query(
+          DatabaseHelper.tableInventoryLots,
+          where: 'product_id = ? AND warehouse_id = ? AND quantity > 0',
+          whereArgs: [item.productId, sale.warehouseId],
+          orderBy: 'received_at ASC',
+        );
+
+        double remainingToDeduct = quantityToDeduct;
+        int? primaryLotId; // For the sale_item record
+
+        // Deduct from lots using FIFO
+        for (final lotData in lotsResult) {
+          if (remainingToDeduct <= 0) break;
+
+          final lotId = lotData['id'] as int;
+          final lotQuantity = (lotData['quantity'] as num).toDouble();
+          final deductFromLot = remainingToDeduct < lotQuantity
+              ? remainingToDeduct
+              : lotQuantity;
+
+          // Update lot quantity
           await txn.rawUpdate(
             '''
             UPDATE ${DatabaseHelper.tableInventoryLots}
             SET quantity = quantity - ?
             WHERE id = ?
           ''',
-            [quantityToDeduct, item.lotId],
+            [deductFromLot, lotId],
+          );
+
+          // Store the first lot ID for the sale_item
+          primaryLotId ??= lotId;
+
+          remainingToDeduct -= deductFromLot;
+        }
+
+        // Check if we have enough stock in lots
+        if (remainingToDeduct > 0) {
+          throw Exception(
+            'Insufficient stock in lots for product ${item.productId}. '
+            'Needed: $quantityToDeduct, Available: ${quantityToDeduct - remainingToDeduct}',
+          );
+        }
+
+        // Update the sale_item with the primary lot_id
+        if (primaryLotId != null) {
+          await txn.update(
+            DatabaseHelper.tableSaleItems,
+            {'lot_id': primaryLotId},
+            where: 'id = ?',
+            whereArgs: [saleItemId],
           );
         }
 
@@ -291,7 +334,7 @@ class SaleRepositoryImpl implements SaleRepository {
           'quantity_after': quantityBefore - quantityToDeduct,
           'reference_type': 'sale',
           'reference_id': saleId,
-          'lot_id': item.lotId,
+          'lot_id': primaryLotId,
           'reason': 'Sale #$saleId',
           'performed_by': sale.cashierId,
           'movement_date': DateTime.now().toIso8601String(),

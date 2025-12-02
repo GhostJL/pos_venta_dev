@@ -172,11 +172,12 @@ class PurchaseRepositoryImpl implements PurchaseRepository {
       for (final item in itemsResult) {
         final itemId = item['id'] as int;
         final productId = item['product_id'] as int;
+        final variantId = item['variant_id'] as int?;
         final quantityOrdered = item['quantity'] as double;
         final quantityReceivedSoFar =
             (item['quantity_received'] as num?)?.toDouble() ?? 0.0;
         final unitCostCents = item['unit_cost_cents'] as int;
-        final lotId = item['lot_id'] as int?;
+        final expirationDate = item['expiration_date'] as String?;
 
         // Skip if no quantity to receive for this item
         if (!receivedQuantities.containsKey(itemId) ||
@@ -196,10 +197,29 @@ class PurchaseRepositoryImpl implements PurchaseRepository {
           );
         }
 
-        // 3a. Update purchase item quantity_received
+        // 3a. Create inventory lot
+        final lotNumber = _generateLotNumber();
+        final totalCostCents = (unitCostCents * quantityToReceive).toInt();
+
+        final lotId = await txn.insert(DatabaseHelper.tableInventoryLots, {
+          'product_id': productId,
+          'variant_id': variantId,
+          'warehouse_id': warehouseId,
+          'lot_number': lotNumber,
+          'quantity': quantityToReceive,
+          'unit_cost_cents': unitCostCents,
+          'total_cost_cents': totalCostCents,
+          'expiration_date': expirationDate,
+          'received_at': DateTime.now().toIso8601String(),
+        });
+
+        // 3b. Update purchase item with lot_id and quantity_received
         await txn.update(
           DatabaseHelper.tablePurchaseItems,
-          {'quantity_received': quantityReceivedSoFar + quantityToReceive},
+          {
+            'quantity_received': quantityReceivedSoFar + quantityToReceive,
+            'lot_id': lotId,
+          },
           where: 'id = ?',
           whereArgs: [itemId],
         );
@@ -207,18 +227,6 @@ class PurchaseRepositoryImpl implements PurchaseRepository {
         // Check if this item is now fully received
         if (quantityReceivedSoFar + quantityToReceive < quantityOrdered) {
           allItemsCompleted = false;
-        }
-
-        // 3b. Update InventoryLots if lotId is present
-        if (lotId != null) {
-          await txn.rawUpdate(
-            '''
-            UPDATE ${DatabaseHelper.tableInventoryLots}
-            SET quantity = quantity + ?
-            WHERE id = ?
-          ''',
-            [quantityToReceive, lotId],
-          );
         }
 
         // 3c. Get current inventory
@@ -272,7 +280,7 @@ class PurchaseRepositoryImpl implements PurchaseRepository {
           'reference_type': 'purchase',
           'reference_id': purchaseId,
           'lot_id': lotId,
-          'reason': 'Purchase received (Partial/Complete)',
+          'reason': 'Purchase received - Lot: $lotNumber',
           'performed_by': receivedBy,
           'movement_date': DateTime.now().toIso8601String(),
         });
@@ -316,6 +324,13 @@ class PurchaseRepositoryImpl implements PurchaseRepository {
         whereArgs: [purchaseId],
       );
     });
+  }
+
+  String _generateLotNumber() {
+    final now = DateTime.now();
+    final dateStr = now.toIso8601String().substring(0, 10).replaceAll('-', '');
+    final timeStr = now.toIso8601String().substring(11, 19).replaceAll(':', '');
+    return 'LOT-$dateStr-$timeStr';
   }
 
   @override
