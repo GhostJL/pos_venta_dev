@@ -32,6 +32,9 @@ class DatabaseSchema {
     await _createSaleReturnsTable(db);
     await _createSaleReturnItemsTable(db);
     await _createProductVariantsTable(db);
+    await _createSaleReturnItemsTable(db);
+    await _createProductVariantsTable(db);
+    await _createInventoryLotsTable(db);
   }
 
   static Future<void> _createUsersTable(Database db) async {
@@ -302,13 +305,44 @@ class DatabaseSchema {
         quantity_reserved REAL NOT NULL DEFAULT 0,
         min_stock INTEGER,
         max_stock INTEGER,
-        lot_number TEXT,
-        expiration_date TEXT,
         updated_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
-        UNIQUE (product_id, warehouse_id, lot_number),
+        UNIQUE (product_id, warehouse_id),
         FOREIGN KEY (product_id) REFERENCES ${DatabaseConstants.tableProducts}(id) ON DELETE CASCADE,
         FOREIGN KEY (warehouse_id) REFERENCES ${DatabaseConstants.tableWarehouses}(id) ON DELETE CASCADE
       )
+    ''');
+  }
+
+  static Future<void> _createInventoryLotsTable(Database db) async {
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS ${DatabaseConstants.tableInventoryLots} (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        product_id INTEGER NOT NULL,
+        variant_id INTEGER,
+        warehouse_id INTEGER NOT NULL,
+        lot_number TEXT NOT NULL,
+        quantity REAL NOT NULL DEFAULT 0,
+        unit_cost_cents INTEGER NOT NULL,
+        total_cost_cents INTEGER NOT NULL,
+        expiration_date TEXT,
+        received_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
+        FOREIGN KEY (product_id) REFERENCES ${DatabaseConstants.tableProducts}(id) ON DELETE CASCADE,
+        FOREIGN KEY (variant_id) REFERENCES ${DatabaseConstants.tableProductVariants}(id) ON DELETE SET NULL,
+        FOREIGN KEY (warehouse_id) REFERENCES ${DatabaseConstants.tableWarehouses}(id) ON DELETE CASCADE
+      )
+    ''');
+
+    await db.execute('''
+      CREATE INDEX IF NOT EXISTS idx_inventory_lots_product 
+      ON ${DatabaseConstants.tableInventoryLots}(product_id)
+    ''');
+    await db.execute('''
+      CREATE INDEX IF NOT EXISTS idx_inventory_lots_warehouse 
+      ON ${DatabaseConstants.tableInventoryLots}(warehouse_id)
+    ''');
+    await db.execute('''
+      CREATE INDEX IF NOT EXISTS idx_inventory_lots_number 
+      ON ${DatabaseConstants.tableInventoryLots}(lot_number)
     ''');
   }
 
@@ -324,12 +358,13 @@ class DatabaseSchema {
         quantity_after REAL NOT NULL,
         reference_type TEXT,
         reference_id INTEGER,
-        lot_number TEXT,
+        lot_id INTEGER,
         reason TEXT,
         performed_by INTEGER NOT NULL,
         movement_date TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
         FOREIGN KEY (product_id) REFERENCES ${DatabaseConstants.tableProducts}(id) ON DELETE RESTRICT,
         FOREIGN KEY (warehouse_id) REFERENCES ${DatabaseConstants.tableWarehouses}(id) ON DELETE RESTRICT,
+        FOREIGN KEY (lot_id) REFERENCES ${DatabaseConstants.tableInventoryLots}(id) ON DELETE SET NULL,
         FOREIGN KEY (performed_by) REFERENCES ${DatabaseConstants.tableUsers}(id) ON DELETE RESTRICT
       )
     ''');
@@ -449,11 +484,12 @@ class DatabaseSchema {
         tax_cents INTEGER NOT NULL DEFAULT 0,
         total_cents INTEGER NOT NULL,
         cost_price_cents INTEGER NOT NULL,
-        lot_number TEXT,
+        lot_id INTEGER,
         created_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
         FOREIGN KEY (sale_id) REFERENCES ${DatabaseConstants.tableSales}(id) ON DELETE CASCADE,
         FOREIGN KEY (product_id) REFERENCES ${DatabaseConstants.tableProducts}(id) ON DELETE RESTRICT,
-        FOREIGN KEY (variant_id) REFERENCES ${DatabaseConstants.tableProductVariants}(id) ON DELETE SET NULL
+        FOREIGN KEY (variant_id) REFERENCES ${DatabaseConstants.tableProductVariants}(id) ON DELETE SET NULL,
+        FOREIGN KEY (lot_id) REFERENCES ${DatabaseConstants.tableInventoryLots}(id) ON DELETE SET NULL
       )
     ''');
     await db.execute(
@@ -557,12 +593,13 @@ class DatabaseSchema {
         subtotal_cents INTEGER NOT NULL,
         tax_cents INTEGER NOT NULL DEFAULT 0,
         total_cents INTEGER NOT NULL,
-        lot_number TEXT,
+        lot_id INTEGER,
         expiration_date TEXT,
         created_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
         FOREIGN KEY (purchase_id) REFERENCES ${DatabaseConstants.tablePurchases}(id) ON DELETE CASCADE,
         FOREIGN KEY (product_id) REFERENCES ${DatabaseConstants.tableProducts}(id) ON DELETE RESTRICT,
-        FOREIGN KEY (variant_id) REFERENCES ${DatabaseConstants.tableProductVariants}(id) ON DELETE SET NULL
+        FOREIGN KEY (variant_id) REFERENCES ${DatabaseConstants.tableProductVariants}(id) ON DELETE SET NULL,
+        FOREIGN KEY (lot_id) REFERENCES ${DatabaseConstants.tableInventoryLots}(id) ON DELETE SET NULL
       )
     ''');
     await db.execute(

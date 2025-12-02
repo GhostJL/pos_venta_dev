@@ -13,7 +13,7 @@ class SaleItem {
   final int taxCents;
   final int totalCents;
   final int costPriceCents;
-  final String? lotNumber;
+  final int? lotId;
   final String? productName; // For display convenience
 
   const SaleItem({
@@ -29,7 +29,7 @@ class SaleItem {
     this.taxCents = 0,
     required this.totalCents,
     required this.costPriceCents,
-    this.lotNumber,
+    this.lotId,
     this.productName,
     this.taxes = const [],
     this.unitsPerPack = 1.0,

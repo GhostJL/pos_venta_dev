@@ -9,7 +9,7 @@ class PurchaseItem {
   final int subtotalCents;
   final int taxCents;
   final int totalCents;
-  final String? lotNumber;
+  final int? lotId;
   final DateTime? expirationDate;
   final double quantityReceived;
   final int? variantId;
@@ -28,7 +28,7 @@ class PurchaseItem {
     required this.subtotalCents,
     this.taxCents = 0,
     required this.totalCents,
-    this.lotNumber,
+    this.lotId,
     this.expirationDate,
     required this.createdAt,
   });

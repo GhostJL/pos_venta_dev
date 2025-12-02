@@ -15,7 +15,7 @@ class SaleItemModel extends SaleItem {
     super.taxCents,
     required super.totalCents,
     required super.costPriceCents,
-    super.lotNumber,
+    super.lotId,
     super.productName,
     super.taxes,
     super.unitsPerPack,
@@ -35,7 +35,7 @@ class SaleItemModel extends SaleItem {
       taxCents: json['tax_cents'] ?? 0,
       totalCents: json['total_cents'],
       costPriceCents: json['cost_price_cents'],
-      lotNumber: json['lot_number'],
+      lotId: json['lot_id'],
       productName: json['product_name'], // Joined field
       unitsPerPack: (json['units_per_pack'] as num?)?.toDouble() ?? 1.0,
     );
@@ -55,7 +55,7 @@ class SaleItemModel extends SaleItem {
       'tax_cents': taxCents,
       'total_cents': totalCents,
       'cost_price_cents': costPriceCents,
-      'lot_number': lotNumber,
+      'lot_id': lotId,
     };
   }
 
@@ -73,7 +73,7 @@ class SaleItemModel extends SaleItem {
       taxCents: item.taxCents,
       totalCents: item.totalCents,
       costPriceCents: item.costPriceCents,
-      lotNumber: item.lotNumber,
+      lotId: item.lotId,
       productName: item.productName,
       taxes: item.taxes,
       unitsPerPack: item.unitsPerPack,
@@ -93,7 +93,7 @@ class SaleItemModel extends SaleItem {
     int? taxCents,
     int? totalCents,
     int? costPriceCents,
-    String? lotNumber,
+    int? lotId,
     String? productName,
     List<SaleItemTax>? taxes,
     double? unitsPerPack,
@@ -111,7 +111,7 @@ class SaleItemModel extends SaleItem {
       taxCents: taxCents ?? this.taxCents,
       totalCents: totalCents ?? this.totalCents,
       costPriceCents: costPriceCents ?? this.costPriceCents,
-      lotNumber: lotNumber ?? this.lotNumber,
+      lotId: lotId ?? this.lotId,
       productName: productName ?? this.productName,
       taxes: taxes ?? this.taxes,
       unitsPerPack: unitsPerPack ?? this.unitsPerPack,

@@ -9,8 +9,6 @@ class InventoryModel extends Inventory {
     super.quantityReserved,
     super.minStock,
     super.maxStock,
-    super.lotNumber,
-    super.expirationDate,
     super.updatedAt,
   });
 
@@ -23,10 +21,6 @@ class InventoryModel extends Inventory {
       quantityReserved: (json['quantity_reserved'] as num?)?.toDouble() ?? 0.0,
       minStock: json['min_stock'],
       maxStock: json['max_stock'],
-      lotNumber: json['lot_number'],
-      expirationDate: json['expiration_date'] != null
-          ? DateTime.parse(json['expiration_date'])
-          : null,
       updatedAt: json['updated_at'] != null
           ? DateTime.parse(json['updated_at'])
           : null,
@@ -42,8 +36,6 @@ class InventoryModel extends Inventory {
       'quantity_reserved': quantityReserved,
       'min_stock': minStock,
       'max_stock': maxStock,
-      'lot_number': lotNumber,
-      'expiration_date': expirationDate?.toIso8601String(),
       'updated_at': updatedAt?.toIso8601String(),
     };
   }
@@ -57,8 +49,6 @@ class InventoryModel extends Inventory {
       quantityReserved: inventory.quantityReserved,
       minStock: inventory.minStock,
       maxStock: inventory.maxStock,
-      lotNumber: inventory.lotNumber,
-      expirationDate: inventory.expirationDate,
       updatedAt: inventory.updatedAt,
     );
   }

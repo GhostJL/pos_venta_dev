@@ -13,7 +13,7 @@ class PurchaseItemModel extends PurchaseItem {
     required super.subtotalCents,
     super.taxCents,
     required super.totalCents,
-    super.lotNumber,
+    super.lotId,
     super.expirationDate,
     required super.createdAt,
     super.productName,
@@ -36,7 +36,7 @@ class PurchaseItemModel extends PurchaseItem {
       subtotalCents: json['subtotal_cents'],
       taxCents: json['tax_cents'] ?? 0,
       totalCents: json['total_cents'],
-      lotNumber: json['lot_number'],
+      lotId: json['lot_id'],
       expirationDate: json['expiration_date'] != null
           ? DateTime.parse(json['expiration_date'])
           : null,
@@ -58,7 +58,7 @@ class PurchaseItemModel extends PurchaseItem {
       'subtotal_cents': subtotalCents,
       'tax_cents': taxCents,
       'total_cents': totalCents,
-      'lot_number': lotNumber,
+      'lot_id': lotId,
       'expiration_date': expirationDate?.toIso8601String(),
       'created_at': createdAt.toIso8601String(),
     };
@@ -77,7 +77,7 @@ class PurchaseItemModel extends PurchaseItem {
       subtotalCents: item.subtotalCents,
       taxCents: item.taxCents,
       totalCents: item.totalCents,
-      lotNumber: item.lotNumber,
+      lotId: item.lotId,
       expirationDate: item.expirationDate,
       createdAt: item.createdAt,
       productName: item.productName,

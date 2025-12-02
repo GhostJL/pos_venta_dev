@@ -145,14 +145,14 @@ class PurchaseItemDetailPage extends ConsumerWidget {
                           '\$${item.unitCost.toStringAsFixed(2)}',
                           Icons.attach_money,
                         ),
-                        if (item.lotNumber != null) ...[
-                          const Divider(),
-                          _buildInfoRow(
-                            'Número de Lote',
-                            item.lotNumber!,
-                            Icons.qr_code,
-                          ),
-                        ],
+                        // if (item.lotNumber != null) ...[
+                        //   const Divider(),
+                        //   _buildInfoRow(
+                        //     'Número de Lote',
+                        //     item.lotNumber!,
+                        //     Icons.qr_code,
+                        //   ),
+                        // ],
                         if (item.expirationDate != null) ...[
                           const Divider(),
                           _buildInfoRow(

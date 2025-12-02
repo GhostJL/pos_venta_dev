@@ -49,6 +49,7 @@ class DatabaseHelper {
   static const tableSaleReturnItems = DatabaseConstants.tableSaleReturnItems;
   static const tableProductVariants = DatabaseConstants.tableProductVariants;
   static const tableUnitsOfMeasure = DatabaseConstants.tableUnitsOfMeasure;
+  static const tableInventoryLots = DatabaseConstants.tableInventoryLots;
 
   static Database? _database;
 

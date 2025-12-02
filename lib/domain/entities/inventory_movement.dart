@@ -30,7 +30,7 @@ class InventoryMovement {
   final double quantityAfter;
   final String? referenceType;
   final int? referenceId;
-  final String? lotNumber;
+  final int? lotId;
   final String? reason;
   final int performedBy;
   final DateTime movementDate;
@@ -45,7 +45,7 @@ class InventoryMovement {
     required this.quantityAfter,
     this.referenceType,
     this.referenceId,
-    this.lotNumber,
+    this.lotId,
     this.reason,
     required this.performedBy,
     DateTime? movementDate,
@@ -61,7 +61,7 @@ class InventoryMovement {
     double? quantityAfter,
     String? referenceType,
     int? referenceId,
-    String? lotNumber,
+    int? lotId,
     String? reason,
     int? performedBy,
     DateTime? movementDate,
@@ -76,7 +76,7 @@ class InventoryMovement {
       quantityAfter: quantityAfter ?? this.quantityAfter,
       referenceType: referenceType ?? this.referenceType,
       referenceId: referenceId ?? this.referenceId,
-      lotNumber: lotNumber ?? this.lotNumber,
+      lotId: lotId ?? this.lotId,
       reason: reason ?? this.reason,
       performedBy: performedBy ?? this.performedBy,
       movementDate: movementDate ?? this.movementDate,

@@ -269,6 +269,18 @@ class SaleRepositoryImpl implements SaleRepository {
           ],
         );
 
+        // Update InventoryLots if lotId is present
+        if (item.lotId != null) {
+          await txn.rawUpdate(
+            '''
+            UPDATE ${DatabaseHelper.tableInventoryLots}
+            SET quantity = quantity - ?
+            WHERE id = ?
+          ''',
+            [quantityToDeduct, item.lotId],
+          );
+        }
+
         // Record Movement (Sale)
         await txn.insert(DatabaseHelper.tableInventoryMovements, {
           'product_id': item.productId,
@@ -279,6 +291,7 @@ class SaleRepositoryImpl implements SaleRepository {
           'quantity_after': quantityBefore - quantityToDeduct,
           'reference_type': 'sale',
           'reference_id': saleId,
+          'lot_id': item.lotId,
           'reason': 'Sale #$saleId',
           'performed_by': sale.cashierId,
           'movement_date': DateTime.now().toIso8601String(),
@@ -383,6 +396,19 @@ class SaleRepositoryImpl implements SaleRepository {
           ],
         );
 
+        // Update InventoryLots if lotId is present
+        final lotId = item['lot_id'] as int?;
+        if (lotId != null) {
+          await txn.rawUpdate(
+            '''
+            UPDATE ${DatabaseHelper.tableInventoryLots}
+            SET quantity = quantity + ?
+            WHERE id = ?
+          ''',
+            [quantityToRestore, lotId],
+          );
+        }
+
         // Record Movement (Return/Cancel)
         await txn.insert(DatabaseHelper.tableInventoryMovements, {
           'product_id': productId,
@@ -393,6 +419,7 @@ class SaleRepositoryImpl implements SaleRepository {
           'quantity_after': quantityBefore + quantityToRestore,
           'reference_type': 'sale',
           'reference_id': saleId,
+          'lot_id': lotId,
           'reason': reason.isNotEmpty ? reason : 'Sale Cancelled',
           'performed_by': userId,
           'movement_date': DateTime.now().toIso8601String(),

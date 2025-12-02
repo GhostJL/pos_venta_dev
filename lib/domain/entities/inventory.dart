@@ -6,8 +6,6 @@ class Inventory {
   final double quantityReserved;
   final int? minStock;
   final int? maxStock;
-  final String? lotNumber;
-  final DateTime? expirationDate;
   final DateTime? updatedAt;
 
   Inventory({
@@ -18,8 +16,6 @@ class Inventory {
     this.quantityReserved = 0.0,
     this.minStock,
     this.maxStock,
-    this.lotNumber,
-    this.expirationDate,
     this.updatedAt,
   });
 
@@ -31,8 +27,6 @@ class Inventory {
     double? quantityReserved,
     int? minStock,
     int? maxStock,
-    String? lotNumber,
-    DateTime? expirationDate,
     DateTime? updatedAt,
   }) {
     return Inventory(
@@ -43,8 +37,6 @@ class Inventory {
       quantityReserved: quantityReserved ?? this.quantityReserved,
       minStock: minStock ?? this.minStock,
       maxStock: maxStock ?? this.maxStock,
-      lotNumber: lotNumber ?? this.lotNumber,
-      expirationDate: expirationDate ?? this.expirationDate,
       updatedAt: updatedAt ?? this.updatedAt,
     );
   }

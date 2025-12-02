@@ -40,7 +40,8 @@ class _InventoryFormPageState extends ConsumerState<InventoryFormPage> {
       text: widget.inventory?.maxStock?.toString() ?? '',
     );
     _lotNumberController = TextEditingController(
-      text: widget.inventory?.lotNumber ?? '',
+      // text: widget.inventory?.lotNumber ?? '',
+      text: '',
     );
   }
 
@@ -168,14 +169,14 @@ class _InventoryFormPageState extends ConsumerState<InventoryFormPage> {
               const SizedBox(height: 16),
 
               // Lot Number
-              TextFormField(
-                controller: _lotNumberController,
-                decoration: const InputDecoration(
-                  labelText: 'Número de Lote (Opcional)',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.qr_code_rounded),
-                ),
-              ),
+              // TextFormField(
+              //   controller: _lotNumberController,
+              //   decoration: const InputDecoration(
+              //     labelText: 'Número de Lote (Opcional)',
+              //     border: OutlineInputBorder(),
+              //     prefixIcon: Icon(Icons.qr_code_rounded),
+              //   ),
+              // ),
               const SizedBox(height: 32),
 
               // Save Button
@@ -222,9 +223,6 @@ class _InventoryFormPageState extends ConsumerState<InventoryFormPage> {
     final quantity = double.parse(_quantityController.text);
     final minStock = int.tryParse(_minStockController.text);
     final maxStock = int.tryParse(_maxStockController.text);
-    final lotNumber = _lotNumberController.text.isEmpty
-        ? null
-        : _lotNumberController.text;
 
     final inventory = Inventory(
       id: widget.inventory?.id,
@@ -234,7 +232,6 @@ class _InventoryFormPageState extends ConsumerState<InventoryFormPage> {
       quantityReserved: widget.inventory?.quantityReserved ?? 0,
       minStock: minStock,
       maxStock: maxStock,
-      lotNumber: lotNumber,
       updatedAt: DateTime.now(),
     );
 

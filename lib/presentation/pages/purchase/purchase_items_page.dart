@@ -303,23 +303,22 @@ class _PurchaseItemCard extends StatelessWidget {
               ),
 
               // Lot number if available
-              if (item.lotNumber != null) ...[
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    Icon(Icons.qr_code, size: 16, color: Colors.grey.shade600),
-                    const SizedBox(width: 8),
-                    Text(
-                      'Lote: ${item.lotNumber}',
-                      style: TextStyle(
-                        color: Colors.grey.shade600,
-                        fontSize: 13,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-
+              // if (item.lotNumber != null) ...[
+              //   const SizedBox(height: 8),
+              //   Row(
+              //     children: [
+              //       Icon(Icons.qr_code, size: 16, color: Colors.grey.shade600),
+              //       const SizedBox(width: 8),
+              //       Text(
+              //         'Lote: ${item.lotNumber}',
+              //         style: TextStyle(
+              //           color: Colors.grey.shade600,
+              //           fontSize: 13,
+              //         ),
+              //       ),
+              //     ],
+              //   ),
+              // ],
               const SizedBox(height: 12),
               const Divider(),
               const SizedBox(height: 8),

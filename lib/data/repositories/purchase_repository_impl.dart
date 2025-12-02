@@ -176,7 +176,7 @@ class PurchaseRepositoryImpl implements PurchaseRepository {
         final quantityReceivedSoFar =
             (item['quantity_received'] as num?)?.toDouble() ?? 0.0;
         final unitCostCents = item['unit_cost_cents'] as int;
-        final lotNumber = item['lot_number'] as String?;
+        final lotId = item['lot_id'] as int?;
 
         // Skip if no quantity to receive for this item
         if (!receivedQuantities.containsKey(itemId) ||
@@ -209,7 +209,19 @@ class PurchaseRepositoryImpl implements PurchaseRepository {
           allItemsCompleted = false;
         }
 
-        // 3b. Get current inventory
+        // 3b. Update InventoryLots if lotId is present
+        if (lotId != null) {
+          await txn.rawUpdate(
+            '''
+            UPDATE ${DatabaseHelper.tableInventoryLots}
+            SET quantity = quantity + ?
+            WHERE id = ?
+          ''',
+            [quantityToReceive, lotId],
+          );
+        }
+
+        // 3c. Get current inventory
         final inventoryResult = await txn.query(
           DatabaseHelper.tableInventory,
           where: 'product_id = ? AND warehouse_id = ?',
@@ -225,7 +237,6 @@ class PurchaseRepositoryImpl implements PurchaseRepository {
             'warehouse_id': warehouseId,
             'quantity_on_hand': quantityToReceive,
             'quantity_reserved': 0,
-            'lot_number': lotNumber,
             'updated_at': DateTime.now().toIso8601String(),
           });
         } else {
@@ -250,7 +261,7 @@ class PurchaseRepositoryImpl implements PurchaseRepository {
 
         final quantityAfter = quantityBefore + quantityToReceive;
 
-        // 3c. Create inventory movement (Kardex)
+        // 3d. Create inventory movement (Kardex)
         await txn.insert(DatabaseHelper.tableInventoryMovements, {
           'product_id': productId,
           'warehouse_id': warehouseId,
@@ -260,13 +271,13 @@ class PurchaseRepositoryImpl implements PurchaseRepository {
           'quantity_after': quantityAfter,
           'reference_type': 'purchase',
           'reference_id': purchaseId,
-          'lot_number': lotNumber,
+          'lot_id': lotId,
           'reason': 'Purchase received (Partial/Complete)',
           'performed_by': receivedBy,
           'movement_date': DateTime.now().toIso8601String(),
         });
 
-        // 3d. Update product variant cost (Last Cost / LIFO policy)
+        // 3e. Update product variant cost (Last Cost / LIFO policy)
         // Update the main variant's cost (first variant by ID)
         await txn.rawUpdate(
           '''

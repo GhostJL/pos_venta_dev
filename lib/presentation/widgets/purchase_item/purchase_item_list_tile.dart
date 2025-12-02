@@ -41,11 +41,11 @@ class PurchaseItemListTile extends StatelessWidget {
             Text(
               '${item.quantity} ${item.unitOfMeasure} × \$${item.unitCost.toStringAsFixed(2)}',
             ),
-            if (item.lotNumber != null)
-              Text(
-                'Lote: ${item.lotNumber}',
-                style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
-              ),
+            // if (item.lotNumber != null)
+            //   Text(
+            //     'Lote: ${item.lotNumber}',
+            //     style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+            //   ),
             Text(
               dateFormat.format(item.createdAt),
               style: TextStyle(fontSize: 12, color: Colors.grey.shade600),

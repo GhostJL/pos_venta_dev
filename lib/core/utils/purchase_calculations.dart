@@ -72,7 +72,7 @@ class PurchaseCalculations {
       subtotalCents: subtotalCents,
       taxCents: taxCents,
       totalCents: totalCents,
-      lotNumber: existingItem?.lotNumber,
+      lotId: existingItem?.lotId,
       expirationDate: existingItem?.expirationDate,
       createdAt: existingItem?.createdAt ?? DateTime.now(),
     );

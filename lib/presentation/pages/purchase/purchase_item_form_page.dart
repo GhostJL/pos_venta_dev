@@ -88,7 +88,7 @@ class _PurchaseItemFormPageState extends ConsumerState<PurchaseItemFormPage> {
       setState(() {
         _quantityController.text = item.quantity.toString();
         _unitCostController.text = item.unitCost.toStringAsFixed(2);
-        _lotNumberController.text = item.lotNumber ?? '';
+        // _lotNumberController.text = item.lotNumber ?? '';
         _selectedPurchaseId = item.purchaseId;
         _expirationDate = item.expirationDate;
         // Note: We can't set _selectedProduct here without loading products
@@ -148,9 +148,9 @@ class _PurchaseItemFormPageState extends ConsumerState<PurchaseItemFormPage> {
         subtotalCents: subtotalCents,
         taxCents: taxCents,
         totalCents: totalCents,
-        lotNumber: _lotNumberController.text.isEmpty
-            ? null
-            : _lotNumberController.text,
+        // lotNumber: _lotNumberController.text.isEmpty
+        //     ? null
+        //     : _lotNumberController.text,
         expirationDate: _expirationDate,
         createdAt: DateTime.now(),
       );
@@ -390,16 +390,17 @@ class _PurchaseItemFormPageState extends ConsumerState<PurchaseItemFormPage> {
                       style: Theme.of(context).textTheme.titleMedium,
                     ),
                     const SizedBox(height: 12),
-                    TextFormField(
-                      controller: _lotNumberController,
-                      decoration: const InputDecoration(
-                        labelText: 'Número de Lote',
-                        border: OutlineInputBorder(),
-                        prefixIcon: Icon(Icons.qr_code),
-                        hintText: 'Ej: LOT-2024-001',
-                      ),
-                    ),
 
+                    // TODO: Implement Lot Selection/Creation
+                    // TextFormField(
+                    //   controller: _lotNumberController,
+                    //   decoration: const InputDecoration(
+                    //     labelText: 'Número de Lote',
+                    //     border: OutlineInputBorder(),
+                    //     prefixIcon: Icon(Icons.qr_code),
+                    //     hintText: 'Ej: LOT-2024-001',
+                    //   ),
+                    // ),
                     const SizedBox(height: 16),
 
                     // Expiration Date
