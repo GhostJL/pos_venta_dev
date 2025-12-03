@@ -88,6 +88,12 @@ class _PurchaseItemDialogState extends ConsumerState<PurchaseItemDialog> {
         ? inputQuantity * widget.variant!.quantity
         : inputQuantity;
 
+    // If variant is present, inputCost is the PACK cost.
+    // We need to calculate the unit cost.
+    // To avoid precision loss, we should ideally pass the pack cost to createPurchaseItem
+    // or calculate unitCost with high precision.
+    // 160 / 12 = 13.3333333333...
+
     final finalUnitCost = widget.variant != null
         ? inputCost / widget.variant!.quantity
         : inputCost;
