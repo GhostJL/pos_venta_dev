@@ -2,14 +2,9 @@ import 'package:flutter/material.dart';
 
 /// Widget that displays purchase totals (subtotal, tax, total) in a footer
 class PurchaseTotalsFooter extends StatelessWidget {
-  final double subtotal;
   final double total;
 
-  const PurchaseTotalsFooter({
-    super.key,
-    required this.subtotal,
-    required this.total,
-  });
+  const PurchaseTotalsFooter({super.key, required this.total});
 
   @override
   Widget build(BuildContext context) {
@@ -27,8 +22,6 @@ class PurchaseTotalsFooter extends StatelessWidget {
       ),
       child: Column(
         children: [
-          _TotalRow(label: 'Subtotal:', value: subtotal),
-          const Divider(),
           _TotalRow(
             label: 'TOTAL:',
             value: total,

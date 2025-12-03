@@ -277,8 +277,8 @@ class _PurchaseFormPageState extends ConsumerState<PurchaseFormPage> {
                 title: const Text('Nueva Compra'),
                 bottom: const TabBar(
                   tabs: [
-                    Tab(text: 'Productos', icon: Icon(Icons.grid_view)),
-                    Tab(text: 'Detalle', icon: Icon(Icons.receipt_long)),
+                    Tab(text: 'Productos'),
+                    Tab(text: 'Tu compra'),
                   ],
                 ),
                 actions: [
@@ -308,7 +308,7 @@ class _PurchaseFormPageState extends ConsumerState<PurchaseFormPage> {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Text(
-                                '${_items.length} items',
+                                '${_items.length} productos',
                                 style: const TextStyle(
                                   fontWeight: FontWeight.bold,
                                 ),
@@ -353,10 +353,7 @@ class _PurchaseFormPageState extends ConsumerState<PurchaseFormPage> {
                             ),
                           ),
                         ),
-                        PurchaseTotalsFooter(
-                          subtotal: _subtotal,
-                          total: _total,
-                        ),
+                        PurchaseTotalsFooter(total: _total),
                       ],
                     ),
                   ],
@@ -457,10 +454,7 @@ class _PurchaseFormPageState extends ConsumerState<PurchaseFormPage> {
                             ),
 
                             // Totals Footer
-                            PurchaseTotalsFooter(
-                              subtotal: _subtotal,
-                              total: _total,
-                            ),
+                            PurchaseTotalsFooter(total: _total),
                           ],
                         ),
                       ),
