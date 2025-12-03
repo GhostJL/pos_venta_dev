@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:posventa/domain/entities/product.dart';
+import 'package:posventa/domain/entities/product_variant.dart';
 import 'package:posventa/domain/entities/purchase_item.dart';
 
 class ReceptionItemCard extends StatelessWidget {
   final PurchaseItem item;
+  final Product? product;
+  final ProductVariant? variant;
   final TextEditingController quantityController;
   final TextEditingController lotController;
   final TextEditingController expirationController;
@@ -12,6 +16,8 @@ class ReceptionItemCard extends StatelessWidget {
   const ReceptionItemCard({
     super.key,
     required this.item,
+    this.product,
+    this.variant,
     required this.quantityController,
     required this.lotController,
     required this.expirationController,
@@ -42,6 +48,23 @@ class ReceptionItemCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final remaining = item.quantity - item.quantityReceived;
 
+    // Calculate price diff
+    double currentCost = 0;
+    if (variant != null) {
+      currentCost = variant!.costPriceCents / 100.0;
+    } else if (product != null) {
+      currentCost = product!.costPriceCents / 100.0;
+    }
+
+    // Convert item unit cost to pack cost if variant
+    double comparisonCost = item.unitCost;
+    if (variant != null) {
+      comparisonCost = item.unitCost * variant!.quantity;
+    }
+
+    final diff = comparisonCost - currentCost;
+    final hasDiff = diff.abs() > 0.01 && currentCost > 0;
+
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 6),
       elevation: 0,
@@ -56,15 +79,78 @@ class ReceptionItemCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             /// Nombre del producto
-            Text(
-              item.productName ?? 'Producto',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                fontWeight: FontWeight.w600,
-                fontSize: 14,
-              ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    item.productName ?? 'Producto',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 14,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                if (variant != null)
+                  Container(
+                    margin: const EdgeInsets.only(left: 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 6,
+                      vertical: 2,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.purple.shade50,
+                      borderRadius: BorderRadius.circular(4),
+                      border: Border.all(color: Colors.purple.shade100),
+                    ),
+                    child: Text(
+                      '${variant!.quantity.toStringAsFixed(0)} un/caja',
+                      style: TextStyle(
+                        fontSize: 10,
+                        color: Colors.purple.shade700,
+                      ),
+                    ),
+                  ),
+              ],
             ),
+            const SizedBox(height: 4),
+
+            // Price Info
+            if (hasDiff)
+              Row(
+                children: [
+                  Text(
+                    'Costo Anterior: \$${currentCost.toStringAsFixed(2)}',
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: Colors.grey.shade600,
+                      decoration: TextDecoration.lineThrough,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Nuevo: \$${comparisonCost.toStringAsFixed(2)}',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
+                      color: diff > 0 ? Colors.red : Colors.green,
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  Icon(
+                    diff > 0 ? Icons.arrow_upward : Icons.arrow_downward,
+                    size: 12,
+                    color: diff > 0 ? Colors.red : Colors.green,
+                  ),
+                ],
+              )
+            else
+              Text(
+                'Costo: \$${comparisonCost.toStringAsFixed(2)}',
+                style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
+              ),
+
             const SizedBox(height: 8),
 
             /// Badges
@@ -72,22 +158,14 @@ class ReceptionItemCard extends StatelessWidget {
               spacing: 6,
               runSpacing: 6,
               children: [
-                _buildBadge(
-                  item.quantity,
-                  Colors.blue.shade700,
-                  item.unitOfMeasure,
-                ),
+                _buildBadge(item.quantity, Colors.blue.shade700, 'Solicitado'),
                 if (item.quantityReceived > 0)
                   _buildBadge(
                     item.quantityReceived,
                     Colors.green.shade700,
-                    item.unitOfMeasure,
+                    'Recibido',
                   ),
-                _buildBadge(
-                  remaining,
-                  Colors.orange.shade700,
-                  item.unitOfMeasure,
-                ),
+                _buildBadge(remaining, Colors.orange.shade700, 'Pendiente'),
               ],
             ),
             const SizedBox(height: 12),

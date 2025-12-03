@@ -1,18 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:posventa/domain/entities/purchase.dart';
 import 'package:posventa/domain/entities/purchase_reception_item.dart';
+import 'package:posventa/presentation/providers/product_provider.dart';
 import 'package:posventa/presentation/widgets/purchase/reception_item_card.dart';
 import 'package:posventa/presentation/widgets/purchase/reception_summary_card.dart';
 
-class PurchaseReceptionDialog extends StatefulWidget {
+class PurchaseReceptionDialog extends ConsumerStatefulWidget {
   final Purchase purchase;
 
   const PurchaseReceptionDialog({super.key, required this.purchase});
 
   @override
-  State<PurchaseReceptionDialog> createState() =>
+  ConsumerState<PurchaseReceptionDialog> createState() =>
       _PurchaseReceptionDialogState();
 }
 
@@ -38,7 +40,8 @@ class _ReceptionItemState {
   }
 }
 
-class _PurchaseReceptionDialogState extends State<PurchaseReceptionDialog> {
+class _PurchaseReceptionDialogState
+    extends ConsumerState<PurchaseReceptionDialog> {
   final Map<int, _ReceptionItemState> _itemStates = {};
 
   @override
@@ -112,6 +115,8 @@ class _PurchaseReceptionDialogState extends State<PurchaseReceptionDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final productsAsync = ref.watch(productNotifierProvider);
+
     double totalOrdered = 0;
     double totalReceived = 0;
     double totalPending = 0;
@@ -140,7 +145,7 @@ class _PurchaseReceptionDialogState extends State<PurchaseReceptionDialog> {
                 Text(
                   'Recibir Mercancía',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
                 Text(
@@ -185,61 +190,75 @@ class _PurchaseReceptionDialogState extends State<PurchaseReceptionDialog> {
 
             /// Lista con scroll independiente
             Expanded(
-              child: ListView.separated(
-                itemCount: widget.purchase.items.length,
-                separatorBuilder: (_, __) =>
-                    Divider(color: Colors.grey.shade200),
-                itemBuilder: (context, index) {
-                  final item = widget.purchase.items[index];
-                  final remaining = item.quantity - item.quantityReceived;
-                  final id = item.id;
+              child: productsAsync.when(
+                loading: () => const Center(child: CircularProgressIndicator()),
+                error: (err, stack) => Center(child: Text('Error: $err')),
+                data: (products) {
+                  final productMap = {for (var p in products) p.id!: p};
 
-                  if (remaining <= 0) {
-                    return Card(
-                      margin: const EdgeInsets.symmetric(vertical: 4),
-                      color: Colors.green.shade50,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: ListTile(
-                        leading: const Icon(
-                          Icons.check_circle,
-                          color: Colors.green,
-                        ),
-                        title: Text(
-                          item.productName ?? 'Producto',
-                          style: const TextStyle(
-                            fontWeight: FontWeight.w600,
-                            fontSize: 15,
+                  return ListView.separated(
+                    itemCount: widget.purchase.items.length,
+                    separatorBuilder: (_, __) =>
+                        Divider(color: Colors.grey.shade200),
+                    itemBuilder: (context, index) {
+                      final item = widget.purchase.items[index];
+                      final remaining = item.quantity - item.quantityReceived;
+                      final id = item.id;
+                      final product = productMap[item.productId];
+                      final variant = product?.variants
+                          ?.where((v) => v.id == item.variantId)
+                          .firstOrNull;
+
+                      if (remaining <= 0) {
+                        return Card(
+                          margin: const EdgeInsets.symmetric(vertical: 4),
+                          color: Colors.green.shade50,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
                           ),
-                        ),
-                        subtitle: Text(
-                          'Completamente recibido: ${_formatNumber(item.quantity)} ${item.unitOfMeasure}',
-                          style: TextStyle(
-                            color: Colors.green.shade700,
-                            fontWeight: FontWeight.w500,
+                          child: ListTile(
+                            leading: const Icon(
+                              Icons.check_circle,
+                              color: Colors.green,
+                            ),
+                            title: Text(
+                              item.productName ?? 'Producto',
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w600,
+                                fontSize: 15,
+                              ),
+                            ),
+                            subtitle: Text(
+                              'Completamente recibido: ${_formatNumber(item.quantity)} ${item.unitOfMeasure}',
+                              style: TextStyle(
+                                color: Colors.green.shade700,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
                           ),
-                        ),
-                      ),
-                    );
-                  }
+                        );
+                      }
 
-                  final state = _itemStates[id];
-                  if (state == null) return const SizedBox.shrink();
+                      final state = _itemStates[id];
+                      if (state == null) return const SizedBox.shrink();
 
-                  return ReceptionItemCard(
-                    item: item,
-                    quantityController: state.quantityController,
-                    lotController: state.lotController,
-                    expirationController: state.expirationController,
-                    onQuantityChanged: (qty) {
-                      setState(() {
-                        if (qty >= 0 && qty <= remaining) {
-                          state.quantity = qty;
-                        }
-                      });
+                      return ReceptionItemCard(
+                        item: item,
+                        product: product,
+                        variant: variant,
+                        quantityController: state.quantityController,
+                        lotController: state.lotController,
+                        expirationController: state.expirationController,
+                        onQuantityChanged: (qty) {
+                          setState(() {
+                            if (qty >= 0 && qty <= remaining) {
+                              state.quantity = qty;
+                            }
+                          });
+                        },
+                        onExpirationTap: () => _selectDate(context, state),
+                      );
                     },
-                    onExpirationTap: () => _selectDate(context, state),
                   );
                 },
               ),
@@ -258,11 +277,6 @@ class _PurchaseReceptionDialogState extends State<PurchaseReceptionDialog> {
                   final List<PurchaseReceptionItem> result = [];
                   _itemStates.forEach((itemId, state) {
                     if (state.quantity > 0) {
-                      // Use generated lot number if empty, or require it?
-                      // User said "PurchaseItems -> usar lot_id".
-                      // If user leaves lot empty, we should probably generate one or error.
-                      // Let's generate one if empty for convenience, or maybe validate.
-                      // For now, I'll use a default if empty to avoid blocking, but ideally should validate.
                       String lot = state.lotController.text.trim();
                       if (lot.isEmpty) {
                         final now = DateTime.now();

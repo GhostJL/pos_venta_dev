@@ -69,11 +69,25 @@ class _PurchaseFormPageState extends ConsumerState<PurchaseFormPage> {
     // Determine quantity to add (default 1, or variant multiplier)
     final double quantityToAdd = variant?.quantity ?? 1.0;
 
-    // For variants, we need to calculate the unit cost from the pack cost
-    // but we'll use a special approach to avoid rounding errors
+    // For variants, we want to preserve the PACK cost precision.
+    // If we calculate unitCost = packCost / quantity, we lose precision.
+    // But createPurchaseItem takes unitCost.
+    // We should pass the raw unit cost, but we need to ensure createPurchaseItem
+    // calculates subtotal correctly.
+
+    // Actually, createPurchaseItem has special handling for variants:
+    // if (variant != null) {
+    //   packCostCents = (unitCost * 100 * variant.quantity).round();
+    //   ...
+    // }
+    // So if we pass the SINGLE UNIT cost, it tries to reconstruct the pack cost.
+    // (13.3333 * 100 * 12) = 15999.96 -> 16000.
+    // So we need to pass the most precise single unit cost possible.
+
     final double unitCost;
     if (variant != null) {
-      // Calculate unit cost from pack cost, but we'll handle precision in createPurchaseItem
+      // Calculate unit cost from pack cost
+      // 160 / 12 = 13.33333333...
       unitCost = (variant.costPriceCents / 100) / quantityToAdd;
     } else {
       unitCost = product.costPriceCents / 100;
@@ -216,22 +230,145 @@ class _PurchaseFormPageState extends ConsumerState<PurchaseFormPage> {
     }
   }
 
+  void _updateItemQuantity(int index, double newQuantity) {
+    if (newQuantity <= 0) return;
+
+    final item = _items[index];
+
+    // Try to get the product from the provider
+    final productsState = ref.read(productNotifierProvider);
+    Product? product;
+
+    productsState.whenData((products) {
+      product = products.where((p) => p.id == item.productId).firstOrNull;
+    });
+
+    if (product == null) {
+      // Should not happen if data is loaded, but safety check
+      return;
+    }
+
+    final updatedItem = PurchaseCalculations.createPurchaseItem(
+      product: product!,
+      quantity: newQuantity,
+      unitCost: item.unitCost, // Keep current unit cost
+      existingItem: item,
+    );
+
+    setState(() {
+      _items[index] = updatedItem;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final isMobile = MediaQuery.of(context).size.width < 800;
+    final productsAsync = ref.watch(productNotifierProvider);
 
-    if (isMobile) {
-      return DefaultTabController(
-        length: 2,
-        child: Scaffold(
+    return productsAsync.when(
+      data: (products) {
+        final productMap = {for (var p in products) p.id!: p};
+
+        if (isMobile) {
+          return DefaultTabController(
+            length: 2,
+            child: Scaffold(
+              appBar: AppBar(
+                title: const Text('Nueva Compra'),
+                bottom: const TabBar(
+                  tabs: [
+                    Tab(text: 'Productos', icon: Icon(Icons.grid_view)),
+                    Tab(text: 'Detalle', icon: Icon(Icons.receipt_long)),
+                  ],
+                ),
+                actions: [
+                  IconButton(
+                    icon: const Icon(Icons.save),
+                    onPressed: _savePurchase,
+                  ),
+                ],
+              ),
+              body: Form(
+                key: _formKey,
+                child: TabBarView(
+                  children: [
+                    // Tab 1: Product Grid
+                    Column(
+                      children: [
+                        Expanded(
+                          child: PurchaseProductGrid(
+                            onProductSelected: _addItemDirectly,
+                          ),
+                        ),
+                        // Mini summary bar
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          color: Theme.of(context).primaryColor.withAlpha(20),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                '${_items.length} items',
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              Text(
+                                'Total: \$${_total.toStringAsFixed(2)}',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: Theme.of(context).primaryColor,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    // Tab 2: Order Details
+                    Column(
+                      children: [
+                        Expanded(
+                          child: SingleChildScrollView(
+                            padding: const EdgeInsets.all(16),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                PurchaseHeaderCard(
+                                  supplier: _supplier,
+                                  warehouse: _warehouse,
+                                  invoiceNumber: _invoiceNumber,
+                                  purchaseDate: _purchaseDate,
+                                ),
+                                const SizedBox(height: 24),
+                                PurchaseItemsListWidget(
+                                  items: _items,
+                                  productMap: productMap,
+                                  onEditItem: _editItem,
+                                  onRemoveItem: _removeItem,
+                                  onQuantityChanged: _updateItemQuantity,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        PurchaseTotalsFooter(
+                          subtotal: _subtotal,
+                          total: _total,
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        }
+
+        return Scaffold(
           appBar: AppBar(
             title: const Text('Nueva Compra'),
-            bottom: const TabBar(
-              tabs: [
-                Tab(text: 'Productos', icon: Icon(Icons.grid_view)),
-                Tab(text: 'Detalle', icon: Icon(Icons.receipt_long)),
-              ],
-            ),
             actions: [
               IconButton(
                 icon: const Icon(Icons.save),
@@ -241,174 +378,104 @@ class _PurchaseFormPageState extends ConsumerState<PurchaseFormPage> {
           ),
           body: Form(
             key: _formKey,
-            child: TabBarView(
+            child: Column(
               children: [
-                // Tab 1: Product Grid
-                Column(
-                  children: [
-                    Expanded(
-                      child: PurchaseProductGrid(
-                        onProductSelected: _addItemDirectly,
-                      ),
-                    ),
-                    // Mini summary bar
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      color: Theme.of(context).primaryColor.withAlpha(20),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            '${_items.length} items',
-                            style: const TextStyle(fontWeight: FontWeight.bold),
+                Expanded(
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Left Side: Product Grid (60% width)
+                      Expanded(
+                        flex: 6,
+                        child: Container(
+                          padding: const EdgeInsets.all(12),
+                          color: Colors.grey.shade50,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                'Selección de Productos',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+                              Expanded(
+                                child: PurchaseProductGrid(
+                                  onProductSelected: _addItemDirectly,
+                                ),
+                              ),
+                            ],
                           ),
-                          Text(
-                            'Total: \$${_total.toStringAsFixed(2)}',
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              color: Theme.of(context).primaryColor,
-                            ),
-                          ),
-                        ],
+                        ),
                       ),
-                    ),
-                  ],
-                ),
 
-                // Tab 2: Order Details
-                Column(
-                  children: [
-                    Expanded(
-                      child: SingleChildScrollView(
-                        padding: const EdgeInsets.all(16),
+                      // Vertical Divider
+                      const VerticalDivider(width: 1),
+
+                      // Right Side: Order Details (40% width)
+                      Expanded(
+                        flex: 4,
                         child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            PurchaseHeaderCard(
-                              supplier: _supplier,
-                              warehouse: _warehouse,
-                              invoiceNumber: _invoiceNumber,
-                              purchaseDate: _purchaseDate,
+                            Expanded(
+                              child: SingleChildScrollView(
+                                padding: const EdgeInsets.all(16),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    // Header Info Card
+                                    PurchaseHeaderCard(
+                                      supplier: _supplier,
+                                      warehouse: _warehouse,
+                                      invoiceNumber: _invoiceNumber,
+                                      purchaseDate: _purchaseDate,
+                                    ),
+                                    const SizedBox(height: 24),
+
+                                    const Text(
+                                      'Items del Pedido',
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 8),
+
+                                    // Items List
+                                    PurchaseItemsListWidget(
+                                      items: _items,
+                                      productMap: productMap,
+                                      onEditItem: _editItem,
+                                      onRemoveItem: _removeItem,
+                                      onQuantityChanged: _updateItemQuantity,
+                                    ),
+                                  ],
+                                ),
+                              ),
                             ),
-                            const SizedBox(height: 24),
-                            PurchaseItemsListWidget(
-                              items: _items,
-                              onEditItem: _editItem,
-                              onRemoveItem: _removeItem,
+
+                            // Totals Footer
+                            PurchaseTotalsFooter(
+                              subtotal: _subtotal,
+                              total: _total,
                             ),
                           ],
                         ),
                       ),
-                    ),
-                    PurchaseTotalsFooter(subtotal: _subtotal, total: _total),
-                  ],
+                    ],
+                  ),
                 ),
               ],
             ),
           ),
-        ),
-      );
-    }
-
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Nueva Compra'),
-        actions: [
-          IconButton(icon: const Icon(Icons.save), onPressed: _savePurchase),
-        ],
-      ),
-      body: Form(
-        key: _formKey,
-        child: Column(
-          children: [
-            Expanded(
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Left Side: Product Grid (60% width)
-                  Expanded(
-                    flex: 6,
-                    child: Container(
-                      padding: const EdgeInsets.all(12),
-                      color: Colors.grey.shade50,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            'Selección de Productos',
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-                          Expanded(
-                            child: PurchaseProductGrid(
-                              onProductSelected: _addItemDirectly,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-
-                  // Vertical Divider
-                  const VerticalDivider(width: 1),
-
-                  // Right Side: Order Details (40% width)
-                  Expanded(
-                    flex: 4,
-                    child: Column(
-                      children: [
-                        Expanded(
-                          child: SingleChildScrollView(
-                            padding: const EdgeInsets.all(16),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                // Header Info Card
-                                PurchaseHeaderCard(
-                                  supplier: _supplier,
-                                  warehouse: _warehouse,
-                                  invoiceNumber: _invoiceNumber,
-                                  purchaseDate: _purchaseDate,
-                                ),
-                                const SizedBox(height: 24),
-
-                                const Text(
-                                  'Items del Pedido',
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                const SizedBox(height: 8),
-
-                                // Items List
-                                PurchaseItemsListWidget(
-                                  items: _items,
-                                  onEditItem: _editItem,
-                                  onRemoveItem: _removeItem,
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-
-                        // Totals Footer
-                        PurchaseTotalsFooter(
-                          subtotal: _subtotal,
-                          total: _total,
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
+        );
+      },
+      loading: () =>
+          const Scaffold(body: Center(child: CircularProgressIndicator())),
+      error: (error, stack) =>
+          Scaffold(body: Center(child: Text('Error: $error'))),
     );
   }
 }

@@ -287,26 +287,59 @@ class PurchaseRepositoryImpl implements PurchaseRepository {
         });
 
         // 3e. Update product variant cost (Last Cost / LIFO policy)
-        // Update the main variant's cost (first variant by ID)
-        await txn.rawUpdate(
-          '''
-          UPDATE ${DatabaseHelper.tableProductVariants}
-          SET cost_price_cents = ?,
-              updated_at = ?
-          WHERE product_id = ?
-            AND id = (
-              SELECT MIN(id) 
-              FROM ${DatabaseHelper.tableProductVariants} 
-              WHERE product_id = ?
-            )
-          ''',
-          [
-            unitCostCents,
-            DateTime.now().toIso8601String(),
-            productId,
-            productId,
-          ],
-        );
+        // 3e. Update product variant cost (Last Cost / LIFO policy)
+        if (variantId != null) {
+          // Calculate the precise cost of the variant (pack)
+          // Formula: (Total Subtotal / Total Quantity) * Variant Quantity
+          // This avoids precision loss from using the rounded unit_cost_cents
+          final subtotalCents = itemData['subtotal_cents'] as int;
+
+          // Fetch variant quantity from DB to be safe, or use a join above
+          final variantResult = await txn.query(
+            DatabaseHelper.tableProductVariants,
+            columns: ['quantity'],
+            where: 'id = ?',
+            whereArgs: [variantId],
+          );
+
+          if (variantResult.isNotEmpty) {
+            final variantQty = variantResult.first['quantity'] as double;
+            // (32000 * 12) / 24 = 16000
+            final newVariantCostCents =
+                (subtotalCents * variantQty / quantityOrdered).round();
+
+            await txn.update(
+              DatabaseHelper.tableProductVariants,
+              {
+                'cost_price_cents': newVariantCostCents,
+                'updated_at': DateTime.now().toIso8601String(),
+              },
+              where: 'id = ?',
+              whereArgs: [variantId],
+            );
+          }
+        } else {
+          // Fallback: Update the main variant's cost (first variant by ID)
+          await txn.rawUpdate(
+            '''
+            UPDATE ${DatabaseHelper.tableProductVariants}
+            SET cost_price_cents = ?,
+                updated_at = ?
+            WHERE product_id = ?
+              AND id = (
+                SELECT MIN(id) 
+                FROM ${DatabaseHelper.tableProductVariants} 
+                WHERE product_id = ?
+              )
+            ''',
+            [
+              unitCostCents,
+              DateTime.now().toIso8601String(),
+              productId,
+              productId,
+            ],
+          );
+        }
       }
 
       // Check if all items are fully received
