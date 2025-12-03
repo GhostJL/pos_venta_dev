@@ -279,7 +279,7 @@ class DatabaseSchema {
     );
     await db.execute('''
         CREATE INDEX IF NOT EXISTS idx_products_search 
-        ON ${DatabaseConstants.tableProducts}(name, code, barcode)
+        ON ${DatabaseConstants.tableProducts}(name, code)
       ''');
   }
 

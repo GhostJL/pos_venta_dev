@@ -230,16 +230,23 @@ class POSNotifier extends _$POSNotifier {
     }
   }
 
-  void removeFromCart(int productId) {
-    final newCart = state.cart
-        .where((item) => item.productId != productId)
-        .toList();
+  void removeFromCart(int productId, {int? variantId}) {
+    final newCart = state.cart.where((item) {
+      if (item.productId != productId) return true;
+      // If productId matches, check variantId
+      return item.variantId != variantId;
+    }).toList();
     state = state.copyWith(cart: newCart);
   }
 
   Future<String?> updateQuantity(int productId, double quantity) async {
     if (quantity <= 0) {
-      removeFromCart(productId);
+      // Find the item to get its variantId
+      final item = state.cart.firstWhere(
+        (i) => i.productId == productId,
+        orElse: () => state.cart.first,
+      );
+      removeFromCart(productId, variantId: item.variantId);
       return null;
     }
 

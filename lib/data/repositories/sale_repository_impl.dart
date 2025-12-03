@@ -217,6 +217,7 @@ class SaleRepositoryImpl implements SaleRepository {
 
         // Calculate quantity to deduct (handle variants)
         double quantityToDeduct = item.quantity;
+
         if (item.variantId != null) {
           final variantResult = await txn.query(
             DatabaseHelper.tableProductVariants,
@@ -224,6 +225,7 @@ class SaleRepositoryImpl implements SaleRepository {
             where: 'id = ?',
             whereArgs: [item.variantId],
           );
+
           if (variantResult.isNotEmpty) {
             final variantQuantity = (variantResult.first['quantity'] as num)
                 .toDouble();

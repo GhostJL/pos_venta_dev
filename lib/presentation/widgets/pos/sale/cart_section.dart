@@ -32,11 +32,57 @@ class CartSection extends ConsumerWidget {
       ),
       child: Column(
         children: [
-          // Customer Selection
-          CustomerSelectionWidget(
-            posState: posState.selectedCustomer != null
-                ? '${posState.selectedCustomer!.firstName} ${posState.selectedCustomer!.lastName}'
-                : 'Cliente General',
+          // Customer Selection and Clear Cart
+          Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: 16.0,
+              vertical: 8.0,
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: CustomerSelectionWidget(
+                    posState: posState.selectedCustomer != null
+                        ? '${posState.selectedCustomer!.firstName} ${posState.selectedCustomer!.lastName}'
+                        : 'Cliente General',
+                  ),
+                ),
+                if (posState.cart.isNotEmpty) ...[
+                  const SizedBox(width: 8),
+                  IconButton(
+                    onPressed: () {
+                      showDialog(
+                        context: context,
+                        builder: (context) => AlertDialog(
+                          title: const Text('Limpiar Carrito'),
+                          content: const Text(
+                            '¿Estás seguro de que deseas eliminar todos los productos del carrito?',
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.pop(context),
+                              child: const Text('CANCELAR'),
+                            ),
+                            TextButton(
+                              onPressed: () {
+                                posNotifier.clearCart();
+                                Navigator.pop(context);
+                              },
+                              style: TextButton.styleFrom(
+                                foregroundColor: Colors.red,
+                              ),
+                              child: const Text('LIMPIAR'),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                    icon: const Icon(Icons.delete_sweep, color: Colors.red),
+                    tooltip: 'Limpiar Carrito',
+                  ),
+                ],
+              ],
+            ),
           ),
           // Cart Items List
           Expanded(
@@ -71,7 +117,10 @@ class CartSection extends ConsumerWidget {
                       return CartItemWidget(
                         productName: item.productName,
                         onPressedRemove: () {
-                          posNotifier.removeFromCart(item.productId);
+                          posNotifier.removeFromCart(
+                            item.productId,
+                            variantId: item.variantId,
+                          );
                         },
                         onTapLessProduct: () {
                           posNotifier.updateQuantity(
