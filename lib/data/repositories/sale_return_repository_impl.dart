@@ -399,6 +399,37 @@ class SaleReturnRepositoryImpl implements SaleReturnRepository {
         whereArgs: [item.productId, warehouseId],
       );
     }
+
+    // Restore inventory to ALL lots that were deducted (not just the primary lot)
+    // Query sale_item_lots to get all lot deductions for this sale item
+    final lotDeductionsResult = await txn.query(
+      DatabaseHelper.tableSaleItemLots,
+      where: 'sale_item_id = ?',
+      whereArgs: [item.saleItemId],
+    );
+
+    // Restore quantity to each lot that was deducted
+    for (final deduction in lotDeductionsResult) {
+      final deductionLotId = deduction['lot_id'] as int;
+      final quantityDeducted = (deduction['quantity_deducted'] as num)
+          .toDouble();
+
+      await txn.rawUpdate(
+        '''
+        UPDATE ${DatabaseHelper.tableInventoryLots}
+        SET quantity = quantity + ?
+        WHERE id = ?
+      ''',
+        [quantityDeducted, deductionLotId],
+      );
+    }
+
+    // Delete lot deduction records for this sale item
+    await txn.delete(
+      DatabaseHelper.tableSaleItemLots,
+      where: 'sale_item_id = ?',
+      whereArgs: [item.saleItemId],
+    );
   }
 
   Future<void> _createCashMovement(

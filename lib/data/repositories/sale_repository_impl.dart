@@ -270,17 +270,11 @@ class SaleRepositoryImpl implements SaleRepository {
         );
 
         // FIFO: Get available lots ordered by received_at (oldest first)
-        // Filter by variant_id to avoid mixing lots from different variants
+        // Deduct from oldest lots regardless of variant to allow bulk purchase + unit sales
         final lotsResult = await txn.query(
           DatabaseHelper.tableInventoryLots,
-          where:
-              'product_id = ? AND warehouse_id = ? AND quantity > 0 AND (variant_id = ? OR (variant_id IS NULL AND ? IS NULL))',
-          whereArgs: [
-            item.productId,
-            sale.warehouseId,
-            item.variantId,
-            item.variantId,
-          ],
+          where: 'product_id = ? AND warehouse_id = ? AND quantity > 0',
+          whereArgs: [item.productId, sale.warehouseId],
           orderBy: 'received_at ASC',
         );
 
