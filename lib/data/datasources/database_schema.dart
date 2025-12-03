@@ -35,6 +35,7 @@ class DatabaseSchema {
     await _createSaleReturnItemsTable(db);
     await _createProductVariantsTable(db);
     await _createInventoryLotsTable(db);
+    await _createSaleItemLotsTable(db);
   }
 
   static Future<void> _createUsersTable(Database db) async {
@@ -903,5 +904,29 @@ class DatabaseSchema {
     await db.execute(
       'CREATE INDEX IF NOT EXISTS idx_product_variants_barcode ON ${DatabaseConstants.tableProductVariants}(barcode)',
     );
+  }
+
+  static Future<void> _createSaleItemLotsTable(Database db) async {
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS ${DatabaseConstants.tableSaleItemLots} (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        sale_item_id INTEGER NOT NULL,
+        lot_id INTEGER NOT NULL,
+        quantity_deducted REAL NOT NULL,
+        created_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
+        FOREIGN KEY (sale_item_id) REFERENCES ${DatabaseConstants.tableSaleItems}(id) ON DELETE CASCADE,
+        FOREIGN KEY (lot_id) REFERENCES ${DatabaseConstants.tableInventoryLots}(id) ON DELETE RESTRICT
+      )
+    ''');
+
+    await db.execute('''
+      CREATE INDEX IF NOT EXISTS idx_sale_item_lots_sale_item 
+      ON ${DatabaseConstants.tableSaleItemLots}(sale_item_id)
+    ''');
+
+    await db.execute('''
+      CREATE INDEX IF NOT EXISTS idx_sale_item_lots_lot 
+      ON ${DatabaseConstants.tableSaleItemLots}(lot_id)
+    ''');
   }
 }

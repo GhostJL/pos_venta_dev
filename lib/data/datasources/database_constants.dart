@@ -29,4 +29,5 @@ class DatabaseConstants {
   static const tableProductVariants = 'product_variants';
   static const tableUnitsOfMeasure = 'units_of_measure';
   static const tableInventoryLots = 'inventory_lots';
+  static const tableSaleItemLots = 'sale_item_lots';
 }

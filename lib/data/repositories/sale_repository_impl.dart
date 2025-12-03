@@ -270,10 +270,17 @@ class SaleRepositoryImpl implements SaleRepository {
         );
 
         // FIFO: Get available lots ordered by received_at (oldest first)
+        // Filter by variant_id to avoid mixing lots from different variants
         final lotsResult = await txn.query(
           DatabaseHelper.tableInventoryLots,
-          where: 'product_id = ? AND warehouse_id = ? AND quantity > 0',
-          whereArgs: [item.productId, sale.warehouseId],
+          where:
+              'product_id = ? AND warehouse_id = ? AND quantity > 0 AND (variant_id = ? OR (variant_id IS NULL AND ? IS NULL))',
+          whereArgs: [
+            item.productId,
+            sale.warehouseId,
+            item.variantId,
+            item.variantId,
+          ],
           orderBy: 'received_at ASC',
         );
 
@@ -299,6 +306,14 @@ class SaleRepositoryImpl implements SaleRepository {
           ''',
             [deductFromLot, lotId],
           );
+
+          // Track lot deduction in sale_item_lots for proper restoration
+          await txn.insert(DatabaseHelper.tableSaleItemLots, {
+            'sale_item_id': saleItemId,
+            'lot_id': lotId,
+            'quantity_deducted': deductFromLot,
+            'created_at': DateTime.now().toIso8601String(),
+          });
 
           // Store the first lot ID for the sale_item
           primaryLotId ??= lotId;
@@ -439,18 +454,37 @@ class SaleRepositoryImpl implements SaleRepository {
           ],
         );
 
-        // Update InventoryLots if lotId is present
-        final lotId = item['lot_id'] as int?;
-        if (lotId != null) {
+        // Restore inventory to ALL lots that were deducted (not just the primary lot)
+        // Query sale_item_lots to get all lot deductions for this sale item
+        final itemId = item['id'] as int;
+        final lotDeductionsResult = await txn.query(
+          DatabaseHelper.tableSaleItemLots,
+          where: 'sale_item_id = ?',
+          whereArgs: [itemId],
+        );
+
+        // Restore quantity to each lot that was deducted
+        for (final deduction in lotDeductionsResult) {
+          final deductionLotId = deduction['lot_id'] as int;
+          final quantityDeducted = (deduction['quantity_deducted'] as num)
+              .toDouble();
+
           await txn.rawUpdate(
             '''
             UPDATE ${DatabaseHelper.tableInventoryLots}
             SET quantity = quantity + ?
             WHERE id = ?
           ''',
-            [quantityToRestore, lotId],
+            [quantityDeducted, deductionLotId],
           );
         }
+
+        // Delete lot deduction records for this sale item
+        await txn.delete(
+          DatabaseHelper.tableSaleItemLots,
+          where: 'sale_item_id = ?',
+          whereArgs: [itemId],
+        );
 
         // Record Movement (Return/Cancel)
         await txn.insert(DatabaseHelper.tableInventoryMovements, {
@@ -462,7 +496,7 @@ class SaleRepositoryImpl implements SaleRepository {
           'quantity_after': quantityBefore + quantityToRestore,
           'reference_type': 'sale',
           'reference_id': saleId,
-          'lot_id': lotId,
+          'lot_id': null, // Multiple lots restored, not just one
           'reason': reason.isNotEmpty ? reason : 'Sale Cancelled',
           'performed_by': userId,
           'movement_date': DateTime.now().toIso8601String(),

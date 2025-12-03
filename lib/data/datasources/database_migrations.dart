@@ -11,6 +11,11 @@ class DatabaseMigrations {
     if (oldVersion < 22 && newVersion >= 22) {
       await _migrateToVersion22(db);
     }
+
+    // Migration from version 22 to 23: Add sale_item_lots table for lot tracking
+    if (oldVersion < 23 && newVersion >= 23) {
+      await _migrateToVersion23(db);
+    }
   }
 
   static Future<void> _migrateToVersion22(Database db) async {
@@ -125,6 +130,32 @@ class DatabaseMigrations {
     await db.execute('''
       CREATE INDEX IF NOT EXISTS idx_inventory_warehouse 
       ON ${DatabaseConstants.tableInventory}(warehouse_id)
+    ''');
+  }
+
+  static Future<void> _migrateToVersion23(Database db) async {
+    // Create sale_item_lots table to track lot deductions per sale item
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS ${DatabaseConstants.tableSaleItemLots} (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        sale_item_id INTEGER NOT NULL,
+        lot_id INTEGER NOT NULL,
+        quantity_deducted REAL NOT NULL,
+        created_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
+        FOREIGN KEY (sale_item_id) REFERENCES ${DatabaseConstants.tableSaleItems}(id) ON DELETE CASCADE,
+        FOREIGN KEY (lot_id) REFERENCES ${DatabaseConstants.tableInventoryLots}(id) ON DELETE RESTRICT
+      )
+    ''');
+
+    // Create indexes for better query performance
+    await db.execute('''
+      CREATE INDEX IF NOT EXISTS idx_sale_item_lots_sale_item 
+      ON ${DatabaseConstants.tableSaleItemLots}(sale_item_id)
+    ''');
+
+    await db.execute('''
+      CREATE INDEX IF NOT EXISTS idx_sale_item_lots_lot 
+      ON ${DatabaseConstants.tableSaleItemLots}(lot_id)
     ''');
   }
 }
