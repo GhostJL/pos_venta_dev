@@ -8,6 +8,7 @@ import 'package:posventa/presentation/widgets/purchase/purchase_info_card.dart';
 import 'package:posventa/presentation/widgets/purchase/purchase_items_list.dart';
 import 'package:posventa/presentation/widgets/purchase/purchase_reception_dialog.dart';
 import 'package:posventa/presentation/widgets/purchase/purchase_totals_card.dart';
+import 'package:posventa/domain/entities/purchase_reception_item.dart';
 
 class PurchaseDetailPage extends ConsumerWidget {
   final int purchaseId;
@@ -146,12 +147,12 @@ class PurchaseDetailPage extends ConsumerWidget {
     Purchase purchase,
   ) async {
     // Show partial reception dialog
-    final receivedQuantities = await showDialog<Map<int, double>>(
+    final itemsToReceive = await showDialog<List<PurchaseReceptionItem>>(
       context: context,
       builder: (context) => PurchaseReceptionDialog(purchase: purchase),
     );
 
-    if (receivedQuantities == null || receivedQuantities.isEmpty) return;
+    if (itemsToReceive == null || itemsToReceive.isEmpty) return;
 
     try {
       final user = ref.read(authProvider).user;
@@ -161,7 +162,7 @@ class PurchaseDetailPage extends ConsumerWidget {
 
       await ref
           .read(purchaseProvider.notifier)
-          .receivePurchase(purchase.id!, receivedQuantities, user.id!);
+          .receivePurchase(purchase.id!, itemsToReceive, user.id!);
 
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

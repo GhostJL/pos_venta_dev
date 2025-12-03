@@ -1,4 +1,5 @@
 import 'package:posventa/domain/repositories/purchase_repository.dart';
+import 'package:posventa/domain/entities/purchase_reception_item.dart';
 
 /// Use case for receiving a purchase and updating inventory
 /// This is the critical process that:
@@ -14,17 +15,13 @@ class ReceivePurchaseUseCase {
 
   /// Receive a purchase by ID
   /// [purchaseId] - The ID of the purchase to receive
-  /// [receivedQuantities] - Map of Item ID to Quantity Received
+  /// [items] - List of items to receive with their details
   /// [receivedBy] - The user ID who is receiving the purchase
   Future<void> call(
     int purchaseId,
-    Map<int, double> receivedQuantities,
+    List<PurchaseReceptionItem> items,
     int receivedBy,
   ) async {
-    return await repository.receivePurchase(
-      purchaseId,
-      receivedQuantities,
-      receivedBy,
-    );
+    return await repository.receivePurchase(purchaseId, items, receivedBy);
   }
 }

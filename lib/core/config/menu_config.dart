@@ -125,7 +125,7 @@ class MenuConfig {
             requiredPermissions: [PermissionConstants.catalogManage],
           ),
           const MenuItem(
-            title: 'Stock Actual',
+            title: 'Inventario',
             icon: Icons.inventory_rounded,
             route: '/inventory',
             requiredPermissions: [PermissionConstants.inventoryView],

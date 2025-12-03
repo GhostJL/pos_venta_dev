@@ -1,4 +1,5 @@
 import 'package:posventa/domain/entities/purchase.dart';
+import 'package:posventa/domain/entities/purchase_reception_item.dart';
 
 abstract class PurchaseRepository {
   Future<List<Purchase>> getPurchases();
@@ -9,11 +10,11 @@ abstract class PurchaseRepository {
 
   /// Receive a purchase (partial or complete)
   /// [purchaseId] - The ID of the purchase to receive
-  /// [receivedQuantities] - Map of Item ID to Quantity Received
+  /// [items] - List of items to receive with their details
   /// [receivedBy] - The user ID who is receiving the purchase
   Future<void> receivePurchase(
     int purchaseId,
-    Map<int, double> receivedQuantities,
+    List<PurchaseReceptionItem> items,
     int receivedBy,
   );
 

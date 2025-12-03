@@ -3,14 +3,20 @@ import 'package:posventa/domain/entities/purchase_item.dart';
 
 class ReceptionItemCard extends StatelessWidget {
   final PurchaseItem item;
-  final TextEditingController controller;
+  final TextEditingController quantityController;
+  final TextEditingController lotController;
+  final TextEditingController expirationController;
   final ValueChanged<double> onQuantityChanged;
+  final VoidCallback onExpirationTap;
 
   const ReceptionItemCard({
     super.key,
     required this.item,
-    required this.controller,
+    required this.quantityController,
+    required this.lotController,
+    required this.expirationController,
     required this.onQuantityChanged,
+    required this.onExpirationTap,
   });
 
   Widget _buildBadge(double value, Color color, String unit) {
@@ -61,41 +67,40 @@ class ReceptionItemCard extends StatelessWidget {
             ),
             const SizedBox(height: 8),
 
-            /// Badges + campo de entrada en una sola fila
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            /// Badges
+            Wrap(
+              spacing: 6,
+              runSpacing: 6,
               children: [
-                /// Badges en fila
-                Expanded(
-                  child: Wrap(
-                    spacing: 6,
-                    runSpacing: 6,
-                    children: [
-                      _buildBadge(
-                        item.quantity,
-                        Colors.blue.shade700,
-                        item.unitOfMeasure,
-                      ),
-                      if (item.quantityReceived > 0)
-                        _buildBadge(
-                          item.quantityReceived,
-                          Colors.green.shade700,
-                          item.unitOfMeasure,
-                        ),
-                      _buildBadge(
-                        remaining,
-                        Colors.orange.shade700,
-                        item.unitOfMeasure,
-                      ),
-                    ],
-                  ),
+                _buildBadge(
+                  item.quantity,
+                  Colors.blue.shade700,
+                  item.unitOfMeasure,
                 ),
+                if (item.quantityReceived > 0)
+                  _buildBadge(
+                    item.quantityReceived,
+                    Colors.green.shade700,
+                    item.unitOfMeasure,
+                  ),
+                _buildBadge(
+                  remaining,
+                  Colors.orange.shade700,
+                  item.unitOfMeasure,
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
 
-                /// Campo de entrada compacto
+            /// Campos de entrada
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Cantidad
                 SizedBox(
                   width: 100,
                   child: TextField(
-                    controller: controller,
+                    controller: quantityController,
                     keyboardType: const TextInputType.numberWithOptions(
                       decimal: true,
                     ),
@@ -115,6 +120,48 @@ class ReceptionItemCard extends StatelessWidget {
                       final qty = double.tryParse(value) ?? 0;
                       onQuantityChanged(qty);
                     },
+                  ),
+                ),
+                const SizedBox(width: 12),
+
+                // Lote
+                Expanded(
+                  child: TextField(
+                    controller: lotController,
+                    decoration: InputDecoration(
+                      labelText: 'Lote',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 8,
+                      ),
+                    ),
+                    style: const TextStyle(fontSize: 13),
+                  ),
+                ),
+                const SizedBox(width: 12),
+
+                // Caducidad
+                SizedBox(
+                  width: 110,
+                  child: TextField(
+                    controller: expirationController,
+                    readOnly: true,
+                    onTap: onExpirationTap,
+                    decoration: InputDecoration(
+                      labelText: 'Caducidad',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 8,
+                      ),
+                      suffixIcon: const Icon(Icons.calendar_today, size: 16),
+                    ),
+                    style: const TextStyle(fontSize: 13),
                   ),
                 ),
               ],

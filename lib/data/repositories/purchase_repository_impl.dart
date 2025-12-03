@@ -3,6 +3,7 @@ import 'package:posventa/data/models/purchase_item_model.dart';
 import 'package:posventa/data/models/purchase_model.dart';
 import 'package:posventa/domain/entities/purchase.dart';
 import 'package:posventa/domain/entities/purchase_item.dart';
+import 'package:posventa/domain/entities/purchase_reception_item.dart';
 import 'package:posventa/domain/repositories/purchase_repository.dart';
 
 class PurchaseRepositoryImpl implements PurchaseRepository {
@@ -139,7 +140,7 @@ class PurchaseRepositoryImpl implements PurchaseRepository {
   @override
   Future<void> receivePurchase(
     int purchaseId,
-    Map<int, double> receivedQuantities,
+    List<PurchaseReceptionItem> itemsToReceive,
     int receivedBy,
   ) async {
     final db = await _databaseHelper.database;
@@ -168,27 +169,29 @@ class PurchaseRepositoryImpl implements PurchaseRepository {
 
       bool allItemsCompleted = true;
 
-      // 3. Process each item
-      for (final item in itemsResult) {
-        final itemId = item['id'] as int;
-        final productId = item['product_id'] as int;
-        final variantId = item['variant_id'] as int?;
-        final quantityOrdered = item['quantity'] as double;
-        final quantityReceivedSoFar =
-            (item['quantity_received'] as num?)?.toDouble() ?? 0.0;
-        final unitCostCents = item['unit_cost_cents'] as int;
-        final expirationDate = item['expiration_date'] as String?;
+      // Map items by ID for easy access
+      final purchaseItemsMap = {
+        for (var item in itemsResult) item['id'] as int: item,
+      };
 
-        // Skip if no quantity to receive for this item
-        if (!receivedQuantities.containsKey(itemId) ||
-            receivedQuantities[itemId]! <= 0) {
-          if (quantityReceivedSoFar < quantityOrdered) {
-            allItemsCompleted = false;
-          }
-          continue;
+      // 3. Process each item
+      for (final receptionItem in itemsToReceive) {
+        final itemId = receptionItem.itemId;
+        final quantityToReceive = receptionItem.quantity;
+        final lotNumber = receptionItem.lotNumber;
+        final expirationDate = receptionItem.expirationDate?.toIso8601String();
+
+        if (!purchaseItemsMap.containsKey(itemId)) {
+          continue; // Should not happen
         }
 
-        final quantityToReceive = receivedQuantities[itemId]!;
+        final itemData = purchaseItemsMap[itemId]!;
+        final productId = itemData['product_id'] as int;
+        final variantId = itemData['variant_id'] as int?;
+        final quantityOrdered = itemData['quantity'] as double;
+        final quantityReceivedSoFar =
+            (itemData['quantity_received'] as num?)?.toDouble() ?? 0.0;
+        final unitCostCents = itemData['unit_cost_cents'] as int;
 
         // Validate quantity
         if (quantityReceivedSoFar + quantityToReceive > quantityOrdered) {
@@ -198,7 +201,6 @@ class PurchaseRepositoryImpl implements PurchaseRepository {
         }
 
         // 3a. Create inventory lot
-        final lotNumber = _generateLotNumber();
         final totalCostCents = (unitCostCents * quantityToReceive).toInt();
 
         final lotId = await txn.insert(DatabaseHelper.tableInventoryLots, {
@@ -214,6 +216,10 @@ class PurchaseRepositoryImpl implements PurchaseRepository {
         });
 
         // 3b. Update purchase item with lot_id and quantity_received
+        // Note: If multiple receptions happen for the same item, we might overwrite lot_id.
+        // Ideally, purchase_items should be split if received in multiple lots.
+        // But for now, we update the last lot_id.
+        // A better approach would be a separate table purchase_receptions, but sticking to current schema:
         await txn.update(
           DatabaseHelper.tablePurchaseItems,
           {
@@ -223,11 +229,6 @@ class PurchaseRepositoryImpl implements PurchaseRepository {
           where: 'id = ?',
           whereArgs: [itemId],
         );
-
-        // Check if this item is now fully received
-        if (quantityReceivedSoFar + quantityToReceive < quantityOrdered) {
-          allItemsCompleted = false;
-        }
 
         // 3c. Get current inventory
         final inventoryResult = await txn.query(
@@ -308,6 +309,24 @@ class PurchaseRepositoryImpl implements PurchaseRepository {
         );
       }
 
+      // Check if all items are fully received
+      // We need to re-query purchase items or track locally
+      // Since we might have received only some items, we check all items in the purchase
+      final updatedItemsResult = await txn.query(
+        DatabaseHelper.tablePurchaseItems,
+        where: 'purchase_id = ?',
+        whereArgs: [purchaseId],
+      );
+
+      for (final item in updatedItemsResult) {
+        final quantity = item['quantity'] as double;
+        final quantityReceived = (item['quantity_received'] as num).toDouble();
+        if (quantityReceived < quantity) {
+          allItemsCompleted = false;
+          break;
+        }
+      }
+
       // 4. Update purchase status
       final newStatus = allItemsCompleted ? 'completed' : 'partial';
 
@@ -324,13 +343,6 @@ class PurchaseRepositoryImpl implements PurchaseRepository {
         whereArgs: [purchaseId],
       );
     });
-  }
-
-  String _generateLotNumber() {
-    final now = DateTime.now();
-    final dateStr = now.toIso8601String().substring(0, 10).replaceAll('-', '');
-    final timeStr = now.toIso8601String().substring(11, 19).replaceAll(':', '');
-    return 'LOT-$dateStr-$timeStr';
   }
 
   @override

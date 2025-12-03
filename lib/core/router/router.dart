@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:posventa/domain/entities/user.dart';
+import 'package:posventa/presentation/pages/inventory/inventory_lot_detail_page.dart';
+import 'package:posventa/presentation/pages/inventory/inventory_lots_page.dart';
 
 import 'package:posventa/presentation/pages/screens.dart';
 import 'package:posventa/presentation/widgets/barcode_scanner_widget.dart';
@@ -441,6 +443,28 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: '/shift-close',
             pageBuilder: (context, state) =>
                 const NoTransitionPage(child: ShiftClosePage()),
+          ),
+          GoRoute(
+            path: '/inventory/lots/:productId/:warehouseId',
+            pageBuilder: (context, state) {
+              final productId = state.pathParameters['productId']!;
+              final warehouseId = state.pathParameters['warehouseId']!;
+              return NoTransitionPage(
+                child: InventoryLotsPage(
+                  productId: int.parse(productId),
+                  warehouseId: int.parse(warehouseId),
+                ),
+              );
+            },
+          ),
+          GoRoute(
+            path: '/inventory/lot/:lotId',
+            pageBuilder: (context, state) {
+              final lotId = state.pathParameters['lotId']!;
+              return NoTransitionPage(
+                child: InventoryLotDetailPage(lotId: int.parse(lotId)),
+              );
+            },
           ),
         ],
       ),

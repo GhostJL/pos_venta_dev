@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 import 'package:posventa/domain/entities/purchase.dart';
+import 'package:posventa/domain/entities/purchase_reception_item.dart';
 import 'package:posventa/presentation/widgets/purchase/reception_item_card.dart';
 import 'package:posventa/presentation/widgets/purchase/reception_summary_card.dart';
 
@@ -14,9 +16,30 @@ class PurchaseReceptionDialog extends StatefulWidget {
       _PurchaseReceptionDialogState();
 }
 
+class _ReceptionItemState {
+  final TextEditingController quantityController;
+  final TextEditingController lotController;
+  final TextEditingController expirationController;
+  double quantity;
+  DateTime? expirationDate;
+
+  _ReceptionItemState({required double initialQuantity})
+    : quantityController = TextEditingController(
+        text: initialQuantity.toStringAsFixed(initialQuantity % 1 == 0 ? 0 : 2),
+      ),
+      lotController = TextEditingController(),
+      expirationController = TextEditingController(),
+      quantity = initialQuantity;
+
+  void dispose() {
+    quantityController.dispose();
+    lotController.dispose();
+    expirationController.dispose();
+  }
+}
+
 class _PurchaseReceptionDialogState extends State<PurchaseReceptionDialog> {
-  final Map<int, TextEditingController> _controllers = {};
-  final Map<int, double> _quantities = {};
+  final Map<int, _ReceptionItemState> _itemStates = {};
 
   @override
   void initState() {
@@ -25,18 +48,15 @@ class _PurchaseReceptionDialogState extends State<PurchaseReceptionDialog> {
       final remaining = item.quantity - item.quantityReceived;
       final id = item.id;
       if (id != null && remaining > 0) {
-        _quantities[id] = remaining;
-        _controllers[id] = TextEditingController(
-          text: _formatNumber(remaining),
-        );
+        _itemStates[id] = _ReceptionItemState(initialQuantity: remaining);
       }
     }
   }
 
   @override
   void dispose() {
-    for (final controller in _controllers.values) {
-      controller.dispose();
+    for (final state in _itemStates.values) {
+      state.dispose();
     }
     super.dispose();
   }
@@ -47,8 +67,11 @@ class _PurchaseReceptionDialogState extends State<PurchaseReceptionDialog> {
         final remaining = item.quantity - item.quantityReceived;
         final id = item.id;
         if (id != null && remaining > 0) {
-          _quantities[id] = remaining;
-          _controllers[id]?.text = _formatNumber(remaining);
+          final state = _itemStates[id];
+          if (state != null) {
+            state.quantity = remaining;
+            state.quantityController.text = _formatNumber(remaining);
+          }
         }
       }
     });
@@ -56,15 +79,35 @@ class _PurchaseReceptionDialogState extends State<PurchaseReceptionDialog> {
 
   void _clearAll() {
     setState(() {
-      for (final key in _quantities.keys) {
-        _quantities[key] = 0;
-        _controllers[key]?.text = '0';
+      for (final state in _itemStates.values) {
+        state.quantity = 0;
+        state.quantityController.text = '0';
       }
     });
   }
 
   String _formatNumber(double value) {
     return value.toStringAsFixed(value % 1 == 0 ? 0 : 2);
+  }
+
+  Future<void> _selectDate(
+    BuildContext context,
+    _ReceptionItemState state,
+  ) async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now().add(const Duration(days: 30)),
+      firstDate: DateTime.now(),
+      lastDate: DateTime.now().add(const Duration(days: 365 * 10)),
+    );
+    if (picked != null && picked != state.expirationDate) {
+      setState(() {
+        state.expirationDate = picked;
+        state.expirationController.text = DateFormat(
+          'yyyy-MM-dd',
+        ).format(picked);
+      });
+    }
   }
 
   @override
@@ -78,7 +121,7 @@ class _PurchaseReceptionDialogState extends State<PurchaseReceptionDialog> {
       totalReceived += item.quantityReceived;
       final remaining = item.quantity - item.quantityReceived;
       if (remaining > 0) {
-        totalPending += _quantities[item.id] ?? 0;
+        totalPending += _itemStates[item.id]?.quantity ?? 0;
       }
     }
 
@@ -181,16 +224,22 @@ class _PurchaseReceptionDialogState extends State<PurchaseReceptionDialog> {
                     );
                   }
 
+                  final state = _itemStates[id];
+                  if (state == null) return const SizedBox.shrink();
+
                   return ReceptionItemCard(
                     item: item,
-                    controller: _controllers[id]!,
+                    quantityController: state.quantityController,
+                    lotController: state.lotController,
+                    expirationController: state.expirationController,
                     onQuantityChanged: (qty) {
                       setState(() {
                         if (qty >= 0 && qty <= remaining) {
-                          _quantities[id!] = qty;
+                          state.quantity = qty;
                         }
                       });
                     },
+                    onExpirationTap: () => _selectDate(context, state),
                   );
                 },
               ),
@@ -206,8 +255,38 @@ class _PurchaseReceptionDialogState extends State<PurchaseReceptionDialog> {
         FilledButton(
           onPressed: totalPending > 0
               ? () {
-                  final result = Map<int, double>.from(_quantities)
-                    ..removeWhere((_, value) => value == 0);
+                  final List<PurchaseReceptionItem> result = [];
+                  _itemStates.forEach((itemId, state) {
+                    if (state.quantity > 0) {
+                      // Use generated lot number if empty, or require it?
+                      // User said "PurchaseItems -> usar lot_id".
+                      // If user leaves lot empty, we should probably generate one or error.
+                      // Let's generate one if empty for convenience, or maybe validate.
+                      // For now, I'll use a default if empty to avoid blocking, but ideally should validate.
+                      String lot = state.lotController.text.trim();
+                      if (lot.isEmpty) {
+                        final now = DateTime.now();
+                        final dateStr = now
+                            .toIso8601String()
+                            .substring(0, 10)
+                            .replaceAll('-', '');
+                        final timeStr = now
+                            .toIso8601String()
+                            .substring(11, 19)
+                            .replaceAll(':', '');
+                        lot = 'LOT-$dateStr-$timeStr';
+                      }
+
+                      result.add(
+                        PurchaseReceptionItem(
+                          itemId: itemId,
+                          quantity: state.quantity,
+                          lotNumber: lot,
+                          expirationDate: state.expirationDate,
+                        ),
+                      );
+                    }
+                  });
                   context.pop(result);
                 }
               : null,

@@ -1,6 +1,7 @@
 import 'package:posventa/domain/entities/purchase.dart';
 import 'package:posventa/presentation/providers/providers.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:posventa/domain/entities/purchase_reception_item.dart';
 
 part 'purchase_providers.g.dart';
 
@@ -42,17 +43,17 @@ class PurchaseNotifier extends _$PurchaseNotifier {
   /// 3. Kardex movement creation
   /// 4. Product cost update (Last Cost policy)
   /// Receive a purchase and update inventory (Partial or Complete)
-  /// [receivedQuantities] - Map of Item ID to Quantity Received
+  /// [items] - List of items to receive with lot details
   Future<void> receivePurchase(
     int purchaseId,
-    Map<int, double> receivedQuantities,
+    List<PurchaseReceptionItem> items,
     int receivedBy,
   ) async {
     state = const AsyncValue.loading();
     state = await AsyncValue.guard(() async {
       await ref
           .read(receivePurchaseUseCaseProvider)
-          .call(purchaseId, receivedQuantities, receivedBy);
+          .call(purchaseId, items, receivedBy);
       return ref.read(getPurchasesUseCaseProvider).call();
     });
   }

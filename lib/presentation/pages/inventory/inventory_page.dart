@@ -164,6 +164,39 @@ class _InventoryPageState extends ConsumerState<InventoryPage> {
                                     ),
                                   ],
                                 ),
+
+                                const SizedBox(height: 12),
+
+                                /// Ver Lotes button
+                                SizedBox(
+                                  width: double.infinity,
+                                  child: OutlinedButton.icon(
+                                    onPressed: () {
+                                      context.push(
+                                        '/inventory/lots/${item.productId}/${item.warehouseId}',
+                                        extra: {
+                                          'productName':
+                                              product?.name ?? 'Producto',
+                                        },
+                                      );
+                                    },
+                                    icon: const Icon(
+                                      Icons.inventory_2_outlined,
+                                      size: 18,
+                                    ),
+                                    label: const Text('Ver Lotes'),
+                                    style: OutlinedButton.styleFrom(
+                                      padding: const EdgeInsets.symmetric(
+                                        vertical: 8,
+                                      ),
+                                      side: BorderSide(
+                                        color: AppTheme.primary.withValues(
+                                          alpha: 0.3,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
                               ],
                             ),
                           ),
