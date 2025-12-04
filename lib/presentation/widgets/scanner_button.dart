@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:posventa/core/theme/theme.dart';
 
 class ScannerButton extends StatelessWidget {
   final VoidCallback onPressed;
@@ -22,7 +21,7 @@ class ScannerButton extends StatelessWidget {
         icon: const Icon(Icons.qr_code_scanner),
         onPressed: onPressed,
         tooltip: tooltip ?? 'Escanear código',
-        color: AppTheme.primary,
+        color: Theme.of(context).colorScheme.primary,
       );
     }
 
@@ -32,7 +31,7 @@ class ScannerButton extends StatelessWidget {
         icon: const Icon(Icons.qr_code_scanner, size: 20),
         label: const Text('Escanear'),
         style: ElevatedButton.styleFrom(
-          backgroundColor: AppTheme.primary,
+          backgroundColor: Theme.of(context).colorScheme.primary,
           foregroundColor: Colors.white,
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           shape: RoundedRectangleBorder(
@@ -45,7 +44,7 @@ class ScannerButton extends StatelessWidget {
     return FloatingActionButton(
       onPressed: onPressed,
       tooltip: tooltip ?? 'Escanear código',
-      backgroundColor: AppTheme.primary,
+      backgroundColor: Theme.of(context).colorScheme.primary,
       child: const Icon(Icons.qr_code_scanner),
     );
   }

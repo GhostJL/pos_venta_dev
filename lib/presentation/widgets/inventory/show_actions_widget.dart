@@ -1,14 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:posventa/core/theme/theme.dart';
 import 'package:posventa/presentation/widgets/inventory/confirm_delete_widget.dart';
 import 'package:posventa/presentation/widgets/inventory/show_adjust_stock_dialog_widget.dart';
 
 void showActions(BuildContext context, WidgetRef ref, item) {
   showModalBottomSheet(
     context: context,
-    backgroundColor: AppTheme.background,
+    backgroundColor: Theme.of(context).colorScheme.surface,
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
     ),
@@ -26,17 +25,20 @@ void showActions(BuildContext context, WidgetRef ref, item) {
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
-            const SizedBox(height: 24),
+            SizedBox(height: 24),
             ListTile(
               leading: Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: AppTheme.primary.withAlpha(20),
+                  color: Theme.of(context).colorScheme.primary.withAlpha(20),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: const Icon(Icons.edit_rounded, color: AppTheme.primary),
+                child: Icon(
+                  Icons.edit_rounded,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
               ),
-              title: const Text(
+              title: Text(
                 'Editar Inventario',
                 style: TextStyle(fontWeight: FontWeight.bold),
               ),
@@ -45,20 +47,20 @@ void showActions(BuildContext context, WidgetRef ref, item) {
                 context.push('/inventory/form', extra: item);
               },
             ),
-            const SizedBox(height: 8),
+            SizedBox(height: 8),
             ListTile(
               leading: Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: AppTheme.secondary.withAlpha(20),
+                  color: Theme.of(context).colorScheme.secondary.withAlpha(20),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.sync_alt_rounded,
-                  color: AppTheme.secondary,
+                  color: Theme.of(context).colorScheme.secondary,
                 ),
               ),
-              title: const Text(
+              title: Text(
                 'Ajustar Stock',
                 style: TextStyle(fontWeight: FontWeight.bold),
               ),
@@ -67,17 +69,20 @@ void showActions(BuildContext context, WidgetRef ref, item) {
                 showAdjustStockDialog(context, ref, item);
               },
             ),
-            const SizedBox(height: 8),
+            SizedBox(height: 8),
             ListTile(
               leading: Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: AppTheme.error.withAlpha(20),
+                  color: Theme.of(context).colorScheme.error.withAlpha(20),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: const Icon(Icons.delete_rounded, color: AppTheme.error),
+                child: Icon(
+                  Icons.delete_rounded,
+                  color: Theme.of(context).colorScheme.error,
+                ),
               ),
-              title: const Text(
+              title: Text(
                 'Eliminar',
                 style: TextStyle(fontWeight: FontWeight.bold),
               ),

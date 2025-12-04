@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:posventa/domain/entities/brand.dart';
 import 'package:posventa/presentation/providers/brand_providers.dart';
 import 'package:posventa/presentation/widgets/common/generic_form_scaffold.dart';
-import 'package:posventa/core/theme/theme.dart';
 import 'package:posventa/core/constants/ui_constants.dart';
 
 class BrandForm extends ConsumerStatefulWidget {
@@ -43,9 +42,9 @@ class BrandFormState extends ConsumerState<BrandForm> {
         if (mounted) {
           Navigator.of(context).pop();
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
+            SnackBar(
               content: Text('Marca guardada correctamente'),
-              backgroundColor: AppTheme.success,
+              backgroundColor: Theme.of(context).colorScheme.tertiary,
             ),
           );
         }
@@ -54,7 +53,7 @@ class BrandFormState extends ConsumerState<BrandForm> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('Error al guardar la marca: $e'),
-              backgroundColor: AppTheme.error,
+              backgroundColor: Theme.of(context).colorScheme.error,
             ),
           );
         }

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:posventa/core/theme/theme.dart';
 
 class ChipFilterWidget extends StatelessWidget {
   final String label;
@@ -26,13 +25,13 @@ class ChipFilterWidget extends StatelessWidget {
             onSelected();
           }
         },
-        backgroundColor: AppTheme.inputBackground,
-        selectedColor: AppTheme.primary.withAlpha(50),
-        checkmarkColor: AppTheme.primary,
+        backgroundColor: Theme.of(context).colorScheme.surface,
+        selectedColor: Theme.of(context).colorScheme.primary.withAlpha(50),
+        checkmarkColor: Theme.of(context).colorScheme.primary,
         labelStyle: TextStyle(
           color: activeFilterCount > 0
-              ? AppTheme.primary
-              : AppTheme.textPrimary,
+              ? Theme.of(context).colorScheme.primary
+              : Theme.of(context).colorScheme.onSurface,
           fontWeight: FontWeight.bold,
         ),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),

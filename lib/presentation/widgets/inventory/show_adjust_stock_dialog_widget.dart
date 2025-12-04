@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:posventa/core/theme/theme.dart';
 import 'package:posventa/presentation/providers/inventory_providers.dart';
 
 void showAdjustStockDialog(BuildContext context, WidgetRef ref, item) {
@@ -14,11 +13,11 @@ void showAdjustStockDialog(BuildContext context, WidgetRef ref, item) {
       return StatefulBuilder(
         builder: (context, setState) {
           return AlertDialog(
-            backgroundColor: AppTheme.cardBackground,
+            backgroundColor: Theme.of(context).colorScheme.surface,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(16),
             ),
-            title: const Text(
+            title: Text(
               'Ajustar Stock',
               style: TextStyle(fontWeight: FontWeight.bold),
             ),
@@ -28,15 +27,15 @@ void showAdjustStockDialog(BuildContext context, WidgetRef ref, item) {
               children: [
                 Text(
                   'Stock actual: ${item.quantityOnHand}',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
-                    color: AppTheme.primary,
+                    color: Theme.of(context).colorScheme.primary,
                   ),
                 ),
-                const SizedBox(height: 16),
+                SizedBox(height: 16),
                 SegmentedButton<String>(
-                  segments: const [
+                  segments: [
                     ButtonSegment(
                       value: 'add',
                       label: Text('Agregar'),
@@ -55,19 +54,19 @@ void showAdjustStockDialog(BuildContext context, WidgetRef ref, item) {
                     });
                   },
                 ),
-                const SizedBox(height: 16),
+                SizedBox(height: 16),
                 TextField(
                   controller: controller,
                   decoration: InputDecoration(
                     labelText: 'Cantidad',
-                    border: const OutlineInputBorder(),
+                    border: OutlineInputBorder(),
                     prefixIcon: Icon(
                       adjustmentType == 'add'
                           ? Icons.add_circle_outline
                           : Icons.remove_circle_outline,
                       color: adjustmentType == 'add'
-                          ? AppTheme.success
-                          : AppTheme.error,
+                          ? Theme.of(context).colorScheme.tertiary
+                          : Theme.of(context).colorScheme.error,
                     ),
                   ),
                   keyboardType: const TextInputType.numberWithOptions(
@@ -79,16 +78,14 @@ void showAdjustStockDialog(BuildContext context, WidgetRef ref, item) {
             actions: [
               TextButton(
                 onPressed: () => context.pop(),
-                child: const Text('Cancelar'),
+                child: Text('Cancelar'),
               ),
               ElevatedButton(
                 onPressed: () {
                   final adjustment = double.tryParse(controller.text);
                   if (adjustment == null || adjustment <= 0) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Ingrese una cantidad válida'),
-                      ),
+                      SnackBar(content: Text('Ingrese una cantidad válida')),
                     );
                     return;
                   }
@@ -100,7 +97,7 @@ void showAdjustStockDialog(BuildContext context, WidgetRef ref, item) {
                     newQuantity -= adjustment;
                     if (newQuantity < 0) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
+                        SnackBar(
                           content: Text('El stock no puede ser negativo'),
                         ),
                       );
@@ -123,12 +120,12 @@ void showAdjustStockDialog(BuildContext context, WidgetRef ref, item) {
                       content: Text(
                         'Stock ${adjustmentType == 'add' ? 'agregado' : 'restado'} correctamente',
                       ),
-                      backgroundColor: AppTheme.success,
+                      backgroundColor: Theme.of(context).colorScheme.tertiary,
                     ),
                   );
                 },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppTheme.primary,
+                  backgroundColor: Theme.of(context).colorScheme.primary,
                   foregroundColor: Colors.white,
                 ),
                 child: const Text('Guardar'),

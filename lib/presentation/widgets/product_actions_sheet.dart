@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:posventa/core/constants/permission_constants.dart';
-import 'package:posventa/core/theme/theme.dart';
+
 import 'package:posventa/domain/entities/product.dart';
 import 'package:posventa/presentation/providers/permission_provider.dart';
 import 'package:posventa/presentation/providers/product_provider.dart';
@@ -30,7 +30,7 @@ class ProductActionsSheet extends ConsumerWidget {
               _buildAction(
                 context,
                 icon: Icons.edit_rounded,
-                color: AppTheme.primary,
+                color: Theme.of(context).colorScheme.primary,
                 label: 'Editar producto',
                 onTap: () {
                   context.pop();
@@ -41,7 +41,7 @@ class ProductActionsSheet extends ConsumerWidget {
               _buildAction(
                 context,
                 icon: Icons.copy_rounded,
-                color: AppTheme.secondary,
+                color: Theme.of(context).colorScheme.secondary,
                 label: 'Duplicar producto',
                 onTap: () {
                   context.pop();
@@ -56,7 +56,9 @@ class ProductActionsSheet extends ConsumerWidget {
               _buildAction(
                 context,
                 icon: Icons.power_settings_new_rounded,
-                color: product.isActive ? AppTheme.error : AppTheme.success,
+                color: product.isActive
+                    ? Theme.of(context).colorScheme.error
+                    : Theme.of(context).colorScheme.tertiary,
                 label: product.isActive
                     ? 'Desactivar producto'
                     : 'Activar producto',
@@ -121,8 +123,8 @@ class ProductActionsSheet extends ConsumerWidget {
               !product.isActive ? 'Producto activado' : 'Producto desactivado',
             ),
             backgroundColor: !product.isActive
-                ? AppTheme.success
-                : AppTheme.textSecondary,
+                ? Theme.of(context).colorScheme.tertiary
+                : Theme.of(context).colorScheme.onSurfaceVariant,
           ),
         );
       }
@@ -131,7 +133,7 @@ class ProductActionsSheet extends ConsumerWidget {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Error al cambiar estado: $e'),
-            backgroundColor: AppTheme.error,
+            backgroundColor: Theme.of(context).colorScheme.error,
           ),
         );
       }

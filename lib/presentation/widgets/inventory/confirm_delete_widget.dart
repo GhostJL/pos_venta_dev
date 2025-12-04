@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:posventa/core/theme/theme.dart';
 import 'package:posventa/presentation/providers/inventory_providers.dart';
 
 void confirmDelete(BuildContext context, WidgetRef ref, item) {
@@ -9,36 +8,33 @@ void confirmDelete(BuildContext context, WidgetRef ref, item) {
     context: context,
     builder: (context) {
       return AlertDialog(
-        backgroundColor: AppTheme.cardBackground,
+        backgroundColor: Theme.of(context).colorScheme.surface,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text(
+        title: Text(
           'Confirmar Eliminación',
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
-        content: const Text(
+        content: Text(
           '¿Está seguro de que desea eliminar este registro de inventario?',
         ),
         actions: [
-          TextButton(
-            onPressed: () => context.pop(),
-            child: const Text('Cancelar'),
-          ),
+          TextButton(onPressed: () => context.pop(), child: Text('Cancelar')),
           ElevatedButton(
             onPressed: () {
               ref.read(inventoryProvider.notifier).deleteInventory(item.id!);
               context.pop();
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
+                SnackBar(
                   content: Text('Inventario eliminado'),
-                  backgroundColor: AppTheme.success,
+                  backgroundColor: Theme.of(context).colorScheme.tertiary,
                 ),
               );
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: AppTheme.error,
+              backgroundColor: Theme.of(context).colorScheme.error,
               foregroundColor: Colors.white,
             ),
-            child: const Text('Eliminar'),
+            child: Text('Eliminar'),
           ),
         ],
       );

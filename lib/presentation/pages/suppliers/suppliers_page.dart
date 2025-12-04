@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:posventa/core/theme/theme.dart';
 import 'package:posventa/domain/entities/supplier.dart';
 import 'package:go_router/go_router.dart';
 import 'package:posventa/presentation/providers/supplier_providers.dart';
@@ -72,8 +71,10 @@ class SuppliersPageState extends ConsumerState<SuppliersPage> {
                         DataCell(
                           Text(
                             supplier.contactPerson ?? '-',
-                            style: const TextStyle(
-                              color: AppTheme.textSecondary,
+                            style: TextStyle(
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onSurfaceVariant,
                             ),
                           ),
                         ),
@@ -86,7 +87,9 @@ class SuppliersPageState extends ConsumerState<SuppliersPage> {
                         DataCell(
                           Text(
                             supplier.email ?? '-',
-                            style: const TextStyle(color: AppTheme.primary),
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.primary,
+                            ),
                           ),
                         ),
                         DataCell(

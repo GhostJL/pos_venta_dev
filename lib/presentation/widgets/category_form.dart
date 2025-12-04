@@ -5,7 +5,6 @@ import 'package:posventa/domain/entities/department.dart';
 import 'package:posventa/presentation/providers/category_providers.dart';
 import 'package:posventa/presentation/providers/department_providers.dart';
 import 'package:posventa/presentation/widgets/common/generic_form_scaffold.dart';
-import 'package:posventa/core/theme/theme.dart';
 import 'package:posventa/core/constants/ui_constants.dart';
 
 class CategoryForm extends ConsumerStatefulWidget {
@@ -54,9 +53,9 @@ class CategoryFormState extends ConsumerState<CategoryForm> {
         if (mounted) {
           Navigator.of(context).pop();
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
+            SnackBar(
               content: Text('Categoría guardada correctamente'),
-              backgroundColor: AppTheme.success,
+              backgroundColor: Theme.of(context).colorScheme.tertiary,
             ),
           );
         }
@@ -65,7 +64,7 @@ class CategoryFormState extends ConsumerState<CategoryForm> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('Error al guardar la categoría: $e'),
-              backgroundColor: AppTheme.error,
+              backgroundColor: Theme.of(context).colorScheme.error,
             ),
           );
         }

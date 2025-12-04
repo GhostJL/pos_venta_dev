@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:posventa/core/theme/theme.dart';
 
 class CustomDataTable<T> extends StatelessWidget {
   final List<DataColumn> columns;
@@ -31,11 +30,11 @@ class CustomDataTable<T> extends StatelessWidget {
 
         return Container(
           decoration: BoxDecoration(
-            color: AppTheme.cardBackground,
+            color: Theme.of(context).colorScheme.surface,
             borderRadius: BorderRadius.circular(20),
             boxShadow: [
               BoxShadow(
-                color: AppTheme.textPrimary.withAlpha(10),
+                color: Theme.of(context).colorScheme.onSurface.withAlpha(10),
                 blurRadius: 20,
                 offset: const Offset(0, 4),
               ),
@@ -84,7 +83,7 @@ class CustomDataTable<T> extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.bold,
-                        color: AppTheme.textSecondary,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
                         letterSpacing: 0.5,
                       ),
                       child: col.label,
@@ -103,7 +102,7 @@ class CustomDataTable<T> extends StatelessWidget {
                   Set<WidgetState> states,
                 ) {
                   if (states.contains(WidgetState.hovered)) {
-                    return AppTheme.primary.withAlpha(10);
+                    return Theme.of(context).colorScheme.primary.withAlpha(10);
                   }
                   return Colors.transparent;
                 }),
@@ -130,16 +129,16 @@ class CustomDataTable<T> extends StatelessWidget {
                     title ?? _getEntityName(),
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(
                       fontWeight: FontWeight.bold,
-                      color: AppTheme.textPrimary,
+                      color: Theme.of(context).colorScheme.onSurface,
                     ),
                   ),
                 ),
-                _buildCountBadge(),
+                _buildCountBadge(context),
               ],
             ),
             const SizedBox(height: 16),
             if (onSearch != null) ...[
-              _buildSearchBar(),
+              _buildSearchBar(context),
               const SizedBox(height: 16),
             ],
             SizedBox(width: double.infinity, child: _buildAddButton(context)),
@@ -154,18 +153,18 @@ class CustomDataTable<T> extends StatelessWidget {
                       style: Theme.of(context).textTheme.headlineSmall
                           ?.copyWith(
                             fontWeight: FontWeight.bold,
-                            color: AppTheme.textPrimary,
+                            color: Theme.of(context).colorScheme.onSurface,
                             fontSize: 24,
                           ),
                     ),
                     const SizedBox(width: 12),
-                    _buildCountBadge(),
+                    _buildCountBadge(context),
                   ],
                 ),
                 Row(
                   children: [
                     if (onSearch != null) ...[
-                      SizedBox(width: 250, child: _buildSearchBar()),
+                      SizedBox(width: 250, child: _buildSearchBar(context)),
                       const SizedBox(width: 16),
                     ],
                     _buildAddButton(context),
@@ -179,17 +178,17 @@ class CustomDataTable<T> extends StatelessWidget {
     );
   }
 
-  Widget _buildSearchBar() {
+  Widget _buildSearchBar(BuildContext context) {
     return TextField(
       onChanged: onSearch,
       decoration: InputDecoration(
         hintText: 'Buscar...',
-        prefixIcon: const Icon(
+        prefixIcon: Icon(
           Icons.search_rounded,
-          color: AppTheme.textSecondary,
+          color: Theme.of(context).colorScheme.onSurfaceVariant,
         ),
         filled: true,
-        fillColor: AppTheme.background,
+        fillColor: Theme.of(context).colorScheme.surface,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide.none,
@@ -203,19 +202,19 @@ class CustomDataTable<T> extends StatelessWidget {
     );
   }
 
-  Widget _buildCountBadge() {
+  Widget _buildCountBadge(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-        color: AppTheme.primary.withAlpha(10),
+        color: Theme.of(context).colorScheme.primary.withAlpha(10),
         borderRadius: BorderRadius.circular(20),
       ),
       child: Text(
         '$itemCount',
-        style: const TextStyle(
+        style: TextStyle(
           fontSize: 14,
           fontWeight: FontWeight.bold,
-          color: AppTheme.primary,
+          color: Theme.of(context).colorScheme.primary,
         ),
       ),
     );
@@ -224,10 +223,10 @@ class CustomDataTable<T> extends StatelessWidget {
   Widget _buildAddButton(BuildContext context) {
     return ElevatedButton.icon(
       onPressed: onAddItem,
-      icon: const Icon(Icons.add_rounded, size: 20),
-      label: const Text('Agregar Nuevo'),
+      icon: Icon(Icons.add_rounded, size: 20),
+      label: Text('Agregar Nuevo'),
       style: ElevatedButton.styleFrom(
-        backgroundColor: AppTheme.primary,
+        backgroundColor: Theme.of(context).colorScheme.primary,
         foregroundColor: Colors.white,
         elevation: 0,
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
@@ -246,12 +245,14 @@ class CustomDataTable<T> extends StatelessWidget {
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: AppTheme.background,
+              color: Theme.of(context).colorScheme.surface,
             ),
             child: Icon(
               Icons.inventory_2_outlined,
               size: 48,
-              color: AppTheme.textSecondary.withAlpha(100),
+              color: Theme.of(
+                context,
+              ).colorScheme.onSurfaceVariant.withAlpha(100),
             ),
           ),
           const SizedBox(height: 24),
@@ -259,7 +260,7 @@ class CustomDataTable<T> extends StatelessWidget {
             emptyText,
             textAlign: TextAlign.center,
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              color: AppTheme.textPrimary,
+              color: Theme.of(context).colorScheme.onSurface,
               fontWeight: FontWeight.w600,
             ),
           ),
@@ -267,9 +268,9 @@ class CustomDataTable<T> extends StatelessWidget {
           Text(
             'Comienza agregando un nuevo elemento a la lista',
             textAlign: TextAlign.center,
-            style: Theme.of(
-              context,
-            ).textTheme.bodyMedium?.copyWith(color: AppTheme.textSecondary),
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
           ),
         ],
       ),

@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:posventa/domain/entities/department.dart';
 import 'package:posventa/presentation/providers/department_providers.dart';
 import 'package:posventa/presentation/widgets/common/generic_form_scaffold.dart';
-import 'package:posventa/core/theme/theme.dart';
+
 import 'package:posventa/core/constants/ui_constants.dart';
 
 class DepartmentForm extends ConsumerStatefulWidget {
@@ -51,9 +51,9 @@ class DepartmentFormState extends ConsumerState<DepartmentForm> {
         if (mounted) {
           Navigator.of(context).pop();
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
+            SnackBar(
               content: Text('Departamento guardado correctamente'),
-              backgroundColor: AppTheme.success,
+              backgroundColor: Theme.of(context).colorScheme.tertiary,
             ),
           );
         }
@@ -62,7 +62,7 @@ class DepartmentFormState extends ConsumerState<DepartmentForm> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('Error al guardar el departamento: $e'),
-              backgroundColor: AppTheme.error,
+              backgroundColor: Theme.of(context).colorScheme.error,
             ),
           );
         }

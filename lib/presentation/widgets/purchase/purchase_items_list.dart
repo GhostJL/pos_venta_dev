@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:posventa/core/theme/theme.dart';
+
 import 'package:posventa/domain/entities/product_variant.dart';
 import 'package:posventa/domain/entities/purchase.dart';
 import 'package:posventa/domain/entities/purchase_item.dart';
@@ -115,10 +115,10 @@ class _PurchaseItemTile extends ConsumerWidget {
                   children: [
                     Text(
                       item.productName ?? 'Producto #${item.productId}',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
-                        color: AppTheme.primary,
+                        color: Theme.of(context).colorScheme.primary,
                         height: 1.3,
                       ),
                       maxLines: 2,
@@ -132,23 +132,25 @@ class _PurchaseItemTile extends ConsumerWidget {
                           vertical: 4,
                         ),
                         decoration: BoxDecoration(
-                          color: AppTheme.secondary.withAlpha(55),
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.secondary.withAlpha(55),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            const Icon(
+                            Icon(
                               Icons.inventory_2_rounded,
                               size: 12,
-                              color: AppTheme.primary,
+                              color: Theme.of(context).colorScheme.primary,
                             ),
-                            const SizedBox(width: 4),
+                            SizedBox(width: 4),
                             Text(
                               '${variant.quantity.toStringAsFixed(0)} un/caja',
                               style: TextStyle(
                                 fontSize: 11,
-                                color: AppTheme.primary,
+                                color: Theme.of(context).colorScheme.primary,
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
@@ -183,7 +185,7 @@ class _PurchaseItemTile extends ConsumerWidget {
                         text: TextSpan(
                           style: TextStyle(
                             fontSize: 13,
-                            color: AppTheme.primary,
+                            color: Theme.of(context).colorScheme.primary,
                             height: 1.4,
                           ),
                           children: [
@@ -192,7 +194,7 @@ class _PurchaseItemTile extends ConsumerWidget {
                                   '${displayQuantity.toStringAsFixed(displayQuantity % 1 == 0 ? 0 : 2)} $displayUnit',
                               style: TextStyle(
                                 fontWeight: FontWeight.w600,
-                                color: AppTheme.primary,
+                                color: Theme.of(context).colorScheme.primary,
                               ),
                             ),
                             const TextSpan(text: ' × '),
@@ -200,7 +202,7 @@ class _PurchaseItemTile extends ConsumerWidget {
                               text: '\$${displayCost.toStringAsFixed(2)}',
                               style: TextStyle(
                                 fontWeight: FontWeight.w600,
-                                color: AppTheme.primary,
+                                color: Theme.of(context).colorScheme.primary,
                               ),
                             ),
                             const TextSpan(text: ' c/u'),
@@ -249,7 +251,7 @@ class _PurchaseItemTile extends ConsumerWidget {
                           'Total',
                           style: TextStyle(
                             fontSize: 14,
-                            color: AppTheme.primary,
+                            color: Theme.of(context).colorScheme.primary,
                             fontWeight: FontWeight.w500,
                           ),
                         ),
@@ -259,7 +261,7 @@ class _PurchaseItemTile extends ConsumerWidget {
                           style: TextStyle(
                             fontSize: 20,
                             fontWeight: FontWeight.w700,
-                            color: AppTheme.primary,
+                            color: Theme.of(context).colorScheme.primary,
                           ),
                         ),
                       ],

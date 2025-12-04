@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:posventa/core/theme/theme.dart';
 
 /// Reusable placeholder page for modules under development
 class PlaceholderPage extends StatelessWidget {
@@ -21,7 +20,7 @@ class PlaceholderPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = accentColor ?? AppTheme.primary;
+    final color = accentColor ?? Theme.of(context).colorScheme.primary;
 
     return Scaffold(
       appBar: AppBar(
@@ -53,7 +52,7 @@ class PlaceholderPage extends StatelessWidget {
                 moduleName,
                 style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                   fontWeight: FontWeight.bold,
-                  color: AppTheme.textPrimary,
+                  color: Theme.of(context).colorScheme.onSurface,
                 ),
                 textAlign: TextAlign.center,
               ),
@@ -88,7 +87,7 @@ class PlaceholderPage extends StatelessWidget {
                 child: Text(
                   description,
                   style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                    color: AppTheme.textSecondary,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
                     height: 1.6,
                   ),
                   textAlign: TextAlign.center,
@@ -102,9 +101,11 @@ class PlaceholderPage extends StatelessWidget {
                   constraints: const BoxConstraints(maxWidth: 500),
                   padding: const EdgeInsets.all(24),
                   decoration: BoxDecoration(
-                    color: AppTheme.cardBackground,
+                    color: Theme.of(context).colorScheme.surface,
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: AppTheme.borders),
+                    border: Border.all(
+                      color: Theme.of(context).colorScheme.outline,
+                    ),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -118,7 +119,9 @@ class PlaceholderPage extends StatelessWidget {
                             style: Theme.of(context).textTheme.titleMedium
                                 ?.copyWith(
                                   fontWeight: FontWeight.bold,
-                                  color: AppTheme.textPrimary,
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurface,
                                 ),
                           ),
                         ],
@@ -140,7 +143,11 @@ class PlaceholderPage extends StatelessWidget {
                                 child: Text(
                                   feature,
                                   style: Theme.of(context).textTheme.bodyMedium
-                                      ?.copyWith(color: AppTheme.textSecondary),
+                                      ?.copyWith(
+                                        color: Theme.of(
+                                          context,
+                                        ).colorScheme.onSurfaceVariant,
+                                      ),
                                 ),
                               ),
                             ],

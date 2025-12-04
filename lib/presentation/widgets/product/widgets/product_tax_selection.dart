@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:posventa/core/theme/theme.dart';
 import 'package:posventa/domain/entities/product_tax.dart';
 import 'package:posventa/domain/entities/tax_rate.dart';
 
@@ -52,8 +51,10 @@ class ProductTaxSelection extends StatelessWidget {
               label: Text('${taxRate.name} (${taxRate.rate}%)'),
               selected: isSelected,
               onSelected: (_) => _toggleTax(taxRate),
-              selectedColor: AppTheme.primary.withValues(alpha: 0.2),
-              checkmarkColor: AppTheme.primary,
+              selectedColor: Theme.of(
+                context,
+              ).colorScheme.primary.withValues(alpha: 0.2),
+              checkmarkColor: Theme.of(context).colorScheme.primary,
             );
           }).toList(),
         ),

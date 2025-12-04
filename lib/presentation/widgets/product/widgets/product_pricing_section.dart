@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:posventa/core/theme/theme.dart';
 import 'package:posventa/presentation/providers/providers.dart';
 
 /// Widget for product pricing section
@@ -34,7 +33,7 @@ class ProductPricingSection extends ConsumerWidget {
         unitsAsync.when(
           data: (units) => DropdownButtonFormField<int>(
             initialValue: selectedUnitId,
-            decoration: const InputDecoration(
+            decoration: InputDecoration(
               labelText: 'Unidad de Medida',
               prefixIcon: Icon(Icons.scale_rounded),
             ),
@@ -54,10 +53,10 @@ class ProductPricingSection extends ConsumerWidget {
         SwitchListTile(
           title: const Text('Venta por Peso'),
           value: isSoldByWeight,
-          activeThumbColor: AppTheme.primary,
+          activeThumbColor: Theme.of(context).colorScheme.primary,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
-            side: const BorderSide(color: AppTheme.borders),
+            side: BorderSide(color: Theme.of(context).colorScheme.outline),
           ),
           onChanged: onSoldByWeightChanged,
         ),
@@ -67,14 +66,12 @@ class ProductPricingSection extends ConsumerWidget {
             Expanded(
               child: TextFormField(
                 controller: costPriceController,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   labelText: 'Costo',
                   prefixText: '\$ ',
                   prefixIcon: Icon(Icons.attach_money_rounded),
                 ),
-                keyboardType: const TextInputType.numberWithOptions(
-                  decimal: true,
-                ),
+                keyboardType: TextInputType.numberWithOptions(decimal: true),
                 validator: (value) =>
                     value?.isEmpty ?? true ? 'Requerido' : null,
               ),
@@ -83,14 +80,12 @@ class ProductPricingSection extends ConsumerWidget {
             Expanded(
               child: TextFormField(
                 controller: salePriceController,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   labelText: 'Venta',
                   prefixText: '\$ ',
                   prefixIcon: Icon(Icons.sell_rounded),
                 ),
-                keyboardType: const TextInputType.numberWithOptions(
-                  decimal: true,
-                ),
+                keyboardType: TextInputType.numberWithOptions(decimal: true),
                 validator: (value) =>
                     value?.isEmpty ?? true ? 'Requerido' : null,
               ),
@@ -100,12 +95,12 @@ class ProductPricingSection extends ConsumerWidget {
         const SizedBox(height: 16),
         TextFormField(
           controller: wholesalePriceController,
-          decoration: const InputDecoration(
+          decoration: InputDecoration(
             labelText: 'Precio Mayorista (Opcional)',
             prefixText: '\$ ',
             prefixIcon: Icon(Icons.storefront_rounded),
           ),
-          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          keyboardType: TextInputType.numberWithOptions(decimal: true),
         ),
       ],
     );

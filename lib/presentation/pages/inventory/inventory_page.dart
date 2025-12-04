@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:posventa/core/theme/theme.dart';
 import 'package:posventa/presentation/providers/inventory_providers.dart';
 import 'package:posventa/presentation/providers/product_provider.dart';
 
@@ -85,7 +84,9 @@ class _InventoryPageState extends ConsumerState<InventoryPage> {
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(16),
                           side: BorderSide(
-                            color: AppTheme.borders.withValues(alpha: 0.2),
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.outline.withValues(alpha: 0.2),
                           ),
                         ),
                         child: InkWell(
@@ -126,7 +127,9 @@ class _InventoryPageState extends ConsumerState<InventoryPage> {
                                                 .textTheme
                                                 .bodySmall
                                                 ?.copyWith(
-                                                  color: AppTheme.textSecondary,
+                                                  color: Theme.of(context)
+                                                      .colorScheme
+                                                      .onSurfaceVariant,
                                                 ),
                                           ),
                                         ],
@@ -152,7 +155,9 @@ class _InventoryPageState extends ConsumerState<InventoryPage> {
                                     _buildBadge(
                                       label:
                                           'Stock: ${item.quantityOnHand.toInt()}',
-                                      color: AppTheme.success,
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.tertiary,
                                     ),
                                     const SizedBox(width: 8),
                                     _buildBadge(
@@ -188,9 +193,10 @@ class _InventoryPageState extends ConsumerState<InventoryPage> {
                                         vertical: 8,
                                       ),
                                       side: BorderSide(
-                                        color: AppTheme.primary.withValues(
-                                          alpha: 0.3,
-                                        ),
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .primary
+                                            .withValues(alpha: 0.3),
                                       ),
                                     ),
                                   ),
@@ -227,14 +233,16 @@ class _InventoryPageState extends ConsumerState<InventoryPage> {
           Icon(
             Icons.inventory_2_outlined,
             size: 72,
-            color: AppTheme.textSecondary.withValues(alpha: 0.4),
+            color: Theme.of(
+              context,
+            ).colorScheme.onSurfaceVariant.withValues(alpha: 0.4),
           ),
           const SizedBox(height: 16),
           Text(
             'No hay inventario registrado',
-            style: Theme.of(
-              context,
-            ).textTheme.bodyLarge?.copyWith(color: AppTheme.textSecondary),
+            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
           ),
         ],
       ),
@@ -246,10 +254,13 @@ class _InventoryPageState extends ConsumerState<InventoryPage> {
       width: 48,
       height: 48,
       decoration: BoxDecoration(
-        color: AppTheme.primary.withValues(alpha: 0.1),
+        color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
       ),
-      child: const Icon(Icons.inventory_2_rounded, color: AppTheme.primary),
+      child: Icon(
+        Icons.inventory_2_rounded,
+        color: Theme.of(context).colorScheme.primary,
+      ),
     );
   }
 

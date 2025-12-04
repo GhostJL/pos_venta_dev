@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:posventa/core/theme/theme.dart';
+
 import 'package:posventa/domain/entities/warehouse.dart';
 import 'package:posventa/presentation/providers/warehouse_providers.dart';
 import 'package:posventa/core/constants/ui_constants.dart';
@@ -68,9 +68,9 @@ class _WarehouseFormWidgetState extends ConsumerState<WarehouseFormWidget> {
           }
 
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
+            SnackBar(
               content: Text('Almacén guardado correctamente'),
-              backgroundColor: AppTheme.success,
+              backgroundColor: Theme.of(context).colorScheme.tertiary,
             ),
           );
         }
@@ -79,7 +79,7 @@ class _WarehouseFormWidgetState extends ConsumerState<WarehouseFormWidget> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('Error al guardar el almacén: $e'),
-              backgroundColor: AppTheme.error,
+              backgroundColor: Theme.of(context).colorScheme.error,
             ),
           );
         }
@@ -101,7 +101,7 @@ class _WarehouseFormWidgetState extends ConsumerState<WarehouseFormWidget> {
         borderRadius: BorderRadius.circular(UIConstants.borderRadiusLarge),
       ),
       elevation: 0,
-      backgroundColor: AppTheme.background,
+      backgroundColor: Theme.of(context).colorScheme.surface,
       title: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 8.0),
         child: Text(
@@ -240,9 +240,9 @@ class _SwitchTile extends StatelessWidget {
               const SizedBox(height: 2),
               Text(
                 subtitle,
-                style: Theme.of(
-                  context,
-                ).textTheme.bodySmall?.copyWith(color: AppTheme.textSecondary),
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
               ),
             ],
           ),

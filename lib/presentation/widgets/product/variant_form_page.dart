@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:posventa/core/theme/theme.dart';
 import 'package:posventa/domain/entities/product_variant.dart';
 import 'package:posventa/presentation/providers/providers.dart';
 
@@ -299,7 +298,7 @@ class _VariantFormPageState extends ConsumerState<VariantFormPage> {
                 'Si se desactiva, solo servirá para abastecimiento',
               ),
               value: _isForSale,
-              activeThumbColor: AppTheme.primary,
+              activeThumbColor: Theme.of(context).colorScheme.primary,
               onChanged: (value) => setState(() => _isForSale = value),
             ),
             const SizedBox(height: 32),
@@ -318,10 +317,10 @@ class _VariantFormPageState extends ConsumerState<VariantFormPage> {
   Widget _buildSectionTitle(String title) {
     return Text(
       title,
-      style: const TextStyle(
+      style: TextStyle(
         fontSize: 18,
         fontWeight: FontWeight.bold,
-        color: AppTheme.primary,
+        color: Theme.of(context).colorScheme.primary,
       ),
     );
   }

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:posventa/core/theme/theme.dart';
 import 'package:posventa/domain/entities/user.dart';
 import 'package:posventa/domain/entities/user_permission.dart';
 import 'package:posventa/presentation/providers/auth_provider.dart';
@@ -118,7 +117,7 @@ class _CreateAccountPageState extends ConsumerState<CreateAccountPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Error al crear cuenta: $e'),
-            backgroundColor: AppTheme.error,
+            backgroundColor: Theme.of(context).colorScheme.error,
           ),
         );
       }
@@ -136,9 +135,9 @@ class _CreateAccountPageState extends ConsumerState<CreateAccountPage> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(
+          icon: Icon(
             Icons.arrow_back_rounded,
-            color: AppTheme.textPrimary,
+            color: Theme.of(context).colorScheme.onSurface,
           ),
           onPressed: () => context.go('/login'),
         ),
@@ -155,7 +154,7 @@ class _CreateAccountPageState extends ConsumerState<CreateAccountPage> {
                   'Crear Cuenta Administrativa',
                   style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                     fontWeight: FontWeight.bold,
-                    color: AppTheme.primary,
+                    color: Theme.of(context).colorScheme.primary,
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -163,7 +162,7 @@ class _CreateAccountPageState extends ConsumerState<CreateAccountPage> {
                 Text(
                   'Configura el usuario administrador para empezar a usar el sistema.',
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: AppTheme.textSecondary,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -171,11 +170,13 @@ class _CreateAccountPageState extends ConsumerState<CreateAccountPage> {
                 Container(
                   padding: const EdgeInsets.all(32),
                   decoration: BoxDecoration(
-                    color: AppTheme.cardBackground,
+                    color: Theme.of(context).colorScheme.surface,
                     borderRadius: BorderRadius.circular(24),
                     boxShadow: [
                       BoxShadow(
-                        color: AppTheme.textPrimary.withAlpha(15),
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.onSurface.withAlpha(15),
                         blurRadius: 30,
                         offset: const Offset(0, 10),
                       ),

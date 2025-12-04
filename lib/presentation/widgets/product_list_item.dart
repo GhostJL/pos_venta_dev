@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:posventa/core/theme/theme.dart';
+
 import 'package:posventa/domain/entities/product.dart';
 
 class ProductListItem extends StatelessWidget {
@@ -18,7 +18,7 @@ class ProductListItem extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       elevation: 0,
-      color: AppTheme.cardBackground,
+      color: Theme.of(context).colorScheme.surface,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: InkWell(
         borderRadius: BorderRadius.circular(16),
@@ -27,7 +27,7 @@ class ProductListItem extends StatelessWidget {
           padding: const EdgeInsets.all(16),
           child: Row(
             children: [
-              _buildProductIcon(),
+              _buildProductIcon(context),
               const SizedBox(width: 12),
               Expanded(child: _buildProductInfo(context)),
               _buildTrailing(context),
@@ -38,15 +38,18 @@ class ProductListItem extends StatelessWidget {
     );
   }
 
-  Widget _buildProductIcon() {
+  Widget _buildProductIcon(BuildContext context) {
     return Container(
       width: 48,
       height: 48,
       decoration: BoxDecoration(
-        color: AppTheme.primary.withValues(alpha: 0.08),
+        color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(12),
       ),
-      child: const Icon(Icons.inventory_2_rounded, color: AppTheme.primary),
+      child: Icon(
+        Icons.inventory_2_rounded,
+        color: Theme.of(context).colorScheme.primary,
+      ),
     );
   }
 
@@ -69,9 +72,9 @@ class ProductListItem extends StatelessWidget {
             const SizedBox(width: 8),
             Text(
               product.unitOfMeasure,
-              style: Theme.of(
-                context,
-              ).textTheme.bodySmall?.copyWith(color: AppTheme.textSecondary),
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
             ),
           ],
         ),
@@ -83,14 +86,14 @@ class ProductListItem extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
       decoration: BoxDecoration(
-        color: AppTheme.primary.withValues(alpha: 0.1),
+        color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(20),
       ),
       child: Text(
         '${product.stock?.toInt() ?? 0.toInt()}',
         style: Theme.of(context).textTheme.bodySmall?.copyWith(
           fontWeight: FontWeight.w500,
-          color: AppTheme.primary,
+          color: Theme.of(context).colorScheme.primary,
         ),
       ),
     );
@@ -109,7 +112,7 @@ class ProductListItem extends StatelessWidget {
             key: ValueKey(product.salePriceCents),
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
               fontWeight: FontWeight.bold,
-              color: AppTheme.primary,
+              color: Theme.of(context).colorScheme.primary,
             ),
           ),
         ),

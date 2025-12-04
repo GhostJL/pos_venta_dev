@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:posventa/core/theme/theme.dart';
 import 'package:posventa/domain/entities/sale.dart';
 import 'package:intl/intl.dart';
 
@@ -19,17 +18,19 @@ class TransactionVoidDialog {
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: AppTheme.error.withValues(alpha: 0.1),
+                color: Theme.of(
+                  context,
+                ).colorScheme.error.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: const Icon(
+              child: Icon(
                 Icons.warning_rounded,
-                color: AppTheme.error,
+                color: Theme.of(context).colorScheme.error,
                 size: 24,
               ),
             ),
-            const SizedBox(width: 12),
-            const Expanded(
+            SizedBox(width: 12),
+            Expanded(
               child: Text('Anular Transacción', style: TextStyle(fontSize: 20)),
             ),
           ],
@@ -56,7 +57,7 @@ class TransactionVoidDialog {
                         color: Colors.orange.shade700,
                         size: 20,
                       ),
-                      const SizedBox(width: 8),
+                      SizedBox(width: 8),
                       Expanded(
                         child: Text(
                           'Esta acción no se puede deshacer. El inventario será restaurado automáticamente.',
@@ -70,43 +71,45 @@ class TransactionVoidDialog {
                   ),
                 ),
 
-                const SizedBox(height: 16),
+                SizedBox(height: 16),
 
                 // Sale details
-                _buildDetailRow('Número de venta', sale.saleNumber),
-                const SizedBox(height: 8),
+                _buildDetailRow(context, 'Número de venta', sale.saleNumber),
+                SizedBox(height: 8),
                 _buildDetailRow(
+                  context,
                   'Fecha',
                   DateFormat('dd/MM/yyyy HH:mm').format(sale.saleDate),
                 ),
-                const SizedBox(height: 8),
+                SizedBox(height: 8),
                 _buildDetailRow(
+                  context,
                   'Total',
                   '\$${(sale.totalCents / 100).toStringAsFixed(2)}',
                   isHighlight: true,
                 ),
-                const SizedBox(height: 8),
-                _buildDetailRow('Productos', '${sale.items.length}'),
+                SizedBox(height: 8),
+                _buildDetailRow(context, 'Productos', '${sale.items.length}'),
 
-                const SizedBox(height: 20),
-                const Divider(),
-                const SizedBox(height: 16),
+                SizedBox(height: 20),
+                Divider(),
+                SizedBox(height: 16),
 
                 // Reason field
-                const Text(
+                Text(
                   'Motivo de anulación *',
                   style: TextStyle(
                     fontWeight: FontWeight.w600,
                     fontSize: 14,
-                    color: AppTheme.textPrimary,
+                    color: Theme.of(context).colorScheme.onSurface,
                   ),
                 ),
-                const SizedBox(height: 8),
+                SizedBox(height: 8),
                 TextFormField(
                   controller: reasonController,
                   maxLines: 3,
                   autofocus: true,
-                  decoration: const InputDecoration(
+                  decoration: InputDecoration(
                     hintText:
                         'Ej: Cliente solicitó cancelación, error en el pedido...',
                     border: OutlineInputBorder(),
@@ -128,7 +131,7 @@ class TransactionVoidDialog {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(),
-            child: const Text('Cancelar'),
+            child: Text('Cancelar'),
           ),
           ElevatedButton.icon(
             onPressed: () {
@@ -136,10 +139,10 @@ class TransactionVoidDialog {
                 Navigator.of(dialogContext).pop(reasonController.text.trim());
               }
             },
-            icon: const Icon(Icons.cancel_rounded),
-            label: const Text('Anular Venta'),
+            icon: Icon(Icons.cancel_rounded),
+            label: Text('Anular Venta'),
             style: ElevatedButton.styleFrom(
-              backgroundColor: AppTheme.error,
+              backgroundColor: Theme.of(context).colorScheme.error,
               foregroundColor: Colors.white,
             ),
           ),
@@ -149,6 +152,7 @@ class TransactionVoidDialog {
   }
 
   static Widget _buildDetailRow(
+    BuildContext context,
     String label,
     String value, {
     bool isHighlight = false,
@@ -158,14 +162,19 @@ class TransactionVoidDialog {
       children: [
         Text(
           label,
-          style: const TextStyle(color: AppTheme.textSecondary, fontSize: 13),
+          style: TextStyle(
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+            fontSize: 13,
+          ),
         ),
         Text(
           value,
           style: TextStyle(
             fontWeight: isHighlight ? FontWeight.bold : FontWeight.w600,
             fontSize: isHighlight ? 16 : 14,
-            color: isHighlight ? AppTheme.primary : AppTheme.textPrimary,
+            color: isHighlight
+                ? Theme.of(context).colorScheme.primary
+                : Theme.of(context).colorScheme.onSurface,
           ),
         ),
       ],

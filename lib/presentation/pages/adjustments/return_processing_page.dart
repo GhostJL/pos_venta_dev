@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:posventa/core/theme/theme.dart';
 import 'package:posventa/domain/entities/sale.dart';
 import 'package:posventa/presentation/providers/return_processing_provider.dart';
 import 'package:posventa/presentation/widgets/return_processing/return_items_selector.dart';
@@ -112,12 +111,12 @@ class _ReturnProcessingPageState extends ConsumerState<ReturnProcessingPage> {
         const SizedBox(height: 24),
 
         // Items selector
-        const Text(
+        Text(
           'Seleccionar Productos a Devolver',
           style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.bold,
-            color: AppTheme.textPrimary,
+            color: Theme.of(context).colorScheme.onSurface,
           ),
         ),
         const SizedBox(height: 16),
@@ -158,10 +157,10 @@ class _ReturnProcessingPageState extends ConsumerState<ReturnProcessingPage> {
                     children: [
                       Text(
                         'Venta ${sale.saleNumber}',
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
-                          color: AppTheme.textPrimary,
+                          color: Theme.of(context).colorScheme.onSurface,
                         ),
                       ),
                       if (sale.customerName != null)
@@ -169,7 +168,9 @@ class _ReturnProcessingPageState extends ConsumerState<ReturnProcessingPage> {
                           sale.customerName!,
                           style: TextStyle(
                             fontSize: 14,
-                            color: AppTheme.textSecondary,
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onSurfaceVariant,
                           ),
                         ),
                     ],
@@ -205,15 +206,18 @@ class _ReturnProcessingPageState extends ConsumerState<ReturnProcessingPage> {
       children: [
         Text(
           label,
-          style: TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+          style: TextStyle(
+            fontSize: 12,
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
         ),
         const SizedBox(height: 4),
         Text(
           value,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.w600,
-            color: AppTheme.textPrimary,
+            color: Theme.of(context).colorScheme.onSurface,
           ),
         ),
       ],

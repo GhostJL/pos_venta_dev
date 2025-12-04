@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:posventa/core/theme/theme.dart';
 import 'package:posventa/domain/entities/product_variant.dart';
 
 /// Widget for displaying and managing product variants list
@@ -23,7 +22,7 @@ class ProductVariantsList extends StatelessWidget {
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
-        side: const BorderSide(color: AppTheme.borders),
+        side: BorderSide(color: Theme.of(context).colorScheme.outline),
       ),
       child: Column(
         children: [
@@ -39,7 +38,7 @@ class ProductVariantsList extends StatelessWidget {
           else
             ListView.separated(
               shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
+              physics: NeverScrollableScrollPhysics(),
               itemCount: variants.length,
               separatorBuilder: (context, index) => const Divider(height: 1),
               itemBuilder: (context, index) {

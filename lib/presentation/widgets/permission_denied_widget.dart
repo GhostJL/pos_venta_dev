@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:posventa/core/theme/theme.dart';
 
 class PermissionDeniedWidget extends StatelessWidget {
   final String message;
@@ -58,26 +57,30 @@ class PermissionDeniedWidget extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
-                  color: AppTheme.error.withAlpha(20),
+                  color: Theme.of(context).colorScheme.error.withAlpha(20),
                   shape: BoxShape.circle,
                 ),
-                child: Icon(icon, size: 80, color: AppTheme.error),
+                child: Icon(
+                  icon,
+                  size: 80,
+                  color: Theme.of(context).colorScheme.error,
+                ),
               ),
               const SizedBox(height: 32),
               Text(
                 'Acceso Denegado',
                 style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                   fontWeight: FontWeight.bold,
-                  color: AppTheme.textPrimary,
+                  color: Theme.of(context).colorScheme.onSurface,
                 ),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 16),
               Text(
                 message,
-                style: Theme.of(
-                  context,
-                ).textTheme.bodyLarge?.copyWith(color: AppTheme.textSecondary),
+                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 48),

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:posventa/core/theme/theme.dart';
 import 'package:posventa/presentation/providers/auth_provider.dart';
 import 'package:posventa/presentation/providers/providers.dart';
 
@@ -42,7 +41,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(state.errorMessage!),
-            backgroundColor: AppTheme.error,
+            backgroundColor: Theme.of(context).colorScheme.error,
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(10),
@@ -66,11 +65,13 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                 const SizedBox(height: 40),
                 Container(
                   decoration: BoxDecoration(
-                    color: AppTheme.cardBackground,
+                    color: Theme.of(context).colorScheme.surface,
                     borderRadius: BorderRadius.circular(24),
                     boxShadow: [
                       BoxShadow(
-                        color: AppTheme.textPrimary.withAlpha(15),
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.onSurface.withAlpha(15),
                         blurRadius: 30,
                         offset: const Offset(0, 10),
                       ),
@@ -87,7 +88,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                           style: Theme.of(context).textTheme.headlineSmall
                               ?.copyWith(
                                 fontWeight: FontWeight.bold,
-                                color: AppTheme.textPrimary,
+                                color: Theme.of(context).colorScheme.onSurface,
                               ),
                           textAlign: TextAlign.center,
                         ),
@@ -95,7 +96,11 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                         Text(
                           'Inicia sesión para continuar',
                           style: Theme.of(context).textTheme.bodyMedium
-                              ?.copyWith(color: AppTheme.textSecondary),
+                              ?.copyWith(
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurfaceVariant,
+                              ),
                           textAlign: TextAlign.center,
                         ),
                         const SizedBox(height: 32),
@@ -195,7 +200,9 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                 Text(
                   '© 2024 POSVENTA',
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: AppTheme.textSecondary.withAlpha(150),
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.onSurfaceVariant.withAlpha(150),
                   ),
                 ),
               ],
@@ -212,13 +219,13 @@ class _LoginPageState extends ConsumerState<LoginPage> {
         Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: AppTheme.primary.withAlpha(25),
+            color: Theme.of(context).colorScheme.primary.withAlpha(25),
             shape: BoxShape.circle,
           ),
-          child: const Icon(
+          child: Icon(
             Icons.point_of_sale_rounded,
             size: 48,
-            color: AppTheme.primary,
+            color: Theme.of(context).colorScheme.primary,
           ),
         ),
         const SizedBox(height: 16),
@@ -226,7 +233,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
           'POSVENTA',
           style: Theme.of(context).textTheme.displaySmall?.copyWith(
             fontWeight: FontWeight.w900,
-            color: AppTheme.primary,
+            color: Theme.of(context).colorScheme.primary,
             letterSpacing: 1.5,
           ),
         ),

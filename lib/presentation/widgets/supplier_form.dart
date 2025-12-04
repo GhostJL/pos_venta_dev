@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:posventa/domain/entities/supplier.dart';
 import 'package:posventa/presentation/providers/supplier_providers.dart';
 import 'package:posventa/presentation/widgets/common/generic_form_scaffold.dart';
-import 'package:posventa/core/theme/theme.dart';
 
 class SupplierForm extends ConsumerStatefulWidget {
   final Supplier? supplier;
@@ -60,9 +59,9 @@ class SupplierFormState extends ConsumerState<SupplierForm> {
         if (mounted) {
           Navigator.of(context).pop();
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
+            SnackBar(
               content: Text('Proveedor guardado correctamente'),
-              backgroundColor: AppTheme.success,
+              backgroundColor: Theme.of(context).colorScheme.tertiary,
             ),
           );
         }
@@ -71,7 +70,7 @@ class SupplierFormState extends ConsumerState<SupplierForm> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('Error al guardar el proveedor: $e'),
-              backgroundColor: AppTheme.error,
+              backgroundColor: Theme.of(context).colorScheme.error,
             ),
           );
         }

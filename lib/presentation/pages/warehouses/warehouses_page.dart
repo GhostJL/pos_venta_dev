@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:posventa/core/theme/theme.dart';
+
 import 'package:posventa/domain/entities/warehouse.dart';
 import 'package:posventa/presentation/providers/warehouse_providers.dart';
 import 'package:posventa/presentation/widgets/custom_data_table.dart';
@@ -46,7 +46,7 @@ class _WarehousesPageState extends ConsumerState<WarehousesPage> {
         title: const Text('Gestión de Almacenes'),
         elevation: 0,
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-        foregroundColor: AppTheme.textPrimary,
+        foregroundColor: Theme.of(context).colorScheme.onSurface,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -74,12 +74,14 @@ class _WarehousesPageState extends ConsumerState<WarehousesPage> {
                       Chip(
                         label: Text(warehouse.isMain ? 'Sí' : 'No'),
                         backgroundColor: warehouse.isMain
-                            ? AppTheme.primary.withAlpha(25)
-                            : AppTheme.inputBackground,
+                            ? Theme.of(
+                                context,
+                              ).colorScheme.primary.withAlpha(25)
+                            : Theme.of(context).colorScheme.surface,
                         labelStyle: TextStyle(
                           color: warehouse.isMain
-                              ? AppTheme.primary
-                              : AppTheme.textSecondary,
+                              ? Theme.of(context).colorScheme.primary
+                              : Theme.of(context).colorScheme.onSurfaceVariant,
                           fontWeight: FontWeight.w600,
                         ),
                         side: BorderSide.none,

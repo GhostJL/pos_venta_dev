@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:posventa/core/theme/theme.dart';
 
 class ComingSoonPage extends StatelessWidget {
   final String title;
@@ -12,7 +11,7 @@ class ComingSoonPage extends StatelessWidget {
     required this.title,
     required this.description,
     required this.icon,
-    this.iconColor = AppTheme.primary,
+    this.iconColor = Colors.amber,
   });
 
   @override
@@ -38,16 +37,16 @@ class ComingSoonPage extends StatelessWidget {
                 'Próximamente',
                 style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                   fontWeight: FontWeight.bold,
-                  color: AppTheme.textPrimary,
+                  color: Theme.of(context).colorScheme.onSurface,
                 ),
               ),
               const SizedBox(height: 16),
               Text(
                 description,
                 textAlign: TextAlign.center,
-                style: Theme.of(
-                  context,
-                ).textTheme.bodyLarge?.copyWith(color: AppTheme.textSecondary),
+                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
               ),
               const SizedBox(height: 32),
               Container(

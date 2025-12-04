@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:posventa/core/theme/theme.dart';
 import 'package:posventa/domain/entities/sale_item.dart';
 import 'package:posventa/domain/entities/return_reason.dart';
 import 'package:posventa/presentation/providers/return_processing_provider.dart';
@@ -153,10 +152,10 @@ class _ReturnItemsSelectorState extends ConsumerState<ReturnItemsSelector> {
                     children: [
                       Text(
                         item.productName ?? 'Producto #${item.productId}',
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
-                          color: AppTheme.textPrimary,
+                          color: Theme.of(context).colorScheme.onSurface,
                         ),
                       ),
                       const SizedBox(height: 4),
@@ -164,7 +163,7 @@ class _ReturnItemsSelectorState extends ConsumerState<ReturnItemsSelector> {
                         'Vendido: ${item.quantity} • Disponible: $maxQuantity',
                         style: TextStyle(
                           fontSize: 12,
-                          color: AppTheme.textSecondary,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
                         ),
                       ),
                     ],
@@ -172,10 +171,10 @@ class _ReturnItemsSelectorState extends ConsumerState<ReturnItemsSelector> {
                 ),
                 Text(
                   '\$${item.unitPrice.toStringAsFixed(2)}',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
-                    color: AppTheme.textPrimary,
+                    color: Theme.of(context).colorScheme.onSurface,
                   ),
                 ),
               ],
@@ -190,7 +189,11 @@ class _ReturnItemsSelectorState extends ConsumerState<ReturnItemsSelector> {
                       controller: _quantityControllers[item.id],
                       decoration: InputDecoration(
                         labelText: 'Cantidad',
-                        border: const OutlineInputBorder(),
+                        border: OutlineInputBorder(
+                          borderSide: BorderSide(
+                            color: Theme.of(context).colorScheme.onSurface,
+                          ),
+                        ),
                         suffixText: item.unitOfMeasure,
                         errorMaxLines: 2,
                       ),

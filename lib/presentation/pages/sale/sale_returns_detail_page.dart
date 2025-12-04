@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:posventa/core/theme/theme.dart';
 import 'package:posventa/domain/entities/sale.dart';
 import 'package:posventa/domain/entities/sale_return.dart';
 import 'package:posventa/presentation/providers/return_processing_provider.dart';
@@ -155,7 +154,7 @@ class SaleReturnsDetailPage extends ConsumerWidget {
                 width: 4,
                 height: 44,
                 decoration: BoxDecoration(
-                  color: AppTheme.primary,
+                  color: Theme.of(context).colorScheme.primary,
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:posventa/core/theme/theme.dart';
 import 'package:posventa/domain/entities/brand.dart';
 import 'package:go_router/go_router.dart';
 import 'package:posventa/presentation/providers/brand_providers.dart';
@@ -68,7 +67,7 @@ class _BrandsPageState extends ConsumerState<BrandsPage> {
                     brand.name,
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       fontWeight: FontWeight.w600,
-                      color: AppTheme.textPrimary,
+                      color: Theme.of(context).colorScheme.onSurface,
                     ),
                   ),
                 ),
@@ -76,7 +75,7 @@ class _BrandsPageState extends ConsumerState<BrandsPage> {
                   Text(
                     brand.code,
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: AppTheme.textSecondary,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
                   ),
                 ),

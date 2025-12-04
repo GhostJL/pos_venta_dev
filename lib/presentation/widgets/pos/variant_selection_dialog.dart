@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:posventa/core/theme/theme.dart';
 import 'package:posventa/domain/entities/product.dart';
 
 class VariantSelectionDialog extends StatelessWidget {
@@ -34,10 +33,10 @@ class VariantSelectionDialog extends StatelessWidget {
               ),
               trailing: Text(
                 '\$${variant.price.toStringAsFixed(2)}',
-                style: const TextStyle(
+                style: TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 16,
-                  color: AppTheme.primary,
+                  color: Theme.of(context).colorScheme.primary,
                 ),
               ),
               onTap: () {

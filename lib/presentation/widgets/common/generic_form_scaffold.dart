@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:posventa/core/theme/theme.dart';
 import 'package:posventa/core/constants/ui_constants.dart';
 
 class GenericFormScaffold extends StatelessWidget {
@@ -60,9 +59,11 @@ class GenericFormScaffold extends StatelessWidget {
               ),
             ),
             elevation: 0,
-            backgroundColor: AppTheme.primary,
+            backgroundColor: Theme.of(context).colorScheme.primary,
             foregroundColor: Colors.white,
-            disabledBackgroundColor: AppTheme.primary.withAlpha(100),
+            disabledBackgroundColor: Theme.of(
+              context,
+            ).colorScheme.primary.withAlpha(100),
           ),
           child: isLoading
               ? const SizedBox(

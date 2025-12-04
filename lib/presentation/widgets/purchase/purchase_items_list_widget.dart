@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:posventa/core/theme/theme.dart';
 import 'package:posventa/domain/entities/product.dart';
 import 'package:posventa/domain/entities/purchase_item.dart';
 import 'package:posventa/presentation/widgets/purchase/your_purchase/cart_item_widget.dart';
@@ -22,7 +21,7 @@ class PurchaseItemsListWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (items.isEmpty) return _buildEmptyState();
+    if (items.isEmpty) return _buildEmptyState(context);
 
     return ListView.separated(
       shrinkWrap: true,
@@ -40,7 +39,7 @@ class PurchaseItemsListWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildEmptyState() {
+  Widget _buildEmptyState(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 72, horizontal: 32),
       decoration: BoxDecoration(
@@ -70,7 +69,9 @@ class PurchaseItemsListWidget extends StatelessWidget {
                   child: Icon(
                     Icons.shopping_cart_outlined,
                     size: 40,
-                    color: AppTheme.primary.withValues(alpha: 0.4),
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.primary.withValues(alpha: 0.4),
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -78,7 +79,9 @@ class PurchaseItemsListWidget extends StatelessWidget {
                   'Carrito vacío',
                   style: TextStyle(
                     fontSize: 16,
-                    color: AppTheme.primary.withValues(alpha: 0.7),
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.primary.withValues(alpha: 0.7),
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -87,7 +90,9 @@ class PurchaseItemsListWidget extends StatelessWidget {
                   'Agrega productos para comenzar',
                   style: TextStyle(
                     fontSize: 13,
-                    color: AppTheme.primary.withValues(alpha: 0.5),
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.primary.withValues(alpha: 0.5),
                   ),
                 ),
               ],

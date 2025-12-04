@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:posventa/core/theme/theme.dart';
 import 'package:posventa/presentation/providers/auth_provider.dart';
 import 'package:posventa/presentation/providers/providers.dart';
 import 'package:posventa/presentation/widgets/dashboard_card.dart';
@@ -35,9 +34,11 @@ class DashboardAdminPage extends ConsumerWidget {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               decoration: BoxDecoration(
-                color: AppTheme.cardBackground,
+                color: Theme.of(context).colorScheme.surface,
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: AppTheme.borders.withAlpha(50)),
+                border: Border.all(
+                  color: Theme.of(context).colorScheme.outline.withAlpha(50),
+                ),
                 boxShadow: [
                   BoxShadow(
                     color: Colors.black.withAlpha(5),
@@ -48,12 +49,15 @@ class DashboardAdminPage extends ConsumerWidget {
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.search_rounded, color: AppTheme.primary),
+                  Icon(
+                    Icons.search_rounded,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
                   const SizedBox(width: 12),
                   Text(
                     'Buscar (Ctrl + K)...',
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: AppTheme.textSecondary,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
                   ),
                 ],
@@ -66,15 +70,17 @@ class DashboardAdminPage extends ConsumerWidget {
             onPressed: () {
               _confirmLogout(context, ref);
             },
-            icon: const Icon(Icons.logout_rounded),
+            icon: Icon(Icons.logout_rounded),
             tooltip: 'Cerrar Sesión',
             style: IconButton.styleFrom(
-              backgroundColor: AppTheme.cardBackground,
-              foregroundColor: AppTheme.error,
+              backgroundColor: Theme.of(context).colorScheme.surface,
+              foregroundColor: Theme.of(context).colorScheme.error,
               padding: const EdgeInsets.all(12),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
-                side: BorderSide(color: AppTheme.borders.withAlpha(50)),
+                side: BorderSide(
+                  color: Theme.of(context).colorScheme.outline.withAlpha(50),
+                ),
               ),
             ),
           ),
@@ -135,7 +141,7 @@ class DashboardAdminPage extends ConsumerWidget {
           '¡Hola, ${firstName ?? 'Usuario'}!',
           style: Theme.of(context).textTheme.headlineMedium?.copyWith(
             fontWeight: FontWeight.w800,
-            color: AppTheme.textPrimary,
+            color: Theme.of(context).colorScheme.onSurface,
             letterSpacing: -0.5,
           ),
         ),
@@ -143,7 +149,7 @@ class DashboardAdminPage extends ConsumerWidget {
         Text(
           'Bienvenido a tu panel de control.',
           style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-            color: AppTheme.textSecondary,
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
             fontSize: 16,
           ),
         ),
@@ -159,9 +165,11 @@ class DashboardAdminPage extends ConsumerWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
       decoration: BoxDecoration(
-        color: AppTheme.cardBackground,
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppTheme.borders.withAlpha(50)),
+        border: Border.all(
+          color: Theme.of(context).colorScheme.outline.withAlpha(50),
+        ),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withAlpha(5),
@@ -184,12 +192,12 @@ class DashboardAdminPage extends ConsumerWidget {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: AppTheme.primary.withAlpha(10),
+                  color: Theme.of(context).colorScheme.primary.withAlpha(10),
                   borderRadius: BorderRadius.circular(14),
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.calendar_today_rounded,
-                  color: AppTheme.primary,
+                  color: Theme.of(context).colorScheme.primary,
                   size: 24,
                 ),
               ),
@@ -315,7 +323,9 @@ class DashboardAdminPage extends ConsumerWidget {
           ),
           FilledButton(
             onPressed: () => Navigator.pop(context, true),
-            style: FilledButton.styleFrom(backgroundColor: AppTheme.error),
+            style: FilledButton.styleFrom(
+              backgroundColor: Theme.of(context).colorScheme.error,
+            ),
             child: const Text('Salir'),
           ),
         ],
@@ -333,14 +343,14 @@ class DashboardAdminPage extends ConsumerWidget {
       padding: const EdgeInsets.only(bottom: 20.0),
       child: Row(
         children: [
-          Icon(icon, color: AppTheme.primary, size: 24),
+          Icon(icon, color: Theme.of(context).colorScheme.primary, size: 24),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
               title,
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
                 fontWeight: FontWeight.bold,
-                color: AppTheme.textPrimary,
+                color: Theme.of(context).colorScheme.onSurface,
                 letterSpacing: -0.5,
               ),
               overflow: TextOverflow.ellipsis,
@@ -361,7 +371,7 @@ class DashboardAdminPage extends ConsumerWidget {
         title: 'Punto de Venta',
         value: 'Iniciar Venta',
         icon: Icons.point_of_sale_rounded,
-        iconColor: AppTheme.primary,
+        iconColor: Theme.of(context).colorScheme.primary,
         onTap: () => context.go('/sales'),
       ),
       DashboardCard(

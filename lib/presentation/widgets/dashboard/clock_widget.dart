@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:posventa/core/theme/theme.dart';
 
 class ClockWidget extends StatefulWidget {
   const ClockWidget({super.key});
@@ -44,15 +43,15 @@ class _ClockWidgetState extends State<ClockWidget> {
           timeFormat.format(_currentTime),
           style: Theme.of(context).textTheme.titleLarge?.copyWith(
             fontWeight: FontWeight.bold,
-            color: AppTheme.textPrimary,
+            color: Theme.of(context).colorScheme.onSurface,
             fontFeatures: [const FontFeature.tabularFigures()],
           ),
         ),
         Text(
           dateFormat.format(_currentTime),
-          style: Theme.of(
-            context,
-          ).textTheme.bodySmall?.copyWith(color: AppTheme.textSecondary),
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
         ),
       ],
     );

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import 'package:posventa/core/theme/theme.dart';
 import 'package:posventa/presentation/providers/inventory_lot_providers.dart';
 
 class InventoryLotDetailPage extends ConsumerWidget {
@@ -47,7 +46,7 @@ class InventoryLotDetailPage extends ConsumerWidget {
                             Icon(
                               Icons.qr_code_2,
                               size: 32,
-                              color: AppTheme.primary,
+                              color: Theme.of(context).colorScheme.primary,
                             ),
                             const SizedBox(width: 12),
                             Expanded(

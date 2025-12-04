@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:posventa/core/theme/theme.dart';
 import 'package:posventa/domain/entities/tax_rate.dart';
 import 'package:posventa/presentation/providers/tax_rate_provider.dart';
 import 'package:posventa/presentation/widgets/custom_data_table.dart';
@@ -64,9 +63,9 @@ class _TaxRatePageState extends ConsumerState<TaxRatePage> {
                         DataCell(
                           Text(
                             '${(taxRate.rate * 100).toStringAsFixed(2)}%',
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontWeight: FontWeight.bold,
-                              color: AppTheme.primary,
+                              color: Theme.of(context).colorScheme.primary,
                             ),
                           ),
                         ),
@@ -78,16 +77,22 @@ class _TaxRatePageState extends ConsumerState<TaxRatePage> {
                                     vertical: 4,
                                   ),
                                   decoration: BoxDecoration(
-                                    color: AppTheme.success.withAlpha(10),
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.tertiary.withAlpha(10),
                                     borderRadius: BorderRadius.circular(8),
                                     border: Border.all(
-                                      color: AppTheme.success.withAlpha(50),
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.tertiary.withAlpha(50),
                                     ),
                                   ),
-                                  child: const Text(
+                                  child: Text(
                                     'Default',
                                     style: TextStyle(
-                                      color: AppTheme.success,
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.tertiary,
                                       fontSize: 12,
                                       fontWeight: FontWeight.bold,
                                     ),
@@ -106,8 +111,10 @@ class _TaxRatePageState extends ConsumerState<TaxRatePage> {
                                         ? Icons.edit_rounded
                                         : Icons.visibility_rounded,
                                     color: taxRate.isEditable
-                                        ? AppTheme.primary
-                                        : AppTheme.textSecondary,
+                                        ? Theme.of(context).colorScheme.primary
+                                        : Theme.of(
+                                            context,
+                                          ).colorScheme.onSurfaceVariant,
                                   ),
                                   onPressed: () =>
                                       _showTaxRateDialog(context, taxRate),
@@ -117,9 +124,9 @@ class _TaxRatePageState extends ConsumerState<TaxRatePage> {
                                 ),
                               if (hasManagePermission)
                                 IconButton(
-                                  icon: const Icon(
+                                  icon: Icon(
                                     Icons.delete_rounded,
-                                    color: AppTheme.error,
+                                    color: Theme.of(context).colorScheme.error,
                                   ),
                                   onPressed: taxRate.isEditable
                                       ? () => _deleteTaxRate(
@@ -134,9 +141,11 @@ class _TaxRatePageState extends ConsumerState<TaxRatePage> {
                                 ),
                               if (hasManagePermission && !taxRate.isDefault)
                                 PopupMenuButton<String>(
-                                  icon: const Icon(
+                                  icon: Icon(
                                     Icons.more_vert_rounded,
-                                    color: AppTheme.textSecondary,
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.onSurfaceVariant,
                                   ),
                                   onSelected: (value) {
                                     if (value == 'setDefault') {
@@ -147,14 +156,16 @@ class _TaxRatePageState extends ConsumerState<TaxRatePage> {
                                   },
                                   itemBuilder: (BuildContext context) =>
                                       <PopupMenuEntry<String>>[
-                                        const PopupMenuItem<String>(
+                                        PopupMenuItem<String>(
                                           value: 'setDefault',
                                           child: Row(
                                             children: [
                                               Icon(
                                                 Icons
                                                     .check_circle_outline_rounded,
-                                                color: AppTheme.success,
+                                                color: Theme.of(
+                                                  context,
+                                                ).colorScheme.tertiary,
                                                 size: 20,
                                               ),
                                               SizedBox(width: 8),
@@ -211,14 +222,16 @@ class _TaxRatePageState extends ConsumerState<TaxRatePage> {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text(
+            child: Text(
               'Cancelar',
-              style: TextStyle(color: AppTheme.textSecondary),
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
             ),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
-              backgroundColor: AppTheme.error,
+              backgroundColor: Theme.of(context).colorScheme.error,
               foregroundColor: Colors.white,
               elevation: 0,
               shape: RoundedRectangleBorder(
@@ -229,7 +242,7 @@ class _TaxRatePageState extends ConsumerState<TaxRatePage> {
               ref.read(taxRateListProvider.notifier).deleteTaxRate(taxRate.id!);
               Navigator.of(context).pop();
             },
-            child: const Text('Eliminar'),
+            child: Text('Eliminar'),
           ),
         ],
       ),

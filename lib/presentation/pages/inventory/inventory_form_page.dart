@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:posventa/core/theme/theme.dart';
 import 'package:posventa/domain/entities/inventory.dart';
 import 'package:posventa/presentation/providers/inventory_providers.dart';
 
@@ -181,7 +180,7 @@ class _InventoryFormPageState extends ConsumerState<InventoryFormPage> {
               ElevatedButton(
                 onPressed: _saveInventory,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppTheme.primary,
+                  backgroundColor: Theme.of(context).colorScheme.primary,
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(

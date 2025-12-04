@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
-import 'package:posventa/core/theme/theme.dart';
 
 class BarcodeScannerWidget extends StatefulWidget {
   final Function(BuildContext context, String barcode) onBarcodeScanned;
@@ -110,7 +109,7 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget> {
                         vertical: 8,
                       ),
                       decoration: BoxDecoration(
-                        color: AppTheme.success,
+                        color: Theme.of(context).colorScheme.tertiary,
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Row(
@@ -205,7 +204,7 @@ class ScannerOverlayPainter extends CustomPainter {
 
     // Esquinas del marco
     final cornerPaint = Paint()
-      ..color = AppTheme.primary
+      ..color = Colors.white
       ..style = PaintingStyle.stroke
       ..strokeWidth = 4
       ..strokeCap = StrokeCap.round;
@@ -262,7 +261,7 @@ class ScannerOverlayPainter extends CustomPainter {
 
     // Línea de escaneo animada (opcional, se puede animar con AnimationController)
     final scanLinePaint = Paint()
-      ..color = AppTheme.primary.withAlpha(10)
+      ..color = Colors.white
       ..style = PaintingStyle.fill;
 
     canvas.drawRect(

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:posventa/core/theme/theme.dart';
 
 /// Widget reutilizable para diálogos de confirmación de eliminación.
 ///
@@ -65,7 +64,7 @@ class ConfirmDeleteDialog extends StatelessWidget {
         ),
         ElevatedButton(
           style: ElevatedButton.styleFrom(
-            backgroundColor: AppTheme.error,
+            backgroundColor: Theme.of(context).colorScheme.error,
             foregroundColor: Colors.white,
             elevation: 0,
             shape: RoundedRectangleBorder(
@@ -88,7 +87,7 @@ class ConfirmDeleteDialog extends StatelessWidget {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(message),
-                backgroundColor: AppTheme.success,
+                backgroundColor: Theme.of(context).colorScheme.tertiary,
               ),
             );
           },

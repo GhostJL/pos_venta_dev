@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:posventa/core/theme/theme.dart';
 
 class ProductSearchBar extends StatelessWidget {
   final TextEditingController controller;
@@ -30,7 +29,7 @@ class ProductSearchBar extends StatelessWidget {
         const SizedBox(width: 8),
         Container(
           decoration: BoxDecoration(
-            color: AppTheme.primary,
+            color: Theme.of(context).colorScheme.primary,
             borderRadius: BorderRadius.circular(8),
           ),
           child: IconButton(

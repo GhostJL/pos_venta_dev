@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:posventa/core/theme/theme.dart';
 
 /// Widget reutilizable para botones de acción en DataTables.
 ///
@@ -41,9 +40,9 @@ class DataTableActions extends StatelessWidget {
       children: [
         if (hasEditPermission && onEdit != null)
           IconButton(
-            icon: const Icon(
+            icon: Icon(
               Icons.edit_rounded,
-              color: AppTheme.primary,
+              color: Theme.of(context).colorScheme.primary,
               size: 20,
             ),
             tooltip: editTooltip ?? 'Editar',
@@ -51,9 +50,9 @@ class DataTableActions extends StatelessWidget {
           ),
         if (hasDeletePermission && onDelete != null)
           IconButton(
-            icon: const Icon(
+            icon: Icon(
               Icons.delete_rounded,
-              color: AppTheme.error,
+              color: Theme.of(context).colorScheme.error,
               size: 20,
             ),
             tooltip: deleteTooltip ?? 'Eliminar',

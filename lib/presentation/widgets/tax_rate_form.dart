@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:posventa/domain/entities/tax_rate.dart';
 import 'package:posventa/presentation/providers/tax_rate_provider.dart';
-import 'package:posventa/core/theme/theme.dart';
+
 import 'package:posventa/core/constants/ui_constants.dart';
 
 class TaxRateForm extends ConsumerStatefulWidget {
@@ -126,7 +126,7 @@ class _TaxRateFormState extends ConsumerState<TaxRateForm> {
                   style: TextStyle(fontSize: 12),
                 ),
                 value: _isDefault,
-                activeThumbColor: AppTheme.primary,
+                activeThumbColor: Theme.of(context).colorScheme.primary,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
@@ -146,7 +146,7 @@ class _TaxRateFormState extends ConsumerState<TaxRateForm> {
                   style: TextStyle(fontSize: 12),
                 ),
                 value: _isOptional,
-                activeThumbColor: AppTheme.primary,
+                activeThumbColor: Theme.of(context).colorScheme.primary,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
@@ -202,9 +202,9 @@ class _TaxRateFormState extends ConsumerState<TaxRateForm> {
         if (notifier.isDuplicateName(_name, widget.taxRate?.id)) {
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
+              SnackBar(
                 content: Text('Ya existe un impuesto con este nombre.'),
-                backgroundColor: AppTheme.error,
+                backgroundColor: Theme.of(context).colorScheme.error,
               ),
             );
           }
@@ -214,9 +214,9 @@ class _TaxRateFormState extends ConsumerState<TaxRateForm> {
         if (notifier.isDuplicateCode(_code, widget.taxRate?.id)) {
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
+              SnackBar(
                 content: Text('Ya existe un impuesto con este código.'),
-                backgroundColor: AppTheme.error,
+                backgroundColor: Theme.of(context).colorScheme.error,
               ),
             );
           }
@@ -226,11 +226,11 @@ class _TaxRateFormState extends ConsumerState<TaxRateForm> {
         if (!_isDefault && !_isOptional) {
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
+              SnackBar(
                 content: Text(
                   'Debe seleccionar al menos una opción (Predeterminada u Opcional).',
                 ),
-                backgroundColor: AppTheme.error,
+                backgroundColor: Theme.of(context).colorScheme.error,
               ),
             );
           }
@@ -258,9 +258,9 @@ class _TaxRateFormState extends ConsumerState<TaxRateForm> {
         if (mounted) {
           Navigator.of(context).pop();
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
+            SnackBar(
               content: Text('Tasa de impuesto guardada correctamente'),
-              backgroundColor: AppTheme.success,
+              backgroundColor: Theme.of(context).colorScheme.tertiary,
             ),
           );
         }
@@ -269,7 +269,7 @@ class _TaxRateFormState extends ConsumerState<TaxRateForm> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('Error al guardar la tasa: $e'),
-              backgroundColor: AppTheme.error,
+              backgroundColor: Theme.of(context).colorScheme.error,
             ),
           );
         }

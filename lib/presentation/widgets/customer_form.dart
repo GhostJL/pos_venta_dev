@@ -4,7 +4,7 @@ import 'package:posventa/domain/entities/customer.dart';
 import 'package:posventa/presentation/providers/customer_providers.dart';
 import 'package:posventa/presentation/providers/providers.dart';
 import 'package:posventa/presentation/widgets/common/generic_form_scaffold.dart';
-import 'package:posventa/core/theme/theme.dart';
+
 import 'package:posventa/core/constants/ui_constants.dart';
 
 class CustomerForm extends ConsumerStatefulWidget {
@@ -86,9 +86,9 @@ class CustomerFormState extends ConsumerState<CustomerForm> {
         if (mounted) {
           Navigator.of(context).pop();
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
+            SnackBar(
               content: Text('Cliente guardado correctamente'),
-              backgroundColor: AppTheme.success,
+              backgroundColor: Theme.of(context).colorScheme.tertiary,
             ),
           );
         }
@@ -97,7 +97,7 @@ class CustomerFormState extends ConsumerState<CustomerForm> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('Error al guardar el cliente: $e'),
-              backgroundColor: AppTheme.error,
+              backgroundColor: Theme.of(context).colorScheme.error,
             ),
           );
         }

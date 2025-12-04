@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:posventa/core/theme/theme.dart';
 import 'package:posventa/domain/entities/sale_return.dart';
 import 'package:posventa/domain/entities/return_reason.dart';
 import 'package:posventa/presentation/providers/return_processing_provider.dart';
@@ -40,12 +39,12 @@ class _ReturnSummaryCardState extends ConsumerState<ReturnSummaryCard> {
               children: [
                 Icon(Icons.summarize, color: Colors.orange.shade600, size: 24),
                 const SizedBox(width: 12),
-                const Text(
+                Text(
                   'Resumen de Devolución',
                   style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
-                    color: AppTheme.textPrimary,
+                    color: Theme.of(context).colorScheme.onSurface,
                   ),
                 ),
               ],
@@ -78,12 +77,12 @@ class _ReturnSummaryCardState extends ConsumerState<ReturnSummaryCard> {
             const SizedBox(height: 24),
 
             // Refund method
-            const Text(
+            Text(
               'Método de Reembolso *',
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
-                color: AppTheme.textPrimary,
+                color: Theme.of(context).colorScheme.onSurface,
               ),
             ),
             const SizedBox(height: 12),
@@ -105,7 +104,7 @@ class _ReturnSummaryCardState extends ConsumerState<ReturnSummaryCard> {
                   labelStyle: TextStyle(
                     color: isSelected
                         ? Colors.orange.shade900
-                        : AppTheme.textPrimary,
+                        : Theme.of(context).colorScheme.onSurface,
                     fontWeight: isSelected
                         ? FontWeight.w600
                         : FontWeight.normal,
@@ -206,7 +205,9 @@ class _ReturnSummaryCardState extends ConsumerState<ReturnSummaryCard> {
           style: TextStyle(
             fontSize: isTotal ? 18 : 14,
             fontWeight: isTotal ? FontWeight.bold : FontWeight.normal,
-            color: isTotal ? AppTheme.textPrimary : AppTheme.textSecondary,
+            color: isTotal
+                ? Theme.of(context).colorScheme.onSurface
+                : Theme.of(context).colorScheme.onSurfaceVariant,
           ),
         ),
         Text(
@@ -214,7 +215,9 @@ class _ReturnSummaryCardState extends ConsumerState<ReturnSummaryCard> {
           style: TextStyle(
             fontSize: isTotal ? 24 : 16,
             fontWeight: FontWeight.bold,
-            color: isTotal ? Colors.orange.shade700 : AppTheme.textPrimary,
+            color: isTotal
+                ? Colors.orange.shade700
+                : Theme.of(context).colorScheme.onSurface,
           ),
         ),
       ],
