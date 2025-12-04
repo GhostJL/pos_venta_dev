@@ -41,7 +41,7 @@ final class POSNotifierProvider
   }
 }
 
-String _$pOSNotifierHash() => r'a124ab0cb1e232909506acdf9dce06ae848cd481';
+String _$pOSNotifierHash() => r'4c78f106ed546ef6cbea5601b9a5987cc7710935';
 
 abstract class _$POSNotifier extends $Notifier<POSState> {
   POSState build();

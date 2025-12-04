@@ -2,21 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:posventa/domain/entities/product.dart';
-import 'package:posventa/domain/entities/purchase.dart';
 import 'package:posventa/domain/entities/purchase_item.dart';
 import 'package:posventa/domain/entities/supplier.dart';
 import 'package:posventa/domain/entities/warehouse.dart';
-import 'package:posventa/presentation/providers/auth_provider.dart';
 import 'package:posventa/presentation/providers/product_provider.dart';
-import 'package:posventa/presentation/providers/purchase_providers.dart';
+import 'package:posventa/presentation/providers/purchase_form_provider.dart';
 import 'package:posventa/presentation/widgets/purchase/purchase_product_grid.dart';
 import 'package:posventa/presentation/widgets/purchase/purchase_header_card.dart';
 import 'package:posventa/presentation/widgets/purchase/purchase_item_dialog.dart';
 import 'package:posventa/presentation/widgets/purchase/purchase_items_list_widget.dart';
 import 'package:posventa/presentation/widgets/purchase/purchase_totals_footer.dart';
 import 'package:posventa/domain/entities/product_variant.dart';
-import 'package:posventa/core/utils/purchase_calculations.dart';
-import 'package:uuid/uuid.dart';
 
 class PurchaseFormPage extends ConsumerStatefulWidget {
   final Map<String, dynamic>? headerData;
@@ -30,120 +26,25 @@ class PurchaseFormPage extends ConsumerStatefulWidget {
 class _PurchaseFormPageState extends ConsumerState<PurchaseFormPage> {
   final _formKey = GlobalKey<FormState>();
 
-  // Header data from previous step
-  late final Supplier _supplier;
-  late final Warehouse _warehouse;
-  late final String _invoiceNumber;
-  late final DateTime _purchaseDate;
-
-  // Items state
-  final List<PurchaseItem> _items = [];
-
   @override
   void initState() {
     super.initState();
-    // Initialize from header data
+    // Initialize notifier with header data
     if (widget.headerData != null) {
-      _supplier = widget.headerData!['supplier'] as Supplier;
-      _warehouse = widget.headerData!['warehouse'] as Warehouse;
-      _invoiceNumber = widget.headerData!['invoiceNumber'] as String;
-      _purchaseDate = widget.headerData!['purchaseDate'] as DateTime;
-    }
-  }
-
-  // Computed totals
-  double get _subtotal => _items.fold(0, (sum, item) => sum + item.subtotal);
-  double get _tax => _items.fold(0, (sum, item) => sum + item.tax);
-  double get _total => _items.fold(0, (sum, item) => sum + item.total);
-
-  void _removeItem(int index) {
-    setState(() {
-      _items.removeAt(index);
-    });
-  }
-
-  Future<void> _addItemDirectly(
-    Product product,
-    ProductVariant? variant,
-  ) async {
-    // Determine quantity to add (default 1, or variant multiplier)
-    final double quantityToAdd = variant?.quantity ?? 1.0;
-
-    // For variants, we want to preserve the PACK cost precision.
-    // If we calculate unitCost = packCost / quantity, we lose precision.
-    // But createPurchaseItem takes unitCost.
-    // We should pass the raw unit cost, but we need to ensure createPurchaseItem
-    // calculates subtotal correctly.
-
-    // Actually, createPurchaseItem has special handling for variants:
-    // if (variant != null) {
-    //   packCostCents = (unitCost * 100 * variant.quantity).round();
-    //   ...
-    // }
-    // So if we pass the SINGLE UNIT cost, it tries to reconstruct the pack cost.
-    // (13.3333 * 100 * 12) = 15999.96 -> 16000.
-    // So we need to pass the most precise single unit cost possible.
-
-    final double unitCost;
-    if (variant != null) {
-      // Calculate unit cost from pack cost
-      // 160 / 12 = 13.33333333...
-      unitCost = (variant.costPriceCents / 100) / quantityToAdd;
-    } else {
-      unitCost = product.costPriceCents / 100;
-    }
-
-    // Check if item already exists
-    final existingIndex = _items.indexWhere(
-      (item) => item.productId == product.id && item.variantId == variant?.id,
-    );
-
-    if (existingIndex != -1) {
-      // Update existing item
-      final existingItem = _items[existingIndex];
-      final newQuantity = existingItem.quantity + quantityToAdd;
-
-      final updatedItem = PurchaseCalculations.createPurchaseItem(
-        product: product,
-        quantity: newQuantity,
-        unitCost: unitCost,
-        existingItem: existingItem,
-        variant: variant,
-      );
-
-      setState(() {
-        _items[existingIndex] = updatedItem;
-      });
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).hideCurrentSnackBar();
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'Cantidad actualizada: ${product.name} (+${quantityToAdd.toStringAsFixed(0)})',
-            ),
-            duration: const Duration(milliseconds: 500),
-          ),
-        );
-      }
-    } else {
-      // Add new item
-      final newItem = PurchaseCalculations.createPurchaseItem(
-        product: product,
-        quantity: quantityToAdd,
-        unitCost: unitCost,
-        variant: variant,
-      );
-
-      setState(() {
-        _items.add(newItem);
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        ref
+            .read(purchaseFormProvider.notifier)
+            .initialize(
+              supplier: widget.headerData!['supplier'] as Supplier,
+              warehouse: widget.headerData!['warehouse'] as Warehouse,
+              invoiceNumber: widget.headerData!['invoiceNumber'] as String,
+              purchaseDate: widget.headerData!['purchaseDate'] as DateTime,
+            );
       });
     }
   }
 
-  Future<void> _editItem(int index) async {
-    final item = _items[index];
-
+  Future<void> _editItem(int index, PurchaseItem item) async {
     // Find the product for this item
     final productsAsync = ref.read(productNotifierProvider);
     Product? product;
@@ -161,10 +62,14 @@ class _PurchaseFormPageState extends ConsumerState<PurchaseFormPage> {
                 .firstOrNull;
           }
 
+          // Get warehouseId from state
+          final warehouseId = ref.read(purchaseFormProvider).warehouse?.id;
+          if (warehouseId == null) return;
+
           final result = await showDialog<PurchaseItem>(
             context: context,
             builder: (context) => PurchaseItemDialog(
-              warehouseId: _warehouse.id!,
+              warehouseId: warehouseId,
               existingItem: item,
               product: product!,
               variant: variant,
@@ -172,9 +77,7 @@ class _PurchaseFormPageState extends ConsumerState<PurchaseFormPage> {
           );
 
           if (result != null) {
-            setState(() {
-              _items[index] = result;
-            });
+            ref.read(purchaseFormProvider.notifier).updateItem(index, result);
           }
         }
       },
@@ -185,85 +88,40 @@ class _PurchaseFormPageState extends ConsumerState<PurchaseFormPage> {
 
   Future<void> _savePurchase() async {
     if (!_formKey.currentState!.validate()) return;
-    if (_items.isEmpty) {
+
+    final success = await ref
+        .read(purchaseFormProvider.notifier)
+        .savePurchase();
+
+    if (success && mounted) {
+      context.go('/purchases');
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Agregue al menos un producto')),
+        const SnackBar(
+          duration: Duration(milliseconds: 500),
+          content: Text('Compra registrada exitosamente'),
+        ),
       );
-      return;
-    }
-
-    final user = ref.read(authProvider).user;
-    if (user == null) return;
-
-    final purchase = Purchase(
-      purchaseNumber: 'PUR-${const Uuid().v4().substring(0, 8).toUpperCase()}',
-      supplierId: _supplier.id!,
-      warehouseId: _warehouse.id!,
-      subtotalCents: (_subtotal * 100).round(),
-      taxCents: (_tax * 100).round(),
-      totalCents: (_total * 100).round(),
-      purchaseDate: _purchaseDate,
-      supplierInvoiceNumber: _invoiceNumber.isNotEmpty ? _invoiceNumber : null,
-      requestedBy: user.id!,
-      createdAt: DateTime.now(),
-      items: _items,
-      status: PurchaseStatus.pending,
-    );
-
-    try {
-      await ref.read(purchaseProvider.notifier).addPurchase(purchase);
-      if (mounted) {
-        context.go('/purchases');
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            duration: Duration(milliseconds: 500),
-            content: Text('Compra registrada exitosamente'),
-          ),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
+    } else {
+      final error = ref.read(purchaseFormProvider).error;
+      if (error != null && mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text('Error al guardar: $e')));
+        ).showSnackBar(SnackBar(content: Text(error)));
+        ref.read(purchaseFormProvider.notifier).clearError();
       }
     }
-  }
-
-  void _updateItemQuantity(int index, double newQuantity) {
-    if (newQuantity <= 0) return;
-
-    final item = _items[index];
-
-    // Try to get the product from the provider
-    final productsState = ref.read(productNotifierProvider);
-    Product? product;
-
-    productsState.whenData((products) {
-      product = products.where((p) => p.id == item.productId).firstOrNull;
-    });
-
-    if (product == null) {
-      // Should not happen if data is loaded, but safety check
-      return;
-    }
-
-    final updatedItem = PurchaseCalculations.createPurchaseItem(
-      product: product!,
-      quantity: newQuantity,
-      unitCost: item.unitCost, // Keep current unit cost
-      existingItem: item,
-    );
-
-    setState(() {
-      _items[index] = updatedItem;
-    });
   }
 
   @override
   Widget build(BuildContext context) {
     final isMobile = MediaQuery.of(context).size.width < 800;
     final productsAsync = ref.watch(productNotifierProvider);
+    final formState = ref.watch(purchaseFormProvider);
+
+    // Show loading overlay if saving
+    if (formState.isLoading) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
 
     return productsAsync.when(
       data: (products) {
@@ -297,7 +155,23 @@ class _PurchaseFormPageState extends ConsumerState<PurchaseFormPage> {
                       children: [
                         Expanded(
                           child: PurchaseProductGrid(
-                            onProductSelected: _addItemDirectly,
+                            onProductSelected: (product, variant) {
+                              ref
+                                  .read(purchaseFormProvider.notifier)
+                                  .addItemDirectly(product, variant);
+
+                              ScaffoldMessenger.of(
+                                context,
+                              ).hideCurrentSnackBar();
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    'Agregado: ${product.name} ${variant != null ? '(${variant.description})' : ''}',
+                                  ),
+                                  duration: const Duration(milliseconds: 500),
+                                ),
+                              );
+                            },
                           ),
                         ),
                         // Mini summary bar
@@ -308,13 +182,13 @@ class _PurchaseFormPageState extends ConsumerState<PurchaseFormPage> {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Text(
-                                '${_items.length} productos',
+                                '${formState.items.length} productos',
                                 style: const TextStyle(
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
                               Text(
-                                'Total: \$${_total.toStringAsFixed(2)}',
+                                'Total: \$${formState.total.toStringAsFixed(2)}',
                                 style: TextStyle(
                                   fontWeight: FontWeight.bold,
                                   color: Theme.of(context).primaryColor,
@@ -335,25 +209,44 @@ class _PurchaseFormPageState extends ConsumerState<PurchaseFormPage> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                PurchaseHeaderCard(
-                                  supplier: _supplier,
-                                  warehouse: _warehouse,
-                                  invoiceNumber: _invoiceNumber,
-                                  purchaseDate: _purchaseDate,
-                                ),
+                                if (formState.supplier != null &&
+                                    formState.warehouse != null)
+                                  PurchaseHeaderCard(
+                                    supplier: formState.supplier!,
+                                    warehouse: formState.warehouse!,
+                                    invoiceNumber: formState.invoiceNumber,
+                                    purchaseDate:
+                                        formState.purchaseDate ??
+                                        DateTime.now(),
+                                  ),
                                 const SizedBox(height: 24),
                                 PurchaseItemsListWidget(
-                                  items: _items,
+                                  items: formState.items,
                                   productMap: productMap,
-                                  onEditItem: _editItem,
-                                  onRemoveItem: _removeItem,
-                                  onQuantityChanged: _updateItemQuantity,
+                                  onEditItem: (index) =>
+                                      _editItem(index, formState.items[index]),
+                                  onRemoveItem: (index) => ref
+                                      .read(purchaseFormProvider.notifier)
+                                      .removeItem(index),
+                                  onQuantityChanged: (index, quantity) {
+                                    final item = formState.items[index];
+                                    final product = productMap[item.productId];
+                                    if (product != null) {
+                                      ref
+                                          .read(purchaseFormProvider.notifier)
+                                          .updateItemQuantity(
+                                            index,
+                                            quantity,
+                                            product,
+                                          );
+                                    }
+                                  },
                                 ),
                               ],
                             ),
                           ),
                         ),
-                        PurchaseTotalsFooter(total: _total),
+                        PurchaseTotalsFooter(total: formState.total),
                       ],
                     ),
                   ],
@@ -400,7 +293,25 @@ class _PurchaseFormPageState extends ConsumerState<PurchaseFormPage> {
                               const SizedBox(height: 12),
                               Expanded(
                                 child: PurchaseProductGrid(
-                                  onProductSelected: _addItemDirectly,
+                                  onProductSelected: (product, variant) {
+                                    ref
+                                        .read(purchaseFormProvider.notifier)
+                                        .addItemDirectly(product, variant);
+
+                                    ScaffoldMessenger.of(
+                                      context,
+                                    ).hideCurrentSnackBar();
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text(
+                                          'Agregado: ${product.name} ${variant != null ? '(${variant.description})' : ''}',
+                                        ),
+                                        duration: const Duration(
+                                          milliseconds: 500,
+                                        ),
+                                      ),
+                                    );
+                                  },
                                 ),
                               ),
                             ],
@@ -423,12 +334,16 @@ class _PurchaseFormPageState extends ConsumerState<PurchaseFormPage> {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     // Header Info Card
-                                    PurchaseHeaderCard(
-                                      supplier: _supplier,
-                                      warehouse: _warehouse,
-                                      invoiceNumber: _invoiceNumber,
-                                      purchaseDate: _purchaseDate,
-                                    ),
+                                    if (formState.supplier != null &&
+                                        formState.warehouse != null)
+                                      PurchaseHeaderCard(
+                                        supplier: formState.supplier!,
+                                        warehouse: formState.warehouse!,
+                                        invoiceNumber: formState.invoiceNumber,
+                                        purchaseDate:
+                                            formState.purchaseDate ??
+                                            DateTime.now(),
+                                      ),
                                     const SizedBox(height: 24),
 
                                     const Text(
@@ -442,11 +357,31 @@ class _PurchaseFormPageState extends ConsumerState<PurchaseFormPage> {
 
                                     // Items List
                                     PurchaseItemsListWidget(
-                                      items: _items,
+                                      items: formState.items,
                                       productMap: productMap,
-                                      onEditItem: _editItem,
-                                      onRemoveItem: _removeItem,
-                                      onQuantityChanged: _updateItemQuantity,
+                                      onEditItem: (index) => _editItem(
+                                        index,
+                                        formState.items[index],
+                                      ),
+                                      onRemoveItem: (index) => ref
+                                          .read(purchaseFormProvider.notifier)
+                                          .removeItem(index),
+                                      onQuantityChanged: (index, quantity) {
+                                        final item = formState.items[index];
+                                        final product =
+                                            productMap[item.productId];
+                                        if (product != null) {
+                                          ref
+                                              .read(
+                                                purchaseFormProvider.notifier,
+                                              )
+                                              .updateItemQuantity(
+                                                index,
+                                                quantity,
+                                                product,
+                                              );
+                                        }
+                                      },
                                     ),
                                   ],
                                 ),
@@ -454,7 +389,7 @@ class _PurchaseFormPageState extends ConsumerState<PurchaseFormPage> {
                             ),
 
                             // Totals Footer
-                            PurchaseTotalsFooter(total: _total),
+                            PurchaseTotalsFooter(total: formState.total),
                           ],
                         ),
                       ),

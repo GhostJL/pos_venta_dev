@@ -3,10 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:posventa/domain/entities/product.dart';
 import 'package:posventa/domain/entities/product_variant.dart';
-import 'package:posventa/domain/entities/purchase_item.dart';
 import 'package:posventa/presentation/providers/product_provider.dart';
 import 'package:posventa/presentation/providers/purchase_item_providers.dart';
 import 'package:posventa/presentation/providers/purchase_providers.dart';
+import 'package:posventa/presentation/providers/purchase_form_provider.dart';
 
 /// Helper class to represent a product or product variant as a single selectable item
 class ProductVariantItem {
@@ -67,7 +67,6 @@ class _PurchaseItemFormPageState extends ConsumerState<PurchaseItemFormPage> {
   ProductVariantItem? _selectedItem;
   int? _selectedPurchaseId;
   DateTime? _expirationDate;
-  bool _isLoading = false;
 
   @override
   void initState() {
@@ -124,66 +123,38 @@ class _PurchaseItemFormPageState extends ConsumerState<PurchaseItemFormPage> {
       return;
     }
 
-    setState(() => _isLoading = true);
+    final quantity = double.parse(_quantityController.text);
+    final unitCost = double.parse(_unitCostController.text);
 
-    try {
-      final quantity = double.parse(_quantityController.text);
-      final unitCost = double.parse(_unitCostController.text);
-      final unitCostCents = (unitCost * 100).round();
-      final subtotalCents = (unitCostCents * quantity).round();
-
-      // Simple tax calculation (0 for now, can be enhanced)
-      const taxCents = 0;
-      final totalCents = subtotalCents + taxCents;
-
-      final item = PurchaseItem(
-        id: widget.itemId,
-        purchaseId: _selectedPurchaseId,
-        productId: _selectedItem!.product.id!,
-        variantId: _selectedItem!.variant?.id,
-        productName: _selectedItem!.product.name,
-        quantity: quantity,
-        unitOfMeasure: _selectedItem!.unitOfMeasure,
-        unitCostCents: unitCostCents,
-        subtotalCents: subtotalCents,
-        taxCents: taxCents,
-        totalCents: totalCents,
-        // lotNumber: _lotNumberController.text.isEmpty
-        //     ? null
-        //     : _lotNumberController.text,
-        expirationDate: _expirationDate,
-        createdAt: DateTime.now(),
-      );
-
-      if (widget.itemId == null) {
-        // Create new item
-        await ref.read(purchaseItemProvider.notifier).addPurchaseItem(item);
-      } else {
-        // Update existing item
-        await ref.read(purchaseItemProvider.notifier).updatePurchaseItem(item);
-      }
-
-      if (mounted) {
-        context.pop();
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              widget.itemId == null
-                  ? 'Artículo creado exitosamente'
-                  : 'Artículo actualizado exitosamente',
-            ),
-          ),
+    final success = await ref
+        .read(purchaseItemFormProvider.notifier)
+        .saveItem(
+          itemId: widget.itemId,
+          purchaseId: _selectedPurchaseId,
+          product: _selectedItem!.product,
+          variant: _selectedItem!.variant,
+          quantity: quantity,
+          unitCost: unitCost,
+          expirationDate: _expirationDate,
         );
-      }
-    } catch (e) {
-      if (mounted) {
+
+    if (success && mounted) {
+      context.pop();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            widget.itemId == null
+                ? 'Artículo creado exitosamente'
+                : 'Artículo actualizado exitosamente',
+          ),
+        ),
+      );
+    } else {
+      final error = ref.read(purchaseItemFormProvider).error;
+      if (error != null && mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text('Error: $e')));
-      }
-    } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
+        ).showSnackBar(SnackBar(content: Text('Error: $error')));
       }
     }
   }
@@ -192,6 +163,7 @@ class _PurchaseItemFormPageState extends ConsumerState<PurchaseItemFormPage> {
   Widget build(BuildContext context) {
     final productsAsync = ref.watch(productNotifierProvider);
     final purchasesAsync = ref.watch(purchaseProvider);
+    final formState = ref.watch(purchaseItemFormProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -201,7 +173,7 @@ class _PurchaseItemFormPageState extends ConsumerState<PurchaseItemFormPage> {
               : 'Editar Artículo de Compra',
         ),
         actions: [
-          if (!_isLoading)
+          if (!formState.isLoading)
             IconButton(
               icon: const Icon(Icons.save),
               onPressed: _saveItem,
@@ -209,7 +181,7 @@ class _PurchaseItemFormPageState extends ConsumerState<PurchaseItemFormPage> {
             ),
         ],
       ),
-      body: _isLoading
+      body: formState.isLoading
           ? const Center(child: CircularProgressIndicator())
           : Form(
               key: _formKey,
@@ -390,18 +362,6 @@ class _PurchaseItemFormPageState extends ConsumerState<PurchaseItemFormPage> {
                       style: Theme.of(context).textTheme.titleMedium,
                     ),
                     const SizedBox(height: 12),
-
-                    // TODO: Implement Lot Selection/Creation
-                    // TextFormField(
-                    //   controller: _lotNumberController,
-                    //   decoration: const InputDecoration(
-                    //     labelText: 'Número de Lote',
-                    //     border: OutlineInputBorder(),
-                    //     prefixIcon: Icon(Icons.qr_code),
-                    //     hintText: 'Ej: LOT-2024-001',
-                    //   ),
-                    // ),
-                    const SizedBox(height: 16),
 
                     // Expiration Date
                     InkWell(

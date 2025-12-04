@@ -55,7 +55,7 @@ final class InventoryLotRepositoryProvider
 }
 
 String _$inventoryLotRepositoryHash() =>
-    r'49590db162834d5b579a9bb1f036fd9072e30184';
+    r'34533f51f2ae234796cb9ebeb857b05b26a9b615';
 
 @ProviderFor(productLots)
 const productLotsProvider = ProductLotsFamily._();
@@ -114,7 +114,7 @@ final class ProductLotsProvider
   }
 }
 
-String _$productLotsHash() => r'46ad15a2265f8fd1a44e7406d1ea536dee51a1a2';
+String _$productLotsHash() => r'c16791be9e0fc6e34a3538ea0198d033670324b7';
 
 final class ProductLotsFamily extends $Family
     with $FunctionalFamilyOverride<FutureOr<List<InventoryLot>>, (int, int)> {
@@ -191,7 +191,7 @@ final class AvailableLotsProvider
   }
 }
 
-String _$availableLotsHash() => r'2abe80d6d8bafb75fb3be2d7093d810aed08948d';
+String _$availableLotsHash() => r'3dc59d6d7b0cf3256cd6d89737cf99841d01a968';
 
 final class AvailableLotsFamily extends $Family
     with $FunctionalFamilyOverride<FutureOr<List<InventoryLot>>, (int, int)> {
@@ -266,7 +266,7 @@ final class LotByIdProvider
   }
 }
 
-String _$lotByIdHash() => r'4c9419f4316c53640a16ee3700810529c2947990';
+String _$lotByIdHash() => r'cefb9fa6b8d04866a2e33998f396d5462f67ab8b';
 
 final class LotByIdFamily extends $Family
     with $FunctionalFamilyOverride<FutureOr<InventoryLot?>, int> {
@@ -343,7 +343,7 @@ final class ExpiringLotsProvider
   }
 }
 
-String _$expiringLotsHash() => r'3bdc6c8cfe7e50a9e6790869b22554cb3e03d3a9';
+String _$expiringLotsHash() => r'fe6484e76eb704965d10ce276fd3ee58b0b9ae26';
 
 final class ExpiringLotsFamily extends $Family
     with $FunctionalFamilyOverride<FutureOr<List<InventoryLot>>, (int, int)> {
@@ -420,7 +420,7 @@ final class WarehouseLotsProvider
   }
 }
 
-String _$warehouseLotsHash() => r'd0f5c79e4b7337843ef8e7745a884a16e157b6b9';
+String _$warehouseLotsHash() => r'2f781fa3ab47a2a67bd04fc287fbf61d449b9f4b';
 
 final class WarehouseLotsFamily extends $Family
     with $FunctionalFamilyOverride<FutureOr<List<InventoryLot>>, int> {
