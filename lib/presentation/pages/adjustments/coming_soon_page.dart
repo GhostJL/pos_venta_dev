@@ -18,12 +18,7 @@ class ComingSoonPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.background,
-      appBar: AppBar(
-        backgroundColor: AppTheme.background,
-        elevation: 0,
-        title: Text(title),
-      ),
+      appBar: AppBar(elevation: 0, title: Text(title)),
       body: Center(
         child: Padding(
           padding: const EdgeInsets.all(32.0),

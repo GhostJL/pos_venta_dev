@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:animate_do/animate_do.dart';
-import 'package:posventa/core/theme/theme.dart';
 import 'package:posventa/domain/entities/user.dart';
 import 'package:posventa/presentation/providers/auth_provider.dart';
 import 'package:posventa/presentation/providers/providers.dart';
@@ -40,10 +39,12 @@ class _SideMenuState extends ConsumerState<SideMenu> {
     final permissionsAsync = ref.watch(currentUserPermissionsProvider);
     final permissions = permissionsAsync.asData?.value ?? [];
 
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Container(
       width: 280,
       decoration: BoxDecoration(
-        color: AppTheme.background,
+        color: colorScheme.surface,
         boxShadow: [
           BoxShadow(
             color: Colors.black.withAlpha(10),
@@ -56,8 +57,10 @@ class _SideMenuState extends ConsumerState<SideMenu> {
         children: [
           _buildDrawerHeader(context, user),
           _buildQuickActions(context, user),
-          _buildSearchBar(),
-          Expanded(child: _buildMenuContent(user, permissions, currentPath)),
+          _buildSearchBar(context),
+          Expanded(
+            child: _buildMenuContent(context, user, permissions, currentPath),
+          ),
           _buildLogoutSection(context, ref),
         ],
       ),
@@ -67,11 +70,13 @@ class _SideMenuState extends ConsumerState<SideMenu> {
   /// Build quick action buttons for common tasks
   Widget _buildQuickActions(BuildContext context, User? user) {
     if (user?.role == UserRole.cajero) {
+      final colorScheme = Theme.of(context).colorScheme;
+
       return Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
           border: Border(
-            bottom: BorderSide(color: AppTheme.borders.withAlpha(100)),
+            bottom: BorderSide(color: colorScheme.outline.withAlpha(100)),
           ),
         ),
         child: Column(
@@ -80,7 +85,7 @@ class _SideMenuState extends ConsumerState<SideMenu> {
             Text(
               'ACCIONES RÁPIDAS',
               style: TextStyle(
-                color: AppTheme.textSecondary,
+                color: colorScheme.onSurfaceVariant,
                 fontWeight: FontWeight.bold,
                 fontSize: 10,
                 letterSpacing: 1.2,
@@ -117,12 +122,14 @@ class _SideMenuState extends ConsumerState<SideMenu> {
   }
 
   /// Build search bar for menu filtering
-  Widget _buildSearchBar() {
+  Widget _buildSearchBar(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         border: Border(
-          bottom: BorderSide(color: AppTheme.borders.withAlpha(100)),
+          bottom: BorderSide(color: colorScheme.outline.withAlpha(100)),
         ),
       ),
       child: TextField(
@@ -135,19 +142,19 @@ class _SideMenuState extends ConsumerState<SideMenu> {
         decoration: InputDecoration(
           hintText: 'Buscar en menú...',
           hintStyle: TextStyle(
-            color: AppTheme.textSecondary.withValues(alpha: 0.6),
+            color: colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
             fontSize: 14,
           ),
           prefixIcon: Icon(
             Icons.search_rounded,
-            color: AppTheme.textSecondary,
+            color: colorScheme.onSurfaceVariant,
             size: 20,
           ),
           suffixIcon: _searchQuery.isNotEmpty
               ? IconButton(
                   icon: Icon(
                     Icons.clear_rounded,
-                    color: AppTheme.textSecondary,
+                    color: colorScheme.onSurfaceVariant,
                     size: 18,
                   ),
                   onPressed: () {
@@ -159,7 +166,7 @@ class _SideMenuState extends ConsumerState<SideMenu> {
                 )
               : null,
           filled: true,
-          fillColor: AppTheme.cardBackground,
+          fillColor: colorScheme.surfaceContainerHighest,
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
             borderSide: BorderSide.none,
@@ -176,6 +183,7 @@ class _SideMenuState extends ConsumerState<SideMenu> {
 
   /// Build menu content based on user role
   Widget _buildMenuContent(
+    BuildContext context,
     User? user,
     List<String> permissions,
     String currentPath,
@@ -192,6 +200,7 @@ class _SideMenuState extends ConsumerState<SideMenu> {
       children: [
         if (useGroups)
           ..._buildGroupedMenu(
+            context,
             menuData as List<MenuGroup>,
             user,
             permissions,
@@ -199,6 +208,7 @@ class _SideMenuState extends ConsumerState<SideMenu> {
           )
         else
           ..._buildFlatMenu(
+            context,
             menuData as List<MenuItem>,
             user,
             permissions,
@@ -210,11 +220,13 @@ class _SideMenuState extends ConsumerState<SideMenu> {
 
   /// Build grouped menu for administrators
   List<Widget> _buildGroupedMenu(
+    BuildContext context,
     List<MenuGroup> groups,
     User user,
     List<String> permissions,
     String currentPath,
   ) {
+    final colorScheme = Theme.of(context).colorScheme;
     final widgets = <Widget>[];
 
     for (int i = 0; i < groups.length; i++) {
@@ -270,12 +282,15 @@ class _SideMenuState extends ConsumerState<SideMenu> {
               Icon(
                 Icons.search_off_rounded,
                 size: 48,
-                color: AppTheme.textSecondary.withValues(alpha: 0.5),
+                color: colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
               ),
               const SizedBox(height: 16),
               Text(
                 'No se encontraron resultados',
-                style: TextStyle(color: AppTheme.textSecondary, fontSize: 14),
+                style: TextStyle(
+                  color: colorScheme.onSurfaceVariant,
+                  fontSize: 14,
+                ),
                 textAlign: TextAlign.center,
               ),
             ],
@@ -289,11 +304,13 @@ class _SideMenuState extends ConsumerState<SideMenu> {
 
   /// Build flat menu for cashiers
   List<Widget> _buildFlatMenu(
+    BuildContext context,
     List<MenuItem> items,
     User user,
     List<String> permissions,
     String currentPath,
   ) {
+    final colorScheme = Theme.of(context).colorScheme;
     final widgets = <Widget>[];
 
     // Add section header for cashiers
@@ -303,7 +320,7 @@ class _SideMenuState extends ConsumerState<SideMenu> {
         child: Text(
           'MENÚ PRINCIPAL',
           style: TextStyle(
-            color: AppTheme.textSecondary,
+            color: colorScheme.onSurfaceVariant,
             fontWeight: FontWeight.bold,
             fontSize: 11,
             letterSpacing: 1.2,
@@ -338,12 +355,15 @@ class _SideMenuState extends ConsumerState<SideMenu> {
               Icon(
                 Icons.search_off_rounded,
                 size: 48,
-                color: AppTheme.textSecondary.withValues(alpha: 0.5),
+                color: colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
               ),
               const SizedBox(height: 16),
               Text(
                 'No se encontraron resultados',
-                style: TextStyle(color: AppTheme.textSecondary, fontSize: 14),
+                style: TextStyle(
+                  color: colorScheme.onSurfaceVariant,
+                  fontSize: 14,
+                ),
                 textAlign: TextAlign.center,
               ),
             ],
@@ -357,6 +377,7 @@ class _SideMenuState extends ConsumerState<SideMenu> {
 
   /// Build drawer header with user info and cash session status
   Widget _buildDrawerHeader(BuildContext context, User? user) {
+    final colorScheme = Theme.of(context).colorScheme;
     final accountName = user?.firstName ?? 'Usuario';
     final accountLastName = user?.lastName ?? 'N.';
     final accountEmail = user != null
@@ -366,9 +387,9 @@ class _SideMenuState extends ConsumerState<SideMenu> {
     return Container(
       padding: const EdgeInsets.fromLTRB(24, 60, 24, 24),
       decoration: BoxDecoration(
-        color: AppTheme.cardBackground,
+        color: colorScheme.surface,
         border: Border(
-          bottom: BorderSide(color: AppTheme.borders.withAlpha(100)),
+          bottom: BorderSide(color: colorScheme.outline.withAlpha(100)),
         ),
       ),
       child: Column(
@@ -380,19 +401,19 @@ class _SideMenuState extends ConsumerState<SideMenu> {
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   border: Border.all(
-                    color: AppTheme.primary.withAlpha(50),
+                    color: colorScheme.primary.withAlpha(50),
                     width: 2,
                   ),
                 ),
                 child: CircleAvatar(
                   radius: 28,
-                  backgroundColor: AppTheme.primary.withAlpha(20),
+                  backgroundColor: colorScheme.primary.withAlpha(20),
                   child: Text(
                     accountName.isNotEmpty ? accountName[0].toUpperCase() : 'U',
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
-                      color: AppTheme.primary,
+                      color: colorScheme.primary,
                     ),
                   ),
                 ),
@@ -406,7 +427,7 @@ class _SideMenuState extends ConsumerState<SideMenu> {
                       '$accountName $accountLastName',
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.bold,
-                        color: AppTheme.textPrimary,
+                        color: colorScheme.onSurface,
                       ),
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -414,7 +435,7 @@ class _SideMenuState extends ConsumerState<SideMenu> {
                     Text(
                       accountEmail,
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: AppTheme.primary,
+                        color: colorScheme.primary,
                         fontWeight: FontWeight.w600,
                       ),
                       overflow: TextOverflow.ellipsis,
@@ -485,10 +506,14 @@ class _SideMenuState extends ConsumerState<SideMenu> {
 
   /// Build logout section at the bottom
   Widget _buildLogoutSection(BuildContext context, WidgetRef ref) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Container(
       padding: const EdgeInsets.all(24.0),
       decoration: BoxDecoration(
-        border: Border(top: BorderSide(color: AppTheme.borders.withAlpha(100))),
+        border: Border(
+          top: BorderSide(color: colorScheme.outline.withAlpha(100)),
+        ),
       ),
       child: MouseRegion(
         cursor: SystemMouseCursors.click,
@@ -536,18 +561,18 @@ class _SideMenuState extends ConsumerState<SideMenu> {
           child: Container(
             padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
             decoration: BoxDecoration(
-              color: AppTheme.error.withAlpha(10),
+              color: colorScheme.error.withAlpha(10),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
-              children: const [
-                Icon(Icons.logout_rounded, color: AppTheme.error, size: 20),
-                SizedBox(width: 8),
+              children: [
+                Icon(Icons.logout_rounded, color: colorScheme.error, size: 20),
+                const SizedBox(width: 8),
                 Text(
                   'Cerrar Sesión',
                   style: TextStyle(
-                    color: AppTheme.error,
+                    color: colorScheme.error,
                     fontWeight: FontWeight.bold,
                     fontSize: 14,
                   ),

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:posventa/core/theme/theme.dart';
 
 /// Widget reutilizable para mostrar estados vacíos.
 ///
@@ -24,6 +23,8 @@ class EmptyStateWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -31,12 +32,12 @@ class EmptyStateWidget extends StatelessWidget {
           Icon(
             icon,
             size: iconSize,
-            color: AppTheme.textSecondary.withAlpha(100),
+            color: colorScheme.onSurfaceVariant.withAlpha(100),
           ),
           const SizedBox(height: 16),
           Text(
             message,
-            style: const TextStyle(fontSize: 18, color: AppTheme.textSecondary),
+            style: TextStyle(fontSize: 18, color: colorScheme.onSurfaceVariant),
             textAlign: TextAlign.center,
           ),
         ],

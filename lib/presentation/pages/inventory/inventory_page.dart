@@ -44,11 +44,9 @@ class _InventoryPageState extends ConsumerState<InventoryPage> {
     }
 
     return Scaffold(
-      backgroundColor: AppTheme.background,
       appBar: AppBar(
         title: const Text('Inventario'),
         centerTitle: true,
-        backgroundColor: AppTheme.background,
         elevation: 0,
         actions: [
           if (hasAdjustAccess)

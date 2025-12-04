@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:posventa/core/theme/theme.dart';
 import 'package:posventa/core/config/menu_config.dart';
 import 'package:posventa/presentation/widgets/menu/menu_item_widget.dart';
 import 'package:posventa/presentation/providers/menu_state_provider.dart';
@@ -95,7 +94,7 @@ class _MenuGroupWidgetState extends ConsumerState<MenuGroupWidget>
               duration: const Duration(milliseconds: 200),
               decoration: BoxDecoration(
                 color: _isHovered
-                    ? AppTheme.primary.withAlpha(8)
+                    ? Theme.of(context).colorScheme.primary.withAlpha(8)
                     : Colors.transparent,
                 borderRadius: BorderRadius.circular(12),
               ),
@@ -109,8 +108,10 @@ class _MenuGroupWidgetState extends ConsumerState<MenuGroupWidget>
                         widget.menuGroup.groupIcon,
                         size: _isHovered ? 20 : 18,
                         color: _isHovered
-                            ? AppTheme.primary.withValues(alpha: 0.8)
-                            : AppTheme.textSecondary,
+                            ? Theme.of(
+                                context,
+                              ).colorScheme.primary.withValues(alpha: 0.8)
+                            : Theme.of(context).colorScheme.onSurfaceVariant,
                       ),
                     ),
                     const SizedBox(width: 8),
@@ -120,8 +121,10 @@ class _MenuGroupWidgetState extends ConsumerState<MenuGroupWidget>
                       duration: const Duration(milliseconds: 200),
                       style: TextStyle(
                         color: _isHovered
-                            ? AppTheme.primary.withValues(alpha: 0.8)
-                            : AppTheme.textSecondary,
+                            ? Theme.of(
+                                context,
+                              ).colorScheme.primary.withValues(alpha: 0.8)
+                            : Theme.of(context).colorScheme.onSurfaceVariant,
                         fontWeight: FontWeight.bold,
                         fontSize: 11,
                         letterSpacing: 1.2,
@@ -137,8 +140,10 @@ class _MenuGroupWidgetState extends ConsumerState<MenuGroupWidget>
                         Icons.expand_more,
                         size: 20,
                         color: _isHovered
-                            ? AppTheme.primary.withValues(alpha: 0.8)
-                            : AppTheme.textSecondary,
+                            ? Theme.of(
+                                context,
+                              ).colorScheme.primary.withValues(alpha: 0.8)
+                            : Theme.of(context).colorScheme.onSurfaceVariant,
                       ),
                     ),
                   ),
@@ -168,6 +173,8 @@ class _MenuGroupWidgetState extends ConsumerState<MenuGroupWidget>
   }
 
   Widget _buildGroupHeader() {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Padding(
       padding: const EdgeInsets.only(left: 12, bottom: 8, top: 4),
       child: Row(
@@ -176,14 +183,14 @@ class _MenuGroupWidgetState extends ConsumerState<MenuGroupWidget>
             Icon(
               widget.menuGroup.groupIcon,
               size: 16,
-              color: AppTheme.textSecondary,
+              color: colorScheme.onSurfaceVariant,
             ),
             const SizedBox(width: 8),
           ],
           Text(
             widget.menuGroup.title.toUpperCase(),
             style: TextStyle(
-              color: AppTheme.textSecondary,
+              color: colorScheme.onSurfaceVariant,
               fontWeight: FontWeight.bold,
               fontSize: 11,
               letterSpacing: 1.2,

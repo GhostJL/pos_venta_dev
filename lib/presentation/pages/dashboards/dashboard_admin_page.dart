@@ -16,9 +16,7 @@ class DashboardAdminPage extends ConsumerWidget {
     final user = ref.watch(authProvider).user;
 
     return Scaffold(
-      backgroundColor: AppTheme.background,
       appBar: AppBar(
-        backgroundColor: AppTheme.background,
         elevation: 0,
         toolbarHeight: 80,
         title: Container(

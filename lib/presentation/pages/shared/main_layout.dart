@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:posventa/presentation/widgets/menu/side_menu.dart';
-import 'package:posventa/core/theme/theme.dart';
 import 'package:posventa/presentation/widgets/common/theme_toggle_button.dart';
 
 class MainLayout extends StatelessWidget {
@@ -10,6 +9,8 @@ class MainLayout extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return LayoutBuilder(
       builder: (context, constraints) {
         final bool isSmallScreen = constraints.maxWidth < 768;
@@ -18,14 +19,10 @@ class MainLayout extends StatelessWidget {
           return Scaffold(
             appBar: AppBar(
               forceMaterialTransparency: true,
-              backgroundColor: AppTheme.background,
               elevation: 0,
               leading: Builder(
                 builder: (context) => IconButton(
-                  icon: const Icon(
-                    Icons.menu_rounded,
-                    color: AppTheme.textPrimary,
-                  ),
+                  icon: Icon(Icons.menu_rounded, color: colorScheme.onSurface),
                   onPressed: () => Scaffold.of(context).openDrawer(),
                 ),
               ),
@@ -36,7 +33,6 @@ class MainLayout extends StatelessWidget {
           );
         } else {
           return Scaffold(
-            backgroundColor: AppTheme.background,
             body: Row(
               children: [
                 const SideMenu(),

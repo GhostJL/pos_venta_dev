@@ -14,12 +14,7 @@ class InventoryLotDetailPage extends ConsumerWidget {
     final lotAsync = ref.watch(lotByIdProvider(lotId));
 
     return Scaffold(
-      backgroundColor: AppTheme.background,
-      appBar: AppBar(
-        title: const Text('Detalle de Lote'),
-        backgroundColor: AppTheme.background,
-        elevation: 0,
-      ),
+      appBar: AppBar(title: const Text('Detalle de Lote'), elevation: 0),
       body: lotAsync.when(
         data: (lot) {
           if (lot == null) {

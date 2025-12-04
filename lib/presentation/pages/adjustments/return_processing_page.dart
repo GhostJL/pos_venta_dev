@@ -82,9 +82,7 @@ class _ReturnProcessingPageState extends ConsumerState<ReturnProcessingPage> {
     });
 
     return Scaffold(
-      backgroundColor: AppTheme.background,
       appBar: AppBar(
-        backgroundColor: AppTheme.background,
         elevation: 0,
         title: const Text('Procesamiento de Devolución'),
         leading: IconButton(

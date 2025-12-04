@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:posventa/core/theme/theme.dart';
 import 'package:posventa/presentation/widgets/pos/sale/cart_section.dart';
 import 'package:posventa/presentation/widgets/pos/product_grid_section.dart';
 import 'package:posventa/core/constants/permission_constants.dart';
@@ -87,16 +86,18 @@ class _MobileLayoutState extends State<_MobileLayout>
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Column(
       children: [
         Material(
-          color: AppTheme.background,
+          color: colorScheme.surface,
           child: TabBar(
             dividerHeight: 0,
             controller: _tabController,
-            indicatorColor: AppTheme.primary,
-            labelColor: AppTheme.textPrimary,
-            unselectedLabelColor: AppTheme.textSecondary,
+            indicatorColor: colorScheme.primary,
+            labelColor: colorScheme.onSurface,
+            unselectedLabelColor: colorScheme.onSurfaceVariant,
             tabs: const [
               Tab(text: 'Productos'),
               Tab(text: 'Carrito'),

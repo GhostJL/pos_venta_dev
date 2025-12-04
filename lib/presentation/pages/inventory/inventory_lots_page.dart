@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
-import 'package:posventa/core/theme/theme.dart';
 import 'package:posventa/domain/entities/inventory_lot.dart';
 import 'package:posventa/presentation/providers/inventory_lot_providers.dart';
 
@@ -32,10 +31,8 @@ class _InventoryLotsPageState extends ConsumerState<InventoryLotsPage> {
         : ref.watch(productLotsProvider(widget.productId, widget.warehouseId));
 
     return Scaffold(
-      backgroundColor: AppTheme.background,
       appBar: AppBar(
         title: Text(widget.productName ?? 'Lotes de Inventario'),
-        backgroundColor: AppTheme.background,
         elevation: 0,
         actions: [
           IconButton(

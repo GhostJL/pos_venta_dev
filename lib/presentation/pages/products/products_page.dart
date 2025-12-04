@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:posventa/core/theme/theme.dart';
 import 'package:go_router/go_router.dart';
 import 'package:posventa/domain/entities/product.dart';
 import 'package:posventa/presentation/providers/product_provider.dart';
@@ -203,7 +202,6 @@ class ProductsPageState extends ConsumerState<ProductsPage> {
   void _showActionsSheet(product) {
     showModalBottomSheet(
       context: context,
-      backgroundColor: AppTheme.background,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:posventa/core/theme/theme.dart';
 
 /// Widget reutilizable para mostrar chips de estado (Activo/Inactivo).
 ///
@@ -24,27 +23,32 @@ class StatusChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     final displayText = isActive
         ? (activeText ?? 'Activo')
         : (inactiveText ?? 'Inactivo');
+
+    // Use tertiary for success-like states
+    final activeColor = colorScheme.tertiary;
+    final inactiveColor = colorScheme.error;
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
         color: isActive
-            ? AppTheme.success.withAlpha(20)
-            : AppTheme.error.withAlpha(20),
+            ? activeColor.withAlpha(20)
+            : inactiveColor.withAlpha(20),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
           color: isActive
-              ? AppTheme.success.withAlpha(50)
-              : AppTheme.error.withAlpha(50),
+              ? activeColor.withAlpha(50)
+              : inactiveColor.withAlpha(50),
         ),
       ),
       child: Text(
         displayText,
         style: TextStyle(
-          color: isActive ? AppTheme.success : AppTheme.error,
+          color: isActive ? activeColor : inactiveColor,
           fontWeight: FontWeight.bold,
           fontSize: 12,
         ),

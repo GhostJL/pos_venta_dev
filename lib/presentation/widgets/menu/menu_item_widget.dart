@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:animate_do/animate_do.dart';
-import 'package:posventa/core/theme/theme.dart';
 import 'package:posventa/core/config/menu_config.dart';
 
 /// Widget for rendering individual menu items with hover effects
@@ -26,6 +25,7 @@ class _MenuItemWidgetState extends State<MenuItemWidget> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     final bool isSelected = widget.currentPath == widget.menuItem.route;
 
     return Container(
@@ -51,7 +51,7 @@ class _MenuItemWidgetState extends State<MenuItemWidget> {
                     child: Container(
                       width: 4,
                       decoration: BoxDecoration(
-                        color: AppTheme.primary,
+                        color: colorScheme.primary,
                         borderRadius: BorderRadius.circular(2),
                       ),
                     ),
@@ -67,10 +67,10 @@ class _MenuItemWidgetState extends State<MenuItemWidget> {
                   child: Icon(
                     widget.menuItem.icon,
                     color: isSelected
-                        ? AppTheme.primary
+                        ? colorScheme.primary
                         : _isHovered
-                        ? AppTheme.primary.withValues(alpha: 0.7)
-                        : AppTheme.textSecondary,
+                        ? colorScheme.primary.withValues(alpha: 0.7)
+                        : colorScheme.onSurfaceVariant,
                     size: _isHovered ? 24 : 22,
                   ),
                 ),
@@ -81,10 +81,10 @@ class _MenuItemWidgetState extends State<MenuItemWidget> {
                         duration: const Duration(milliseconds: 200),
                         style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                           color: isSelected
-                              ? AppTheme.primary
+                              ? colorScheme.primary
                               : _isHovered
-                              ? AppTheme.primary.withValues(alpha: 0.7)
-                              : AppTheme.textPrimary,
+                              ? colorScheme.primary.withValues(alpha: 0.7)
+                              : colorScheme.onSurface,
                           fontWeight: isSelected
                               ? FontWeight.bold
                               : FontWeight.w500,
@@ -104,13 +104,13 @@ class _MenuItemWidgetState extends State<MenuItemWidget> {
                             vertical: 2,
                           ),
                           decoration: BoxDecoration(
-                            color: AppTheme.error,
+                            color: colorScheme.error,
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Text(
                             '${widget.menuItem.badgeCount}',
-                            style: const TextStyle(
-                              color: Colors.white,
+                            style: TextStyle(
+                              color: colorScheme.onError,
                               fontSize: 11,
                               fontWeight: FontWeight.bold,
                             ),
@@ -131,9 +131,9 @@ class _MenuItemWidgetState extends State<MenuItemWidget> {
                   borderRadius: BorderRadius.circular(12),
                 ),
                 tileColor: isSelected
-                    ? AppTheme.primary.withAlpha(15)
+                    ? colorScheme.primary.withAlpha(15)
                     : _isHovered
-                    ? AppTheme.primary.withAlpha(8)
+                    ? colorScheme.primary.withAlpha(8)
                     : Colors.transparent,
               ),
             ],

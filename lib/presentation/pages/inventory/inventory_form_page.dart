@@ -60,12 +60,10 @@ class _InventoryFormPageState extends ConsumerState<InventoryFormPage> {
     final warehousesAsync = ref.watch(warehousesProvider);
 
     return Scaffold(
-      backgroundColor: AppTheme.background,
       appBar: AppBar(
         title: Text(
           widget.inventory == null ? 'Nuevo Inventario' : 'Editar Inventario',
         ),
-        backgroundColor: AppTheme.background,
         elevation: 0,
       ),
       body: SingleChildScrollView(

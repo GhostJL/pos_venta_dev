@@ -8,12 +8,7 @@ class InventoryAdjustmentsMenuPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.background,
-      appBar: AppBar(
-        backgroundColor: AppTheme.background,
-        elevation: 0,
-        title: const Text('Ajustes de Inventario'),
-      ),
+      appBar: AppBar(elevation: 0, title: const Text('Ajustes de Inventario')),
       body: ListView(
         padding: const EdgeInsets.all(24.0),
         children: [
