@@ -38,9 +38,9 @@ class _SalesHistoryPageState extends ConsumerState<SalesHistoryPage> {
         return Theme(
           data: Theme.of(context).copyWith(
             colorScheme: ColorScheme.light(
-              primary: Colors.grey.shade800,
-              onPrimary: Colors.white,
-              surface: Colors.white,
+              primary: Theme.of(context).colorScheme.primary,
+              onPrimary: Theme.of(context).colorScheme.onPrimary,
+              surface: Theme.of(context).colorScheme.surface,
             ),
           ),
           child: child!,
@@ -78,7 +78,9 @@ class _SalesHistoryPageState extends ConsumerState<SalesHistoryPage> {
     return Scaffold(
       appBar: AppBar(
         elevation: 0,
-        surfaceTintColor: Colors.transparent,
+        surfaceTintColor: Theme.of(context).colorScheme.surface,
+        backgroundColor: Theme.of(context).colorScheme.surface,
+
         title: const Text(
           'Historial de Ventas',
           style: TextStyle(fontWeight: FontWeight.w600),
@@ -94,7 +96,9 @@ class _SalesHistoryPageState extends ConsumerState<SalesHistoryPage> {
                     vertical: 6,
                   ),
                   decoration: BoxDecoration(
-                    color: Colors.grey.shade100,
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.surfaceContainerHighest,
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Row(
@@ -103,7 +107,7 @@ class _SalesHistoryPageState extends ConsumerState<SalesHistoryPage> {
                       Icon(
                         Icons.date_range,
                         size: 14,
-                        color: Colors.grey.shade700,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
                       ),
                       const SizedBox(width: 6),
                       Text(
@@ -111,7 +115,7 @@ class _SalesHistoryPageState extends ConsumerState<SalesHistoryPage> {
                         style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
-                          color: Colors.grey.shade700,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
                         ),
                       ),
                     ],
@@ -157,7 +161,7 @@ class _SalesHistoryPageState extends ConsumerState<SalesHistoryPage> {
                     'No hay ventas registradas',
                     style: TextStyle(
                       fontSize: 16,
-                      color: Colors.grey.shade500,
+                      color: Theme.of(context).colorScheme.outline,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
@@ -167,7 +171,7 @@ class _SalesHistoryPageState extends ConsumerState<SalesHistoryPage> {
                       'Intenta con otro rango de fechas',
                       style: TextStyle(
                         fontSize: 13,
-                        color: Colors.grey.shade400,
+                        color: Theme.of(context).colorScheme.outline,
                       ),
                     ),
                   ],
@@ -196,27 +200,34 @@ class _SalesHistoryPageState extends ConsumerState<SalesHistoryPage> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.error_outline, size: 64, color: Colors.grey.shade400),
+              Icon(
+                Icons.error_outline,
+                size: 64,
+                color: Theme.of(context).colorScheme.outline,
+              ),
               const SizedBox(height: 16),
               Text(
                 'Error al cargar',
                 style: TextStyle(
                   fontSize: 16,
-                  color: Colors.grey.shade600,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
                   fontWeight: FontWeight.w500,
                 ),
               ),
               const SizedBox(height: 8),
               Text(
                 'Intenta de nuevo',
-                style: TextStyle(fontSize: 13, color: Colors.grey.shade500),
+                style: TextStyle(
+                  fontSize: 13,
+                  color: Theme.of(context).colorScheme.outline,
+                ),
               ),
               const SizedBox(height: 24),
               ElevatedButton(
                 onPressed: () => ref.invalidate(salesListStreamProvider),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.grey.shade800,
-                  foregroundColor: Colors.white,
+                  foregroundColor: Theme.of(context).colorScheme.onSurface,
                   elevation: 0,
                   padding: const EdgeInsets.symmetric(
                     horizontal: 24,

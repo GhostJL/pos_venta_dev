@@ -18,12 +18,12 @@ class ReturnStatsCard extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.orange.shade50,
+                color: Theme.of(context).colorScheme.secondaryContainer,
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Icon(
                 Icons.keyboard_return_rounded,
-                color: Colors.orange.shade600,
+                color: Theme.of(context).colorScheme.secondary,
                 size: 24,
               ),
             ),
@@ -41,7 +41,10 @@ class ReturnStatsCard extends StatelessWidget {
                   ),
                   Text(
                     '\$${total.toStringAsFixed(2)}',
-                    style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
                   ),
                 ],
               ),

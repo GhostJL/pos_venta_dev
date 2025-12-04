@@ -103,14 +103,17 @@ class CartItemWidget extends StatelessWidget {
                 children: [
                   Text(
                     '\$${unitPrice.toStringAsFixed(2)}',
-                    style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
                   ),
                   if (tax > 0)
                     Text(
                       '+ Imp: \$${tax.toStringAsFixed(2)}',
                       style: TextStyle(
                         fontSize: 10,
-                        color: Colors.grey.shade500,
+                        color: Theme.of(context).colorScheme.outline,
                       ),
                     ),
                   Text(

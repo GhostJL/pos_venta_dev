@@ -20,7 +20,7 @@ class InventoryAdjustmentsMenuPage extends StatelessWidget {
             context,
             'Ajuste de Inventario Físico',
             Icons.inventory_rounded,
-            Colors.green.shade600,
+            Theme.of(context).colorScheme.tertiary,
           ),
           const SizedBox(height: 16),
           _buildPhysicalInventoryCards(context),
@@ -31,7 +31,7 @@ class InventoryAdjustmentsMenuPage extends StatelessWidget {
             context,
             'Control de Caja',
             Icons.account_balance_wallet_rounded,
-            Colors.orange.shade600,
+            Theme.of(context).colorScheme.secondary,
           ),
           const SizedBox(height: 16),
           _buildCashControlCards(context),
@@ -45,14 +45,19 @@ class InventoryAdjustmentsMenuPage extends StatelessWidget {
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [Colors.amber.shade700, Colors.amber.shade500],
+          colors: [
+            Theme.of(context).colorScheme.tertiary,
+            Theme.of(context).colorScheme.tertiary,
+          ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.amber.shade700.withValues(alpha: 0.3),
+            color: Theme.of(
+              context,
+            ).colorScheme.tertiary.withValues(alpha: 0.3),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -63,12 +68,14 @@ class InventoryAdjustmentsMenuPage extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.2),
+              color: Theme.of(
+                context,
+              ).colorScheme.onSurface.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: const Icon(
+            child: Icon(
               Icons.tune_rounded,
-              color: Colors.white,
+              color: Theme.of(context).colorScheme.onSurface,
               size: 32,
             ),
           ),
@@ -80,7 +87,9 @@ class InventoryAdjustmentsMenuPage extends StatelessWidget {
                 Text(
                   'Gestiona correcciones, ajustes y control de caja',
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Colors.white.withValues(alpha: 0.9),
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.onSurface.withValues(alpha: 0.9),
                   ),
                 ),
               ],
@@ -136,7 +145,7 @@ class InventoryAdjustmentsMenuPage extends StatelessWidget {
               title: 'Ajuste Individual/Masivo',
               description: 'Ajustar stock por producto o masivamente',
               icon: Icons.edit_note_rounded,
-              color: Colors.green.shade600,
+              color: Theme.of(context).colorScheme.tertiary,
               onTap: () => context.push('/adjustments/physical-inventory'),
             ),
             _buildAdjustmentCard(
@@ -152,7 +161,7 @@ class InventoryAdjustmentsMenuPage extends StatelessWidget {
               title: 'Registro de Mermas',
               description: 'Registrar productos dañados o caducados',
               icon: Icons.delete_sweep_rounded,
-              color: Colors.red.shade700,
+              color: Theme.of(context).colorScheme.error,
               onTap: () => context.push('/adjustments/damage-loss'),
             ),
           ],
@@ -178,7 +187,7 @@ class InventoryAdjustmentsMenuPage extends StatelessWidget {
               title: 'Ingresos/Egresos',
               description: 'Registrar movimientos de efectivo',
               icon: Icons.swap_vert_rounded,
-              color: Colors.orange.shade600,
+              color: Theme.of(context).colorScheme.secondary,
               onTap: () => context.push('/adjustments/cash-movements'),
             ),
             _buildAdjustmentCard(

@@ -74,13 +74,15 @@ class _PurchaseItemsPageState extends ConsumerState<PurchaseItemsPage> {
                         Icon(
                           Icons.inventory_2_outlined,
                           size: 64,
-                          color: Colors.grey.shade400,
+                          color: Theme.of(context).colorScheme.outline,
                         ),
                         const SizedBox(height: 16),
                         Text(
                           'No hay artículos de compra registrados',
                           style: TextStyle(
-                            color: Colors.grey.shade600,
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onSurfaceVariant,
                             fontSize: 16,
                           ),
                         ),
@@ -105,13 +107,15 @@ class _PurchaseItemsPageState extends ConsumerState<PurchaseItemsPage> {
                         Icon(
                           Icons.search_off,
                           size: 64,
-                          color: Colors.grey.shade400,
+                          color: Theme.of(context).colorScheme.outline,
                         ),
                         const SizedBox(height: 16),
                         Text(
                           'No se encontraron resultados',
                           style: TextStyle(
-                            color: Colors.grey.shade600,
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onSurfaceVariant,
                             fontSize: 16,
                           ),
                         ),
@@ -265,22 +269,30 @@ class _PurchaseItemCard extends StatelessWidget {
               // Quantity and unit
               Row(
                 children: [
-                  Icon(Icons.inventory, size: 16, color: Colors.grey.shade600),
+                  Icon(
+                    Icons.inventory,
+                    size: 16,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
                   const SizedBox(width: 8),
                   Text(
                     '${item.quantity} ${item.unitOfMeasure}',
-                    style: TextStyle(color: Colors.grey.shade700),
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
                   ),
                   const SizedBox(width: 24),
                   Icon(
                     Icons.attach_money,
                     size: 16,
-                    color: Colors.grey.shade600,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
                   const SizedBox(width: 8),
                   Text(
                     '\$${item.unitCost.toStringAsFixed(2)} c/u',
-                    style: TextStyle(color: Colors.grey.shade700),
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
                   ),
                 ],
               ),
@@ -292,12 +304,15 @@ class _PurchaseItemCard extends StatelessWidget {
                   Icon(
                     Icons.calendar_today,
                     size: 16,
-                    color: Colors.grey.shade600,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
                   const SizedBox(width: 8),
                   Text(
                     dateFormat.format(item.createdAt),
-                    style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      fontSize: 13,
+                    ),
                   ),
                 ],
               ),
@@ -307,12 +322,12 @@ class _PurchaseItemCard extends StatelessWidget {
               //   const SizedBox(height: 8),
               //   Row(
               //     children: [
-              //       Icon(Icons.qr_code, size: 16, color: Colors.grey.shade600),
+              //       Icon(Icons.qr_code, size: 16, color: Theme.of(context).colorScheme.onSurfaceVariant),
               //       const SizedBox(width: 8),
               //       Text(
               //         'Lote: ${item.lotNumber}',
               //         style: TextStyle(
-              //           color: Colors.grey.shade600,
+              //           color: Theme.of(context).colorScheme.onSurfaceVariant,
               //           fontSize: 13,
               //         ),
               //       ),
@@ -339,7 +354,9 @@ class _PurchaseItemCard extends StatelessWidget {
                           'Impuestos: \$${item.tax.toStringAsFixed(2)}',
                           style: TextStyle(
                             fontSize: 13,
-                            color: Colors.grey.shade600,
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onSurfaceVariant,
                           ),
                         ),
                     ],

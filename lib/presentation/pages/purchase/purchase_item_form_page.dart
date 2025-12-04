@@ -431,7 +431,9 @@ class _PurchaseItemFormPageState extends ConsumerState<PurchaseItemFormPage> {
                           style: TextStyle(
                             color: _expirationDate != null
                                 ? Colors.black
-                                : Colors.grey.shade600,
+                                : Theme.of(
+                                    context,
+                                  ).colorScheme.onSurfaceVariant,
                           ),
                         ),
                       ),
@@ -481,7 +483,9 @@ class _PurchaseItemFormPageState extends ConsumerState<PurchaseItemFormPage> {
                                   Text(
                                     '\$0.00',
                                     style: TextStyle(
-                                      color: Colors.grey.shade600,
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.onSurfaceVariant,
                                     ),
                                   ),
                                 ],

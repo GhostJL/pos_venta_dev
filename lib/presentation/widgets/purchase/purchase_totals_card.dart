@@ -13,6 +13,7 @@ class PurchaseTotalsCard extends StatelessWidget {
   });
 
   Widget _buildTotalRow(
+    BuildContext context,
     String label,
     int cents, {
     bool isTotal = false,
@@ -26,7 +27,9 @@ class PurchaseTotalsCard extends StatelessWidget {
           style: TextStyle(
             fontSize: isTotal ? 13 : 12,
             fontWeight: isTotal ? FontWeight.w600 : FontWeight.w500,
-            color: isTotal ? Colors.grey.shade800 : Colors.grey.shade600,
+            color: isTotal
+                ? Colors.grey.shade800
+                : Theme.of(context).colorScheme.onSurfaceVariant,
           ),
         ),
         Text(
@@ -45,16 +48,20 @@ class PurchaseTotalsCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       elevation: 0,
-      surfaceTintColor: Colors.transparent,
+      surfaceTintColor: Theme.of(context).colorScheme.surface,
+
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: Colors.grey.shade200),
+        side: BorderSide(
+          color: Theme.of(context).colorScheme.surfaceContainerHighest,
+        ),
       ),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         child: Column(
           children: [
             _buildTotalRow(
+              context,
               'Total',
               totalCents,
               isTotal: true,

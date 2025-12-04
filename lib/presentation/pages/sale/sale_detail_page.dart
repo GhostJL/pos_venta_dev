@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:posventa/core/theme/theme.dart';
 import 'package:posventa/domain/entities/sale.dart';
 import 'package:posventa/presentation/providers/providers.dart';
 import 'package:posventa/presentation/providers/auth_provider.dart';
@@ -20,7 +21,9 @@ class SaleDetailPage extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         elevation: 0,
-        surfaceTintColor: Colors.transparent,
+        surfaceTintColor: Theme.of(context).colorScheme.surface,
+
+        backgroundColor: Theme.of(context).colorScheme.surface,
         title: const Text(
           'Detalle de Venta',
           style: TextStyle(fontWeight: FontWeight.w600),
@@ -52,7 +55,7 @@ class SaleDetailPage extends ConsumerWidget {
                     'Venta no encontrada',
                     style: TextStyle(
                       fontSize: 16,
-                      color: Colors.grey.shade500,
+                      color: Theme.of(context).colorScheme.outline,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
@@ -67,11 +70,17 @@ class SaleDetailPage extends ConsumerWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.error_outline, size: 64, color: Colors.grey.shade400),
+              Icon(
+                Icons.error_outline,
+                size: 64,
+                color: Theme.of(context).colorScheme.outline,
+              ),
               const SizedBox(height: 16),
               Text(
                 'Error al cargar',
-                style: TextStyle(color: Colors.grey.shade600),
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
               ),
             ],
           ),
@@ -94,9 +103,9 @@ class SaleDetailPage extends ConsumerWidget {
           // Header Card
           Container(
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: Theme.of(context).colorScheme.surfaceContainer,
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: Colors.grey.shade200),
+              border: Border.all(color: Theme.of(context).colorScheme.outline),
             ),
             padding: const EdgeInsets.all(24),
             child: Column(
@@ -109,10 +118,10 @@ class SaleDetailPage extends ConsumerWidget {
                       height: 44,
                       decoration: BoxDecoration(
                         color: isCancelled
-                            ? Colors.red.shade400
+                            ? AppTheme.actionCancel
                             : isReturned
-                            ? Colors.orange.shade400
-                            : Colors.green.shade400,
+                            ? AppTheme.alertWarning
+                            : AppTheme.transactionSuccess,
                         borderRadius: BorderRadius.circular(2),
                       ),
                     ),
@@ -134,7 +143,9 @@ class SaleDetailPage extends ConsumerWidget {
                             dateFormat.format(sale.saleDate),
                             style: TextStyle(
                               fontSize: 13,
-                              color: Colors.grey.shade600,
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onSurfaceVariant,
                             ),
                           ),
                         ],
@@ -147,17 +158,17 @@ class SaleDetailPage extends ConsumerWidget {
                       ),
                       decoration: BoxDecoration(
                         color: isCancelled
-                            ? Colors.red.shade50
+                            ? AppTheme.actionCancel
                             : isReturned
-                            ? Colors.orange.shade50
-                            : Colors.green.shade50,
+                            ? AppTheme.alertWarning
+                            : AppTheme.transactionSuccess,
                         borderRadius: BorderRadius.circular(8),
                         border: Border.all(
                           color: isCancelled
-                              ? Colors.red.shade200
+                              ? AppTheme.actionCancel
                               : isReturned
-                              ? Colors.orange.shade200
-                              : Colors.green.shade200,
+                              ? AppTheme.alertWarning
+                              : AppTheme.transactionSuccess,
                         ),
                       ),
                       child: Text(
@@ -170,10 +181,10 @@ class SaleDetailPage extends ConsumerWidget {
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
                           color: isCancelled
-                              ? Colors.red.shade700
+                              ? AppTheme.onActionCancel
                               : isReturned
-                              ? Colors.orange.shade700
-                              : Colors.green.shade700,
+                              ? AppTheme.onAlertWarning
+                              : AppTheme.onAlertSuccess,
                         ),
                       ),
                     ),
@@ -181,15 +192,17 @@ class SaleDetailPage extends ConsumerWidget {
                 ),
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: 16),
-                  child: Divider(height: 1, color: Colors.grey.shade200),
+                  child: Divider(),
                 ),
                 _buildInfoRow(
+                  context,
                   Icons.person_outline,
                   'Cliente',
                   sale.customerName ?? 'Público General',
                 ),
                 const SizedBox(height: 12),
                 _buildInfoRow(
+                  context,
                   Icons.warehouse_outlined,
                   'Almacén',
                   'Almacén #${sale.warehouseId}',
@@ -197,6 +210,7 @@ class SaleDetailPage extends ConsumerWidget {
                 if (isCancelled) ...[
                   const SizedBox(height: 12),
                   _buildInfoRow(
+                    context,
                     Icons.cancel_outlined,
                     'Motivo de cancelación',
                     sale.cancellationReason ?? 'No especificado',
@@ -231,9 +245,11 @@ class SaleDetailPage extends ConsumerWidget {
                     borderRadius: BorderRadius.circular(16),
                     child: Container(
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: Theme.of(context).colorScheme.surfaceContainer,
                         borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: Colors.grey.shade200),
+                        border: Border.all(
+                          color: Theme.of(context).colorScheme.outline,
+                        ),
                       ),
                       padding: const EdgeInsets.all(20),
                       child: Column(
@@ -243,12 +259,16 @@ class SaleDetailPage extends ConsumerWidget {
                               Container(
                                 padding: const EdgeInsets.all(10),
                                 decoration: BoxDecoration(
-                                  color: Colors.orange.shade50,
+                                  color: Theme.of(context).colorScheme.surface,
                                   borderRadius: BorderRadius.circular(10),
+                                  border: Border.all(
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.outline,
+                                  ),
                                 ),
                                 child: Icon(
                                   Icons.keyboard_return_outlined,
-                                  color: Colors.orange.shade700,
                                   size: 20,
                                 ),
                               ),
@@ -262,33 +282,22 @@ class SaleDetailPage extends ConsumerWidget {
                                       style: TextStyle(
                                         fontSize: 14,
                                         fontWeight: FontWeight.w600,
-                                        color: Colors.grey.shade800,
                                       ),
                                     ),
                                     const SizedBox(height: 2),
                                     Text(
                                       '${returns.length} ${returns.length == 1 ? 'devolución' : 'devoluciones'}',
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        color: Colors.grey.shade600,
-                                      ),
+                                      style: TextStyle(fontSize: 12),
                                     ),
                                   ],
                                 ),
                               ),
-                              Icon(
-                                Icons.chevron_right,
-                                color: Colors.grey.shade400,
-                                size: 20,
-                              ),
+                              Icon(Icons.chevron_right, size: 20),
                             ],
                           ),
                           Padding(
                             padding: const EdgeInsets.symmetric(vertical: 16),
-                            child: Divider(
-                              height: 1,
-                              color: Colors.grey.shade200,
-                            ),
+                            child: Divider(height: 1),
                           ),
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -297,7 +306,7 @@ class SaleDetailPage extends ConsumerWidget {
                                 'Devuelto',
                                 style: TextStyle(
                                   fontSize: 13,
-                                  color: Colors.grey.shade600,
+                                  color: Theme.of(context).colorScheme.error,
                                 ),
                               ),
                               Text(
@@ -305,7 +314,7 @@ class SaleDetailPage extends ConsumerWidget {
                                 style: TextStyle(
                                   fontSize: 14,
                                   fontWeight: FontWeight.w600,
-                                  color: Colors.grey.shade700,
+                                  color: Theme.of(context).colorScheme.error,
                                 ),
                               ),
                             ],
@@ -319,15 +328,20 @@ class SaleDetailPage extends ConsumerWidget {
                                 style: TextStyle(
                                   fontSize: 14,
                                   fontWeight: FontWeight.w600,
-                                  color: Colors.grey.shade800,
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurface,
                                 ),
                               ),
                               Text(
                                 '\$${(netTotalCents / 100).toStringAsFixed(2)}',
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontSize: 18,
                                   fontWeight: FontWeight.w700,
                                   letterSpacing: -0.3,
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurface,
                                 ),
                               ),
                             ],
@@ -353,7 +367,7 @@ class SaleDetailPage extends ConsumerWidget {
               style: TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
-                color: Colors.grey.shade600,
+                color: Theme.of(context).colorScheme.onSurface,
                 letterSpacing: 0.5,
               ),
             ),
@@ -362,11 +376,10 @@ class SaleDetailPage extends ConsumerWidget {
             (item) => Container(
               margin: const EdgeInsets.only(bottom: 12),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: Theme.of(context).colorScheme.surface,
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.grey.shade200),
               ),
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -377,7 +390,7 @@ class SaleDetailPage extends ConsumerWidget {
                         width: 28,
                         height: 28,
                         decoration: BoxDecoration(
-                          color: Colors.grey.shade100,
+                          color: Theme.of(context).colorScheme.surfaceContainer,
                           borderRadius: BorderRadius.circular(6),
                         ),
                         child: Center(
@@ -386,7 +399,9 @@ class SaleDetailPage extends ConsumerWidget {
                             style: TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.w600,
-                              color: Colors.grey.shade700,
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onSurfaceVariant,
                             ),
                           ),
                         ),
@@ -401,7 +416,7 @@ class SaleDetailPage extends ConsumerWidget {
                               style: TextStyle(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w600,
-                                color: Colors.grey.shade800,
+                                color: Theme.of(context).colorScheme.onSurface,
                               ),
                             ),
                             const SizedBox(height: 4),
@@ -409,7 +424,9 @@ class SaleDetailPage extends ConsumerWidget {
                               '\$${(item.unitPriceCents / 100).toStringAsFixed(2)} c/u',
                               style: TextStyle(
                                 fontSize: 12,
-                                color: Colors.grey.shade600,
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurfaceVariant,
                               ),
                             ),
                           ],
@@ -420,7 +437,7 @@ class SaleDetailPage extends ConsumerWidget {
                         style: TextStyle(
                           fontSize: 15,
                           fontWeight: FontWeight.w700,
-                          color: Colors.grey.shade800,
+                          color: Theme.of(context).colorScheme.onSurface,
                           letterSpacing: -0.2,
                         ),
                       ),
@@ -431,8 +448,11 @@ class SaleDetailPage extends ConsumerWidget {
                     Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: Colors.grey.shade50,
+                        color: Theme.of(context).colorScheme.surfaceContainer,
                         borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: Theme.of(context).colorScheme.outline,
+                        ),
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -442,7 +462,9 @@ class SaleDetailPage extends ConsumerWidget {
                               Icon(
                                 Icons.receipt_outlined,
                                 size: 14,
-                                color: Colors.grey.shade600,
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurfaceVariant,
                               ),
                               const SizedBox(width: 6),
                               Text(
@@ -450,7 +472,9 @@ class SaleDetailPage extends ConsumerWidget {
                                 style: TextStyle(
                                   fontSize: 11,
                                   fontWeight: FontWeight.w600,
-                                  color: Colors.grey.shade600,
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurfaceVariant,
                                   letterSpacing: 0.3,
                                 ),
                               ),
@@ -468,7 +492,9 @@ class SaleDetailPage extends ConsumerWidget {
                                     '${tax.taxName} (${tax.taxRate.toStringAsFixed(2)}%)',
                                     style: TextStyle(
                                       fontSize: 11,
-                                      color: Colors.grey.shade700,
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.onSurfaceVariant,
                                     ),
                                   ),
                                   Text(
@@ -476,7 +502,9 @@ class SaleDetailPage extends ConsumerWidget {
                                     style: TextStyle(
                                       fontSize: 11,
                                       fontWeight: FontWeight.w600,
-                                      color: Colors.grey.shade700,
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.onSurfaceVariant,
                                     ),
                                   ),
                                 ],
@@ -500,7 +528,9 @@ class SaleDetailPage extends ConsumerWidget {
                                   style: TextStyle(
                                     fontSize: 11,
                                     fontWeight: FontWeight.w600,
-                                    color: Colors.grey.shade700,
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.onSurfaceVariant,
                                   ),
                                 ),
                                 Text(
@@ -508,7 +538,9 @@ class SaleDetailPage extends ConsumerWidget {
                                   style: TextStyle(
                                     fontSize: 11,
                                     fontWeight: FontWeight.w600,
-                                    color: Colors.grey.shade700,
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.onSurfaceVariant,
                                   ),
                                 ),
                               ],
@@ -533,7 +565,7 @@ class SaleDetailPage extends ConsumerWidget {
                 style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
-                  color: Colors.grey.shade600,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
                   letterSpacing: 0.5,
                 ),
               ),
@@ -542,9 +574,11 @@ class SaleDetailPage extends ConsumerWidget {
               (payment) => Container(
                 margin: const EdgeInsets.only(bottom: 12),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: Theme.of(context).colorScheme.surfaceContainer,
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.grey.shade200),
+                  border: Border.all(
+                    color: Theme.of(context).colorScheme.outline,
+                  ),
                 ),
                 padding: const EdgeInsets.all(16),
                 child: Row(
@@ -552,13 +586,13 @@ class SaleDetailPage extends ConsumerWidget {
                     Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: Colors.grey.shade100,
+                        color: Theme.of(context).colorScheme.surfaceContainer,
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Icon(
                         _getPaymentIcon(payment.paymentMethod),
                         size: 18,
-                        color: Colors.grey.shade700,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -579,7 +613,9 @@ class SaleDetailPage extends ConsumerWidget {
                             dateFormat.format(payment.paymentDate),
                             style: TextStyle(
                               fontSize: 12,
-                              color: Colors.grey.shade600,
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onSurfaceVariant,
                             ),
                           ),
                         ],
@@ -605,19 +641,20 @@ class SaleDetailPage extends ConsumerWidget {
           // Totals Card
           Container(
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: Theme.of(context).colorScheme.surfaceContainer,
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: Colors.grey.shade200),
+              border: Border.all(color: Theme.of(context).colorScheme.outline),
             ),
             padding: const EdgeInsets.all(24),
             child: Column(
               children: [
-                _buildTotalRow('Subtotal', sale.subtotalCents / 100),
+                _buildTotalRow(context, 'Subtotal', sale.subtotalCents / 100),
                 const SizedBox(height: 12),
-                _buildTotalRow('Impuestos', sale.taxCents / 100),
+                _buildTotalRow(context, 'Impuestos', sale.taxCents / 100),
                 if (sale.discountCents > 0) ...[
                   const SizedBox(height: 12),
                   _buildTotalRow(
+                    context,
                     'Descuento',
                     sale.discountCents / 100,
                     isDiscount: true,
@@ -625,7 +662,7 @@ class SaleDetailPage extends ConsumerWidget {
                 ],
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: 16),
-                  child: Divider(height: 1, color: Colors.grey.shade200),
+                  child: Divider(height: 1),
                 ),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -663,8 +700,8 @@ class SaleDetailPage extends ConsumerWidget {
                   context.push('/adjustments/return-processing', extra: sale);
                 },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.grey.shade800,
-                  foregroundColor: Colors.white,
+                  backgroundColor: Theme.of(context).colorScheme.surface,
+                  foregroundColor: Theme.of(context).colorScheme.onSurface,
                   elevation: 0,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -695,7 +732,9 @@ class SaleDetailPage extends ConsumerWidget {
                   _showCancelDialog(context, ref, sale);
                 },
                 style: OutlinedButton.styleFrom(
-                  foregroundColor: Colors.grey.shade700,
+                  foregroundColor: Theme.of(
+                    context,
+                  ).colorScheme.onSurfaceVariant,
                   side: BorderSide(color: Colors.grey.shade300),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -725,6 +764,7 @@ class SaleDetailPage extends ConsumerWidget {
   }
 
   Widget _buildInfoRow(
+    BuildContext context,
     IconData icon,
     String label,
     String value, {
@@ -732,13 +772,16 @@ class SaleDetailPage extends ConsumerWidget {
   }) {
     return Row(
       children: [
-        Icon(icon, size: 16, color: Colors.grey.shade500),
+        Icon(icon, size: 16),
         const SizedBox(width: 8),
         SizedBox(
           width: 120,
           child: Text(
             label,
-            style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
+            style: TextStyle(
+              fontSize: 13,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
           ),
         ),
         Expanded(
@@ -747,7 +790,9 @@ class SaleDetailPage extends ConsumerWidget {
             style: TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.w600,
-              color: isError ? Colors.red.shade600 : Colors.grey.shade800,
+              color: isError
+                  ? Theme.of(context).colorScheme.error
+                  : Colors.grey.shade800,
             ),
           ),
         ),
@@ -756,6 +801,7 @@ class SaleDetailPage extends ConsumerWidget {
   }
 
   Widget _buildTotalRow(
+    BuildContext context,
     String label,
     double amount, {
     bool isDiscount = false,
@@ -765,14 +811,19 @@ class SaleDetailPage extends ConsumerWidget {
       children: [
         Text(
           label,
-          style: TextStyle(fontSize: 14, color: Colors.grey.shade700),
+          style: TextStyle(
+            fontSize: 14,
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
         ),
         Text(
           '${isDiscount ? '-' : ''}\$${amount.toStringAsFixed(2)}',
           style: TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.w600,
-            color: isDiscount ? Colors.green.shade600 : Colors.grey.shade800,
+            color: isDiscount
+                ? Theme.of(context).colorScheme.tertiary
+                : Colors.grey.shade800,
             letterSpacing: -0.2,
           ),
         ),
@@ -824,7 +875,7 @@ class SaleDetailPage extends ConsumerWidget {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Error: $e'),
-            backgroundColor: Colors.red.shade600,
+            backgroundColor: Theme.of(context).colorScheme.error,
           ),
         );
       }

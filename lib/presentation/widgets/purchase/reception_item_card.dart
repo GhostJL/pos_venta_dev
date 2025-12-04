@@ -68,10 +68,13 @@ class ReceptionItemCard extends StatelessWidget {
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 6),
       elevation: 0,
-      surfaceTintColor: Colors.transparent,
+      surfaceTintColor: Theme.of(context).colorScheme.surface,
+
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: Colors.grey.shade200),
+        side: BorderSide(
+          color: Theme.of(context).colorScheme.surfaceContainerHighest,
+        ),
       ),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
@@ -100,15 +103,17 @@ class ReceptionItemCard extends StatelessWidget {
                       vertical: 2,
                     ),
                     decoration: BoxDecoration(
-                      color: Colors.purple.shade50,
+                      color: Theme.of(context).colorScheme.primary,
                       borderRadius: BorderRadius.circular(4),
-                      border: Border.all(color: Colors.purple.shade100),
+                      border: Border.all(
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
                     ),
                     child: Text(
                       '${variant!.quantity.toStringAsFixed(0)} un/caja',
                       style: TextStyle(
                         fontSize: 10,
-                        color: Colors.purple.shade700,
+                        color: Theme.of(context).colorScheme.primary,
                       ),
                     ),
                   ),
@@ -124,7 +129,7 @@ class ReceptionItemCard extends StatelessWidget {
                     'Costo Anterior: \$${currentCost.toStringAsFixed(2)}',
                     style: TextStyle(
                       fontSize: 11,
-                      color: Colors.grey.shade600,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
                       decoration: TextDecoration.lineThrough,
                     ),
                   ),
@@ -148,7 +153,10 @@ class ReceptionItemCard extends StatelessWidget {
             else
               Text(
                 'Costo: \$${comparisonCost.toStringAsFixed(2)}',
-                style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
+                style: TextStyle(
+                  fontSize: 11,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
               ),
 
             const SizedBox(height: 8),
@@ -158,14 +166,22 @@ class ReceptionItemCard extends StatelessWidget {
               spacing: 6,
               runSpacing: 6,
               children: [
-                _buildBadge(item.quantity, Colors.blue.shade700, 'Solicitado'),
+                _buildBadge(
+                  item.quantity,
+                  Theme.of(context).colorScheme.primary,
+                  'Solicitado',
+                ),
                 if (item.quantityReceived > 0)
                   _buildBadge(
                     item.quantityReceived,
-                    Colors.green.shade700,
+                    Theme.of(context).colorScheme.tertiary,
                     'Recibido',
                   ),
-                _buildBadge(remaining, Colors.orange.shade700, 'Pendiente'),
+                _buildBadge(
+                  remaining,
+                  Theme.of(context).colorScheme.secondary,
+                  'Pendiente',
+                ),
               ],
             ),
             const SizedBox(height: 12),

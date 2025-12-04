@@ -63,7 +63,7 @@ class CartItemWidget extends StatelessWidget {
 
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).colorScheme.onSurface,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: Theme.of(context).colorScheme.outline),
         boxShadow: [
@@ -186,7 +186,7 @@ class CartItemWidget extends StatelessWidget {
                   child: Icon(
                     Icons.inventory_2_rounded,
                     size: 10,
-                    color: Colors.white,
+                    color: Theme.of(context).colorScheme.onSurface,
                   ),
                 ),
                 SizedBox(width: 6),

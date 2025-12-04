@@ -70,7 +70,7 @@ class PurchaseDetailPage extends ConsumerWidget {
                                 style: TextStyle(
                                   fontSize: 13,
                                   fontWeight: FontWeight.w500,
-                                  color: Colors.red.shade700,
+                                  color: Theme.of(context).colorScheme.error,
                                 ),
                               ),
                             ],
@@ -166,10 +166,13 @@ class PurchaseDetailPage extends ConsumerWidget {
 
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
+          SnackBar(
             content: Row(
               children: [
-                Icon(Icons.check_circle, color: Colors.white),
+                Icon(
+                  Icons.check_circle,
+                  color: Theme.of(context).colorScheme.onSurface,
+                ),
                 SizedBox(width: 8),
                 Expanded(child: Text('Recepción registrada exitosamente')),
               ],
@@ -185,8 +188,11 @@ class PurchaseDetailPage extends ConsumerWidget {
           SnackBar(
             content: Row(
               children: [
-                const Icon(Icons.error, color: Colors.white),
-                const SizedBox(width: 8),
+                Icon(
+                  Icons.error,
+                  color: Theme.of(context).colorScheme.onSurface,
+                ),
+                SizedBox(width: 8),
                 Expanded(child: Text('Error al recibir compra: $e')),
               ],
             ),

@@ -32,7 +32,7 @@ void confirmDelete(BuildContext context, WidgetRef ref, item) {
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: Theme.of(context).colorScheme.error,
-              foregroundColor: Colors.white,
+              foregroundColor: Theme.of(context).colorScheme.onSurface,
             ),
             child: Text('Eliminar'),
           ),

@@ -46,15 +46,17 @@ class TransactionVoidDialog {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: Colors.orange.shade50,
+                    color: Theme.of(context).colorScheme.secondaryContainer,
                     borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: Colors.orange.shade200),
+                    border: Border.all(
+                      color: Theme.of(context).colorScheme.secondaryContainer,
+                    ),
                   ),
                   child: Row(
                     children: [
                       Icon(
                         Icons.info_outline,
-                        color: Colors.orange.shade700,
+                        color: Theme.of(context).colorScheme.secondary,
                         size: 20,
                       ),
                       SizedBox(width: 8),
@@ -63,7 +65,7 @@ class TransactionVoidDialog {
                           'Esta acción no se puede deshacer. El inventario será restaurado automáticamente.',
                           style: TextStyle(
                             fontSize: 13,
-                            color: Colors.orange.shade900,
+                            color: Theme.of(context).colorScheme.secondary,
                           ),
                         ),
                       ),
@@ -143,7 +145,7 @@ class TransactionVoidDialog {
             label: Text('Anular Venta'),
             style: ElevatedButton.styleFrom(
               backgroundColor: Theme.of(context).colorScheme.error,
-              foregroundColor: Colors.white,
+              foregroundColor: Theme.of(context).colorScheme.onSurface,
             ),
           ),
         ],

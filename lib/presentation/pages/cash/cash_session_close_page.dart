@@ -63,7 +63,7 @@ class _CashSessionClosePageState extends ConsumerState<CashSessionClosePage> {
             onPressed: () => Navigator.of(context).pop(true),
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.red,
-              foregroundColor: Colors.white,
+              foregroundColor: Theme.of(context).colorScheme.onSurface,
             ),
             child: const Text('Confirmar Cierre'),
           ),
@@ -166,8 +166,8 @@ class _CashSessionClosePageState extends ConsumerState<CashSessionClosePage> {
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
                 color: difference > 0
-                    ? Colors.blue.shade50
-                    : Colors.red.shade50,
+                    ? Theme.of(context).colorScheme.primary
+                    : Theme.of(context).colorScheme.errorContainer,
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Row(
@@ -175,8 +175,8 @@ class _CashSessionClosePageState extends ConsumerState<CashSessionClosePage> {
                   Icon(
                     difference > 0 ? Icons.arrow_upward : Icons.arrow_downward,
                     color: difference > 0
-                        ? Colors.blue.shade700
-                        : Colors.red.shade700,
+                        ? Theme.of(context).colorScheme.primary
+                        : Theme.of(context).colorScheme.error,
                   ),
                   const SizedBox(width: 8),
                   Expanded(
@@ -186,8 +186,8 @@ class _CashSessionClosePageState extends ConsumerState<CashSessionClosePage> {
                           : 'Faltante de efectivo',
                       style: TextStyle(
                         color: difference > 0
-                            ? Colors.blue.shade700
-                            : Colors.red.shade700,
+                            ? Theme.of(context).colorScheme.primary
+                            : Theme.of(context).colorScheme.error,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -306,7 +306,7 @@ class _CashSessionClosePageState extends ConsumerState<CashSessionClosePage> {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.grey.shade100,
+                  color: Theme.of(context).colorScheme.surfaceContainer,
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Column(
@@ -358,20 +358,20 @@ class _CashSessionClosePageState extends ConsumerState<CashSessionClosePage> {
                 child: ElevatedButton(
                   onPressed: _isLoading ? null : _closeSession,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.red.shade700,
-                    foregroundColor: Colors.white,
+                    backgroundColor: Theme.of(context).colorScheme.error,
+                    foregroundColor: Theme.of(context).colorScheme.onSurface,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),
                     ),
                     elevation: 0,
                   ),
                   child: _isLoading
-                      ? const SizedBox(
+                      ? SizedBox(
                           width: 20,
                           height: 20,
                           child: CircularProgressIndicator(
                             strokeWidth: 2,
-                            color: Colors.white,
+                            color: Theme.of(context).colorScheme.onSurface,
                           ),
                         )
                       : const Text(

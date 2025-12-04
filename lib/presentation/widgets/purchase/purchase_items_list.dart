@@ -99,9 +99,12 @@ class _PurchaseItemTile extends ConsumerWidget {
 
         return Container(
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: Theme.of(context).colorScheme.onSurface,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Colors.grey.shade200, width: 1),
+            border: Border.all(
+              color: Theme.of(context).colorScheme.surfaceContainerHighest,
+              width: 1,
+            ),
           ),
           child: Padding(
             padding: const EdgeInsets.all(16),
@@ -166,7 +169,12 @@ class _PurchaseItemTile extends ConsumerWidget {
                 /// Divider
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: 2),
-                  child: Divider(height: 1, color: Colors.grey.shade200),
+                  child: Divider(
+                    height: 1,
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.surfaceContainerHighest,
+                  ),
                 ),
 
                 const SizedBox(height: 12),
@@ -177,7 +185,7 @@ class _PurchaseItemTile extends ConsumerWidget {
                     Icon(
                       Icons.shopping_cart_rounded,
                       size: 16,
-                      color: Colors.grey.shade600,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
                     const SizedBox(width: 6),
                     Expanded(

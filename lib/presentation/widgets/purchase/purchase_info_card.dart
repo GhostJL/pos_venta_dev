@@ -7,7 +7,7 @@ class PurchaseInfoCard extends StatelessWidget {
 
   const PurchaseInfoCard({super.key, required this.purchase});
 
-  Widget _buildInfoRow(String label, String value) {
+  Widget _buildInfoRow(BuildContext context, String label, String value) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
@@ -20,7 +20,7 @@ class PurchaseInfoCard extends StatelessWidget {
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
-                color: Colors.grey.shade600,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
             ),
           ),
@@ -52,21 +52,24 @@ class PurchaseInfoCard extends StatelessWidget {
       statusColor = Colors.orange.shade400;
       statusText = 'Pendiente';
     } else if (isCancelled) {
-      statusColor = Colors.red.shade400;
+      statusColor = Theme.of(context).colorScheme.error;
       statusText = 'Cancelada';
     } else if (isPartial) {
-      statusColor = Colors.blue.shade400;
+      statusColor = Theme.of(context).colorScheme.primary;
       statusText = 'Parcial';
     } else {
-      statusColor = Colors.green.shade400;
+      statusColor = Theme.of(context).colorScheme.tertiary;
       statusText = 'Completada';
     }
     return Card(
       elevation: 0,
-      surfaceTintColor: Colors.transparent,
+      surfaceTintColor: Theme.of(context).colorScheme.surface,
+
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: Colors.grey.shade200),
+        side: BorderSide(
+          color: Theme.of(context).colorScheme.surfaceContainerHighest,
+        ),
       ),
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -102,7 +105,7 @@ class PurchaseInfoCard extends StatelessWidget {
                         dateFormat.format(purchase.purchaseDate),
                         style: TextStyle(
                           fontSize: 12,
-                          color: Colors.grey.shade600,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
                         ),
                       ),
                     ],
@@ -133,15 +136,27 @@ class PurchaseInfoCard extends StatelessWidget {
             ),
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 16),
-              child: Divider(height: 1, color: Colors.grey.shade200),
+              child: Divider(
+                height: 1,
+                color: Theme.of(context).colorScheme.surfaceContainerHighest,
+              ),
             ),
 
-            _buildInfoRow('Proveedor', purchase.supplierName ?? 'N/A'),
-            _buildInfoRow('Fecha', dateFormat.format(purchase.purchaseDate)),
+            _buildInfoRow(context, 'Proveedor', purchase.supplierName ?? 'N/A'),
+            _buildInfoRow(
+              context,
+              'Fecha',
+              dateFormat.format(purchase.purchaseDate),
+            ),
             if (purchase.supplierInvoiceNumber != null)
-              _buildInfoRow('Factura Prov.', purchase.supplierInvoiceNumber!),
+              _buildInfoRow(
+                context,
+                'Factura Prov.',
+                purchase.supplierInvoiceNumber!,
+              ),
             if (purchase.receivedDate != null)
               _buildInfoRow(
+                context,
                 'Última Recepción',
                 dateFormat.format(purchase.receivedDate!),
               ),

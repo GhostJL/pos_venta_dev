@@ -18,13 +18,21 @@ class ReceptionSummaryCard extends StatelessWidget {
     required this.totalPending,
   });
 
-  Widget _buildColumn(String label, double value, Color valueColor) {
+  Widget _buildColumn(
+    String label,
+    double value,
+    Color valueColor,
+    BuildContext context,
+  ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           label,
-          style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
+          style: TextStyle(
+            fontSize: 11,
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
         ),
         const SizedBox(height: 2),
         Text(
@@ -43,21 +51,47 @@ class ReceptionSummaryCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       elevation: 0,
-      surfaceTintColor: Colors.transparent,
+      surfaceTintColor: Theme.of(context).colorScheme.surface,
+
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: Colors.grey.shade200),
+        side: BorderSide(
+          color: Theme.of(context).colorScheme.surfaceContainerHighest,
+        ),
       ),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            _buildColumn('Total Pedido', totalOrdered, Colors.blue.shade700),
-            Container(width: 1, height: 28, color: Colors.grey.shade200),
-            _buildColumn('Ya Recibido', totalReceived, Colors.green.shade700),
-            Container(width: 1, height: 28, color: Colors.grey.shade200),
-            _buildColumn('A Recibir', totalPending, Colors.orange.shade700),
+            _buildColumn(
+              'Total Pedido',
+              totalOrdered,
+              Theme.of(context).colorScheme.primary,
+              context,
+            ),
+            Container(
+              width: 1,
+              height: 28,
+              color: Theme.of(context).colorScheme.surfaceContainerHighest,
+            ),
+            _buildColumn(
+              'Ya Recibido',
+              totalReceived,
+              Theme.of(context).colorScheme.tertiary,
+              context,
+            ),
+            Container(
+              width: 1,
+              height: 28,
+              color: Theme.of(context).colorScheme.surfaceContainerHighest,
+            ),
+            _buildColumn(
+              'A Recibir',
+              totalPending,
+              Theme.of(context).colorScheme.secondary,
+              context,
+            ),
           ],
         ),
       ),

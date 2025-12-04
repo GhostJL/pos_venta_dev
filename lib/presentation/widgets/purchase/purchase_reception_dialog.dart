@@ -150,9 +150,9 @@ class _PurchaseReceptionDialogState
                 ),
                 Text(
                   'Compra #${widget.purchase.purchaseNumber}',
-                  style: Theme.of(
-                    context,
-                  ).textTheme.bodySmall?.copyWith(color: Colors.grey.shade600),
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
                 ),
               ],
             ),
@@ -198,8 +198,11 @@ class _PurchaseReceptionDialogState
 
                   return ListView.separated(
                     itemCount: widget.purchase.items.length,
-                    separatorBuilder: (_, __) =>
-                        Divider(color: Colors.grey.shade200),
+                    separatorBuilder: (_, __) => Divider(
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.surfaceContainerHighest,
+                    ),
                     itemBuilder: (context, index) {
                       final item = widget.purchase.items[index];
                       final remaining = item.quantity - item.quantityReceived;
@@ -212,7 +215,9 @@ class _PurchaseReceptionDialogState
                       if (remaining <= 0) {
                         return Card(
                           margin: const EdgeInsets.symmetric(vertical: 4),
-                          color: Colors.green.shade50,
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.tertiaryContainer,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
                           ),
@@ -231,7 +236,7 @@ class _PurchaseReceptionDialogState
                             subtitle: Text(
                               'Completamente recibido: ${_formatNumber(item.quantity)} ${item.unitOfMeasure}',
                               style: TextStyle(
-                                color: Colors.green.shade700,
+                                color: Theme.of(context).colorScheme.tertiary,
                                 fontWeight: FontWeight.w500,
                               ),
                             ),

@@ -85,18 +85,21 @@ class _PaymentDialogState extends ConsumerState<PaymentDialog> {
               ),
               child: Row(
                 children: [
-                  const Expanded(
+                  Expanded(
                     child: Text(
                       'Procesar Pago',
                       style: TextStyle(
-                        color: Colors.white,
+                        color: Theme.of(context).colorScheme.onSurface,
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
                   ),
                   IconButton(
-                    icon: const Icon(Icons.close, color: Colors.white),
+                    icon: Icon(
+                      Icons.close,
+                      color: Theme.of(context).colorScheme.onSurface,
+                    ),
                     onPressed: () => Navigator.of(context).pop(),
                   ),
                 ],
@@ -262,13 +265,13 @@ class _PaymentDialogState extends ConsumerState<PaymentDialog> {
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
                         color: _change >= 0
-                            ? Colors.green.shade50
-                            : Colors.red.shade50,
+                            ? Theme.of(context).colorScheme.tertiaryContainer
+                            : Theme.of(context).colorScheme.errorContainer,
                         borderRadius: BorderRadius.circular(8),
                         border: Border.all(
                           color: _change >= 0
-                              ? Colors.green.shade200
-                              : Colors.red.shade200,
+                              ? Theme.of(context).colorScheme.tertiaryContainer
+                              : Theme.of(context).colorScheme.errorContainer,
                         ),
                       ),
                       child: Row(
@@ -280,8 +283,8 @@ class _PaymentDialogState extends ConsumerState<PaymentDialog> {
                               fontSize: 16,
                               fontWeight: FontWeight.w600,
                               color: _change >= 0
-                                  ? Colors.green.shade700
-                                  : Colors.red.shade700,
+                                  ? Theme.of(context).colorScheme.tertiary
+                                  : Theme.of(context).colorScheme.error,
                             ),
                           ),
                           Text(
@@ -290,8 +293,8 @@ class _PaymentDialogState extends ConsumerState<PaymentDialog> {
                               fontSize: 24,
                               fontWeight: FontWeight.bold,
                               color: _change >= 0
-                                  ? Colors.green.shade700
-                                  : Colors.red.shade700,
+                                  ? Theme.of(context).colorScheme.tertiary
+                                  : Theme.of(context).colorScheme.error,
                             ),
                           ),
                         ],
@@ -360,7 +363,9 @@ class _PaymentDialogState extends ConsumerState<PaymentDialog> {
                             },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Theme.of(context).primaryColor,
-                        foregroundColor: Colors.white,
+                        foregroundColor: Theme.of(
+                          context,
+                        ).colorScheme.onSurface,
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(8),
@@ -368,15 +373,15 @@ class _PaymentDialogState extends ConsumerState<PaymentDialog> {
                         elevation: 0,
                       ),
                       child: posState.isLoading
-                          ? const SizedBox(
+                          ? SizedBox(
                               width: 20,
                               height: 20,
                               child: CircularProgressIndicator(
                                 strokeWidth: 2,
-                                color: Colors.white,
+                                color: Theme.of(context).colorScheme.onSurface,
                               ),
                             )
-                          : const Text(
+                          : Text(
                               'Confirmar Pago',
                               style: TextStyle(
                                 fontSize: 16,

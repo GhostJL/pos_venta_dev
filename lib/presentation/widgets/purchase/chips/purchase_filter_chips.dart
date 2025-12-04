@@ -44,7 +44,9 @@ class PurchaseFilterChips extends ConsumerWidget {
                     fontWeight: isSelected
                         ? FontWeight.w600
                         : FontWeight.normal,
-                    color: isSelected ? chipColor : Colors.grey.shade700,
+                    color: isSelected
+                        ? chipColor
+                        : Theme.of(context).colorScheme.onSurfaceVariant,
                     fontSize: 13,
                   ),
                 ),
@@ -55,7 +57,9 @@ class PurchaseFilterChips extends ConsumerWidget {
                       : null;
                 },
                 selectedColor: chipColor?.withValues(alpha: 0.1),
-                backgroundColor: Colors.grey.shade100,
+                backgroundColor: Theme.of(
+                  context,
+                ).colorScheme.surfaceContainerHighest,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8),
                   side: BorderSide(

@@ -71,12 +71,15 @@ class _ReturnItemsSelectorState extends ConsumerState<ReturnItemsSelector> {
   Widget _buildFullyReturnedItem(SaleItem item) {
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
-      color: Colors.grey.shade100,
+      color: Theme.of(context).colorScheme.surfaceContainerHighest,
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Row(
           children: [
-            Icon(Icons.check_circle, color: Colors.grey.shade400),
+            Icon(
+              Icons.check_circle,
+              color: Theme.of(context).colorScheme.outline,
+            ),
             const SizedBox(width: 12),
             Expanded(
               child: Column(
@@ -86,13 +89,16 @@ class _ReturnItemsSelectorState extends ConsumerState<ReturnItemsSelector> {
                     item.productName ?? 'Producto #${item.productId}',
                     style: TextStyle(
                       fontSize: 14,
-                      color: Colors.grey.shade600,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
                       decoration: TextDecoration.lineThrough,
                     ),
                   ),
                   Text(
                     'Ya devuelto completamente',
-                    style: TextStyle(fontSize: 12, color: Colors.grey.shade500),
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Theme.of(context).colorScheme.outline,
+                    ),
                   ),
                 ],
               ),
@@ -127,7 +133,10 @@ class _ReturnItemsSelectorState extends ConsumerState<ReturnItemsSelector> {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
         side: isSelected
-            ? BorderSide(color: Colors.orange.shade600, width: 2)
+            ? BorderSide(
+                color: Theme.of(context).colorScheme.secondary,
+                width: 2,
+              )
             : BorderSide.none,
       ),
       child: Padding(
@@ -275,7 +284,7 @@ class _ReturnItemsSelectorState extends ConsumerState<ReturnItemsSelector> {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: Colors.orange.shade50,
+                    color: Theme.of(context).colorScheme.secondaryContainer,
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Row(
@@ -285,7 +294,7 @@ class _ReturnItemsSelectorState extends ConsumerState<ReturnItemsSelector> {
                         'Subtotal a devolver:',
                         style: TextStyle(
                           fontSize: 14,
-                          color: Colors.orange.shade900,
+                          color: Theme.of(context).colorScheme.secondary,
                           fontWeight: FontWeight.w500,
                         ),
                       ),
@@ -293,7 +302,7 @@ class _ReturnItemsSelectorState extends ConsumerState<ReturnItemsSelector> {
                         '\$${(itemData.totalCents / 100.0).toStringAsFixed(2)}',
                         style: TextStyle(
                           fontSize: 16,
-                          color: Colors.orange.shade900,
+                          color: Theme.of(context).colorScheme.secondary,
                           fontWeight: FontWeight.bold,
                         ),
                       ),

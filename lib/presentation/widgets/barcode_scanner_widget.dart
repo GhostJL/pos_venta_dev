@@ -62,7 +62,7 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget> {
       appBar: AppBar(
         title: Text(widget.title ?? 'Escanear Código de Barras'),
         backgroundColor: Colors.black,
-        foregroundColor: Colors.white,
+        foregroundColor: Theme.of(context).colorScheme.onSurface,
         elevation: 0,
         actions: [
           IconButton(
@@ -115,16 +115,16 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget> {
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Icon(
+                          Icon(
                             Icons.check_circle,
-                            color: Colors.white,
+                            color: Theme.of(context).colorScheme.onSurface,
                             size: 20,
                           ),
-                          const SizedBox(width: 8),
+                          SizedBox(width: 8),
                           Text(
                             'Código detectado',
-                            style: const TextStyle(
-                              color: Colors.white,
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.onSurface,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
@@ -134,17 +134,17 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget> {
                   else
                     Column(
                       children: [
-                        const Icon(
+                        Icon(
                           Icons.qr_code_scanner,
-                          color: Colors.white,
+                          color: Theme.of(context).colorScheme.onSurface,
                           size: 48,
                         ),
                         const SizedBox(height: 12),
                         Text(
                           widget.hint ??
                               'Coloca el código de barras dentro del marco',
-                          style: const TextStyle(
-                            color: Colors.white,
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.onSurface,
                             fontSize: 16,
                             fontWeight: FontWeight.w500,
                           ),
@@ -154,7 +154,9 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget> {
                         Text(
                           'EAN-13, EAN-8, Code 128',
                           style: TextStyle(
-                            color: Colors.white.withAlpha(10),
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onSurface.withAlpha(10),
                             fontSize: 12,
                           ),
                         ),

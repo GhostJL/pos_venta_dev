@@ -56,7 +56,7 @@ class PurchaseItemsListWidget extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: Theme.of(context).colorScheme.onSurface,
                     shape: BoxShape.circle,
                     boxShadow: [
                       BoxShadow(

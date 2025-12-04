@@ -126,7 +126,7 @@ void showAdjustStockDialog(BuildContext context, WidgetRef ref, item) {
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Theme.of(context).colorScheme.primary,
-                  foregroundColor: Colors.white,
+                  foregroundColor: Theme.of(context).colorScheme.onSurface,
                 ),
                 child: const Text('Guardar'),
               ),

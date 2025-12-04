@@ -18,6 +18,8 @@ class DashboardAdminPage extends ConsumerWidget {
       appBar: AppBar(
         elevation: 0,
         toolbarHeight: 80,
+        backgroundColor: Theme.of(context).colorScheme.surface,
+        surfaceTintColor: Theme.of(context).colorScheme.surface,
         title: Container(
           constraints: const BoxConstraints(maxWidth: 600),
           child: InkWell(
@@ -34,10 +36,10 @@ class DashboardAdminPage extends ConsumerWidget {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.surface,
+                color: Theme.of(context).colorScheme.surfaceContainer,
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
-                  color: Theme.of(context).colorScheme.outline.withAlpha(50),
+                  color: Theme.of(context).colorScheme.outline,
                 ),
                 boxShadow: [
                   BoxShadow(
@@ -49,13 +51,10 @@ class DashboardAdminPage extends ConsumerWidget {
               ),
               child: Row(
                 children: [
-                  Icon(
-                    Icons.search_rounded,
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
+                  Icon(Icons.search_rounded),
                   const SizedBox(width: 12),
                   Text(
-                    'Buscar (Ctrl + K)...',
+                    'Buscar funciones...',
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
@@ -165,11 +164,9 @@ class DashboardAdminPage extends ConsumerWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
+        color: Theme.of(context).colorScheme.surfaceContainer,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: Theme.of(context).colorScheme.outline.withAlpha(50),
-        ),
+        border: Border.all(color: Theme.of(context).colorScheme.outline),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withAlpha(5),
@@ -378,14 +375,14 @@ class DashboardAdminPage extends ConsumerWidget {
         title: 'Historial de Ventas',
         value: 'Ver Registros y detalles',
         icon: Icons.receipt_long_rounded,
-        iconColor: Colors.blue.shade600,
+        iconColor: Theme.of(context).colorScheme.primary,
         onTap: () => context.go('/sales-history'),
       ),
       DashboardCard(
         title: 'Cortes de Caja',
         value: 'Sesiones de Caja y detalles',
         icon: Icons.history_edu_rounded,
-        iconColor: Colors.orange.shade600,
+        iconColor: Theme.of(context).colorScheme.secondary,
         onTap: () => context.go('/cash-sessions-history'),
       ),
     ];
@@ -431,14 +428,14 @@ class DashboardAdminPage extends ConsumerWidget {
         title: 'Ajustes de Inventario',
         value: 'Correcciones y Ajustes',
         icon: Icons.tune_rounded,
-        iconColor: Colors.amber.shade700,
+        iconColor: Theme.of(context).colorScheme.tertiary,
         onTap: () => context.go('/inventory-adjustments-menu'),
       ),
       DashboardCard(
         title: 'Clientes',
         value: 'Informacion y detalles',
         icon: Icons.people_alt_rounded,
-        iconColor: Colors.purple.shade600,
+        iconColor: Theme.of(context).colorScheme.primary,
         onTap: () => context.go('/customers'),
       ),
       DashboardCard(

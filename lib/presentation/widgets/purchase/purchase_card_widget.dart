@@ -21,22 +21,24 @@ class PurchaseCard extends StatelessWidget {
       statusColor = Colors.orange.shade400;
       statusText = 'Pendiente';
     } else if (isCancelled) {
-      statusColor = Colors.red.shade400;
+      statusColor = Theme.of(context).colorScheme.error;
       statusText = 'Cancelada';
     } else if (isPartial) {
-      statusColor = Colors.blue.shade400;
+      statusColor = Theme.of(context).colorScheme.primary;
       statusText = 'Parcial';
     } else {
-      statusColor = Colors.green.shade400;
+      statusColor = Theme.of(context).colorScheme.tertiary;
       statusText = 'Completada';
     }
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).colorScheme.onSurface,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.shade200),
+        border: Border.all(
+          color: Theme.of(context).colorScheme.surfaceContainerHighest,
+        ),
       ),
       child: InkWell(
         onTap: () => context.push('/purchases/${purchase.id}'),
@@ -75,7 +77,9 @@ class PurchaseCard extends StatelessWidget {
                           dateFormat.format(purchase.purchaseDate),
                           style: TextStyle(
                             fontSize: 12,
-                            color: Colors.grey.shade600,
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onSurfaceVariant,
                           ),
                         ),
                       ],
@@ -113,14 +117,14 @@ class PurchaseCard extends StatelessWidget {
                   Icon(
                     Icons.store_outlined,
                     size: 14,
-                    color: Colors.grey.shade500,
+                    color: Theme.of(context).colorScheme.outline,
                   ),
                   const SizedBox(width: 6),
                   Text(
                     purchase.supplierName ?? 'Proveedor desconocido',
                     style: TextStyle(
                       fontSize: 13,
-                      color: Colors.grey.shade700,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
@@ -132,29 +136,42 @@ class PurchaseCard extends StatelessWidget {
               /// Items + Warehouse
               Row(
                 children: [
-                  Icon(Icons.list, size: 14, color: Colors.grey.shade500),
+                  Icon(
+                    Icons.list,
+                    size: 14,
+                    color: Theme.of(context).colorScheme.outline,
+                  ),
                   const SizedBox(width: 6),
                   Text(
                     '${purchase.items.length} ${purchase.items.length == 1 ? 'producto' : 'productos'}',
-                    style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
                   ),
                   const Spacer(),
                   Icon(
                     Icons.warehouse_outlined,
                     size: 14,
-                    color: Colors.grey.shade500,
+                    color: Theme.of(context).colorScheme.outline,
                   ),
                   const SizedBox(width: 6),
                   Text(
                     'Almacén #${purchase.warehouseId}',
-                    style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
                   ),
                 ],
               ),
 
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 16),
-                child: Divider(height: 1, color: Colors.grey.shade200),
+                child: Divider(
+                  height: 1,
+                  color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                ),
               ),
 
               /// Totals
@@ -168,7 +185,7 @@ class PurchaseCard extends StatelessWidget {
                         'Total',
                         style: TextStyle(
                           fontSize: 11,
-                          color: Colors.grey.shade600,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
                         ),
                       ),
                       const SizedBox(height: 2),

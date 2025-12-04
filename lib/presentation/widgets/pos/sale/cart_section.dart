@@ -94,13 +94,15 @@ class CartSection extends ConsumerWidget {
                         Icon(
                           Icons.shopping_cart_outlined,
                           size: 64,
-                          color: Colors.grey.shade400,
+                          color: Theme.of(context).colorScheme.outline,
                         ),
                         const SizedBox(height: 16),
                         Text(
                           'Carrito vacío',
                           style: TextStyle(
-                            color: Colors.grey.shade600,
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onSurfaceVariant,
                             fontSize: 16,
                           ),
                         ),
@@ -150,7 +152,7 @@ class CartSection extends ConsumerWidget {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: Theme.of(context).colorScheme.onSurface,
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withValues(alpha: 0.05),
@@ -193,7 +195,7 @@ class CartSection extends ConsumerWidget {
                           },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Theme.of(context).primaryColor,
-                      foregroundColor: Colors.white,
+                      foregroundColor: Theme.of(context).colorScheme.onSurface,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),
                       ),
@@ -254,14 +256,18 @@ class CartSection extends ConsumerWidget {
       SnackBar(
         content: Row(
           children: [
-            const Icon(Icons.warning_amber, color: Colors.white, size: 18),
+            Icon(
+              Icons.warning_amber,
+              color: Theme.of(context).colorScheme.onSurface,
+              size: 18,
+            ),
             const SizedBox(width: 12),
             Expanded(
               child: Text(message, style: const TextStyle(fontSize: 13)),
             ),
           ],
         ),
-        backgroundColor: Colors.orange.shade700,
+        backgroundColor: Theme.of(context).colorScheme.secondary,
         duration: const Duration(seconds: 2),
         behavior: SnackBarBehavior.floating,
         margin: EdgeInsets.only(

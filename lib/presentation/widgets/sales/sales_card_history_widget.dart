@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:posventa/core/theme/theme.dart';
 import 'package:posventa/domain/entities/sale.dart';
 import 'package:posventa/presentation/providers/return_processing_provider.dart';
 
@@ -20,9 +21,9 @@ class SaleCardHistoryWidget extends ConsumerWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).colorScheme.surfaceContainer,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.shade200),
+        border: Border.all(color: Theme.of(context).colorScheme.outline),
       ),
       child: InkWell(
         onTap: () {
@@ -42,10 +43,10 @@ class SaleCardHistoryWidget extends ConsumerWidget {
                     height: 36,
                     decoration: BoxDecoration(
                       color: isCancelled
-                          ? Colors.red.shade400
+                          ? AppTheme.actionCancel
                           : isReturned
-                          ? Colors.orange.shade400
-                          : Colors.green.shade400,
+                          ? AppTheme.alertWarning
+                          : AppTheme.alertSuccess,
                       borderRadius: BorderRadius.circular(2),
                     ),
                   ),
@@ -67,7 +68,9 @@ class SaleCardHistoryWidget extends ConsumerWidget {
                           dateFormat.format(sale.saleDate),
                           style: TextStyle(
                             fontSize: 12,
-                            color: Colors.grey.shade600,
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onSurfaceVariant,
                           ),
                         ),
                       ],
@@ -80,17 +83,17 @@ class SaleCardHistoryWidget extends ConsumerWidget {
                     ),
                     decoration: BoxDecoration(
                       color: isCancelled
-                          ? Colors.red.shade50
+                          ? AppTheme.actionCancel
                           : isReturned
-                          ? Colors.orange.shade50
-                          : Colors.green.shade50,
+                          ? AppTheme.alertWarning
+                          : AppTheme.alertSuccess,
                       borderRadius: BorderRadius.circular(6),
                       border: Border.all(
                         color: isCancelled
-                            ? Colors.red.shade200
+                            ? AppTheme.actionCancel
                             : isReturned
-                            ? Colors.orange.shade200
-                            : Colors.green.shade200,
+                            ? AppTheme.alertWarning
+                            : AppTheme.transactionSuccess,
                       ),
                     ),
                     child: Text(
@@ -103,10 +106,10 @@ class SaleCardHistoryWidget extends ConsumerWidget {
                         fontSize: 11,
                         fontWeight: FontWeight.w600,
                         color: isCancelled
-                            ? Colors.red.shade700
+                            ? Theme.of(context).colorScheme.onErrorContainer
                             : isReturned
-                            ? Colors.orange.shade700
-                            : Colors.green.shade700,
+                            ? AppTheme.onAlertWarning
+                            : Theme.of(context).colorScheme.onPrimaryContainer,
                       ),
                     ),
                   ),
@@ -117,15 +120,14 @@ class SaleCardHistoryWidget extends ConsumerWidget {
               // Info Row
               Row(
                 children: [
-                  Icon(
-                    Icons.shopping_bag_outlined,
-                    size: 14,
-                    color: Colors.grey.shade500,
-                  ),
+                  Icon(Icons.shopping_bag_outlined, size: 14),
                   const SizedBox(width: 6),
                   Text(
                     '${sale.items.length} ${sale.items.length == 1 ? 'producto' : 'productos'}',
-                    style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
                   ),
                 ],
               ),
@@ -148,7 +150,7 @@ class SaleCardHistoryWidget extends ConsumerWidget {
                         vertical: 6,
                       ),
                       decoration: BoxDecoration(
-                        color: Colors.orange.shade50,
+                        color: AppTheme.alertWarning,
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: Row(
@@ -157,14 +159,14 @@ class SaleCardHistoryWidget extends ConsumerWidget {
                           Icon(
                             Icons.keyboard_return_outlined,
                             size: 14,
-                            color: Colors.orange.shade700,
+                            color: AppTheme.onAlertWarning,
                           ),
                           const SizedBox(width: 6),
                           Text(
                             '${returns.length} ${returns.length == 1 ? 'devolución' : 'devoluciones'} · -\$${(totalReturned / 100).toStringAsFixed(2)}',
                             style: TextStyle(
                               fontSize: 11,
-                              color: Colors.orange.shade700,
+                              color: AppTheme.onAlertWarning,
                               fontWeight: FontWeight.w600,
                             ),
                           ),
@@ -179,7 +181,10 @@ class SaleCardHistoryWidget extends ConsumerWidget {
 
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 16),
-                child: Divider(height: 1, color: Colors.grey.shade200),
+                child: Divider(
+                  height: 1,
+                  color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                ),
               ),
 
               // Totals - Compact
@@ -193,7 +198,7 @@ class SaleCardHistoryWidget extends ConsumerWidget {
                         'Subtotal',
                         style: TextStyle(
                           fontSize: 11,
-                          color: Colors.grey.shade600,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
                         ),
                       ),
                       const SizedBox(height: 2),
@@ -202,12 +207,18 @@ class SaleCardHistoryWidget extends ConsumerWidget {
                         style: TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.w600,
-                          color: Colors.grey.shade700,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
                         ),
                       ),
                     ],
                   ),
-                  Container(width: 1, height: 28, color: Colors.grey.shade200),
+                  Container(
+                    width: 1,
+                    height: 28,
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.surfaceContainerHighest,
+                  ),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -215,7 +226,7 @@ class SaleCardHistoryWidget extends ConsumerWidget {
                         'Impuestos',
                         style: TextStyle(
                           fontSize: 11,
-                          color: Colors.grey.shade600,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
                         ),
                       ),
                       const SizedBox(height: 2),
@@ -224,12 +235,18 @@ class SaleCardHistoryWidget extends ConsumerWidget {
                         style: TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.w600,
-                          color: Colors.grey.shade700,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
                         ),
                       ),
                     ],
                   ),
-                  Container(width: 1, height: 28, color: Colors.grey.shade200),
+                  Container(
+                    width: 1,
+                    height: 28,
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.surfaceContainerHighest,
+                  ),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
@@ -237,7 +254,7 @@ class SaleCardHistoryWidget extends ConsumerWidget {
                         'Total',
                         style: TextStyle(
                           fontSize: 11,
-                          color: Colors.grey.shade600,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
                         ),
                       ),
                       const SizedBox(height: 2),

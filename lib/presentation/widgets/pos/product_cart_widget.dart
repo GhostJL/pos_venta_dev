@@ -28,7 +28,8 @@ class ProductCard extends StatelessWidget {
 
     return Card(
       elevation: 1,
-      surfaceTintColor: Colors.transparent,
+      surfaceTintColor: Theme.of(context).colorScheme.surface,
+
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
         side: BorderSide(color: Colors.grey.withValues(alpha: 0.2)),
@@ -102,8 +103,8 @@ class ProductCard extends StatelessWidget {
                       '${product.stock?.toStringAsFixed(0) ?? '0'} en stock',
                       style: TextStyle(
                         color: hasStock
-                            ? Colors.green.shade700
-                            : Colors.red.shade700,
+                            ? Theme.of(context).colorScheme.tertiary
+                            : Theme.of(context).colorScheme.error,
                         fontSize: 11,
                         fontWeight: FontWeight.w600,
                       ),
@@ -119,7 +120,9 @@ class ProductCard extends StatelessWidget {
                           'Costo',
                           style: Theme.of(context).textTheme.bodySmall
                               ?.copyWith(
-                                color: Colors.grey.shade600,
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurfaceVariant,
                                 fontSize: 11,
                               ),
                         ),
@@ -130,7 +133,7 @@ class ProductCard extends StatelessWidget {
                               fontWeight: FontWeight.bold,
                               fontSize: isMobile ? 15 : 16,
                               color: showCost
-                                  ? Colors.blue.shade700
+                                  ? Theme.of(context).colorScheme.primary
                                   : Theme.of(context).primaryColor,
                             ),
                       ),

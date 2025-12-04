@@ -80,7 +80,8 @@ class _InventoryPageState extends ConsumerState<InventoryPage> {
 
                       return Card(
                         elevation: 0,
-                        surfaceTintColor: Colors.transparent,
+                        surfaceTintColor: Theme.of(context).colorScheme.surface,
+
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(16),
                           side: BorderSide(

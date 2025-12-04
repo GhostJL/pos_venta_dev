@@ -30,9 +30,11 @@ class PurchaseCancelDialog {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Colors.orange.shade50,
+                  color: Theme.of(context).colorScheme.secondaryContainer,
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.orange.shade200),
+                  border: Border.all(
+                    color: Theme.of(context).colorScheme.secondaryContainer,
+                  ),
                 ),
                 child: Row(
                   children: [
@@ -45,7 +47,7 @@ class PurchaseCancelDialog {
                       child: Text(
                         'Esta compra tiene items recibidos. Al cancelar, se revertirá el inventario recibido.',
                         style: TextStyle(
-                          color: Colors.orange.shade900,
+                          color: Theme.of(context).colorScheme.secondary,
                           fontSize: 13,
                         ),
                       ),
@@ -65,7 +67,7 @@ class PurchaseCancelDialog {
             onPressed: () => context.pop(true),
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.red,
-              foregroundColor: Colors.white,
+              foregroundColor: Theme.of(context).colorScheme.onSurface,
             ),
             icon: const Icon(Icons.cancel),
             label: const Text('Sí, Cancelar'),

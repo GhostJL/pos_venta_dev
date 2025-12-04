@@ -58,12 +58,15 @@ class _InventoryLotsPageState extends ConsumerState<InventoryLotsPage> {
                   Icon(
                     Icons.inventory_2_outlined,
                     size: 64,
-                    color: Colors.grey.shade400,
+                    color: Theme.of(context).colorScheme.outline,
                   ),
                   const SizedBox(height: 16),
                   Text(
                     'No hay lotes disponibles',
-                    style: TextStyle(fontSize: 18, color: Colors.grey.shade600),
+                    style: TextStyle(
+                      fontSize: 18,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
                   ),
                 ],
               ),
@@ -149,16 +152,16 @@ class _LotCard extends StatelessWidget {
                     ),
                     decoration: BoxDecoration(
                       color: lot.quantity > 0
-                          ? Colors.green.shade100
-                          : Colors.grey.shade200,
+                          ? Theme.of(context).colorScheme.tertiaryContainer
+                          : Theme.of(context).colorScheme.surfaceContainer,
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Text(
                       lot.quantity > 0 ? 'Disponible' : 'Agotado',
                       style: TextStyle(
                         color: lot.quantity > 0
-                            ? Colors.green.shade700
-                            : Colors.grey.shade600,
+                            ? Theme.of(context).colorScheme.tertiary
+                            : Theme.of(context).colorScheme.onSurfaceVariant,
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
                       ),
@@ -221,7 +224,7 @@ class _LotCard extends StatelessWidget {
                             ? Colors.red
                             : isExpiringSoon
                             ? Colors.orange
-                            : Colors.grey.shade600,
+                            : Theme.of(context).colorScheme.onSurfaceVariant,
                         fontWeight: isExpired || isExpiringSoon
                             ? FontWeight.w600
                             : FontWeight.normal,
@@ -255,7 +258,11 @@ class _InfoItem extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Icon(icon, size: small ? 14 : 16, color: Colors.grey.shade600),
+        Icon(
+          icon,
+          size: small ? 14 : 16,
+          color: Theme.of(context).colorScheme.onSurfaceVariant,
+        ),
         const SizedBox(width: 4),
         Expanded(
           child: Column(
@@ -265,7 +272,7 @@ class _InfoItem extends StatelessWidget {
                 label,
                 style: TextStyle(
                   fontSize: small ? 10 : 11,
-                  color: Colors.grey.shade600,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
               ),
               Text(

@@ -38,12 +38,15 @@ class PurchaseItemDetailPage extends ConsumerWidget {
                   Icon(
                     Icons.error_outline,
                     size: 64,
-                    color: Colors.grey.shade400,
+                    color: Theme.of(context).colorScheme.outline,
                   ),
                   const SizedBox(height: 16),
                   Text(
                     'Artículo no encontrado',
-                    style: TextStyle(color: Colors.grey.shade600, fontSize: 16),
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      fontSize: 16,
+                    ),
                   ),
                   const SizedBox(height: 16),
                   ElevatedButton(
@@ -101,7 +104,9 @@ class PurchaseItemDetailPage extends ConsumerWidget {
                                   Text(
                                     'ID: ${item.id}',
                                     style: TextStyle(
-                                      color: Colors.grey.shade600,
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.onSurfaceVariant,
                                       fontSize: 14,
                                     ),
                                   ),
@@ -129,18 +134,21 @@ class PurchaseItemDetailPage extends ConsumerWidget {
                     child: Column(
                       children: [
                         _buildInfoRow(
+                          context,
                           'Producto',
                           item.productName ?? 'N/A',
                           Icons.shopping_bag,
                         ),
                         const Divider(),
                         _buildInfoRow(
+                          context,
                           'Cantidad',
                           '${item.quantity} ${item.unitOfMeasure}',
                           Icons.inventory,
                         ),
                         const Divider(),
                         _buildInfoRow(
+                          context,
                           'Costo Unitario',
                           '\$${item.unitCost.toStringAsFixed(2)}',
                           Icons.attach_money,
@@ -156,6 +164,7 @@ class PurchaseItemDetailPage extends ConsumerWidget {
                         if (item.expirationDate != null) ...[
                           const Divider(),
                           _buildInfoRow(
+                            context,
                             'Fecha de Vencimiento',
                             dateFormat.format(item.expirationDate!),
                             Icons.event_busy,
@@ -177,18 +186,21 @@ class PurchaseItemDetailPage extends ConsumerWidget {
                     child: Column(
                       children: [
                         _buildInfoRow(
+                          context,
                           'Subtotal',
                           '\$${item.subtotal.toStringAsFixed(2)}',
                           Icons.calculate,
                         ),
                         const Divider(),
                         _buildInfoRow(
+                          context,
                           'Impuestos',
                           '\$${item.tax.toStringAsFixed(2)}',
                           Icons.receipt,
                         ),
                         const Divider(),
                         _buildInfoRow(
+                          context,
                           'TOTAL',
                           '\$${item.total.toStringAsFixed(2)}',
                           Icons.monetization_on,
@@ -210,6 +222,7 @@ class PurchaseItemDetailPage extends ConsumerWidget {
                     child: Column(
                       children: [
                         _buildInfoRow(
+                          context,
                           'Fecha de Registro',
                           dateFormat.format(item.createdAt),
                           Icons.calendar_today,
@@ -217,6 +230,7 @@ class PurchaseItemDetailPage extends ConsumerWidget {
                         if (item.purchaseId != null) ...[
                           const Divider(),
                           _buildInfoRow(
+                            context,
                             'ID de Compra',
                             item.purchaseId.toString(),
                             Icons.shopping_cart,
@@ -282,6 +296,7 @@ class PurchaseItemDetailPage extends ConsumerWidget {
   }
 
   Widget _buildInfoRow(
+    BuildContext context,
     String label,
     String value,
     IconData icon, {
@@ -291,14 +306,18 @@ class PurchaseItemDetailPage extends ConsumerWidget {
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
         children: [
-          Icon(icon, size: 20, color: Colors.grey.shade600),
+          Icon(
+            icon,
+            size: 20,
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
               label,
               style: TextStyle(
                 fontSize: 14,
-                color: Colors.grey.shade700,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
                 fontWeight: isHighlighted ? FontWeight.bold : FontWeight.normal,
               ),
             ),
@@ -354,7 +373,7 @@ class PurchaseItemDetailPage extends ConsumerWidget {
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.red,
-              foregroundColor: Colors.white,
+              foregroundColor: Theme.of(context).colorScheme.onSurface,
             ),
             child: const Text('Eliminar'),
           ),

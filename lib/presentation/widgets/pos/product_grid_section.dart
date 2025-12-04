@@ -271,7 +271,11 @@ class _ProductGridSectionState extends ConsumerState<ProductGridSection> {
         content: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.check_circle, color: Colors.white, size: 16),
+            Icon(
+              Icons.check_circle,
+              color: Theme.of(context).colorScheme.onSurface,
+              size: 16,
+            ),
             const SizedBox(width: 8),
             Text(
               productName,
@@ -299,14 +303,18 @@ class _ProductGridSectionState extends ConsumerState<ProductGridSection> {
       SnackBar(
         content: Row(
           children: [
-            const Icon(Icons.warning_amber, color: Colors.white, size: 18),
+            Icon(
+              Icons.warning_amber,
+              color: Theme.of(context).colorScheme.onSurface,
+              size: 18,
+            ),
             const SizedBox(width: 12),
             Expanded(
               child: Text(message, style: const TextStyle(fontSize: 13)),
             ),
           ],
         ),
-        backgroundColor: Colors.orange.shade700,
+        backgroundColor: Theme.of(context).colorScheme.secondary,
         duration: const Duration(seconds: 2),
         behavior: SnackBarBehavior.floating,
         margin: EdgeInsets.only(

@@ -16,14 +16,17 @@ class EmptyPurchasesView extends ConsumerWidget {
           Icon(
             Icons.shopping_bag_outlined,
             size: 64,
-            color: Colors.grey.shade400,
+            color: Theme.of(context).colorScheme.outline,
           ),
           const SizedBox(height: 16),
           Text(
             selectedFilter == null
                 ? 'No hay compras registradas'
                 : 'No hay compras ${selectedFilter.name.toLowerCase()}',
-            style: TextStyle(color: Colors.grey.shade600, fontSize: 16),
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+              fontSize: 16,
+            ),
           ),
         ],
       ),

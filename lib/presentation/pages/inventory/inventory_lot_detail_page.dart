@@ -57,7 +57,9 @@ class InventoryLotDetailPage extends ConsumerWidget {
                                     'Número de Lote',
                                     style: TextStyle(
                                       fontSize: 12,
-                                      color: Colors.grey.shade600,
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.onSurfaceVariant,
                                     ),
                                   ),
                                   const SizedBox(height: 4),
@@ -78,16 +80,22 @@ class InventoryLotDetailPage extends ConsumerWidget {
                               ),
                               decoration: BoxDecoration(
                                 color: lot.quantity > 0
-                                    ? Colors.green.shade100
-                                    : Colors.grey.shade200,
+                                    ? Theme.of(
+                                        context,
+                                      ).colorScheme.tertiaryContainer
+                                    : Theme.of(
+                                        context,
+                                      ).colorScheme.surfaceContainer,
                                 borderRadius: BorderRadius.circular(20),
                               ),
                               child: Text(
                                 lot.quantity > 0 ? 'Disponible' : 'Agotado',
                                 style: TextStyle(
                                   color: lot.quantity > 0
-                                      ? Colors.green.shade700
-                                      : Colors.grey.shade600,
+                                      ? Theme.of(context).colorScheme.tertiary
+                                      : Theme.of(
+                                          context,
+                                        ).colorScheme.onSurfaceVariant,
                                   fontSize: 14,
                                   fontWeight: FontWeight.w600,
                                 ),
@@ -121,18 +129,21 @@ class InventoryLotDetailPage extends ConsumerWidget {
                         ),
                         const Divider(height: 24),
                         _buildInfoRow(
+                          context,
                           'Cantidad Disponible',
                           lot.quantity.toStringAsFixed(2),
                           Icons.inventory,
                         ),
                         const Divider(),
                         _buildInfoRow(
+                          context,
                           'Costo Unitario',
                           '\$${(lot.unitCostCents / 100).toStringAsFixed(2)}',
                           Icons.attach_money,
                         ),
                         const Divider(),
                         _buildInfoRow(
+                          context,
                           'Costo Total',
                           '\$${(lot.totalCostCents / 100).toStringAsFixed(2)}',
                           Icons.account_balance_wallet,
@@ -163,6 +174,7 @@ class InventoryLotDetailPage extends ConsumerWidget {
                         ),
                         const Divider(height: 24),
                         _buildInfoRow(
+                          context,
                           'Fecha de Recepción',
                           dateFormat.format(lot.receivedAt),
                           Icons.calendar_today,
@@ -170,6 +182,7 @@ class InventoryLotDetailPage extends ConsumerWidget {
                         if (lot.expirationDate != null) ...[
                           const Divider(),
                           _buildInfoRow(
+                            context,
                             'Fecha de Expiración',
                             dateFormat.format(lot.expirationDate!),
                             Icons.warning_amber_rounded,
@@ -181,17 +194,23 @@ class InventoryLotDetailPage extends ConsumerWidget {
                               child: Container(
                                 padding: const EdgeInsets.all(12),
                                 decoration: BoxDecoration(
-                                  color: Colors.red.shade50,
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.errorContainer,
                                   borderRadius: BorderRadius.circular(8),
                                   border: Border.all(
-                                    color: Colors.red.shade200,
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.errorContainer,
                                   ),
                                 ),
                                 child: Row(
                                   children: [
                                     Icon(
                                       Icons.error_outline,
-                                      color: Colors.red.shade700,
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.error,
                                       size: 20,
                                     ),
                                     const SizedBox(width: 8),
@@ -199,7 +218,9 @@ class InventoryLotDetailPage extends ConsumerWidget {
                                       child: Text(
                                         'Este lote ha expirado',
                                         style: TextStyle(
-                                          color: Colors.red.shade700,
+                                          color: Theme.of(
+                                            context,
+                                          ).colorScheme.error,
                                           fontWeight: FontWeight.w600,
                                         ),
                                       ),
@@ -233,6 +254,7 @@ class InventoryLotDetailPage extends ConsumerWidget {
   }
 
   Widget _buildInfoRow(
+    BuildContext context,
     String label,
     String value,
     IconData icon, {
@@ -242,7 +264,11 @@ class InventoryLotDetailPage extends ConsumerWidget {
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
         children: [
-          Icon(icon, size: 20, color: Colors.grey.shade600),
+          Icon(
+            icon,
+            size: 20,
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
@@ -250,7 +276,10 @@ class InventoryLotDetailPage extends ConsumerWidget {
               children: [
                 Text(
                   label,
-                  style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
                 ),
                 const SizedBox(height: 4),
                 Text(

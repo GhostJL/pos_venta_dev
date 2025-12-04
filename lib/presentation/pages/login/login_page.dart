@@ -162,11 +162,13 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                             elevation: 0,
                           ),
                           child: auth.status == AuthStatus.loading
-                              ? const SizedBox(
+                              ? SizedBox(
                                   height: 24,
                                   width: 24,
                                   child: CircularProgressIndicator(
-                                    color: Colors.white,
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.onSurface,
                                     strokeWidth: 2.5,
                                   ),
                                 )

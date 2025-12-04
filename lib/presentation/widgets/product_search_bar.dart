@@ -33,7 +33,10 @@ class ProductSearchBar extends StatelessWidget {
             borderRadius: BorderRadius.circular(8),
           ),
           child: IconButton(
-            icon: const Icon(Icons.qr_code_scanner, color: Colors.white),
+            icon: Icon(
+              Icons.qr_code_scanner,
+              color: Theme.of(context).colorScheme.onSurface,
+            ),
             onPressed: onScannerPressed,
             tooltip: 'Escanear código',
           ),

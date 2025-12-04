@@ -44,11 +44,14 @@ class PurchaseItemListTile extends StatelessWidget {
             // if (item.lotNumber != null)
             //   Text(
             //     'Lote: ${item.lotNumber}',
-            //     style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+            //     style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurfaceVariant),
             //   ),
             Text(
               dateFormat.format(item.createdAt),
-              style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+              style: TextStyle(
+                fontSize: 12,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
             ),
           ],
         ),
@@ -70,7 +73,10 @@ class PurchaseItemListTile extends StatelessWidget {
                 if (item.taxCents > 0)
                   Text(
                     'IVA: \$${item.tax.toStringAsFixed(2)}',
-                    style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
                   ),
               ],
             ),

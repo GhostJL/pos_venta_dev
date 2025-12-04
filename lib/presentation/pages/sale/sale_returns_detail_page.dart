@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:posventa/core/theme/theme.dart';
 import 'package:posventa/domain/entities/sale.dart';
 import 'package:posventa/domain/entities/sale_return.dart';
 import 'package:posventa/presentation/providers/return_processing_provider.dart';
@@ -22,7 +23,9 @@ class SaleReturnsDetailPage extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         elevation: 0,
-        surfaceTintColor: Colors.transparent,
+        surfaceTintColor: Theme.of(context).colorScheme.surface,
+
+        backgroundColor: Theme.of(context).colorScheme.surface,
         title: const Text(
           'Devoluciones',
           style: TextStyle(fontWeight: FontWeight.w600),
@@ -69,7 +72,7 @@ class SaleReturnsDetailPage extends ConsumerWidget {
                     'No hay devoluciones',
                     style: TextStyle(
                       fontSize: 16,
-                      color: Colors.grey.shade500,
+                      color: Theme.of(context).colorScheme.outline,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
@@ -103,7 +106,7 @@ class SaleReturnsDetailPage extends ConsumerWidget {
                     style: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
-                      color: Colors.grey.shade600,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
                       letterSpacing: 0.5,
                     ),
                   ),
@@ -120,11 +123,17 @@ class SaleReturnsDetailPage extends ConsumerWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.error_outline, size: 64, color: Colors.grey.shade400),
+              Icon(
+                Icons.error_outline,
+                size: 64,
+                color: Theme.of(context).colorScheme.outline,
+              ),
               const SizedBox(height: 16),
               Text(
                 'Error al cargar',
-                style: TextStyle(color: Colors.grey.shade600),
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
               ),
             ],
           ),
@@ -141,8 +150,9 @@ class SaleReturnsDetailPage extends ConsumerWidget {
   ) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).colorScheme.surfaceContainer,
         borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Theme.of(context).colorScheme.outline),
       ),
       padding: const EdgeInsets.all(24),
       child: Column(
@@ -154,7 +164,7 @@ class SaleReturnsDetailPage extends ConsumerWidget {
                 width: 4,
                 height: 44,
                 decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.primary,
+                  color: AppTheme.alertWarning,
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -176,7 +186,7 @@ class SaleReturnsDetailPage extends ConsumerWidget {
                       DateFormat('dd/MM/yyyy · HH:mm').format(sale.saleDate),
                       style: TextStyle(
                         fontSize: 13,
-                        color: Colors.grey.shade600,
+                        color: Theme.of(context).colorScheme.onSurface,
                         fontWeight: FontWeight.w400,
                       ),
                     ),
@@ -187,21 +197,26 @@ class SaleReturnsDetailPage extends ConsumerWidget {
           ),
           const SizedBox(height: 24),
           _buildSummaryRow(
+            context,
             'Total original',
             '\$${(sale.totalCents / 100).toStringAsFixed(2)}',
-            Colors.grey.shade700,
+            Theme.of(context).colorScheme.onSurfaceVariant,
           ),
           const SizedBox(height: 12),
           _buildSummaryRow(
+            context,
             'Devuelto',
             '-\$${(totalReturnedCents / 100).toStringAsFixed(2)}',
-            Colors.grey.shade600,
+            Theme.of(context).colorScheme.error,
             subtitle:
                 '${returns.length} ${returns.length == 1 ? 'devolución' : 'devoluciones'}',
           ),
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 16),
-            child: Divider(height: 1, color: Colors.grey.shade200),
+            child: Divider(
+              height: 1,
+              color: Theme.of(context).colorScheme.surfaceContainer,
+            ),
           ),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -230,6 +245,7 @@ class SaleReturnsDetailPage extends ConsumerWidget {
   }
 
   Widget _buildSummaryRow(
+    BuildContext context,
     String label,
     String value,
     Color color, {
@@ -254,7 +270,10 @@ class SaleReturnsDetailPage extends ConsumerWidget {
               const SizedBox(height: 2),
               Text(
                 subtitle,
-                style: TextStyle(fontSize: 11, color: Colors.grey.shade500),
+                style: TextStyle(
+                  fontSize: 11,
+                  color: Theme.of(context).colorScheme.error,
+                ),
               ),
             ],
           ],
@@ -278,7 +297,8 @@ class SaleReturnsDetailPage extends ConsumerWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).colorScheme.surfaceContainer,
+        border: Border.all(color: Theme.of(context).colorScheme.outline),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
@@ -301,15 +321,20 @@ class SaleReturnsDetailPage extends ConsumerWidget {
                               vertical: 4,
                             ),
                             decoration: BoxDecoration(
-                              color: Colors.grey.shade100,
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.surfaceContainerHighest,
                               borderRadius: BorderRadius.circular(6),
+                              border: Border.all(
+                                color: Theme.of(context).colorScheme.outline,
+                              ),
                             ),
                             child: Text(
                               returnItem.returnNumber,
                               style: TextStyle(
                                 fontSize: 12,
                                 fontWeight: FontWeight.w600,
-                                color: Colors.grey.shade700,
+                                color: Theme.of(context).colorScheme.onSurface,
                                 letterSpacing: 0.3,
                               ),
                             ),
@@ -318,7 +343,6 @@ class SaleReturnsDetailPage extends ConsumerWidget {
                           Icon(
                             _getRefundMethodIcon(returnItem.refundMethod),
                             size: 16,
-                            color: Colors.grey.shade500,
                           ),
                         ],
                       ),
@@ -327,7 +351,7 @@ class SaleReturnsDetailPage extends ConsumerWidget {
                         dateFormat.format(returnItem.returnDate),
                         style: TextStyle(
                           fontSize: 12,
-                          color: Colors.grey.shade600,
+                          color: Theme.of(context).colorScheme.onSurface,
                         ),
                       ),
                     ],
@@ -338,7 +362,7 @@ class SaleReturnsDetailPage extends ConsumerWidget {
                   style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.w700,
-                    color: Colors.grey.shade800,
+                    color: Theme.of(context).colorScheme.error,
                     letterSpacing: -0.5,
                   ),
                 ),
@@ -346,7 +370,7 @@ class SaleReturnsDetailPage extends ConsumerWidget {
             ),
           ),
 
-          Divider(height: 1, color: Colors.grey.shade100),
+          Divider(height: 1),
 
           // Body
           Padding(
@@ -356,12 +380,13 @@ class SaleReturnsDetailPage extends ConsumerWidget {
               children: [
                 // Info compacta
                 _buildInfoRow(
+                  context,
                   Icons.person_outline,
                   returnItem.processedByName ??
                       'Usuario #${returnItem.processedBy}',
                 ),
                 const SizedBox(height: 8),
-                _buildInfoRow(Icons.label_outline, returnItem.reason),
+                _buildInfoRow(context, Icons.label_outline, returnItem.reason),
 
                 // Productos
                 if (returnItem.items.isNotEmpty) ...[
@@ -372,7 +397,7 @@ class SaleReturnsDetailPage extends ConsumerWidget {
                       style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
-                        color: Colors.grey.shade600,
+                        color: Theme.of(context).colorScheme.onSurface,
                         letterSpacing: 0.3,
                       ),
                     ),
@@ -385,6 +410,9 @@ class SaleReturnsDetailPage extends ConsumerWidget {
                         decoration: BoxDecoration(
                           color: Colors.grey.shade50,
                           borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: Theme.of(context).colorScheme.outline,
+                          ),
                         ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -395,7 +423,9 @@ class SaleReturnsDetailPage extends ConsumerWidget {
                                   width: 28,
                                   height: 28,
                                   decoration: BoxDecoration(
-                                    color: Colors.white,
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.onSurface,
                                     borderRadius: BorderRadius.circular(6),
                                     border: Border.all(
                                       color: Colors.grey.shade300,
@@ -407,7 +437,9 @@ class SaleReturnsDetailPage extends ConsumerWidget {
                                       style: TextStyle(
                                         fontSize: 12,
                                         fontWeight: FontWeight.w600,
-                                        color: Colors.grey.shade700,
+                                        color: Theme.of(
+                                          context,
+                                        ).colorScheme.onSurfaceVariant,
                                       ),
                                     ),
                                   ),
@@ -429,7 +461,7 @@ class SaleReturnsDetailPage extends ConsumerWidget {
                                   style: TextStyle(
                                     fontSize: 13,
                                     fontWeight: FontWeight.w600,
-                                    color: Colors.grey.shade700,
+                                    color: Theme.of(context).colorScheme.error,
                                   ),
                                 ),
                               ],
@@ -441,7 +473,9 @@ class SaleReturnsDetailPage extends ConsumerWidget {
                                 item.reason!,
                                 style: TextStyle(
                                   fontSize: 11,
-                                  color: Colors.grey.shade600,
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurfaceVariant,
                                   fontStyle: FontStyle.italic,
                                 ),
                               ),
@@ -461,8 +495,11 @@ class SaleReturnsDetailPage extends ConsumerWidget {
                     width: double.infinity,
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: Colors.grey.shade50,
+                      color: Theme.of(context).colorScheme.surfaceContainer,
                       borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: Theme.of(context).colorScheme.outline,
+                      ),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -472,7 +509,9 @@ class SaleReturnsDetailPage extends ConsumerWidget {
                             Icon(
                               Icons.sticky_note_2_outlined,
                               size: 14,
-                              color: Colors.grey.shade600,
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onSurfaceVariant,
                             ),
                             const SizedBox(width: 6),
                             Text(
@@ -480,7 +519,9 @@ class SaleReturnsDetailPage extends ConsumerWidget {
                               style: TextStyle(
                                 fontSize: 11,
                                 fontWeight: FontWeight.w600,
-                                color: Colors.grey.shade600,
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurfaceVariant,
                                 letterSpacing: 0.3,
                               ),
                             ),
@@ -491,7 +532,9 @@ class SaleReturnsDetailPage extends ConsumerWidget {
                           returnItem.notes!,
                           style: TextStyle(
                             fontSize: 12,
-                            color: Colors.grey.shade700,
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onSurfaceVariant,
                             height: 1.4,
                           ),
                         ),
@@ -507,15 +550,18 @@ class SaleReturnsDetailPage extends ConsumerWidget {
     );
   }
 
-  Widget _buildInfoRow(IconData icon, String text) {
+  Widget _buildInfoRow(BuildContext context, IconData icon, String text) {
     return Row(
       children: [
-        Icon(icon, size: 16, color: Colors.grey.shade500),
+        Icon(icon, size: 16),
         const SizedBox(width: 8),
         Expanded(
           child: Text(
             text,
-            style: TextStyle(fontSize: 13, color: Colors.grey.shade700),
+            style: TextStyle(
+              fontSize: 13,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
           ),
         ),
       ],

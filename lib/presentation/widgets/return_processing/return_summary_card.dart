@@ -37,7 +37,11 @@ class _ReturnSummaryCardState extends ConsumerState<ReturnSummaryCard> {
             // Header
             Row(
               children: [
-                Icon(Icons.summarize, color: Colors.orange.shade600, size: 24),
+                Icon(
+                  Icons.summarize,
+                  color: Theme.of(context).colorScheme.secondary,
+                  size: 24,
+                ),
                 const SizedBox(width: 12),
                 Text(
                   'Resumen de Devolución',
@@ -100,10 +104,12 @@ class _ReturnSummaryCardState extends ConsumerState<ReturnSummaryCard> {
                           .setRefundMethod(method);
                     }
                   },
-                  selectedColor: Colors.orange.shade100,
+                  selectedColor: Theme.of(
+                    context,
+                  ).colorScheme.secondaryContainer,
                   labelStyle: TextStyle(
                     color: isSelected
-                        ? Colors.orange.shade900
+                        ? Theme.of(context).colorScheme.secondary
                         : Theme.of(context).colorScheme.onSurface,
                     fontWeight: isSelected
                         ? FontWeight.w600
@@ -166,15 +172,17 @@ class _ReturnSummaryCardState extends ConsumerState<ReturnSummaryCard> {
                   ? () => _processReturn()
                   : null,
               icon: state.isProcessing
-                  ? const SizedBox(
+                  ? SizedBox(
                       width: 20,
                       height: 20,
                       child: CircularProgressIndicator(
                         strokeWidth: 2,
-                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          Theme.of(context).colorScheme.onSurface,
+                        ),
                       ),
                     )
-                  : const Icon(Icons.check_circle),
+                  : Icon(Icons.check_circle),
               label: Text(
                 state.isProcessing ? 'Procesando...' : 'Procesar Devolución',
                 style: const TextStyle(
@@ -183,7 +191,7 @@ class _ReturnSummaryCardState extends ConsumerState<ReturnSummaryCard> {
                 ),
               ),
               style: FilledButton.styleFrom(
-                backgroundColor: Colors.orange.shade600,
+                backgroundColor: Theme.of(context).colorScheme.secondary,
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
@@ -216,7 +224,7 @@ class _ReturnSummaryCardState extends ConsumerState<ReturnSummaryCard> {
             fontSize: isTotal ? 24 : 16,
             fontWeight: FontWeight.bold,
             color: isTotal
-                ? Colors.orange.shade700
+                ? Theme.of(context).colorScheme.secondary
                 : Theme.of(context).colorScheme.onSurface,
           ),
         ),

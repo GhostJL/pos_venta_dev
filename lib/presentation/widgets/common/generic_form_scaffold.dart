@@ -60,18 +60,20 @@ class GenericFormScaffold extends StatelessWidget {
             ),
             elevation: 0,
             backgroundColor: Theme.of(context).colorScheme.primary,
-            foregroundColor: Colors.white,
+            foregroundColor: Theme.of(context).colorScheme.onSurface,
             disabledBackgroundColor: Theme.of(
               context,
             ).colorScheme.primary.withAlpha(100),
           ),
           child: isLoading
-              ? const SizedBox(
+              ? SizedBox(
                   height: UIConstants.iconSizeSmall,
                   width: UIConstants.iconSizeSmall,
                   child: CircularProgressIndicator(
                     strokeWidth: 2,
-                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      Theme.of(context).colorScheme.onSurface,
+                    ),
                   ),
                 )
               : Text(

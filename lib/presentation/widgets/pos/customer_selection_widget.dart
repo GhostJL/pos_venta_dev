@@ -23,7 +23,7 @@ class CustomerSelectionWidget extends StatelessWidget {
           decoration: BoxDecoration(
             border: Border.all(color: Colors.grey.shade300),
             borderRadius: BorderRadius.circular(8),
-            color: Colors.white,
+            color: Theme.of(context).colorScheme.onSurface,
           ),
           child: Row(
             children: [
@@ -36,7 +36,10 @@ class CustomerSelectionWidget extends StatelessWidget {
                   ),
                 ),
               ),
-              Icon(Icons.arrow_drop_down, color: Colors.grey.shade600),
+              Icon(
+                Icons.arrow_drop_down,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
             ],
           ),
         ),

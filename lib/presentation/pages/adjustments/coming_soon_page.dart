@@ -55,23 +55,25 @@ class ComingSoonPage extends StatelessWidget {
                   vertical: 12,
                 ),
                 decoration: BoxDecoration(
-                  color: Colors.amber.shade50,
+                  color: Theme.of(context).colorScheme.tertiary,
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.amber.shade200),
+                  border: Border.all(
+                    color: Theme.of(context).colorScheme.tertiary,
+                  ),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Icon(
                       Icons.construction_rounded,
-                      color: Colors.amber.shade700,
+                      color: Theme.of(context).colorScheme.tertiary,
                       size: 20,
                     ),
                     const SizedBox(width: 8),
                     Text(
                       'Esta funcionalidad está en desarrollo',
                       style: TextStyle(
-                        color: Colors.amber.shade900,
+                        color: Theme.of(context).colorScheme.tertiary,
                         fontWeight: FontWeight.w500,
                       ),
                     ),

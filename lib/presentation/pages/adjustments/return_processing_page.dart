@@ -41,7 +41,7 @@ class _ReturnProcessingPageState extends ConsumerState<ReturnProcessingPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(next.error!),
-            backgroundColor: Colors.red.shade600,
+            backgroundColor: Theme.of(context).colorScheme.error,
             behavior: SnackBarBehavior.floating,
           ),
         );
@@ -54,12 +54,15 @@ class _ReturnProcessingPageState extends ConsumerState<ReturnProcessingPage> {
           SnackBar(
             content: Row(
               children: [
-                const Icon(Icons.check_circle, color: Colors.white),
-                const SizedBox(width: 12),
+                Icon(
+                  Icons.check_circle,
+                  color: Theme.of(context).colorScheme.onSurface,
+                ),
+                SizedBox(width: 12),
                 Expanded(child: Text(next.successMessage!)),
               ],
             ),
-            backgroundColor: Colors.green.shade600,
+            backgroundColor: Theme.of(context).colorScheme.tertiary,
             behavior: SnackBarBehavior.floating,
             duration: const Duration(milliseconds: 1200),
           ),
@@ -147,7 +150,7 @@ class _ReturnProcessingPageState extends ConsumerState<ReturnProcessingPage> {
               children: [
                 Icon(
                   Icons.receipt_long,
-                  color: Colors.orange.shade600,
+                  color: Theme.of(context).colorScheme.secondary,
                   size: 24,
                 ),
                 const SizedBox(width: 12),
@@ -247,7 +250,9 @@ class _ReturnProcessingPageState extends ConsumerState<ReturnProcessingPage> {
               ref.read(returnProcessingProvider.notifier).reset();
               context.pop();
             },
-            style: FilledButton.styleFrom(backgroundColor: Colors.red.shade600),
+            style: FilledButton.styleFrom(
+              backgroundColor: Theme.of(context).colorScheme.error,
+            ),
             child: const Text('Sí, cancelar'),
           ),
         ],

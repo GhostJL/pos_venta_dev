@@ -73,7 +73,9 @@ class ProductSearchBar extends StatelessWidget {
                           subtitle: Text(
                             'Costo: \$${(product.costPriceCents / 100).toStringAsFixed(2)}',
                             style: TextStyle(
-                              color: Colors.grey.shade600,
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onSurfaceVariant,
                               fontSize: 12,
                             ),
                           ),
