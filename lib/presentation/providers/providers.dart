@@ -89,6 +89,8 @@ import 'package:posventa/domain/repositories/permission_repository.dart';
 import 'package:posventa/data/repositories/permission_repository_impl.dart';
 import 'package:posventa/domain/repositories/user_permission_repository.dart';
 import 'package:posventa/data/repositories/user_permission_repository_impl.dart';
+import 'package:posventa/domain/repositories/inventory_lot_repository.dart';
+import 'package:posventa/data/repositories/inventory_lot_repository_impl.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -116,6 +118,11 @@ UpdateWarehouse updateWarehouse(ref) =>
 @riverpod
 DeleteWarehouse deleteWarehouse(ref) =>
     DeleteWarehouse(ref.watch(warehouseRepositoryProvider));
+
+// Inventory Lot Providers
+@riverpod
+InventoryLotRepository inventoryLotRepository(ref) =>
+    InventoryLotRepositoryImpl(ref.watch(databaseHelperProvider));
 
 // Inventory Providers
 @riverpod
@@ -282,8 +289,11 @@ SaleRepository saleRepository(ref) =>
     SaleRepositoryImpl(ref.watch(databaseHelperProvider));
 
 @riverpod
-CreateSaleUseCase createSaleUseCase(ref) =>
-    CreateSaleUseCase(ref.watch(saleRepositoryProvider));
+CreateSaleUseCase createSaleUseCase(ref) => CreateSaleUseCase(
+  ref.watch(saleRepositoryProvider),
+  ref.watch(inventoryLotRepositoryProvider),
+  ref.watch(productRepositoryProvider),
+);
 
 @riverpod
 GetSalesUseCase getSalesUseCase(ref) =>

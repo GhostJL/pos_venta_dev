@@ -4,6 +4,7 @@ import 'package:posventa/data/models/sale_model.dart';
 import 'package:posventa/data/models/sale_item_tax_model.dart';
 import 'package:posventa/data/models/sale_payment_model.dart';
 import 'package:posventa/domain/entities/sale.dart';
+import 'package:posventa/domain/entities/sale_transaction.dart';
 import 'package:posventa/domain/repositories/sale_repository.dart';
 
 class SaleRepositoryImpl implements SaleRepository {
@@ -186,26 +187,33 @@ class SaleRepositoryImpl implements SaleRepository {
   }
 
   @override
-  Future<int> createSale(Sale sale) async {
+  Future<int> executeSaleTransaction(SaleTransaction transaction) async {
     final db = await _databaseHelper.database;
+
     final saleId = await db.transaction((txn) async {
       // 1. Insert Sale
-      final saleModel = SaleModel.fromEntity(sale);
+      final saleModel = SaleModel.fromEntity(transaction.sale);
       final saleId = await txn.insert(
         DatabaseHelper.tableSales,
         saleModel.toMap(),
       );
 
-      // 2. Insert Items
-      for (final item in sale.items) {
+      // 2. Insert Items and Taxes
+      final Map<int, int> saleItemIdMap =
+          {}; // Map original item index to DB ID
+
+      for (int i = 0; i < transaction.sale.items.length; i++) {
+        final item = transaction.sale.items[i];
         final itemModel = SaleItemModel.fromEntity(item);
-        // Ensure saleId is set
         final itemMap = itemModel.toMap();
         itemMap['sale_id'] = saleId;
+
         final saleItemId = await txn.insert(
           DatabaseHelper.tableSaleItems,
           itemMap,
         );
+
+        saleItemIdMap[i] = saleItemId;
 
         // Insert Item Taxes
         for (final tax in item.taxes) {
@@ -214,118 +222,38 @@ class SaleRepositoryImpl implements SaleRepository {
           taxMap['sale_item_id'] = saleItemId;
           await txn.insert(DatabaseHelper.tableSaleItemTaxes, taxMap);
         }
+      }
 
-        // Calculate quantity to deduct (handle variants)
-        double quantityToDeduct = item.quantity;
+      // 3. Process Lot Deductions (prepared by Use Case)
+      for (int i = 0; i < transaction.lotDeductions.length; i++) {
+        final itemDeduction = transaction.lotDeductions[i];
+        final saleItemId = saleItemIdMap[i]!;
+        int? primaryLotId;
 
-        if (item.variantId != null) {
-          final variantResult = await txn.query(
-            DatabaseHelper.tableProductVariants,
-            columns: ['quantity'],
-            where: 'id = ?',
-            whereArgs: [item.variantId],
-          );
-
-          if (variantResult.isNotEmpty) {
-            final variantQuantity = (variantResult.first['quantity'] as num)
-                .toDouble();
-            quantityToDeduct = item.quantity * variantQuantity;
-          }
-        }
-
-        // Update Inventory (Decrease stock)
-        // Check if inventory exists
-        final inventoryResult = await txn.query(
-          DatabaseHelper.tableInventory,
-          where: 'product_id = ? AND warehouse_id = ?',
-          whereArgs: [item.productId, sale.warehouseId],
-        );
-
-        double quantityBefore = 0;
-        if (inventoryResult.isNotEmpty) {
-          quantityBefore = (inventoryResult.first['quantity_on_hand'] as num)
-              .toDouble();
-        } else {
-          // Create if not exists (though ideally it should exist)
-          await txn.insert(DatabaseHelper.tableInventory, {
-            'product_id': item.productId,
-            'warehouse_id': sale.warehouseId,
-            'quantity_on_hand': 0,
-            'quantity_reserved': 0,
-            'updated_at': DateTime.now().toIso8601String(),
-          });
-        }
-
-        await txn.rawUpdate(
-          '''
-          UPDATE ${DatabaseHelper.tableInventory}
-          SET quantity_on_hand = quantity_on_hand - ?,
-              updated_at = ?
-          WHERE product_id = ? AND warehouse_id = ?
-        ''',
-          [
-            quantityToDeduct,
-            DateTime.now().toIso8601String(),
-            item.productId,
-            sale.warehouseId,
-          ],
-        );
-
-        // FIFO: Get available lots ordered by received_at (oldest first)
-        // Deduct from oldest lots regardless of variant to allow bulk purchase + unit sales
-        final lotsResult = await txn.query(
-          DatabaseHelper.tableInventoryLots,
-          where: 'product_id = ? AND warehouse_id = ? AND quantity > 0',
-          whereArgs: [item.productId, sale.warehouseId],
-          orderBy: 'received_at ASC',
-        );
-
-        double remainingToDeduct = quantityToDeduct;
-        int? primaryLotId; // For the sale_item record
-
-        // Deduct from lots using FIFO
-        for (final lotData in lotsResult) {
-          if (remainingToDeduct <= 0) break;
-
-          final lotId = lotData['id'] as int;
-          final lotQuantity = (lotData['quantity'] as num).toDouble();
-          final deductFromLot = remainingToDeduct < lotQuantity
-              ? remainingToDeduct
-              : lotQuantity;
-
+        for (final deduction in itemDeduction.deductions) {
           // Update lot quantity
           await txn.rawUpdate(
             '''
             UPDATE ${DatabaseHelper.tableInventoryLots}
             SET quantity = quantity - ?
             WHERE id = ?
-          ''',
-            [deductFromLot, lotId],
+            ''',
+            [deduction.quantityToDeduct, deduction.lotId],
           );
 
-          // Track lot deduction in sale_item_lots for proper restoration
+          // Track lot deduction for restoration
           await txn.insert(DatabaseHelper.tableSaleItemLots, {
             'sale_item_id': saleItemId,
-            'lot_id': lotId,
-            'quantity_deducted': deductFromLot,
+            'lot_id': deduction.lotId,
+            'quantity_deducted': deduction.quantityToDeduct,
             'created_at': DateTime.now().toIso8601String(),
           });
 
-          // Store the first lot ID for the sale_item
-          primaryLotId ??= lotId;
-
-          remainingToDeduct -= deductFromLot;
+          // Store first lot as primary
+          primaryLotId ??= deduction.lotId;
         }
 
-        // Check if we have enough stock in lots
-        if (remainingToDeduct > 0) {
-          throw Exception(
-            'Insufficient stock in lots for product ${item.productId}. '
-            'Needed: $quantityToDeduct, Available: ${quantityToDeduct - remainingToDeduct}',
-          );
-        }
-
-        // Update the sale_item with the primary lot_id
+        // Update sale_item with primary lot_id
         if (primaryLotId != null) {
           await txn.update(
             DatabaseHelper.tableSaleItems,
@@ -334,26 +262,58 @@ class SaleRepositoryImpl implements SaleRepository {
             whereArgs: [saleItemId],
           );
         }
+      }
 
-        // Record Movement (Sale)
+      // 4. Update Inventory (prepared by Use Case)
+      for (final adj in transaction.inventoryAdjustments) {
+        await txn.rawUpdate(
+          '''
+          UPDATE ${DatabaseHelper.tableInventory}
+          SET quantity_on_hand = quantity_on_hand - ?,
+              updated_at = ?
+          WHERE product_id = ? AND warehouse_id = ?
+          ''',
+          [
+            adj.quantityToDeduct,
+            DateTime.now().toIso8601String(),
+            adj.productId,
+            adj.warehouseId,
+          ],
+        );
+      }
+
+      // 5. Record Movements (prepared by Use Case)
+      for (final mov in transaction.movements) {
+        // Get current stock for accurate before/after
+        final invResult = await txn.query(
+          DatabaseHelper.tableInventory,
+          columns: ['quantity_on_hand'],
+          where: 'product_id = ? AND warehouse_id = ?',
+          whereArgs: [mov.productId, mov.warehouseId],
+        );
+
+        double currentQty = 0;
+        if (invResult.isNotEmpty) {
+          currentQty = (invResult.first['quantity_on_hand'] as num).toDouble();
+        }
+
         await txn.insert(DatabaseHelper.tableInventoryMovements, {
-          'product_id': item.productId,
-          'warehouse_id': sale.warehouseId,
-          'movement_type': 'sale',
-          'quantity': -quantityToDeduct, // Negative for sale
-          'quantity_before': quantityBefore,
-          'quantity_after': quantityBefore - quantityToDeduct,
-          'reference_type': 'sale',
+          'product_id': mov.productId,
+          'warehouse_id': mov.warehouseId,
+          'movement_type': mov.movementType.value,
+          'quantity': mov.quantity,
+          'quantity_before': currentQty - mov.quantity, // Before deduction
+          'quantity_after': currentQty,
+          'reference_type': mov.referenceType,
           'reference_id': saleId,
-          'lot_id': primaryLotId,
-          'reason': 'Sale #$saleId',
-          'performed_by': sale.cashierId,
-          'movement_date': DateTime.now().toIso8601String(),
+          'reason': mov.reason,
+          'performed_by': mov.performedBy,
+          'movement_date': mov.movementDate.toIso8601String(),
         });
       }
 
-      // 3. Insert Payments
-      for (final payment in sale.payments) {
+      // 6. Insert Payments
+      for (final payment in transaction.sale.payments) {
         final paymentModel = SalePaymentModel.fromEntity(payment);
         final paymentMap = paymentModel.toMap();
         paymentMap['sale_id'] = saleId;
@@ -369,44 +329,71 @@ class SaleRepositoryImpl implements SaleRepository {
   }
 
   @override
-  Future<void> cancelSale(int saleId, int userId, String reason) async {
+  Future<void> executeSaleCancellation(
+    SaleCancellationTransaction transaction,
+  ) async {
     final db = await _databaseHelper.database;
+
     await db.transaction((txn) async {
       // 1. Update Sale Status
       await txn.update(
         DatabaseHelper.tableSales,
         {
           'status': SaleStatus.cancelled.name,
-          'cancelled_by': userId,
-          'cancelled_at': DateTime.now().toIso8601String(),
-          'cancellation_reason': reason,
+          'cancelled_by': transaction.userId,
+          'cancelled_at': transaction.cancelledAt.toIso8601String(),
+          'cancellation_reason': transaction.reason,
         },
         where: 'id = ?',
-        whereArgs: [saleId],
+        whereArgs: [transaction.saleId],
       );
 
-      // 2. Restore Inventory
+      // 2. Restore Lots
+      final lotDeductions = await txn.query(
+        DatabaseHelper.tableSaleItemLots,
+        where:
+            'sale_item_id IN (SELECT id FROM ${DatabaseHelper.tableSaleItems} WHERE sale_id = ?)',
+        whereArgs: [transaction.saleId],
+      );
+
+      for (final deduction in lotDeductions) {
+        final lotId = deduction['lot_id'] as int;
+        final quantityDeducted = (deduction['quantity_deducted'] as num)
+            .toDouble();
+
+        await txn.rawUpdate(
+          '''
+          UPDATE ${DatabaseHelper.tableInventoryLots}
+          SET quantity = quantity + ?
+          WHERE id = ?
+          ''',
+          [quantityDeducted, lotId],
+        );
+      }
+
+      // 3. Restore Inventory
       final items = await txn.query(
         DatabaseHelper.tableSaleItems,
         where: 'sale_id = ?',
-        whereArgs: [saleId],
+        whereArgs: [transaction.saleId],
       );
 
-      // We need the warehouse ID from the sale
       final saleResult = await txn.query(
         DatabaseHelper.tableSales,
         columns: ['warehouse_id'],
         where: 'id = ?',
-        whereArgs: [saleId],
+        whereArgs: [transaction.saleId],
       );
+
+      if (saleResult.isEmpty) return;
+
       final warehouseId = saleResult.first['warehouse_id'] as int;
 
       for (final item in items) {
         final productId = item['product_id'] as int;
         final variantId = item['variant_id'] as int?;
-        final quantity = item['quantity'] as double;
+        final quantity = (item['quantity'] as num).toDouble();
 
-        // Calculate quantity to restore (handle variants)
         double quantityToRestore = quantity;
         if (variantId != null) {
           final variantResult = await txn.query(
@@ -422,7 +409,6 @@ class SaleRepositoryImpl implements SaleRepository {
           }
         }
 
-        // Get current inventory
         final inventoryResult = await txn.query(
           DatabaseHelper.tableInventory,
           where: 'product_id = ? AND warehouse_id = ?',
@@ -441,7 +427,7 @@ class SaleRepositoryImpl implements SaleRepository {
           SET quantity_on_hand = quantity_on_hand + ?,
               updated_at = ?
           WHERE product_id = ? AND warehouse_id = ?
-        ''',
+          ''',
           [
             quantityToRestore,
             DateTime.now().toIso8601String(),
@@ -450,55 +436,22 @@ class SaleRepositoryImpl implements SaleRepository {
           ],
         );
 
-        // Restore inventory to ALL lots that were deducted (not just the primary lot)
-        // Query sale_item_lots to get all lot deductions for this sale item
-        final itemId = item['id'] as int;
-        final lotDeductionsResult = await txn.query(
-          DatabaseHelper.tableSaleItemLots,
-          where: 'sale_item_id = ?',
-          whereArgs: [itemId],
-        );
-
-        // Restore quantity to each lot that was deducted
-        for (final deduction in lotDeductionsResult) {
-          final deductionLotId = deduction['lot_id'] as int;
-          final quantityDeducted = (deduction['quantity_deducted'] as num)
-              .toDouble();
-
-          await txn.rawUpdate(
-            '''
-            UPDATE ${DatabaseHelper.tableInventoryLots}
-            SET quantity = quantity + ?
-            WHERE id = ?
-          ''',
-            [quantityDeducted, deductionLotId],
-          );
-        }
-
-        // Delete lot deduction records for this sale item
-        await txn.delete(
-          DatabaseHelper.tableSaleItemLots,
-          where: 'sale_item_id = ?',
-          whereArgs: [itemId],
-        );
-
-        // Record Movement (Return/Cancel)
         await txn.insert(DatabaseHelper.tableInventoryMovements, {
           'product_id': productId,
           'warehouse_id': warehouseId,
           'movement_type': 'return',
-          'quantity': quantityToRestore, // Positive for return
+          'quantity': quantityToRestore,
           'quantity_before': quantityBefore,
           'quantity_after': quantityBefore + quantityToRestore,
-          'reference_type': 'sale',
-          'reference_id': saleId,
-          'lot_id': null, // Multiple lots restored, not just one
-          'reason': reason.isNotEmpty ? reason : 'Sale Cancelled',
-          'performed_by': userId,
-          'movement_date': DateTime.now().toIso8601String(),
+          'reference_type': 'sale_cancellation',
+          'reference_id': transaction.saleId,
+          'reason': 'Sale cancelled: ${transaction.reason}',
+          'performed_by': transaction.userId,
+          'movement_date': transaction.cancelledAt.toIso8601String(),
         });
       }
     });
+
     _databaseHelper.notifyTableChanged(DatabaseHelper.tableSales);
     _databaseHelper.notifyTableChanged(DatabaseHelper.tableInventory);
   }
@@ -506,15 +459,21 @@ class SaleRepositoryImpl implements SaleRepository {
   @override
   Future<String> generateNextSaleNumber() async {
     final db = await _databaseHelper.database;
-    // Simple sequential number: S-000001
-    final result = await db.rawQuery(
-      'SELECT MAX(id) as max_id FROM ${DatabaseHelper.tableSales}',
-    );
-    int nextId = 1;
-    if (result.isNotEmpty && result.first['max_id'] != null) {
-      nextId = (result.first['max_id'] as int) + 1;
+    final result = await db.rawQuery('''
+      SELECT sale_number FROM ${DatabaseHelper.tableSales}
+      ORDER BY id DESC
+      LIMIT 1
+    ''');
+
+    if (result.isEmpty) {
+      return 'SALE-00001';
     }
-    return 'S-${nextId.toString().padLeft(6, '0')}';
+
+    final lastNumber = result.first['sale_number'] as String;
+    final numberPart = int.parse(lastNumber.split('-').last);
+    final nextNumber = numberPart + 1;
+
+    return 'SALE-${nextNumber.toString().padLeft(5, '0')}';
   }
 
   @override

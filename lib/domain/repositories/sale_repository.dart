@@ -1,4 +1,5 @@
 import 'package:posventa/domain/entities/sale.dart';
+import 'package:posventa/domain/entities/sale_transaction.dart';
 
 abstract class SaleRepository {
   Future<List<Sale>> getSales({
@@ -21,9 +22,11 @@ abstract class SaleRepository {
 
   Future<Sale?> getSaleByNumber(String saleNumber);
 
-  Future<int> createSale(Sale sale);
+  /// Execute a sale transaction (FIFO lot selection done in Use Case)
+  Future<int> executeSaleTransaction(SaleTransaction transaction);
 
-  Future<void> cancelSale(int saleId, int userId, String reason);
+  /// Execute a sale cancellation transaction
+  Future<void> executeSaleCancellation(SaleCancellationTransaction transaction);
 
   Future<String> generateNextSaleNumber();
 }

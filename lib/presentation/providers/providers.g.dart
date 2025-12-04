@@ -270,6 +270,54 @@ final class DeleteWarehouseProvider
 
 String _$deleteWarehouseHash() => r'ff886f51aaaa27cac0f986e339c5425f50726be8';
 
+@ProviderFor(inventoryLotRepository)
+const inventoryLotRepositoryProvider = InventoryLotRepositoryProvider._();
+
+final class InventoryLotRepositoryProvider
+    extends
+        $FunctionalProvider<
+          InventoryLotRepository,
+          InventoryLotRepository,
+          InventoryLotRepository
+        >
+    with $Provider<InventoryLotRepository> {
+  const InventoryLotRepositoryProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'inventoryLotRepositoryProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$inventoryLotRepositoryHash();
+
+  @$internal
+  @override
+  $ProviderElement<InventoryLotRepository> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  InventoryLotRepository create(Ref ref) {
+    return inventoryLotRepository(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(InventoryLotRepository value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<InventoryLotRepository>(value),
+    );
+  }
+}
+
+String _$inventoryLotRepositoryHash() =>
+    r'10df6387d3eeeb5945e6990d9bd4945b84b5f8d0';
+
 @ProviderFor(inventoryRepository)
 const inventoryRepositoryProvider = InventoryRepositoryProvider._();
 
@@ -2037,7 +2085,7 @@ final class CreateSaleUseCaseProvider
   }
 }
 
-String _$createSaleUseCaseHash() => r'3db622103744c3ce938942a65c887ad2610100da';
+String _$createSaleUseCaseHash() => r'8383adf6cc1f027ea36f0ff243858a83b1b228c2';
 
 @ProviderFor(getSalesUseCase)
 const getSalesUseCaseProvider = GetSalesUseCaseProvider._();
@@ -2835,7 +2883,7 @@ final class ReceivePurchaseUseCaseProvider
 }
 
 String _$receivePurchaseUseCaseHash() =>
-    r'82fa7357dfc7c2dc70fc11bcd1ae8793114c0ba5';
+    r'a486676f272c5abf64f4b98b8a6daf60ac428a13';
 
 @ProviderFor(cancelPurchaseUseCase)
 const cancelPurchaseUseCaseProvider = CancelPurchaseUseCaseProvider._();
