@@ -1,5 +1,5 @@
 import 'package:posventa/domain/entities/purchase.dart';
-import 'package:posventa/domain/entities/purchase_reception_item.dart';
+import 'package:posventa/domain/entities/purchase_reception_transaction.dart';
 
 abstract class PurchaseRepository {
   Future<List<Purchase>> getPurchases();
@@ -8,14 +8,10 @@ abstract class PurchaseRepository {
   Future<void> updatePurchase(Purchase purchase);
   Future<void> deletePurchase(int id);
 
-  /// Receive a purchase (partial or complete)
-  /// [purchaseId] - The ID of the purchase to receive
-  /// [items] - List of items to receive with their details
-  /// [receivedBy] - The user ID who is receiving the purchase
-  Future<void> receivePurchase(
-    int purchaseId,
-    List<PurchaseReceptionItem> items,
-    int receivedBy,
+  /// Execute a purchase reception transaction
+  /// [transaction] - The fully prepared transaction data
+  Future<void> executePurchaseReception(
+    PurchaseReceptionTransaction transaction,
   );
 
   /// Cancel a purchase

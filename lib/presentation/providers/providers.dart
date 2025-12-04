@@ -371,8 +371,10 @@ DeletePurchaseUseCase deletePurchaseUseCase(ref) =>
     DeletePurchaseUseCase(ref.watch(purchaseRepositoryProvider));
 
 @riverpod
-ReceivePurchaseUseCase receivePurchaseUseCase(ref) =>
-    ReceivePurchaseUseCase(ref.watch(purchaseRepositoryProvider));
+ReceivePurchaseUseCase receivePurchaseUseCase(ref) => ReceivePurchaseUseCase(
+  ref.watch(purchaseRepositoryProvider),
+  ref.watch(productRepositoryProvider),
+);
 
 @riverpod
 CancelPurchaseUseCase cancelPurchaseUseCase(ref) =>

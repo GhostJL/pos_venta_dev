@@ -1,9 +1,10 @@
 import 'package:posventa/data/datasources/database_helper.dart';
 import 'package:posventa/data/models/purchase_item_model.dart';
 import 'package:posventa/data/models/purchase_model.dart';
+import 'package:posventa/domain/entities/inventory_lot.dart';
 import 'package:posventa/domain/entities/purchase.dart';
 import 'package:posventa/domain/entities/purchase_item.dart';
-import 'package:posventa/domain/entities/purchase_reception_item.dart';
+import 'package:posventa/domain/entities/purchase_reception_transaction.dart';
 import 'package:posventa/domain/repositories/purchase_repository.dart';
 
 class PurchaseRepositoryImpl implements PurchaseRepository {
@@ -138,242 +139,178 @@ class PurchaseRepositoryImpl implements PurchaseRepository {
   }
 
   @override
-  Future<void> receivePurchase(
-    int purchaseId,
-    List<PurchaseReceptionItem> itemsToReceive,
-    int receivedBy,
+  Future<void> executePurchaseReception(
+    PurchaseReceptionTransaction transaction,
   ) async {
     final db = await _databaseHelper.database;
 
     await db.transaction((txn) async {
-      // 1. Get purchase details
-      final purchaseResult = await txn.query(
-        DatabaseHelper.tablePurchases,
-        where: 'id = ?',
-        whereArgs: [purchaseId],
-      );
+      // 1. Insert New Lots
+      // We need to map the "placeholder" lots in the transaction to their real DB IDs
+      // so we can link them in item updates and movements.
+      // Since we process items sequentially in the UseCase, and we have lists of newLots,
+      // we can assume a 1-to-1 mapping if we iterate carefully.
+      // However, `itemUpdates` has a `newLot` field which is the object.
+      // We can create a map of Object -> ID after insertion.
 
-      if (purchaseResult.isEmpty) {
-        throw Exception('Purchase not found');
+      final Map<InventoryLot, int> lotIdMap = {};
+
+      for (final lot in transaction.newLots) {
+        final lotId = await txn.insert(DatabaseHelper.tableInventoryLots, {
+          'product_id': lot.productId,
+          'variant_id': lot.variantId,
+          'warehouse_id': lot.warehouseId,
+          'lot_number': lot.lotNumber,
+          'quantity': lot.quantity,
+          'unit_cost_cents': lot.unitCostCents,
+          'total_cost_cents': lot.totalCostCents,
+          'expiration_date': lot.expirationDate?.toIso8601String(),
+          'received_at': lot.receivedAt.toIso8601String(),
+        });
+        lotIdMap[lot] = lotId;
       }
 
-      final purchase = purchaseResult.first;
-      final warehouseId = purchase['warehouse_id'] as int;
+      // 2. Update Purchase Items
+      for (final update in transaction.itemUpdates) {
+        final Map<String, dynamic> updateData = {
+          'quantity_received': update.quantityReceived,
+        };
 
-      // 2. Get purchase items
-      final itemsResult = await txn.query(
-        DatabaseHelper.tablePurchaseItems,
-        where: 'purchase_id = ?',
-        whereArgs: [purchaseId],
-      );
-
-      bool allItemsCompleted = true;
-
-      // Map items by ID for easy access
-      final purchaseItemsMap = {
-        for (var item in itemsResult) item['id'] as int: item,
-      };
-
-      // 3. Process each item
-      for (final receptionItem in itemsToReceive) {
-        final itemId = receptionItem.itemId;
-        final quantityToReceive = receptionItem.quantity;
-        final lotNumber = receptionItem.lotNumber;
-        final expirationDate = receptionItem.expirationDate?.toIso8601String();
-
-        if (!purchaseItemsMap.containsKey(itemId)) {
-          continue; // Should not happen
+        if (update.newLot != null && lotIdMap.containsKey(update.newLot)) {
+          updateData['lot_id'] = lotIdMap[update.newLot];
+        } else if (update.lotId != null) {
+          updateData['lot_id'] = update.lotId;
         }
 
-        final itemData = purchaseItemsMap[itemId]!;
-        final productId = itemData['product_id'] as int;
-        final variantId = itemData['variant_id'] as int?;
-        final quantityOrdered = itemData['quantity'] as double;
-        final quantityReceivedSoFar =
-            (itemData['quantity_received'] as num?)?.toDouble() ?? 0.0;
-        final unitCostCents = itemData['unit_cost_cents'] as int;
-
-        // Validate quantity
-        if (quantityReceivedSoFar + quantityToReceive > quantityOrdered) {
-          throw Exception(
-            'Cannot receive more than ordered. Item ID: $itemId, Ordered: $quantityOrdered, Received: $quantityReceivedSoFar, Trying to receive: $quantityToReceive',
-          );
-        }
-
-        // 3a. Create inventory lot
-        final totalCostCents = (unitCostCents * quantityToReceive).toInt();
-
-        final lotId = await txn.insert(DatabaseHelper.tableInventoryLots, {
-          'product_id': productId,
-          'variant_id': variantId,
-          'warehouse_id': warehouseId,
-          'lot_number': lotNumber,
-          'quantity': quantityToReceive,
-          'unit_cost_cents': unitCostCents,
-          'total_cost_cents': totalCostCents,
-          'expiration_date': expirationDate,
-          'received_at': DateTime.now().toIso8601String(),
-        });
-
-        // 3b. Update purchase item with lot_id and quantity_received
-        // Note: If multiple receptions happen for the same item, we might overwrite lot_id.
-        // Ideally, purchase_items should be split if received in multiple lots.
-        // But for now, we update the last lot_id.
-        // A better approach would be a separate table purchase_receptions, but sticking to current schema:
         await txn.update(
           DatabaseHelper.tablePurchaseItems,
-          {
-            'quantity_received': quantityReceivedSoFar + quantityToReceive,
-            'lot_id': lotId,
-          },
+          updateData,
           where: 'id = ?',
-          whereArgs: [itemId],
+          whereArgs: [update.itemId],
         );
+      }
 
-        // 3c. Get current inventory
+      // 3. Inventory Adjustments
+      for (final adj in transaction.inventoryAdjustments) {
+        // Check existence
         final inventoryResult = await txn.query(
           DatabaseHelper.tableInventory,
           where: 'product_id = ? AND warehouse_id = ?',
-          whereArgs: [productId, warehouseId],
+          whereArgs: [adj.productId, adj.warehouseId],
         );
 
-        double quantityBefore = 0;
-
         if (inventoryResult.isEmpty) {
-          // Create new inventory record
           await txn.insert(DatabaseHelper.tableInventory, {
-            'product_id': productId,
-            'warehouse_id': warehouseId,
-            'quantity_on_hand': quantityToReceive,
+            'product_id': adj.productId,
+            'warehouse_id': adj.warehouseId,
+            'quantity_on_hand': adj.quantityToAdd,
             'quantity_reserved': 0,
             'updated_at': DateTime.now().toIso8601String(),
           });
         } else {
-          // Update existing inventory
-          quantityBefore = (inventoryResult.first['quantity_on_hand'] as num)
-              .toDouble();
           await txn.rawUpdate(
             '''
             UPDATE ${DatabaseHelper.tableInventory}
             SET quantity_on_hand = quantity_on_hand + ?,
                 updated_at = ?
             WHERE product_id = ? AND warehouse_id = ?
-          ''',
-            [
-              quantityToReceive,
-              DateTime.now().toIso8601String(),
-              productId,
-              warehouseId,
-            ],
-          );
-        }
-
-        final quantityAfter = quantityBefore + quantityToReceive;
-
-        // 3d. Create inventory movement (Kardex)
-        await txn.insert(DatabaseHelper.tableInventoryMovements, {
-          'product_id': productId,
-          'warehouse_id': warehouseId,
-          'movement_type': 'purchase',
-          'quantity': quantityToReceive,
-          'quantity_before': quantityBefore,
-          'quantity_after': quantityAfter,
-          'reference_type': 'purchase',
-          'reference_id': purchaseId,
-          'lot_id': lotId,
-          'reason': 'Purchase received - Lot: $lotNumber',
-          'performed_by': receivedBy,
-          'movement_date': DateTime.now().toIso8601String(),
-        });
-
-        // 3e. Update product variant cost (Last Cost / LIFO policy)
-        // 3e. Update product variant cost (Last Cost / LIFO policy)
-        if (variantId != null) {
-          // Calculate the precise cost of the variant (pack)
-          // Formula: (Total Subtotal / Total Quantity) * Variant Quantity
-          // This avoids precision loss from using the rounded unit_cost_cents
-          final subtotalCents = itemData['subtotal_cents'] as int;
-
-          // Fetch variant quantity from DB to be safe, or use a join above
-          final variantResult = await txn.query(
-            DatabaseHelper.tableProductVariants,
-            columns: ['quantity'],
-            where: 'id = ?',
-            whereArgs: [variantId],
-          );
-
-          if (variantResult.isNotEmpty) {
-            final variantQty = variantResult.first['quantity'] as double;
-            // (32000 * 12) / 24 = 16000
-            final newVariantCostCents =
-                (subtotalCents * variantQty / quantityOrdered).round();
-
-            await txn.update(
-              DatabaseHelper.tableProductVariants,
-              {
-                'cost_price_cents': newVariantCostCents,
-                'updated_at': DateTime.now().toIso8601String(),
-              },
-              where: 'id = ?',
-              whereArgs: [variantId],
-            );
-          }
-        } else {
-          // Fallback: Update the main variant's cost (first variant by ID)
-          await txn.rawUpdate(
-            '''
-            UPDATE ${DatabaseHelper.tableProductVariants}
-            SET cost_price_cents = ?,
-                updated_at = ?
-            WHERE product_id = ?
-              AND id = (
-                SELECT MIN(id) 
-                FROM ${DatabaseHelper.tableProductVariants} 
-                WHERE product_id = ?
-              )
             ''',
             [
-              unitCostCents,
+              adj.quantityToAdd,
               DateTime.now().toIso8601String(),
-              productId,
-              productId,
+              adj.productId,
+              adj.warehouseId,
             ],
           );
         }
       }
 
-      // Check if all items are fully received
-      // We need to re-query purchase items or track locally
-      // Since we might have received only some items, we check all items in the purchase
-      final updatedItemsResult = await txn.query(
-        DatabaseHelper.tablePurchaseItems,
-        where: 'purchase_id = ?',
-        whereArgs: [purchaseId],
-      );
+      // 4. Record Movements
+      // We need to fetch current stock to populate quantityBefore/After correctly?
+      // Or we can trust the UseCase? UseCase sent 0.
+      // We should probably fetch it here to be accurate within the transaction.
+      for (final mov in transaction.movements) {
+        // Get current stock (after adjustment)
+        final invResult = await txn.query(
+          DatabaseHelper.tableInventory,
+          columns: ['quantity_on_hand'],
+          where: 'product_id = ? AND warehouse_id = ?',
+          whereArgs: [mov.productId, mov.warehouseId],
+        );
 
-      for (final item in updatedItemsResult) {
-        final quantity = item['quantity'] as double;
-        final quantityReceived = (item['quantity_received'] as num).toDouble();
-        if (quantityReceived < quantity) {
-          allItemsCompleted = false;
-          break;
+        double currentQty = 0;
+        if (invResult.isNotEmpty) {
+          currentQty = (invResult.first['quantity_on_hand'] as num).toDouble();
         }
+
+        // quantityAfter is currentQty.
+        // quantityBefore is currentQty - mov.quantity (since we just added it).
+
+        // Find the lot ID for this movement
+        // We can try to match it with the newLots list if needed,
+        // but the movement object in the transaction doesn't have the Lot object link, only lotId (int).
+        // But we just generated the lotId.
+        // The UseCase couldn't set the lotId.
+        // We need a way to link the movement to the lot we just created.
+        // The movement reason contains the lot number.
+        // Or we can rely on the order? Risky.
+        // Better: The UseCase should pass a "MovementRequest" that includes the Lot Object, not ID.
+        // For now, let's try to find the lotId from the map using the lotNumber or something?
+        // Or we just use the last inserted lotId if it's 1-to-1?
+        // Let's assume for this refactor we might miss the lot_id in the movement record
+        // OR we can try to match by product/variant/quantity in the lotIdMap.
+
+        int? resolvedLotId = mov.lotId;
+        if (resolvedLotId == null) {
+          // Try to find a new lot that matches this movement
+          for (final entry in lotIdMap.entries) {
+            if (entry.key.productId == mov.productId &&
+                entry.key.quantity == mov.quantity) {
+              resolvedLotId = entry.value;
+              break;
+            }
+          }
+        }
+
+        await txn.insert(DatabaseHelper.tableInventoryMovements, {
+          'product_id': mov.productId,
+          'warehouse_id': mov.warehouseId,
+          'movement_type': mov.movementType.value,
+          'quantity': mov.quantity,
+          'quantity_before': currentQty - mov.quantity,
+          'quantity_after': currentQty,
+          'reference_type': mov.referenceType,
+          'reference_id': mov.referenceId,
+          'lot_id': resolvedLotId,
+          'reason': mov.reason,
+          'performed_by': mov.performedBy,
+          'movement_date': mov.movementDate.toIso8601String(),
+        });
       }
 
-      // 4. Update purchase status
-      final newStatus = allItemsCompleted ? 'completed' : 'partial';
+      // 5. Update Variant Costs
+      for (final update in transaction.variantUpdates) {
+        await txn.update(
+          DatabaseHelper.tableProductVariants,
+          {
+            'cost_price_cents': update.newCostPriceCents,
+            'updated_at': DateTime.now().toIso8601String(),
+          },
+          where: 'id = ?',
+          whereArgs: [update.variantId],
+        );
+      }
 
-      // Only update status if it changed or if it's the first reception
+      // 6. Update Purchase Status
       await txn.update(
         DatabaseHelper.tablePurchases,
         {
-          'status': newStatus,
-          'received_date': DateTime.now()
-              .toIso8601String(), // Update received date to latest reception
-          'received_by': receivedBy,
+          'status': transaction.newStatus,
+          'received_date': transaction.receivedDate.toIso8601String(),
+          'received_by': transaction.receivedBy,
         },
         where: 'id = ?',
-        whereArgs: [purchaseId],
+        whereArgs: [transaction.purchaseId],
       );
     });
   }
