@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:posventa/presentation/widgets/menu/side_menu.dart';
 import 'package:posventa/core/theme/theme.dart';
+import 'package:posventa/presentation/widgets/common/theme_toggle_button.dart';
 
 class MainLayout extends StatelessWidget {
   final Widget child;
@@ -28,6 +29,7 @@ class MainLayout extends StatelessWidget {
                   onPressed: () => Scaffold.of(context).openDrawer(),
                 ),
               ),
+              actions: const [ThemeToggleButton()],
             ),
             drawer: const Drawer(elevation: 0, child: SideMenu()),
             body: child,
