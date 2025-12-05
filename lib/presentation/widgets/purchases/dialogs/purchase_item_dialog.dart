@@ -128,17 +128,17 @@ class _PurchaseItemDialogState extends ConsumerState<PurchaseItemDialog> {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.primary,
+                    color: Theme.of(context).colorScheme.primaryContainer,
                     borderRadius: BorderRadius.circular(8),
                     border: Border.all(
-                      color: Theme.of(context).colorScheme.primary,
+                      color: Theme.of(context).colorScheme.outline,
                     ),
                   ),
                   child: Row(
                     children: [
                       Icon(
                         Icons.info_outline,
-                        color: Theme.of(context).colorScheme.primary,
+                        color: Theme.of(context).colorScheme.onPrimaryContainer,
                         size: 20,
                       ),
                       const SizedBox(width: 8),
@@ -146,7 +146,9 @@ class _PurchaseItemDialogState extends ConsumerState<PurchaseItemDialog> {
                         child: Text(
                           'Costo anterior: \$${(widget.variant != null ? (widget.variant!.costPriceCents / 100) : (widget.product.costPriceCents / 100)).toStringAsFixed(2)}',
                           style: TextStyle(
-                            color: Theme.of(context).colorScheme.primary,
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onPrimaryContainer,
                             fontWeight: FontWeight.w500,
                             fontSize: 13,
                           ),

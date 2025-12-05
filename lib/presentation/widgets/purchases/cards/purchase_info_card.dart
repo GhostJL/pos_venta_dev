@@ -68,9 +68,7 @@ class PurchaseInfoCard extends StatelessWidget {
 
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
-        side: BorderSide(
-          color: Theme.of(context).colorScheme.surfaceContainerHighest,
-        ),
+        side: BorderSide(color: Theme.of(context).colorScheme.outline),
       ),
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -139,7 +137,7 @@ class PurchaseInfoCard extends StatelessWidget {
               padding: const EdgeInsets.symmetric(vertical: 16),
               child: Divider(
                 height: 1,
-                color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                color: Theme.of(context).colorScheme.outline,
               ),
             ),
 

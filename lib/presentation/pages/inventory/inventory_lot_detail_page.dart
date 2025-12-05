@@ -80,9 +80,7 @@ class InventoryLotDetailPage extends ConsumerWidget {
                               ),
                               decoration: BoxDecoration(
                                 color: lot.quantity > 0
-                                    ? Theme.of(
-                                        context,
-                                      ).colorScheme.tertiaryContainer
+                                    ? Theme.of(context).colorScheme.tertiary
                                     : Theme.of(
                                         context,
                                       ).colorScheme.surfaceContainer,
@@ -92,7 +90,7 @@ class InventoryLotDetailPage extends ConsumerWidget {
                                 lot.quantity > 0 ? 'Disponible' : 'Agotado',
                                 style: TextStyle(
                                   color: lot.quantity > 0
-                                      ? Theme.of(context).colorScheme.tertiary
+                                      ? Theme.of(context).colorScheme.onTertiary
                                       : Theme.of(
                                           context,
                                         ).colorScheme.onSurfaceVariant,

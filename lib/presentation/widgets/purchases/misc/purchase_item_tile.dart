@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:posventa/core/theme/theme.dart';
 import 'package:posventa/domain/entities/product_variant.dart';
 import 'package:posventa/domain/entities/purchase.dart';
 import 'package:posventa/domain/entities/purchase_item.dart';
@@ -34,10 +35,10 @@ class PurchaseItemTile extends ConsumerWidget {
 
         return Container(
           decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.onSurface,
+            color: Theme.of(context).colorScheme.surface,
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: Theme.of(context).colorScheme.surfaceContainerHighest,
+              color: Theme.of(context).colorScheme.outline,
               width: 1,
             ),
           ),
@@ -52,9 +53,7 @@ class PurchaseItemTile extends ConsumerWidget {
                   padding: const EdgeInsets.symmetric(vertical: 2),
                   child: Divider(
                     height: 1,
-                    color: Theme.of(
-                      context,
-                    ).colorScheme.surfaceContainerHighest,
+                    color: Theme.of(context).colorScheme.outline,
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -262,29 +261,29 @@ class _PurchaseItemFooter extends StatelessWidget {
 
     if (isFullyReceived) {
       return _StatusStyles(
-        color: const Color(0xFF059669),
-        bgColor: const Color(0xFFD1FAE5),
+        color: AppTheme.transactionSuccess,
+        bgColor: AppTheme.transactionSuccess.withValues(alpha: 0.2),
         icon: Icons.check_circle_rounded,
         text: 'Completado',
       );
     } else if (isPartiallyReceived) {
       return _StatusStyles(
-        color: const Color(0xFFD97706),
-        bgColor: const Color(0xFFFEF3C7),
+        color: AppTheme.transactionPending,
+        bgColor: AppTheme.transactionPending.withValues(alpha: 0.2),
         icon: Icons.schedule_rounded,
         text: '${item.quantityReceived} de ${item.quantity}',
       );
     } else if (isCancelled) {
       return _StatusStyles(
-        color: const Color(0xFFDC2626),
-        bgColor: const Color(0xFFFEE2E2),
+        color: AppTheme.transactionFailed,
+        bgColor: AppTheme.transactionFailed.withValues(alpha: 0.2),
         icon: Icons.cancel_rounded,
         text: 'Cancelado',
       );
     } else {
       return _StatusStyles(
-        color: const Color(0xFF2563EB),
-        bgColor: const Color(0xFFDEEBFF),
+        color: AppTheme.alertInfo,
+        bgColor: AppTheme.alertInfo.withValues(alpha: 0.2),
         icon: Icons.pending_rounded,
         text: 'Pendiente',
       );

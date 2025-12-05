@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:posventa/core/theme/theme.dart';
 import 'package:posventa/presentation/providers/pos_providers.dart';
 import 'package:posventa/presentation/widgets/pos/cart_item_widget.dart';
 import 'package:posventa/presentation/widgets/pos/customer_selection_widget.dart';
@@ -22,12 +23,12 @@ class CartSection extends ConsumerWidget {
 
     return Container(
       decoration: BoxDecoration(
-        color: Colors.grey.shade50,
+        color: Theme.of(context).colorScheme.surfaceContainerHighest,
         border: isMobile
             ? null
             : Border(
-                left: BorderSide(color: Colors.grey.shade300),
-                top: BorderSide(color: Colors.grey.shade300),
+                left: BorderSide(color: Theme.of(context).colorScheme.outline),
+                top: BorderSide(color: Theme.of(context).colorScheme.outline),
               ),
       ),
       child: Column(
@@ -69,7 +70,9 @@ class CartSection extends ConsumerWidget {
                                 Navigator.pop(context);
                               },
                               style: TextButton.styleFrom(
-                                foregroundColor: Colors.red,
+                                foregroundColor: Theme.of(
+                                  context,
+                                ).colorScheme.error,
                               ),
                               child: const Text('LIMPIAR'),
                             ),
@@ -77,7 +80,10 @@ class CartSection extends ConsumerWidget {
                         ),
                       );
                     },
-                    icon: const Icon(Icons.delete_sweep, color: Colors.red),
+                    icon: Icon(
+                      Icons.delete_sweep,
+                      color: Theme.of(context).colorScheme.error,
+                    ),
                     tooltip: 'Limpiar Carrito',
                   ),
                 ],
@@ -112,8 +118,10 @@ class CartSection extends ConsumerWidget {
                 : ListView.separated(
                     padding: const EdgeInsets.symmetric(vertical: 8),
                     itemCount: posState.cart.length,
-                    separatorBuilder: (context, index) =>
-                        Divider(height: 1, color: Colors.grey.shade300),
+                    separatorBuilder: (context, index) => Divider(
+                      height: 1,
+                      color: Theme.of(context).colorScheme.outline,
+                    ),
                     itemBuilder: (context, index) {
                       final item = posState.cart[index];
                       return CartItemWidget(
@@ -152,10 +160,12 @@ class CartSection extends ConsumerWidget {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.onSurface,
+              color: Theme.of(context).colorScheme.surface,
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.05),
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.shadow.withValues(alpha: 0.05),
                   blurRadius: 10,
                   offset: const Offset(0, -2),
                 ),
@@ -195,7 +205,7 @@ class CartSection extends ConsumerWidget {
                           },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Theme.of(context).primaryColor,
-                      foregroundColor: Theme.of(context).colorScheme.onSurface,
+                      foregroundColor: Theme.of(context).colorScheme.onPrimary,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),
                       ),
@@ -243,7 +253,7 @@ class CartSection extends ConsumerWidget {
             style: TextStyle(
               fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
               fontSize: fontSize,
-              color: isDiscount ? Colors.green : null,
+              color: isDiscount ? AppTheme.transactionSuccess : null,
             ),
           ),
         ],

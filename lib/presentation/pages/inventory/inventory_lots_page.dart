@@ -152,7 +152,7 @@ class _LotCard extends StatelessWidget {
                     ),
                     decoration: BoxDecoration(
                       color: lot.quantity > 0
-                          ? Theme.of(context).colorScheme.tertiaryContainer
+                          ? Theme.of(context).colorScheme.tertiary
                           : Theme.of(context).colorScheme.surfaceContainer,
                       borderRadius: BorderRadius.circular(20),
                     ),
@@ -160,7 +160,7 @@ class _LotCard extends StatelessWidget {
                       lot.quantity > 0 ? 'Disponible' : 'Agotado',
                       style: TextStyle(
                         color: lot.quantity > 0
-                            ? Theme.of(context).colorScheme.tertiary
+                            ? Theme.of(context).colorScheme.onTertiary
                             : Theme.of(context).colorScheme.onSurfaceVariant,
                         fontSize: 12,
                         fontWeight: FontWeight.w600,

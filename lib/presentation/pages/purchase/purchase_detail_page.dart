@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:posventa/core/theme/theme.dart';
 import 'package:posventa/domain/entities/purchase.dart';
 import 'package:posventa/presentation/providers/auth_provider.dart';
 import 'package:posventa/presentation/providers/purchase_providers.dart';
@@ -39,7 +40,10 @@ class PurchaseDetailPage extends ConsumerWidget {
                 children: [
                   if (canReceive)
                     IconButton(
-                      icon: const Icon(Icons.check_circle, color: Colors.green),
+                      icon: Icon(
+                        Icons.check_circle,
+                        color: AppTheme.transactionSuccess,
+                      ),
                       tooltip: 'Recibir Compra',
                       onPressed: () => _receivePurchase(context, ref, purchase),
                     ),
@@ -59,9 +63,9 @@ class PurchaseDetailPage extends ConsumerWidget {
                           value: 'cancel',
                           child: Row(
                             children: [
-                              const Icon(
+                              Icon(
                                 Icons.cancel,
-                                color: Colors.red,
+                                color: Theme.of(context).colorScheme.error,
                                 size: 18,
                               ),
                               const SizedBox(width: 8),
@@ -77,7 +81,10 @@ class PurchaseDetailPage extends ConsumerWidget {
                           ),
                         ),
                       ],
-                      icon: const Icon(Icons.more_vert, color: Colors.grey),
+                      icon: Icon(
+                        Icons.more_vert,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
                       tooltip: 'Más acciones',
                     ),
                 ],
@@ -125,7 +132,7 @@ class PurchaseDetailPage extends ConsumerWidget {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Compra cancelada exitosamente'),
-            backgroundColor: Colors.green,
+            backgroundColor: AppTheme.transactionSuccess,
           ),
         );
       }
@@ -134,7 +141,7 @@ class PurchaseDetailPage extends ConsumerWidget {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Error al cancelar: $e'),
-            backgroundColor: Colors.red,
+            backgroundColor: Theme.of(context).colorScheme.error,
           ),
         );
       }
@@ -171,13 +178,13 @@ class PurchaseDetailPage extends ConsumerWidget {
               children: [
                 Icon(
                   Icons.check_circle,
-                  color: Theme.of(context).colorScheme.onSurface,
+                  color: Theme.of(context).colorScheme.onPrimary,
                 ),
                 SizedBox(width: 8),
                 Expanded(child: Text('Recepción registrada exitosamente')),
               ],
             ),
-            backgroundColor: Colors.green,
+            backgroundColor: AppTheme.transactionSuccess,
             duration: Duration(seconds: 3),
           ),
         );
@@ -188,15 +195,12 @@ class PurchaseDetailPage extends ConsumerWidget {
           SnackBar(
             content: Row(
               children: [
-                Icon(
-                  Icons.error,
-                  color: Theme.of(context).colorScheme.onSurface,
-                ),
+                Icon(Icons.error, color: Theme.of(context).colorScheme.onError),
                 SizedBox(width: 8),
                 Expanded(child: Text('Error al recibir compra: $e')),
               ],
             ),
-            backgroundColor: Colors.red,
+            backgroundColor: Theme.of(context).colorScheme.error,
             duration: const Duration(seconds: 5),
           ),
         );
