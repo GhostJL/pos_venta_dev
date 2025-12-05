@@ -4,7 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:posventa/domain/entities/product.dart';
 import 'package:posventa/domain/entities/product_variant.dart';
 import 'package:posventa/presentation/providers/product_provider.dart';
-import 'package:posventa/presentation/widgets/pos/product_cart_widget.dart';
+import 'package:posventa/presentation/widgets/shared/product_card.dart';
 
 /// Helper class to represent a product or variant as a single grid item
 class PurchaseGridItem {
