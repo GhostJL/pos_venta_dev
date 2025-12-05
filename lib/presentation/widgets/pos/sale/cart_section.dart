@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:posventa/presentation/providers/pos_providers.dart';
 import 'package:posventa/presentation/widgets/pos/cart_item_widget.dart';
 import 'package:posventa/presentation/widgets/pos/customer_selection_widget.dart';
-import 'package:posventa/presentation/widgets/pos/payment_dialog.dart';
+import 'package:posventa/presentation/widgets/pos/payment/payment_dialog.dart';
 import 'package:posventa/core/constants/permission_constants.dart';
 import 'package:posventa/presentation/providers/permission_provider.dart';
 
