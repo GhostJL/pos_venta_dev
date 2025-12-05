@@ -8,6 +8,9 @@ import 'package:posventa/core/constants/permission_constants.dart';
 import 'package:posventa/presentation/providers/permission_provider.dart';
 import 'package:posventa/presentation/widgets/common/confirm_delete_dialog.dart';
 import 'package:posventa/presentation/widgets/common/data_table_actions.dart';
+import 'package:posventa/presentation/widgets/common/tables/data_cell_text.dart';
+import 'package:posventa/presentation/widgets/common/async_value_handler.dart';
+import 'package:posventa/presentation/mixins/page_lifecycle_mixin.dart';
 
 class SuppliersPage extends ConsumerStatefulWidget {
   const SuppliersPage({super.key});
@@ -16,20 +19,15 @@ class SuppliersPage extends ConsumerStatefulWidget {
   SuppliersPageState createState() => SuppliersPageState();
 }
 
-class SuppliersPageState extends ConsumerState<SuppliersPage> {
+class SuppliersPageState extends ConsumerState<SuppliersPage>
+    with PageLifecycleMixin {
   String _searchQuery = '';
+
+  @override
+  List<dynamic> get providersToInvalidate => [supplierListProvider];
 
   void _navigateToForm([Supplier? supplier]) {
     context.push('/suppliers/form', extra: supplier);
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    // Auto-refresh suppliers when entering the page
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.invalidate(supplierListProvider);
-    });
   }
 
   @override
@@ -40,7 +38,8 @@ class SuppliersPageState extends ConsumerState<SuppliersPage> {
     );
 
     return Scaffold(
-      body: suppliers.when(
+      body: AsyncValueHandler<List<Supplier>>(
+        value: suppliers,
         data: (supplierList) {
           final filteredList = supplierList.where((s) {
             return _searchQuery.isEmpty ||
@@ -62,36 +61,12 @@ class SuppliersPageState extends ConsumerState<SuppliersPage> {
                   .map(
                     (supplier) => DataRow(
                       cells: [
+                        DataCell(DataCellPrimaryText(supplier.name)),
                         DataCell(
-                          Text(
-                            supplier.name,
-                            style: const TextStyle(fontWeight: FontWeight.bold),
-                          ),
+                          DataCellSecondaryText(supplier.contactPerson ?? '-'),
                         ),
-                        DataCell(
-                          Text(
-                            supplier.contactPerson ?? '-',
-                            style: TextStyle(
-                              color: Theme.of(
-                                context,
-                              ).colorScheme.onSurfaceVariant,
-                            ),
-                          ),
-                        ),
-                        DataCell(
-                          Text(
-                            supplier.phone ?? '-',
-                            style: const TextStyle(fontFamily: 'Monospace'),
-                          ),
-                        ),
-                        DataCell(
-                          Text(
-                            supplier.email ?? '-',
-                            style: TextStyle(
-                              color: Theme.of(context).colorScheme.primary,
-                            ),
-                          ),
-                        ),
+                        DataCell(DataCellMonospaceText(supplier.phone ?? '-')),
+                        DataCell(DataCellLinkText(supplier.email ?? '-')),
                         DataCell(
                           DataTableActions(
                             hasEditPermission: hasManagePermission,
@@ -118,8 +93,6 @@ class SuppliersPageState extends ConsumerState<SuppliersPage> {
             ),
           );
         },
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, stack) => Center(child: Text('Error: $error')),
       ),
     );
   }

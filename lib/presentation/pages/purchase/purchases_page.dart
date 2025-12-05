@@ -8,6 +8,7 @@ import 'package:posventa/presentation/providers/permission_provider.dart';
 import 'package:posventa/presentation/widgets/purchases/filters/chips/purchase_filter_chips.dart';
 import 'package:posventa/presentation/widgets/purchases/misc/empty_purchases_view.dart';
 import 'package:posventa/presentation/widgets/purchases/lists/purchase_card_widget.dart';
+import 'package:posventa/presentation/widgets/common/async_value_handler.dart';
 
 class PurchasesPage extends ConsumerWidget {
   const PurchasesPage({super.key});
@@ -38,17 +39,14 @@ class PurchasesPage extends ConsumerWidget {
           children: [
             PurchaseFilterChips(selectedFilter: selectedFilter),
             Expanded(
-              child: purchasesAsync.when(
+              child: AsyncValueHandler(
+                value: purchasesAsync,
                 data: (purchases) {
                   final filtered = selectedFilter == null
                       ? purchases
                       : purchases
                             .where((p) => p.status == selectedFilter)
                             .toList();
-
-                  if (filtered.isEmpty) {
-                    return const EmptyPurchasesView();
-                  }
 
                   return RefreshIndicator(
                     onRefresh: () async => ref.invalidate(purchaseProvider),
@@ -61,8 +59,16 @@ class PurchasesPage extends ConsumerWidget {
                     ),
                   );
                 },
-                loading: () => const Center(child: CircularProgressIndicator()),
-                error: (e, _) => Center(child: Text('Error: $e')),
+                emptyState: const EmptyPurchasesView(),
+                isEmpty: (purchases) {
+                  final filtered = selectedFilter == null
+                      ? purchases
+                      : purchases
+                            .where((p) => p.status == selectedFilter)
+                            .toList();
+                  return filtered.isEmpty;
+                },
+                onRetry: () => ref.invalidate(purchaseProvider),
               ),
             ),
           ],

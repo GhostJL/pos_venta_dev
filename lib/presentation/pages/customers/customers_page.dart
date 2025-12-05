@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
 import 'package:posventa/domain/entities/customer.dart';
 import 'package:posventa/presentation/providers/customer_providers.dart';
 import 'package:posventa/presentation/widgets/common/tables/custom_data_table.dart';
@@ -9,6 +8,9 @@ import 'package:posventa/core/constants/permission_constants.dart';
 import 'package:posventa/presentation/providers/permission_provider.dart';
 import 'package:posventa/presentation/widgets/common/confirm_delete_dialog.dart';
 import 'package:posventa/presentation/widgets/common/data_table_actions.dart';
+import 'package:posventa/presentation/widgets/common/tables/data_cell_text.dart';
+import 'package:posventa/presentation/widgets/common/async_value_handler.dart';
+import 'package:posventa/presentation/mixins/page_lifecycle_mixin.dart';
 
 class CustomersPage extends ConsumerStatefulWidget {
   const CustomersPage({super.key});
@@ -17,20 +19,15 @@ class CustomersPage extends ConsumerStatefulWidget {
   CustomersPageState createState() => CustomersPageState();
 }
 
-class CustomersPageState extends ConsumerState<CustomersPage> {
+class CustomersPageState extends ConsumerState<CustomersPage>
+    with PageLifecycleMixin {
   String _searchQuery = '';
+
+  @override
+  List<dynamic> get providersToInvalidate => [customerProvider];
 
   void _navigateToForm([Customer? customer]) {
     context.push('/customers/form', extra: customer);
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    // Auto-refresh customers when entering the page
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.invalidate(customerProvider);
-    });
   }
 
   @override
@@ -41,7 +38,8 @@ class CustomersPageState extends ConsumerState<CustomersPage> {
     );
 
     return Scaffold(
-      body: customersAsync.when(
+      body: AsyncValueHandler<List<Customer>>(
+        value: customersAsync,
         data: (customers) {
           final filteredList = customers.where((c) {
             final query = _searchQuery.toLowerCase();
@@ -65,10 +63,10 @@ class CustomersPageState extends ConsumerState<CustomersPage> {
               rows: filteredList.map((customer) {
                 return DataRow(
                   cells: [
-                    DataCell(Text(customer.code)),
-                    DataCell(Text(customer.fullName)),
-                    DataCell(Text(customer.phone ?? '-')),
-                    DataCell(Text(customer.email ?? '-')),
+                    DataCell(DataCellSecondaryText(customer.code)),
+                    DataCell(DataCellPrimaryText(customer.fullName)),
+                    DataCell(DataCellMonospaceText(customer.phone ?? '-')),
+                    DataCell(DataCellLinkText(customer.email ?? '-')),
                     DataCell(
                       DataTableActions(
                         hasEditPermission: hasManagePermission,
@@ -91,8 +89,6 @@ class CustomersPageState extends ConsumerState<CustomersPage> {
             ),
           );
         },
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, stack) => Center(child: Text('Error: $error')),
       ),
     );
   }

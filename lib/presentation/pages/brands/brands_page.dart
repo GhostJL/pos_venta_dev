@@ -9,6 +9,9 @@ import 'package:posventa/presentation/widgets/common/confirm_delete_dialog.dart'
 import 'package:posventa/presentation/widgets/common/status_chip.dart';
 import 'package:posventa/presentation/widgets/common/data_table_actions.dart';
 import 'package:posventa/presentation/providers/permission_provider.dart';
+import 'package:posventa/presentation/widgets/common/tables/data_cell_text.dart';
+import 'package:posventa/presentation/widgets/common/async_value_handler.dart';
+import 'package:posventa/presentation/mixins/page_lifecycle_mixin.dart';
 
 class BrandsPage extends ConsumerStatefulWidget {
   const BrandsPage({super.key});
@@ -17,14 +20,10 @@ class BrandsPage extends ConsumerStatefulWidget {
   ConsumerState<BrandsPage> createState() => _BrandsPageState();
 }
 
-class _BrandsPageState extends ConsumerState<BrandsPage> {
+class _BrandsPageState extends ConsumerState<BrandsPage>
+    with PageLifecycleMixin {
   @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.invalidate(brandListProvider);
-    });
-  }
+  List<dynamic> get providersToInvalidate => [brandListProvider];
 
   void _navigateToForm([Brand? brand]) {
     context.push('/brands/form', extra: brand);
@@ -51,7 +50,8 @@ class _BrandsPageState extends ConsumerState<BrandsPage> {
 
     return Padding(
       padding: const EdgeInsets.all(24.0),
-      child: brandList.when(
+      child: AsyncValueHandler<List<Brand>>(
+        value: brandList,
         data: (brands) => CustomDataTable<Brand>(
           columns: const [
             DataColumn(label: Text('Nombre')),
@@ -62,23 +62,8 @@ class _BrandsPageState extends ConsumerState<BrandsPage> {
           rows: brands.map((brand) {
             return DataRow(
               cells: [
-                DataCell(
-                  Text(
-                    brand.name,
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                      color: Theme.of(context).colorScheme.onSurface,
-                    ),
-                  ),
-                ),
-                DataCell(
-                  Text(
-                    brand.code,
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                ),
+                DataCell(DataCellPrimaryText(brand.name)),
+                DataCell(DataCellSecondaryText(brand.code)),
                 DataCell(StatusChip(isActive: brand.isActive)),
                 DataCell(
                   DataTableActions(
@@ -97,8 +82,6 @@ class _BrandsPageState extends ConsumerState<BrandsPage> {
           onAddItem: hasManagePermission ? () => _navigateToForm() : () {},
           emptyText: 'No se encontraron marcas. ¡Añade una para empezar!',
         ),
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, st) => Center(child: Text('Error: $e')),
       ),
     );
   }

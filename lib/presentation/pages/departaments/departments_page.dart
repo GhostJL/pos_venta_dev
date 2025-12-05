@@ -9,6 +9,9 @@ import 'package:posventa/presentation/providers/permission_provider.dart';
 import 'package:posventa/presentation/widgets/common/confirm_delete_dialog.dart';
 import 'package:posventa/presentation/widgets/common/status_chip.dart';
 import 'package:posventa/presentation/widgets/common/data_table_actions.dart';
+import 'package:posventa/presentation/widgets/common/tables/data_cell_text.dart';
+import 'package:posventa/presentation/widgets/common/async_value_handler.dart';
+import 'package:posventa/presentation/mixins/page_lifecycle_mixin.dart';
 
 class DepartmentsPage extends ConsumerStatefulWidget {
   const DepartmentsPage({super.key});
@@ -17,14 +20,10 @@ class DepartmentsPage extends ConsumerStatefulWidget {
   ConsumerState<DepartmentsPage> createState() => _DepartmentsPageState();
 }
 
-class _DepartmentsPageState extends ConsumerState<DepartmentsPage> {
+class _DepartmentsPageState extends ConsumerState<DepartmentsPage>
+    with PageLifecycleMixin {
   @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.invalidate(departmentListProvider);
-    });
-  }
+  List<dynamic> get providersToInvalidate => [departmentListProvider];
 
   void _navigateToForm([Department? department]) {
     context.push('/departments/form', extra: department);
@@ -57,7 +56,8 @@ class _DepartmentsPageState extends ConsumerState<DepartmentsPage> {
 
     return Padding(
       padding: const EdgeInsets.all(24.0),
-      child: departmentsAsync.when(
+      child: AsyncValueHandler<List<Department>>(
+        value: departmentsAsync,
         data: (departments) => CustomDataTable<Department>(
           columns: const [
             DataColumn(label: Text('Nombre')),
@@ -68,23 +68,8 @@ class _DepartmentsPageState extends ConsumerState<DepartmentsPage> {
           rows: departments.map((department) {
             return DataRow(
               cells: [
-                DataCell(
-                  Text(
-                    department.name,
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                      color: Theme.of(context).colorScheme.onSurface,
-                    ),
-                  ),
-                ),
-                DataCell(
-                  Text(
-                    department.code,
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                ),
+                DataCell(DataCellPrimaryText(department.name)),
+                DataCell(DataCellSecondaryText(department.code)),
                 DataCell(StatusChip(isActive: department.isActive)),
                 DataCell(
                   DataTableActions(
@@ -104,8 +89,6 @@ class _DepartmentsPageState extends ConsumerState<DepartmentsPage> {
           emptyText:
               'No se encontraron departamentos. ¡Añade uno para empezar!',
         ),
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (err, stack) => Center(child: Text('Error: $err')),
       ),
     );
   }

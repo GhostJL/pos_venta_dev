@@ -9,6 +9,9 @@ import 'package:posventa/core/constants/permission_constants.dart';
 import 'package:posventa/presentation/providers/permission_provider.dart';
 import 'package:posventa/presentation/widgets/common/confirm_delete_dialog.dart';
 import 'package:posventa/presentation/widgets/common/data_table_actions.dart';
+import 'package:posventa/presentation/widgets/common/tables/data_cell_text.dart';
+import 'package:posventa/presentation/widgets/common/async_value_handler.dart';
+import 'package:posventa/presentation/mixins/page_lifecycle_mixin.dart';
 
 class CategoriesPage extends ConsumerStatefulWidget {
   const CategoriesPage({super.key});
@@ -17,14 +20,10 @@ class CategoriesPage extends ConsumerStatefulWidget {
   ConsumerState<CategoriesPage> createState() => _CategoriesPageState();
 }
 
-class _CategoriesPageState extends ConsumerState<CategoriesPage> {
+class _CategoriesPageState extends ConsumerState<CategoriesPage>
+    with PageLifecycleMixin {
   @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.invalidate(categoryListProvider);
-    });
-  }
+  List<dynamic> get providersToInvalidate => [categoryListProvider];
 
   void _navigateToForm([Category? category]) {
     context.push('/categories/form', extra: category);
@@ -52,7 +51,8 @@ class _CategoriesPageState extends ConsumerState<CategoriesPage> {
 
     return Padding(
       padding: const EdgeInsets.all(24.0),
-      child: categoriesAsync.when(
+      child: AsyncValueHandler<List<Category>>(
+        value: categoriesAsync,
         data: (categories) => CustomDataTable<Category>(
           columns: const [
             DataColumn(label: Text('Nombre')),
@@ -68,31 +68,9 @@ class _CategoriesPageState extends ConsumerState<CategoriesPage> {
                 'N/A';
             return DataRow(
               cells: [
-                DataCell(
-                  Text(
-                    category.name,
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                      color: Theme.of(context).colorScheme.onSurface,
-                    ),
-                  ),
-                ),
-                DataCell(
-                  Text(
-                    category.code,
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                ),
-                DataCell(
-                  Text(
-                    departmentName,
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurface,
-                    ),
-                  ),
-                ),
+                DataCell(DataCellPrimaryText(category.name)),
+                DataCell(DataCellSecondaryText(category.code)),
+                DataCell(DataCellText(departmentName)),
                 DataCell(
                   DataTableActions(
                     hasEditPermission: hasManagePermission,
@@ -110,8 +88,6 @@ class _CategoriesPageState extends ConsumerState<CategoriesPage> {
           onAddItem: hasManagePermission ? () => _navigateToForm() : () {},
           emptyText: 'No se encontraron categorías. ¡Añade una para empezar!',
         ),
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (err, stack) => Center(child: Text('Error: $err')),
       ),
     );
   }

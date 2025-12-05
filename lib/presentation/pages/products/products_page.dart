@@ -12,6 +12,8 @@ import 'package:posventa/presentation/widgets/products/actions/product_actions_s
 import 'package:posventa/core/utils/product_filter_utils.dart';
 import 'package:posventa/presentation/widgets/common/empty_state_widget.dart';
 import 'package:posventa/presentation/widgets/products/filters/chip_filter_widget.dart';
+import 'package:posventa/presentation/widgets/common/async_value_handler.dart';
+import 'package:posventa/presentation/mixins/page_lifecycle_mixin.dart';
 
 class ProductsPage extends ConsumerStatefulWidget {
   const ProductsPage({super.key});
@@ -20,7 +22,8 @@ class ProductsPage extends ConsumerStatefulWidget {
   ProductsPageState createState() => ProductsPageState();
 }
 
-class ProductsPageState extends ConsumerState<ProductsPage> {
+class ProductsPageState extends ConsumerState<ProductsPage>
+    with PageLifecycleMixin {
   String _searchQuery = '';
   int? _departmentFilter;
   int? _categoryFilter;
@@ -29,21 +32,15 @@ class ProductsPageState extends ConsumerState<ProductsPage> {
   String _sortOrder = 'name';
   final TextEditingController _searchController = TextEditingController();
 
+  @override
+  List<dynamic> get providersToInvalidate => [productNotifierProvider];
+
   int get _activeFilterCount => ProductFilterUtils.countActiveFilters(
     departmentFilter: _departmentFilter,
     categoryFilter: _categoryFilter,
     brandFilter: _brandFilter,
     supplierFilter: _supplierFilter,
   );
-
-  @override
-  void initState() {
-    super.initState();
-    // Auto-refresh products when entering the page
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.invalidate(productNotifierProvider);
-    });
-  }
 
   @override
   void dispose() {
@@ -103,11 +100,25 @@ class ProductsPageState extends ConsumerState<ProductsPage> {
               const SizedBox(height: 4),
 
               Expanded(
-                child: products.when(
+                child: AsyncValueHandler<List<Product>>(
+                  value: products,
                   data: (productList) => _buildProductList(productList),
-                  loading: () =>
-                      const Center(child: CircularProgressIndicator()),
-                  error: (error, stack) => Center(child: Text('Error: $error')),
+                  emptyState: const EmptyStateWidget(
+                    icon: Icons.inventory_2_outlined,
+                    message: 'No se encontraron productos',
+                  ),
+                  isEmpty: (productList) {
+                    final filteredList = ProductFilterUtils.filterAndSort(
+                      products: productList,
+                      searchQuery: _searchQuery,
+                      departmentFilter: _departmentFilter,
+                      categoryFilter: _categoryFilter,
+                      brandFilter: _brandFilter,
+                      supplierFilter: _supplierFilter,
+                      sortOrder: _sortOrder,
+                    );
+                    return filteredList.isEmpty;
+                  },
                 ),
               ),
             ],
@@ -128,10 +139,6 @@ class ProductsPageState extends ConsumerState<ProductsPage> {
       sortOrder: _sortOrder,
     );
 
-    if (filteredList.isEmpty) {
-      return _buildEmptyState();
-    }
-
     return ListView.separated(
       itemCount: filteredList.length,
       separatorBuilder: (context, index) => const SizedBox(height: 12),
@@ -142,13 +149,6 @@ class ProductsPageState extends ConsumerState<ProductsPage> {
           onMorePressed: () => _showActionsSheet(product),
         );
       },
-    );
-  }
-
-  Widget _buildEmptyState() {
-    return const EmptyStateWidget(
-      icon: Icons.inventory_2_outlined,
-      message: 'No se encontraron productos',
     );
   }
 
