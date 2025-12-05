@@ -14,7 +14,7 @@ class PurchaseTotalsFooter extends StatelessWidget {
         color: Theme.of(context).colorScheme.surface,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withAlpha(100),
+            color: Theme.of(context).colorScheme.shadow.withAlpha(100),
             blurRadius: 4,
             offset: const Offset(0, -2),
           ),

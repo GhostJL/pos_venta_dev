@@ -44,7 +44,7 @@ class AdditionalInfoSection extends StatelessWidget {
                   : 'Sin fecha de vencimiento',
               style: TextStyle(
                 color: expirationDate != null
-                    ? Colors.black
+                    ? Theme.of(context).colorScheme.onSurface
                     : Theme.of(context).colorScheme.onSurfaceVariant,
               ),
             ),

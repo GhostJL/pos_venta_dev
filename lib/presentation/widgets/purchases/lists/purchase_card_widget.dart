@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:posventa/core/theme/theme.dart';
 import 'package:posventa/domain/entities/purchase.dart';
 
 class PurchaseCard extends StatelessWidget {
@@ -18,7 +19,7 @@ class PurchaseCard extends StatelessWidget {
     Color statusColor;
     String statusText;
     if (isPending) {
-      statusColor = Colors.orange.shade400;
+      statusColor = AppTheme.transactionPending;
       statusText = 'Pendiente';
     } else if (isCancelled) {
       statusColor = Theme.of(context).colorScheme.error;
@@ -34,11 +35,9 @@ class PurchaseCard extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.onSurface,
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: Theme.of(context).colorScheme.surfaceContainerHighest,
-        ),
+        border: Border.all(color: Theme.of(context).colorScheme.outline),
       ),
       child: InkWell(
         onTap: () => context.push('/purchases/${purchase.id}'),

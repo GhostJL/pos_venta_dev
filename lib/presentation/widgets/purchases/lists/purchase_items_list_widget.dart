@@ -43,9 +43,9 @@ class PurchaseItemsListWidget extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 72, horizontal: 32),
       decoration: BoxDecoration(
-        color: const Color(0xFFFAFAFA),
+        color: Theme.of(context).colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
+        border: Border.all(color: Theme.of(context).colorScheme.outline),
       ),
       child: Row(
         children: [
@@ -56,11 +56,13 @@ class PurchaseItemsListWidget extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.onSurface,
+                    color: Theme.of(context).colorScheme.surface,
                     shape: BoxShape.circle,
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.04),
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.shadow.withValues(alpha: 0.04),
                         blurRadius: 12,
                         offset: const Offset(0, 4),
                       ),
@@ -79,9 +81,7 @@ class PurchaseItemsListWidget extends StatelessWidget {
                   'Carrito vacío',
                   style: TextStyle(
                     fontSize: 16,
-                    color: Theme.of(
-                      context,
-                    ).colorScheme.primary.withValues(alpha: 0.7),
+                    color: Theme.of(context).colorScheme.onSurface,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -90,9 +90,7 @@ class PurchaseItemsListWidget extends StatelessWidget {
                   'Agrega productos para comenzar',
                   style: TextStyle(
                     fontSize: 13,
-                    color: Theme.of(
-                      context,
-                    ).colorScheme.primary.withValues(alpha: 0.5),
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
                 ),
               ],
