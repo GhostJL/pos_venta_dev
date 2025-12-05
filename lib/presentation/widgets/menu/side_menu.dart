@@ -1,14 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:animate_do/animate_do.dart';
 import 'package:posventa/domain/entities/user.dart';
 import 'package:posventa/presentation/providers/auth_provider.dart';
-import 'package:posventa/presentation/providers/providers.dart';
 import 'package:posventa/presentation/providers/permission_provider.dart';
 import 'package:posventa/core/config/menu_config.dart';
 import 'package:posventa/presentation/widgets/menu/menu_group_widget.dart';
 import 'package:posventa/presentation/widgets/menu/menu_item_widget.dart';
+import 'package:posventa/presentation/widgets/menu/side_menu/side_menu_header.dart';
+import 'package:posventa/presentation/widgets/menu/side_menu/side_menu_logout.dart';
+import 'package:posventa/presentation/widgets/menu/side_menu/side_menu_quick_actions.dart';
+import 'package:posventa/presentation/widgets/menu/side_menu/side_menu_search_bar.dart';
 
 /// Main side menu navigation widget with enhanced UX for POS
 class SideMenu extends ConsumerStatefulWidget {
@@ -55,128 +57,28 @@ class _SideMenuState extends ConsumerState<SideMenu> {
       ),
       child: Column(
         children: [
-          _buildDrawerHeader(context, user),
-          _buildQuickActions(context, user),
-          _buildSearchBar(context),
+          SideMenuHeader(user: user),
+          SideMenuQuickActions(user: user),
+          SideMenuSearchBar(
+            controller: _searchController,
+            searchQuery: _searchQuery,
+            onChanged: (value) {
+              setState(() {
+                _searchQuery = value.toLowerCase();
+              });
+            },
+            onClear: () {
+              _searchController.clear();
+              setState(() {
+                _searchQuery = '';
+              });
+            },
+          ),
           Expanded(
             child: _buildMenuContent(context, user, permissions, currentPath),
           ),
-          _buildLogoutSection(context, ref),
+          const SideMenuLogout(),
         ],
-      ),
-    );
-  }
-
-  /// Build quick action buttons for common tasks
-  Widget _buildQuickActions(BuildContext context, User? user) {
-    if (user?.role == UserRole.cajero) {
-      final colorScheme = Theme.of(context).colorScheme;
-
-      return Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        decoration: BoxDecoration(
-          border: Border(
-            bottom: BorderSide(color: colorScheme.outline.withAlpha(100)),
-          ),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'ACCIONES RÁPIDAS',
-              style: TextStyle(
-                color: colorScheme.onSurfaceVariant,
-                fontWeight: FontWeight.bold,
-                fontSize: 10,
-                letterSpacing: 1.2,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                Expanded(
-                  child: _QuickActionButton(
-                    icon: Icons.point_of_sale_rounded,
-                    label: 'POS',
-                    color: Colors.green,
-                    onTap: () => context.go('/sales'),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: _QuickActionButton(
-                    icon: Icons.keyboard_return_rounded,
-                    label: 'Devolución',
-                    color: Colors.orange,
-                    onTap: () => context.go('/returns'),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      );
-    }
-
-    return const SizedBox.shrink();
-  }
-
-  /// Build search bar for menu filtering
-  Widget _buildSearchBar(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        border: Border(
-          bottom: BorderSide(color: colorScheme.outline.withAlpha(100)),
-        ),
-      ),
-      child: TextField(
-        controller: _searchController,
-        onChanged: (value) {
-          setState(() {
-            _searchQuery = value.toLowerCase();
-          });
-        },
-        decoration: InputDecoration(
-          hintText: 'Buscar en menú...',
-          hintStyle: TextStyle(
-            color: colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
-            fontSize: 14,
-          ),
-          prefixIcon: Icon(
-            Icons.search_rounded,
-            color: colorScheme.onSurfaceVariant,
-            size: 20,
-          ),
-          suffixIcon: _searchQuery.isNotEmpty
-              ? IconButton(
-                  icon: Icon(
-                    Icons.clear_rounded,
-                    color: colorScheme.onSurfaceVariant,
-                    size: 18,
-                  ),
-                  onPressed: () {
-                    _searchController.clear();
-                    setState(() {
-                      _searchQuery = '';
-                    });
-                  },
-                )
-              : null,
-          filled: true,
-          fillColor: colorScheme.surfaceContainerHighest,
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide.none,
-          ),
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 16,
-            vertical: 12,
-          ),
-        ),
-        style: const TextStyle(fontSize: 14),
       ),
     );
   }
@@ -373,281 +275,5 @@ class _SideMenuState extends ConsumerState<SideMenu> {
     }
 
     return widgets;
-  }
-
-  /// Build drawer header with user info and cash session status
-  Widget _buildDrawerHeader(BuildContext context, User? user) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final accountName = user?.firstName ?? 'Usuario';
-    final accountLastName = user?.lastName ?? 'N.';
-    final accountEmail = user != null
-        ? (user.role == UserRole.administrador ? 'Administrador' : 'Cajero')
-        : 'Rol no disponible';
-
-    return Container(
-      padding: const EdgeInsets.fromLTRB(24, 60, 24, 24),
-      decoration: BoxDecoration(
-        color: colorScheme.surface,
-        border: Border(
-          bottom: BorderSide(color: colorScheme.outline.withAlpha(100)),
-        ),
-      ),
-      child: Column(
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(2),
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: colorScheme.primary.withAlpha(50),
-                    width: 2,
-                  ),
-                ),
-                child: CircleAvatar(
-                  radius: 28,
-                  backgroundColor: colorScheme.primary.withAlpha(20),
-                  child: Text(
-                    accountName.isNotEmpty ? accountName[0].toUpperCase() : 'U',
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      color: colorScheme.primary,
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '$accountName $accountLastName',
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: colorScheme.onSurface,
-                      ),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      accountEmail,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: colorScheme.primary,
-                        fontWeight: FontWeight.w600,
-                      ),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          // Cash session status indicator
-          if (user?.role == UserRole.cajero) ...[
-            const SizedBox(height: 16),
-            _buildCashSessionStatus(ref),
-          ],
-        ],
-      ),
-    );
-  }
-
-  /// Build cash session status indicator
-  Widget _buildCashSessionStatus(WidgetRef ref) {
-    return FutureBuilder(
-      future: ref.read(getCurrentCashSessionUseCaseProvider).call(),
-      builder: (context, snapshot) {
-        final hasOpenSession = snapshot.data != null;
-
-        return Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          decoration: BoxDecoration(
-            color: hasOpenSession
-                ? Colors.green.withAlpha(20)
-                : Colors.orange.withAlpha(20),
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(
-              color: hasOpenSession
-                  ? Colors.green.withAlpha(50)
-                  : Colors.orange.withAlpha(50),
-              width: 1,
-            ),
-          ),
-          child: Row(
-            children: [
-              Container(
-                width: 8,
-                height: 8,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: hasOpenSession ? Colors.green : Colors.orange,
-                ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  hasOpenSession ? 'Caja Abierta' : 'Caja Cerrada',
-                  style: TextStyle(
-                    color: hasOpenSession ? Colors.green : Colors.orange,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 12,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  /// Build logout section at the bottom
-  Widget _buildLogoutSection(BuildContext context, WidgetRef ref) {
-    final colorScheme = Theme.of(context).colorScheme;
-
-    return Container(
-      padding: const EdgeInsets.all(24.0),
-      decoration: BoxDecoration(
-        border: Border(
-          top: BorderSide(color: colorScheme.outline.withAlpha(100)),
-        ),
-      ),
-      child: MouseRegion(
-        cursor: SystemMouseCursors.click,
-        child: InkWell(
-          onTap: () async {
-            if (Scaffold.of(context).isDrawerOpen) {
-              Scaffold.of(context).closeDrawer();
-            }
-
-            final session = await ref
-                .read(getCurrentCashSessionUseCaseProvider)
-                .call();
-
-            if (session != null && context.mounted) {
-              showDialog(
-                context: context,
-                builder: (context) => AlertDialog(
-                  title: const Text('Caja Abierta'),
-                  content: const Text(
-                    'Tienes una sesión de caja abierta.\nDebe cerrarla antes de cerrar sesión.',
-                  ),
-                  actions: [
-                    TextButton(
-                      onPressed: () => context.pop(),
-                      child: const Text('Cancelar'),
-                    ),
-                    FilledButton(
-                      onPressed: () {
-                        context.pop();
-                        context.go('/cash-session-close?intent=logout');
-                      },
-                      style: FilledButton.styleFrom(
-                        backgroundColor: Colors.orange,
-                      ),
-                      child: const Text('Ir a Cerrar Caja'),
-                    ),
-                  ],
-                ),
-              );
-            } else {
-              ref.read(authProvider.notifier).logout();
-            }
-          },
-          borderRadius: BorderRadius.circular(12),
-          child: Container(
-            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-            decoration: BoxDecoration(
-              color: colorScheme.error.withAlpha(10),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.logout_rounded, color: colorScheme.error, size: 20),
-                const SizedBox(width: 8),
-                Text(
-                  'Cerrar Sesión',
-                  style: TextStyle(
-                    color: colorScheme.error,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 14,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// Quick action button widget
-class _QuickActionButton extends StatefulWidget {
-  final IconData icon;
-  final String label;
-  final Color color;
-  final VoidCallback onTap;
-
-  const _QuickActionButton({
-    required this.icon,
-    required this.label,
-    required this.color,
-    required this.onTap,
-  });
-
-  @override
-  State<_QuickActionButton> createState() => _QuickActionButtonState();
-}
-
-class _QuickActionButtonState extends State<_QuickActionButton> {
-  bool _isHovered = false;
-
-  @override
-  Widget build(BuildContext context) {
-    return MouseRegion(
-      onEnter: (_) => setState(() => _isHovered = true),
-      onExit: (_) => setState(() => _isHovered = false),
-      cursor: SystemMouseCursors.click,
-      child: ZoomIn(
-        duration: const Duration(milliseconds: 200),
-        from: _isHovered ? 1.0 : 1.05,
-        animate: true,
-        child: InkWell(
-          onTap: widget.onTap,
-          borderRadius: BorderRadius.circular(12),
-          child: Container(
-            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
-            decoration: BoxDecoration(
-              color: widget.color.withAlpha(20),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: widget.color.withAlpha(_isHovered ? 100 : 50),
-                width: 2,
-              ),
-            ),
-            child: Column(
-              children: [
-                Icon(widget.icon, color: widget.color, size: 24),
-                const SizedBox(height: 4),
-                Text(
-                  widget.label,
-                  style: TextStyle(
-                    color: widget.color,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 11,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
   }
 }
