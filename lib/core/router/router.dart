@@ -6,19 +6,19 @@ import 'package:posventa/presentation/pages/inventory/inventory_lot_detail_page.
 import 'package:posventa/presentation/pages/inventory/inventory_lots_page.dart';
 
 import 'package:posventa/presentation/pages/screens.dart';
-import 'package:posventa/presentation/widgets/barcode_scanner_widget.dart';
-import 'package:posventa/presentation/widgets/cash_session_guard.dart';
+import 'package:posventa/presentation/widgets/common/misc/barcode_scanner_widget.dart';
+import 'package:posventa/presentation/widgets/cash_sessions/misc/cash_session_guard.dart';
 
 import 'package:posventa/domain/entities/sale.dart';
 import 'package:posventa/presentation/providers/auth_provider.dart';
 
 import 'package:posventa/presentation/pages/products/product_form_page.dart';
-import 'package:posventa/presentation/widgets/product/variant_form_page.dart';
-import 'package:posventa/presentation/widgets/brand_form.dart';
-import 'package:posventa/presentation/widgets/category_form.dart';
-import 'package:posventa/presentation/widgets/customer_form.dart';
-import 'package:posventa/presentation/widgets/department_form.dart';
-import 'package:posventa/presentation/widgets/supplier_form.dart';
+import 'package:posventa/presentation/widgets/products/forms/variant_form_page.dart';
+import 'package:posventa/presentation/widgets/catalog/brands/brand_form.dart';
+import 'package:posventa/presentation/widgets/catalog/categories/category_form.dart';
+import 'package:posventa/presentation/widgets/catalog/customers/customer_form.dart';
+import 'package:posventa/presentation/widgets/catalog/departments/department_form.dart';
+import 'package:posventa/presentation/widgets/catalog/suppliers/supplier_form.dart';
 
 import 'package:posventa/domain/entities/product.dart';
 

@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:posventa/presentation/providers/create_account_provider.dart';
-import 'package:posventa/presentation/widgets/create_account/create_account_form.dart';
-import 'package:posventa/presentation/widgets/create_account/create_account_header.dart';
+import 'package:posventa/presentation/widgets/auth/create_account/create_account_form.dart';
+import 'package:posventa/presentation/widgets/auth/create_account/create_account_header.dart';
 
 class CreateAccountPage extends ConsumerStatefulWidget {
   const CreateAccountPage({super.key});

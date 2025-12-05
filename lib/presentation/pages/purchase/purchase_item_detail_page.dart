@@ -3,10 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:posventa/presentation/providers/purchase_item_providers.dart';
-import 'package:posventa/presentation/widgets/purchase_item_detail/purchase_item_header.dart';
-import 'package:posventa/presentation/widgets/purchase_item_detail/purchase_item_info_section.dart';
-import 'package:posventa/presentation/widgets/purchase_item_detail/purchase_item_financial_section.dart';
-import 'package:posventa/presentation/widgets/purchase_item_detail/purchase_item_metadata_section.dart';
+import 'package:posventa/presentation/widgets/purchases/items/purchase_item_detail/purchase_item_header.dart';
+import 'package:posventa/presentation/widgets/purchases/items/purchase_item_detail/purchase_item_info_section.dart';
+import 'package:posventa/presentation/widgets/purchases/items/purchase_item_detail/purchase_item_financial_section.dart';
+import 'package:posventa/presentation/widgets/purchases/items/purchase_item_detail/purchase_item_metadata_section.dart';
 
 /// Detailed view of a single purchase item
 /// Shows all information including related purchase and product details

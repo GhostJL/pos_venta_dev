@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:posventa/domain/entities/sale.dart';
 import 'package:posventa/presentation/providers/return_processing_provider.dart';
-import 'package:posventa/presentation/widgets/sale_returns_detail/sale_return_card.dart';
-import 'package:posventa/presentation/widgets/sale_returns_detail/sale_returns_header_card.dart';
+import 'package:posventa/presentation/widgets/sales/returns/detail/sale_return_card.dart';
+import 'package:posventa/presentation/widgets/sales/returns/detail/sale_returns_header_card.dart';
 
 class SaleReturnsDetailPage extends ConsumerWidget {
   final int saleId;

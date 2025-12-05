@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:posventa/domain/entities/sale.dart';
 import 'package:posventa/presentation/providers/providers.dart';
-import 'package:posventa/presentation/widgets/sale_detail/sale_action_buttons.dart';
-import 'package:posventa/presentation/widgets/sale_detail/sale_header_card.dart';
-import 'package:posventa/presentation/widgets/sale_detail/sale_payments_list.dart';
-import 'package:posventa/presentation/widgets/sale_detail/sale_products_list.dart';
-import 'package:posventa/presentation/widgets/sale_detail/sale_returns_section.dart';
-import 'package:posventa/presentation/widgets/sale_detail/sale_totals_card.dart';
+import 'package:posventa/presentation/widgets/sales/detail/sale_action_buttons.dart';
+import 'package:posventa/presentation/widgets/sales/detail/sale_header_card.dart';
+import 'package:posventa/presentation/widgets/sales/detail/sale_payments_list.dart';
+import 'package:posventa/presentation/widgets/sales/detail/sale_products_list.dart';
+import 'package:posventa/presentation/widgets/sales/detail/sale_returns_section.dart';
+import 'package:posventa/presentation/widgets/sales/detail/sale_totals_card.dart';
 
 class SaleDetailPage extends ConsumerWidget {
   final int saleId;

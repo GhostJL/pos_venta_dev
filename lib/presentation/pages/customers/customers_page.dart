@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:posventa/domain/entities/customer.dart';
 import 'package:posventa/presentation/providers/customer_providers.dart';
-import 'package:posventa/presentation/widgets/custom_data_table.dart';
+import 'package:posventa/presentation/widgets/common/tables/custom_data_table.dart';
 import 'package:go_router/go_router.dart';
 import 'package:posventa/core/constants/permission_constants.dart';
 import 'package:posventa/presentation/providers/permission_provider.dart';

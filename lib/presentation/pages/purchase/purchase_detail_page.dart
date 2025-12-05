@@ -3,11 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:posventa/domain/entities/purchase.dart';
 import 'package:posventa/presentation/providers/auth_provider.dart';
 import 'package:posventa/presentation/providers/purchase_providers.dart';
-import 'package:posventa/presentation/widgets/purchase/purchase_cancel_dialog.dart';
-import 'package:posventa/presentation/widgets/purchase/purchase_info_card.dart';
-import 'package:posventa/presentation/widgets/purchase/purchase_items_list.dart';
-import 'package:posventa/presentation/widgets/purchase/purchase_reception_dialog.dart';
-import 'package:posventa/presentation/widgets/purchase/purchase_totals_card.dart';
+import 'package:posventa/presentation/widgets/purchases/dialogs/purchase_cancel_dialog.dart';
+import 'package:posventa/presentation/widgets/purchases/cards/purchase_info_card.dart';
+import 'package:posventa/presentation/widgets/purchases/lists/purchase_items_list.dart';
+import 'package:posventa/presentation/widgets/purchases/reception/purchase_reception_dialog.dart';
+import 'package:posventa/presentation/widgets/purchases/cards/purchase_totals_card.dart';
 import 'package:posventa/domain/entities/purchase_reception_item.dart';
 
 class PurchaseDetailPage extends ConsumerWidget {

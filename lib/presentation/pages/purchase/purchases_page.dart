@@ -5,9 +5,9 @@ import 'package:posventa/presentation/providers/purchase_filter_chip_provider.da
 import 'package:posventa/presentation/providers/purchase_providers.dart';
 import 'package:posventa/core/constants/permission_constants.dart';
 import 'package:posventa/presentation/providers/permission_provider.dart';
-import 'package:posventa/presentation/widgets/purchase/chips/purchase_filter_chips.dart';
-import 'package:posventa/presentation/widgets/purchase/empty_purchases_view.dart';
-import 'package:posventa/presentation/widgets/purchase/purchase_card_widget.dart';
+import 'package:posventa/presentation/widgets/purchases/filters/chips/purchase_filter_chips.dart';
+import 'package:posventa/presentation/widgets/purchases/misc/empty_purchases_view.dart';
+import 'package:posventa/presentation/widgets/purchases/lists/purchase_card_widget.dart';
 
 class PurchasesPage extends ConsumerWidget {
   const PurchasesPage({super.key});

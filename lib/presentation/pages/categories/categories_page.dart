@@ -4,7 +4,7 @@ import 'package:posventa/domain/entities/category.dart';
 import 'package:posventa/presentation/providers/category_providers.dart';
 import 'package:posventa/presentation/providers/department_providers.dart';
 import 'package:go_router/go_router.dart';
-import 'package:posventa/presentation/widgets/custom_data_table.dart';
+import 'package:posventa/presentation/widgets/common/tables/custom_data_table.dart';
 import 'package:posventa/core/constants/permission_constants.dart';
 import 'package:posventa/presentation/providers/permission_provider.dart';
 import 'package:posventa/presentation/widgets/common/confirm_delete_dialog.dart';

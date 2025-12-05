@@ -6,11 +6,11 @@ import 'package:posventa/domain/entities/product_tax.dart' as pt;
 import 'package:posventa/domain/entities/product_variant.dart';
 import 'package:posventa/presentation/providers/product_form_provider.dart';
 import 'package:posventa/presentation/providers/tax_rate_provider.dart';
-import 'package:posventa/presentation/widgets/product/widgets/product_basic_info_section.dart';
-import 'package:posventa/presentation/widgets/product/widgets/product_classification_section.dart';
-import 'package:posventa/presentation/widgets/product/widgets/product_pricing_section.dart';
-import 'package:posventa/presentation/widgets/product/widgets/product_tax_selection.dart';
-import 'package:posventa/presentation/widgets/product/widgets/product_variants_list.dart';
+import 'package:posventa/presentation/widgets/products/forms/product_form/product_basic_info_section.dart';
+import 'package:posventa/presentation/widgets/products/forms/product_form/product_classification_section.dart';
+import 'package:posventa/presentation/widgets/products/forms/product_form/product_pricing_section.dart';
+import 'package:posventa/presentation/widgets/products/forms/product_form/product_tax_selection.dart';
+import 'package:posventa/presentation/widgets/products/forms/product_form/product_variants_list.dart';
 
 class ProductFormPage extends ConsumerStatefulWidget {
   final Product? product;

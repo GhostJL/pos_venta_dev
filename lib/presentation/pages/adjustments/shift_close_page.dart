@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:posventa/presentation/widgets/placeholder_page.dart';
+import 'package:posventa/presentation/widgets/common/layouts/placeholder_page.dart';
 
 /// Shift Close Page - Quick access for cashiers to close their shift
 class ShiftClosePage extends StatelessWidget {

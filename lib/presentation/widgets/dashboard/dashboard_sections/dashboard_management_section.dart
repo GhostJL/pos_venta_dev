@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:posventa/presentation/widgets/dashboard_card.dart';
+import 'package:posventa/presentation/widgets/common/cards/dashboard_card.dart';
 
 class DashboardManagementSection extends StatelessWidget {
   final int crossAxisCount;

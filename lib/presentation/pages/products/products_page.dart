@@ -5,13 +5,13 @@ import 'package:posventa/domain/entities/product.dart';
 import 'package:posventa/presentation/providers/product_provider.dart';
 import 'package:posventa/core/constants/permission_constants.dart';
 import 'package:posventa/presentation/providers/permission_provider.dart';
-import 'package:posventa/presentation/widgets/product_filter_sheet.dart';
-import 'package:posventa/presentation/widgets/product_list_item.dart';
-import 'package:posventa/presentation/widgets/product_search_bar.dart';
-import 'package:posventa/presentation/widgets/product_actions_sheet.dart';
+import 'package:posventa/presentation/widgets/products/filters/product_filter_sheet.dart';
+import 'package:posventa/presentation/widgets/products/lists/product_list_item.dart';
+import 'package:posventa/presentation/widgets/products/search/product_search_bar.dart';
+import 'package:posventa/presentation/widgets/products/actions/product_actions_sheet.dart';
 import 'package:posventa/core/utils/product_filter_utils.dart';
 import 'package:posventa/presentation/widgets/common/empty_state_widget.dart';
-import 'package:posventa/presentation/widgets/products/chip_filter_widget.dart';
+import 'package:posventa/presentation/widgets/products/filters/chip_filter_widget.dart';
 
 class ProductsPage extends ConsumerStatefulWidget {
   const ProductsPage({super.key});

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:posventa/presentation/widgets/shared/product_card.dart';
+import 'package:posventa/presentation/widgets/products/shared/product_card.dart';
 import 'package:posventa/presentation/widgets/pos/product_grid/product_grid_item_model.dart';
 
 class ProductGridView extends StatelessWidget {

@@ -5,7 +5,7 @@ import 'package:posventa/domain/entities/product.dart';
 import 'package:posventa/presentation/providers/auth_provider.dart';
 import 'package:posventa/presentation/providers/inventory_adjustment_provider.dart';
 import 'package:posventa/presentation/providers/providers.dart';
-import 'package:posventa/presentation/widgets/inventory/adjustment_item_card.dart';
+import 'package:posventa/presentation/widgets/inventory/adjustments/adjustment_item_card.dart';
 
 class PhysicalInventoryAdjustmentPage extends ConsumerWidget {
   const PhysicalInventoryAdjustmentPage({super.key});

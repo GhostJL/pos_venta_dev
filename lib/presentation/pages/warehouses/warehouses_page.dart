@@ -3,13 +3,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:posventa/domain/entities/warehouse.dart';
 import 'package:posventa/presentation/providers/warehouse_providers.dart';
-import 'package:posventa/presentation/widgets/custom_data_table.dart';
+import 'package:posventa/presentation/widgets/common/tables/custom_data_table.dart';
 import 'package:posventa/core/constants/permission_constants.dart';
 import 'package:posventa/presentation/providers/permission_provider.dart';
 import 'package:posventa/presentation/widgets/common/status_chip.dart';
 import 'package:posventa/presentation/widgets/common/data_table_actions.dart';
 
-import 'package:posventa/presentation/widgets/warehouse_form_widget.dart';
+import 'package:posventa/presentation/widgets/catalog/warehouses/warehouse_form_widget.dart';
 
 class WarehousesPage extends ConsumerStatefulWidget {
   const WarehousesPage({super.key});

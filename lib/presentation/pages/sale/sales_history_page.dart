@@ -4,8 +4,8 @@ import 'package:posventa/presentation/providers/providers.dart';
 import 'package:intl/intl.dart';
 import 'package:posventa/core/constants/permission_constants.dart';
 import 'package:posventa/presentation/providers/permission_provider.dart';
-import 'package:posventa/presentation/widgets/permission_denied_widget.dart';
-import 'package:posventa/presentation/widgets/sales/sales_card_history_widget.dart';
+import 'package:posventa/presentation/widgets/common/layouts/permission_denied_widget.dart';
+import 'package:posventa/presentation/widgets/sales/history/sales_card_history_widget.dart';
 
 class SalesHistoryPage extends ConsumerStatefulWidget {
   const SalesHistoryPage({super.key});

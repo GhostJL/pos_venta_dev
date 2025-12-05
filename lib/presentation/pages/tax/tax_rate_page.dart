@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:posventa/domain/entities/tax_rate.dart';
 import 'package:posventa/presentation/providers/tax_rate_provider.dart';
-import 'package:posventa/presentation/widgets/custom_data_table.dart';
-import 'package:posventa/presentation/widgets/tax_rate_form.dart';
+import 'package:posventa/presentation/widgets/common/tables/custom_data_table.dart';
+import 'package:posventa/presentation/widgets/catalog/tax_rates/tax_rate_form.dart';
 import 'package:posventa/core/constants/permission_constants.dart';
 import 'package:posventa/presentation/providers/permission_provider.dart';
 

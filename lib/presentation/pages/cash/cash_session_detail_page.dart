@@ -4,11 +4,11 @@ import 'package:intl/intl.dart';
 import 'package:posventa/domain/entities/cash_session.dart';
 import 'package:posventa/presentation/providers/cash_session_providers.dart';
 import 'package:posventa/presentation/providers/warehouse_providers.dart';
-import 'package:posventa/presentation/widgets/cash_session_detail/session_info_card.dart';
-import 'package:posventa/presentation/widgets/cash_session_detail/financial_summary_card.dart';
-import 'package:posventa/presentation/widgets/cash_session_detail/sales_summary_card.dart';
-import 'package:posventa/presentation/widgets/cash_session_detail/manual_movements_card.dart';
-import 'package:posventa/presentation/widgets/cash_session_detail/payment_methods_card.dart';
+import 'package:posventa/presentation/widgets/cash_sessions/detail/session_info_card.dart';
+import 'package:posventa/presentation/widgets/cash_sessions/detail/financial_summary_card.dart';
+import 'package:posventa/presentation/widgets/cash_sessions/detail/sales_summary_card.dart';
+import 'package:posventa/presentation/widgets/cash_sessions/detail/manual_movements_card.dart';
+import 'package:posventa/presentation/widgets/cash_sessions/detail/payment_methods_card.dart';
 
 class CashSessionDetailPage extends ConsumerWidget {
   final CashSession session;

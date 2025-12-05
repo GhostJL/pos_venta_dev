@@ -4,11 +4,11 @@ import 'package:go_router/go_router.dart';
 import 'package:posventa/presentation/providers/purchase_item_providers.dart';
 import 'package:posventa/presentation/providers/purchase_form_provider.dart';
 import 'package:posventa/presentation/viewmodels/product_variant_item.dart';
-import 'package:posventa/presentation/widgets/purchase_item_form/product_selection_section.dart';
-import 'package:posventa/presentation/widgets/purchase_item_form/purchase_selection_section.dart';
-import 'package:posventa/presentation/widgets/purchase_item_form/quantity_cost_section.dart';
-import 'package:posventa/presentation/widgets/purchase_item_form/additional_info_section.dart';
-import 'package:posventa/presentation/widgets/purchase_item_form/totals_preview_section.dart';
+import 'package:posventa/presentation/widgets/purchases/forms/purchase_item_form/product_selection_section.dart';
+import 'package:posventa/presentation/widgets/purchases/forms/purchase_item_form/purchase_selection_section.dart';
+import 'package:posventa/presentation/widgets/purchases/forms/purchase_item_form/quantity_cost_section.dart';
+import 'package:posventa/presentation/widgets/purchases/forms/purchase_item_form/additional_info_section.dart';
+import 'package:posventa/presentation/widgets/purchases/forms/purchase_item_form/totals_preview_section.dart';
 
 /// Form page for creating or editing a purchase item
 /// Can be used standalone or as part of a purchase creation flow

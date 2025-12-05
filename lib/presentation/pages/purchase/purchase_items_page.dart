@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:posventa/presentation/widgets/purchase_items_page/purchase_items_filter_dialog.dart';
-import 'package:posventa/presentation/widgets/purchase_items_page/purchase_items_list.dart';
-import 'package:posventa/presentation/widgets/purchase_items_page/purchase_items_search_bar.dart';
+import 'package:posventa/presentation/widgets/purchases/items/purchase_items_page/purchase_items_filter_dialog.dart';
+import 'package:posventa/presentation/widgets/purchases/items/purchase_items_page/purchase_items_list.dart';
+import 'package:posventa/presentation/widgets/purchases/items/purchase_items_page/purchase_items_search_bar.dart';
 import 'package:posventa/presentation/providers/purchase_item_providers.dart';
 
 /// Page to display all purchase items across all purchases

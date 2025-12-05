@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:posventa/presentation/widgets/placeholder_page.dart';
+import 'package:posventa/presentation/widgets/common/layouts/placeholder_page.dart';
 
 /// Returns Management Page (Gestión de Devoluciones)
 class ReturnsManagementPage extends StatelessWidget {

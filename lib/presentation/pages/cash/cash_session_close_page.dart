@@ -5,11 +5,11 @@ import 'package:posventa/presentation/providers/providers.dart';
 import 'package:posventa/presentation/providers/auth_provider.dart';
 import 'package:posventa/core/constants/permission_constants.dart';
 import 'package:posventa/presentation/providers/permission_provider.dart';
-import 'package:posventa/presentation/widgets/permission_denied_widget.dart';
+import 'package:posventa/presentation/widgets/common/layouts/permission_denied_widget.dart';
 import 'package:posventa/presentation/widgets/common/centered_form_card.dart';
-import 'package:posventa/presentation/widgets/cash_session_close/cash_session_info_card.dart';
-import 'package:posventa/presentation/widgets/cash_session_close/cash_session_close_form.dart';
-import 'package:posventa/presentation/widgets/cash_session_close/cash_session_close_summary_dialog.dart';
+import 'package:posventa/presentation/widgets/cash_sessions/close/cash_session_info_card.dart';
+import 'package:posventa/presentation/widgets/cash_sessions/close/cash_session_close_form.dart';
+import 'package:posventa/presentation/widgets/cash_sessions/close/cash_session_close_summary_dialog.dart';
 
 class CashSessionClosePage extends ConsumerStatefulWidget {
   final bool isLogoutIntent;

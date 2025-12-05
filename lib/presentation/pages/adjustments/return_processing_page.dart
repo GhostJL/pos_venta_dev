@@ -3,8 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:posventa/domain/entities/sale.dart';
 import 'package:posventa/presentation/providers/return_processing_provider.dart';
-import 'package:posventa/presentation/widgets/return_processing/return_items_selector.dart';
-import 'package:posventa/presentation/widgets/return_processing/return_summary_card.dart';
+import 'package:posventa/presentation/widgets/sales/returns/processing/return_items_selector.dart';
+import 'package:posventa/presentation/widgets/sales/returns/processing/return_summary_card.dart';
 
 class ReturnProcessingPage extends ConsumerStatefulWidget {
   final Sale? sale;

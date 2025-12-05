@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:posventa/presentation/widgets/login/login_footer.dart';
-import 'package:posventa/presentation/widgets/login/login_form.dart';
-import 'package:posventa/presentation/widgets/login/login_header.dart';
+import 'package:posventa/presentation/widgets/auth/login/login_footer.dart';
+import 'package:posventa/presentation/widgets/auth/login/login_form.dart';
+import 'package:posventa/presentation/widgets/auth/login/login_header.dart';
 import 'package:posventa/presentation/providers/auth_provider.dart';
 
 class LoginPage extends ConsumerWidget {

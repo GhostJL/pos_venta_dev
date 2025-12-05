@@ -8,9 +8,9 @@ import 'package:posventa/domain/entities/supplier.dart';
 import 'package:posventa/domain/entities/warehouse.dart';
 import 'package:posventa/presentation/providers/product_provider.dart';
 import 'package:posventa/presentation/providers/purchase_form_provider.dart';
-import 'package:posventa/presentation/widgets/purchase/purchase_item_dialog.dart';
-import 'package:posventa/presentation/widgets/purchase_form/purchase_form_mobile_layout.dart';
-import 'package:posventa/presentation/widgets/purchase_form/purchase_form_desktop_layout.dart';
+import 'package:posventa/presentation/widgets/purchases/dialogs/purchase_item_dialog.dart';
+import 'package:posventa/presentation/widgets/purchases/forms/purchase_form/purchase_form_mobile_layout.dart';
+import 'package:posventa/presentation/widgets/purchases/forms/purchase_form/purchase_form_desktop_layout.dart';
 
 class PurchaseFormPage extends ConsumerStatefulWidget {
   final Map<String, dynamic>? headerData;
