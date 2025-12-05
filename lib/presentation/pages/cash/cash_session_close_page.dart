@@ -6,9 +6,10 @@ import 'package:posventa/presentation/providers/auth_provider.dart';
 import 'package:posventa/core/constants/permission_constants.dart';
 import 'package:posventa/presentation/providers/permission_provider.dart';
 import 'package:posventa/presentation/widgets/permission_denied_widget.dart';
-import 'package:posventa/presentation/widgets/common/error_message_box.dart';
-import 'package:posventa/presentation/widgets/common/money_input_field.dart';
 import 'package:posventa/presentation/widgets/common/centered_form_card.dart';
+import 'package:posventa/presentation/widgets/cash_session_close/cash_session_info_card.dart';
+import 'package:posventa/presentation/widgets/cash_session_close/cash_session_close_form.dart';
+import 'package:posventa/presentation/widgets/cash_session_close/cash_session_close_summary_dialog.dart';
 
 class CashSessionClosePage extends ConsumerStatefulWidget {
   final bool isLogoutIntent;
@@ -20,33 +21,10 @@ class CashSessionClosePage extends ConsumerStatefulWidget {
 }
 
 class _CashSessionClosePageState extends ConsumerState<CashSessionClosePage> {
-  final TextEditingController _amountController = TextEditingController();
   bool _isLoading = false;
   String? _errorMessage;
 
-  @override
-  void dispose() {
-    _amountController.dispose();
-    super.dispose();
-  }
-
-  Future<void> _closeSession() async {
-    final amountText = _amountController.text.trim();
-    if (amountText.isEmpty) {
-      setState(() {
-        _errorMessage = 'Debe ingresar el efectivo contado';
-      });
-      return;
-    }
-
-    final amount = double.tryParse(amountText);
-    if (amount == null || amount < 0) {
-      setState(() {
-        _errorMessage = 'El monto debe ser un número válido y no negativo';
-      });
-      return;
-    }
-
+  Future<void> _handleCloseSession(double amount) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -97,7 +75,8 @@ class _CashSessionClosePageState extends ConsumerState<CashSessionClosePage> {
         await showDialog(
           context: context,
           barrierDismissible: false,
-          builder: (context) => _buildCloseSummaryDialog(closedSession),
+          builder: (context) =>
+              CashSessionCloseSummaryDialog(session: closedSession),
         );
 
         // Invalidar sesión
@@ -120,120 +99,6 @@ class _CashSessionClosePageState extends ConsumerState<CashSessionClosePage> {
         _isLoading = false;
       });
     }
-  }
-
-  Widget _buildCloseSummaryDialog(dynamic session) {
-    final openingBalance = session.openingBalanceCents / 100;
-    final expectedBalance = (session.expectedBalanceCents ?? 0) / 100;
-    final closingBalance = (session.closingBalanceCents ?? 0) / 100;
-    final difference = (session.differenceCents ?? 0) / 100;
-    final isBalanced = difference.abs() < 0.01; // Tolerancia de 1 centavo
-
-    return AlertDialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      title: Row(
-        children: [
-          Icon(
-            isBalanced ? Icons.check_circle : Icons.warning,
-            color: isBalanced ? Colors.green : Colors.orange,
-            size: 32,
-          ),
-          const SizedBox(width: 12),
-          const Expanded(child: Text('Resumen de Cierre')),
-        ],
-      ),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          _buildSummaryRow('Fondo Inicial:', openingBalance),
-          const Divider(height: 24),
-          _buildSummaryRow('Efectivo Esperado:', expectedBalance, isBold: true),
-          const SizedBox(height: 8),
-          _buildSummaryRow('Efectivo Contado:', closingBalance, isBold: true),
-          const Divider(height: 24),
-          _buildSummaryRow(
-            'Diferencia:',
-            difference,
-            isBold: true,
-            color: difference == 0
-                ? Colors.green
-                : (difference > 0 ? Colors.blue : Colors.red),
-          ),
-          if (!isBalanced) ...[
-            const SizedBox(height: 16),
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: difference > 0
-                    ? Theme.of(context).colorScheme.primary
-                    : Theme.of(context).colorScheme.errorContainer,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Row(
-                children: [
-                  Icon(
-                    difference > 0 ? Icons.arrow_upward : Icons.arrow_downward,
-                    color: difference > 0
-                        ? Theme.of(context).colorScheme.primary
-                        : Theme.of(context).colorScheme.error,
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      difference > 0
-                          ? 'Sobrante de efectivo'
-                          : 'Faltante de efectivo',
-                      style: TextStyle(
-                        color: difference > 0
-                            ? Theme.of(context).colorScheme.primary
-                            : Theme.of(context).colorScheme.error,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ],
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: const Text('ACEPTAR'),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildSummaryRow(
-    String label,
-    double amount, {
-    bool isBold = false,
-    Color? color,
-  }) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: isBold ? 16 : 14,
-            fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
-            color: color,
-          ),
-        ),
-        Text(
-          '\$${amount.toStringAsFixed(2)}',
-          style: TextStyle(
-            fontSize: isBold ? 18 : 14,
-            fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
-            color: color,
-          ),
-        ),
-      ],
-    );
   }
 
   @override
@@ -295,94 +160,23 @@ class _CashSessionClosePageState extends ConsumerState<CashSessionClosePage> {
           final openingBalance = session.openingBalanceCents / 100;
           final openedAt = session.openedAt;
           final duration = DateTime.now().difference(openedAt);
-          final hours = duration.inHours;
-          final minutes = duration.inMinutes.remainder(60);
 
           return CenteredFormCard(
             icon: Icons.lock_clock,
             title: 'Cierre de Turno',
             children: [
               // Información de la sesión
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.surfaceContainer,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Column(
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text('Fondo Inicial:'),
-                        Text(
-                          '\$${openingBalance.toStringAsFixed(2)}',
-                          style: const TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text('Tiempo de turno:'),
-                        Text(
-                          '${hours}h ${minutes}m',
-                          style: const TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
+              CashSessionInfoCard(
+                openingBalance: openingBalance,
+                duration: duration,
               ),
               const SizedBox(height: 24),
 
-              // Conteo de efectivo
-              MoneyInputField(
-                controller: _amountController,
-                label: 'Conteo de Efectivo',
-                helpText: 'Ingrese el total de efectivo contado en caja',
-                autofocus: true,
-              ),
-              const SizedBox(height: 24),
-
-              // Mensaje de error
-              if (_errorMessage != null) ...[
-                ErrorMessageBox(message: _errorMessage!),
-                const SizedBox(height: 16),
-              ],
-
-              // Botón de cierre
-              SizedBox(
-                height: 50,
-                child: ElevatedButton(
-                  onPressed: _isLoading ? null : _closeSession,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Theme.of(context).colorScheme.error,
-                    foregroundColor: Theme.of(context).colorScheme.onSurface,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    elevation: 0,
-                  ),
-                  child: _isLoading
-                      ? SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Theme.of(context).colorScheme.onSurface,
-                          ),
-                        )
-                      : const Text(
-                          'CERRAR CAJA',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: 0.5,
-                          ),
-                        ),
-                ),
+              // Formulario de cierre
+              CashSessionCloseForm(
+                onCloseSession: _handleCloseSession,
+                isLoading: _isLoading,
+                errorMessage: _errorMessage,
               ),
             ],
           );
