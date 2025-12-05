@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:posventa/presentation/widgets/purchases/your_purchase/action_button_widget.dart';
+import 'package:posventa/presentation/widgets/common/base/base_button.dart';
 
 class CartItemActions extends StatelessWidget {
   final int index;
@@ -18,14 +18,14 @@ class CartItemActions extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        ActionButtonWidget(
+        BaseButton.action(
           icon: Icons.edit_rounded,
           color: Theme.of(context).colorScheme.primary,
           onPressed: () => onEditItem(index),
           tooltip: 'Editar',
         ),
         SizedBox(width: 4),
-        ActionButtonWidget(
+        BaseButton.action(
           icon: Icons.delete_rounded,
           color: Theme.of(context).colorScheme.error,
           onPressed: () => onRemoveItem(index),

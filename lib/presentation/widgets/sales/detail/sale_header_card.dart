@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:posventa/core/theme/theme.dart';
 import 'package:posventa/domain/entities/sale.dart';
+import 'package:posventa/presentation/widgets/common/base/base_card.dart';
+import 'package:posventa/presentation/widgets/common/base/info_row.dart';
 
 class SaleHeaderCard extends StatelessWidget {
   final Sale sale;
@@ -14,12 +16,8 @@ class SaleHeaderCard extends StatelessWidget {
     final isCancelled = sale.status == SaleStatus.cancelled;
     final isReturned = sale.status == SaleStatus.returned;
 
-    return Container(
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceContainer,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Theme.of(context).colorScheme.outline),
-      ),
+    return BaseCard(
+      borderRadius: 16,
       padding: const EdgeInsets.all(24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -101,72 +99,35 @@ class SaleHeaderCard extends StatelessWidget {
               ),
             ],
           ),
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 16),
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 16),
             child: Divider(),
           ),
-          _buildInfoRow(
-            context,
-            Icons.person_outline,
-            'Cliente',
-            sale.customerName ?? 'Público General',
+          InfoRow(
+            icon: Icons.person_outline,
+            label: 'Cliente',
+            value: sale.customerName ?? 'Público General',
+            labelWidth: 120,
           ),
           const SizedBox(height: 12),
-          _buildInfoRow(
-            context,
-            Icons.warehouse_outlined,
-            'Almacén',
-            'Almacén #${sale.warehouseId}',
+          InfoRow(
+            icon: Icons.warehouse_outlined,
+            label: 'Almacén',
+            value: 'Almacén #${sale.warehouseId}',
+            labelWidth: 120,
           ),
           if (isCancelled) ...[
             const SizedBox(height: 12),
-            _buildInfoRow(
-              context,
-              Icons.cancel_outlined,
-              'Motivo de cancelación',
-              sale.cancellationReason ?? 'No especificado',
+            InfoRow(
+              icon: Icons.cancel_outlined,
+              label: 'Motivo de cancelación',
+              value: sale.cancellationReason ?? 'No especificado',
+              labelWidth: 120,
               isError: true,
             ),
           ],
         ],
       ),
-    );
-  }
-
-  Widget _buildInfoRow(
-    BuildContext context,
-    IconData icon,
-    String label,
-    String value, {
-    bool isError = false,
-  }) {
-    return Row(
-      children: [
-        Icon(icon, size: 16),
-        const SizedBox(width: 8),
-        SizedBox(
-          width: 120,
-          child: Text(
-            label,
-            style: TextStyle(
-              fontSize: 13,
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
-          ),
-        ),
-        Expanded(
-          child: Text(
-            value,
-            style: TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-              color: isError
-                  ? Theme.of(context).colorScheme.error
-                  : Colors.grey.shade800,
-            ),
-          ),
-        ),
-      ],
     );
   }
 }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:posventa/presentation/widgets/common/base/base_card.dart';
 
 class PurchaseTotalsCard extends StatelessWidget {
   final int subtotalCents;
@@ -46,29 +47,21 @@ class PurchaseTotalsCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
+    return BaseCard(
       elevation: 0,
-      surfaceTintColor: Theme.of(context).colorScheme.surface,
-
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: BorderSide(
-          color: Theme.of(context).colorScheme.surfaceContainerHighest,
-        ),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        child: Column(
-          children: [
-            _buildTotalRow(
-              context,
-              'Total',
-              totalCents,
-              isTotal: true,
-              color: Theme.of(context).primaryColor,
-            ),
-          ],
-        ),
+      backgroundColor: Theme.of(context).colorScheme.surface,
+      borderColor: Theme.of(context).colorScheme.surfaceContainerHighest,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      child: Column(
+        children: [
+          _buildTotalRow(
+            context,
+            'Total',
+            totalCents,
+            isTotal: true,
+            color: Theme.of(context).primaryColor,
+          ),
+        ],
       ),
     );
   }

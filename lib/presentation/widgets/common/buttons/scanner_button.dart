@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:posventa/presentation/widgets/common/base/base_button.dart';
 
 class ScannerButton extends StatelessWidget {
   final VoidCallback onPressed;
@@ -26,18 +27,11 @@ class ScannerButton extends StatelessWidget {
     }
 
     if (showLabel) {
-      return ElevatedButton.icon(
+      return BaseButton.elevated(
+        icon: Icons.qr_code_scanner,
+        label: 'Escanear',
         onPressed: onPressed,
-        icon: const Icon(Icons.qr_code_scanner, size: 20),
-        label: const Text('Escanear'),
-        style: ElevatedButton.styleFrom(
-          backgroundColor: Theme.of(context).colorScheme.primary,
-          foregroundColor: Theme.of(context).colorScheme.onSurface,
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-        ),
+        backgroundColor: Theme.of(context).colorScheme.primary,
       );
     }
 

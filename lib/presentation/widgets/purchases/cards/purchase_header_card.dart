@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:posventa/domain/entities/supplier.dart';
 import 'package:posventa/domain/entities/warehouse.dart';
+import 'package:posventa/presentation/widgets/common/base/info_row.dart';
 
 /// Widget that displays purchase header information (supplier, warehouse, invoice, date)
 class PurchaseHeaderCard extends StatelessWidget {
@@ -46,10 +47,10 @@ class PurchaseHeaderCard extends StatelessWidget {
             Row(
               children: [
                 Expanded(
-                  child: _InfoField(label: 'Proveedor:', value: supplier.name),
+                  child: InfoField(label: 'Proveedor:', value: supplier.name),
                 ),
                 Expanded(
-                  child: _InfoField(label: 'Almacén:', value: warehouse.name),
+                  child: InfoField(label: 'Almacén:', value: warehouse.name),
                 ),
               ],
             ),
@@ -58,10 +59,10 @@ class PurchaseHeaderCard extends StatelessWidget {
               children: [
                 if (invoiceNumber.isNotEmpty)
                   Expanded(
-                    child: _InfoField(label: 'Factura:', value: invoiceNumber),
+                    child: InfoField(label: 'Factura:', value: invoiceNumber),
                   ),
                 Expanded(
-                  child: _InfoField(
+                  child: InfoField(
                     label: 'Fecha:',
                     value: _formatDate(purchaseDate),
                   ),
@@ -76,30 +77,5 @@ class PurchaseHeaderCard extends StatelessWidget {
 
   String _formatDate(DateTime date) {
     return "${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}";
-  }
-}
-
-/// Internal widget for displaying a label-value pair
-class _InfoField extends StatelessWidget {
-  final String label;
-  final String value;
-
-  const _InfoField({required this.label, required this.value});
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 12,
-            color: Theme.of(context).colorScheme.onSurfaceVariant,
-          ),
-        ),
-        Text(value, style: const TextStyle(fontWeight: FontWeight.w500)),
-      ],
-    );
   }
 }
