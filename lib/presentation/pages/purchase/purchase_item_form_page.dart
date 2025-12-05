@@ -1,46 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:posventa/domain/entities/product.dart';
-import 'package:posventa/domain/entities/product_variant.dart';
-import 'package:posventa/presentation/providers/product_provider.dart';
 import 'package:posventa/presentation/providers/purchase_item_providers.dart';
-import 'package:posventa/presentation/providers/purchase_providers.dart';
 import 'package:posventa/presentation/providers/purchase_form_provider.dart';
-
-/// Helper class to represent a product or product variant as a single selectable item
-class ProductVariantItem {
-  final Product product;
-  final ProductVariant? variant;
-
-  ProductVariantItem({required this.product, this.variant});
-
-  String get displayName {
-    if (variant != null) {
-      return '${product.name} - ${variant!.description} (Factor: ${variant!.quantity})';
-    }
-    return product.name;
-  }
-
-  int get costPriceCents {
-    return variant?.costPriceCents ?? product.costPriceCents;
-  }
-
-  String get unitOfMeasure {
-    return product.unitOfMeasure;
-  }
-
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is ProductVariantItem &&
-          runtimeType == other.runtimeType &&
-          product.id == other.product.id &&
-          variant?.id == other.variant?.id;
-
-  @override
-  int get hashCode => product.id.hashCode ^ (variant?.id.hashCode ?? 0);
-}
+import 'package:posventa/presentation/viewmodels/product_variant_item.dart';
+import 'package:posventa/presentation/widgets/purchase_item_form/product_selection_section.dart';
+import 'package:posventa/presentation/widgets/purchase_item_form/purchase_selection_section.dart';
+import 'package:posventa/presentation/widgets/purchase_item_form/quantity_cost_section.dart';
+import 'package:posventa/presentation/widgets/purchase_item_form/additional_info_section.dart';
+import 'package:posventa/presentation/widgets/purchase_item_form/totals_preview_section.dart';
 
 /// Form page for creating or editing a purchase item
 /// Can be used standalone or as part of a purchase creation flow
@@ -161,8 +129,6 @@ class _PurchaseItemFormPageState extends ConsumerState<PurchaseItemFormPage> {
 
   @override
   Widget build(BuildContext context) {
-    final productsAsync = ref.watch(productNotifierProvider);
-    final purchasesAsync = ref.watch(purchaseProvider);
     final formState = ref.watch(purchaseItemFormProvider);
 
     return Scaffold(
@@ -190,55 +156,8 @@ class _PurchaseItemFormPageState extends ConsumerState<PurchaseItemFormPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Product Selection
-                    Text(
-                      'Información del Producto',
-                      style: Theme.of(context).textTheme.titleMedium,
-                    ),
-                    const SizedBox(height: 12),
-                    DropdownButtonFormField<ProductVariantItem>(
-                      initialValue: _selectedItem,
-                      decoration: const InputDecoration(
-                        labelText: 'Producto / Variante *',
-                        border: OutlineInputBorder(),
-                        prefixIcon: Icon(Icons.shopping_bag),
-                      ),
-                      items: productsAsync.when(
-                        data: (products) {
-                          // Flatten products and variants into a single list
-                          final List<ProductVariantItem> items = [];
-                          for (final product in products) {
-                            if (product.variants != null &&
-                                product.variants!.isNotEmpty) {
-                              // Add each variant as a separate item
-                              for (final variant in product.variants!) {
-                                items.add(
-                                  ProductVariantItem(
-                                    product: product,
-                                    variant: variant,
-                                  ),
-                                );
-                              }
-                            } else {
-                              // Add product without variant
-                              items.add(ProductVariantItem(product: product));
-                            }
-                          }
-                          return items
-                              .map(
-                                (item) => DropdownMenuItem(
-                                  value: item,
-                                  child: Text(
-                                    item.displayName,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ),
-                              )
-                              .toList();
-                        },
-                        loading: () => [],
-                        error: (_, __) => [],
-                      ),
+                    ProductSelectionSection(
+                      selectedItem: _selectedItem,
                       onChanged: (value) {
                         setState(() {
                           _selectedItem = value;
@@ -249,237 +168,52 @@ class _PurchaseItemFormPageState extends ConsumerState<PurchaseItemFormPage> {
                           }
                         });
                       },
-                      validator: (value) => value == null ? 'Requerido' : null,
                     ),
 
                     const SizedBox(height: 24),
 
-                    // Purchase Selection (if not pre-selected)
                     if (widget.purchaseId == null) ...[
-                      Text(
-                        'Compra Asociada',
-                        style: Theme.of(context).textTheme.titleMedium,
-                      ),
-                      const SizedBox(height: 12),
-                      DropdownButtonFormField<int>(
-                        initialValue: _selectedPurchaseId,
-                        decoration: const InputDecoration(
-                          labelText: 'Compra *',
-                          border: OutlineInputBorder(),
-                          prefixIcon: Icon(Icons.shopping_cart),
-                        ),
-                        items: purchasesAsync.when(
-                          data: (purchases) => purchases
-                              .map(
-                                (p) => DropdownMenuItem(
-                                  value: p.id,
-                                  child: Text(
-                                    '${p.purchaseNumber} - ${p.supplierName ?? 'N/A'}',
-                                  ),
-                                ),
-                              )
-                              .toList(),
-                          loading: () => [],
-                          error: (_, __) => [],
-                        ),
+                      PurchaseSelectionSection(
+                        selectedPurchaseId: _selectedPurchaseId,
                         onChanged: (value) {
                           setState(() => _selectedPurchaseId = value);
                         },
-                        validator: (value) =>
-                            value == null ? 'Requerido' : null,
                       ),
                       const SizedBox(height: 24),
                     ],
 
-                    // Quantity and Cost
-                    Text(
-                      'Cantidad y Precio',
-                      style: Theme.of(context).textTheme.titleMedium,
-                    ),
-                    const SizedBox(height: 12),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: TextFormField(
-                            controller: _quantityController,
-                            decoration: const InputDecoration(
-                              labelText: 'Cantidad *',
-                              border: OutlineInputBorder(),
-                              prefixIcon: Icon(Icons.inventory),
-                            ),
-                            keyboardType: const TextInputType.numberWithOptions(
-                              decimal: true,
-                            ),
-                            validator: (value) {
-                              if (value == null || value.isEmpty) {
-                                return 'Requerido';
-                              }
-                              if (double.tryParse(value) == null) {
-                                return 'Inválido';
-                              }
-                              if (double.parse(value) <= 0) {
-                                return 'Debe ser mayor a 0';
-                              }
-                              return null;
-                            },
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: TextFormField(
-                            controller: _unitCostController,
-                            decoration: const InputDecoration(
-                              labelText: 'Costo Unitario *',
-                              border: OutlineInputBorder(),
-                              prefixIcon: Icon(Icons.attach_money),
-                              prefixText: '\$ ',
-                            ),
-                            keyboardType: const TextInputType.numberWithOptions(
-                              decimal: true,
-                            ),
-                            validator: (value) {
-                              if (value == null || value.isEmpty) {
-                                return 'Requerido';
-                              }
-                              if (double.tryParse(value) == null) {
-                                return 'Inválido';
-                              }
-                              if (double.parse(value) < 0) {
-                                return 'No puede ser negativo';
-                              }
-                              return null;
-                            },
-                          ),
-                        ),
-                      ],
+                    QuantityCostSection(
+                      quantityController: _quantityController,
+                      unitCostController: _unitCostController,
                     ),
 
                     const SizedBox(height: 24),
 
-                    // Optional Fields
-                    Text(
-                      'Información Adicional (Opcional)',
-                      style: Theme.of(context).textTheme.titleMedium,
-                    ),
-                    const SizedBox(height: 12),
-
-                    // Expiration Date
-                    InkWell(
-                      onTap: () async {
-                        final picked = await showDatePicker(
-                          context: context,
-                          initialDate: _expirationDate ?? DateTime.now(),
-                          firstDate: DateTime.now(),
-                          lastDate: DateTime.now().add(
-                            const Duration(days: 3650),
-                          ),
-                        );
-                        if (picked != null) {
-                          setState(() => _expirationDate = picked);
-                        }
+                    AdditionalInfoSection(
+                      expirationDate: _expirationDate,
+                      onDateChanged: (picked) {
+                        setState(() => _expirationDate = picked);
                       },
-                      child: InputDecorator(
-                        decoration: const InputDecoration(
-                          labelText: 'Fecha de Vencimiento',
-                          border: OutlineInputBorder(),
-                          prefixIcon: Icon(Icons.event_busy),
-                        ),
-                        child: Text(
-                          _expirationDate != null
-                              ? '${_expirationDate!.day}/${_expirationDate!.month}/${_expirationDate!.year}'
-                              : 'Sin fecha de vencimiento',
-                          style: TextStyle(
-                            color: _expirationDate != null
-                                ? Colors.black
-                                : Theme.of(
-                                    context,
-                                  ).colorScheme.onSurfaceVariant,
-                          ),
-                        ),
-                      ),
                     ),
 
                     const SizedBox(height: 24),
 
-                    // Calculated Totals Preview
-                    if (_quantityController.text.isNotEmpty &&
-                        _unitCostController.text.isNotEmpty &&
-                        double.tryParse(_quantityController.text) != null &&
-                        double.tryParse(_unitCostController.text) != null) ...[
-                      Card(
-                        color: Theme.of(context).primaryColor.withAlpha(100),
-                        child: Padding(
-                          padding: const EdgeInsets.all(16),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text(
-                                'Resumen',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 16,
-                                ),
-                              ),
-                              const SizedBox(height: 12),
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  const Text('Subtotal:'),
-                                  Text(
-                                    '\$${(double.parse(_quantityController.text) * double.parse(_unitCostController.text)).toStringAsFixed(2)}',
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 8),
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  const Text('Impuestos:'),
-                                  Text(
-                                    '\$0.00',
-                                    style: TextStyle(
-                                      color: Theme.of(
-                                        context,
-                                      ).colorScheme.onSurfaceVariant,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              const Divider(),
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  const Text(
-                                    'TOTAL:',
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 16,
-                                    ),
-                                  ),
-                                  Text(
-                                    '\$${(double.parse(_quantityController.text) * double.parse(_unitCostController.text)).toStringAsFixed(2)}',
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 16,
-                                      color: Theme.of(context).primaryColor,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-                    ],
+                    // Rebuild TotalsPreviewSection when text changes
+                    ListenableBuilder(
+                      listenable: Listenable.merge([
+                        _quantityController,
+                        _unitCostController,
+                      ]),
+                      builder: (context, _) {
+                        return TotalsPreviewSection(
+                          quantity: _quantityController.text,
+                          unitCost: _unitCostController.text,
+                        );
+                      },
+                    ),
 
-                    // Save Button
+                    const SizedBox(height: 24),
+
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton.icon(
