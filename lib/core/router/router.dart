@@ -12,7 +12,7 @@ import 'package:posventa/presentation/widgets/cash_session_guard.dart';
 import 'package:posventa/domain/entities/sale.dart';
 import 'package:posventa/presentation/providers/auth_provider.dart';
 
-import 'package:posventa/presentation/widgets/product_form_page.dart';
+import 'package:posventa/presentation/pages/products/product_form_page.dart';
 import 'package:posventa/presentation/widgets/product/variant_form_page.dart';
 import 'package:posventa/presentation/widgets/brand_form.dart';
 import 'package:posventa/presentation/widgets/category_form.dart';
