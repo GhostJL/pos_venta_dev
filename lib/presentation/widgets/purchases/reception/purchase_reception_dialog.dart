@@ -199,11 +199,8 @@ class _PurchaseReceptionDialogState
 
                   return ListView.separated(
                     itemCount: widget.purchase.items.length,
-                    separatorBuilder: (_, __) => Divider(
-                      color: Theme.of(
-                        context,
-                      ).colorScheme.surfaceContainerHighest,
-                    ),
+                    separatorBuilder: (_, __) =>
+                        Divider(color: Theme.of(context).colorScheme.outline),
                     itemBuilder: (context, index) {
                       final item = widget.purchase.items[index];
                       final remaining = item.quantity - item.quantityReceived;

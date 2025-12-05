@@ -183,7 +183,7 @@ class SaleCardHistoryWidget extends ConsumerWidget {
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 child: Divider(
                   height: 1,
-                  color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                  color: Theme.of(context).colorScheme.outline,
                 ),
               ),
 
@@ -215,9 +215,7 @@ class SaleCardHistoryWidget extends ConsumerWidget {
                   Container(
                     width: 1,
                     height: 28,
-                    color: Theme.of(
-                      context,
-                    ).colorScheme.surfaceContainerHighest,
+                    color: Theme.of(context).colorScheme.outline,
                   ),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -243,9 +241,7 @@ class SaleCardHistoryWidget extends ConsumerWidget {
                   Container(
                     width: 1,
                     height: 28,
-                    color: Theme.of(
-                      context,
-                    ).colorScheme.surfaceContainerHighest,
+                    color: Theme.of(context).colorScheme.outline,
                   ),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.end,

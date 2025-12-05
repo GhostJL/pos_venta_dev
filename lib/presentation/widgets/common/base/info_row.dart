@@ -87,7 +87,7 @@ class InfoRow extends StatelessWidget {
               fontWeight: valueBold ? FontWeight.w600 : FontWeight.normal,
               color: isError
                   ? colorScheme.error
-                  : valueColor ?? Colors.grey.shade800,
+                  : valueColor ?? Theme.of(context).colorScheme.onSurface,
             ),
           ),
         ),

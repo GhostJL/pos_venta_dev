@@ -50,7 +50,7 @@ class PurchaseTotalsCard extends StatelessWidget {
     return BaseCard(
       elevation: 0,
       backgroundColor: Theme.of(context).colorScheme.surface,
-      borderColor: Theme.of(context).colorScheme.surfaceContainerHighest,
+      borderColor: Theme.of(context).colorScheme.outline,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Column(
         children: [

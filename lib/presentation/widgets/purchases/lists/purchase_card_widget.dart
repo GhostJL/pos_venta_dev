@@ -169,7 +169,7 @@ class PurchaseCard extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 child: Divider(
                   height: 1,
-                  color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                  color: Theme.of(context).colorScheme.outline,
                 ),
               ),
 

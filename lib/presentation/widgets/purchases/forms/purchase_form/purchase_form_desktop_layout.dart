@@ -52,9 +52,7 @@ class PurchaseFormDesktopLayout extends StatelessWidget {
                     flex: 6,
                     child: Container(
                       padding: const EdgeInsets.all(12),
-                      color: Theme.of(
-                        context,
-                      ).colorScheme.surfaceContainerHighest,
+                      color: Theme.of(context).colorScheme.surface,
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [

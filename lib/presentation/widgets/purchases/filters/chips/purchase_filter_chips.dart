@@ -58,9 +58,7 @@ class PurchaseFilterChips extends ConsumerWidget {
                       : null;
                 },
                 selectedColor: chipColor?.withValues(alpha: 0.1),
-                backgroundColor: Theme.of(
-                  context,
-                ).colorScheme.surfaceContainerHighest,
+                backgroundColor: Theme.of(context).colorScheme.outline,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8),
                   side: BorderSide(

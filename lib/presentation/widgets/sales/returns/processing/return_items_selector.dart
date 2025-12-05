@@ -71,7 +71,7 @@ class _ReturnItemsSelectorState extends ConsumerState<ReturnItemsSelector> {
   Widget _buildFullyReturnedItem(SaleItem item) {
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
-      color: Theme.of(context).colorScheme.surfaceContainerHighest,
+      color: Theme.of(context).colorScheme.outline,
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Row(

@@ -191,7 +191,9 @@ class _CashSessionOpenPageState extends ConsumerState<CashSessionOpenPage> {
               }
               return Container(
                 decoration: BoxDecoration(
-                  border: Border.all(color: Colors.grey.shade300),
+                  border: Border.all(
+                    color: Theme.of(context).colorScheme.outline,
+                  ),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: DropdownButtonHideUnderline(

@@ -55,9 +55,7 @@ class ReceptionSummaryCard extends StatelessWidget {
 
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
-        side: BorderSide(
-          color: Theme.of(context).colorScheme.surfaceContainerHighest,
-        ),
+        side: BorderSide(color: Theme.of(context).colorScheme.outline),
       ),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -73,7 +71,7 @@ class ReceptionSummaryCard extends StatelessWidget {
             Container(
               width: 1,
               height: 28,
-              color: Theme.of(context).colorScheme.surfaceContainerHighest,
+              color: Theme.of(context).colorScheme.outline,
             ),
             _buildColumn(
               'Ya Recibido',
@@ -84,7 +82,7 @@ class ReceptionSummaryCard extends StatelessWidget {
             Container(
               width: 1,
               height: 28,
-              color: Theme.of(context).colorScheme.surfaceContainerHighest,
+              color: Theme.of(context).colorScheme.outline,
             ),
             _buildColumn(
               'A Recibir',

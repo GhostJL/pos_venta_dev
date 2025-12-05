@@ -187,7 +187,7 @@ class _ProductGridSectionState extends ConsumerState<ProductGridSection> {
             ),
           ],
         ),
-        backgroundColor: Colors.grey.shade800,
+        backgroundColor: Theme.of(context).colorScheme.onSurface,
         duration: const Duration(milliseconds: 800),
         behavior: SnackBarBehavior.floating,
         margin: EdgeInsets.only(

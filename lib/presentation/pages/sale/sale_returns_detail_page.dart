@@ -63,7 +63,7 @@ class SaleReturnsDetailPage extends ConsumerWidget {
                   Icon(
                     Icons.inbox_outlined,
                     size: 64,
-                    color: Colors.grey.shade300,
+                    color: Theme.of(context).colorScheme.outline,
                   ),
                   const SizedBox(height: 16),
                   Text(
