@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:posventa/core/theme/theme.dart';
 import 'package:posventa/domain/entities/product.dart';
 import 'package:posventa/domain/entities/product_variant.dart';
 import 'package:posventa/presentation/providers/product_provider.dart';
@@ -90,14 +91,14 @@ class _PurchaseProductGridState extends ConsumerState<PurchaseProductGrid> {
               'Agregado: ${product.name} ${matchedVariant != null ? "(${matchedVariant.description})" : ""}',
             ),
             duration: const Duration(milliseconds: 800),
-            backgroundColor: Colors.green,
+            backgroundColor: AppTheme.transactionSuccess,
           ),
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Producto no encontrado: $barcode'),
-            backgroundColor: Colors.orange,
+            backgroundColor: AppTheme.transactionPending,
           ),
         );
       }
@@ -178,7 +179,7 @@ class _PurchaseProductGridState extends ConsumerState<PurchaseProductGrid> {
                 return const Center(
                   child: Text(
                     'No se encontraron productos',
-                    style: TextStyle(color: Colors.grey),
+                    style: TextStyle(color: Color(0xFF9E9E9E)),
                   ),
                 );
               }
@@ -231,7 +232,7 @@ class _PurchaseProductGridState extends ConsumerState<PurchaseProductGrid> {
             error: (err, stack) => Center(
               child: Text(
                 'Error: $err',
-                style: const TextStyle(color: Colors.red),
+                style: TextStyle(color: Theme.of(context).colorScheme.error),
               ),
             ),
           ),

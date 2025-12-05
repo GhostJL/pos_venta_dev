@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:posventa/core/theme/theme.dart';
 import 'package:posventa/domain/entities/purchase.dart';
 
 /// Widget reutilizable para mostrar el diálogo de confirmación de cancelación de compra.
@@ -40,7 +41,7 @@ class PurchaseCancelDialog {
                   children: [
                     Icon(
                       Icons.warning_amber_rounded,
-                      color: Colors.orange.shade800,
+                      color: AppTheme.transactionPending,
                     ),
                     const SizedBox(width: 12),
                     Expanded(
@@ -66,8 +67,8 @@ class PurchaseCancelDialog {
           ElevatedButton.icon(
             onPressed: () => context.pop(true),
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-              foregroundColor: Theme.of(context).colorScheme.onSurface,
+              backgroundColor: Theme.of(context).colorScheme.error,
+              foregroundColor: Theme.of(context).colorScheme.onError,
             ),
             icon: const Icon(Icons.cancel),
             label: const Text('Sí, Cancelar'),

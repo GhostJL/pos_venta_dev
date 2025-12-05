@@ -41,7 +41,7 @@ class SaleTotalsCard extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
-                  color: Colors.grey.shade800,
+                  color: Theme.of(context).colorScheme.onSurface,
                 ),
               ),
               Text(
@@ -82,7 +82,7 @@ class SaleTotalsCard extends StatelessWidget {
             fontWeight: FontWeight.w600,
             color: isDiscount
                 ? Theme.of(context).colorScheme.tertiary
-                : Colors.grey.shade800,
+                : Theme.of(context).colorScheme.onSurface,
             letterSpacing: -0.2,
           ),
         ),

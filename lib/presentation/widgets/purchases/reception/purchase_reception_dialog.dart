@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:posventa/core/theme/theme.dart';
 import 'package:posventa/domain/entities/purchase.dart';
 import 'package:posventa/domain/entities/purchase_reception_item.dart';
 import 'package:posventa/presentation/providers/product_provider.dart';
@@ -136,7 +137,7 @@ class _PurchaseReceptionDialogState
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       title: Row(
         children: [
-          const Icon(Icons.inventory_2, color: Colors.blue),
+          Icon(Icons.inventory_2, color: AppTheme.alertInfo),
           const SizedBox(width: 8),
           Expanded(
             child: Column(
@@ -222,9 +223,9 @@ class _PurchaseReceptionDialogState
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: ListTile(
-                            leading: const Icon(
+                            leading: Icon(
                               Icons.check_circle,
-                              color: Colors.green,
+                              color: AppTheme.transactionSuccess,
                             ),
                             title: Text(
                               item.productName ?? 'Producto',

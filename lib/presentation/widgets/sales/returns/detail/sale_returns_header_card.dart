@@ -98,7 +98,7 @@ class SaleReturnsHeaderCard extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
-                  color: Colors.grey.shade800,
+                  color: Theme.of(context).colorScheme.onSurface,
                 ),
               ),
               Text(

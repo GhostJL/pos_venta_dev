@@ -95,25 +95,8 @@ class PurchaseItemListTile extends StatelessWidget {
                 itemBuilder: (context) => [
                   const PopupMenuItem(
                     value: 'view',
-                    child: Row(
-                      children: [
-                        Icon(Icons.visibility, size: 20),
-                        SizedBox(width: 8),
-                        Text('Ver Detalle'),
-                      ],
-                    ),
+                    child: Row(children: [Icon(Icons.visibility, size: 20)]),
                   ),
-                  if (onDelete != null)
-                    const PopupMenuItem(
-                      value: 'delete',
-                      child: Row(
-                        children: [
-                          Icon(Icons.delete, size: 20, color: Colors.red),
-                          SizedBox(width: 8),
-                          Text('Eliminar', style: TextStyle(color: Colors.red)),
-                        ],
-                      ),
-                    ),
                 ],
               ),
             ],

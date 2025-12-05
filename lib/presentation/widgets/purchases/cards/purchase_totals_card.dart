@@ -29,7 +29,7 @@ class PurchaseTotalsCard extends StatelessWidget {
             fontSize: isTotal ? 13 : 12,
             fontWeight: isTotal ? FontWeight.w600 : FontWeight.w500,
             color: isTotal
-                ? Colors.grey.shade800
+                ? Theme.of(context).colorScheme.onSurface
                 : Theme.of(context).colorScheme.onSurfaceVariant,
           ),
         ),
@@ -38,7 +38,7 @@ class PurchaseTotalsCard extends StatelessWidget {
           style: TextStyle(
             fontSize: isTotal ? 16 : 13,
             fontWeight: isTotal ? FontWeight.w700 : FontWeight.w600,
-            color: color ?? Colors.black87,
+            color: color ?? Theme.of(context).colorScheme.onSurface,
           ),
         ),
       ],

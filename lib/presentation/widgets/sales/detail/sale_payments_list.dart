@@ -62,7 +62,7 @@ class SalePaymentsList extends StatelessWidget {
                         style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
-                          color: Colors.grey.shade800,
+                          color: Theme.of(context).colorScheme.onSurface,
                         ),
                       ),
                       const SizedBox(height: 2),
@@ -81,7 +81,7 @@ class SalePaymentsList extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w700,
-                    color: Colors.grey.shade800,
+                    color: Theme.of(context).colorScheme.onSurface,
                     letterSpacing: -0.2,
                   ),
                 ),

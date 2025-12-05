@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:posventa/core/theme/theme.dart';
 import 'package:posventa/domain/entities/purchase.dart';
 
 class PurchaseInfoCard extends StatelessWidget {
@@ -27,10 +28,10 @@ class PurchaseInfoCard extends StatelessWidget {
 
           Text(
             value,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.w500,
-              color: Colors.black87,
+              color: Theme.of(context).colorScheme.onSurface,
             ),
             overflow: TextOverflow.ellipsis,
           ),
@@ -49,7 +50,7 @@ class PurchaseInfoCard extends StatelessWidget {
     Color statusColor;
     String statusText;
     if (isPending) {
-      statusColor = Colors.orange.shade400;
+      statusColor = AppTheme.transactionPending;
       statusText = 'Pendiente';
     } else if (isCancelled) {
       statusColor = Theme.of(context).colorScheme.error;

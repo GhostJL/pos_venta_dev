@@ -125,7 +125,9 @@ class SaleReturnCard extends StatelessWidget {
                       child: Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: Colors.grey.shade50,
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.surfaceContainerHighest,
                           borderRadius: BorderRadius.circular(8),
                           border: Border.all(
                             color: Theme.of(context).colorScheme.outline,
@@ -145,7 +147,9 @@ class SaleReturnCard extends StatelessWidget {
                                     ).colorScheme.onSurface,
                                     borderRadius: BorderRadius.circular(6),
                                     border: Border.all(
-                                      color: Colors.grey.shade300,
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.outline,
                                     ),
                                   ),
                                   child: Center(
@@ -169,7 +173,9 @@ class SaleReturnCard extends StatelessWidget {
                                     style: TextStyle(
                                       fontSize: 13,
                                       fontWeight: FontWeight.w500,
-                                      color: Colors.grey.shade800,
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.onSurface,
                                     ),
                                   ),
                                 ),

@@ -59,7 +59,7 @@ class SaleActionButtons extends ConsumerWidget {
             },
             style: OutlinedButton.styleFrom(
               foregroundColor: Theme.of(context).colorScheme.onSurfaceVariant,
-              side: BorderSide(color: Colors.grey.shade300),
+              side: BorderSide(color: Theme.of(context).colorScheme.outline),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
@@ -102,7 +102,7 @@ class SaleActionButtons extends ConsumerWidget {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Venta cancelada exitosamente'),
-            backgroundColor: Colors.grey.shade800,
+            backgroundColor: Theme.of(context).colorScheme.onSurface,
           ),
         );
         context.pop();

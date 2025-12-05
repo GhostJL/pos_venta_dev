@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:posventa/core/theme/theme.dart';
 import 'package:posventa/domain/entities/product.dart';
 import 'package:posventa/domain/entities/product_variant.dart';
 import 'package:posventa/domain/entities/purchase_item.dart';
@@ -139,14 +140,18 @@ class ReceptionItemCard extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.bold,
-                      color: diff > 0 ? Colors.red : Colors.green,
+                      color: diff > 0
+                          ? Theme.of(context).colorScheme.error
+                          : AppTheme.transactionSuccess,
                     ),
                   ),
                   const SizedBox(width: 4),
                   Icon(
                     diff > 0 ? Icons.arrow_upward : Icons.arrow_downward,
                     size: 12,
-                    color: diff > 0 ? Colors.red : Colors.green,
+                    color: diff > 0
+                        ? Theme.of(context).colorScheme.error
+                        : AppTheme.transactionSuccess,
                   ),
                 ],
               )

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:posventa/core/theme/theme.dart';
 import 'package:posventa/domain/entities/purchase.dart';
 import 'package:posventa/presentation/providers/purchase_filter_chip_provider.dart';
 
@@ -16,10 +17,10 @@ class PurchaseFilterChips extends ConsumerWidget {
   };
 
   static const _colors = {
-    PurchaseStatus.pending: Colors.orange,
-    PurchaseStatus.partial: Colors.blue,
-    PurchaseStatus.completed: Colors.green,
-    PurchaseStatus.cancelled: Colors.red,
+    PurchaseStatus.pending: AppTheme.transactionPending,
+    PurchaseStatus.partial: AppTheme.alertInfo,
+    PurchaseStatus.completed: AppTheme.transactionSuccess,
+    PurchaseStatus.cancelled: AppTheme.transactionFailed,
   };
 
   @override
@@ -65,7 +66,7 @@ class PurchaseFilterChips extends ConsumerWidget {
                   side: BorderSide(
                     color: isSelected
                         ? chipColor ?? Theme.of(context).primaryColor
-                        : Colors.grey.shade300,
+                        : Theme.of(context).colorScheme.outline,
                   ),
                 ),
                 pressElevation: 0,

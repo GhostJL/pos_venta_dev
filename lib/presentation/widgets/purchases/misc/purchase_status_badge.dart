@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:posventa/core/theme/theme.dart';
 import 'package:posventa/domain/entities/purchase.dart';
 
 /// Widget reutilizable para mostrar el badge de estado de una compra.
@@ -20,19 +21,19 @@ class PurchaseStatusBadge extends StatelessWidget {
 
     switch (status) {
       case PurchaseStatus.pending:
-        color = Colors.orange;
+        color = AppTheme.transactionPending;
         text = 'PENDIENTE';
         break;
       case PurchaseStatus.completed:
-        color = Colors.green;
+        color = AppTheme.transactionSuccess;
         text = 'COMPLETADA';
         break;
       case PurchaseStatus.cancelled:
-        color = Colors.red;
+        color = AppTheme.transactionFailed;
         text = 'CANCELADA';
         break;
       case PurchaseStatus.partial:
-        color = Colors.blue;
+        color = AppTheme.alertInfo;
         text = 'PARCIAL';
         break;
     }

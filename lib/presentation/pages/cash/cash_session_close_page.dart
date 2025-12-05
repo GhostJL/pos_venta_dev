@@ -40,8 +40,8 @@ class _CashSessionClosePageState extends ConsumerState<CashSessionClosePage> {
           ElevatedButton(
             onPressed: () => Navigator.of(context).pop(true),
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-              foregroundColor: Theme.of(context).colorScheme.onSurface,
+              backgroundColor: Theme.of(context).colorScheme.error,
+              foregroundColor: Theme.of(context).colorScheme.onError,
             ),
             child: const Text('Confirmar Cierre'),
           ),
@@ -132,9 +132,16 @@ class _CashSessionClosePageState extends ConsumerState<CashSessionClosePage> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.error_outline, size: 64, color: Colors.red),
+              Icon(
+                Icons.error_outline,
+                size: 64,
+                color: Theme.of(context).colorScheme.error,
+              ),
               const SizedBox(height: 16),
-              Text('Error: $error', style: const TextStyle(color: Colors.red)),
+              Text(
+                'Error: $error',
+                style: TextStyle(color: Theme.of(context).colorScheme.error),
+              ),
             ],
           ),
         ),
@@ -144,7 +151,11 @@ class _CashSessionClosePageState extends ConsumerState<CashSessionClosePage> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(Icons.info_outline, size: 64, color: Colors.grey),
+                  Icon(
+                    Icons.info_outline,
+                    size: 64,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
                   const SizedBox(height: 16),
                   const Text('No hay una sesión de caja abierta'),
                   const SizedBox(height: 24),

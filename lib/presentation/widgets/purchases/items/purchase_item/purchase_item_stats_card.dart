@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:posventa/core/theme/theme.dart';
 import 'package:posventa/domain/entities/purchase_item.dart';
 
 /// Widget to display purchase item statistics
@@ -49,7 +50,7 @@ class PurchaseItemStatsCard extends StatelessWidget {
                     icon: Icons.inventory_2,
                     label: 'Total Artículos',
                     value: totalItems.toString(),
-                    color: Colors.blue,
+                    color: AppTheme.alertInfo,
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -58,7 +59,7 @@ class PurchaseItemStatsCard extends StatelessWidget {
                     icon: Icons.shopping_cart,
                     label: 'Cantidad Total',
                     value: totalQuantity.toStringAsFixed(0),
-                    color: Colors.green,
+                    color: AppTheme.transactionSuccess,
                   ),
                 ),
               ],
@@ -71,7 +72,7 @@ class PurchaseItemStatsCard extends StatelessWidget {
                     icon: Icons.attach_money,
                     label: 'Valor Total',
                     value: '\$${totalValue.toStringAsFixed(2)}',
-                    color: Colors.orange,
+                    color: AppTheme.transactionPending,
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -80,7 +81,7 @@ class PurchaseItemStatsCard extends StatelessWidget {
                     icon: Icons.calculate,
                     label: 'Costo Promedio',
                     value: '\$${averageCost.toStringAsFixed(2)}',
-                    color: Colors.purple,
+                    color: AppTheme.brandSecondary,
                   ),
                 ),
               ],

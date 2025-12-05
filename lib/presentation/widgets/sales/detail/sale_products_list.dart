@@ -166,7 +166,7 @@ class SaleProductsList extends StatelessWidget {
                             padding: const EdgeInsets.only(top: 4),
                             child: Divider(
                               height: 1,
-                              color: Colors.grey.shade300,
+                              color: Theme.of(context).colorScheme.outline,
                             ),
                           ),
                           const SizedBox(height: 6),
