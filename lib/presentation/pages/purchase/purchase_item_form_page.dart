@@ -224,9 +224,6 @@ class _PurchaseItemFormPageState extends ConsumerState<PurchaseItemFormPage> {
                               ? 'Crear Artículo'
                               : 'Guardar Cambios',
                         ),
-                        style: ElevatedButton.styleFrom(
-                          padding: const EdgeInsets.all(16),
-                        ),
                       ),
                     ),
                   ],

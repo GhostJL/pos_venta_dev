@@ -30,10 +30,6 @@ void confirmDelete(BuildContext context, WidgetRef ref, item) {
                 ),
               );
             },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Theme.of(context).colorScheme.error,
-              foregroundColor: Theme.of(context).colorScheme.onSurface,
-            ),
             child: Text('Eliminar'),
           ),
         ],

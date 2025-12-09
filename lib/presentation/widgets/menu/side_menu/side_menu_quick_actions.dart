@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:posventa/domain/entities/user.dart';
 import 'package:posventa/presentation/widgets/menu/side_menu/quick_action_button.dart';
+import 'package:posventa/core/theme/theme.dart';
 
 class SideMenuQuickActions extends StatelessWidget {
   final User? user;
@@ -39,7 +40,7 @@ class SideMenuQuickActions extends StatelessWidget {
                   child: QuickActionButton(
                     icon: Icons.point_of_sale_rounded,
                     label: 'POS',
-                    color: Colors.green,
+                    color: AppTheme.transactionSuccess,
                     onTap: () => context.go('/sales'),
                   ),
                 ),
@@ -48,7 +49,7 @@ class SideMenuQuickActions extends StatelessWidget {
                   child: QuickActionButton(
                     icon: Icons.keyboard_return_rounded,
                     label: 'Devolución',
-                    color: Colors.orange,
+                    color: AppTheme.transactionPending,
                     onTap: () => context.go('/returns'),
                   ),
                 ),

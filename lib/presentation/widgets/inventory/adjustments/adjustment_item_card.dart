@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:posventa/presentation/providers/inventory_adjustment_provider.dart';
+import 'package:posventa/core/theme/theme.dart';
 
 class AdjustmentItemCard extends StatelessWidget {
   final AdjustmentItem item;
@@ -21,15 +22,12 @@ class AdjustmentItemCard extends StatelessWidget {
     final isPositive = item.quantity > 0;
     final isNegative = item.quantity < 0;
     final color = isPositive
-        ? Colors.green
+        ? AppTheme.transactionSuccess
         : isNegative
-        ? Colors.red
+        ? AppTheme.transactionFailed
         : Colors.grey;
 
     return Card(
-      margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -51,13 +49,19 @@ class AdjustmentItemCard extends StatelessWidget {
                       ),
                       Text(
                         'Código: ${item.product.code}',
-                        style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                          fontSize: 12,
+                        ),
                       ),
                     ],
                   ),
                 ),
                 IconButton(
-                  icon: const Icon(Icons.delete_outline, color: Colors.red),
+                  icon: Icon(
+                    Icons.delete_outline,
+                    color: Theme.of(context).colorScheme.error,
+                  ),
                   onPressed: onRemove,
                 ),
               ],
@@ -69,9 +73,12 @@ class AdjustmentItemCard extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
+                      Text(
                         'Stock Actual',
-                        style: TextStyle(fontSize: 12, color: Colors.grey),
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
                       ),
                       Text(
                         '${item.currentStock}',
@@ -87,9 +94,12 @@ class AdjustmentItemCard extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
+                      Text(
                         'Ajuste',
-                        style: TextStyle(fontSize: 12, color: Colors.grey),
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
                       ),
                       Row(
                         children: [
@@ -120,9 +130,12 @@ class AdjustmentItemCard extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
+                      Text(
                         'Nuevo Stock',
-                        style: TextStyle(fontSize: 12, color: Colors.grey),
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
                       ),
                       Text(
                         '${item.currentStock + item.quantity}',

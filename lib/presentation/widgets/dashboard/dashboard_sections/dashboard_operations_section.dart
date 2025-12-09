@@ -3,14 +3,8 @@ import 'package:go_router/go_router.dart';
 import 'package:posventa/presentation/widgets/common/cards/dashboard_card.dart';
 
 class DashboardOperationsSection extends StatelessWidget {
-  final int crossAxisCount;
-  final double childAspectRatio;
-
-  const DashboardOperationsSection({
-    super.key,
-    required this.crossAxisCount,
-    required this.childAspectRatio,
-  });
+  final bool isTablet;
+  const DashboardOperationsSection({super.key, required this.isTablet});
 
   @override
   Widget build(BuildContext context) {
@@ -50,10 +44,10 @@ class DashboardOperationsSection extends StatelessWidget {
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: crossAxisCount,
-            childAspectRatio: childAspectRatio,
-            crossAxisSpacing: 24,
-            mainAxisSpacing: 24,
+            crossAxisCount: isTablet ? 3 : 1,
+            childAspectRatio: isTablet ? 3.7 : 4.2,
+            crossAxisSpacing: 16,
+            mainAxisSpacing: 16,
           ),
           itemCount: actionCards.length,
           itemBuilder: (context, index) => actionCards[index],

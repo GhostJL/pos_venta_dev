@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:posventa/domain/entities/permission.dart';
 import 'package:posventa/domain/entities/user.dart';
-import 'package:posventa/presentation/providers/auth_provider.dart';
 import 'package:posventa/presentation/providers/cashier_providers.dart';
 
 class CashierPermissionsPage extends ConsumerStatefulWidget {
@@ -44,9 +43,17 @@ class _CashierPermissionsPageState
       appBar: AppBar(
         title: Text('Permisos de ${widget.cashier.username}'),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.save),
-            onPressed: controllerState.isLoading ? null : _savePermissions,
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            child: ElevatedButton.icon(
+              onPressed: controllerState.isLoading ? null : _savePermissions,
+              icon: const Icon(Icons.save),
+              label: const Text('Guardar'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Theme.of(context).colorScheme.primary,
+                foregroundColor: Theme.of(context).colorScheme.onPrimary,
+              ),
+            ),
           ),
         ],
       ),
@@ -61,53 +68,83 @@ class _CashierPermissionsPageState
                 _isInitialized = true;
               }
 
-              // Group permissions by module
+              // Agrupar permisos por módulo
               final Map<String, List<Permission>> groupedPermissions = {};
               for (var perm in allPermissions) {
-                if (!groupedPermissions.containsKey(perm.module)) {
-                  groupedPermissions[perm.module] = [];
-                }
+                groupedPermissions.putIfAbsent(perm.module, () => []);
                 groupedPermissions[perm.module]!.add(perm);
               }
 
-              return ListView(
-                children: groupedPermissions.entries.map((entry) {
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: Text(
-                          entry.key,
-                          style: Theme.of(context).textTheme.titleLarge,
-                        ),
+              return ListView.separated(
+                padding: const EdgeInsets.all(16),
+                itemCount: groupedPermissions.length,
+                separatorBuilder: (_, __) => const SizedBox(height: 12),
+                itemBuilder: (context, index) {
+                  final entry = groupedPermissions.entries.elementAt(index);
+                  return Card(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 12,
                       ),
-                      ...entry.value.map((perm) {
-                        return CheckboxListTile(
-                          title: Text(perm.name),
-                          subtitle: Text(perm.description ?? ''),
-                          value: _selectedPermissionIds.contains(perm.id),
-                          onChanged: (bool? value) {
-                            setState(() {
-                              if (value == true) {
-                                _selectedPermissionIds.add(perm.id!);
-                              } else {
-                                _selectedPermissionIds.remove(perm.id);
-                              }
-                            });
-                          },
-                        );
-                      }),
-                      const Divider(),
-                    ],
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            entry.key,
+                            style: Theme.of(context).textTheme.titleMedium
+                                ?.copyWith(fontWeight: FontWeight.bold),
+                          ),
+                          const SizedBox(height: 8),
+                          ...entry.value.map((perm) {
+                            final isSelected = _selectedPermissionIds.contains(
+                              perm.id,
+                            );
+                            return CheckboxListTile(
+                              dense: true,
+                              contentPadding: EdgeInsets.zero,
+                              title: Text(
+                                perm.name,
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                  color: isSelected
+                                      ? Theme.of(context).colorScheme.primary
+                                      : Theme.of(context).colorScheme.onSurface,
+                                ),
+                              ),
+                              subtitle: perm.description != null
+                                  ? Text(
+                                      perm.description!,
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: Theme.of(
+                                          context,
+                                        ).colorScheme.onSurfaceVariant,
+                                      ),
+                                    )
+                                  : null,
+                              value: isSelected,
+                              onChanged: (bool? value) {
+                                setState(() {
+                                  if (value == true) {
+                                    _selectedPermissionIds.add(perm.id!);
+                                  } else {
+                                    _selectedPermissionIds.remove(perm.id);
+                                  }
+                                });
+                              },
+                            );
+                          }),
+                        ],
+                      ),
+                    ),
                   );
-                }).toList(),
+                },
               );
             },
             loading: () => const Center(child: CircularProgressIndicator()),
-            error: (err, stack) => Center(
-              child: Text('Error cargando permisos del usuario: $err'),
-            ),
+            error: (err, stack) =>
+                Center(child: Text('Error cargando permisos: $err')),
           );
         },
         loading: () => const Center(child: CircularProgressIndicator()),
@@ -118,9 +155,6 @@ class _CashierPermissionsPageState
   }
 
   void _savePermissions() {
-    final authState = ref.read(authProvider);
-    final currentUserId = authState.user?.id;
-
     ref
         .read(cashierControllerProvider.notifier)
         .updatePermissions(widget.cashier.id!, _selectedPermissionIds.toList());

@@ -9,6 +9,7 @@ import 'package:posventa/presentation/widgets/cash_sessions/detail/financial_sum
 import 'package:posventa/presentation/widgets/cash_sessions/detail/sales_summary_card.dart';
 import 'package:posventa/presentation/widgets/cash_sessions/detail/manual_movements_card.dart';
 import 'package:posventa/presentation/widgets/cash_sessions/detail/payment_methods_card.dart';
+import 'package:posventa/core/theme/theme.dart';
 
 class CashSessionDetailPage extends ConsumerWidget {
   final CashSession session;
@@ -31,9 +32,9 @@ class CashSessionDetailPage extends ConsumerWidget {
               padding: const EdgeInsets.all(8.0),
               child: Chip(
                 label: const Text('Abierta'),
-                backgroundColor: Colors.green.withAlpha(50),
+                backgroundColor: AppTheme.transactionSuccess.withAlpha(50),
                 labelStyle: const TextStyle(
-                  color: Colors.green,
+                  color: AppTheme.transactionSuccess,
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -42,10 +43,10 @@ class CashSessionDetailPage extends ConsumerWidget {
             Padding(
               padding: const EdgeInsets.all(8.0),
               child: Chip(
-                label: const Text('Cerrada'),
+                label: Text('Cerrada'),
                 backgroundColor: Colors.grey.withAlpha(50),
-                labelStyle: const TextStyle(
-                  color: Colors.grey,
+                labelStyle: TextStyle(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -102,7 +103,11 @@ class CashSessionDetailPage extends ConsumerWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.error_outline, size: 64, color: Colors.red),
+              Icon(
+                Icons.error_outline,
+                size: 64,
+                color: Theme.of(context).colorScheme.error,
+              ),
               const SizedBox(height: 16),
               Text('Error: $err'),
             ],

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 import 'package:posventa/presentation/providers/cash_session_providers.dart';
+import 'package:posventa/core/theme/theme.dart';
 
 class SalesSummaryCard extends StatelessWidget {
   final CashSessionDetail detail;
@@ -72,7 +73,7 @@ class SalesSummaryCard extends StatelessWidget {
                     currencyFormat.format(detail.totalSales / 100),
                     style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                       fontWeight: FontWeight.bold,
-                      color: Colors.green,
+                      color: AppTheme.transactionSuccess,
                     ),
                   ),
                 ],

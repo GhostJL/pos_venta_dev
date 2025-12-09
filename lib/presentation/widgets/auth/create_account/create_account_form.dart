@@ -181,12 +181,6 @@ class _CreateAccountFormState extends ConsumerState<CreateAccountForm> {
             const SizedBox(height: 32),
             ElevatedButton(
               onPressed: state.isLoading ? null : _submit,
-              style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
               child: state.isLoading
                   ? SizedBox(
                       height: 24,

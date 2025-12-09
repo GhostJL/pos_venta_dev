@@ -194,12 +194,6 @@ class BaseButton extends StatelessWidget {
       onPressed: onPressed,
       icon: Icon(icon, size: iconSize),
       label: Text(label ?? ''),
-      style: ElevatedButton.styleFrom(
-        backgroundColor: backgroundColor,
-        foregroundColor: Theme.of(context).colorScheme.onPrimary,
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      ),
     );
   }
 }

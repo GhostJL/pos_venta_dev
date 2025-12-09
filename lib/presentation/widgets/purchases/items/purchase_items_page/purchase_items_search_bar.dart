@@ -1,10 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:posventa/presentation/mixins/search_debounce_mixin.dart';
 
-class PurchaseItemsSearchBar extends StatelessWidget {
+class PurchaseItemsSearchBar extends StatefulWidget {
   final ValueChanged<String> onChanged;
 
   const PurchaseItemsSearchBar({super.key, required this.onChanged});
 
+  @override
+  State<PurchaseItemsSearchBar> createState() => _PurchaseItemsSearchBarState();
+}
+
+class _PurchaseItemsSearchBarState extends State<PurchaseItemsSearchBar>
+    with SearchDebounceMixin {
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -16,7 +23,11 @@ class PurchaseItemsSearchBar extends StatelessWidget {
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
           filled: true,
         ),
-        onChanged: onChanged,
+        onChanged: (value) {
+          debounceSearch(() {
+            widget.onChanged(value);
+          });
+        },
       ),
     );
   }

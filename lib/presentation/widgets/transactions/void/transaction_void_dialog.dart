@@ -143,10 +143,6 @@ class TransactionVoidDialog {
             },
             icon: Icon(Icons.cancel_rounded),
             label: Text('Anular Venta'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Theme.of(context).colorScheme.error,
-              foregroundColor: Theme.of(context).colorScheme.onSurface,
-            ),
           ),
         ],
       ),

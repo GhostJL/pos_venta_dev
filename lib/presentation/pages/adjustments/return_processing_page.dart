@@ -139,8 +139,6 @@ class _ReturnProcessingPageState extends ConsumerState<ReturnProcessingPage> {
     final sale = state.selectedSale!;
 
     return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(

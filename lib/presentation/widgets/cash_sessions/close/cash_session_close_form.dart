@@ -82,14 +82,7 @@ class _CashSessionCloseFormState extends State<CashSessionCloseForm> {
           height: 50,
           child: ElevatedButton(
             onPressed: widget.isLoading ? null : _handleSubmit,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Theme.of(context).colorScheme.error,
-              foregroundColor: Theme.of(context).colorScheme.onSurface,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-              elevation: 0,
-            ),
+
             child: widget.isLoading
                 ? SizedBox(
                     width: 20,
@@ -99,14 +92,7 @@ class _CashSessionCloseFormState extends State<CashSessionCloseForm> {
                       color: Theme.of(context).colorScheme.onSurface,
                     ),
                   )
-                : const Text(
-                    'CERRAR CAJA',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 0.5,
-                    ),
-                  ),
+                : const Text('CERRAR CAJA'),
           ),
         ),
       ],

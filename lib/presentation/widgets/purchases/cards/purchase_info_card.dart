@@ -63,13 +63,6 @@ class PurchaseInfoCard extends StatelessWidget {
       statusText = 'Completada';
     }
     return Card(
-      elevation: 0,
-      surfaceTintColor: Theme.of(context).colorScheme.surface,
-
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: Theme.of(context).colorScheme.outline),
-      ),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(

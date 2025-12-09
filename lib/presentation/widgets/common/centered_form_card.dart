@@ -41,10 +41,6 @@ class CenteredFormCard extends StatelessWidget {
         child: Container(
           constraints: const BoxConstraints(maxWidth: 500),
           child: Card(
-            elevation: 4,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-            ),
             child: Padding(
               padding: const EdgeInsets.all(24),
               child: Column(
@@ -73,9 +69,9 @@ class CenteredFormCard extends StatelessWidget {
                     const SizedBox(height: 8),
                     Text(
                       subtitle!,
-                      style: Theme.of(
-                        context,
-                      ).textTheme.bodyLarge?.copyWith(color: Colors.grey[600]),
+                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
                       textAlign: TextAlign.center,
                     ),
                   ],

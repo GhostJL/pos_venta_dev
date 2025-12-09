@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:posventa/core/theme/theme.dart';
 import 'package:posventa/domain/entities/inventory_lot.dart';
 import 'package:posventa/presentation/providers/inventory_lot_providers.dart';
 
@@ -92,7 +93,11 @@ class _InventoryLotsPageState extends ConsumerState<InventoryLotsPage> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.error_outline, size: 48, color: Colors.red),
+              Icon(
+                Icons.error_outline,
+                size: 48,
+                color: Theme.of(context).colorScheme.error,
+              ),
               const SizedBox(height: 16),
               Text('Error: $error'),
             ],
@@ -124,11 +129,8 @@ class _LotCard extends StatelessWidget {
 
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Column(
@@ -210,10 +212,10 @@ class _LotCard extends StatelessWidget {
                       Icons.warning_amber_rounded,
                       size: 16,
                       color: isExpired
-                          ? Colors.red
+                          ? AppTheme.transactionFailed
                           : isExpiringSoon
-                          ? Colors.orange
-                          : Colors.grey,
+                          ? AppTheme.transactionPending
+                          : Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
                     const SizedBox(width: 4),
                     Text(
@@ -221,9 +223,9 @@ class _LotCard extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 12,
                         color: isExpired
-                            ? Colors.red
+                            ? AppTheme.transactionFailed
                             : isExpiringSoon
-                            ? Colors.orange
+                            ? AppTheme.transactionPending
                             : Theme.of(context).colorScheme.onSurfaceVariant,
                         fontWeight: isExpired || isExpiringSoon
                             ? FontWeight.w600

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 import 'package:posventa/presentation/providers/cash_session_providers.dart';
+import 'package:posventa/core/theme/theme.dart';
 
 class ManualMovementsCard extends StatelessWidget {
   final CashSessionDetail detail;
@@ -59,11 +60,11 @@ class ManualMovementsCard extends StatelessWidget {
                     contentPadding: const EdgeInsets.symmetric(vertical: 8),
                     leading: CircleAvatar(
                       backgroundColor: isEntry
-                          ? Colors.green.withAlpha(25)
-                          : Colors.red.withAlpha(25),
+                          ? AppTheme.transactionSuccess.withAlpha(25)
+                          : Theme.of(context).colorScheme.error.withAlpha(25),
                       child: Icon(
                         isEntry ? Icons.add : Icons.remove,
-                        color: isEntry ? Colors.green : Colors.red,
+                        color: isEntry ? AppTheme.transactionSuccess : AppTheme.transactionFailed,
                       ),
                     ),
                     title: Text(
@@ -89,7 +90,7 @@ class ManualMovementsCard extends StatelessWidget {
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 16,
-                        color: isEntry ? Colors.green : Colors.red,
+                        color: isEntry ? AppTheme.transactionSuccess : AppTheme.transactionFailed,
                       ),
                     ),
                   );

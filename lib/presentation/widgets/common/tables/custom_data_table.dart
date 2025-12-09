@@ -58,11 +58,13 @@ class CustomDataTable<T> extends StatelessWidget {
         return Container(
           decoration: BoxDecoration(
             color: Theme.of(context).colorScheme.surface,
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
-                color: Theme.of(context).colorScheme.onSurface.withAlpha(10),
-                blurRadius: 20,
+                color: Theme.of(
+                  context,
+                ).colorScheme.shadow.withValues(alpha: 0.05),
+                blurRadius: 12,
                 offset: const Offset(0, 4),
               ),
             ],
@@ -70,6 +72,7 @@ class CustomDataTable<T> extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              // Header moderno
               CustomDataTableHeader(
                 title: title ?? _getEntityName(),
                 itemCount: itemCount,
@@ -77,21 +80,49 @@ class CustomDataTable<T> extends StatelessWidget {
                 onSearch: onSearch,
                 onAddItem: onAddItem,
               ),
-              if (_shouldShowEmptyState())
-                Expanded(
-                  child: CustomDataTableEmptyState(
-                    emptyText: emptyText,
-                    isSmallScreen: isSmallScreen,
-                  ),
-                )
-              else
-                Expanded(
-                  child: CustomDataTableContent(
-                    columns: columns,
-                    rows: rows,
-                    isSmallScreen: isSmallScreen,
-                  ),
-                ),
+
+              const Divider(height: 1),
+
+              // Contenido o empty state
+              Expanded(
+                child: _shouldShowEmptyState()
+                    ? CustomDataTableEmptyState(
+                        emptyText: emptyText,
+                        isSmallScreen: isSmallScreen,
+                      )
+                    : Theme(
+                        data: Theme.of(context).copyWith(
+                          dataTableTheme: DataTableThemeData(
+                            headingRowColor: WidgetStateProperty.all(
+                              Theme.of(
+                                context,
+                              ).colorScheme.surfaceContainerHighest,
+                            ),
+                            headingTextStyle: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Theme.of(context).colorScheme.onSurface,
+                            ),
+                            dataRowColor:
+                                WidgetStateProperty.resolveWith<Color?>((
+                                  states,
+                                ) {
+                                  if (states.contains(WidgetState.hovered)) {
+                                    return Theme.of(context)
+                                        .colorScheme
+                                        .primaryContainer
+                                        .withValues(alpha: 0.1);
+                                  }
+                                  return null;
+                                }),
+                          ),
+                        ),
+                        child: CustomDataTableContent(
+                          columns: columns,
+                          rows: rows,
+                          isSmallScreen: isSmallScreen,
+                        ),
+                      ),
+              ),
             ],
           ),
         );

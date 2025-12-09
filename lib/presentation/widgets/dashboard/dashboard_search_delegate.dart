@@ -1,6 +1,9 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 
 class DashboardSearchDelegate extends SearchDelegate<String?> {
+  DashboardSearchDelegate() : super(searchFieldLabel: 'Buscar funciones...');
+
   final List<Map<String, String>> _searchTerms = [
     {'term': 'Ventas', 'route': '/sales'},
     {'term': 'Historial de Ventas', 'route': '/sales-history'},
@@ -17,12 +20,16 @@ class DashboardSearchDelegate extends SearchDelegate<String?> {
     {'term': 'Historial de Sesiones', 'route': '/cash-sessions-history'},
   ];
 
+  Timer? _debounceTimer;
+  String _debouncedQuery = '';
+
   @override
   List<Widget>? buildActions(BuildContext context) {
     return [
       IconButton(
         onPressed: () {
           query = '';
+          _debouncedQuery = '';
         },
         icon: const Icon(Icons.clear),
       ),
@@ -31,11 +38,16 @@ class DashboardSearchDelegate extends SearchDelegate<String?> {
 
   @override
   Widget? buildLeading(BuildContext context) {
-    return IconButton(
-      onPressed: () {
-        close(context, null);
-      },
-      icon: const Icon(Icons.arrow_back),
+    return Row(
+      children: [
+        IconButton(
+          onPressed: () {
+            _debounceTimer?.cancel();
+            close(context, null);
+          },
+          icon: const Icon(Icons.arrow_back),
+        ),
+      ],
     );
   }
 
@@ -51,20 +63,28 @@ class DashboardSearchDelegate extends SearchDelegate<String?> {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         close(context, match['route']);
       });
+
       return const Center(child: CircularProgressIndicator());
     }
 
-    return _buildSuggestionsList(context);
+    return _buildSuggestionsList(context, query);
   }
 
   @override
   Widget buildSuggestions(BuildContext context) {
-    return _buildSuggestionsList(context);
+    // Debounce the search query
+    _debounceTimer?.cancel();
+    _debounceTimer = Timer(const Duration(milliseconds: 500), () {
+      _debouncedQuery = query;
+    });
+
+    // Use debounced query for suggestions
+    return _buildSuggestionsList(context, _debouncedQuery);
   }
 
-  Widget _buildSuggestionsList(BuildContext context) {
+  Widget _buildSuggestionsList(BuildContext context, String searchQuery) {
     final suggestions = _searchTerms.where((element) {
-      return element['term']!.toLowerCase().contains(query.toLowerCase());
+      return element['term']!.toLowerCase().contains(searchQuery.toLowerCase());
     }).toList();
 
     return ListView.builder(
@@ -80,5 +100,11 @@ class DashboardSearchDelegate extends SearchDelegate<String?> {
         );
       },
     );
+  }
+
+  @override
+  void dispose() {
+    _debounceTimer?.cancel();
+    super.dispose();
   }
 }

@@ -28,6 +28,7 @@ import 'package:posventa/domain/entities/category.dart';
 import 'package:posventa/domain/entities/customer.dart';
 import 'package:posventa/domain/entities/department.dart';
 import 'package:posventa/domain/entities/supplier.dart';
+import 'package:posventa/core/theme/theme.dart';
 
 final GlobalKey<NavigatorState> _rootNavigatorKey = GlobalKey<NavigatorState>();
 
@@ -353,7 +354,7 @@ final routerProvider = Provider<GoRouter>((ref) {
                 description:
                     'Corregir precios o descuentos aplicados en ventas',
                 icon: Icons.price_change_rounded,
-                iconColor: Colors.blue,
+                iconColor: AppTheme.alertInfo,
               ),
             ),
           ),
@@ -398,7 +399,7 @@ final routerProvider = Provider<GoRouter>((ref) {
                 description:
                     'Registrar productos dañados, caducados o perdidos',
                 icon: Icons.delete_sweep_rounded,
-                iconColor: Colors.red,
+                iconColor: AppTheme.transactionFailed,
               ),
             ),
           ),
@@ -411,7 +412,7 @@ final routerProvider = Provider<GoRouter>((ref) {
                 description:
                     'Registrar movimientos de efectivo no relacionados con ventas',
                 icon: Icons.swap_vert_rounded,
-                iconColor: Colors.orange,
+                iconColor: AppTheme.transactionPending,
               ),
             ),
           ),

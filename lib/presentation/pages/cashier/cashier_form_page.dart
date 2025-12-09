@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:posventa/domain/entities/user.dart';
 import 'package:posventa/presentation/providers/cashier_providers.dart';
 
@@ -15,11 +14,21 @@ class CashierFormPage extends ConsumerStatefulWidget {
 
 class _CashierFormPageState extends ConsumerState<CashierFormPage> {
   final _formKey = GlobalKey<FormState>();
+
+  // Controladores
   late TextEditingController _usernameController;
   late TextEditingController _passwordController;
   late TextEditingController _firstNameController;
   late TextEditingController _lastNameController;
   late TextEditingController _emailController;
+
+  // FocusNodes 👇
+  final _usernameFocus = FocusNode();
+  final _passwordFocus = FocusNode();
+  final _firstNameFocus = FocusNode();
+  final _lastNameFocus = FocusNode();
+  final _emailFocus = FocusNode();
+
   bool _isActive = true;
   bool _isPasswordVisible = false;
 
@@ -29,7 +38,7 @@ class _CashierFormPageState extends ConsumerState<CashierFormPage> {
     _usernameController = TextEditingController(
       text: widget.cashier?.username ?? '',
     );
-    _passwordController = TextEditingController(); // Password empty on edit
+    _passwordController = TextEditingController();
     _firstNameController = TextEditingController(
       text: widget.cashier?.firstName ?? '',
     );
@@ -47,6 +56,13 @@ class _CashierFormPageState extends ConsumerState<CashierFormPage> {
     _firstNameController.dispose();
     _lastNameController.dispose();
     _emailController.dispose();
+
+    // Liberar FocusNodes
+    _usernameFocus.dispose();
+    _passwordFocus.dispose();
+    _firstNameFocus.dispose();
+    _lastNameFocus.dispose();
+    _emailFocus.dispose();
     super.dispose();
   }
 
@@ -54,21 +70,6 @@ class _CashierFormPageState extends ConsumerState<CashierFormPage> {
   Widget build(BuildContext context) {
     final isEditing = widget.cashier != null;
     final controllerState = ref.watch(cashierControllerProvider);
-
-    ref.listen(cashierControllerProvider, (previous, next) {
-      if (next is AsyncData && !next.isLoading) {
-        context.pop();
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(isEditing ? 'Cajero actualizado' : 'Cajero creado'),
-          ),
-        );
-      } else if (next is AsyncError) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error: ${next.error}')));
-      }
-    });
 
     return Scaffold(
       appBar: AppBar(title: Text(isEditing ? 'Editar Cajero' : 'Nuevo Cajero')),
@@ -80,18 +81,25 @@ class _CashierFormPageState extends ConsumerState<CashierFormPage> {
             children: [
               TextFormField(
                 controller: _usernameController,
+                focusNode: _usernameFocus,
+                textInputAction: TextInputAction.next,
+                onFieldSubmitted: (_) => FocusScope.of(
+                  context,
+                ).requestFocus(isEditing ? _firstNameFocus : _passwordFocus),
                 decoration: const InputDecoration(labelText: 'Usuario'),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Por favor ingrese un nombre de usuario';
-                  }
-                  return null;
-                },
+                validator: (value) => value == null || value.isEmpty
+                    ? 'Por favor ingrese un nombre de usuario'
+                    : null,
               ),
               const SizedBox(height: 16),
+
               if (!isEditing) ...[
                 TextFormField(
                   controller: _passwordController,
+                  focusNode: _passwordFocus,
+                  textInputAction: TextInputAction.next,
+                  onFieldSubmitted: (_) =>
+                      FocusScope.of(context).requestFocus(_firstNameFocus),
                   decoration: InputDecoration(
                     labelText: 'Contraseña',
                     suffixIcon: IconButton(
@@ -117,49 +125,56 @@ class _CashierFormPageState extends ConsumerState<CashierFormPage> {
                     }
                     return null;
                   },
+                  keyboardType: TextInputType.visiblePassword,
                 ),
                 const SizedBox(height: 16),
               ],
+
               TextFormField(
                 controller: _firstNameController,
+                focusNode: _firstNameFocus,
+                textInputAction: TextInputAction.next,
+                onFieldSubmitted: (_) =>
+                    FocusScope.of(context).requestFocus(_lastNameFocus),
                 decoration: const InputDecoration(labelText: 'Nombre'),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Por favor ingrese el nombre';
-                  }
-                  return null;
-                },
+                validator: (value) => value == null || value.isEmpty
+                    ? 'Por favor ingrese el nombre'
+                    : null,
               ),
               const SizedBox(height: 16),
+
               TextFormField(
                 controller: _lastNameController,
+                focusNode: _lastNameFocus,
+                textInputAction: TextInputAction.next,
+                onFieldSubmitted: (_) =>
+                    FocusScope.of(context).requestFocus(_emailFocus),
                 decoration: const InputDecoration(labelText: 'Apellido'),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Por favor ingrese el apellido';
-                  }
-                  return null;
-                },
+                validator: (value) => value == null || value.isEmpty
+                    ? 'Por favor ingrese el apellido'
+                    : null,
               ),
               const SizedBox(height: 16),
+
               TextFormField(
                 controller: _emailController,
+                focusNode: _emailFocus,
+                textInputAction: TextInputAction.done,
+                onFieldSubmitted: (_) => _submit(),
                 decoration: const InputDecoration(
                   labelText: 'Email (Opcional)',
                 ),
                 keyboardType: TextInputType.emailAddress,
               ),
               const SizedBox(height: 16),
+
               SwitchListTile(
                 title: const Text('Activo'),
                 value: _isActive,
-                onChanged: (value) {
-                  setState(() {
-                    _isActive = value;
-                  });
-                },
+                onChanged: (value) => setState(() => _isActive = value),
               ),
               const SizedBox(height: 24),
+
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
@@ -197,6 +212,7 @@ class _CashierFormPageState extends ConsumerState<CashierFormPage> {
             .read(cashierControllerProvider.notifier)
             .createCashier(user, _passwordController.text);
       }
+      Navigator.pop(context);
     }
   }
 }

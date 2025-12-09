@@ -42,12 +42,14 @@ class RecentPurchaseItemsWidget extends ConsumerWidget {
         recentItemsAsync.when(
           data: (items) {
             if (items.isEmpty) {
-              return const Padding(
+              return Padding(
                 padding: EdgeInsets.all(32),
                 child: Center(
                   child: Text(
                     'No hay artículos recientes',
-                    style: TextStyle(color: Colors.grey),
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
                   ),
                 ),
               );
@@ -76,7 +78,7 @@ class RecentPurchaseItemsWidget extends ConsumerWidget {
             child: Center(
               child: Text(
                 'Error al cargar artículos: $error',
-                style: const TextStyle(color: Colors.red),
+                style: TextStyle(color: Theme.of(context).colorScheme.error),
               ),
             ),
           ),

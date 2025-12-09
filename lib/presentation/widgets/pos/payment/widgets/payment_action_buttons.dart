@@ -42,15 +42,7 @@ class PaymentActionButtons extends StatelessWidget {
             flex: 2,
             child: ElevatedButton(
               onPressed: onConfirm,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Theme.of(context).primaryColor,
-                foregroundColor: Theme.of(context).colorScheme.onSurface,
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                elevation: 0,
-              ),
+
               child: isLoading
                   ? SizedBox(
                       width: 20,

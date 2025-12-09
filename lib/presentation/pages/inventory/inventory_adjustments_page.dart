@@ -6,6 +6,7 @@ import 'package:posventa/presentation/providers/auth_provider.dart';
 import 'package:posventa/presentation/providers/inventory_adjustment_provider.dart';
 import 'package:posventa/presentation/providers/providers.dart';
 import 'package:posventa/presentation/widgets/inventory/adjustments/adjustment_item_card.dart';
+import 'package:posventa/core/theme/theme.dart';
 
 class InventoryAdjustmentsPage extends ConsumerWidget {
   const InventoryAdjustmentsPage({super.key});
@@ -38,14 +39,18 @@ class InventoryAdjustmentsPage extends ConsumerWidget {
                   Icon(
                     Icons.playlist_add,
                     size: 64,
-                    color: Colors.grey.withValues(alpha: 0.5),
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
                   ),
                   const SizedBox(height: 16),
                   Text(
                     'No hay ajustes pendientes',
                     style: TextStyle(
                       fontSize: 18,
-                      color: Colors.grey.withValues(alpha: 0.8),
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.onSurfaceVariant.withValues(alpha: 0.8),
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -100,7 +105,7 @@ class InventoryAdjustmentsPage extends ConsumerWidget {
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
                             content: Text('Ajustes procesados correctamente'),
-                            backgroundColor: Colors.green,
+                            backgroundColor: AppTheme.transactionSuccess,
                           ),
                         );
                       }
@@ -109,7 +114,9 @@ class InventoryAdjustmentsPage extends ConsumerWidget {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
                             content: Text('Error al procesar ajustes: $e'),
-                            backgroundColor: Colors.red,
+                            backgroundColor: Theme.of(
+                              context,
+                            ).colorScheme.error,
                           ),
                         );
                       }
@@ -258,9 +265,15 @@ class _AddProductDialogState extends ConsumerState<_AddProductDialog> {
                         _isAdjustmentPositive = index == 0;
                       });
                     },
-                    children: const [
-                      Icon(Icons.add, color: Colors.green),
-                      Icon(Icons.remove, color: Colors.red),
+                    children: [
+                      Icon(
+                        Icons.add,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                      Icon(
+                        Icons.remove,
+                        color: Theme.of(context).colorScheme.error,
+                      ),
                     ],
                   ),
                 ],

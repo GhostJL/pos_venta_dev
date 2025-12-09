@@ -17,8 +17,6 @@ class SaleHeaderCard extends StatelessWidget {
     final isReturned = sale.status == SaleStatus.returned;
 
     return BaseCard(
-      borderRadius: 16,
-      padding: const EdgeInsets.all(24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

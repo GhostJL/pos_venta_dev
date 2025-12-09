@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 class CartItemWidget extends StatelessWidget {
   final String? productName;
+  final String? variantDescription;
   final Function() onPressedRemove;
   final Function() onTapLessProduct;
   final Function() onTapMoreProduct;
@@ -9,9 +10,11 @@ class CartItemWidget extends StatelessWidget {
   final double unitPrice;
   final double tax;
   final double total;
+
   const CartItemWidget({
     super.key,
     required this.productName,
+    required this.variantDescription,
     required this.onPressedRemove,
     required this.onTapLessProduct,
     required this.onTapMoreProduct,
@@ -24,105 +27,127 @@ class CartItemWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      padding: const EdgeInsets.all(12),
+
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Product name and remove button
+          /// Header: nombre + eliminar
           Row(
             children: [
               Expanded(
-                child: Text(
-                  productName ?? '',
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w600,
-                    fontSize: 14,
-                  ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
+                child: Column(
+                  crossAxisAlignment: .start,
+                  children: [
+                    Text(
+                      productName ?? '',
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 14,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    if (variantDescription != null &&
+                        variantDescription!.isNotEmpty) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        '($variantDescription)',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          fontWeight: FontWeight.w500,
+                          fontSize: 12,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ],
                 ),
               ),
-
               IconButton(
-                icon: const Icon(Icons.close, size: 20),
+                icon: Icon(
+                  Icons.close,
+                  size: 24,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
                 onPressed: onPressedRemove,
-                padding: EdgeInsets.zero,
                 constraints: const BoxConstraints(),
               ),
             ],
           ),
-          const SizedBox(height: 8),
 
-          // Quantity controls and price
+          const SizedBox(height: 12),
+
+          /// Body: cantidad + precios
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              // Quantity controls
+              // Controles de cantidad
               Container(
                 decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.surface,
+                  borderRadius: BorderRadius.circular(8),
                   border: Border.all(
                     color: Theme.of(context).colorScheme.outline,
                   ),
-                  borderRadius: BorderRadius.circular(8),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    InkWell(
+                    _QuantityButton(
+                      icon: Icons.remove,
                       onTap: onTapLessProduct,
-                      child: Container(
-                        padding: const EdgeInsets.all(8),
-                        child: const Icon(Icons.remove, size: 18),
-                      ),
+                      context: context,
                     ),
-                    Container(
+                    Padding(
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
+                        horizontal: 14,
                         vertical: 8,
                       ),
                       child: Text(
                         quantity.toStringAsFixed(0),
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                        ),
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
                       ),
                     ),
-                    InkWell(
+                    _QuantityButton(
+                      icon: Icons.add,
                       onTap: onTapMoreProduct,
-                      child: Container(
-                        padding: const EdgeInsets.all(8),
-                        child: const Icon(Icons.add, size: 18),
-                      ),
+                      context: context,
                     ),
                   ],
                 ),
               ),
 
-              // Price
+              // Precios
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   Text(
-                    '\$${unitPrice.toStringAsFixed(2)}',
-                    style: TextStyle(
-                      fontSize: 12,
+                    'Unitario: \$${unitPrice.toStringAsFixed(2)}',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      fontSize: 12,
                     ),
                   ),
                   if (tax > 0)
                     Text(
                       '+ Imp: \$${tax.toStringAsFixed(2)}',
-                      style: TextStyle(
-                        fontSize: 10,
-                        color: Theme.of(context).colorScheme.outline,
-                      ),
+                      style: Theme.of(
+                        context,
+                      ).textTheme.bodySmall?.copyWith(fontSize: 11),
                     ),
+                  const SizedBox(height: 4),
                   Text(
                     '\$${total.toStringAsFixed(2)}',
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w700,
                       fontSize: 16,
+                      color: Theme.of(context).colorScheme.onSurface,
                     ),
                   ),
                 ],
@@ -130,6 +155,34 @@ class CartItemWidget extends StatelessWidget {
             ],
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _QuantityButton extends StatelessWidget {
+  final IconData icon;
+  final Function() onTap;
+  final BuildContext context;
+
+  const _QuantityButton({
+    required this.icon,
+    required this.onTap,
+    required this.context,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(8),
+      child: Padding(
+        padding: const EdgeInsets.all(8),
+        child: Icon(
+          icon,
+          size: 18,
+          color: Theme.of(context).colorScheme.onSurface,
+        ),
       ),
     );
   }

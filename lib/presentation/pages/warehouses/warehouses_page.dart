@@ -2,11 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:posventa/domain/entities/warehouse.dart';
 import 'package:posventa/presentation/providers/warehouse_providers.dart';
-import 'package:posventa/presentation/widgets/common/tables/custom_data_table.dart';
+import 'package:posventa/presentation/widgets/common/cards/card_base_module_widget.dart';
 import 'package:posventa/core/constants/permission_constants.dart';
 import 'package:posventa/presentation/providers/permission_provider.dart';
-import 'package:posventa/presentation/widgets/common/status_chip.dart';
-import 'package:posventa/presentation/widgets/common/data_table_actions.dart';
 import 'package:posventa/presentation/widgets/catalog/warehouses/warehouse_form_widget.dart';
 import 'package:posventa/presentation/widgets/common/async_value_handler.dart';
 import 'package:posventa/presentation/mixins/page_lifecycle_mixin.dart';
@@ -48,66 +46,53 @@ class _WarehousesPageState extends ConsumerState<WarehousesPage>
         padding: const EdgeInsets.all(16.0),
         child: AsyncValueHandler<List<Warehouse>>(
           value: warehousesAsync,
-          data: (warehouses) => CustomDataTable<Warehouse>(
-            itemCount: warehouses.length,
-            onAddItem: hasManagePermission ? () => _showWarehouseForm() : () {},
-            emptyText: 'No hay almacenes registrados.',
-            columns: const [
-              DataColumn(label: Text('NOMBRE')),
-              DataColumn(label: Text('CÓDIGO')),
-              DataColumn(label: Text('PRINCIPAL')),
-              DataColumn(label: Text('ESTADO')),
-              DataColumn(label: Text('ACCIONES')),
-            ],
-            rows: warehouses.map((warehouse) {
-              return DataRow(
-                cells: [
-                  DataCell(Text(warehouse.name)),
-                  DataCell(Text(warehouse.code)),
-                  DataCell(
-                    Chip(
-                      label: Text(warehouse.isMain ? 'Sí' : 'No'),
-                      backgroundColor: warehouse.isMain
-                          ? Theme.of(context).colorScheme.primary.withAlpha(25)
-                          : Theme.of(context).colorScheme.surface,
-                      labelStyle: TextStyle(
-                        color: warehouse.isMain
-                            ? Theme.of(context).colorScheme.primary
-                            : Theme.of(context).colorScheme.onSurfaceVariant,
+          data: (warehouses) {
+            if (warehouses.isEmpty) {
+              return Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.warehouse_rounded,
+                      size: 64,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      'No se encontraron almacenes',
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.w600,
                       ),
-                      side: BorderSide.none,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 2,
+                    ),
+                    const SizedBox(height: 8),
+                    if (hasManagePermission)
+                      ElevatedButton.icon(
+                        onPressed: () => _showWarehouseForm(),
+                        icon: const Icon(Icons.add),
+                        label: const Text('Añadir Almacén'),
                       ),
-                    ),
-                  ),
-                  DataCell(
-                    StatusChip(
-                      isActive: warehouse.isActive,
-                      activeText: 'Activo',
-                      inactiveText: 'Inactivo',
-                    ),
-                  ),
-                  DataCell(
-                    DataTableActions(
-                      hasEditPermission: hasManagePermission,
-                      hasDeletePermission: hasManagePermission,
-                      onEdit: () => _showWarehouseForm(warehouse),
-                      onDelete: () {
-                        ref
-                            .read(warehouseProvider.notifier)
-                            .removeWarehouse(warehouse.id!);
-                      },
-                      editTooltip: 'Editar',
-                      deleteTooltip: 'Eliminar',
-                    ),
-                  ),
-                ],
+                  ],
+                ),
               );
-            }).toList(),
-          ),
+            }
+            return ListView.builder(
+              itemCount: warehouses.length,
+              itemBuilder: (context, index) {
+                final warehouse = warehouses[index];
+
+                return CardBaseModuleWidget(
+                  icon: Icons.warehouse_rounded,
+                  title: warehouse.name,
+                  subtitle: warehouse.isMain
+                      ? 'Almacén principal'
+                      : 'Almacén secundario',
+                  onEdit: () => _showWarehouseForm(warehouse),
+                  onDelete: () => _showWarehouseForm(warehouse),
+                  isActive: warehouse.isActive,
+                );
+              },
+            );
+          },
         ),
       ),
     );

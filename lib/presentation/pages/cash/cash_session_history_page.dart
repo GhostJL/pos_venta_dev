@@ -5,6 +5,7 @@ import 'package:posventa/domain/entities/cash_session.dart';
 import 'package:go_router/go_router.dart';
 import 'package:posventa/presentation/providers/cash_session_providers.dart';
 import 'package:posventa/presentation/providers/cashier_providers.dart';
+import 'package:posventa/core/theme/theme.dart';
 
 class CashSessionHistoryPage extends ConsumerStatefulWidget {
   const CashSessionHistoryPage({super.key});
@@ -200,14 +201,13 @@ class SessionCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isOpen = session.status == 'open';
-    final statusColor = isOpen ? Colors.green : Colors.grey;
+    final statusColor = isOpen
+        ? AppTheme.transactionSuccess
+        : Theme.of(context).colorScheme.onSurfaceVariant;
     final currencyFormat = NumberFormat.currency(symbol: '\$');
 
     return Card(
-      elevation: 0,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: InkWell(
-        borderRadius: BorderRadius.circular(16),
         onTap: () => context.push('/cash-sessions/detail', extra: session),
         child: Padding(
           padding: const EdgeInsets.all(16),
@@ -315,8 +315,8 @@ class SessionCard extends StatelessWidget {
                       'Dif: ${currencyFormat.format(session.differenceCents! / 100)}',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: session.differenceCents! < 0
-                            ? Colors.red
-                            : Colors.green,
+                            ? AppTheme.transactionFailed
+                            : AppTheme.transactionSuccess,
                         fontWeight: FontWeight.w600,
                       ),
                     ),

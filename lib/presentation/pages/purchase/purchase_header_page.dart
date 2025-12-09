@@ -5,6 +5,7 @@ import 'package:posventa/domain/entities/supplier.dart';
 import 'package:posventa/domain/entities/warehouse.dart';
 import 'package:posventa/presentation/providers/supplier_providers.dart';
 import 'package:posventa/presentation/providers/warehouse_providers.dart';
+import 'package:posventa/core/theme/theme.dart';
 
 class PurchaseHeaderPage extends ConsumerStatefulWidget {
   const PurchaseHeaderPage({super.key});
@@ -33,7 +34,7 @@ class _PurchaseHeaderPageState extends ConsumerState<PurchaseHeaderPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Seleccione proveedor y almacén'),
-          backgroundColor: Colors.orange,
+          backgroundColor: AppTheme.transactionPending,
         ),
       );
       return;
@@ -191,9 +192,6 @@ class _PurchaseHeaderPageState extends ConsumerState<PurchaseHeaderPage> {
                 onPressed: _continue,
                 icon: const Icon(Icons.arrow_forward),
                 label: const Text('Continuar a Productos'),
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                ),
               ),
             ],
           ),

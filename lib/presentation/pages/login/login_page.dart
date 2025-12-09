@@ -14,33 +14,31 @@ class LoginPage extends ConsumerWidget {
       if (state.status == AuthStatus.error && state.errorMessage != null) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
+            duration: const Duration(seconds: 1),
             content: Text(state.errorMessage!),
             backgroundColor: Theme.of(context).colorScheme.error,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10),
-            ),
-            margin: const EdgeInsets.all(16),
           ),
         );
       }
     });
 
     return Scaffold(
-      body: Center(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24.0),
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 400),
-            child: const Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                LoginHeader(),
-                SizedBox(height: 40),
-                LoginForm(),
-                SizedBox(height: 24),
-                LoginFooter(),
-              ],
+      body: SafeArea(
+        minimum: const EdgeInsets.symmetric(horizontal: 32),
+        child: Center(
+          child: SingleChildScrollView(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 400),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  LoginHeader(),
+                  SizedBox(height: 40),
+                  LoginForm(),
+                  SizedBox(height: 24),
+                  LoginFooter(),
+                ],
+              ),
             ),
           ),
         ),

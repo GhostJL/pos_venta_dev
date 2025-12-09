@@ -6,7 +6,8 @@ class LoginFooter extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Text(
-      '© 2024 POSVENTA',
+      '© 2025 POSVENTA de Jolu Software.',
+      textAlign: TextAlign.center,
       style: Theme.of(context).textTheme.bodySmall?.copyWith(
         color: Theme.of(context).colorScheme.onSurfaceVariant.withAlpha(150),
       ),

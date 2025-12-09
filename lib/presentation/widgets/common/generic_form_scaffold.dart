@@ -49,22 +49,7 @@ class GenericFormScaffold extends StatelessWidget {
         ),
         child: ElevatedButton(
           onPressed: isLoading ? null : onSubmit,
-          style: ElevatedButton.styleFrom(
-            padding: const EdgeInsets.symmetric(
-              vertical: UIConstants.paddingMedium,
-            ),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(
-                UIConstants.borderRadiusMedium,
-              ),
-            ),
-            elevation: 0,
-            backgroundColor: Theme.of(context).colorScheme.primary,
-            foregroundColor: Theme.of(context).colorScheme.onSurface,
-            disabledBackgroundColor: Theme.of(
-              context,
-            ).colorScheme.primary.withAlpha(100),
-          ),
+
           child: isLoading
               ? SizedBox(
                   height: UIConstants.iconSizeSmall,

@@ -63,14 +63,6 @@ class ConfirmDeleteDialog extends StatelessWidget {
           onPressed: () => Navigator.of(context).pop(false),
         ),
         ElevatedButton(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Theme.of(context).colorScheme.error,
-            foregroundColor: Theme.of(context).colorScheme.onSurface,
-            elevation: 0,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-          ),
           child: const Text('Eliminar'),
           onPressed: () {
             // Ejecutar el callback de eliminación

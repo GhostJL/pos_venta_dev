@@ -179,18 +179,7 @@ class _InventoryFormPageState extends ConsumerState<InventoryFormPage> {
               // Save Button
               ElevatedButton(
                 onPressed: _saveInventory,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Theme.of(context).colorScheme.primary,
-                  foregroundColor: Theme.of(context).colorScheme.onSurface,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                child: const Text(
-                  'Guardar',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                ),
+                child: const Text('Guardar'),
               ),
             ],
           ),
@@ -261,7 +250,7 @@ class _InventoryFormPageState extends ConsumerState<InventoryFormPage> {
           SnackBar(
             content: Text(errorMessage),
             duration: const Duration(seconds: 5),
-            backgroundColor: Colors.red,
+            backgroundColor: Theme.of(context).colorScheme.error,
           ),
         );
       }

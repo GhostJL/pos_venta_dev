@@ -27,8 +27,6 @@ class _ReturnSummaryCardState extends ConsumerState<ReturnSummaryCard> {
     final state = ref.watch(returnProcessingProvider);
 
     return Card(
-      elevation: 4,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Padding(
         padding: const EdgeInsets.all(20.0),
         child: Column(

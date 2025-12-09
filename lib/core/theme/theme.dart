@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-/// 🛍️ Sistema de Diseño para POS (Punto de Venta)
+/// Sistema de Diseño para POS (Punto de Venta)
 /// Colorimetría enfocada en la funcionalidad y psicología del retail
 class AppTheme {
-  // 🎨 COLORES PRIMARIOS - Identidad de Marca
+  // COLORES PRIMARIOS - Identidad de Marca
 
   /// Color principal del negocio - Usado en header, botones principales
   /// Representa confianza y profesionalismo en transacciones
@@ -20,7 +20,7 @@ class AppTheme {
   static const Color brandTertiary = Color(0xFF0891B2); // Cyan profesional
   static const Color onBrandTertiary = Color(0xFFFFFFFF);
 
-  // 💰 COLORES TRANSACCIONALES - Estados de Operación
+  // COLORES TRANSACCIONALES - Estados de Operación
 
   /// AGREGAR AL CARRITO - Verde confiable para añadir productos
   /// Psicología: Acción positiva, avanzar en el proceso
@@ -47,7 +47,7 @@ class AppTheme {
   static const Color transactionRefund = Color(0xFFF97316);
   static const Color onTransactionRefund = Color(0xFFFFFFFF);
 
-  // 🏷️ COLORES DE PRODUCTOS - Categorización Visual
+  // COLORES DE PRODUCTOS - Categorización Visual
 
   /// PRODUCTO EN STOCK - Verde para disponibilidad inmediata
   /// Indica que el producto puede venderse sin problemas
@@ -79,7 +79,7 @@ class AppTheme {
   static const Color productNew = Color(0xFF3B82F6);
   static const Color onProductNew = Color(0xFFFFFFFF);
 
-  // 👤 COLORES DE CLIENTES - Segmentación y Lealtad
+  // COLORES DE CLIENTES - Segmentación y Lealtad
 
   /// CLIENTE VIP - Dorado premium para clientes de alto valor
   /// Tratamiento especial, descuentos exclusivos, prioridad
@@ -106,7 +106,7 @@ class AppTheme {
   static const Color customerDelinquent = Color(0xFFDC2626);
   static const Color onCustomerDelinquent = Color(0xFFFFFFFF);
 
-  // 💳 COLORES DE MÉTODOS DE PAGO - Identificación Rápida
+  // COLORES DE MÉTODOS DE PAGO - Identificación Rápida
 
   /// EFECTIVO - Verde dinero para pagos en efectivo
   /// Pago inmediato, requiere cambio, va a caja física
@@ -133,7 +133,7 @@ class AppTheme {
   static const Color paymentStoreCredit = Color(0xFFF97316);
   static const Color onPaymentStoreCredit = Color(0xFFFFFFFF);
 
-  // 📊 COLORES DE MÉTRICAS - Dashboard y Reportes
+  // COLORES DE MÉTRICAS - Dashboard y Reportes
 
   /// VENTAS DEL DÍA - Verde crecimiento para ingresos
   /// Número positivo, meta del día, rendimiento de ventas
@@ -160,7 +160,7 @@ class AppTheme {
   static const Color metricTarget = Color(0xFFF59E0B);
   static const Color onMetricTarget = Color(0xFF1E1E1E);
 
-  // 🚨 COLORES DE ALERTAS - Notificaciones del Sistema
+  // COLORES DE ALERTAS - Notificaciones del Sistema
 
   /// ALERTA CRÍTICA - Rojo intenso para problemas urgentes
   /// Caja descuadrada, error de sistema, requiere atención inmediata
@@ -182,7 +182,7 @@ class AppTheme {
   static const Color alertSuccess = Color(0xFF10B981);
   static const Color onAlertSuccess = Color(0xFFFFFFFF);
 
-  // 🎯 COLORES DE ACCIONES - Botones de Operación Rápida
+  // COLORES DE ACCIONES - Botones de Operación Rápida
 
   /// ACCIÓN CONFIRMAR - Verde para botones de confirmación
   /// Proceder con venta, aceptar pago, finalizar operación
@@ -214,7 +214,7 @@ class AppTheme {
   static const Color actionPrint = Color(0xFF475569);
   static const Color onActionPrint = Color(0xFFFFFFFF);
 
-  // 🎨 COLORES DE SUPERFICIE - Fondos y Contenedores
+  // COLORES DE SUPERFICIE - Fondos y Contenedores
 
   /// Superficies Light Mode
   static const Color surfaceLight = Color(0xFFFAFAFA);
@@ -228,13 +228,13 @@ class AppTheme {
   static const Color surfaceContainerHighDark = Color(0xFF2A2A2A);
   static const Color surfaceContainerLowDark = Color(0xFF141414);
 
-  // 🔲 COLORES DE BORDE Y DIVISIÓN
+  // COLORES DE BORDE Y DIVISIÓN
   static const Color borderLight = Color(0xFFE5E5E5);
   static const Color borderDark = Color(0xFF2A2A2A);
   static const Color dividerLight = Color(0xFFE5E5E5);
   static const Color dividerDark = Color(0xFF2A2A2A);
 
-  // 📝 COLORES DE TEXTO
+  // COLORES DE TEXTO
   static const Color textPrimaryLight = Color(0xFF171717);
   static const Color textSecondaryLight = Color(0xFF525252);
   static const Color textTertiaryLight = Color(0xFF737373);
@@ -245,7 +245,7 @@ class AppTheme {
   static const Color textTertiaryDark = Color(0xFFA3A3A3);
   static const Color textDisabledDark = Color(0xFF525252);
 
-  // 🌞 LIGHT THEME
+  // LIGHT THEME
   static ThemeData get lightTheme {
     final colorScheme = ColorScheme.light(
       primary: brandPrimary,
@@ -268,7 +268,7 @@ class AppTheme {
     return _buildTheme(colorScheme, false);
   }
 
-  // 🌙 DARK THEME
+  // DARK THEME
   static ThemeData get darkTheme {
     final colorScheme = ColorScheme.dark(
       primary: brandPrimary,
@@ -291,7 +291,7 @@ class AppTheme {
     return _buildTheme(colorScheme, true);
   }
 
-  // 🏗️ CONSTRUCTOR DE TEMA
+  // CONSTRUCTOR DE TEMA
   static ThemeData _buildTheme(ColorScheme colorScheme, bool isDark) {
     return ThemeData(
       useMaterial3: true,
@@ -306,7 +306,7 @@ class AppTheme {
         centerTitle: false,
         elevation: 0,
         scrolledUnderElevation: 1,
-        backgroundColor: colorScheme.surfaceContainer,
+        backgroundColor: colorScheme.surface,
         foregroundColor: colorScheme.onSurface,
         surfaceTintColor: colorScheme.surface,
 
@@ -322,9 +322,12 @@ class AppTheme {
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+          backgroundColor: AppTheme.brandPrimary,
+          foregroundColor: AppTheme.onBrandPrimary,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
+          textStyle: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
           elevation: 0,
           shadowColor: Colors.transparent,
         ),
@@ -359,19 +362,15 @@ class AppTheme {
 
       // Cards - Productos, tickets, resúmenes
       cardTheme: CardThemeData(
-        elevation: 0,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-          side: BorderSide(color: colorScheme.outlineVariant, width: 1),
-        ),
+        elevation: 0.5,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         color: colorScheme.surfaceContainer,
-        margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       ),
 
       // Input - Búsqueda de productos, cantidades, códigos
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: colorScheme.surfaceContainerHighest,
+        fillColor: colorScheme.surfaceContainer,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide(color: colorScheme.outline, width: 1),
@@ -388,16 +387,16 @@ class AppTheme {
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide(color: colorScheme.error, width: 1),
         ),
+
         contentPadding: const EdgeInsets.symmetric(
-          horizontal: 16,
+          horizontal: 24,
           vertical: 16,
         ),
       ),
 
       // List Tiles - Items del carrito, historial de ventas
       listTileTheme: ListTileThemeData(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
 
       // Dialogs - Confirmaciones, alertas
@@ -435,10 +434,50 @@ class AppTheme {
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       ),
+      // Switches - Filtros, categorías
+      switchTheme: SwitchThemeData(
+        thumbColor: WidgetStateProperty.resolveWith<Color?>((states) {
+          if (states.contains(WidgetState.selected)) {
+            return colorScheme.onPrimary;
+          }
+          return colorScheme.onSurfaceVariant;
+        }),
+        trackColor: WidgetStateProperty.resolveWith<Color?>((states) {
+          if (states.contains(WidgetState.selected)) {
+            return colorScheme.primary;
+          }
+          return colorScheme.outlineVariant;
+        }),
+        trackOutlineColor: WidgetStateProperty.resolveWith<Color?>((states) {
+          if (states.contains(WidgetState.selected)) {
+            return colorScheme.primaryContainer;
+          }
+          return colorScheme.outline;
+        }),
+        overlayColor: WidgetStateProperty.resolveWith<Color?>((states) {
+          if (states.contains(WidgetState.pressed)) {
+            return colorScheme.primary.withValues(alpha: 0.2);
+          }
+          return null;
+        }),
+        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+      ),
+
+      popupMenuTheme: PopupMenuThemeData(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        elevation: 4,
+        color: colorScheme.surfaceContainer,
+        textStyle: TextStyle(
+          fontSize: 14,
+          fontWeight: FontWeight.w500,
+          color: colorScheme.onSurface,
+        ),
+        position: PopupMenuPosition.under,
+      ),
     );
   }
 
-  // 📝 TYPOGRAPHY
+  // TYPOGRAPHY
   static TextTheme _textTheme(bool isDark) {
     final baseColor = isDark ? textPrimaryDark : textPrimaryLight;
     final secondaryColor = isDark ? textSecondaryDark : textSecondaryLight;
@@ -548,7 +587,7 @@ class AppTheme {
   }
 }
 
-// 🌗 Theme Provider
+// Theme Provider
 class ThemeNotifier extends Notifier<ThemeMode> {
   @override
   ThemeMode build() => ThemeMode.system;
@@ -570,7 +609,7 @@ final themeProvider = NotifierProvider<ThemeNotifier, ThemeMode>(() {
   return ThemeNotifier();
 });
 
-// 🎨 Extensions para acceso rápido en el código
+// Extensions para acceso rápido en el código
 extension AppColorExtension on BuildContext {
   // Transacciones
   Color get addToCart => AppTheme.actionAddToCart;

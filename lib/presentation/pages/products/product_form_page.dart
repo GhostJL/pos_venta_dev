@@ -188,7 +188,7 @@ class ProductFormPageState extends ConsumerState<ProductFormPage> {
     ref.listen<ProductFormState>(provider, (previous, next) {
       if (next.error != null && (previous?.error != next.error)) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(next.error!), backgroundColor: Colors.red),
+          SnackBar(content: Text(next.error!), backgroundColor: Theme.of(context).colorScheme.error),
         );
       }
       if (next.isSuccess && !previous!.isSuccess) {

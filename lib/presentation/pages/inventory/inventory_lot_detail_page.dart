@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:posventa/presentation/providers/inventory_lot_providers.dart';
+import 'package:posventa/core/theme/theme.dart';
 
 class InventoryLotDetailPage extends ConsumerWidget {
   final int lotId;
@@ -32,10 +33,6 @@ class InventoryLotDetailPage extends ConsumerWidget {
               children: [
                 // Lot Number Card
                 Card(
-                  elevation: 2,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
                   child: Padding(
                     padding: const EdgeInsets.all(20),
                     child: Column(
@@ -154,10 +151,6 @@ class InventoryLotDetailPage extends ConsumerWidget {
 
                 // Dates Card
                 Card(
-                  elevation: 2,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
                   child: Padding(
                     padding: const EdgeInsets.all(20),
                     child: Column(
@@ -184,7 +177,9 @@ class InventoryLotDetailPage extends ConsumerWidget {
                             'Fecha de Expiración',
                             dateFormat.format(lot.expirationDate!),
                             Icons.warning_amber_rounded,
-                            valueColor: isExpired ? Colors.red : null,
+                            valueColor: isExpired
+                                ? AppTheme.transactionFailed
+                                : null,
                           ),
                           if (isExpired)
                             Padding(
@@ -241,7 +236,11 @@ class InventoryLotDetailPage extends ConsumerWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.error_outline, size: 48, color: Colors.red),
+              Icon(
+                Icons.error_outline,
+                size: 48,
+                color: Theme.of(context).colorScheme.error,
+              ),
               const SizedBox(height: 16),
               Text('Error: $error'),
             ],

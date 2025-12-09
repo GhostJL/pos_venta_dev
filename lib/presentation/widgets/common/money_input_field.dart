@@ -64,7 +64,10 @@ class MoneyInputField extends StatelessWidget {
           const SizedBox(height: 8),
           Text(
             helpText!,
-            style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+            style: TextStyle(
+              fontSize: 12,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
           ),
         ],
       ],

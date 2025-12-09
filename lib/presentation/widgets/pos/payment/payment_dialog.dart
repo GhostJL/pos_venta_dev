@@ -7,6 +7,7 @@ import 'package:posventa/presentation/widgets/pos/payment/widgets/payment_change
 import 'package:posventa/presentation/widgets/pos/payment/widgets/payment_header.dart';
 import 'package:posventa/presentation/widgets/pos/payment/widgets/payment_method_selector.dart';
 import 'package:posventa/presentation/widgets/pos/payment/widgets/payment_summary_card.dart';
+import 'package:posventa/core/theme/theme.dart';
 
 class PaymentDialog extends ConsumerStatefulWidget {
   const PaymentDialog({super.key});
@@ -48,9 +49,9 @@ class _PaymentDialogState extends ConsumerState<PaymentDialog> {
     final amountPaid = double.tryParse(_amountController.text) ?? 0.0;
     if (amountPaid < total) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+        SnackBar(
           content: Text('El monto recibido es insuficiente'),
-          backgroundColor: Colors.red,
+          backgroundColor: Theme.of(context).colorScheme.error,
           behavior: SnackBarBehavior.floating,
         ),
       );
@@ -72,7 +73,7 @@ class _PaymentDialogState extends ConsumerState<PaymentDialog> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(next.successMessage!),
-            backgroundColor: Colors.green,
+            backgroundColor: AppTheme.transactionSuccess,
             behavior: SnackBarBehavior.floating,
           ),
         );
@@ -81,7 +82,7 @@ class _PaymentDialogState extends ConsumerState<PaymentDialog> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(next.errorMessage!),
-            backgroundColor: Colors.red,
+            backgroundColor: Theme.of(context).colorScheme.error,
             behavior: SnackBarBehavior.floating,
           ),
         );

@@ -1,14 +1,26 @@
 import 'package:flutter/material.dart';
+import 'package:posventa/presentation/mixins/search_debounce_mixin.dart';
 
-class CustomDataTableSearchBar extends StatelessWidget {
+class CustomDataTableSearchBar extends StatefulWidget {
   final ValueChanged<String>? onSearch;
 
   const CustomDataTableSearchBar({super.key, required this.onSearch});
 
   @override
+  State<CustomDataTableSearchBar> createState() =>
+      _CustomDataTableSearchBarState();
+}
+
+class _CustomDataTableSearchBarState extends State<CustomDataTableSearchBar>
+    with SearchDebounceMixin {
+  @override
   Widget build(BuildContext context) {
     return TextField(
-      onChanged: onSearch,
+      onChanged: (value) {
+        debounceSearch(() {
+          widget.onSearch?.call(value);
+        });
+      },
       decoration: InputDecoration(
         hintText: 'Buscar...',
         prefixIcon: Icon(

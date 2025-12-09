@@ -27,11 +27,13 @@ class ProductVariantsList extends StatelessWidget {
       child: Column(
         children: [
           if (variants.isEmpty)
-            const Padding(
+            Padding(
               padding: EdgeInsets.all(16.0),
               child: Text(
                 'No hay variantes adicionales. Se usará la configuración principal.',
-                style: TextStyle(color: Colors.grey),
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
                 textAlign: TextAlign.center,
               ),
             )
@@ -61,7 +63,7 @@ class ProductVariantsList extends StatelessWidget {
                       ),
                       IconButton(
                         icon: const Icon(Icons.delete),
-                        color: Colors.red,
+                        color: Theme.of(context).colorScheme.error,
                         onPressed: () => onDeleteVariant(index),
                         tooltip: 'Eliminar',
                       ),

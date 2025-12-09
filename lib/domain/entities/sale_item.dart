@@ -15,6 +15,7 @@ class SaleItem {
   final int costPriceCents;
   final int? lotId;
   final String? productName; // For display convenience
+  final String? variantDescription;
 
   const SaleItem({
     this.id,
@@ -31,6 +32,7 @@ class SaleItem {
     required this.costPriceCents,
     this.lotId,
     this.productName,
+    this.variantDescription,
     this.taxes = const [],
     this.unitsPerPack = 1.0,
   });

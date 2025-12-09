@@ -5,23 +5,15 @@ class LoginHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
+    return Row(
       children: [
-        Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.primary.withAlpha(25),
-            shape: BoxShape.circle,
-          ),
-          child: Icon(
-            Icons.point_of_sale_rounded,
-            size: 48,
-            color: Theme.of(context).colorScheme.primary,
-          ),
+        Icon(
+          Icons.point_of_sale_rounded,
+          size: 48,
+          color: Theme.of(context).colorScheme.primary,
         ),
-        const SizedBox(height: 16),
         Text(
-          'POSVENTA',
+          ' | POSVENTA',
           style: Theme.of(context).textTheme.displaySmall?.copyWith(
             fontWeight: FontWeight.w900,
             color: Theme.of(context).colorScheme.primary,

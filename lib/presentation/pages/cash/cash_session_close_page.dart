@@ -29,8 +29,21 @@ class _CashSessionClosePageState extends ConsumerState<CashSessionClosePage> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Confirmar Cierre'),
-        content: Text(
-          '¿Está seguro de cerrar la caja con un efectivo contado de \$${amount.toStringAsFixed(2)}?',
+        content: Text.rich(
+          TextSpan(
+            style: Theme.of(context).textTheme.bodyMedium,
+            children: [
+              const TextSpan(
+                text:
+                    '¿Está seguro de cerrar la caja con un efectivo contado de ',
+              ),
+              TextSpan(
+                text: '\$${amount.toStringAsFixed(2)}',
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+              const TextSpan(text: '?'),
+            ],
+          ),
         ),
         actions: [
           TextButton(
@@ -39,10 +52,6 @@ class _CashSessionClosePageState extends ConsumerState<CashSessionClosePage> {
           ),
           ElevatedButton(
             onPressed: () => Navigator.of(context).pop(true),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Theme.of(context).colorScheme.error,
-              foregroundColor: Theme.of(context).colorScheme.onError,
-            ),
             child: const Text('Confirmar Cierre'),
           ),
         ],

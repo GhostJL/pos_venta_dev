@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:posventa/presentation/widgets/common/layouts/placeholder_page.dart';
+import 'package:posventa/core/theme/theme.dart';
 
 /// Returns Management Page (Gestión de Devoluciones)
 class ReturnsManagementPage extends StatelessWidget {
@@ -14,7 +15,7 @@ class ReturnsManagementPage extends StatelessWidget {
           'Este módulo permitirá gestionar las devoluciones de productos, '
           'procesar reversos de ventas y mantener un historial completo de '
           'todas las transacciones de devolución.',
-      accentColor: Colors.orange,
+      accentColor: AppTheme.transactionPending,
       plannedFeatures: [
         'Búsqueda de ventas por folio o cliente',
         'Devolución parcial o total de productos',

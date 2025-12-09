@@ -124,16 +124,6 @@ class PermissionDeniedWidget extends StatelessWidget {
                       onPrimaryPressed != null ? Icons.check : Icons.home,
                     ), // Dynamic icon
                     label: Text(primaryButtonText ?? 'Ir al Inicio'),
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 32,
-                        vertical: 16,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      elevation: 0,
-                    ),
                   ),
                 ],
               ),

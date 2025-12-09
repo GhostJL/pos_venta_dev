@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:posventa/presentation/providers/create_account_provider.dart';
 import 'package:posventa/presentation/widgets/auth/create_account/create_account_form.dart';
 import 'package:posventa/presentation/widgets/auth/create_account/create_account_header.dart';
+import 'package:posventa/core/theme/theme.dart';
 
 class CreateAccountPage extends ConsumerStatefulWidget {
   const CreateAccountPage({super.key});
@@ -20,7 +21,7 @@ class _CreateAccountPageState extends ConsumerState<CreateAccountPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Cuenta creada exitosamente'),
-            backgroundColor: Colors.green,
+            backgroundColor: AppTheme.transactionSuccess,
           ),
         );
         context.go('/cash-session-open');

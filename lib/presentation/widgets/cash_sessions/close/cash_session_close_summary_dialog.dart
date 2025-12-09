@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:posventa/core/theme/theme.dart';
 
 class CashSessionCloseSummaryDialog extends StatelessWidget {
   final dynamic
@@ -20,11 +21,13 @@ class CashSessionCloseSummaryDialog extends StatelessWidget {
         children: [
           Icon(
             isBalanced ? Icons.check_circle : Icons.warning,
-            color: isBalanced ? Colors.green : Colors.orange,
+            color: isBalanced
+                ? AppTheme.transactionSuccess
+                : AppTheme.transactionPending,
             size: 32,
           ),
           const SizedBox(width: 12),
-          const Expanded(child: Text('Resumen de Cierre')),
+          const Expanded(child: Text('Resumen de Cierre de Caja')),
         ],
       ),
       content: Column(
@@ -42,8 +45,8 @@ class CashSessionCloseSummaryDialog extends StatelessWidget {
             difference,
             isBold: true,
             color: difference == 0
-                ? Colors.green
-                : (difference > 0 ? Colors.blue : Colors.red),
+                ? AppTheme.transactionSuccess
+                : (difference > 0 ? Colors.blue : AppTheme.transactionFailed),
           ),
           if (!isBalanced) ...[
             const SizedBox(height: 16),
@@ -105,8 +108,7 @@ class CashSessionCloseSummaryDialog extends StatelessWidget {
           label,
           style: TextStyle(
             fontSize: isBold ? 16 : 14,
-            fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
-            color: color,
+            fontWeight: isBold ? FontWeight.bold : FontWeight.bold,
           ),
         ),
         Text(

@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import 'package:posventa/core/constants/permission_constants.dart';
 import 'package:posventa/presentation/providers/permission_provider.dart';
 import 'package:posventa/presentation/widgets/inventory/adjustments/show_actions_widget.dart';
+import 'package:posventa/core/theme/theme.dart';
 
 class InventoryPage extends ConsumerStatefulWidget {
   const InventoryPage({super.key});
@@ -79,19 +80,7 @@ class _InventoryPageState extends ConsumerState<InventoryPage> {
                       final warehouse = warehouseMap[item.warehouseId];
 
                       return Card(
-                        elevation: 0,
-                        surfaceTintColor: Theme.of(context).colorScheme.surface,
-
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                          side: BorderSide(
-                            color: Theme.of(
-                              context,
-                            ).colorScheme.outline.withValues(alpha: 0.2),
-                          ),
-                        ),
                         child: InkWell(
-                          borderRadius: BorderRadius.circular(16),
                           onTap: () =>
                               context.push('/inventory/detail', extra: item),
                           child: Padding(
@@ -164,7 +153,7 @@ class _InventoryPageState extends ConsumerState<InventoryPage> {
                                     _buildBadge(
                                       label:
                                           'Reservado: ${item.quantityReserved.toInt()}',
-                                      color: Colors.orange,
+                                      color: AppTheme.transactionPending,
                                     ),
                                   ],
                                 ),

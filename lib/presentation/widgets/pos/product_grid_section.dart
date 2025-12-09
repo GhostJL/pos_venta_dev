@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:posventa/core/theme/theme.dart';
 import 'package:posventa/domain/entities/product.dart';
 import 'package:posventa/domain/entities/product_variant.dart';
 import 'package:posventa/presentation/providers/pos_providers.dart';
@@ -8,6 +9,7 @@ import 'package:posventa/presentation/providers/product_provider.dart';
 import 'package:posventa/presentation/widgets/pos/product_grid/product_grid_item_model.dart';
 import 'package:posventa/presentation/widgets/pos/product_grid/product_grid_view.dart';
 import 'package:posventa/presentation/widgets/pos/product_grid/product_search_bar.dart';
+import 'package:posventa/presentation/mixins/search_debounce_mixin.dart';
 
 class ProductGridSection extends ConsumerStatefulWidget {
   final bool isMobile;
@@ -18,7 +20,8 @@ class ProductGridSection extends ConsumerStatefulWidget {
   ConsumerState<ProductGridSection> createState() => _ProductGridSectionState();
 }
 
-class _ProductGridSectionState extends ConsumerState<ProductGridSection> {
+class _ProductGridSectionState extends ConsumerState<ProductGridSection>
+    with SearchDebounceMixin {
   final TextEditingController _searchController = TextEditingController();
 
   @override
@@ -79,6 +82,7 @@ class _ProductGridSectionState extends ConsumerState<ProductGridSection> {
             matchedVariant != null
                 ? '${product.name} (${matchedVariant.description})'
                 : product.name,
+            matchedVariant != null ? matchedVariant.description : '',
           );
         }
       } else if (scannerContext.mounted) {
@@ -116,7 +120,11 @@ class _ProductGridSectionState extends ConsumerState<ProductGridSection> {
     if (error != null && mounted) {
       _showStockError(context, error);
     } else if (mounted) {
-      _showProductAdded(context, item.displayName);
+      _showProductAdded(
+        context,
+        item.product.name,
+        item.variant?.description ?? '',
+      );
     }
   }
 
@@ -130,8 +138,10 @@ class _ProductGridSectionState extends ConsumerState<ProductGridSection> {
         ProductSearchBar(
           controller: _searchController,
           onChanged: (value) {
-            ref.read(productListProvider.notifier).searchProducts(value);
-            setState(() {});
+            debounceSearch(() {
+              ref.read(productListProvider.notifier).searchProducts(value);
+              setState(() {});
+            });
           },
           onClear: () {
             _searchController.clear();
@@ -156,7 +166,11 @@ class _ProductGridSectionState extends ConsumerState<ProductGridSection> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(Icons.error_outline, size: 48, color: Colors.red),
+                  Icon(
+                    Icons.error_outline,
+                    size: 48,
+                    color: Theme.of(context).colorScheme.error,
+                  ),
                   const SizedBox(height: 16),
                   Text('Error: $err'),
                 ],
@@ -168,7 +182,11 @@ class _ProductGridSectionState extends ConsumerState<ProductGridSection> {
     );
   }
 
-  void _showProductAdded(BuildContext context, String productName) {
+  void _showProductAdded(
+    BuildContext context,
+    String productName,
+    String variantName,
+  ) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Row(
@@ -176,27 +194,38 @@ class _ProductGridSectionState extends ConsumerState<ProductGridSection> {
           children: [
             Icon(
               Icons.check_circle,
-              color: Theme.of(context).colorScheme.onSurface,
-              size: 16,
+              size: 18,
+              color: AppTheme.onActionAddToCart,
             ),
-            const SizedBox(width: 8),
-            Text(
-              productName,
-              style: const TextStyle(fontSize: 13),
-              overflow: TextOverflow.ellipsis,
+            const SizedBox(width: 16),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  productName,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: AppTheme.onActionAddToCart,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                Text(
+                  variantName.isNotEmpty ? '($variantName)' : '',
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: AppTheme.onActionAddToCart,
+                    fontSize: 10,
+                  ),
+                ),
+              ],
             ),
           ],
         ),
-        backgroundColor: Theme.of(context).colorScheme.onSurface,
-        duration: const Duration(milliseconds: 800),
+        duration: const Duration(milliseconds: 500),
         behavior: SnackBarBehavior.floating,
-        margin: EdgeInsets.only(
-          bottom: MediaQuery.of(context).size.height - 100,
-          left: 16,
-          right: 16,
-        ),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        backgroundColor: AppTheme.actionAddToCart,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
     );
   }
@@ -208,25 +237,20 @@ class _ProductGridSectionState extends ConsumerState<ProductGridSection> {
           children: [
             Icon(
               Icons.warning_amber,
-              color: Theme.of(context).colorScheme.onSurface,
+              color: AppTheme.onAlertCritical,
               size: 18,
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: 16),
             Expanded(
-              child: Text(message, style: const TextStyle(fontSize: 13)),
+              child: Text(message, style: const TextStyle(fontSize: 12)),
             ),
           ],
         ),
-        backgroundColor: Theme.of(context).colorScheme.secondary,
-        duration: const Duration(seconds: 2),
+        duration: const Duration(milliseconds: 500),
         behavior: SnackBarBehavior.floating,
-        margin: EdgeInsets.only(
-          bottom: MediaQuery.of(context).size.height - 100,
-          left: 16,
-          right: 16,
-        ),
+        backgroundColor: AppTheme.alertCritical,
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
     );
   }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:posventa/core/theme/theme.dart';
 
 /// Reusable placeholder page for modules under development
 class PlaceholderPage extends StatelessWidget {
@@ -65,14 +66,14 @@ class PlaceholderPage extends StatelessWidget {
                   vertical: 8,
                 ),
                 decoration: BoxDecoration(
-                  color: Colors.orange.withAlpha(20),
+                  color: AppTheme.transactionPending.withAlpha(20),
                   borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: Colors.orange.withAlpha(100)),
+                  border: Border.all(color: AppTheme.transactionPending.withAlpha(100)),
                 ),
                 child: const Text(
                   'PRÓXIMAMENTE',
                   style: TextStyle(
-                    color: Colors.orange,
+                    color: AppTheme.transactionPending,
                     fontWeight: FontWeight.bold,
                     fontSize: 12,
                     letterSpacing: 1.2,

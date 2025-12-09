@@ -12,6 +12,7 @@ import 'package:posventa/presentation/widgets/catalog/warehouses/warehouse_form_
 import 'package:posventa/presentation/widgets/common/error_message_box.dart';
 import 'package:posventa/presentation/widgets/common/money_input_field.dart';
 import 'package:posventa/presentation/widgets/common/centered_form_card.dart';
+import 'package:posventa/core/theme/theme.dart';
 
 class CashSessionOpenPage extends ConsumerStatefulWidget {
   const CashSessionOpenPage({super.key});
@@ -71,8 +72,9 @@ class _CashSessionOpenPageState extends ConsumerState<CashSessionOpenPage> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
+            duration: Duration(seconds: 1),
             content: Text('Caja abierta exitosamente'),
-            backgroundColor: Colors.green,
+            backgroundColor: AppTheme.transactionSuccess,
           ),
         );
         // Invalidar el provider para que el Guard detecte la nueva sesión
@@ -144,9 +146,11 @@ class _CashSessionOpenPageState extends ConsumerState<CashSessionOpenPage> {
                 if (isAdmin) {
                   return Column(
                     children: [
-                      const Text(
+                      Text(
                         'No hay sucursales registradas.',
-                        style: TextStyle(color: Colors.red),
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.error,
+                        ),
                         textAlign: TextAlign.center,
                       ),
                       const SizedBox(height: 8),
@@ -164,19 +168,13 @@ class _CashSessionOpenPageState extends ConsumerState<CashSessionOpenPage> {
                         },
                         icon: const Icon(Icons.add),
                         label: const Text('Crear Sucursal'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Theme.of(context).primaryColor,
-                          foregroundColor: Theme.of(
-                            context,
-                          ).colorScheme.onSurface,
-                        ),
                       ),
                     ],
                   );
                 }
-                return const Text(
+                return Text(
                   'No hay sucursales disponibles',
-                  style: TextStyle(color: Colors.red),
+                  style: TextStyle(color: Theme.of(context).colorScheme.error),
                 );
               }
               // Seleccionar automáticamente si solo hay una
@@ -220,8 +218,10 @@ class _CashSessionOpenPageState extends ConsumerState<CashSessionOpenPage> {
               );
             },
             loading: () => const Center(child: CircularProgressIndicator()),
-            error: (err, stack) =>
-                Text('Error: $err', style: const TextStyle(color: Colors.red)),
+            error: (err, stack) => Text(
+              'Error: $err',
+              style: TextStyle(color: Theme.of(context).colorScheme.error),
+            ),
           ),
           const SizedBox(height: 24),
 
@@ -241,36 +241,26 @@ class _CashSessionOpenPageState extends ConsumerState<CashSessionOpenPage> {
           ],
 
           // Botón de apertura
-          SizedBox(
-            height: 50,
-            child: ElevatedButton(
-              onPressed: _isLoading ? null : _openSession,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Theme.of(context).primaryColor,
-                foregroundColor: Theme.of(context).colorScheme.onSurface,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                elevation: 0,
-              ),
-              child: _isLoading
-                  ? SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: Theme.of(context).colorScheme.onSurface,
-                      ),
-                    )
-                  : const Text(
-                      'ABRIR CAJA',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 0.5,
-                      ),
+          ElevatedButton(
+            onPressed: _isLoading ? null : _openSession,
+
+            child: _isLoading
+                ? SizedBox(
+                    width: 24,
+                    height: 16,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Theme.of(context).colorScheme.onSurface,
                     ),
-            ),
+                  )
+                : const Text(
+                    'ABRIR CAJA',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 0.5,
+                    ),
+                  ),
           ),
         ],
       ),

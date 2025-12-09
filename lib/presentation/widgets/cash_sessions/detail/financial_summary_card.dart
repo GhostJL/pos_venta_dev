@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 import 'package:posventa/presentation/providers/cash_session_providers.dart';
+import 'package:posventa/core/theme/theme.dart';
 
 class FinancialSummaryCard extends StatelessWidget {
   final CashSessionDetail detail;
@@ -55,7 +56,7 @@ class FinancialSummaryCard extends StatelessWidget {
               'Ventas en Efectivo',
               detail.totalCashSales,
               currencyFormat,
-              color: Colors.green,
+              color: AppTheme.transactionSuccess,
               prefix: '+',
             ),
             const SizedBox(height: 8),
@@ -64,9 +65,7 @@ class FinancialSummaryCard extends StatelessWidget {
               'Movimientos Manuales',
               detail.totalManualMovements,
               currencyFormat,
-              color: detail.totalManualMovements >= 0
-                  ? Colors.green
-                  : Colors.red,
+              color: detail.totalManualMovements >= 0 ? AppTheme.transactionSuccess : AppTheme.transactionFailed,
               prefix: detail.totalManualMovements >= 0 ? '+' : '',
             ),
             const Divider(height: 24),
@@ -93,8 +92,8 @@ class FinancialSummaryCard extends StatelessWidget {
                   color: difference == 0
                       ? Colors.blue.withAlpha(25)
                       : (isNegative
-                            ? Colors.red.withAlpha(25)
-                            : Colors.green.withAlpha(25)),
+                            ? Theme.of(context).colorScheme.error.withAlpha(25)
+                            : AppTheme.transactionSuccess.withAlpha(25)),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Row(
@@ -110,7 +109,7 @@ class FinancialSummaryCard extends StatelessWidget {
                                     : Icons.trending_up),
                           color: difference == 0
                               ? Colors.blue
-                              : (isNegative ? Colors.red : Colors.green),
+                              : (isNegative ? AppTheme.transactionFailed : AppTheme.transactionSuccess),
                         ),
                         const SizedBox(width: 8),
                         Text(
@@ -120,7 +119,7 @@ class FinancialSummaryCard extends StatelessWidget {
                             fontWeight: FontWeight.bold,
                             color: difference == 0
                                 ? Colors.blue
-                                : (isNegative ? Colors.red : Colors.green),
+                                : (isNegative ? AppTheme.transactionFailed : AppTheme.transactionSuccess),
                           ),
                         ),
                       ],
@@ -132,7 +131,7 @@ class FinancialSummaryCard extends StatelessWidget {
                         fontWeight: FontWeight.bold,
                         color: difference == 0
                             ? Colors.blue
-                            : (isNegative ? Colors.red : Colors.green),
+                            : (isNegative ? AppTheme.transactionFailed : AppTheme.transactionSuccess),
                       ),
                     ),
                   ],

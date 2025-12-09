@@ -28,14 +28,7 @@ class SaleActionButtons extends ConsumerWidget {
             onPressed: () {
               context.push('/adjustments/return-processing', extra: sale);
             },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Theme.of(context).colorScheme.surface,
-              foregroundColor: Theme.of(context).colorScheme.onSurface,
-              elevation: 0,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
+
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -57,13 +50,6 @@ class SaleActionButtons extends ConsumerWidget {
             onPressed: () {
               _showCancelDialog(context, ref, sale);
             },
-            style: OutlinedButton.styleFrom(
-              foregroundColor: Theme.of(context).colorScheme.onSurfaceVariant,
-              side: BorderSide(color: Theme.of(context).colorScheme.outline),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [

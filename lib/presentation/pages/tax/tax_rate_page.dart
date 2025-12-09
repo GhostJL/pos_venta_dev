@@ -230,14 +230,6 @@ class _TaxRatePageState extends ConsumerState<TaxRatePage> {
             ),
           ),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Theme.of(context).colorScheme.error,
-              foregroundColor: Theme.of(context).colorScheme.onSurface,
-              elevation: 0,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-            ),
             onPressed: () {
               ref.read(taxRateListProvider.notifier).deleteTaxRate(taxRate.id!);
               Navigator.of(context).pop();

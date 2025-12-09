@@ -43,7 +43,11 @@ class CashSessionGuard extends ConsumerWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.error_outline, size: 64, color: Colors.red),
+              Icon(
+                Icons.error_outline,
+                size: 64,
+                color: Theme.of(context).colorScheme.error,
+              ),
               const SizedBox(height: 16),
               Text(
                 'Error al verificar sesión de caja',
@@ -52,7 +56,7 @@ class CashSessionGuard extends ConsumerWidget {
               const SizedBox(height: 8),
               Text(
                 error.toString(),
-                style: const TextStyle(color: Colors.red),
+                style: TextStyle(color: Theme.of(context).colorScheme.error),
                 textAlign: TextAlign.center,
               ),
             ],

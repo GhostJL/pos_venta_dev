@@ -14,6 +14,7 @@ import 'package:posventa/presentation/widgets/common/empty_state_widget.dart';
 import 'package:posventa/presentation/widgets/products/filters/chip_filter_widget.dart';
 import 'package:posventa/presentation/widgets/common/async_value_handler.dart';
 import 'package:posventa/presentation/mixins/page_lifecycle_mixin.dart';
+import 'package:posventa/presentation/mixins/search_debounce_mixin.dart';
 
 class ProductsPage extends ConsumerStatefulWidget {
   const ProductsPage({super.key});
@@ -23,7 +24,7 @@ class ProductsPage extends ConsumerStatefulWidget {
 }
 
 class ProductsPageState extends ConsumerState<ProductsPage>
-    with PageLifecycleMixin {
+    with PageLifecycleMixin, SearchDebounceMixin {
   String _searchQuery = '';
   int? _departmentFilter;
   int? _categoryFilter;
@@ -76,7 +77,9 @@ class ProductsPageState extends ConsumerState<ProductsPage>
               const SizedBox(height: 12),
               ProductSearchBar(
                 controller: _searchController,
-                onChanged: (value) => setState(() => _searchQuery = value),
+                onChanged: (value) {
+                  debounceSearch(() => setState(() => _searchQuery = value));
+                },
                 onScannerPressed: _openScanner,
               ),
               const SizedBox(height: 4),

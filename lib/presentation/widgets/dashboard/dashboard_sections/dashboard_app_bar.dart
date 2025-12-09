@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:posventa/presentation/providers/auth_provider.dart';
 import 'package:posventa/presentation/providers/providers.dart';
 import 'package:posventa/presentation/widgets/dashboard/dashboard_search_delegate.dart';
+import 'package:posventa/core/theme/theme.dart';
 
 class DashboardAppBar extends ConsumerWidget implements PreferredSizeWidget {
   const DashboardAppBar({super.key});
@@ -105,7 +106,9 @@ class DashboardAppBar extends ConsumerWidget implements PreferredSizeWidget {
                 Navigator.pop(context);
                 context.go('/cash-session-close?intent=logout');
               },
-              style: FilledButton.styleFrom(backgroundColor: Colors.orange),
+              style: FilledButton.styleFrom(
+                backgroundColor: AppTheme.transactionPending,
+              ),
               child: const Text('Ir a Cerrar Caja'),
             ),
           ],

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:posventa/presentation/providers/auth_provider.dart';
 import 'package:posventa/presentation/providers/providers.dart';
+import 'package:posventa/core/theme/theme.dart';
 
 class SideMenuLogout extends ConsumerWidget {
   const SideMenuLogout({super.key});
@@ -49,7 +50,7 @@ class SideMenuLogout extends ConsumerWidget {
                         context.go('/cash-session-close?intent=logout');
                       },
                       style: FilledButton.styleFrom(
-                        backgroundColor: Colors.orange,
+                        backgroundColor: AppTheme.transactionPending,
                       ),
                       child: const Text('Ir a Cerrar Caja'),
                     ),

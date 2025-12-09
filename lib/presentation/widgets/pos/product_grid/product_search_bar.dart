@@ -35,10 +35,6 @@ class ProductSearchBar extends StatelessWidget {
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
                 ),
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 12,
-                ),
                 isDense: true,
               ),
               onChanged: onChanged,
@@ -50,7 +46,7 @@ class ProductSearchBar extends StatelessWidget {
             child: IconButton(
               icon: Icon(
                 Icons.qr_code_scanner,
-                color: Theme.of(context).primaryColor,
+                color: Theme.of(context).colorScheme.onSurface,
               ),
               onPressed: onScan,
               tooltip: 'Escanear código',

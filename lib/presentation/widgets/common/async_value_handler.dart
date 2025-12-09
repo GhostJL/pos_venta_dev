@@ -126,18 +126,7 @@ class _DefaultErrorWidget extends StatelessWidget {
             const SizedBox(height: 24),
             ElevatedButton(
               onPressed: onRetry,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: colorScheme.surfaceContainerHighest,
-                foregroundColor: colorScheme.onSurface,
-                elevation: 0,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 24,
-                  vertical: 12,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
-              ),
+
               child: const Text(
                 'Reintentar',
                 style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),

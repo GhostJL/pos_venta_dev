@@ -4,12 +4,10 @@ import 'package:posventa/domain/entities/category.dart';
 import 'package:posventa/presentation/providers/category_providers.dart';
 import 'package:posventa/presentation/providers/department_providers.dart';
 import 'package:go_router/go_router.dart';
-import 'package:posventa/presentation/widgets/common/tables/custom_data_table.dart';
 import 'package:posventa/core/constants/permission_constants.dart';
 import 'package:posventa/presentation/providers/permission_provider.dart';
+import 'package:posventa/presentation/widgets/common/cards/card_base_module_widget.dart';
 import 'package:posventa/presentation/widgets/common/confirm_delete_dialog.dart';
-import 'package:posventa/presentation/widgets/common/data_table_actions.dart';
-import 'package:posventa/presentation/widgets/common/tables/data_cell_text.dart';
 import 'package:posventa/presentation/widgets/common/async_value_handler.dart';
 import 'package:posventa/presentation/mixins/page_lifecycle_mixin.dart';
 
@@ -49,44 +47,74 @@ class _CategoriesPageState extends ConsumerState<CategoriesPage>
       hasPermissionProvider(PermissionConstants.catalogManage),
     );
 
-    return Padding(
-      padding: const EdgeInsets.all(24.0),
-      child: AsyncValueHandler<List<Category>>(
-        value: categoriesAsync,
-        data: (categories) => CustomDataTable<Category>(
-          columns: const [
-            DataColumn(label: Text('Nombre')),
-            DataColumn(label: Text('Código')),
-            DataColumn(label: Text('Departamento')),
-            DataColumn(label: Text('Acciones')),
-          ],
-          rows: categories.map((category) {
-            final departmentName =
-                departments.asData?.value
-                    .firstWhere((d) => d.id == category.departmentId)
-                    .name ??
-                'N/A';
-            return DataRow(
-              cells: [
-                DataCell(DataCellPrimaryText(category.name)),
-                DataCell(DataCellSecondaryText(category.code)),
-                DataCell(DataCellText(departmentName)),
-                DataCell(
-                  DataTableActions(
-                    hasEditPermission: hasManagePermission,
-                    hasDeletePermission: hasManagePermission,
-                    onEdit: () => _navigateToForm(category),
-                    onDelete: () => _confirmDelete(context, ref, category),
-                    editTooltip: 'Editar Categoría',
-                    deleteTooltip: 'Eliminar Categoría',
-                  ),
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Categorías'),
+        actions: [
+          if (hasManagePermission)
+            IconButton(
+              icon: const Icon(Icons.add),
+              onPressed: () => _navigateToForm(),
+            ),
+        ],
+      ),
+      body: SafeArea(
+        minimum: const EdgeInsets.all(16),
+        child: AsyncValueHandler<List<Category>>(
+          value: categoriesAsync,
+          data: (categories) {
+            if (categories.isEmpty) {
+              return Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.category_outlined,
+                      size: 64,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      'No se encontraron categorías',
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    if (hasManagePermission)
+                      ElevatedButton.icon(
+                        onPressed: () => _navigateToForm(),
+                        icon: const Icon(Icons.add),
+                        label: const Text('Añadir Categoría'),
+                      ),
+                  ],
                 ),
-              ],
+              );
+            }
+
+            return ListView.separated(
+              itemCount: categories.length,
+              separatorBuilder: (_, __) => const SizedBox(height: 12),
+              itemBuilder: (context, index) {
+                final category = categories[index];
+                final departmentName =
+                    departments.asData?.value
+                        .firstWhere((d) => d.id == category.departmentId)
+                        .name ??
+                    'N/A';
+
+                return CardBaseModuleWidget(
+                  icon: Icons.category_outlined,
+                  title: category.name,
+                  subtitle: 'Departamento',
+                  departmentName: departmentName,
+                  onEdit: () => _navigateToForm(category),
+                  onDelete: () => _confirmDelete(context, ref, category),
+                  isActive: category.isActive,
+                );
+              },
             );
-          }).toList(),
-          itemCount: categories.length,
-          onAddItem: hasManagePermission ? () => _navigateToForm() : () {},
-          emptyText: 'No se encontraron categorías. ¡Añade una para empezar!',
+          },
         ),
       ),
     );

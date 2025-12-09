@@ -123,6 +123,7 @@ class POSNotifier extends _$POSNotifier {
         totalCents: totalCents,
         costPriceCents: existingItem.costPriceCents,
         productName: existingItem.productName,
+        variantDescription: existingItem.variantDescription,
         taxes: taxes,
         unitsPerPack: existingItem.unitsPerPack,
       );
@@ -143,10 +144,8 @@ class POSNotifier extends _$POSNotifier {
       final costPriceCents = variant != null
           ? variant.costPriceCents
           : (product.costPrice * 100).round();
-      final productName = variant != null
-          ? '${product.name} (${variant.description})'
-          : product.name;
-
+      final productName = product.name;
+      final variantDescription = variant?.description;
       final quantity = 1.0;
       final subtotalCents = (unitPriceCents * quantity).round();
 
@@ -178,6 +177,7 @@ class POSNotifier extends _$POSNotifier {
         totalCents: totalCents,
         costPriceCents: costPriceCents,
         productName: productName,
+        variantDescription: variantDescription,
         taxes: taxes,
         unitsPerPack: variant?.quantity ?? 1.0,
       );
@@ -295,6 +295,7 @@ class POSNotifier extends _$POSNotifier {
         totalCents: totalCents,
         costPriceCents: existingItem.costPriceCents,
         productName: existingItem.productName,
+        variantDescription: existingItem.variantDescription,
         taxes: taxes,
         unitsPerPack: existingItem.unitsPerPack,
       );

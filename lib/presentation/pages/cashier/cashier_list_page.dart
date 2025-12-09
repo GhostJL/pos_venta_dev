@@ -4,6 +4,7 @@ import 'package:posventa/domain/entities/user.dart';
 import 'package:go_router/go_router.dart';
 import 'package:posventa/presentation/providers/cashier_providers.dart';
 import 'package:posventa/presentation/providers/auth_provider.dart';
+import 'package:posventa/core/theme/theme.dart';
 
 class CashierListPage extends ConsumerWidget {
   const CashierListPage({super.key});
@@ -15,7 +16,12 @@ class CashierListPage extends ConsumerWidget {
 
     if (authState.user?.role != UserRole.administrador) {
       return const Scaffold(
-        body: Center(child: Text('Acceso denegado. Solo administradores.')),
+        body: Center(
+          child: Text(
+            'Acceso denegado. Solo administradores.',
+            style: TextStyle(fontWeight: FontWeight.w600),
+          ),
+        ),
       );
     }
 
@@ -24,41 +30,109 @@ class CashierListPage extends ConsumerWidget {
       body: cashiersAsync.when(
         data: (cashiers) {
           if (cashiers.isEmpty) {
-            return const Center(child: Text('No hay cajeros registrados.'));
+            return Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.people_alt_outlined,
+                    size: 64,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    'No hay cajeros registrados',
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+            );
           }
-          return ListView.builder(
+          return ListView.separated(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
             itemCount: cashiers.length,
+            separatorBuilder: (_, __) => const SizedBox(height: 10),
             itemBuilder: (context, index) {
               final cashier = cashiers[index];
               return Card(
-                margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 child: ListTile(
                   leading: CircleAvatar(
-                    child: Text(cashier.firstName[0].toUpperCase()),
+                    backgroundColor: Theme.of(
+                      context,
+                    ).colorScheme.primaryContainer,
+                    child: Text(
+                      cashier.firstName[0].toUpperCase(),
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onPrimaryContainer,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ),
-                  title: Text('${cashier.firstName} ${cashier.lastName}'),
-                  subtitle: Text(cashier.username),
-                  trailing: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      IconButton(
-                        icon: const Icon(Icons.security),
-                        tooltip: 'Permisos',
-                        onPressed: () {
+                  title: Text(
+                    '${cashier.firstName} ${cashier.lastName}',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 15,
+                    ),
+                  ),
+                  trailing: PopupMenuButton<String>(
+                    onSelected: (value) {
+                      switch (value) {
+                        case 'permissions':
                           context.push('/cashiers/permissions', extra: cashier);
-                        },
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.edit),
-                        tooltip: 'Editar',
-                        onPressed: () {
+                          break;
+                        case 'edit':
                           context.push('/cashiers/form', extra: cashier);
-                        },
+                          break;
+                        case 'delete':
+                          _confirmDelete(context, ref, cashier);
+                          break;
+                      }
+                    },
+                    itemBuilder: (context) => [
+                      PopupMenuItem(
+                        value: 'permissions',
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.security,
+                              color: Theme.of(context).colorScheme.primary,
+                            ),
+                            const SizedBox(width: 8),
+                            const Text('Permisos'),
+                          ],
+                        ),
                       ),
-                      IconButton(
-                        icon: const Icon(Icons.delete, color: Colors.red),
-                        tooltip: 'Eliminar',
-                        onPressed: () => _confirmDelete(context, ref, cashier),
+                      PopupMenuItem(
+                        value: 'edit',
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.edit,
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onSurfaceVariant,
+                            ),
+                            const SizedBox(width: 8),
+                            const Text('Editar'),
+                          ],
+                        ),
+                      ),
+                      PopupMenuItem(
+                        value: 'delete',
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.delete,
+                              color: Theme.of(context).colorScheme.error,
+                            ),
+                            const SizedBox(width: 8),
+                            const Text('Eliminar'),
+                          ],
+                        ),
                       ),
                     ],
                   ),
@@ -68,13 +142,16 @@ class CashierListPage extends ConsumerWidget {
           );
         },
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (err, stack) => Center(child: Text('Error: $err')),
+        error: (err, stack) => Center(
+          child: Text('Error: $err', style: const TextStyle(color: Colors.red)),
+        ),
       ),
-      floatingActionButton: FloatingActionButton(
+      floatingActionButton: FloatingActionButton.extended(
         onPressed: () {
           context.push('/cashiers/form');
         },
-        child: const Icon(Icons.add),
+        icon: const Icon(Icons.add),
+        label: const Text('Nuevo Cajero'),
       ),
     );
   }
@@ -92,7 +169,11 @@ class CashierListPage extends ConsumerWidget {
             onPressed: () => context.pop(),
             child: const Text('Cancelar'),
           ),
-          TextButton(
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Theme.of(context).colorScheme.error,
+              foregroundColor: Theme.of(context).colorScheme.onError,
+            ),
             onPressed: () {
               ref
                   .read(cashierControllerProvider.notifier)
@@ -101,11 +182,11 @@ class CashierListPage extends ConsumerWidget {
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
                   content: Text('Cajero eliminado correctamente'),
-                  backgroundColor: Colors.green,
+                  backgroundColor: AppTheme.transactionSuccess,
                 ),
               );
             },
-            child: const Text('Eliminar', style: TextStyle(color: Colors.red)),
+            child: const Text('Eliminar'),
           ),
         ],
       ),

@@ -96,9 +96,6 @@ class PurchaseItemDetailPage extends ConsumerWidget {
                       },
                       icon: const Icon(Icons.visibility),
                       label: const Text('Ver Compra Completa'),
-                      style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.all(16),
-                      ),
                     ),
                   ),
               ],
@@ -110,7 +107,11 @@ class PurchaseItemDetailPage extends ConsumerWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.error_outline, size: 64, color: Colors.red),
+              Icon(
+                Icons.error_outline,
+                size: 64,
+                color: Theme.of(context).colorScheme.error,
+              ),
               const SizedBox(height: 16),
               Text('Error: $error'),
               const SizedBox(height: 16),
@@ -162,10 +163,6 @@ class PurchaseItemDetailPage extends ConsumerWidget {
                 }
               }
             },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-              foregroundColor: Theme.of(context).colorScheme.onSurface,
-            ),
             child: const Text('Eliminar'),
           ),
         ],

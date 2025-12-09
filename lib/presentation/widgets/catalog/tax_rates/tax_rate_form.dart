@@ -172,12 +172,6 @@ class _TaxRateFormState extends ConsumerState<TaxRateForm> {
         if (isEditable)
           ElevatedButton(
             onPressed: _isLoading ? null : _submit,
-            style: ElevatedButton.styleFrom(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              elevation: 0,
-            ),
             child: _isLoading
                 ? const SizedBox(
                     height: 20,

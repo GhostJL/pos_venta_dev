@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:posventa/presentation/providers/auth_provider.dart';
 import 'package:posventa/presentation/providers/providers.dart';
 import 'package:posventa/presentation/widgets/dashboard/clock_widget.dart';
+import 'package:posventa/core/theme/theme.dart';
 
 class DashboardStatusSection extends ConsumerWidget {
   const DashboardStatusSection({super.key});
@@ -61,7 +62,9 @@ class DashboardStatusSection extends ConsumerWidget {
           sessionAsync.when(
             data: (session) {
               final isOpen = session != null;
-              final statusColor = isOpen ? Colors.green : Colors.red;
+              final statusColor = isOpen
+                  ? AppTheme.transactionSuccess
+                  : AppTheme.transactionFailed;
 
               final roleName = user?.role.name ?? '';
               final displayRole = roleName.isNotEmpty
@@ -105,7 +108,7 @@ class DashboardStatusSection extends ConsumerWidget {
                       child: Text(
                         statusText,
                         style: TextStyle(
-                          color: statusColor.shade700,
+                          color: statusColor,
                           fontWeight: FontWeight.w700,
                           fontSize: 14,
                         ),

@@ -41,13 +41,7 @@ class CartSection extends ConsumerWidget {
             ),
             child: Row(
               children: [
-                Expanded(
-                  child: CustomerSelectionWidget(
-                    posState: posState.selectedCustomer != null
-                        ? '${posState.selectedCustomer!.firstName} ${posState.selectedCustomer!.lastName}'
-                        : 'Cliente General',
-                  ),
-                ),
+                const Expanded(child: CustomerSelectionWidget()),
                 if (posState.cart.isNotEmpty) ...[
                   const SizedBox(width: 8),
                   IconButton(
@@ -126,6 +120,7 @@ class CartSection extends ConsumerWidget {
                       final item = posState.cart[index];
                       return CartItemWidget(
                         productName: item.productName,
+                        variantDescription: item.variantDescription,
                         onPressedRemove: () {
                           posNotifier.removeFromCart(
                             item.productId,
@@ -203,14 +198,7 @@ class CartSection extends ConsumerWidget {
                               builder: (context) => const PaymentDialog(),
                             );
                           },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Theme.of(context).primaryColor,
-                      foregroundColor: Theme.of(context).colorScheme.onPrimary,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      elevation: 0,
-                    ),
+
                     child: const Text(
                       'PROCESAR PAGO',
                       style: TextStyle(

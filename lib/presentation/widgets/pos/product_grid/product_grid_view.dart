@@ -17,10 +17,12 @@ class ProductGridView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (items.isEmpty) {
-      return const Center(
+      return Center(
         child: Text(
           'No se encontraron productos',
-          style: TextStyle(color: Colors.grey),
+          style: TextStyle(
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
         ),
       );
     }
@@ -33,8 +35,8 @@ class ProductGridView extends StatelessWidget {
       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: crossAxisCount,
         childAspectRatio: 1.2,
-        crossAxisSpacing: 2,
-        mainAxisSpacing: 2,
+        crossAxisSpacing: 8,
+        mainAxisSpacing: 8,
       ),
       itemCount: items.length,
       itemBuilder: (context, index) {

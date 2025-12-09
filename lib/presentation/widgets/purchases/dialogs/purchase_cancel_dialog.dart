@@ -66,10 +66,6 @@ class PurchaseCancelDialog {
           ),
           ElevatedButton.icon(
             onPressed: () => context.pop(true),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Theme.of(context).colorScheme.error,
-              foregroundColor: Theme.of(context).colorScheme.onError,
-            ),
             icon: const Icon(Icons.cancel),
             label: const Text('Sí, Cancelar'),
           ),

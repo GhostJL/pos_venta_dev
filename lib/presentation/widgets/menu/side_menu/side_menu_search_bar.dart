@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:posventa/presentation/mixins/search_debounce_mixin.dart';
 
-class SideMenuSearchBar extends StatelessWidget {
+class SideMenuSearchBar extends StatefulWidget {
   final TextEditingController controller;
   final ValueChanged<String> onChanged;
   final String searchQuery;
@@ -15,6 +16,12 @@ class SideMenuSearchBar extends StatelessWidget {
   });
 
   @override
+  State<SideMenuSearchBar> createState() => _SideMenuSearchBarState();
+}
+
+class _SideMenuSearchBarState extends State<SideMenuSearchBar>
+    with SearchDebounceMixin {
+  @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
 
@@ -26,8 +33,12 @@ class SideMenuSearchBar extends StatelessWidget {
         ),
       ),
       child: TextField(
-        controller: controller,
-        onChanged: onChanged,
+        controller: widget.controller,
+        onChanged: (value) {
+          debounceSearch(() {
+            widget.onChanged(value);
+          });
+        },
         decoration: InputDecoration(
           hintText: 'Buscar en menú...',
           hintStyle: TextStyle(
@@ -39,14 +50,14 @@ class SideMenuSearchBar extends StatelessWidget {
             color: colorScheme.onSurfaceVariant,
             size: 20,
           ),
-          suffixIcon: searchQuery.isNotEmpty
+          suffixIcon: widget.searchQuery.isNotEmpty
               ? IconButton(
                   icon: Icon(
                     Icons.clear_rounded,
                     color: colorScheme.onSurfaceVariant,
                     size: 18,
                   ),
-                  onPressed: onClear,
+                  onPressed: widget.onClear,
                 )
               : null,
           filled: true,
