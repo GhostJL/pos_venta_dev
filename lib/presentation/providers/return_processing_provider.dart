@@ -348,6 +348,8 @@ final getReturnsStatsUseCaseProvider = Provider((ref) {
 
 // Returns List Provider - Now using StreamProvider for real-time updates
 final saleReturnsProvider = StreamProvider.autoDispose<List<SaleReturn>>((ref) {
+  final link = ref.keepAlive();
+
   final repository = ref.watch(saleReturnRepositoryProvider);
   final now = DateTime.now();
   final startOfDay = DateTime(now.year, now.month, now.day);
@@ -383,14 +385,17 @@ final todayReturnsStatsProvider =
     });
 
 // Returns for a specific sale Provider - Now using StreamProvider for real-time updates
-final saleReturnsForSaleProvider = StreamProvider.autoDispose
-    .family<List<SaleReturn>, int>((ref, saleId) {
-      final repository = ref.watch(saleReturnRepositoryProvider);
-      // Use the stream method for real-time updates
-      return repository.getSaleReturnsStream().map(
-        (allReturns) => allReturns.where((r) => r.saleId == saleId).toList(),
-      );
-    });
+final saleReturnsForSaleProvider = Provider.family<List<SaleReturn>, int>((
+  ref,
+  saleId,
+) {
+  final asyncValue = ref.watch(allSaleReturnsProvider);
+
+  final List<SaleReturn> allReturns =
+      asyncValue.asData?.value ?? const <SaleReturn>[];
+
+  return allReturns.where((r) => r.saleId == saleId).toList(growable: false);
+});
 
 // Returns Stats Provider
 final returnsStatsProvider =

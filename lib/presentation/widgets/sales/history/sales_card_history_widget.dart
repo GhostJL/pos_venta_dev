@@ -5,6 +5,10 @@ import 'package:intl/intl.dart';
 import 'package:posventa/core/theme/theme.dart';
 import 'package:posventa/domain/entities/sale.dart';
 import 'package:posventa/presentation/providers/return_processing_provider.dart';
+import 'package:posventa/presentation/widgets/sales/history/sale_header_widget.dart';
+import 'package:posventa/presentation/widgets/sales/history/sale_info_row_widget.dart';
+import 'package:posventa/presentation/widgets/sales/history/sale_returns_indicator_widget.dart';
+import 'package:posventa/presentation/widgets/sales/history/sales_totals_row_widget.dart';
 
 class SaleCardHistoryWidget extends ConsumerWidget {
   final Sale sale;
@@ -13,258 +17,86 @@ class SaleCardHistoryWidget extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+
     final dateFormat = DateFormat('dd/MM/yyyy · HH:mm');
+    final saleDateText = dateFormat.format(sale.saleDate);
+
     final isCancelled = sale.status == SaleStatus.cancelled;
     final isReturned = sale.status == SaleStatus.returned;
-    final returnsAsync = ref.watch(saleReturnsForSaleProvider(sale.id!));
+
+    final statusColor = isCancelled
+        ? AppTheme.actionCancel
+        : isReturned
+        ? AppTheme.alertWarning
+        : AppTheme.alertSuccess;
+
+    final statusBorderColor = isCancelled
+        ? AppTheme.actionCancel
+        : isReturned
+        ? AppTheme.alertWarning
+        : AppTheme.transactionSuccess;
+
+    final statusText = isCancelled
+        ? 'Cancelada'
+        : isReturned
+        ? 'Devuelta'
+        : 'Completada';
+
+    final statusTextColor = isCancelled
+        ? cs.onErrorContainer
+        : isReturned
+        ? AppTheme.onAlertWarning
+        : cs.onPrimaryContainer;
+    final returns = ref.watch(saleReturnsForSaleProvider(sale.id!));
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceContainer,
+        color: cs.surfaceContainer,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Theme.of(context).colorScheme.outline),
+        border: Border.all(color: cs.outline),
       ),
       child: InkWell(
-        onTap: () {
-          context.push('/sale-detail/${sale.id}');
-        },
+        onTap: () => context.push('/sale-detail/${sale.id}'),
         borderRadius: BorderRadius.circular(12),
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Header
-              Row(
-                children: [
-                  Container(
-                    width: 3,
-                    height: 36,
-                    decoration: BoxDecoration(
-                      color: isCancelled
-                          ? AppTheme.actionCancel
-                          : isReturned
-                          ? AppTheme.alertWarning
-                          : AppTheme.alertSuccess,
-                      borderRadius: BorderRadius.circular(2),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          sale.saleNumber,
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                            letterSpacing: -0.2,
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          dateFormat.format(sale.saleDate),
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Theme.of(
-                              context,
-                            ).colorScheme.onSurfaceVariant,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 5,
-                    ),
-                    decoration: BoxDecoration(
-                      color: isCancelled
-                          ? AppTheme.actionCancel
-                          : isReturned
-                          ? AppTheme.alertWarning
-                          : AppTheme.alertSuccess,
-                      borderRadius: BorderRadius.circular(6),
-                      border: Border.all(
-                        color: isCancelled
-                            ? AppTheme.actionCancel
-                            : isReturned
-                            ? AppTheme.alertWarning
-                            : AppTheme.transactionSuccess,
-                      ),
-                    ),
-                    child: Text(
-                      isCancelled
-                          ? 'Cancelada'
-                          : isReturned
-                          ? 'Devuelta'
-                          : 'Completada',
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w600,
-                        color: isCancelled
-                            ? Theme.of(context).colorScheme.onErrorContainer
-                            : isReturned
-                            ? AppTheme.onAlertWarning
-                            : Theme.of(context).colorScheme.onPrimaryContainer,
-                      ),
-                    ),
-                  ),
-                ],
+              SaleHeaderWidget(
+                saleNumber: sale.saleNumber,
+                saleDateText: saleDateText,
+                statusColor: statusColor,
+                statusBorderColor: statusBorderColor,
+                statusText: statusText,
+                statusTextColor: statusTextColor,
+                isCancelled: isCancelled,
+                isReturned: isReturned,
               ),
+
               const SizedBox(height: 16),
 
-              // Info Row
-              Row(
-                children: [
-                  Icon(Icons.shopping_bag_outlined, size: 14),
-                  const SizedBox(width: 6),
-                  Text(
-                    '${sale.items.length} ${sale.items.length == 1 ? 'producto' : 'productos'}',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                ],
+              SaleInfoRowWidget(
+                itemCount: sale.items.length,
+                textColor: cs.onSurfaceVariant,
               ),
 
-              // Return Indicator
-              returnsAsync.when(
-                data: (returns) {
-                  if (returns.isEmpty) return const SizedBox.shrink();
-
-                  final totalReturned = returns.fold<int>(
-                    0,
-                    (sum, r) => sum + r.totalCents,
-                  );
-
-                  return Padding(
-                    padding: const EdgeInsets.only(top: 12),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 6,
-                      ),
-                      decoration: BoxDecoration(
-                        color: AppTheme.alertWarning,
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            Icons.keyboard_return_outlined,
-                            size: 14,
-                            color: AppTheme.onAlertWarning,
-                          ),
-                          const SizedBox(width: 6),
-                          Text(
-                            '${returns.length} ${returns.length == 1 ? 'devolución' : 'devoluciones'} · -\$${(totalReturned / 100).toStringAsFixed(2)}',
-                            style: TextStyle(
-                              fontSize: 11,
-                              color: AppTheme.onAlertWarning,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                },
-                loading: () => const SizedBox.shrink(),
-                error: (_, __) => const SizedBox.shrink(),
-              ),
+              if (returns.isNotEmpty)
+                SaleReturnsIndicatorWidget(returns: returns),
 
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 16),
-                child: Divider(
-                  height: 1,
-                  color: Theme.of(context).colorScheme.outline,
-                ),
+                child: Divider(height: 1, color: cs.outline),
               ),
 
-              // Totals - Compact
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Subtotal',
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        '\$${(sale.subtotalCents / 100).toStringAsFixed(2)}',
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                    ],
-                  ),
-                  Container(
-                    width: 1,
-                    height: 28,
-                    color: Theme.of(context).colorScheme.outline,
-                  ),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Impuestos',
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        '\$${(sale.taxCents / 100).toStringAsFixed(2)}',
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                    ],
-                  ),
-                  Container(
-                    width: 1,
-                    height: 28,
-                    color: Theme.of(context).colorScheme.outline,
-                  ),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Text(
-                        'Total',
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        '\$${(sale.totalCents / 100).toStringAsFixed(2)}',
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w700,
-                          letterSpacing: -0.3,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
+              SaleTotalsRowWidget(
+                subtotal: sale.subtotalCents,
+                tax: sale.taxCents,
+                total: sale.totalCents,
+                textColor: cs.onSurfaceVariant,
               ),
             ],
           ),

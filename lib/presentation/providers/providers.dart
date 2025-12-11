@@ -1,5 +1,6 @@
 import 'package:posventa/data/datasources/database_helper.dart';
 import 'package:posventa/data/repositories/warehouse_repository_impl.dart';
+import 'package:posventa/domain/entities/sale_return.dart';
 import 'package:posventa/domain/repositories/warehouse_repository.dart';
 import 'package:posventa/domain/use_cases/warehouse/create_warehouse.dart';
 import 'package:posventa/domain/use_cases/warehouse/delete_warehouse.dart';
@@ -91,6 +92,7 @@ import 'package:posventa/domain/repositories/user_permission_repository.dart';
 import 'package:posventa/data/repositories/user_permission_repository_impl.dart';
 import 'package:posventa/domain/repositories/inventory_lot_repository.dart';
 import 'package:posventa/data/repositories/inventory_lot_repository_impl.dart';
+import 'package:posventa/presentation/providers/return_processing_provider.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -316,10 +318,22 @@ final salesListStreamProvider = StreamProvider.autoDispose
       ref,
       args,
     ) {
+      final link = ref.keepAlive();
+
       return ref
           .watch(getSalesUseCaseProvider)
           .stream(startDate: args.startDate, endDate: args.endDate);
     });
+
+final allSaleReturnsProvider = StreamProvider.autoDispose<List<SaleReturn>>((
+  ref,
+) {
+  ref.keepAlive();
+
+  final repository = ref.watch(saleReturnRepositoryProvider);
+
+  return repository.getSaleReturnsStream();
+});
 
 // --- Cash Session Providers ---
 
