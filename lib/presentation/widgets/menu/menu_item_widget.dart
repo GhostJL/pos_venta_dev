@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:animate_do/animate_do.dart';
 import 'package:posventa/core/config/menu_config.dart';
 
-/// Widget for rendering individual menu items with hover effects
+/// Widget para items del menú - Adaptable a tema claro/oscuro
 class MenuItemWidget extends StatefulWidget {
   final MenuItem menuItem;
   final String currentPath;
@@ -26,120 +25,147 @@ class _MenuItemWidgetState extends State<MenuItemWidget> {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    final bool isSelected = widget.currentPath == widget.menuItem.route;
+    final currentPath = GoRouterState.of(context).uri.toString();
+    final isSelected = currentPath == widget.menuItem.route;
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 4),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
       child: MouseRegion(
-        onEnter: (_) => setState(() => _isHovered = true),
-        onExit: (_) => setState(() => _isHovered = false),
+        onEnter: (_) {
+          if (mounted) setState(() => _isHovered = true);
+        },
+        onExit: (_) {
+          if (mounted) setState(() => _isHovered = false);
+        },
         cursor: SystemMouseCursors.click,
-        child: SlideInLeft(
+        child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),
-          from: _isHovered && !isSelected ? -4 : 0,
-          animate: true,
-          child: Stack(
-            children: [
-              // Barra lateral izquierda para indicar selección
-              if (isSelected)
-                Positioned(
-                  left: 0,
-                  top: 0,
-                  bottom: 0,
-                  child: FadeIn(
-                    duration: const Duration(milliseconds: 200),
-                    child: Container(
-                      width: 4,
-                      decoration: BoxDecoration(
-                        color: colorScheme.primary,
-                        borderRadius: BorderRadius.circular(2),
-                      ),
+          curve: Curves.easeOut,
+          decoration: BoxDecoration(
+            // Fondo adaptado al tema
+            color: isSelected
+                ? colorScheme.primary.withValues(alpha: 0.12)
+                : _isHovered
+                ? colorScheme.primary.withValues(alpha: 0.06)
+                : Colors.transparent,
+            borderRadius: BorderRadius.circular(12),
+            boxShadow: isSelected
+                ? [
+                    BoxShadow(
+                      color: colorScheme.shadow.withValues(alpha: 0.08),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
                     ),
-                  ),
+                  ]
+                : null,
+          ),
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: () => _handleTap(context),
+              borderRadius: BorderRadius.circular(12),
+              splashColor: colorScheme.primary.withValues(alpha: 0.08),
+              highlightColor: colorScheme.primary.withValues(alpha: 0.05),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 11,
                 ),
-              ListTile(
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 4,
-                ),
-                leading: AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
-                  child: Icon(
-                    widget.menuItem.icon,
-                    color: isSelected
-                        ? colorScheme.primary
-                        : _isHovered
-                        ? colorScheme.primary.withValues(alpha: 0.7)
-                        : colorScheme.onSurfaceVariant,
-                    size: _isHovered ? 24 : 22,
-                  ),
-                ),
-                title: Row(
+                child: Row(
                   children: [
+                    // Icono
+                    Icon(
+                      widget.menuItem.icon,
+                      size: 20,
+                      color: isSelected
+                          ? colorScheme.onSurface
+                          : _isHovered
+                          ? colorScheme.onSurface.withValues(alpha: 0.7)
+                          : colorScheme.onSurface,
+                    ),
+                    const SizedBox(width: 12),
+                    // Texto
                     Expanded(
-                      child: AnimatedDefaultTextStyle(
-                        duration: const Duration(milliseconds: 200),
-                        style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                      child: Text(
+                        widget.menuItem.title,
+                        style: TextStyle(
                           color: isSelected
-                              ? colorScheme.primary
-                              : _isHovered
-                              ? colorScheme.primary.withValues(alpha: 0.7)
+                              ? colorScheme.onSurface
                               : colorScheme.onSurface,
                           fontWeight: isSelected
-                              ? FontWeight.bold
-                              : FontWeight.w500,
+                              ? FontWeight.w600
+                              : FontWeight.w400,
                           fontSize: 14,
+                          letterSpacing: -0.1,
                         ),
-                        child: Text(widget.menuItem.title),
                       ),
                     ),
-                    if (widget.menuItem.badgeCount != null &&
-                        widget.menuItem.badgeCount! > 0)
-                      Pulse(
-                        infinite: true,
-                        duration: const Duration(seconds: 2),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 2,
-                          ),
-                          decoration: BoxDecoration(
-                            color: colorScheme.error,
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Text(
-                            '${widget.menuItem.badgeCount}',
-                            style: TextStyle(
-                              color: colorScheme.onError,
-                              fontSize: 11,
-                              fontWeight: FontWeight.bold,
+                    // Indicador de selección
+                    if (isSelected)
+                      Container(
+                        width: 6,
+                        height: 6,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: colorScheme.onSurface,
+                          boxShadow: [
+                            BoxShadow(
+                              color: colorScheme.onSurface.withValues(
+                                alpha: 0.4,
+                              ),
+                              blurRadius: 4,
+                              spreadRadius: 1,
                             ),
-                          ),
+                          ],
                         ),
-                      ),
+                      )
+                    // Badge si existe
+                    else if (widget.menuItem.badgeCount != null &&
+                        widget.menuItem.badgeCount! > 0)
+                      _buildBadge(colorScheme),
                   ],
                 ),
-                onTap:
-                    widget.onTap ??
-                    () {
-                      context.go(widget.menuItem.route);
-                      if (Scaffold.of(context).isDrawerOpen) {
-                        Scaffold.of(context).closeDrawer();
-                      }
-                    },
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                tileColor: isSelected
-                    ? colorScheme.primary.withAlpha(15)
-                    : _isHovered
-                    ? colorScheme.primary.withAlpha(8)
-                    : Colors.transparent,
               ),
-            ],
+            ),
           ),
         ),
       ),
     );
+  }
+
+  Widget _buildBadge(ColorScheme colorScheme) {
+    return Container(
+      constraints: const BoxConstraints(minWidth: 20, minHeight: 20),
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: colorScheme.error,
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Center(
+        child: Text(
+          widget.menuItem.badgeCount! > 99
+              ? '99+'
+              : '${widget.menuItem.badgeCount}',
+          style: TextStyle(
+            color: colorScheme.onError,
+            fontSize: 11,
+            fontWeight: FontWeight.w600,
+            height: 1,
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _handleTap(BuildContext context) {
+    if (widget.onTap != null) {
+      widget.onTap!();
+    } else {
+      context.go(widget.menuItem.route);
+      final scaffold = Scaffold.maybeOf(context);
+      if (scaffold?.isDrawerOpen ?? false) {
+        scaffold!.closeDrawer();
+      }
+    }
   }
 }

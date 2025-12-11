@@ -7,12 +7,9 @@ import 'package:posventa/presentation/providers/permission_provider.dart';
 import 'package:posventa/core/config/menu_config.dart';
 import 'package:posventa/presentation/widgets/menu/menu_group_widget.dart';
 import 'package:posventa/presentation/widgets/menu/menu_item_widget.dart';
-import 'package:posventa/presentation/widgets/menu/side_menu/side_menu_header.dart';
 import 'package:posventa/presentation/widgets/menu/side_menu/side_menu_logout.dart';
-import 'package:posventa/presentation/widgets/menu/side_menu/side_menu_quick_actions.dart';
-import 'package:posventa/presentation/widgets/menu/side_menu/side_menu_search_bar.dart';
 
-/// Main side menu navigation widget with enhanced UX for POS
+/// Main side menu adaptable a tema claro/oscuro
 class SideMenu extends ConsumerStatefulWidget {
   const SideMenu({super.key});
 
@@ -32,58 +29,90 @@ class _SideMenuState extends ConsumerState<SideMenu> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     final authState = ref.watch(authProvider);
     final user = authState.user;
     final currentPath = GoRouter.of(
       context,
     ).routerDelegate.currentConfiguration.uri.toString();
-
     final permissionsAsync = ref.watch(currentUserPermissionsProvider);
     final permissions = permissionsAsync.asData?.value ?? [];
 
-    final colorScheme = Theme.of(context).colorScheme;
+    return SafeArea(
+      child: Container(
+        width: 280,
+        decoration: BoxDecoration(
+          // Fondo adaptado al tema
+          color: isDark
+              ? colorScheme.surface
+              : colorScheme.surfaceContainerLowest,
+          boxShadow: [
+            BoxShadow(
+              color: colorScheme.shadow.withValues(alpha: 0.06),
+              blurRadius: 20,
+              offset: const Offset(2, 0),
+            ),
+          ],
+        ),
+        child: Column(
+          children: [
+            // Header minimalista
+            _MinimalHeader(user: user),
 
-    return Container(
-      width: 280,
-      decoration: BoxDecoration(
-        color: colorScheme.surface,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withAlpha(10),
-            blurRadius: 20,
-            offset: const Offset(4, 0),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          SideMenuHeader(user: user),
-          SideMenuQuickActions(user: user),
-          SideMenuSearchBar(
-            controller: _searchController,
-            searchQuery: _searchQuery,
-            onChanged: (value) {
-              setState(() {
-                _searchQuery = value.toLowerCase();
-              });
-            },
-            onClear: () {
-              _searchController.clear();
-              setState(() {
-                _searchQuery = '';
-              });
-            },
-          ),
-          Expanded(
-            child: _buildMenuContent(context, user, permissions, currentPath),
-          ),
-          const SideMenuLogout(),
-        ],
+            // Campo de búsqueda
+            _buildSearchBar(colorScheme),
+
+            // Contenido del menú
+            Expanded(
+              child: _buildMenuContent(context, user, permissions, currentPath),
+            ),
+
+            // Logout button
+            const SideMenuLogout(),
+          ],
+        ),
       ),
     );
   }
 
-  /// Build menu content based on user role
+  Widget _buildSearchBar(ColorScheme colorScheme) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      child: TextField(
+        controller: _searchController,
+        onChanged: (value) {
+          setState(() {
+            _searchQuery = value.toLowerCase();
+          });
+        },
+        style: TextStyle(color: colorScheme.onSurface, fontSize: 14),
+        decoration: InputDecoration(
+          hintText: 'Buscar...',
+          hintStyle: TextStyle(
+            color: colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
+          ),
+          prefixIcon: Icon(
+            Icons.search,
+            color: colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
+            size: 20,
+          ),
+          filled: true,
+          fillColor: colorScheme.surface.withValues(alpha: 0.3),
+          contentPadding: const EdgeInsets.symmetric(
+            vertical: 0,
+            horizontal: 12,
+          ),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide.none,
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildMenuContent(
     BuildContext context,
     User? user,
@@ -98,7 +127,7 @@ class _SideMenuState extends ConsumerState<SideMenu> {
     final useGroups = MenuConfig.shouldUseGroups(user);
 
     return ListView(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
       children: [
         if (useGroups)
           ..._buildGroupedMenu(
@@ -120,7 +149,6 @@ class _SideMenuState extends ConsumerState<SideMenu> {
     );
   }
 
-  /// Build grouped menu for administrators
   List<Widget> _buildGroupedMenu(
     BuildContext context,
     List<MenuGroup> groups,
@@ -128,19 +156,15 @@ class _SideMenuState extends ConsumerState<SideMenu> {
     List<String> permissions,
     String currentPath,
   ) {
-    final colorScheme = Theme.of(context).colorScheme;
     final widgets = <Widget>[];
 
     for (int i = 0; i < groups.length; i++) {
       final group = groups[i];
 
-      // Check if group should be visible
       if (!group.isVisible(user, permissions)) continue;
 
-      // Get accessible items
       var accessibleItems = group.getAccessibleItems(user, permissions);
 
-      // Filter by search query
       if (_searchQuery.isNotEmpty) {
         accessibleItems = accessibleItems
             .where(
@@ -153,7 +177,6 @@ class _SideMenuState extends ConsumerState<SideMenu> {
 
       if (accessibleItems.isEmpty) continue;
 
-      // Create a filtered group with only accessible items
       final filteredGroup = MenuGroup(
         id: group.id,
         title: group.title,
@@ -163,48 +186,22 @@ class _SideMenuState extends ConsumerState<SideMenu> {
         defaultExpanded: group.defaultExpanded,
       );
 
-      // Add spacing before group (except first one)
       if (i > 0) {
-        widgets.add(const SizedBox(height: 20));
+        widgets.add(const SizedBox(height: 4));
       }
 
-      // Add the group widget
       widgets.add(
         MenuGroupWidget(menuGroup: filteredGroup, currentPath: currentPath),
       );
     }
 
-    // Show "no results" message if search yields nothing
     if (widgets.isEmpty && _searchQuery.isNotEmpty) {
-      widgets.add(
-        Padding(
-          padding: const EdgeInsets.all(32),
-          child: Column(
-            children: [
-              Icon(
-                Icons.search_off_rounded,
-                size: 48,
-                color: colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                'No se encontraron resultados',
-                style: TextStyle(
-                  color: colorScheme.onSurfaceVariant,
-                  fontSize: 14,
-                ),
-                textAlign: TextAlign.center,
-              ),
-            ],
-          ),
-        ),
-      );
+      widgets.add(_buildNoResults(context));
     }
 
     return widgets;
   }
 
-  /// Build flat menu for cashiers
   List<Widget> _buildFlatMenu(
     BuildContext context,
     List<MenuItem> items,
@@ -212,26 +209,8 @@ class _SideMenuState extends ConsumerState<SideMenu> {
     List<String> permissions,
     String currentPath,
   ) {
-    final colorScheme = Theme.of(context).colorScheme;
     final widgets = <Widget>[];
 
-    // Add section header for cashiers
-    widgets.add(
-      Padding(
-        padding: const EdgeInsets.only(left: 12, bottom: 8, top: 4),
-        child: Text(
-          'MENÚ PRINCIPAL',
-          style: TextStyle(
-            color: colorScheme.onSurfaceVariant,
-            fontWeight: FontWeight.bold,
-            fontSize: 11,
-            letterSpacing: 1.2,
-          ),
-        ),
-      ),
-    );
-
-    // Filter items based on permissions and search
     var accessibleItems = items
         .where((item) => item.hasAccess(user, permissions))
         .toList();
@@ -242,38 +221,84 @@ class _SideMenuState extends ConsumerState<SideMenu> {
           .toList();
     }
 
-    // Add menu items
     for (final item in accessibleItems) {
       widgets.add(MenuItemWidget(menuItem: item, currentPath: currentPath));
     }
 
-    // Show "no results" message if search yields nothing
     if (accessibleItems.isEmpty && _searchQuery.isNotEmpty) {
-      widgets.add(
-        Padding(
-          padding: const EdgeInsets.all(32),
-          child: Column(
-            children: [
-              Icon(
-                Icons.search_off_rounded,
-                size: 48,
-                color: colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                'No se encontraron resultados',
-                style: TextStyle(
-                  color: colorScheme.onSurfaceVariant,
-                  fontSize: 14,
-                ),
-                textAlign: TextAlign.center,
-              ),
-            ],
-          ),
-        ),
-      );
+      widgets.add(_buildNoResults(context));
     }
 
     return widgets;
+  }
+
+  Widget _buildNoResults(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Padding(
+      padding: const EdgeInsets.all(32),
+      child: Column(
+        children: [
+          Icon(
+            Icons.search_off_rounded,
+            size: 48,
+            color: colorScheme.onSurface.withValues(alpha: 0.3),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'No se encontraron resultados',
+            style: TextStyle(
+              color: colorScheme.onSurface.withValues(alpha: 0.6),
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Header minimalista adaptable al tema
+class _MinimalHeader extends StatelessWidget {
+  final User? user;
+
+  const _MinimalHeader({required this.user});
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        border: Border(
+          bottom: BorderSide(
+            color: colorScheme.onSurface.withValues(alpha: 0.08),
+            width: 1,
+          ),
+        ),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            Icons.menu_rounded,
+            size: 20,
+            color: colorScheme.onSurface.withValues(alpha: 0.7),
+          ),
+          const SizedBox(width: 10),
+          Text(
+            'Menu',
+            style: TextStyle(
+              color: colorScheme.onSurface.withValues(alpha: 0.85),
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              letterSpacing: -0.2,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }

@@ -47,17 +47,16 @@ class DashboardManagementSection extends StatelessWidget {
           'Gestión y Administración',
           Icons.admin_panel_settings_rounded,
         ),
-        GridView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: isTablet ? 3 : 1,
-            childAspectRatio: isTablet ? 3.7 : 4.2,
-            crossAxisSpacing: 16,
-            mainAxisSpacing: 16,
-          ),
-          itemCount: actionCards.length,
-          itemBuilder: (context, index) => actionCards[index],
+
+        Wrap(
+          spacing: 16,
+          runSpacing: 16,
+          children: actionCards.map((card) {
+            return SizedBox(
+              width: isTablet ? 300 : double.infinity,
+              child: card,
+            );
+          }).toList(),
         ),
       ],
     );

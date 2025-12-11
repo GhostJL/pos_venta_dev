@@ -203,19 +203,6 @@ class MenuConfig {
             route: '/tax-rates',
             requiredPermissions: [PermissionConstants.catalogManage],
           ),
-        ],
-      ),
-
-      // ═══════════════════════════════════════════════════════════
-      // SECCIÓN 5: CATÁLOGOS BASE (Solo Admin - Menos usado)
-      // ═══════════════════════════════════════════════════════════
-      MenuGroup(
-        id: 'base_catalogs',
-        title: 'Catálogos Base',
-        groupIcon: Icons.category_rounded,
-        defaultExpanded: false,
-        visibilityCheck: (user) => user?.role == UserRole.administrador,
-        items: [
           const MenuItem(
             title: 'Departamentos',
             icon: Icons.apartment_rounded,
