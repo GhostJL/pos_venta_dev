@@ -45,55 +45,61 @@ class _BrandsPageState extends ConsumerState<BrandsPage>
       hasPermissionProvider(PermissionConstants.catalogManage),
     );
 
-    return Padding(
-      padding: const EdgeInsets.all(24.0),
-      child: AsyncValueHandler<List<Brand>>(
-        value: brandList,
-        data: (brands) {
-          if (brands.isEmpty) {
-            return Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    Icons.build,
-                    size: 64,
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    'No se encontraron marcas',
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Marcas'),
+        actions: [
+          if (hasManagePermission)
+            IconButton(
+              onPressed: () => _navigateToForm(),
+              icon: const Icon(Icons.add),
+              tooltip: 'Añadir Marca',
+            ),
+        ],
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(24.0),
+        child: AsyncValueHandler<List<Brand>>(
+          value: brandList,
+          data: (brands) {
+            if (brands.isEmpty) {
+              return Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.build,
+                      size: 64,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
-                  ),
-                  const SizedBox(height: 8),
-                  if (hasManagePermission)
-                    ElevatedButton.icon(
-                      onPressed: () => _navigateToForm(),
-                      icon: const Icon(Icons.add),
-                      label: const Text('Añadir Marca'),
+                    const SizedBox(height: 12),
+                    Text(
+                      'No se encontraron marcas',
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
-                ],
-              ),
-            );
-          }
-          return ListView.separated(
-            itemCount: brands.length,
-            separatorBuilder: (_, __) => const SizedBox(height: 12),
-            itemBuilder: (context, index) {
-              final brand = brands[index];
-
-              return CardBaseModuleWidget(
-                icon: Icons.label_rounded,
-                title: brand.name,
-                onEdit: () => _navigateToForm(brand),
-                onDelete: () => _confirmDelete(context, ref, brand),
-                isActive: brand.isActive,
+                  ],
+                ),
               );
-            },
-          );
-        },
+            }
+            return ListView.separated(
+              itemCount: brands.length,
+              separatorBuilder: (_, __) => const SizedBox(height: 12),
+              itemBuilder: (context, index) {
+                final brand = brands[index];
+
+                return CardBaseModuleWidget(
+                  icon: Icons.label_rounded,
+                  title: brand.name,
+                  onEdit: () => _navigateToForm(brand),
+                  onDelete: () => _confirmDelete(context, ref, brand),
+                  isActive: brand.isActive,
+                );
+              },
+            );
+          },
+        ),
       ),
     );
   }
