@@ -362,9 +362,15 @@ class AppTheme {
 
       // Cards - Productos, tickets, resúmenes
       cardTheme: CardThemeData(
-        elevation: 0.5,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        color: colorScheme.surfaceContainer,
+        elevation: 0,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+          side: BorderSide(
+            color: colorScheme.outlineVariant.withValues(alpha: 0.5),
+            width: 1,
+          ),
+        ),
+        margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       ),
 
       // Input - Búsqueda de productos, cantidades, códigos
