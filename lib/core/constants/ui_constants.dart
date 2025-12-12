@@ -2,6 +2,10 @@
 class UIConstants {
   UIConstants._();
 
+  static const double kMinStock = 5;
+  static const double kLowStock = 20;
+  static const double kItemPadding = 16.0;
+
   // Border Radius
   static const double borderRadiusSmall = 8.0;
   static const double borderRadiusMedium = 12.0;

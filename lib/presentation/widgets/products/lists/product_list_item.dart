@@ -1,10 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:posventa/core/constants/ui_constants.dart';
 import 'package:posventa/core/theme/theme.dart';
 import 'package:posventa/domain/entities/product.dart';
-
-const double _kMinStock = 5;
-const double _kLowStock = 20;
-const double _kItemPadding = 16.0;
 
 class ProductListItem extends StatelessWidget {
   final Product product;
@@ -27,13 +24,13 @@ class ProductListItem extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         onTap: onTap,
         child: Padding(
-          padding: const EdgeInsets.all(_kItemPadding),
+          padding: const EdgeInsets.all(UIConstants.kItemPadding),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               // Icono de Producto
               _buildProductVisual(theme),
-              const SizedBox(width: _kItemPadding),
+              const SizedBox(width: UIConstants.kItemPadding),
 
               // Información del Producto
               Expanded(child: _buildProductInfo(theme, context)),
@@ -147,12 +144,13 @@ class ProductListItem extends StatelessWidget {
     Color textColor;
     String text;
 
-    if (stock < _kMinStock) {
+    if (stock < UIConstants.kMinStock) {
       // Usar 'error' para bajo/sin stock
       chipColor = theme.colorScheme.errorContainer.withValues(alpha: 0.6);
       textColor = theme.colorScheme.onErrorContainer;
       text = stock == 0 ? 'Sin Stock' : '$stock Uds.';
-    } else if (stock >= _kMinStock && stock < _kLowStock) {
+    } else if (stock >= UIConstants.kMinStock &&
+        stock < UIConstants.kLowStock) {
       // Usar 'warning' (o un color personalizado como AppTheme.alertWarning)
       chipColor = AppTheme.alertWarning.withValues(alpha: 0.15);
       textColor = AppTheme.alertWarning;
