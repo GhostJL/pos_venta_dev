@@ -53,7 +53,7 @@ class ProductModel extends Product {
       unitName: map['unit_name'], // Mapped from join
       isSoldByWeight: map['is_sold_by_weight'] == 1,
       isActive: map['is_active'] == 1,
-      stock: map['stock'] != null ? (map['stock'] as num).toDouble() : null,
+      stock: map['stock'] != null ? (map['stock'] as num).toInt() : null,
     );
   }
 

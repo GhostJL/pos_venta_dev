@@ -18,7 +18,7 @@ class Product {
   final bool isActive;
   final List<ProductTax>? productTaxes;
   final List<ProductVariant>? variants;
-  final double? stock;
+  final int? stock;
 
   const Product({
     this.id,
@@ -102,7 +102,7 @@ class Product {
     bool? isActive,
     List<ProductTax>? productTaxes,
     List<ProductVariant>? variants,
-    double? stock,
+    int? stock,
   }) {
     return Product(
       id: id ?? this.id,
