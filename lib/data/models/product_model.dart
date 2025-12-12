@@ -7,6 +7,7 @@ class ProductModel extends Product {
     required super.name,
     super.description,
     required super.departmentId,
+    super.departmentName,
     required super.categoryId,
     super.brandId,
     super.supplierId,
@@ -26,6 +27,7 @@ class ProductModel extends Product {
       name: product.name,
       description: product.description,
       departmentId: product.departmentId,
+      departmentName: product.departmentName,
       categoryId: product.categoryId,
       brandId: product.brandId,
       supplierId: product.supplierId,
@@ -46,6 +48,7 @@ class ProductModel extends Product {
       name: map['name'],
       description: map['description'],
       departmentId: map['department_id'],
+      departmentName: map['department_name'], // Mapped from join
       categoryId: map['category_id'],
       brandId: map['brand_id'],
       supplierId: map['supplier_id'],

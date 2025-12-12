@@ -126,15 +126,27 @@ class ProductListItem extends StatelessWidget {
                 ).colorScheme.onSurface.withValues(alpha: 0.6),
               ),
             ),
-            const SizedBox(width: 8),
-            Container(
-              width: 1.5,
-              height: 12,
-              color: Theme.of(
-                context,
-              ).colorScheme.onSurface.withValues(alpha: 0.6),
-            ),
-            const SizedBox(width: 8),
+            if (product.departmentName != null &&
+                product.departmentName!.isNotEmpty) ...[
+              const SizedBox(width: 8),
+              Container(
+                width: 1.5,
+                height: 12,
+                color: Theme.of(
+                  context,
+                ).colorScheme.onSurface.withValues(alpha: 0.6),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                product.departmentName!,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.onSurface.withValues(alpha: 0.6),
+                ),
+              ),
+            ],
           ],
         ),
       ],

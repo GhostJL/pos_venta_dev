@@ -9,6 +9,7 @@ class Product {
   final String name;
   final String? description;
   final int? departmentId;
+  final String? departmentName; // Populated from join
   final int? categoryId;
   final int? brandId;
   final int? supplierId;
@@ -26,6 +27,7 @@ class Product {
     required this.name,
     this.description,
     this.departmentId,
+    this.departmentName,
     this.categoryId,
     this.brandId,
     this.supplierId,
@@ -93,6 +95,7 @@ class Product {
     String? name,
     String? description,
     int? departmentId,
+    String? departmentName,
     int? categoryId,
     int? brandId,
     int? supplierId,
@@ -110,6 +113,7 @@ class Product {
       name: name ?? this.name,
       description: description ?? this.description,
       departmentId: departmentId ?? this.departmentId,
+      departmentName: departmentName ?? this.departmentName,
       categoryId: categoryId ?? this.categoryId,
       brandId: brandId ?? this.brandId,
       supplierId: supplierId ?? this.supplierId,

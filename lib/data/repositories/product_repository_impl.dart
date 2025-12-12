@@ -101,9 +101,11 @@ class ProductRepositoryImpl implements ProductRepository {
     final List<Map<String, dynamic>> productMaps = await db.rawQuery('''
       SELECT p.*, 
              (SELECT SUM(quantity_on_hand) FROM inventory WHERE product_id = p.id) as stock,
-             u.name as unit_name
+             u.name as unit_name,
+             d.name as department_name
       FROM ${DatabaseHelper.tableProducts} p
       LEFT JOIN ${DatabaseHelper.tableUnitsOfMeasure} u ON p.unit_id = u.id
+      LEFT JOIN ${DatabaseHelper.tableDepartments} d ON p.department_id = d.id
       WHERE p.is_active = 1
     ''');
 
@@ -161,10 +163,12 @@ class ProductRepositoryImpl implements ProductRepository {
       '''
       SELECT DISTINCT p.*, 
              (SELECT SUM(quantity_on_hand) FROM inventory WHERE product_id = p.id) as stock,
-             u.name as unit_name
+             u.name as unit_name,
+             d.name as department_name
       FROM ${DatabaseHelper.tableProducts} p
       LEFT JOIN ${DatabaseHelper.tableProductVariants} pv ON p.id = pv.product_id AND pv.is_active = 1
       LEFT JOIN ${DatabaseHelper.tableUnitsOfMeasure} u ON p.unit_id = u.id
+      LEFT JOIN ${DatabaseHelper.tableDepartments} d ON p.department_id = d.id
       WHERE p.is_active = 1 AND (
         p.name LIKE ? OR 
         p.code LIKE ? OR 
@@ -227,9 +231,11 @@ class ProductRepositoryImpl implements ProductRepository {
       '''
       SELECT p.*, 
              (SELECT SUM(quantity_on_hand) FROM inventory WHERE product_id = p.id) as stock,
-             u.name as unit_name
+             u.name as unit_name,
+             d.name as department_name
       FROM ${DatabaseHelper.tableProducts} p
       LEFT JOIN ${DatabaseHelper.tableUnitsOfMeasure} u ON p.unit_id = u.id
+      LEFT JOIN ${DatabaseHelper.tableDepartments} d ON p.department_id = d.id
       WHERE p.id = ?
     ''',
       [id],
