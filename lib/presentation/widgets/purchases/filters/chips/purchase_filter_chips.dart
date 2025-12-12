@@ -25,8 +25,15 @@ class PurchaseFilterChips extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      decoration: BoxDecoration(
+        border: Border(
+          bottom: BorderSide(color: colorScheme.outlineVariant, width: 0.5),
+        ),
+      ),
       child: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
         child: Row(
@@ -34,39 +41,44 @@ class PurchaseFilterChips extends ConsumerWidget {
             final status = entry.key;
             final label = entry.value;
             final isSelected = selectedFilter == status;
-            final chipColor = _colors[status];
+            final chipColor = _colors[status] ?? colorScheme.primary;
 
             return Padding(
-              padding: const EdgeInsets.only(right: 8),
+              padding: const EdgeInsets.only(right: 12),
               child: ChoiceChip(
                 label: Text(
                   label,
                   style: TextStyle(
-                    fontWeight: isSelected
-                        ? FontWeight.w600
-                        : FontWeight.normal,
-                    color: isSelected
-                        ? chipColor
-                        : Theme.of(context).colorScheme.onSurfaceVariant,
-                    fontSize: 13,
+                    fontSize: 14,
+                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                    color: isSelected ? chipColor : colorScheme.onSurface,
                   ),
                 ),
                 selected: isSelected,
+
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  side: BorderSide(
+                    color: isSelected ? chipColor : colorScheme.outlineVariant,
+                    width: isSelected ? 1.5 : 1,
+                  ),
+                ),
+                checkmarkColor: chipColor,
+                selectedShadowColor: chipColor,
+
+                backgroundColor: colorScheme.surface,
+                selectedColor: colorScheme.surface,
+
+                labelPadding: const EdgeInsets.symmetric(
+                  horizontal: 4,
+                  vertical: 2,
+                ),
+
                 onSelected: (selected) {
                   ref.read(purchaseFilterProvider.notifier).state = selected
                       ? status
                       : null;
                 },
-                selectedColor: chipColor?.withValues(alpha: 0.1),
-                backgroundColor: Theme.of(context).colorScheme.outline,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  side: BorderSide(
-                    color: isSelected
-                        ? chipColor ?? Theme.of(context).primaryColor
-                        : Theme.of(context).colorScheme.outline,
-                  ),
-                ),
                 pressElevation: 0,
               ),
             );

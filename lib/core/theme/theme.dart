@@ -430,10 +430,8 @@ class AppTheme {
 
       // Chips - Filtros, categorías
       chipTheme: ChipThemeData(
-        elevation: 0,
-        backgroundColor: colorScheme.surfaceContainerHighest,
-        selectedColor: colorScheme.secondaryContainer,
         labelStyle: GoogleFonts.inter(
+          color: colorScheme.onPrimaryContainer,
           fontSize: 14,
           fontWeight: FontWeight.w500,
         ),

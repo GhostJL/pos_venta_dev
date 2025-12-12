@@ -2,40 +2,42 @@ import 'package:sqflite/sqflite.dart';
 import 'database_constants.dart';
 
 class DatabaseSchema {
+  // =================================================================
+  // 1. MÉTODO DE INICIALIZACIÓN PRINCIPAL
+  // =================================================================
   static Future<void> createTables(Database db) async {
+    // 1. Tablas de Meta-información y Usuarios
+    await _createSystemAndUserTables(db);
+
+    // 2. Tablas de Catálogo (Productos, Categorías, Impuestos)
+    await _createCatalogTables(db);
+
+    // 3. Tablas de Inventario y Lotes
+    await _createInventoryTables(db);
+
+    // 4. Tablas de Clientes y Proveedores
+    await _createPartyTables(db);
+
+    // 5. Tablas de Ventas y Pagos
+    await _createSalesTables(db);
+
+    // 6. Tablas de Compras y Suministros
+    await _createPurchaseTables(db);
+
+    // 7. Tablas de Caja y Operaciones Financieras
+    await _createCashManagementTables(db);
+
+    // 8. Tablas de Seguridad y Auditoría
+    await _createSecurityAndAuditTables(db);
+  }
+
+  // =================================================================
+  // 2. GRUPO: SISTEMA Y USUARIOS
+  // =================================================================
+  static Future<void> _createSystemAndUserTables(Database db) async {
     await _createUsersTable(db);
     await _createAppMetaTable(db);
     await _createTransactionsTable(db);
-    await _createDepartmentsTable(db);
-    await _createCategoriesTable(db);
-    await _createBrandsTable(db);
-    await _createSuppliersTable(db);
-    await _createWarehousesTable(db);
-    await _createUnitsOfMeasureTable(db);
-    await _createTaxRatesTable(db);
-    await _createProductsTable(db);
-    await _createProductTaxesTable(db);
-    await _createInventoryTable(db);
-    await _createInventoryMovementsTable(db);
-    await _createCustomersTable(db);
-    await _createSalesTable(db);
-    await _createSaleItemsTable(db);
-    await _createSaleItemTaxesTable(db);
-    await _createSalePaymentsTable(db);
-    await _createPurchasesTable(db);
-    await _createPurchaseItemsTable(db);
-    await _createCashSessionsTable(db);
-    await _createCashMovementsTable(db);
-    await _createAuditLogsTable(db);
-    await _createPermissionsTable(db);
-    await _createUserPermissionsTable(db);
-    await _createSaleReturnsTable(db);
-    await _createSaleReturnItemsTable(db);
-    await _createProductVariantsTable(db);
-    await _createSaleReturnItemsTable(db);
-    await _createProductVariantsTable(db);
-    await _createInventoryLotsTable(db);
-    await _createSaleItemLotsTable(db);
   }
 
   static Future<void> _createUsersTable(Database db) async {
@@ -78,6 +80,22 @@ class DatabaseSchema {
         FOREIGN KEY (userId) REFERENCES ${DatabaseConstants.tableUsers}(id) ON DELETE SET NULL
       )
     ''');
+  }
+
+  // =================================================================
+  // 3. GRUPO: CATÁLOGO Y CONFIGURACIÓN DE PRODUCTOS
+  // =================================================================
+  static Future<void> _createCatalogTables(Database db) async {
+    await _createDepartmentsTable(db);
+    await _createCategoriesTable(db);
+    await _createBrandsTable(db);
+    await _createUnitsOfMeasureTable(
+      db,
+    ); // Incluye inserción de datos por defecto
+    await _createTaxRatesTable(db); // Incluye inserción de datos por defecto
+    await _createProductsTable(db);
+    await _createProductVariantsTable(db);
+    await _createProductTaxesTable(db);
   }
 
   static Future<void> _createDepartmentsTable(Database db) async {
@@ -127,40 +145,6 @@ class DatabaseSchema {
     ''');
   }
 
-  static Future<void> _createSuppliersTable(Database db) async {
-    await db.execute('''
-      CREATE TABLE ${DatabaseConstants.tableSuppliers} (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT NOT NULL,
-        code TEXT NOT NULL UNIQUE,
-        contact_person TEXT,
-        phone TEXT,
-        email TEXT,
-        address TEXT,
-        tax_id TEXT,
-        credit_days INTEGER DEFAULT 0,
-        is_active INTEGER NOT NULL DEFAULT 1,
-        created_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
-        updated_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
-      )
-    ''');
-  }
-
-  static Future<void> _createWarehousesTable(Database db) async {
-    await db.execute('''
-      CREATE TABLE IF NOT EXISTS ${DatabaseConstants.tableWarehouses} (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT NOT NULL,
-        code TEXT NOT NULL UNIQUE,
-        address TEXT,
-        phone TEXT,
-        is_main INTEGER NOT NULL DEFAULT 0,
-        is_active INTEGER NOT NULL DEFAULT 1,
-        created_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
-      )
-    ''');
-  }
-
   static Future<void> _createUnitsOfMeasureTable(Database db) async {
     await db.execute('''
       CREATE TABLE IF NOT EXISTS ${DatabaseConstants.tableUnitsOfMeasure} (
@@ -191,18 +175,18 @@ class DatabaseSchema {
 
   static Future<void> _createTaxRatesTable(Database db) async {
     await db.execute('''
-    CREATE TABLE IF NOT EXISTS ${DatabaseConstants.tableTaxRates} (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      name TEXT NOT NULL,
-      code TEXT NOT NULL UNIQUE,
-      rate REAL NOT NULL,
-      is_default INTEGER NOT NULL DEFAULT 0,
-      is_active INTEGER NOT NULL DEFAULT 1,
-      is_editable INTEGER NOT NULL DEFAULT 0,
-      is_optional INTEGER NOT NULL DEFAULT 0,
-      created_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
-    )
-  ''');
+      CREATE TABLE IF NOT EXISTS ${DatabaseConstants.tableTaxRates} (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        code TEXT NOT NULL UNIQUE,
+        rate REAL NOT NULL,
+        is_default INTEGER NOT NULL DEFAULT 0,
+        is_active INTEGER NOT NULL DEFAULT 1,
+        is_editable INTEGER NOT NULL DEFAULT 0,
+        is_optional INTEGER NOT NULL DEFAULT 0,
+        created_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
+      )
+    ''');
 
     final predefinedTaxes = [
       {
@@ -268,6 +252,7 @@ class DatabaseSchema {
       )
     ''');
 
+    // Índices
     await db.execute(
       'CREATE INDEX IF NOT EXISTS idx_products_code ON ${DatabaseConstants.tableProducts}(code)',
     );
@@ -277,10 +262,36 @@ class DatabaseSchema {
     await db.execute(
       'CREATE INDEX IF NOT EXISTS idx_products_category ON ${DatabaseConstants.tableProducts}(category_id)',
     );
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_products_search ON ${DatabaseConstants.tableProducts}(name, code)',
+    );
+  }
+
+  static Future<void> _createProductVariantsTable(Database db) async {
     await db.execute('''
-        CREATE INDEX IF NOT EXISTS idx_products_search 
-        ON ${DatabaseConstants.tableProducts}(name, code)
-      ''');
+      CREATE TABLE IF NOT EXISTS ${DatabaseConstants.tableProductVariants} (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        product_id INTEGER NOT NULL,
+        variant_name TEXT NOT NULL,
+        barcode TEXT UNIQUE,
+        quantity REAL NOT NULL DEFAULT 1,
+        cost_price_cents INTEGER NOT NULL,
+        sale_price_cents INTEGER NOT NULL,
+        wholesale_price_cents INTEGER,
+        is_active INTEGER NOT NULL DEFAULT 1 CHECK (is_active IN (0,1)),
+        is_for_sale INTEGER NOT NULL DEFAULT 1 CHECK (is_for_sale IN (0,1)),
+        created_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
+        updated_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
+        FOREIGN KEY (product_id) REFERENCES ${DatabaseConstants.tableProducts}(id) ON DELETE CASCADE
+      )
+    ''');
+    // Índices
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_product_variants_product ON ${DatabaseConstants.tableProductVariants}(product_id)',
+    );
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_product_variants_barcode ON ${DatabaseConstants.tableProductVariants}(barcode)',
+    );
   }
 
   static Future<void> _createProductTaxesTable(Database db) async {
@@ -292,6 +303,31 @@ class DatabaseSchema {
         PRIMARY KEY (product_id, tax_rate_id),
         FOREIGN KEY (product_id) REFERENCES ${DatabaseConstants.tableProducts}(id) ON DELETE CASCADE,
         FOREIGN KEY (tax_rate_id) REFERENCES ${DatabaseConstants.tableTaxRates}(id) ON DELETE RESTRICT
+      )
+    ''');
+  }
+
+  // =================================================================
+  // 4. GRUPO: INVENTARIO
+  // =================================================================
+  static Future<void> _createInventoryTables(Database db) async {
+    await _createWarehousesTable(db);
+    await _createInventoryTable(db);
+    await _createInventoryLotsTable(db);
+    await _createInventoryMovementsTable(db);
+  }
+
+  static Future<void> _createWarehousesTable(Database db) async {
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS ${DatabaseConstants.tableWarehouses} (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        code TEXT NOT NULL UNIQUE,
+        address TEXT,
+        phone TEXT,
+        is_main INTEGER NOT NULL DEFAULT 0,
+        is_active INTEGER NOT NULL DEFAULT 1,
+        created_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
       )
     ''');
   }
@@ -332,19 +368,16 @@ class DatabaseSchema {
         FOREIGN KEY (warehouse_id) REFERENCES ${DatabaseConstants.tableWarehouses}(id) ON DELETE CASCADE
       )
     ''');
-
-    await db.execute('''
-      CREATE INDEX IF NOT EXISTS idx_inventory_lots_product 
-      ON ${DatabaseConstants.tableInventoryLots}(product_id)
-    ''');
-    await db.execute('''
-      CREATE INDEX IF NOT EXISTS idx_inventory_lots_warehouse 
-      ON ${DatabaseConstants.tableInventoryLots}(warehouse_id)
-    ''');
-    await db.execute('''
-      CREATE INDEX IF NOT EXISTS idx_inventory_lots_number 
-      ON ${DatabaseConstants.tableInventoryLots}(lot_number)
-    ''');
+    // Índices
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_inventory_lots_product ON ${DatabaseConstants.tableInventoryLots}(product_id)',
+    );
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_inventory_lots_warehouse ON ${DatabaseConstants.tableInventoryLots}(warehouse_id)',
+    );
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_inventory_lots_number ON ${DatabaseConstants.tableInventoryLots}(lot_number)',
+    );
   }
 
   static Future<void> _createInventoryMovementsTable(Database db) async {
@@ -369,32 +402,30 @@ class DatabaseSchema {
         FOREIGN KEY (performed_by) REFERENCES ${DatabaseConstants.tableUsers}(id) ON DELETE RESTRICT
       )
     ''');
+    // Índices
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_inventory_movements_product ON ${DatabaseConstants.tableInventoryMovements}(product_id)',
+    );
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_inventory_movements_warehouse ON ${DatabaseConstants.tableInventoryMovements}(warehouse_id)',
+    );
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_inventory_movements_type ON ${DatabaseConstants.tableInventoryMovements}(movement_type)',
+    );
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_inventory_movements_date ON ${DatabaseConstants.tableInventoryMovements}(movement_date)',
+    );
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_inventory_movements_reference ON ${DatabaseConstants.tableInventoryMovements}(reference_type, reference_id)',
+    );
+  }
 
-    // Create indexes for better query performance
-    await db.execute('''
-      CREATE INDEX IF NOT EXISTS idx_inventory_movements_product 
-      ON ${DatabaseConstants.tableInventoryMovements}(product_id)
-    ''');
-
-    await db.execute('''
-      CREATE INDEX IF NOT EXISTS idx_inventory_movements_warehouse 
-      ON ${DatabaseConstants.tableInventoryMovements}(warehouse_id)
-    ''');
-
-    await db.execute('''
-      CREATE INDEX IF NOT EXISTS idx_inventory_movements_type 
-      ON ${DatabaseConstants.tableInventoryMovements}(movement_type)
-    ''');
-
-    await db.execute('''
-      CREATE INDEX IF NOT EXISTS idx_inventory_movements_date 
-      ON ${DatabaseConstants.tableInventoryMovements}(movement_date)
-    ''');
-
-    await db.execute('''
-      CREATE INDEX IF NOT EXISTS idx_inventory_movements_reference 
-      ON ${DatabaseConstants.tableInventoryMovements}(reference_type, reference_id)
-    ''');
+  // =================================================================
+  // 5. GRUPO: TERCEROS (CLIENTES Y PROVEEDORES)
+  // =================================================================
+  static Future<void> _createPartyTables(Database db) async {
+    await _createCustomersTable(db);
+    await _createSuppliersTable(db);
   }
 
   static Future<void> _createCustomersTable(Database db) async {
@@ -414,7 +445,7 @@ class DatabaseSchema {
         updated_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
       )
     ''');
-    // Indexes
+    // Índices
     await db.execute(
       'CREATE INDEX IF NOT EXISTS idx_customers_code ON ${DatabaseConstants.tableCustomers}(code)',
     );
@@ -424,6 +455,38 @@ class DatabaseSchema {
     await db.execute(
       'CREATE INDEX IF NOT EXISTS idx_customers_email ON ${DatabaseConstants.tableCustomers}(email)',
     );
+  }
+
+  static Future<void> _createSuppliersTable(Database db) async {
+    await db.execute('''
+      CREATE TABLE ${DatabaseConstants.tableSuppliers} (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        code TEXT NOT NULL UNIQUE,
+        contact_person TEXT,
+        phone TEXT,
+        email TEXT,
+        address TEXT,
+        tax_id TEXT,
+        credit_days INTEGER DEFAULT 0,
+        is_active INTEGER NOT NULL DEFAULT 1,
+        created_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
+        updated_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
+      )
+    ''');
+  }
+
+  // =================================================================
+  // 6. GRUPO: VENTAS Y DEVOLUCIONES (POS)
+  // =================================================================
+  static Future<void> _createSalesTables(Database db) async {
+    await _createSalesTable(db);
+    await _createSaleItemsTable(db);
+    await _createSaleItemTaxesTable(db);
+    await _createSalePaymentsTable(db);
+    await _createSaleReturnsTable(db);
+    await _createSaleReturnItemsTable(db);
+    await _createSaleItemLotsTable(db);
   }
 
   static Future<void> _createSalesTable(Database db) async {
@@ -450,6 +513,7 @@ class DatabaseSchema {
         FOREIGN KEY (cancelled_by) REFERENCES ${DatabaseConstants.tableUsers}(id) ON DELETE SET NULL
       )
     ''');
+    // Índices
     await db.execute(
       'CREATE INDEX IF NOT EXISTS idx_sales_number ON ${DatabaseConstants.tableSales}(sale_number)',
     );
@@ -493,6 +557,7 @@ class DatabaseSchema {
         FOREIGN KEY (lot_id) REFERENCES ${DatabaseConstants.tableInventoryLots}(id) ON DELETE SET NULL
       )
     ''');
+    // Índices
     await db.execute(
       'CREATE INDEX IF NOT EXISTS idx_sale_items_sale ON ${DatabaseConstants.tableSaleItems}(sale_id)',
     );
@@ -514,6 +579,7 @@ class DatabaseSchema {
         FOREIGN KEY (tax_rate_id) REFERENCES ${DatabaseConstants.tableTaxRates}(id) ON DELETE RESTRICT
       )
     ''');
+    // Índices
     await db.execute(
       'CREATE INDEX IF NOT EXISTS idx_sale_item_taxes_item ON ${DatabaseConstants.tableSaleItemTaxes}(sale_item_id)',
     );
@@ -533,12 +599,112 @@ class DatabaseSchema {
         FOREIGN KEY (received_by) REFERENCES ${DatabaseConstants.tableUsers}(id) ON DELETE RESTRICT
       )
     ''');
+    // Índices
     await db.execute(
       'CREATE INDEX IF NOT EXISTS idx_sale_payments_sale ON ${DatabaseConstants.tableSalePayments}(sale_id)',
     );
     await db.execute(
       'CREATE INDEX IF NOT EXISTS idx_sale_payments_method ON ${DatabaseConstants.tableSalePayments}(payment_method)',
     );
+  }
+
+  static Future<void> _createSaleReturnsTable(Database db) async {
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS ${DatabaseConstants.tableSaleReturns} (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        return_number TEXT NOT NULL UNIQUE,
+        sale_id INTEGER NOT NULL,
+        warehouse_id INTEGER NOT NULL,
+        customer_id INTEGER,
+        processed_by INTEGER NOT NULL,
+        subtotal_cents INTEGER NOT NULL,
+        tax_cents INTEGER NOT NULL DEFAULT 0,
+        total_cents INTEGER NOT NULL,
+        refund_method TEXT NOT NULL,
+        reason TEXT NOT NULL,
+        notes TEXT,
+        status TEXT NOT NULL DEFAULT 'completed',
+        return_date TEXT NOT NULL,
+        created_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
+        FOREIGN KEY (sale_id) REFERENCES ${DatabaseConstants.tableSales}(id) ON DELETE RESTRICT,
+        FOREIGN KEY (warehouse_id) REFERENCES ${DatabaseConstants.tableWarehouses}(id) ON DELETE RESTRICT,
+        FOREIGN KEY (customer_id) REFERENCES ${DatabaseConstants.tableCustomers}(id) ON DELETE SET NULL,
+        FOREIGN KEY (processed_by) REFERENCES ${DatabaseConstants.tableUsers}(id) ON DELETE RESTRICT
+      )
+    ''');
+    // Índices
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_sale_returns_number ON ${DatabaseConstants.tableSaleReturns}(return_number)',
+    );
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_sale_returns_sale ON ${DatabaseConstants.tableSaleReturns}(sale_id)',
+    );
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_sale_returns_date ON ${DatabaseConstants.tableSaleReturns}(return_date)',
+    );
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_sale_returns_status ON ${DatabaseConstants.tableSaleReturns}(status)',
+    );
+  }
+
+  static Future<void> _createSaleReturnItemsTable(Database db) async {
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS ${DatabaseConstants.tableSaleReturnItems} (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        sale_return_id INTEGER NOT NULL,
+        sale_item_id INTEGER NOT NULL,
+        product_id INTEGER NOT NULL,
+        quantity REAL NOT NULL,
+        unit_price_cents INTEGER NOT NULL,
+        subtotal_cents INTEGER NOT NULL,
+        tax_cents INTEGER NOT NULL DEFAULT 0,
+        total_cents INTEGER NOT NULL,
+        reason TEXT,
+        created_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
+        FOREIGN KEY (sale_return_id) REFERENCES ${DatabaseConstants.tableSaleReturns}(id) ON DELETE CASCADE,
+        FOREIGN KEY (sale_item_id) REFERENCES ${DatabaseConstants.tableSaleItems}(id) ON DELETE RESTRICT,
+        FOREIGN KEY (product_id) REFERENCES ${DatabaseConstants.tableProducts}(id) ON DELETE RESTRICT
+      )
+    ''');
+    // Índices
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_sale_return_items_return ON ${DatabaseConstants.tableSaleReturnItems}(sale_return_id)',
+    );
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_sale_return_items_sale_item ON ${DatabaseConstants.tableSaleReturnItems}(sale_item_id)',
+    );
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_sale_return_items_product ON ${DatabaseConstants.tableSaleReturnItems}(product_id)',
+    );
+  }
+
+  static Future<void> _createSaleItemLotsTable(Database db) async {
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS ${DatabaseConstants.tableSaleItemLots} (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        sale_item_id INTEGER NOT NULL,
+        lot_id INTEGER NOT NULL,
+        quantity_deducted REAL NOT NULL,
+        created_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
+        FOREIGN KEY (sale_item_id) REFERENCES ${DatabaseConstants.tableSaleItems}(id) ON DELETE CASCADE,
+        FOREIGN KEY (lot_id) REFERENCES ${DatabaseConstants.tableInventoryLots}(id) ON DELETE RESTRICT
+      )
+    ''');
+    // Índices
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_sale_item_lots_sale_item ON ${DatabaseConstants.tableSaleItemLots}(sale_item_id)',
+    );
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_sale_item_lots_lot ON ${DatabaseConstants.tableSaleItemLots}(lot_id)',
+    );
+  }
+
+  // =================================================================
+  // 7. GRUPO: COMPRAS Y ADQUISICIONES
+  // =================================================================
+  static Future<void> _createPurchaseTables(Database db) async {
+    await _createPurchasesTable(db);
+    await _createPurchaseItemsTable(db);
   }
 
   static Future<void> _createPurchasesTable(Database db) async {
@@ -566,6 +732,7 @@ class DatabaseSchema {
         FOREIGN KEY (cancelled_by) REFERENCES ${DatabaseConstants.tableUsers}(id) ON DELETE SET NULL
       )
     ''');
+    // Índices
     await db.execute(
       'CREATE INDEX IF NOT EXISTS idx_purchases_number ON ${DatabaseConstants.tablePurchases}(purchase_number)',
     );
@@ -603,12 +770,21 @@ class DatabaseSchema {
         FOREIGN KEY (lot_id) REFERENCES ${DatabaseConstants.tableInventoryLots}(id) ON DELETE SET NULL
       )
     ''');
+    // Índices
     await db.execute(
       'CREATE INDEX IF NOT EXISTS idx_purchase_items_purchase ON ${DatabaseConstants.tablePurchaseItems}(purchase_id)',
     );
     await db.execute(
       'CREATE INDEX IF NOT EXISTS idx_purchase_items_product ON ${DatabaseConstants.tablePurchaseItems}(product_id)',
     );
+  }
+
+  // =================================================================
+  // 8. GRUPO: GESTIÓN DE CAJA Y MOVIMIENTOS
+  // =================================================================
+  static Future<void> _createCashManagementTables(Database db) async {
+    await _createCashSessionsTable(db);
+    await _createCashMovementsTable(db);
   }
 
   static Future<void> _createCashSessionsTable(Database db) async {
@@ -629,6 +805,7 @@ class DatabaseSchema {
         FOREIGN KEY (user_id) REFERENCES ${DatabaseConstants.tableUsers}(id) ON DELETE RESTRICT
       )
     ''');
+    // Índices
     await db.execute(
       'CREATE INDEX IF NOT EXISTS idx_cash_sessions_warehouse ON ${DatabaseConstants.tableCashSessions}(warehouse_id)',
     );
@@ -655,12 +832,22 @@ class DatabaseSchema {
         FOREIGN KEY (performed_by) REFERENCES ${DatabaseConstants.tableUsers}(id) ON DELETE RESTRICT
       )
     ''');
+    // Índices
     await db.execute(
       'CREATE INDEX IF NOT EXISTS idx_cash_movements_session ON ${DatabaseConstants.tableCashMovements}(cash_session_id)',
     );
     await db.execute(
       'CREATE INDEX IF NOT EXISTS idx_cash_movements_type ON ${DatabaseConstants.tableCashMovements}(movement_type)',
     );
+  }
+
+  // =================================================================
+  // 9. GRUPO: SEGURIDAD Y AUDITORÍA
+  // =================================================================
+  static Future<void> _createSecurityAndAuditTables(Database db) async {
+    await _createPermissionsTable(db); // Incluye inserción de datos por defecto
+    await _createUserPermissionsTable(db);
+    await _createAuditLogsTable(db);
   }
 
   static Future<void> _createAuditLogsTable(Database db) async {
@@ -679,6 +866,7 @@ class DatabaseSchema {
         FOREIGN KEY (user_id) REFERENCES ${DatabaseConstants.tableUsers}(id) ON DELETE RESTRICT
       )
     ''');
+    // Índices
     await db.execute(
       'CREATE INDEX IF NOT EXISTS idx_audit_logs_table ON ${DatabaseConstants.tableAuditLogs}(table_name, record_id)',
     );
@@ -748,7 +936,6 @@ class DatabaseSchema {
         'module': 'CASH',
         'description': 'Permite registrar ingresos/egresos',
       },
-
       // Inventory Module
       {
         'name': 'Ver Inventario',
@@ -762,7 +949,6 @@ class DatabaseSchema {
         'module': 'INVENTORY',
         'description': 'Permite realizar ajustes de inventario',
       },
-
       // Reports Module
       {
         'name': 'Ver Reportes',
@@ -805,128 +991,6 @@ class DatabaseSchema {
         FOREIGN KEY (permission_id) REFERENCES ${DatabaseConstants.tablePermissions}(id) ON DELETE CASCADE,
         FOREIGN KEY (granted_by) REFERENCES ${DatabaseConstants.tableUsers}(id) ON DELETE SET NULL
       )
-    ''');
-  }
-
-  static Future<void> _createSaleReturnsTable(Database db) async {
-    await db.execute('''
-      CREATE TABLE IF NOT EXISTS ${DatabaseConstants.tableSaleReturns} (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        return_number TEXT NOT NULL UNIQUE,
-        sale_id INTEGER NOT NULL,
-        warehouse_id INTEGER NOT NULL,
-        customer_id INTEGER,
-        processed_by INTEGER NOT NULL,
-        subtotal_cents INTEGER NOT NULL,
-        tax_cents INTEGER NOT NULL DEFAULT 0,
-        total_cents INTEGER NOT NULL,
-        refund_method TEXT NOT NULL,
-        reason TEXT NOT NULL,
-        notes TEXT,
-        status TEXT NOT NULL DEFAULT 'completed',
-        return_date TEXT NOT NULL,
-        created_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
-        FOREIGN KEY (sale_id) REFERENCES ${DatabaseConstants.tableSales}(id) ON DELETE RESTRICT,
-        FOREIGN KEY (warehouse_id) REFERENCES ${DatabaseConstants.tableWarehouses}(id) ON DELETE RESTRICT,
-        FOREIGN KEY (customer_id) REFERENCES ${DatabaseConstants.tableCustomers}(id) ON DELETE SET NULL,
-        FOREIGN KEY (processed_by) REFERENCES ${DatabaseConstants.tableUsers}(id) ON DELETE RESTRICT
-      )
-    ''');
-
-    // Create indexes for better query performance
-    await db.execute(
-      'CREATE INDEX IF NOT EXISTS idx_sale_returns_number ON ${DatabaseConstants.tableSaleReturns}(return_number)',
-    );
-    await db.execute(
-      'CREATE INDEX IF NOT EXISTS idx_sale_returns_sale ON ${DatabaseConstants.tableSaleReturns}(sale_id)',
-    );
-    await db.execute(
-      'CREATE INDEX IF NOT EXISTS idx_sale_returns_date ON ${DatabaseConstants.tableSaleReturns}(return_date)',
-    );
-    await db.execute(
-      'CREATE INDEX IF NOT EXISTS idx_sale_returns_status ON ${DatabaseConstants.tableSaleReturns}(status)',
-    );
-  }
-
-  static Future<void> _createSaleReturnItemsTable(Database db) async {
-    await db.execute('''
-      CREATE TABLE IF NOT EXISTS ${DatabaseConstants.tableSaleReturnItems} (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        sale_return_id INTEGER NOT NULL,
-        sale_item_id INTEGER NOT NULL,
-        product_id INTEGER NOT NULL,
-        quantity REAL NOT NULL,
-        unit_price_cents INTEGER NOT NULL,
-        subtotal_cents INTEGER NOT NULL,
-        tax_cents INTEGER NOT NULL DEFAULT 0,
-        total_cents INTEGER NOT NULL,
-        reason TEXT,
-        created_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
-        FOREIGN KEY (sale_return_id) REFERENCES ${DatabaseConstants.tableSaleReturns}(id) ON DELETE CASCADE,
-        FOREIGN KEY (sale_item_id) REFERENCES ${DatabaseConstants.tableSaleItems}(id) ON DELETE RESTRICT,
-        FOREIGN KEY (product_id) REFERENCES ${DatabaseConstants.tableProducts}(id) ON DELETE RESTRICT
-      )
-    ''');
-
-    // Create indexes
-    await db.execute(
-      'CREATE INDEX IF NOT EXISTS idx_sale_return_items_return ON ${DatabaseConstants.tableSaleReturnItems}(sale_return_id)',
-    );
-    await db.execute(
-      'CREATE INDEX IF NOT EXISTS idx_sale_return_items_sale_item ON ${DatabaseConstants.tableSaleReturnItems}(sale_item_id)',
-    );
-    await db.execute(
-      'CREATE INDEX IF NOT EXISTS idx_sale_return_items_product ON ${DatabaseConstants.tableSaleReturnItems}(product_id)',
-    );
-  }
-
-  static Future<void> _createProductVariantsTable(Database db) async {
-    await db.execute('''
-      CREATE TABLE IF NOT EXISTS ${DatabaseConstants.tableProductVariants} (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        product_id INTEGER NOT NULL,
-        variant_name TEXT NOT NULL,
-        barcode TEXT UNIQUE,
-        quantity REAL NOT NULL DEFAULT 1,
-        cost_price_cents INTEGER NOT NULL,
-        sale_price_cents INTEGER NOT NULL,
-        wholesale_price_cents INTEGER,
-        is_active INTEGER NOT NULL DEFAULT 1 CHECK (is_active IN (0,1)),
-        is_for_sale INTEGER NOT NULL DEFAULT 1 CHECK (is_for_sale IN (0,1)),
-        created_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
-        updated_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
-        FOREIGN KEY (product_id) REFERENCES ${DatabaseConstants.tableProducts}(id) ON DELETE CASCADE
-      )
-    ''');
-    await db.execute(
-      'CREATE INDEX IF NOT EXISTS idx_product_variants_product ON ${DatabaseConstants.tableProductVariants}(product_id)',
-    );
-    await db.execute(
-      'CREATE INDEX IF NOT EXISTS idx_product_variants_barcode ON ${DatabaseConstants.tableProductVariants}(barcode)',
-    );
-  }
-
-  static Future<void> _createSaleItemLotsTable(Database db) async {
-    await db.execute('''
-      CREATE TABLE IF NOT EXISTS ${DatabaseConstants.tableSaleItemLots} (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        sale_item_id INTEGER NOT NULL,
-        lot_id INTEGER NOT NULL,
-        quantity_deducted REAL NOT NULL,
-        created_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
-        FOREIGN KEY (sale_item_id) REFERENCES ${DatabaseConstants.tableSaleItems}(id) ON DELETE CASCADE,
-        FOREIGN KEY (lot_id) REFERENCES ${DatabaseConstants.tableInventoryLots}(id) ON DELETE RESTRICT
-      )
-    ''');
-
-    await db.execute('''
-      CREATE INDEX IF NOT EXISTS idx_sale_item_lots_sale_item 
-      ON ${DatabaseConstants.tableSaleItemLots}(sale_item_id)
-    ''');
-
-    await db.execute('''
-      CREATE INDEX IF NOT EXISTS idx_sale_item_lots_lot 
-      ON ${DatabaseConstants.tableSaleItemLots}(lot_id)
     ''');
   }
 }
