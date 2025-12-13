@@ -12,6 +12,8 @@ class ProductPricingSection extends ConsumerWidget {
   final bool isSoldByWeight;
   final ValueChanged<bool> onSoldByWeightChanged;
 
+  final bool showPrices;
+
   const ProductPricingSection({
     super.key,
     required this.selectedUnitId,
@@ -21,6 +23,7 @@ class ProductPricingSection extends ConsumerWidget {
     required this.wholesalePriceController,
     required this.isSoldByWeight,
     required this.onSoldByWeightChanged,
+    this.showPrices = true,
   });
 
   @override
@@ -53,55 +56,56 @@ class ProductPricingSection extends ConsumerWidget {
         SwitchListTile(
           title: const Text('Venta por Peso'),
           value: isSoldByWeight,
-          activeThumbColor: Theme.of(context).colorScheme.primary,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
             side: BorderSide(color: Theme.of(context).colorScheme.outline),
           ),
           onChanged: onSoldByWeightChanged,
         ),
-        const SizedBox(height: 16),
-        Row(
-          children: [
-            Expanded(
-              child: TextFormField(
-                controller: costPriceController,
-                decoration: InputDecoration(
-                  labelText: 'Costo',
-                  prefixText: '\$ ',
-                  prefixIcon: Icon(Icons.attach_money_rounded),
+        if (showPrices) ...[
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: TextFormField(
+                  controller: costPriceController,
+                  decoration: InputDecoration(
+                    labelText: 'Costo',
+                    prefixText: '\$ ',
+                    prefixIcon: Icon(Icons.attach_money_rounded),
+                  ),
+                  keyboardType: TextInputType.numberWithOptions(decimal: true),
+                  validator: (value) =>
+                      value?.isEmpty ?? true ? 'Requerido' : null,
                 ),
-                keyboardType: TextInputType.numberWithOptions(decimal: true),
-                validator: (value) =>
-                    value?.isEmpty ?? true ? 'Requerido' : null,
               ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: TextFormField(
-                controller: salePriceController,
-                decoration: InputDecoration(
-                  labelText: 'Venta',
-                  prefixText: '\$ ',
-                  prefixIcon: Icon(Icons.sell_rounded),
+              const SizedBox(width: 16),
+              Expanded(
+                child: TextFormField(
+                  controller: salePriceController,
+                  decoration: InputDecoration(
+                    labelText: 'Venta',
+                    prefixText: '\$ ',
+                    prefixIcon: Icon(Icons.sell_rounded),
+                  ),
+                  keyboardType: TextInputType.numberWithOptions(decimal: true),
+                  validator: (value) =>
+                      value?.isEmpty ?? true ? 'Requerido' : null,
                 ),
-                keyboardType: TextInputType.numberWithOptions(decimal: true),
-                validator: (value) =>
-                    value?.isEmpty ?? true ? 'Requerido' : null,
               ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 16),
-        TextFormField(
-          controller: wholesalePriceController,
-          decoration: InputDecoration(
-            labelText: 'Precio Mayorista (Opcional)',
-            prefixText: '\$ ',
-            prefixIcon: Icon(Icons.storefront_rounded),
+            ],
           ),
-          keyboardType: TextInputType.numberWithOptions(decimal: true),
-        ),
+          const SizedBox(height: 16),
+          TextFormField(
+            controller: wholesalePriceController,
+            decoration: InputDecoration(
+              labelText: 'Precio Mayorista (Opcional)',
+              prefixText: '\$ ',
+              prefixIcon: Icon(Icons.storefront_rounded),
+            ),
+            keyboardType: TextInputType.numberWithOptions(decimal: true),
+          ),
+        ],
       ],
     );
   }

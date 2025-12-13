@@ -3,12 +3,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:posventa/domain/entities/brand.dart';
 import 'package:posventa/presentation/providers/brand_providers.dart';
 import 'package:posventa/presentation/widgets/common/generic_form_scaffold.dart';
+import 'package:posventa/presentation/widgets/common/simple_dialog_form.dart';
 import 'package:posventa/core/constants/ui_constants.dart';
 
 class BrandForm extends ConsumerStatefulWidget {
   final Brand? brand;
+  final bool isDialog;
 
-  const BrandForm({super.key, this.brand});
+  const BrandForm({super.key, this.brand, this.isDialog = false});
 
   @override
   BrandFormState createState() => BrandFormState();
@@ -34,13 +36,14 @@ class BrandFormState extends ConsumerState<BrandForm> {
 
       try {
         final brand = Brand(id: widget.brand?.id, name: _name, code: _code);
+        Brand? newBrand;
         if (widget.brand == null) {
-          await ref.read(brandListProvider.notifier).addBrand(brand);
+          newBrand = await ref.read(brandListProvider.notifier).addBrand(brand);
         } else {
           await ref.read(brandListProvider.notifier).updateBrand(brand);
         }
         if (mounted) {
-          Navigator.of(context).pop();
+          Navigator.of(context).pop(newBrand);
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('Marca guardada correctamente'),
@@ -67,51 +70,65 @@ class BrandFormState extends ConsumerState<BrandForm> {
 
   @override
   Widget build(BuildContext context) {
+    var title = widget.brand == null ? 'Nueva Marca' : 'Editar Marca';
+    var submitText = widget.brand == null ? 'Crear' : 'Actualizar';
+
+    var formContent = Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        TextFormField(
+          initialValue: _name,
+          decoration: const InputDecoration(
+            labelText: 'Nombre de la Marca',
+            prefixIcon: Icon(Icons.branding_watermark_rounded),
+          ),
+          validator: (value) {
+            if (value == null || value.isEmpty) {
+              return 'Por favor, introduce un nombre de marca';
+            }
+            if (value.length < 2) {
+              return 'El nombre debe tener al menos 2 caracteres';
+            }
+            return null;
+          },
+          onSaved: (value) => _name = value!,
+        ),
+        const SizedBox(height: UIConstants.spacingLarge),
+        TextFormField(
+          initialValue: _code,
+          decoration: const InputDecoration(
+            labelText: 'Código de la Marca',
+            prefixIcon: Icon(Icons.qr_code_rounded),
+          ),
+          validator: (value) {
+            if (value == null || value.isEmpty) {
+              return 'Por favor, introduce un código de marca';
+            }
+            return null;
+          },
+          onSaved: (value) => _code = value!,
+        ),
+      ],
+    );
+
+    if (widget.isDialog) {
+      return SimpleDialogForm(
+        title: title,
+        isLoading: _isLoading,
+        onSubmit: _submit,
+        submitButtonText: submitText,
+        formKey: _formKey,
+        child: formContent,
+      );
+    }
+
     return GenericFormScaffold(
-      title: widget.brand == null ? 'Nueva Marca' : 'Editar Marca',
+      title: title,
       isLoading: _isLoading,
       onSubmit: _submit,
-      submitButtonText: widget.brand == null
-          ? 'Crear Marca'
-          : 'Actualizar Marca',
+      submitButtonText: submitText,
       formKey: _formKey,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          TextFormField(
-            initialValue: _name,
-            decoration: const InputDecoration(
-              labelText: 'Nombre de la Marca',
-              prefixIcon: Icon(Icons.branding_watermark_rounded),
-            ),
-            validator: (value) {
-              if (value == null || value.isEmpty) {
-                return 'Por favor, introduce un nombre de marca';
-              }
-              if (value.length < 2) {
-                return 'El nombre debe tener al menos 2 caracteres';
-              }
-              return null;
-            },
-            onSaved: (value) => _name = value!,
-          ),
-          const SizedBox(height: UIConstants.spacingLarge),
-          TextFormField(
-            initialValue: _code,
-            decoration: const InputDecoration(
-              labelText: 'Código de la Marca',
-              prefixIcon: Icon(Icons.qr_code_rounded),
-            ),
-            validator: (value) {
-              if (value == null || value.isEmpty) {
-                return 'Por favor, introduce un código de marca';
-              }
-              return null;
-            },
-            onSaved: (value) => _code = value!,
-          ),
-        ],
-      ),
+      child: formContent,
     );
   }
 }

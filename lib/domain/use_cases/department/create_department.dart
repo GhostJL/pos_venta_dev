@@ -6,7 +6,7 @@ class CreateDepartment {
 
   CreateDepartment(this.repository);
 
-  Future<void> call(Department department) async {
+  Future<int> call(Department department) async {
     return await repository.createDepartment(department);
   }
 }

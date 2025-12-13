@@ -10,7 +10,7 @@ class CategoryRepositoryImpl implements CategoryRepository {
   CategoryRepositoryImpl(this._databaseHelper);
 
   @override
-  Future<void> createCategory(Category category) async {
+  Future<int> createCategory(Category category) async {
     final db = await _databaseHelper.database;
     final categoryModel = CategoryModel(
       name: category.name,
@@ -21,7 +21,7 @@ class CategoryRepositoryImpl implements CategoryRepository {
       displayOrder: category.displayOrder,
       isActive: category.isActive,
     );
-    await db.insert('categories', categoryModel.toMap());
+    return await db.insert('categories', categoryModel.toMap());
   }
 
   @override

@@ -10,7 +10,7 @@ class DepartmentRepositoryImpl implements DepartmentRepository {
   DepartmentRepositoryImpl(this.databaseHelper);
 
   @override
-  Future<void> createDepartment(Department department) async {
+  Future<int> createDepartment(Department department) async {
     final db = await databaseHelper.database;
     final departmentModel = DepartmentModel(
       name: department.name,
@@ -19,7 +19,7 @@ class DepartmentRepositoryImpl implements DepartmentRepository {
       displayOrder: department.displayOrder,
       isActive: department.isActive,
     );
-    await db.insert('departments', departmentModel.toMap());
+    return await db.insert('departments', departmentModel.toMap());
   }
 
   @override

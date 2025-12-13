@@ -6,7 +6,7 @@ class CreateCategory {
 
   CreateCategory(this.repository);
 
-  Future<void> call(Category category) {
+  Future<int> call(Category category) {
     return repository.createCategory(category);
   }
 }

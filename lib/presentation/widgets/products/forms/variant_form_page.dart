@@ -62,41 +62,32 @@ class _VariantFormPageState extends ConsumerState<VariantFormPage> {
                       color: Colors.white,
                     ),
                   )
-                : const Icon(Icons.save),
+                : Icon(Icons.check_circle_outline_rounded, size: 28),
             onPressed: state.isSaving ? null : _saveVariant,
-            tooltip: 'Guardar',
+            tooltip: isEditing ? 'Guardar Cambios' : 'Guardar',
+            color: Theme.of(context).colorScheme.primary,
           ),
         ],
       ),
-      body: Form(
-        key: _formKey,
-        child: ListView(
-          padding: const EdgeInsets.all(16),
-          children: [
-            VariantBasicInfoSection(variant: widget.variant),
-            const SizedBox(height: 24),
-            VariantPriceSection(variant: widget.variant),
-            const SizedBox(height: 24),
-            VariantBarcodeSection(variant: widget.variant),
-            const SizedBox(height: 24),
-            VariantSettingsSection(variant: widget.variant),
-            const SizedBox(height: 32),
-            FilledButton.icon(
-              onPressed: state.isSaving ? null : _saveVariant,
-              icon: state.isSaving
-                  ? const SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: Colors.white,
-                      ),
-                    )
-                  : const Icon(Icons.save),
-              label: Text(state.isSaving ? 'Guardando...' : 'Guardar Variante'),
-              style: FilledButton.styleFrom(padding: const EdgeInsets.all(16)),
+      body: SafeArea(
+        child: Form(
+          key: _formKey,
+          child: ListView(
+            padding: const EdgeInsets.symmetric(
+              horizontal: 24.0,
+              vertical: 16.0,
             ),
-          ],
+            children: [
+              VariantBasicInfoSection(variant: widget.variant),
+              const SizedBox(height: 24),
+              VariantPriceSection(variant: widget.variant),
+              const SizedBox(height: 24),
+              VariantBarcodeSection(variant: widget.variant),
+              const SizedBox(height: 24),
+              VariantSettingsSection(variant: widget.variant),
+              const SizedBox(height: 32),
+            ],
+          ),
         ),
       ),
     );

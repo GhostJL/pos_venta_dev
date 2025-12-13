@@ -48,13 +48,39 @@ class ProductTaxSelection extends StatelessWidget {
               (t) => t.taxRateId == taxRate.id,
             );
             return FilterChip(
-              label: Text('${taxRate.name} (${taxRate.rate}%)'),
+              label: Text(
+                '${taxRate.name} (${taxRate.rate}%)',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                  color: isSelected
+                      ? Theme.of(context).colorScheme.primary
+                      : Theme.of(context).colorScheme.onSurface,
+                ),
+              ),
               selected: isSelected,
               onSelected: (_) => _toggleTax(taxRate),
               selectedColor: Theme.of(
                 context,
               ).colorScheme.primary.withValues(alpha: 0.2),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+                side: BorderSide(
+                  color: isSelected
+                      ? Theme.of(context).colorScheme.primary
+                      : Theme.of(context).colorScheme.outline,
+                  width: isSelected ? 1.5 : 1,
+                ),
+              ),
               checkmarkColor: Theme.of(context).colorScheme.primary,
+              selectedShadowColor: Theme.of(context).colorScheme.primary,
+
+              backgroundColor: Theme.of(context).colorScheme.surface,
+
+              labelPadding: const EdgeInsets.symmetric(
+                horizontal: 4,
+                vertical: 2,
+              ),
             );
           }).toList(),
         ),

@@ -4,6 +4,12 @@ import 'package:posventa/presentation/providers/brand_providers.dart';
 import 'package:posventa/presentation/providers/category_providers.dart';
 import 'package:posventa/presentation/providers/department_providers.dart';
 import 'package:posventa/presentation/providers/supplier_providers.dart';
+import 'package:posventa/presentation/widgets/catalog/brands/brand_form.dart';
+import 'package:posventa/presentation/widgets/catalog/categories/category_form.dart';
+import 'package:posventa/presentation/widgets/catalog/departments/department_form.dart';
+import 'package:posventa/presentation/widgets/catalog/suppliers/supplier_form.dart';
+import 'package:posventa/domain/entities/brand.dart';
+import 'package:posventa/domain/entities/supplier.dart';
 
 /// Widget for product classification section (department, category, brand, supplier)
 class ProductClassificationSection extends ConsumerWidget {
@@ -28,6 +34,46 @@ class ProductClassificationSection extends ConsumerWidget {
     required this.onSupplierChanged,
   });
 
+  Future<void> _openDepartmentForm(BuildContext context, WidgetRef ref) async {
+    final result = await showDialog<int>(
+      context: context,
+      builder: (context) => const Dialog(child: DepartmentForm(isDialog: true)),
+    );
+    if (result != null) {
+      onDepartmentChanged(result);
+    }
+  }
+
+  Future<void> _openCategoryForm(BuildContext context, WidgetRef ref) async {
+    final result = await showDialog<int>(
+      context: context,
+      builder: (context) => const Dialog(child: CategoryForm(isDialog: true)),
+    );
+    if (result != null) {
+      onCategoryChanged(result);
+    }
+  }
+
+  Future<void> _openBrandForm(BuildContext context, WidgetRef ref) async {
+    final result = await showDialog<Brand>(
+      context: context,
+      builder: (context) => const Dialog(child: BrandForm(isDialog: true)),
+    );
+    if (result != null && result.id != null) {
+      onBrandChanged(result.id);
+    }
+  }
+
+  Future<void> _openSupplierForm(BuildContext context, WidgetRef ref) async {
+    final result = await showDialog<Supplier>(
+      context: context,
+      builder: (context) => const Dialog(child: SupplierForm(isDialog: true)),
+    );
+    if (result != null && result.id != null) {
+      onSupplierChanged(result.id);
+    }
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final departmentsAsync = ref.watch(departmentListProvider);
@@ -41,9 +87,14 @@ class ProductClassificationSection extends ConsumerWidget {
         departmentsAsync.when(
           data: (departments) => DropdownButtonFormField<int>(
             initialValue: selectedDepartment,
-            decoration: const InputDecoration(
+            decoration: InputDecoration(
               labelText: 'Departamento',
-              prefixIcon: Icon(Icons.category),
+              prefixIcon: const Icon(Icons.business_rounded),
+              suffixIcon: IconButton(
+                icon: const Icon(Icons.add_circle_outline),
+                tooltip: 'Agregar Departamento',
+                onPressed: () => _openDepartmentForm(context, ref),
+              ),
             ),
             items: departments
                 .map(
@@ -59,21 +110,28 @@ class ProductClassificationSection extends ConsumerWidget {
         ),
         const SizedBox(height: 16),
         categoriesAsync.when(
-          data: (categories) => DropdownButtonFormField<int>(
-            initialValue: selectedCategory,
-            decoration: const InputDecoration(
-              labelText: 'Categoría',
-              prefixIcon: Icon(Icons.label),
-            ),
-            items: categories
-                .map(
-                  (cat) =>
-                      DropdownMenuItem(value: cat.id, child: Text(cat.name)),
-                )
-                .toList(),
-            onChanged: onCategoryChanged,
-            validator: (value) => value == null ? 'Requerido' : null,
-          ),
+          data: (categories) {
+            return DropdownButtonFormField<int>(
+              initialValue: selectedCategory,
+              decoration: InputDecoration(
+                labelText: 'Categoría',
+                prefixIcon: const Icon(Icons.category_rounded),
+                suffixIcon: IconButton(
+                  icon: const Icon(Icons.add_circle_outline),
+                  tooltip: 'Agregar Categoría',
+                  onPressed: () => _openCategoryForm(context, ref),
+                ),
+              ),
+              items: categories
+                  .map(
+                    (cat) =>
+                        DropdownMenuItem(value: cat.id, child: Text(cat.name)),
+                  )
+                  .toList(),
+              onChanged: onCategoryChanged,
+              validator: (value) => value == null ? 'Requerido' : null,
+            );
+          },
           loading: () => const CircularProgressIndicator(),
           error: (e, s) => Text('Error: $e'),
         ),
@@ -81,9 +139,14 @@ class ProductClassificationSection extends ConsumerWidget {
         brandsAsync.when(
           data: (brands) => DropdownButtonFormField<int>(
             initialValue: selectedBrand,
-            decoration: const InputDecoration(
+            decoration: InputDecoration(
               labelText: 'Marca (Opcional)',
-              prefixIcon: Icon(Icons.branding_watermark),
+              prefixIcon: const Icon(Icons.branding_watermark_rounded),
+              suffixIcon: IconButton(
+                icon: const Icon(Icons.add_circle_outline),
+                tooltip: 'Agregar Marca',
+                onPressed: () => _openBrandForm(context, ref),
+              ),
             ),
             items: brands
                 .map(
@@ -102,9 +165,14 @@ class ProductClassificationSection extends ConsumerWidget {
         suppliersAsync.when(
           data: (suppliers) => DropdownButtonFormField<int>(
             initialValue: selectedSupplier,
-            decoration: const InputDecoration(
+            decoration: InputDecoration(
               labelText: 'Proveedor (Opcional)',
-              prefixIcon: Icon(Icons.local_shipping),
+              prefixIcon: const Icon(Icons.local_shipping_rounded),
+              suffixIcon: IconButton(
+                icon: const Icon(Icons.add_circle_outline),
+                tooltip: 'Agregar Proveedor',
+                onPressed: () => _openSupplierForm(context, ref),
+              ),
             ),
             items: suppliers
                 .map(

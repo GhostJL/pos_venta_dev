@@ -16,14 +16,7 @@ class VariantSettingsSection extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Configuración',
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: Theme.of(context).colorScheme.primary,
-          ),
-        ),
+        _buildSectionTitle(context, 'Configuración'),
         const SizedBox(height: 8),
         SwitchListTile(
           title: const Text('Disponible para Venta'),
@@ -31,10 +24,48 @@ class VariantSettingsSection extends ConsumerWidget {
             'Si se desactiva, solo servirá para abastecimiento',
           ),
           value: state.isForSale,
-          activeThumbColor: Theme.of(context).colorScheme.primary,
           onChanged: notifier.updateIsForSale,
         ),
       ],
+    );
+  }
+
+  Widget _buildSectionTitle(BuildContext context, String title) {
+    // Mapa de iconos para un toque visual (opcional)
+    final Map<String, IconData> sectionIcons = {
+      'Configuración': Icons.settings,
+    };
+
+    final icon = sectionIcons[title];
+
+    return Padding(
+      // Añadimos padding superior para asegurarnos de que el título esté bien separado de la sección anterior
+      padding: const EdgeInsets.only(top: 24.0, bottom: 8.0),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          if (icon != null) ...[
+            Icon(
+              icon,
+              size: 20,
+              color: Theme.of(context).colorScheme.primary, // Color de acento
+            ),
+            const SizedBox(width: 8),
+          ],
+          Text(
+            title,
+            style: TextStyle(
+              fontSize: 18, // Ligeramente más grande para jerarquía
+              fontWeight:
+                  FontWeight.w700, // Más fuerte, pero sin ser negrita pura
+              color: Theme.of(
+                context,
+              ).colorScheme.primary, // Color principal de texto
+              letterSpacing: 0.5, // Un toque moderno
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

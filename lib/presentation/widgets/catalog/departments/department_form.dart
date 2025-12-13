@@ -3,13 +3,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:posventa/domain/entities/department.dart';
 import 'package:posventa/presentation/providers/department_providers.dart';
 import 'package:posventa/presentation/widgets/common/generic_form_scaffold.dart';
+import 'package:posventa/presentation/widgets/common/simple_dialog_form.dart';
 
 import 'package:posventa/core/constants/ui_constants.dart';
 
 class DepartmentForm extends ConsumerStatefulWidget {
   final Department? department;
+  final bool isDialog;
 
-  const DepartmentForm({super.key, this.department});
+  const DepartmentForm({super.key, this.department, this.isDialog = false});
 
   @override
   DepartmentFormState createState() => DepartmentFormState();
@@ -39,8 +41,9 @@ class DepartmentFormState extends ConsumerState<DepartmentForm> {
           name: _name,
           code: _code,
         );
+        int? newId;
         if (widget.department == null) {
-          await ref
+          newId = await ref
               .read(departmentListProvider.notifier)
               .addDepartment(department);
         } else {
@@ -49,7 +52,7 @@ class DepartmentFormState extends ConsumerState<DepartmentForm> {
               .updateDepartment(department);
         }
         if (mounted) {
-          Navigator.of(context).pop();
+          Navigator.of(context).pop(newId);
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('Departamento guardado correctamente'),
@@ -76,53 +79,67 @@ class DepartmentFormState extends ConsumerState<DepartmentForm> {
 
   @override
   Widget build(BuildContext context) {
+    var title = widget.department == null
+        ? 'Nuevo Departamento'
+        : 'Editar Departamento';
+    var submitText = widget.department == null ? 'Crear' : 'Actualizar';
+
+    var formContent = Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        TextFormField(
+          initialValue: _name,
+          decoration: const InputDecoration(
+            labelText: 'Nombre del Departamento',
+            prefixIcon: Icon(Icons.business_rounded),
+          ),
+          validator: (value) {
+            if (value == null || value.isEmpty) {
+              return 'Por favor, introduce un nombre de departamento';
+            }
+            if (value.length < 2) {
+              return 'El nombre debe tener al menos 2 caracteres';
+            }
+            return null;
+          },
+          onSaved: (value) => _name = value!,
+        ),
+        const SizedBox(height: UIConstants.spacingLarge),
+        TextFormField(
+          initialValue: _code,
+          decoration: const InputDecoration(
+            labelText: 'Código del Departamento',
+            prefixIcon: Icon(Icons.qr_code_rounded),
+          ),
+          validator: (value) {
+            if (value == null || value.isEmpty) {
+              return 'Por favor, introduce un código de departamento';
+            }
+            return null;
+          },
+          onSaved: (value) => _code = value!,
+        ),
+      ],
+    );
+
+    if (widget.isDialog) {
+      return SimpleDialogForm(
+        title: title,
+        isLoading: _isLoading,
+        onSubmit: _submit,
+        submitButtonText: submitText, // Used internally in simple dialog
+        formKey: _formKey,
+        child: formContent,
+      );
+    }
+
     return GenericFormScaffold(
-      title: widget.department == null
-          ? 'Nuevo Departamento'
-          : 'Editar Departamento',
+      title: title,
       isLoading: _isLoading,
       onSubmit: _submit,
-      submitButtonText: widget.department == null
-          ? 'Crear Departamento'
-          : 'Actualizar Departamento',
+      submitButtonText: submitText,
       formKey: _formKey,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          TextFormField(
-            initialValue: _name,
-            decoration: const InputDecoration(
-              labelText: 'Nombre del Departamento',
-              prefixIcon: Icon(Icons.business_rounded),
-            ),
-            validator: (value) {
-              if (value == null || value.isEmpty) {
-                return 'Por favor, introduce un nombre de departamento';
-              }
-              if (value.length < 2) {
-                return 'El nombre debe tener al menos 2 caracteres';
-              }
-              return null;
-            },
-            onSaved: (value) => _name = value!,
-          ),
-          const SizedBox(height: UIConstants.spacingLarge),
-          TextFormField(
-            initialValue: _code,
-            decoration: const InputDecoration(
-              labelText: 'Código del Departamento',
-              prefixIcon: Icon(Icons.qr_code_rounded),
-            ),
-            validator: (value) {
-              if (value == null || value.isEmpty) {
-                return 'Por favor, introduce un código de departamento';
-              }
-              return null;
-            },
-            onSaved: (value) => _code = value!,
-          ),
-        ],
-      ),
+      child: formContent,
     );
   }
 }

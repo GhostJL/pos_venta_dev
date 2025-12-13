@@ -3,11 +3,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:posventa/domain/entities/supplier.dart';
 import 'package:posventa/presentation/providers/supplier_providers.dart';
 import 'package:posventa/presentation/widgets/common/generic_form_scaffold.dart';
+import 'package:posventa/presentation/widgets/common/simple_dialog_form.dart';
+import 'package:posventa/core/constants/ui_constants.dart';
 
 class SupplierForm extends ConsumerStatefulWidget {
   final Supplier? supplier;
+  final bool isDialog;
 
-  const SupplierForm({super.key, this.supplier});
+  const SupplierForm({super.key, this.supplier, this.isDialog = false});
 
   @override
   SupplierFormState createState() => SupplierFormState();
@@ -49,15 +52,18 @@ class SupplierFormState extends ConsumerState<SupplierForm> {
           email: _email,
           address: _address,
         );
+        Supplier? newSupplier;
         if (widget.supplier == null) {
-          await ref.read(supplierListProvider.notifier).addSupplier(supplier);
+          newSupplier = await ref
+              .read(supplierListProvider.notifier)
+              .addSupplier(supplier);
         } else {
           await ref
               .read(supplierListProvider.notifier)
               .updateSupplier(supplier);
         }
         if (mounted) {
-          Navigator.of(context).pop();
+          Navigator.of(context).pop(newSupplier);
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('Proveedor guardado correctamente'),
@@ -84,95 +90,111 @@ class SupplierFormState extends ConsumerState<SupplierForm> {
 
   @override
   Widget build(BuildContext context) {
+    var title = widget.supplier == null
+        ? 'Nuevo Proveedor'
+        : 'Editar Proveedor';
+    var submitText = widget.supplier == null ? 'Crear' : 'Actualizar';
+
+    var formContent = Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        TextFormField(
+          initialValue: _name,
+          decoration: const InputDecoration(
+            labelText: 'Nombre del Proveedor',
+            prefixIcon: Icon(Icons.business_rounded),
+          ),
+          validator: (value) {
+            if (value == null || value.isEmpty) {
+              return 'Por favor, introduce un nombre de proveedor';
+            }
+            if (value.length < 2) {
+              return 'El nombre debe tener al menos 2 caracteres';
+            }
+            return null;
+          },
+          onSaved: (value) => _name = value!,
+        ),
+        const SizedBox(height: UIConstants.spacingLarge),
+        TextFormField(
+          initialValue: _code,
+          decoration: const InputDecoration(
+            labelText: 'Código del Proveedor',
+            prefixIcon: Icon(Icons.qr_code_rounded),
+          ),
+          validator: (value) {
+            if (value == null || value.isEmpty) {
+              return 'Por favor, introduce un código de proveedor';
+            }
+            return null;
+          },
+          onSaved: (value) => _code = value!,
+        ),
+        const SizedBox(height: UIConstants.spacingLarge),
+        TextFormField(
+          initialValue: _contactName,
+          decoration: const InputDecoration(
+            labelText: 'Nombre de Contacto',
+            prefixIcon: Icon(Icons.person_outline_rounded),
+          ),
+          onSaved: (value) => _contactName = value,
+        ),
+        const SizedBox(height: UIConstants.spacingLarge),
+        TextFormField(
+          initialValue: _phone,
+          decoration: const InputDecoration(
+            labelText: 'Teléfono',
+            prefixIcon: Icon(Icons.phone_rounded),
+          ),
+          onSaved: (value) => _phone = value,
+        ),
+        const SizedBox(height: UIConstants.spacingLarge),
+        TextFormField(
+          initialValue: _email,
+          decoration: const InputDecoration(
+            labelText: 'Correo Electrónico',
+            prefixIcon: Icon(Icons.email_outlined),
+          ),
+          validator: (value) {
+            if (value != null && value.isNotEmpty) {
+              if (!value.contains('@')) {
+                return 'Por favor, introduce un correo electrónico válido';
+              }
+            }
+            return null;
+          },
+          onSaved: (value) => _email = value,
+        ),
+        const SizedBox(height: UIConstants.spacingLarge),
+        TextFormField(
+          initialValue: _address,
+          decoration: const InputDecoration(
+            labelText: 'Dirección',
+            prefixIcon: Icon(Icons.location_on_outlined),
+          ),
+          onSaved: (value) => _address = value,
+        ),
+      ],
+    );
+
+    if (widget.isDialog) {
+      return SimpleDialogForm(
+        title: title,
+        isLoading: _isLoading,
+        onSubmit: _submit,
+        submitButtonText: submitText,
+        formKey: _formKey,
+        child: formContent,
+      );
+    }
+
     return GenericFormScaffold(
-      title: widget.supplier == null ? 'Nuevo Proveedor' : 'Editar Proveedor',
+      title: title,
       isLoading: _isLoading,
       onSubmit: _submit,
-      submitButtonText: widget.supplier == null
-          ? 'Crear Proveedor'
-          : 'Actualizar Proveedor',
+      submitButtonText: submitText,
       formKey: _formKey,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          TextFormField(
-            initialValue: _name,
-            decoration: const InputDecoration(
-              labelText: 'Nombre del Proveedor',
-              prefixIcon: Icon(Icons.business_rounded),
-            ),
-            validator: (value) {
-              if (value == null || value.isEmpty) {
-                return 'Por favor, introduce un nombre de proveedor';
-              }
-              if (value.length < 2) {
-                return 'El nombre debe tener al menos 2 caracteres';
-              }
-              return null;
-            },
-            onSaved: (value) => _name = value!,
-          ),
-          const SizedBox(height: 20),
-          TextFormField(
-            initialValue: _code,
-            decoration: const InputDecoration(
-              labelText: 'Código del Proveedor',
-              prefixIcon: Icon(Icons.qr_code_rounded),
-            ),
-            validator: (value) {
-              if (value == null || value.isEmpty) {
-                return 'Por favor, introduce un código de proveedor';
-              }
-              return null;
-            },
-            onSaved: (value) => _code = value!,
-          ),
-          const SizedBox(height: 20),
-          TextFormField(
-            initialValue: _contactName,
-            decoration: const InputDecoration(
-              labelText: 'Nombre de Contacto',
-              prefixIcon: Icon(Icons.person_outline_rounded),
-            ),
-            onSaved: (value) => _contactName = value,
-          ),
-          const SizedBox(height: 20),
-          TextFormField(
-            initialValue: _phone,
-            decoration: const InputDecoration(
-              labelText: 'Teléfono',
-              prefixIcon: Icon(Icons.phone_rounded),
-            ),
-            onSaved: (value) => _phone = value,
-          ),
-          const SizedBox(height: 20),
-          TextFormField(
-            initialValue: _email,
-            decoration: const InputDecoration(
-              labelText: 'Correo Electrónico',
-              prefixIcon: Icon(Icons.email_outlined),
-            ),
-            validator: (value) {
-              if (value != null && value.isNotEmpty) {
-                if (!value.contains('@')) {
-                  return 'Por favor, introduce un correo electrónico válido';
-                }
-              }
-              return null;
-            },
-            onSaved: (value) => _email = value,
-          ),
-          const SizedBox(height: 20),
-          TextFormField(
-            initialValue: _address,
-            decoration: const InputDecoration(
-              labelText: 'Dirección',
-              prefixIcon: Icon(Icons.location_on_outlined),
-            ),
-            onSaved: (value) => _address = value,
-          ),
-        ],
-      ),
+      child: formContent,
     );
   }
 }

@@ -44,12 +44,14 @@ class DepartmentList extends _$DepartmentList {
     return getAllDepartments();
   }
 
-  Future<void> addDepartment(Department department) async {
+  Future<int?> addDepartment(Department department) async {
     state = const AsyncValue.loading();
+    int? newId;
     state = await AsyncValue.guard(() async {
-      await ref.read(createDepartmentUseCaseProvider).call(department);
+      newId = await ref.read(createDepartmentUseCaseProvider).call(department);
       return ref.read(getAllDepartmentsUseCaseProvider).call();
     });
+    return newId;
   }
 
   Future<void> updateDepartment(Department department) async {

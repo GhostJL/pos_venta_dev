@@ -7,6 +7,7 @@ class ProductBasicInfoSection extends StatelessWidget {
   final TextEditingController barcodeController;
   final TextEditingController descriptionController;
   final VoidCallback onScanBarcode;
+  final bool showBarcode;
 
   const ProductBasicInfoSection({
     super.key,
@@ -15,6 +16,7 @@ class ProductBasicInfoSection extends StatelessWidget {
     required this.barcodeController,
     required this.descriptionController,
     required this.onScanBarcode,
+    this.showBarcode = true,
   });
 
   @override
@@ -40,21 +42,23 @@ class ProductBasicInfoSection extends StatelessWidget {
           ),
           validator: (value) => value?.isEmpty ?? true ? 'Requerido' : null,
         ),
-        const SizedBox(height: 16),
-        TextFormField(
-          controller: barcodeController,
-          decoration: InputDecoration(
-            labelText: 'Código de Barras Principal',
-            helperText: 'Código de barras del producto base',
-            prefixIcon: const Icon(Icons.qr_code),
-            suffixIcon: IconButton(
-              icon: const Icon(Icons.qr_code_scanner),
-              onPressed: onScanBarcode,
-              tooltip: 'Escanear',
+        if (showBarcode) ...[
+          const SizedBox(height: 16),
+          TextFormField(
+            controller: barcodeController,
+            decoration: InputDecoration(
+              labelText: 'Código de Barras Principal',
+              helperText: 'Código de barras del producto base',
+              prefixIcon: const Icon(Icons.qr_code),
+              suffixIcon: IconButton(
+                icon: const Icon(Icons.qr_code_scanner),
+                onPressed: onScanBarcode,
+                tooltip: 'Escanear',
+              ),
             ),
+            validator: (value) => value?.isEmpty ?? true ? 'Requerido' : null,
           ),
-          validator: (value) => value?.isEmpty ?? true ? 'Requerido' : null,
-        ),
+        ],
         const SizedBox(height: 16),
         TextFormField(
           controller: descriptionController,

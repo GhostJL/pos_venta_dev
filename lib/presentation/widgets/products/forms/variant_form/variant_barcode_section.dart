@@ -56,14 +56,7 @@ class _VariantBarcodeSectionState extends ConsumerState<VariantBarcodeSection> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Código de Barras',
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: Theme.of(context).colorScheme.primary,
-          ),
-        ),
+        _buildSectionTitle(context, 'Código de Barras'),
         const SizedBox(height: 16),
         TextFormField(
           controller: _controller,
@@ -82,6 +75,45 @@ class _VariantBarcodeSectionState extends ConsumerState<VariantBarcodeSection> {
           validator: (value) => value?.isEmpty ?? true ? 'Requerido' : null,
         ),
       ],
+    );
+  }
+
+  Widget _buildSectionTitle(BuildContext context, String title) {
+    // Mapa de iconos para un toque visual (opcional)
+    final Map<String, IconData> sectionIcons = {
+      'Código de Barras': Icons.qr_code,
+    };
+
+    final icon = sectionIcons[title];
+
+    return Padding(
+      // Añadimos padding superior para asegurarnos de que el título esté bien separado de la sección anterior
+      padding: const EdgeInsets.only(top: 24.0, bottom: 8.0),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          if (icon != null) ...[
+            Icon(
+              icon,
+              size: 20,
+              color: Theme.of(context).colorScheme.primary, // Color de acento
+            ),
+            const SizedBox(width: 8),
+          ],
+          Text(
+            title,
+            style: TextStyle(
+              fontSize: 18, // Ligeramente más grande para jerarquía
+              fontWeight:
+                  FontWeight.w700, // Más fuerte, pero sin ser negrita pura
+              color: Theme.of(
+                context,
+              ).colorScheme.primary, // Color principal de texto
+              letterSpacing: 0.5, // Un toque moderno
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

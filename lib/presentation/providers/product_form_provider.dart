@@ -18,6 +18,8 @@ class ProductFormState {
   final bool isActive;
   final List<ProductTax> selectedTaxes;
   final List<ProductVariant> variants;
+  final bool hasVariants;
+  final bool usesTaxes;
   final bool isLoading;
   final String? error;
   final bool isSuccess;
@@ -33,6 +35,8 @@ class ProductFormState {
     this.isActive = true,
     this.selectedTaxes = const [],
     this.variants = const [],
+    this.hasVariants = false,
+    this.usesTaxes = false,
     this.isLoading = false,
     this.error,
     this.isSuccess = false,
@@ -49,6 +53,8 @@ class ProductFormState {
     bool? isActive,
     List<ProductTax>? selectedTaxes,
     List<ProductVariant>? variants,
+    bool? hasVariants,
+    bool? usesTaxes,
     bool? isLoading,
     String? error,
     bool? isSuccess,
@@ -64,6 +70,8 @@ class ProductFormState {
       isActive: isActive ?? this.isActive,
       selectedTaxes: selectedTaxes ?? this.selectedTaxes,
       variants: variants ?? this.variants,
+      hasVariants: hasVariants ?? this.hasVariants,
+      usesTaxes: usesTaxes ?? this.usesTaxes,
       isLoading: isLoading ?? this.isLoading,
       error: error,
       isSuccess: isSuccess ?? this.isSuccess,
@@ -87,10 +95,18 @@ class ProductFormNotifier extends _$ProductFormNotifier {
         isActive: product.isActive,
         selectedTaxes: List.from(product.productTaxes ?? []),
         variants: List.from(product.variants ?? []),
+        hasVariants:
+            (product.variants?.length ?? 0) > 1 ||
+            ((product.variants?.isNotEmpty ?? false) &&
+                product.variants!.first.variantName != 'Estándar'),
+        usesTaxes: (product.productTaxes?.isNotEmpty ?? false),
       );
     }
     return ProductFormState();
   }
+
+  void setHasVariants(bool value) => state = state.copyWith(hasVariants: value);
+  void setUsesTaxes(bool value) => state = state.copyWith(usesTaxes: value);
 
   void setDepartment(int? value) => state = state.copyWith(departmentId: value);
   void setCategory(int? value) => state = state.copyWith(categoryId: value);
@@ -133,17 +149,8 @@ class ProductFormNotifier extends _$ProductFormNotifier {
     state = state.copyWith(isLoading: true, error: null, isSuccess: false);
 
     try {
-      if (salePrice <= costPrice) {
-        state = state.copyWith(
-          isLoading: false,
-          error: 'El precio de venta debe ser mayor que el precio de costo.',
-        );
-        return false;
-      }
-
       final productRepo = ref.read(productRepositoryProvider);
 
-      // Validate code uniqueness
       final isCodeUnique = await productRepo.isCodeUnique(
         code,
         excludeId: state.initialProduct?.id,
@@ -156,8 +163,25 @@ class ProductFormNotifier extends _$ProductFormNotifier {
         return false;
       }
 
-      // Validate barcode uniqueness
-      if (barcode.isNotEmpty) {
+      List<ProductVariant> finalVariants = [];
+
+      if (!state.hasVariants) {
+        if (salePrice <= costPrice) {
+          state = state.copyWith(
+            isLoading: false,
+            error: 'El precio de venta debe ser mayor que el precio de costo.',
+          );
+          return false;
+        }
+
+        if (barcode.isEmpty) {
+          state = state.copyWith(
+            isLoading: false,
+            error: 'El Código de Barras es requerido.',
+          );
+          return false;
+        }
+
         final isBarcodeUnique = await productRepo.isBarcodeUnique(
           barcode,
           excludeId: state.initialProduct?.id,
@@ -169,63 +193,75 @@ class ProductFormNotifier extends _$ProductFormNotifier {
           );
           return false;
         }
-      } else {
-        state = state.copyWith(
-          isLoading: false,
-          error: 'El Código de Barras es requerido.',
+
+        int? variantId;
+        if (state.variants.isNotEmpty) {
+          variantId = state.variants.first.id;
+        }
+
+        final mainVariant = ProductVariant(
+          id: variantId,
+          productId: state.initialProduct?.id ?? 0,
+          variantName: 'Estándar',
+          quantity: 1.0,
+          priceCents: (salePrice * 100).toInt(),
+          costPriceCents: (costPrice * 100).toInt(),
+          wholesalePriceCents: wholesalePrice != null
+              ? (wholesalePrice * 100).toInt()
+              : null,
+          barcode: barcode,
+          isForSale: true,
+          isActive: true,
         );
-        return false;
-      }
-
-      // Validate variant barcodes
-      final variantBarcodes = <String>{};
-      for (int i = 0; i < state.variants.length; i++) {
-        final variantBarcode = state.variants[i].barcode;
-        if (variantBarcode != null && variantBarcode.isNotEmpty) {
-          if (variantBarcodes.contains(variantBarcode)) {
-            state = state.copyWith(
-              isLoading: false,
-              error: 'Código de barras duplicado en variantes: $variantBarcode',
-            );
-            return false;
-          }
-          variantBarcodes.add(variantBarcode);
-
-          final isUnique = await productRepo.isBarcodeUnique(
-            variantBarcode,
-            excludeVariantId: state.variants[i].id,
+        finalVariants.add(mainVariant);
+      } else {
+        if (state.variants.isEmpty) {
+          state = state.copyWith(
+            isLoading: false,
+            error: 'Debe agregar al menos una variante.',
           );
-          if (!isUnique) {
+          return false;
+        }
+
+        final variantBarcodes = <String>{};
+        for (int i = 0; i < state.variants.length; i++) {
+          final v = state.variants[i];
+          final vBarcode = v.barcode;
+
+          if (v.priceCents <= v.costPriceCents) {
             state = state.copyWith(
               isLoading: false,
               error:
-                  'El código de barras $variantBarcode ya existe en el sistema',
+                  'La variante "${v.variantName}" tiene un precio de venta menor o igual al costo.',
             );
             return false;
           }
+
+          if (vBarcode != null && vBarcode.isNotEmpty) {
+            if (variantBarcodes.contains(vBarcode)) {
+              state = state.copyWith(
+                isLoading: false,
+                error: 'Código de barras duplicado en variantes: $vBarcode',
+              );
+              return false;
+            }
+            variantBarcodes.add(vBarcode);
+
+            final isUnique = await productRepo.isBarcodeUnique(
+              vBarcode,
+              excludeVariantId: v.id,
+            );
+            if (!isUnique) {
+              state = state.copyWith(
+                isLoading: false,
+                error:
+                    'El código de barras $vBarcode (Variante: ${v.variantName}) ya existe en el sistema.',
+              );
+              return false;
+            }
+          }
         }
-      }
-
-      // Create main variant
-      final mainVariant = ProductVariant(
-        id: state.variants.isNotEmpty ? state.variants.first.id : null,
-        productId: state.initialProduct?.id ?? 0,
-        variantName: 'Estándar',
-        quantity: 1.0,
-        priceCents: (salePrice * 100).toInt(),
-        costPriceCents: (costPrice * 100).toInt(),
-        wholesalePriceCents: wholesalePrice != null
-            ? (wholesalePrice * 100).toInt()
-            : null,
-        barcode: barcode,
-        isForSale: true,
-      );
-
-      final finalVariants = List<ProductVariant>.from(state.variants);
-      if (finalVariants.isEmpty) {
-        finalVariants.add(mainVariant);
-      } else {
-        finalVariants[0] = mainVariant;
+        finalVariants = List.from(state.variants);
       }
 
       final newProduct = Product(
@@ -239,7 +275,7 @@ class ProductFormNotifier extends _$ProductFormNotifier {
         supplierId: state.supplierId,
         unitId: state.unitId!,
         isSoldByWeight: state.isSoldByWeight,
-        productTaxes: state.selectedTaxes,
+        productTaxes: state.usesTaxes ? state.selectedTaxes : [],
         variants: finalVariants,
         isActive: state.isActive,
       );

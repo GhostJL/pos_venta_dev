@@ -44,12 +44,16 @@ class SupplierList extends _$SupplierList {
     return getAllSuppliers();
   }
 
-  Future<void> addSupplier(Supplier supplier) async {
+  Future<Supplier?> addSupplier(Supplier supplier) async {
     state = const AsyncValue.loading();
+    Supplier? newSupplier;
     state = await AsyncValue.guard(() async {
-      await ref.read(createSupplierUseCaseProvider).call(supplier);
+      newSupplier = await ref
+          .read(createSupplierUseCaseProvider)
+          .call(supplier);
       return ref.read(getAllSuppliersUseCaseProvider).call();
     });
+    return newSupplier;
   }
 
   Future<void> updateSupplier(Supplier supplier) async {

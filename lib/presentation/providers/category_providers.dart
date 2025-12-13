@@ -44,12 +44,14 @@ class CategoryList extends _$CategoryList {
     return getAllCategories();
   }
 
-  Future<void> addCategory(Category category) async {
+  Future<int?> addCategory(Category category) async {
     state = const AsyncValue.loading();
+    int? newId;
     state = await AsyncValue.guard(() async {
-      await ref.read(createCategoryUseCaseProvider).call(category);
+      newId = await ref.read(createCategoryUseCaseProvider).call(category);
       return ref.read(getAllCategoriesUseCaseProvider).call();
     });
+    return newId;
   }
 
   Future<void> updateCategory(Category category) async {

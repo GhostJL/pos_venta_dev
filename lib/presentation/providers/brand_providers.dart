@@ -44,12 +44,14 @@ class BrandList extends _$BrandList {
     return getAllBrands();
   }
 
-  Future<void> addBrand(Brand brand) async {
+  Future<Brand?> addBrand(Brand brand) async {
     state = const AsyncValue.loading();
+    Brand? newBrand;
     state = await AsyncValue.guard(() async {
-      await ref.read(createBrandUseCaseProvider).call(brand);
+      newBrand = await ref.read(createBrandUseCaseProvider).call(brand);
       return ref.read(getAllBrandsUseCaseProvider).call();
     });
+    return newBrand;
   }
 
   Future<void> updateBrand(Brand brand) async {
