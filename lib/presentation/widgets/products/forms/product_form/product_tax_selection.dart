@@ -18,13 +18,44 @@ class ProductTaxSelection extends StatelessWidget {
   void _toggleTax(TaxRate taxRate) {
     final newTaxes = List<ProductTax>.from(selectedTaxes);
     final existingIndex = newTaxes.indexWhere((t) => t.taxRateId == taxRate.id);
+    final isExempt =
+        taxRate.rate == 0 && taxRate.name.toLowerCase().contains('exento');
 
     if (existingIndex >= 0) {
+      // Deselecting
       newTaxes.removeAt(existingIndex);
     } else {
-      newTaxes.add(
-        ProductTax(taxRateId: taxRate.id!, applyOrder: newTaxes.length + 1),
-      );
+      // Selecting
+      if (isExempt) {
+        // If exempt is selected, clear everything else
+        newTaxes.clear();
+        newTaxes.add(ProductTax(taxRateId: taxRate.id!, applyOrder: 1));
+      } else {
+        // If normal tax is selected, check if exempt was present and remove it
+        // First, finding if any existing tax is exempt logic could be complex without full list,
+        // but typically "Exempt" is the only one with 0 rate/name.
+        // Actually, we need to check if ANY currently selected tax is exempt.
+        // Since we don't have the full TaxRate object for selectedTaxes here easily without map,
+        // we'll rely on the rule that if we are adding a non-exempt, we clear any potential exempt.
+        // However, `selectedTaxes` is just `ProductTax` (id, order).
+        // To be safe and precise, we should filter out known exempts if possible,
+        // OR, just iterate and check against the passed `taxRates` list if needed,
+        // BUT simpler: If "Exempt" is mutually exclusive, it's likely the only one selected if present.
+
+        // Let's filter out any selected tax that matches the "Exempt" definition found in `taxRates`
+        final exemptTaxIds = taxRates
+            .where(
+              (t) => t.rate == 0 && t.name.toLowerCase().contains('exento'),
+            )
+            .map((t) => t.id)
+            .toSet();
+
+        newTaxes.removeWhere((t) => exemptTaxIds.contains(t.taxRateId));
+
+        newTaxes.add(
+          ProductTax(taxRateId: taxRate.id!, applyOrder: newTaxes.length + 1),
+        );
+      }
     }
 
     onTaxesChanged(newTaxes);

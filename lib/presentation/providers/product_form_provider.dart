@@ -4,6 +4,8 @@ import 'package:posventa/domain/entities/product_variant.dart';
 import 'package:posventa/presentation/providers/product_provider.dart';
 import 'package:posventa/presentation/providers/providers.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:posventa/domain/entities/tax_rate.dart';
+import 'package:posventa/presentation/providers/tax_rate_provider.dart';
 
 part 'product_form_provider.g.dart';
 
@@ -151,6 +153,16 @@ class ProductFormNotifier extends _$ProductFormNotifier {
     try {
       final productRepo = ref.read(productRepositoryProvider);
 
+      // Validation: If taxes are enabled, at least one must be selected
+      if (state.usesTaxes && state.selectedTaxes.isEmpty) {
+        state = state.copyWith(
+          isLoading: false,
+          error:
+              'Debe seleccionar al menos un impuesto si los impuestos están habilitados.',
+        );
+        return false;
+      }
+
       final isCodeUnique = await productRepo.isCodeUnique(
         code,
         excludeId: state.initialProduct?.id,
@@ -264,6 +276,39 @@ class ProductFormNotifier extends _$ProductFormNotifier {
         finalVariants = List.from(state.variants);
       }
 
+      List<ProductTax> finalProductTaxes = [];
+      if (state.usesTaxes) {
+        finalProductTaxes = state.selectedTaxes;
+      } else {
+        // Search for Exempt tax (Rate 0)
+        try {
+          final taxRates = await ref.read(taxRateListProvider.future);
+          TaxRate? exemptTax;
+
+          // Try to find by name "exento" and rate 0
+          try {
+            exemptTax = taxRates.firstWhere(
+              (t) => t.rate == 0 && t.name.toLowerCase().contains('exento'),
+            );
+          } catch (_) {
+            // Fallback to any rate 0
+            try {
+              exemptTax = taxRates.firstWhere((t) => t.rate == 0);
+            } catch (__) {
+              // No exempt tax found
+            }
+          }
+
+          if (exemptTax != null) {
+            finalProductTaxes = [
+              ProductTax(taxRateId: exemptTax.id!, applyOrder: 1),
+            ];
+          }
+        } catch (e) {
+          // Ignore error, just proceed without taxes
+        }
+      }
+
       final newProduct = Product(
         id: state.initialProduct?.id,
         name: name,
@@ -275,7 +320,7 @@ class ProductFormNotifier extends _$ProductFormNotifier {
         supplierId: state.supplierId,
         unitId: state.unitId!,
         isSoldByWeight: state.isSoldByWeight,
-        productTaxes: state.usesTaxes ? state.selectedTaxes : [],
+        productTaxes: finalProductTaxes,
         variants: finalVariants,
         isActive: state.isActive,
       );
