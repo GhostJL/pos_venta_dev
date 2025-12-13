@@ -175,8 +175,7 @@ class ProductFormPageState extends ConsumerState<ProductFormPage> {
   @override
   Widget build(BuildContext context) {
     final provider = productFormProvider(widget.product);
-    final state = ref.watch(provider);
-    final taxRatesAsync = ref.watch(taxRateListProvider);
+    final isLoading = ref.watch(provider.select((s) => s.isLoading));
     final isNewProduct = widget.product == null;
 
     // Listen for success or error
@@ -208,7 +207,7 @@ class ProductFormPageState extends ConsumerState<ProductFormPage> {
       appBar: AppBar(
         title: Text(isNewProduct ? 'Nuevo Producto' : 'Editar Producto'),
         actions: [
-          if (state.isLoading)
+          if (isLoading)
             Center(
               child: Padding(
                 padding: const EdgeInsets.only(right: 16.0),
@@ -233,127 +232,155 @@ class ProductFormPageState extends ConsumerState<ProductFormPage> {
           padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
           children: [
             _buildSectionTitle(context, 'Información Básica'),
-            ProductBasicInfoSection(
-              nameController: _nameController,
-              codeController: _codeController,
-              barcodeController: _barcodeController,
-              descriptionController: _descriptionController,
-              onScanBarcode: _openBarcodeScanner,
-              showBarcode: !state.hasVariants,
+
+            // Optimization: Only rebuild this part when hasVariants changes
+            Consumer(
+              builder: (context, ref, child) {
+                final hasVariants = ref.watch(
+                  provider.select((s) => s.hasVariants),
+                );
+                return ProductBasicInfoSection(
+                  nameController: _nameController,
+                  codeController: _codeController,
+                  barcodeController: _barcodeController,
+                  descriptionController: _descriptionController,
+                  onScanBarcode: _openBarcodeScanner,
+                  showBarcode: !hasVariants,
+                );
+              },
             ),
+
             const SizedBox(height: 16),
 
-            Container(
-              decoration: BoxDecoration(
-                color: Theme.of(
-                  context,
-                ).colorScheme.surfaceContainerHighest, // Color sutil
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: SwitchListTile(
-                title: const Text(
-                  '¿Este producto tiene variantes?',
-                  style: TextStyle(fontWeight: FontWeight.bold),
-                ),
-                subtitle: const Text(
-                  'Habilita opciones como talla, color, etc. (El código de barras principal se mueve a las variantes)',
-                  style: TextStyle(fontSize: 12),
-                ),
-                value: state.hasVariants,
-                onChanged: (value) =>
-                    ref.read(provider.notifier).setHasVariants(value),
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 16.0,
-                  vertical: 4.0,
-                ),
-              ),
+            Consumer(
+              builder: (context, ref, child) {
+                final hasVariants = ref.watch(
+                  provider.select((s) => s.hasVariants),
+                );
+                return Container(
+                  decoration: BoxDecoration(
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.surfaceContainerHighest, // Color sutil
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: SwitchListTile(
+                    title: const Text(
+                      '¿Este producto tiene variantes?',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    subtitle: const Text(
+                      'Habilita opciones como talla, color, etc. (El código de barras principal se mueve a las variantes)',
+                      style: TextStyle(fontSize: 12),
+                    ),
+                    value: hasVariants,
+                    onChanged: (value) =>
+                        ref.read(provider.notifier).setHasVariants(value),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16.0,
+                      vertical: 4.0,
+                    ),
+                  ),
+                );
+              },
             ),
+
             const SizedBox(height: 32),
             _buildSectionTitle(context, 'Clasificación'),
-            ProductClassificationSection(
-              selectedDepartment: state.departmentId,
-              selectedCategory: state.categoryId,
-              selectedBrand: state.brandId,
-              selectedSupplier: state.supplierId,
-              onDepartmentChanged: (value) =>
-                  ref.read(provider.notifier).setDepartment(value),
-              onCategoryChanged: (value) =>
-                  ref.read(provider.notifier).setCategory(value),
-              onBrandChanged: (value) =>
-                  ref.read(provider.notifier).setBrand(value),
-              onSupplierChanged: (value) =>
-                  ref.read(provider.notifier).setSupplier(value),
-            ),
+            ProductClassificationSection(product: widget.product),
+
             const SizedBox(height: 32),
 
-            if (!state.hasVariants) ...[
-              _buildSectionTitle(context, 'Precios y Unidad'),
-              ProductPricingSection(
-                selectedUnitId: state.unitId,
-                onUnitChanged: (value) =>
-                    ref.read(provider.notifier).setUnit(value),
-                costPriceController: _costPriceController,
-                salePriceController: _salePriceController,
-                wholesalePriceController: _wholesalePriceController,
-                isSoldByWeight: state.isSoldByWeight,
-                onSoldByWeightChanged: (value) =>
-                    ref.read(provider.notifier).setSoldByWeight(value),
-              ),
-            ] else ...[
-              _buildSectionTitle(context, 'Unidad de Medida'),
-              ProductPricingSection(
-                selectedUnitId: state.unitId,
-                onUnitChanged: (value) =>
-                    ref.read(provider.notifier).setUnit(value),
-                costPriceController: _costPriceController,
-                salePriceController: _salePriceController,
-                wholesalePriceController: _wholesalePriceController,
-                isSoldByWeight: state.isSoldByWeight,
-                onSoldByWeightChanged: (value) =>
-                    ref.read(provider.notifier).setSoldByWeight(value),
-                showPrices: false,
-              ),
-            ],
+            Consumer(
+              builder: (context, ref, child) {
+                final hasVariants = ref.watch(
+                  provider.select((s) => s.hasVariants),
+                );
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (!hasVariants) ...[
+                      _buildSectionTitle(context, 'Precios y Unidad'),
+                      ProductPricingSection(
+                        product: widget.product,
+                        costPriceController: _costPriceController,
+                        salePriceController: _salePriceController,
+                        wholesalePriceController: _wholesalePriceController,
+                      ),
+                    ] else ...[
+                      _buildSectionTitle(context, 'Unidad de Medida'),
+                      ProductPricingSection(
+                        product: widget.product,
+                        costPriceController: _costPriceController,
+                        salePriceController: _salePriceController,
+                        wholesalePriceController: _wholesalePriceController,
+                        showPrices: false,
+                      ),
+                    ],
+                  ],
+                );
+              },
+            ),
+
             const SizedBox(height: 32),
 
             _buildSectionTitle(context, 'Impuestos'),
-            SwitchListTile(
-              title: const Text(
-                '¿Aplica Impuestos?',
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-              value: state.usesTaxes,
-              onChanged: (value) =>
-                  ref.read(provider.notifier).setUsesTaxes(value),
-              contentPadding: const EdgeInsets.symmetric(horizontal: 0),
+            Consumer(
+              builder: (context, ref, child) {
+                final usesTaxes = ref.watch(
+                  provider.select((s) => s.usesTaxes),
+                );
+                return Column(
+                  children: [
+                    SwitchListTile(
+                      title: const Text(
+                        '¿Aplica Impuestos?',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      value: usesTaxes,
+                      onChanged: (value) =>
+                          ref.read(provider.notifier).setUsesTaxes(value),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 0),
+                    ),
+                    if (usesTaxes) ...[
+                      const SizedBox(height: 16),
+                      // Since internal data loading is handled by ProductTaxSelection now,
+                      // we don't need to manually verify taxRates here unless we want to hide it if failed.
+                      // But ProductTaxSelection handles loading/error states gracefully.
+                      ProductTaxSelection(product: widget.product),
+                    ],
+                  ],
+                );
+              },
             ),
-            if (state.usesTaxes) ...[
-              const SizedBox(height: 16),
-              taxRatesAsync.when(
-                data: (taxRates) => ProductTaxSelection(
-                  taxRates: taxRates,
-                  selectedTaxes: state.selectedTaxes,
-                  onTaxesChanged: (taxes) =>
-                      ref.read(provider.notifier).setTaxes(taxes),
-                ),
-                loading: () => const Center(child: CircularProgressIndicator()),
-                error: (e, s) => Text('Error al cargar impuestos: $e'),
-              ),
-            ],
+
             const SizedBox(height: 32),
 
-            if (state.hasVariants) ...[
-              _buildSectionTitle(context, 'Variantes / Presentaciones'),
-              ProductVariantsList(
-                variants: state.variants,
-                onAddVariant: () => _navigateToVariantForm(),
-                onEditVariant: (variant, index) =>
-                    _navigateToVariantForm(variant: variant, index: index),
-                onDeleteVariant: (index) =>
-                    ref.read(provider.notifier).removeVariant(index),
-              ),
-              const SizedBox(height: 24),
-            ],
+            Consumer(
+              builder: (context, ref, child) {
+                final hasVariants = ref.watch(
+                  provider.select((s) => s.hasVariants),
+                );
+                if (hasVariants) {
+                  return Column(
+                    children: [
+                      _buildSectionTitle(context, 'Variantes / Presentaciones'),
+                      ProductVariantsList(
+                        product: widget.product,
+                        onAddVariant: () => _navigateToVariantForm(),
+                        onEditVariant: (variant, index) =>
+                            _navigateToVariantForm(
+                              variant: variant,
+                              index: index,
+                            ),
+                      ),
+                      const SizedBox(height: 24),
+                    ],
+                  );
+                }
+                return const SizedBox.shrink();
+              },
+            ),
 
             const SizedBox(height: 40),
           ],

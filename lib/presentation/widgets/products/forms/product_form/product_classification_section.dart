@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:posventa/domain/entities/product.dart';
 import 'package:posventa/presentation/providers/brand_providers.dart';
 import 'package:posventa/presentation/providers/category_providers.dart';
 import 'package:posventa/presentation/providers/department_providers.dart';
+import 'package:posventa/presentation/providers/product_form_provider.dart';
 import 'package:posventa/presentation/providers/supplier_providers.dart';
 import 'package:posventa/presentation/widgets/catalog/brands/brand_form.dart';
 import 'package:posventa/presentation/widgets/catalog/categories/category_form.dart';
@@ -13,26 +15,9 @@ import 'package:posventa/domain/entities/supplier.dart';
 
 /// Widget for product classification section (department, category, brand, supplier)
 class ProductClassificationSection extends ConsumerWidget {
-  final int? selectedDepartment;
-  final int? selectedCategory;
-  final int? selectedBrand;
-  final int? selectedSupplier;
-  final ValueChanged<int?> onDepartmentChanged;
-  final ValueChanged<int?> onCategoryChanged;
-  final ValueChanged<int?> onBrandChanged;
-  final ValueChanged<int?> onSupplierChanged;
+  final Product? product;
 
-  const ProductClassificationSection({
-    super.key,
-    required this.selectedDepartment,
-    required this.selectedCategory,
-    required this.selectedBrand,
-    required this.selectedSupplier,
-    required this.onDepartmentChanged,
-    required this.onCategoryChanged,
-    required this.onBrandChanged,
-    required this.onSupplierChanged,
-  });
+  const ProductClassificationSection({super.key, required this.product});
 
   Future<void> _openDepartmentForm(BuildContext context, WidgetRef ref) async {
     final result = await showDialog<int>(
@@ -40,7 +25,7 @@ class ProductClassificationSection extends ConsumerWidget {
       builder: (context) => const Dialog(child: DepartmentForm(isDialog: true)),
     );
     if (result != null) {
-      onDepartmentChanged(result);
+      ref.read(productFormProvider(product).notifier).setDepartment(result);
     }
   }
 
@@ -50,7 +35,7 @@ class ProductClassificationSection extends ConsumerWidget {
       builder: (context) => const Dialog(child: CategoryForm(isDialog: true)),
     );
     if (result != null) {
-      onCategoryChanged(result);
+      ref.read(productFormProvider(product).notifier).setCategory(result);
     }
   }
 
@@ -60,7 +45,7 @@ class ProductClassificationSection extends ConsumerWidget {
       builder: (context) => const Dialog(child: BrandForm(isDialog: true)),
     );
     if (result != null && result.id != null) {
-      onBrandChanged(result.id);
+      ref.read(productFormProvider(product).notifier).setBrand(result.id);
     }
   }
 
@@ -70,12 +55,21 @@ class ProductClassificationSection extends ConsumerWidget {
       builder: (context) => const Dialog(child: SupplierForm(isDialog: true)),
     );
     if (result != null && result.id != null) {
-      onSupplierChanged(result.id);
+      ref.read(productFormProvider(product).notifier).setSupplier(result.id);
     }
   }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final provider = productFormProvider(product);
+
+    final selectedDepartment = ref.watch(
+      provider.select((s) => s.departmentId),
+    );
+    final selectedCategory = ref.watch(provider.select((s) => s.categoryId));
+    final selectedBrand = ref.watch(provider.select((s) => s.brandId));
+    final selectedSupplier = ref.watch(provider.select((s) => s.supplierId));
+
     final departmentsAsync = ref.watch(departmentListProvider);
     final categoriesAsync = ref.watch(categoryListProvider);
     final brandsAsync = ref.watch(brandListProvider);
@@ -102,7 +96,8 @@ class ProductClassificationSection extends ConsumerWidget {
                       DropdownMenuItem(value: dept.id, child: Text(dept.name)),
                 )
                 .toList(),
-            onChanged: onDepartmentChanged,
+            onChanged: (value) =>
+                ref.read(provider.notifier).setDepartment(value),
             validator: (value) => value == null ? 'Requerido' : null,
           ),
           loading: () => const CircularProgressIndicator(),
@@ -128,7 +123,8 @@ class ProductClassificationSection extends ConsumerWidget {
                         DropdownMenuItem(value: cat.id, child: Text(cat.name)),
                   )
                   .toList(),
-              onChanged: onCategoryChanged,
+              onChanged: (value) =>
+                  ref.read(provider.notifier).setCategory(value),
               validator: (value) => value == null ? 'Requerido' : null,
             );
           },
@@ -156,7 +152,7 @@ class ProductClassificationSection extends ConsumerWidget {
                   ),
                 )
                 .toList(),
-            onChanged: onBrandChanged,
+            onChanged: (value) => ref.read(provider.notifier).setBrand(value),
           ),
           loading: () => const CircularProgressIndicator(),
           error: (e, s) => Text('Error: $e'),
@@ -182,7 +178,8 @@ class ProductClassificationSection extends ConsumerWidget {
                   ),
                 )
                 .toList(),
-            onChanged: onSupplierChanged,
+            onChanged: (value) =>
+                ref.read(provider.notifier).setSupplier(value),
           ),
           loading: () => const CircularProgressIndicator(),
           error: (e, s) => Text('Error: $e'),

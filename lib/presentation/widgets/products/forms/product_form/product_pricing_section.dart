@@ -1,34 +1,33 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:posventa/domain/entities/product.dart';
+import 'package:posventa/presentation/providers/product_form_provider.dart';
 import 'package:posventa/presentation/providers/providers.dart';
 
 /// Widget for product pricing section
 class ProductPricingSection extends ConsumerWidget {
-  final int? selectedUnitId;
-  final ValueChanged<int?> onUnitChanged;
+  final Product? product;
   final TextEditingController costPriceController;
   final TextEditingController salePriceController;
   final TextEditingController wholesalePriceController;
-  final bool isSoldByWeight;
-  final ValueChanged<bool> onSoldByWeightChanged;
-
   final bool showPrices;
 
   const ProductPricingSection({
     super.key,
-    required this.selectedUnitId,
-    required this.onUnitChanged,
+    required this.product,
     required this.costPriceController,
     required this.salePriceController,
     required this.wholesalePriceController,
-    required this.isSoldByWeight,
-    required this.onSoldByWeightChanged,
     this.showPrices = true,
   });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final provider = productFormProvider(product);
     final unitsAsync = ref.watch(unitListProvider);
+
+    final selectedUnitId = ref.watch(provider.select((s) => s.unitId));
+    final isSoldByWeight = ref.watch(provider.select((s) => s.isSoldByWeight));
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -46,7 +45,7 @@ class ProductPricingSection extends ConsumerWidget {
                       DropdownMenuItem(value: unit.id, child: Text(unit.name)),
                 )
                 .toList(),
-            onChanged: onUnitChanged,
+            onChanged: (value) => ref.read(provider.notifier).setUnit(value),
             validator: (value) => value == null ? 'Requerido' : null,
           ),
           loading: () => const CircularProgressIndicator(),
@@ -60,7 +59,8 @@ class ProductPricingSection extends ConsumerWidget {
             borderRadius: BorderRadius.circular(12),
             side: BorderSide(color: Theme.of(context).colorScheme.outline),
           ),
-          onChanged: onSoldByWeightChanged,
+          onChanged: (value) =>
+              ref.read(provider.notifier).setSoldByWeight(value),
         ),
         if (showPrices) ...[
           const SizedBox(height: 16),

@@ -1,23 +1,27 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:posventa/domain/entities/product.dart';
 import 'package:posventa/domain/entities/product_variant.dart';
+import 'package:posventa/presentation/providers/product_form_provider.dart';
 
 /// Widget for displaying and managing product variants list
-class ProductVariantsList extends StatelessWidget {
-  final List<ProductVariant> variants;
+class ProductVariantsList extends ConsumerWidget {
+  final Product? product;
   final VoidCallback onAddVariant;
   final void Function(ProductVariant variant, int index) onEditVariant;
-  final void Function(int index) onDeleteVariant;
 
   const ProductVariantsList({
     super.key,
-    required this.variants,
+    required this.product,
     required this.onAddVariant,
     required this.onEditVariant,
-    required this.onDeleteVariant,
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final provider = productFormProvider(product);
+    final variants = ref.watch(provider.select((s) => s.variants));
+
     return LayoutBuilder(
       builder: (context, constraints) {
         final isCompact = constraints.maxWidth < 700;
@@ -28,7 +32,7 @@ class ProductVariantsList extends StatelessWidget {
             if (variants.isEmpty)
               _buildEmptyState(context)
             else
-              _buildVariantsList(context, isCompact),
+              _buildVariantsList(context, ref, variants, isCompact),
 
             SizedBox(height: isCompact ? 16 : 24),
 
@@ -39,7 +43,12 @@ class ProductVariantsList extends StatelessWidget {
     );
   }
 
-  Widget _buildVariantsList(BuildContext context, bool isCompact) {
+  Widget _buildVariantsList(
+    BuildContext context,
+    WidgetRef ref,
+    List<ProductVariant> variants,
+    bool isCompact,
+  ) {
     final colorScheme = Theme.of(context).colorScheme;
 
     return Container(
@@ -65,7 +74,9 @@ class ProductVariantsList extends StatelessWidget {
               variant: variants[index],
               index: index,
               onEdit: onEditVariant,
-              onDelete: onDeleteVariant,
+              onDelete: (idx) => ref
+                  .read(productFormProvider(product).notifier)
+                  .removeVariant(idx),
               isCompact: isCompact,
             ),
           ),
