@@ -27,7 +27,7 @@ class PaymentSummaryCard extends StatelessWidget {
           _buildRow('Impuestos:', tax),
           const Divider(height: 20),
           const Text(
-            'Total a Pagar',
+            'Total a Cobrar',
             style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
           ),
           const SizedBox(height: 8),

@@ -10,9 +10,9 @@ class PaymentChangeDisplay extends StatelessWidget {
     final isPositive = change >= 0;
     final colorScheme = Theme.of(context).colorScheme;
     final backgroundColor = isPositive
-        ? colorScheme.tertiaryContainer
+        ? colorScheme.surface
         : colorScheme.errorContainer;
-    final textColor = isPositive ? colorScheme.tertiary : colorScheme.error;
+    final textColor = isPositive ? colorScheme.onSurface : colorScheme.onError;
 
     return Container(
       padding: const EdgeInsets.all(16),

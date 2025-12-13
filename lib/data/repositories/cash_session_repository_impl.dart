@@ -73,7 +73,7 @@ class CashSessionRepositoryImpl implements CashSessionRepository {
           AND sp.payment_method = 'Efectivo'
           AND s.sale_date >= ?
           AND s.sale_date <= ?
-          AND s.status = 'completed'
+          AND s.status IN ('completed', 'returned')
       ''',
         [_userId, session.openedAt.toIso8601String(), now.toIso8601String()],
       );
@@ -286,7 +286,7 @@ class CashSessionRepositoryImpl implements CashSessionRepository {
         WHERE s.cashier_id = ?
         AND s.sale_date >= ?
         AND s.sale_date <= ?
-        AND s.status = 'completed'
+        AND s.status IN ('completed', 'returned')
       ''',
       [session.userId, session.openedAt.toIso8601String(), endTime],
     );
