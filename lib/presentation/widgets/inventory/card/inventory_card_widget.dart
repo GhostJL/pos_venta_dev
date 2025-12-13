@@ -10,16 +10,12 @@ class InventoryCardWidget extends ConsumerWidget {
   final Inventory item;
   final Product? product;
   final Warehouse? warehouse;
-  final bool hasAdjustAccess;
-  final VoidCallback showActions;
 
   const InventoryCardWidget({
     super.key,
     required this.item,
     required this.product,
     required this.warehouse,
-    required this.hasAdjustAccess,
-    required this.showActions,
   });
 
   @override
@@ -60,12 +56,6 @@ class InventoryCardWidget extends ConsumerWidget {
                       ],
                     ),
                   ),
-                  if (hasAdjustAccess)
-                    IconButton(
-                      onPressed: () => showActions(),
-                      icon: const Icon(Icons.more_vert_rounded),
-                      tooltip: 'Ajustes de inventario',
-                    ),
                 ],
               ),
 

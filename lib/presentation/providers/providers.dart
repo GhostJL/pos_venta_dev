@@ -83,9 +83,7 @@ import 'package:posventa/domain/use_cases/purchase_item/delete_purchase_item_use
 import 'package:posventa/domain/use_cases/purchase_item/get_purchase_items_by_date_range_usecase.dart';
 import 'package:posventa/domain/use_cases/purchase_item/get_recent_purchase_items_usecase.dart';
 import 'package:posventa/presentation/providers/auth_provider.dart';
-import 'package:posventa/domain/use_cases/inventory/adjust_inventory_use_case.dart';
-import 'package:posventa/domain/use_cases/inventory/adjust_inventory_batch_use_case.dart';
-import 'package:posventa/domain/use_cases/inventory/transfer_inventory_use_case.dart';
+
 import 'package:posventa/domain/repositories/permission_repository.dart';
 import 'package:posventa/data/repositories/permission_repository_impl.dart';
 import 'package:posventa/domain/repositories/user_permission_repository.dart';
@@ -451,21 +449,6 @@ GetPurchaseItemsByDateRangeUseCase getPurchaseItemsByDateRangeUseCase(ref) =>
 @riverpod
 GetRecentPurchaseItemsUseCase getRecentPurchaseItemsUseCase(ref) =>
     GetRecentPurchaseItemsUseCase(ref.watch(purchaseItemRepositoryProvider));
-
-@riverpod
-AdjustInventoryUseCase adjustInventory(ref) {
-  return AdjustInventoryUseCase(ref.watch(inventoryRepositoryProvider));
-}
-
-@riverpod
-TransferInventoryUseCase transferInventory(ref) {
-  return TransferInventoryUseCase(ref.watch(inventoryRepositoryProvider));
-}
-
-@riverpod
-AdjustInventoryBatchUseCase adjustInventoryBatchUseCase(ref) {
-  return AdjustInventoryBatchUseCase(ref.watch(inventoryRepositoryProvider));
-}
 
 // Stream providers for real-time updates
 final saleDetailStreamProvider = StreamProvider.family<Sale?, int>((

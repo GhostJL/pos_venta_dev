@@ -6,7 +6,6 @@ import 'package:posventa/presentation/providers/product_provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:posventa/core/constants/permission_constants.dart';
 import 'package:posventa/presentation/providers/permission_provider.dart';
-import 'package:posventa/presentation/widgets/inventory/adjustments/show_actions_widget.dart';
 
 import 'package:posventa/presentation/widgets/inventory/card/inventory_card_widget.dart';
 
@@ -84,8 +83,6 @@ class _InventoryPageState extends ConsumerState<InventoryPage> {
                         item: item,
                         product: product,
                         warehouse: warehouse,
-                        hasAdjustAccess: hasAdjustAccess,
-                        showActions: () => showActions(context, ref, item),
                       );
                     },
                   );

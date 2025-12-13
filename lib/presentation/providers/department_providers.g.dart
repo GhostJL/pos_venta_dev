@@ -270,7 +270,7 @@ final class DepartmentListProvider
   DepartmentList create() => DepartmentList();
 }
 
-String _$departmentListHash() => r'3c4bd31b3d5d3410739352c5c9ac1e6f53b767ef';
+String _$departmentListHash() => r'e9655c8752311fe4a572d6855141a4201f71aef5';
 
 abstract class _$DepartmentList extends $AsyncNotifier<List<Department>> {
   FutureOr<List<Department>> build();

@@ -16,13 +16,7 @@ class DashboardManagementSection extends StatelessWidget {
         iconColor: Colors.indigo.shade600,
         onTap: () => context.go('/inventory'),
       ),
-      DashboardCard(
-        title: 'Ajustes de Inventario',
-        value: 'Correcciones y Ajustes',
-        icon: Icons.tune_rounded,
-        iconColor: Theme.of(context).colorScheme.tertiary,
-        onTap: () => context.go('/inventory-adjustments-menu'),
-      ),
+
       DashboardCard(
         title: 'Clientes',
         value: 'Informacion y detalles',

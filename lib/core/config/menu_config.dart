@@ -130,12 +130,7 @@ class MenuConfig {
             route: '/inventory',
             requiredPermissions: [PermissionConstants.inventoryView],
           ),
-          const MenuItem(
-            title: 'Ajustes de Inventario',
-            icon: Icons.tune_rounded,
-            route: '/inventory-adjustments-menu',
-            requiredPermissions: [PermissionConstants.inventoryView],
-          ),
+
           const MenuItem(
             title: 'Órdenes de Compra',
             icon: Icons.shopping_cart_rounded,

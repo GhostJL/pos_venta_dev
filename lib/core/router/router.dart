@@ -5,7 +5,43 @@ import 'package:posventa/domain/entities/user.dart';
 import 'package:posventa/presentation/pages/inventory/inventory_lot_detail_page.dart';
 import 'package:posventa/presentation/pages/inventory/inventory_lots_page.dart';
 
-import 'package:posventa/presentation/pages/screens.dart';
+import 'package:posventa/presentation/pages/adjustments/return_processing_page.dart';
+import 'package:posventa/presentation/pages/adjustments/returns_management_page.dart';
+import 'package:posventa/presentation/pages/adjustments/shift_close_page.dart';
+import 'package:posventa/presentation/pages/brands/brands_page.dart';
+import 'package:posventa/presentation/pages/cash/cash_session_close_page.dart';
+import 'package:posventa/presentation/pages/cash/cash_session_detail_page.dart';
+import 'package:posventa/presentation/pages/cash/cash_session_history_page.dart';
+import 'package:posventa/presentation/pages/cash/cash_session_open_page.dart';
+import 'package:posventa/presentation/pages/cashier/cashier_form_page.dart';
+import 'package:posventa/presentation/pages/cashier/cashier_list_page.dart';
+import 'package:posventa/presentation/pages/cashier/cashier_permissions_page.dart';
+import 'package:posventa/presentation/pages/categories/categories_page.dart';
+import 'package:posventa/presentation/pages/customers/customers_page.dart';
+import 'package:posventa/presentation/pages/dashboards/dashboard_admin_page.dart';
+import 'package:posventa/presentation/pages/dashboards/dashboard_cashier_page.dart';
+import 'package:posventa/presentation/pages/departaments/departments_page.dart';
+import 'package:posventa/presentation/pages/inventory/inventory_page.dart';
+import 'package:posventa/presentation/pages/inventory/inventory_form_page.dart';
+import 'package:posventa/presentation/pages/login/login_page.dart';
+import 'package:posventa/presentation/pages/login/create_account/create_account_page.dart';
+import 'package:posventa/presentation/pages/pos_sale/pos_sales_page.dart';
+import 'package:posventa/presentation/pages/products/products_page.dart';
+import 'package:posventa/presentation/pages/purchase/purchase_detail_page.dart';
+import 'package:posventa/presentation/pages/purchase/purchase_form_page.dart';
+import 'package:posventa/presentation/pages/purchase/purchase_header_page.dart';
+import 'package:posventa/presentation/pages/purchase/purchase_item_detail_page.dart';
+import 'package:posventa/presentation/pages/purchase/purchase_item_form_page.dart';
+import 'package:posventa/presentation/pages/purchase/purchase_items_page.dart';
+import 'package:posventa/presentation/pages/purchase/purchases_page.dart';
+import 'package:posventa/presentation/pages/sale/sale_detail_page.dart';
+import 'package:posventa/presentation/pages/sale/sale_returns_detail_page.dart';
+import 'package:posventa/presentation/pages/sale/sales_history_page.dart';
+import 'package:posventa/presentation/pages/suppliers/suppliers_page.dart';
+import 'package:posventa/presentation/pages/tax/tax_rate_page.dart';
+import 'package:posventa/presentation/pages/tax/tax_store_config_page.dart';
+import 'package:posventa/presentation/pages/users/users_permissions_page.dart';
+import 'package:posventa/presentation/pages/warehouses/warehouses_page.dart';
 import 'package:posventa/presentation/widgets/common/misc/barcode_scanner_widget.dart';
 import 'package:posventa/presentation/widgets/cash_sessions/misc/cash_session_guard.dart';
 
@@ -28,7 +64,6 @@ import 'package:posventa/domain/entities/category.dart';
 import 'package:posventa/domain/entities/customer.dart';
 import 'package:posventa/domain/entities/department.dart';
 import 'package:posventa/domain/entities/supplier.dart';
-import 'package:posventa/core/theme/theme.dart';
 
 final GlobalKey<NavigatorState> _rootNavigatorKey = GlobalKey<NavigatorState>();
 
@@ -329,47 +364,7 @@ final routerProvider = Provider<GoRouter>((ref) {
             pageBuilder: (context, state) =>
                 const NoTransitionPage(child: ReturnsManagementPage()),
           ),
-          GoRoute(
-            path: '/inventory-adjustments',
-            pageBuilder: (context, state) =>
-                const NoTransitionPage(child: InventoryAdjustmentsPage()),
-          ),
-          GoRoute(
-            path: '/inventory-adjustments-menu',
-            pageBuilder: (context, state) =>
-                const NoTransitionPage(child: InventoryAdjustmentsMenuPage()),
-          ),
-          GoRoute(
-            path: '/adjustments/physical-inventory',
-            pageBuilder: (context, state) => const NoTransitionPage(
-              child: PhysicalInventoryAdjustmentPage(),
-            ),
-          ),
 
-          GoRoute(
-            path: '/adjustments/price-adjustment',
-            pageBuilder: (context, state) => const NoTransitionPage(
-              child: ComingSoonPage(
-                title: 'Ajuste de Precios',
-                description:
-                    'Corregir precios o descuentos aplicados en ventas',
-                icon: Icons.price_change_rounded,
-                iconColor: AppTheme.alertInfo,
-              ),
-            ),
-          ),
-          GoRoute(
-            path: '/adjustments/payment-correction',
-            pageBuilder: (context, state) => const NoTransitionPage(
-              child: ComingSoonPage(
-                title: 'Corrección de Forma de Pago',
-                description:
-                    'Modificar la forma de pago registrada en una venta',
-                icon: Icons.payment_rounded,
-                iconColor: Colors.purple,
-              ),
-            ),
-          ),
           GoRoute(
             path: '/adjustments/return-processing',
             pageBuilder: (context, state) {
@@ -379,56 +374,8 @@ final routerProvider = Provider<GoRouter>((ref) {
           ),
 
           // Physical Inventory Routes
-          GoRoute(
-            path: '/adjustments/inventory-reversal',
-            pageBuilder: (context, state) => const NoTransitionPage(
-              child: ComingSoonPage(
-                title: 'Reversión por Devolución',
-                description:
-                    'Devolver productos al inventario tras una devolución',
-                icon: Icons.undo_rounded,
-                iconColor: Colors.teal,
-              ),
-            ),
-          ),
-          GoRoute(
-            path: '/adjustments/damage-loss',
-            pageBuilder: (context, state) => const NoTransitionPage(
-              child: ComingSoonPage(
-                title: 'Registro de Mermas',
-                description:
-                    'Registrar productos dañados, caducados o perdidos',
-                icon: Icons.delete_sweep_rounded,
-                iconColor: AppTheme.transactionFailed,
-              ),
-            ),
-          ),
-          // Cash Control Routes
-          GoRoute(
-            path: '/adjustments/cash-movements',
-            pageBuilder: (context, state) => const NoTransitionPage(
-              child: ComingSoonPage(
-                title: 'Ingresos/Egresos de Caja',
-                description:
-                    'Registrar movimientos de efectivo no relacionados con ventas',
-                icon: Icons.swap_vert_rounded,
-                iconColor: AppTheme.transactionPending,
-              ),
-            ),
-          ),
-          GoRoute(
-            path: '/adjustments/cash-adjustment',
-            pageBuilder: (context, state) => const NoTransitionPage(
-              child: ComingSoonPage(
-                title: 'Ajuste de Recibidos',
-                description:
-                    'Corregir montos recibidos en caja por errores de cambio',
-                icon: Icons.account_balance_rounded,
-                iconColor: Colors.deepOrange,
-              ),
-            ),
-          ),
 
+          // Cash Control Routes
           GoRoute(
             path: '/users-permissions',
             pageBuilder: (context, state) =>

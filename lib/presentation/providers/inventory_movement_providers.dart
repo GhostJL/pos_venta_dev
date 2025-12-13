@@ -34,38 +34,6 @@ class InventoryMovementNotifier extends _$InventoryMovementNotifier {
       return ref.read(getAllInventoryMovementsProvider).call();
     });
   }
-
-  Future<void> adjustInventory(InventoryMovement movement) async {
-    state = const AsyncValue.loading();
-    state = await AsyncValue.guard(() async {
-      await ref.read(adjustInventoryProvider).call(movement);
-      return ref.read(getAllInventoryMovementsProvider).call();
-    });
-  }
-
-  Future<void> transferInventory({
-    required int fromWarehouseId,
-    required int toWarehouseId,
-    required int productId,
-    required double quantity,
-    required int userId,
-    String? reason,
-  }) async {
-    state = const AsyncValue.loading();
-    state = await AsyncValue.guard(() async {
-      await ref
-          .read(transferInventoryProvider)
-          .call(
-            fromWarehouseId: fromWarehouseId,
-            toWarehouseId: toWarehouseId,
-            productId: productId,
-            quantity: quantity,
-            userId: userId,
-            reason: reason,
-          );
-      return ref.read(getAllInventoryMovementsProvider).call();
-    });
-  }
 }
 
 @riverpod

@@ -6,7 +6,7 @@ import 'package:posventa/domain/entities/permission.dart';
 import 'package:posventa/domain/entities/user.dart';
 import 'package:posventa/domain/repositories/cashier_repository.dart';
 import 'package:posventa/domain/repositories/permission_repository.dart';
-import 'package:posventa/domain/usecases/cashier/cashier_usecases.dart';
+import 'package:posventa/domain/use_cases/cashier/cashier_usecases.dart';
 import 'package:posventa/presentation/providers/auth_provider.dart';
 
 part 'cashier_providers.g.dart';

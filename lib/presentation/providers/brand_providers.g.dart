@@ -243,7 +243,7 @@ final class BrandListProvider
   BrandList create() => BrandList();
 }
 
-String _$brandListHash() => r'872092e5bb92d38fd7e1ca5e3254c7b196440fe8';
+String _$brandListHash() => r'9a74ea24d7140827aae092a448db06a251fd27a7';
 
 abstract class _$BrandList extends $AsyncNotifier<List<Brand>> {
   FutureOr<List<Brand>> build();
