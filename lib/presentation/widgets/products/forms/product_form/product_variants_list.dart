@@ -24,7 +24,11 @@ class ProductVariantsList extends ConsumerWidget {
       ..sort((a, b) => (a.id ?? 0).compareTo(b.id ?? 0));
 
     final salesVariants = variants
-        .where((v) => v.type == VariantType.sales)
+        .where(
+          (v) =>
+              v.type == VariantType.sales ||
+              (v.type == VariantType.purchase && v.isForSale),
+        )
         .toList();
     final purchaseVariants = variants
         .where((v) => v.type == VariantType.purchase)
@@ -43,7 +47,13 @@ class ProductVariantsList extends ConsumerWidget {
               if (salesVariants.isNotEmpty) ...[
                 _buildListHeader(context, 'Variantes de Venta', Icons.sell),
                 const SizedBox(height: 8),
-                _buildVariantsList(context, ref, salesVariants, isCompact),
+                _buildVariantsList(
+                  context,
+                  ref,
+                  salesVariants,
+                  isCompact,
+                  isSalesList: true,
+                ),
                 const SizedBox(height: 24),
               ],
               if (purchaseVariants.isNotEmpty) ...[
@@ -53,7 +63,13 @@ class ProductVariantsList extends ConsumerWidget {
                   Icons.inventory,
                 ),
                 const SizedBox(height: 8),
-                _buildVariantsList(context, ref, purchaseVariants, isCompact),
+                _buildVariantsList(
+                  context,
+                  ref,
+                  purchaseVariants,
+                  isCompact,
+                  isSalesList: false,
+                ),
                 const SizedBox(height: 24),
               ],
             ],
@@ -85,8 +101,9 @@ class ProductVariantsList extends ConsumerWidget {
     BuildContext context,
     WidgetRef ref,
     List<ProductVariant> variants,
-    bool isCompact,
-  ) {
+    bool isCompact, {
+    bool isSalesList = false,
+  }) {
     final colorScheme = Theme.of(context).colorScheme;
 
     return Container(
@@ -122,6 +139,7 @@ class ProductVariantsList extends ConsumerWidget {
                     .read(productFormProvider(product).notifier)
                     .removeVariant(idx),
                 isCompact: isCompact,
+                isSalesList: isSalesList,
               );
             },
           ),
@@ -203,6 +221,7 @@ class _VariantItemRow extends StatelessWidget {
   final void Function(ProductVariant variant, int index) onEdit;
   final void Function(int index) onDelete;
   final bool isCompact;
+  final bool isSalesList;
 
   const _VariantItemRow({
     required this.variant,
@@ -210,6 +229,7 @@ class _VariantItemRow extends StatelessWidget {
     required this.onEdit,
     required this.onDelete,
     required this.isCompact,
+    this.isSalesList = false,
   });
 
   String _formatPrice(int cents) {
@@ -258,7 +278,7 @@ class _VariantItemRow extends StatelessWidget {
                             borderRadius: BorderRadius.circular(4),
                           ),
                           child: Text(
-                            'Compra',
+                            isSalesList ? 'Compra + Venta' : 'Compra',
                             style: Theme.of(context).textTheme.labelSmall
                                 ?.copyWith(
                                   color: colorScheme.onTertiaryContainer,
@@ -277,10 +297,10 @@ class _VariantItemRow extends StatelessWidget {
             children: [
               _buildMetricCompact(
                 context,
-                icon: variant.type == VariantType.purchase
+                icon: !isSalesList
                     ? Icons.monetization_on_outlined
                     : Icons.attach_money_rounded,
-                label: variant.type == VariantType.purchase
+                label: !isSalesList
                     ? 'Costo: \$${_formatPrice(variant.costPriceCents)}'
                     : 'Precio: \$${_formatPrice(variant.priceCents)}',
                 color: colorScheme.primary,
@@ -355,7 +375,9 @@ class _VariantItemRow extends StatelessWidget {
                         borderRadius: BorderRadius.circular(4),
                       ),
                       child: Text(
-                        'Compra (Enlace: ${variant.linkedVariantId ?? "Base"})',
+                        isSalesList
+                            ? 'Compra + Venta'
+                            : 'Compra (Enlace: ${variant.linkedVariantId ?? "Base"})',
                         style: Theme.of(context).textTheme.labelSmall?.copyWith(
                           color: colorScheme.onTertiaryContainer,
                         ),
@@ -368,10 +390,10 @@ class _VariantItemRow extends StatelessWidget {
           const SizedBox(width: 8),
           _buildMetricCompact(
             context,
-            icon: variant.type == VariantType.purchase
+            icon: !isSalesList
                 ? Icons.monetization_on_outlined
                 : Icons.attach_money_rounded,
-            label: variant.type == VariantType.purchase
+            label: !isSalesList
                 ? 'Costo: \$${_formatPrice(variant.costPriceCents)}'
                 : '\$${_formatPrice(variant.priceCents)}',
             color: colorScheme.primary,

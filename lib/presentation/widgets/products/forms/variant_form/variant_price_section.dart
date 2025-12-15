@@ -42,7 +42,7 @@ class VariantPriceSection extends ConsumerWidget {
                 },
               ),
             ),
-            if (state.type != VariantType.purchase) ...[
+            if (state.type != VariantType.purchase || state.isForSale) ...[
               const SizedBox(width: 16),
               Expanded(
                 child: TextFormField(
@@ -69,7 +69,7 @@ class VariantPriceSection extends ConsumerWidget {
             ],
           ],
         ),
-        if (state.type != VariantType.purchase) ...[
+        if (state.type != VariantType.purchase || state.isForSale) ...[
           const SizedBox(height: 16),
           TextFormField(
             initialValue: state.wholesalePrice,

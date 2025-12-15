@@ -169,6 +169,9 @@ class VariantForm extends _$VariantForm {
   void updateType(VariantType value) {
     state = state.copyWithNullable(
       type: value,
+      // If switching to Sales: always for sale.
+      // If switching to Purchase: defaults to NOT for sale, but user can opt-in via switch.
+      isForSale: value == VariantType.sales,
       // Reset linked variant if type changes to Sales (optional, but good practice)
       clearLinkedVariantId: value == VariantType.sales,
     );
@@ -241,7 +244,7 @@ class VariantForm extends _$VariantForm {
         productId: productId,
         variantName: state.name,
         quantity: double.parse(state.quantity),
-        priceCents: state.type == VariantType.purchase
+        priceCents: (state.type == VariantType.purchase && !state.isForSale)
             ? 0
             : (double.parse(state.price) * 100).toInt(),
         costPriceCents: (double.parse(state.cost) * 100).toInt(),
@@ -250,7 +253,8 @@ class VariantForm extends _$VariantForm {
             ? (double.parse(state.wholesalePrice) * 100).toInt()
             : null,
         barcode: state.barcode.isNotEmpty ? state.barcode : null,
-        isForSale: state.type == VariantType.sales ? state.isForSale : false,
+        // Now we respect state.isForSale even for purchase variants
+        isForSale: state.isForSale,
         type: state.type,
         linkedVariantId: state.linkedVariantId,
       );

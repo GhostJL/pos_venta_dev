@@ -18,7 +18,7 @@ class VariantSettingsSection extends ConsumerWidget {
       children: [
         _buildSectionTitle(context, 'Configuración'),
         const SizedBox(height: 8),
-        if (state.type != VariantType.purchase)
+        if (state.type == VariantType.purchase)
           SwitchListTile(
             title: const Text('Disponible para Venta'),
             subtitle: const Text(
