@@ -10,7 +10,8 @@ class ProductVariantItem {
 
   String get displayName {
     if (variant != null) {
-      return '${product.name} - ${variant!.description} (Factor: ${variant!.quantity})';
+      final typeStr = variant!.type == VariantType.purchase ? ' (Compra)' : '';
+      return '${product.name} - ${variant!.description}$typeStr (Factor: ${variant!.quantity})';
     }
     return product.name;
   }

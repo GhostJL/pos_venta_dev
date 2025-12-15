@@ -1,5 +1,7 @@
 import 'package:flutter/foundation.dart';
 
+enum VariantType { sales, purchase }
+
 @immutable
 class ProductVariant {
   final int? id;
@@ -12,6 +14,8 @@ class ProductVariant {
   final int? wholesalePriceCents;
   final bool isActive;
   final bool isForSale;
+  final VariantType type;
+  final int? linkedVariantId;
 
   const ProductVariant({
     this.id,
@@ -24,6 +28,8 @@ class ProductVariant {
     this.wholesalePriceCents,
     this.isActive = true,
     this.isForSale = true,
+    this.type = VariantType.sales,
+    this.linkedVariantId,
   });
 
   double get price => priceCents / 100.0;
@@ -43,6 +49,8 @@ class ProductVariant {
     int? wholesalePriceCents,
     bool? isActive,
     bool? isForSale,
+    VariantType? type,
+    int? linkedVariantId,
   }) {
     return ProductVariant(
       id: id ?? this.id,
@@ -55,6 +63,8 @@ class ProductVariant {
       wholesalePriceCents: wholesalePriceCents ?? this.wholesalePriceCents,
       isActive: isActive ?? this.isActive,
       isForSale: isForSale ?? this.isForSale,
+      type: type ?? this.type,
+      linkedVariantId: linkedVariantId ?? this.linkedVariantId,
     );
   }
 }

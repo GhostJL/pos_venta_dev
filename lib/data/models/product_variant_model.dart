@@ -12,6 +12,8 @@ class ProductVariantModel extends ProductVariant {
     super.wholesalePriceCents,
     required super.isActive,
     required super.isForSale,
+    required super.type,
+    super.linkedVariantId,
   });
 
   factory ProductVariantModel.fromEntity(ProductVariant variant) {
@@ -26,6 +28,8 @@ class ProductVariantModel extends ProductVariant {
       wholesalePriceCents: variant.wholesalePriceCents,
       isActive: variant.isActive,
       isForSale: variant.isForSale,
+      type: variant.type,
+      linkedVariantId: variant.linkedVariantId,
     );
   }
 
@@ -42,6 +46,10 @@ class ProductVariantModel extends ProductVariant {
       wholesalePriceCents: map['wholesale_price_cents'],
       isActive: map['is_active'] == 1,
       isForSale: map['is_for_sale'] == null ? true : map['is_for_sale'] == 1,
+      type: map['type'] == 'purchase'
+          ? VariantType.purchase
+          : VariantType.sales,
+      linkedVariantId: map['linked_variant_id'],
     );
   }
 
@@ -57,6 +65,8 @@ class ProductVariantModel extends ProductVariant {
       'wholesale_price_cents': wholesalePriceCents,
       'is_active': isActive ? 1 : 0,
       'is_for_sale': isForSale ? 1 : 0,
+      'type': type == VariantType.purchase ? 'purchase' : 'sales',
+      'linked_variant_id': linkedVariantId,
     };
   }
 }

@@ -15,6 +15,8 @@ class VariantFormState extends Equatable {
   final bool isForSale;
   final bool isSaving;
   final String? barcodeError;
+  final VariantType type;
+  final int? linkedVariantId;
 
   const VariantFormState({
     required this.name,
@@ -26,6 +28,8 @@ class VariantFormState extends Equatable {
     required this.isForSale,
     this.isSaving = false,
     this.barcodeError,
+    this.type = VariantType.sales,
+    this.linkedVariantId,
   });
 
   factory VariantFormState.initial(ProductVariant? variant) {
@@ -43,6 +47,8 @@ class VariantFormState extends Equatable {
           : '',
       barcode: variant?.barcode ?? '',
       isForSale: variant?.isForSale ?? true,
+      type: variant?.type ?? VariantType.sales,
+      linkedVariantId: variant?.linkedVariantId,
     );
   }
 
@@ -56,6 +62,8 @@ class VariantFormState extends Equatable {
     bool? isForSale,
     bool? isSaving,
     String? barcodeError,
+    VariantType? type,
+    int? linkedVariantId,
   }) {
     return VariantFormState(
       name: name ?? this.name,
@@ -66,16 +74,9 @@ class VariantFormState extends Equatable {
       barcode: barcode ?? this.barcode,
       isForSale: isForSale ?? this.isForSale,
       isSaving: isSaving ?? this.isSaving,
-      barcodeError:
-          barcodeError, // Allow setting to null, but here we treat null as "not changed" if we don't handle it carefully.
-      // Actually, for barcodeError, we often want to clear it.
-      // Let's use a specific logic: if passed, use it. But copyWith usually ignores nulls.
-      // To allow clearing, we might need a specific flag or nullable wrapper.
-      // For simplicity in this specific use case, I'll assume if I want to clear it, I pass null? No, that's the default.
-      // I'll change the logic to: if barcodeError is passed (even null? no, Dart arguments don't work like that easily without a wrapper).
-      // I'll just use a separate method or assume if I call copyWith I might want to keep it unless I explicitly change it.
-      // Wait, in my notifier I did `state = state.copyWith(barcode: value, barcodeError: null);`.
-      // So I need to support nullable update.
+      barcodeError: barcodeError,
+      type: type ?? this.type,
+      linkedVariantId: linkedVariantId ?? this.linkedVariantId,
     );
   }
 
@@ -91,6 +92,9 @@ class VariantFormState extends Equatable {
     bool? isSaving,
     String? barcodeError,
     bool clearBarcodeError = false,
+    VariantType? type,
+    int? linkedVariantId,
+    bool clearLinkedVariantId = false,
   }) {
     return VariantFormState(
       name: name ?? this.name,
@@ -104,6 +108,10 @@ class VariantFormState extends Equatable {
       barcodeError: clearBarcodeError
           ? null
           : (barcodeError ?? this.barcodeError),
+      type: type ?? this.type,
+      linkedVariantId: clearLinkedVariantId
+          ? null
+          : (linkedVariantId ?? this.linkedVariantId),
     );
   }
 
@@ -118,6 +126,8 @@ class VariantFormState extends Equatable {
     isForSale,
     isSaving,
     barcodeError,
+    type,
+    linkedVariantId,
   ];
 }
 
@@ -154,6 +164,21 @@ class VariantForm extends _$VariantForm {
 
   void updateIsForSale(bool value) {
     state = state.copyWithNullable(isForSale: value);
+  }
+
+  void updateType(VariantType value) {
+    state = state.copyWithNullable(
+      type: value,
+      // Reset linked variant if type changes to Sales (optional, but good practice)
+      clearLinkedVariantId: value == VariantType.sales,
+    );
+  }
+
+  void updateLinkedVariantId(int? value) {
+    state = state.copyWithNullable(
+      linkedVariantId: value,
+      clearLinkedVariantId: value == null,
+    );
   }
 
   Future<bool> validateBarcode(List<String>? existingBarcodes) async {
@@ -216,13 +241,18 @@ class VariantForm extends _$VariantForm {
         productId: productId,
         variantName: state.name,
         quantity: double.parse(state.quantity),
-        priceCents: (double.parse(state.price) * 100).toInt(),
+        priceCents: state.type == VariantType.purchase
+            ? 0
+            : (double.parse(state.price) * 100).toInt(),
         costPriceCents: (double.parse(state.cost) * 100).toInt(),
-        wholesalePriceCents: state.wholesalePrice.isNotEmpty
+        wholesalePriceCents:
+            state.type == VariantType.sales && state.wholesalePrice.isNotEmpty
             ? (double.parse(state.wholesalePrice) * 100).toInt()
             : null,
         barcode: state.barcode.isNotEmpty ? state.barcode : null,
-        isForSale: state.isForSale,
+        isForSale: state.type == VariantType.sales ? state.isForSale : false,
+        type: state.type,
+        linkedVariantId: state.linkedVariantId,
       );
       state = state.copyWithNullable(isSaving: false);
       return newVariant;

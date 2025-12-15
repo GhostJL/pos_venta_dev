@@ -240,7 +240,8 @@ class ProductFormNotifier extends _$ProductFormNotifier {
           final v = state.variants[i];
           final vBarcode = v.barcode;
 
-          if (v.priceCents <= v.costPriceCents) {
+          if (v.type != VariantType.purchase &&
+              v.priceCents <= v.costPriceCents) {
             state = state.copyWith(
               isLoading: false,
               error:

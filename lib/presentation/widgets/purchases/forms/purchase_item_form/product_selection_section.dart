@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:posventa/presentation/providers/product_provider.dart';
 import 'package:posventa/presentation/viewmodels/product_variant_item.dart';
+import 'package:posventa/domain/entities/product_variant.dart';
 
 class ProductSelectionSection extends ConsumerWidget {
   final ProductVariantItem? selectedItem;
@@ -37,18 +38,34 @@ class ProductSelectionSection extends ConsumerWidget {
               // Flatten products and variants into a single list
               final List<ProductVariantItem> items = [];
               for (final product in products) {
-                if (product.variants != null && product.variants!.isNotEmpty) {
-                  // Add each variant as a separate item
-                  for (final variant in product.variants!) {
-                    items.add(
-                      ProductVariantItem(product: product, variant: variant),
-                    );
+                final variants = product.variants ?? [];
+                if (variants.isNotEmpty) {
+                  // Only add variants explicitly marked for Purchase
+                  for (final variant in variants) {
+                    if (variant.type == VariantType.purchase) {
+                      items.add(
+                        ProductVariantItem(product: product, variant: variant),
+                      );
+                    }
                   }
                 } else {
-                  // Add product without variant
+                  // Product has no variants (Simple Product).
+                  // Allow it for Purchase as per user request.
                   items.add(ProductVariantItem(product: product));
                 }
               }
+              // Sort items: Purchase variants first (though now list is mostly purchase)
+              items.sort((a, b) {
+                if (a.variant?.type == VariantType.purchase &&
+                    b.variant?.type != VariantType.purchase) {
+                  return -1;
+                }
+                if (a.variant?.type != VariantType.purchase &&
+                    b.variant?.type == VariantType.purchase) {
+                  return 1;
+                }
+                return a.displayName.compareTo(b.displayName);
+              });
               return items
                   .map(
                     (item) => DropdownMenuItem(

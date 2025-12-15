@@ -280,9 +280,12 @@ class DatabaseSchema {
         wholesale_price_cents INTEGER,
         is_active INTEGER NOT NULL DEFAULT 1 CHECK (is_active IN (0,1)),
         is_for_sale INTEGER NOT NULL DEFAULT 1 CHECK (is_for_sale IN (0,1)),
+        type TEXT NOT NULL DEFAULT 'sales',
+        linked_variant_id INTEGER,
         created_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
         updated_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
-        FOREIGN KEY (product_id) REFERENCES ${DatabaseConstants.tableProducts}(id) ON DELETE CASCADE
+        FOREIGN KEY (product_id) REFERENCES ${DatabaseConstants.tableProducts}(id) ON DELETE CASCADE,
+        FOREIGN KEY (linked_variant_id) REFERENCES ${DatabaseConstants.tableProductVariants}(id) ON DELETE SET NULL
       )
     ''');
     // Índices

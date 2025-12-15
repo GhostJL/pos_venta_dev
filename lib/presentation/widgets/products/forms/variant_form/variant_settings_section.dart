@@ -18,14 +18,15 @@ class VariantSettingsSection extends ConsumerWidget {
       children: [
         _buildSectionTitle(context, 'Configuración'),
         const SizedBox(height: 8),
-        SwitchListTile(
-          title: const Text('Disponible para Venta'),
-          subtitle: const Text(
-            'Si se desactiva, solo servirá para abastecimiento',
+        if (state.type != VariantType.purchase)
+          SwitchListTile(
+            title: const Text('Disponible para Venta'),
+            subtitle: const Text(
+              'Si se desactiva, solo servirá para abastecimiento',
+            ),
+            value: state.isForSale,
+            onChanged: notifier.updateIsForSale,
           ),
-          value: state.isForSale,
-          onChanged: notifier.updateIsForSale,
-        ),
       ],
     );
   }

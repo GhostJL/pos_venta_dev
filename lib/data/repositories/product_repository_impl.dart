@@ -296,20 +296,52 @@ class ProductRepositoryImpl implements ProductRepository {
         }
       }
 
-      // Delete existing variants
-      await txn.delete(
+      // --- HANDLE VARIANTS (Smart Update) ---
+
+      // 1. Get existing variant IDs for this product
+      final existingVariantMaps = await txn.query(
         DatabaseHelper.tableProductVariants,
+        columns: ['id'],
         where: 'product_id = ?',
         whereArgs: [product.id],
       );
+      final existingIds = existingVariantMaps
+          .map((m) => m['id'] as int)
+          .toList();
 
-      // Insert updated variants
-      if (product.variants != null && product.variants!.isNotEmpty) {
-        for (final variant in product.variants!) {
-          final variantModel = ProductVariantModel.fromEntity(variant);
-          final variantMap = variantModel.toMap();
-          variantMap['product_id'] = product.id;
-          // Remove id to let autoincrement work
+      final newVariants = product.variants ?? [];
+      final newVariantIds = newVariants
+          .where((v) => v.id != null)
+          .map((v) => v.id!)
+          .toList();
+
+      // 2. Delete variants that are no longer present
+      final idsToDelete = existingIds
+          .where((id) => !newVariantIds.contains(id))
+          .toList();
+      if (idsToDelete.isNotEmpty) {
+        await txn.delete(
+          DatabaseHelper.tableProductVariants,
+          where: 'id IN (${idsToDelete.join(',')})',
+        );
+      }
+
+      // 3. Update or Insert variants
+      for (final variant in newVariants) {
+        final variantModel = ProductVariantModel.fromEntity(variant);
+        final variantMap = variantModel.toMap();
+        variantMap['product_id'] = product.id;
+
+        if (variant.id != null && existingIds.contains(variant.id)) {
+          // Update existing
+          await txn.update(
+            DatabaseHelper.tableProductVariants,
+            variantMap,
+            where: 'id = ?',
+            whereArgs: [variant.id],
+          );
+        } else {
+          // Insert new (remove id to ensure autoincrement works if it was somehow set to 0 or null placeholder)
           variantMap.remove('id');
           await txn.insert(DatabaseHelper.tableProductVariants, variantMap);
         }

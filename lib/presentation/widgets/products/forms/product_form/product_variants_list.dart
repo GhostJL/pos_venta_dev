@@ -4,7 +4,6 @@ import 'package:posventa/domain/entities/product.dart';
 import 'package:posventa/domain/entities/product_variant.dart';
 import 'package:posventa/presentation/providers/product_form_provider.dart';
 
-/// Widget for displaying and managing product variants list
 class ProductVariantsList extends ConsumerWidget {
   final Product? product;
   final VoidCallback onAddVariant;
@@ -20,7 +19,16 @@ class ProductVariantsList extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final provider = productFormProvider(product);
-    final variants = ref.watch(provider.select((s) => s.variants));
+    // Sort variants to ensure stable order
+    final variants = ref.watch(provider.select((s) => s.variants)).toList()
+      ..sort((a, b) => (a.id ?? 0).compareTo(b.id ?? 0));
+
+    final salesVariants = variants
+        .where((v) => v.type == VariantType.sales)
+        .toList();
+    final purchaseVariants = variants
+        .where((v) => v.type == VariantType.purchase)
+        .toList();
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -31,15 +39,45 @@ class ProductVariantsList extends ConsumerWidget {
           children: [
             if (variants.isEmpty)
               _buildEmptyState(context)
-            else
-              _buildVariantsList(context, ref, variants, isCompact),
-
-            SizedBox(height: isCompact ? 16 : 24),
-
+            else ...[
+              if (salesVariants.isNotEmpty) ...[
+                _buildListHeader(context, 'Variantes de Venta', Icons.sell),
+                const SizedBox(height: 8),
+                _buildVariantsList(context, ref, salesVariants, isCompact),
+                const SizedBox(height: 24),
+              ],
+              if (purchaseVariants.isNotEmpty) ...[
+                _buildListHeader(
+                  context,
+                  'Variantes de Compra',
+                  Icons.inventory,
+                ),
+                const SizedBox(height: 8),
+                _buildVariantsList(context, ref, purchaseVariants, isCompact),
+                const SizedBox(height: 24),
+              ],
+            ],
+            SizedBox(height: isCompact ? 16 : 0),
             _buildAddButton(context, isCompact),
           ],
         );
       },
+    );
+  }
+
+  Widget _buildListHeader(BuildContext context, String title, IconData icon) {
+    return Row(
+      children: [
+        Icon(icon, size: 18, color: Theme.of(context).colorScheme.primary),
+        const SizedBox(width: 8),
+        Text(
+          title,
+          style: Theme.of(context).textTheme.titleSmall?.copyWith(
+            fontWeight: FontWeight.bold,
+            color: Theme.of(context).colorScheme.primary,
+          ),
+        ),
+      ],
     );
   }
 
@@ -70,15 +108,22 @@ class ProductVariantsList extends ConsumerWidget {
               endIndent: 20,
               color: colorScheme.outlineVariant.withValues(alpha: 0.5),
             ),
-            itemBuilder: (context, index) => _VariantItemRow(
-              variant: variants[index],
-              index: index,
-              onEdit: onEditVariant,
-              onDelete: (idx) => ref
-                  .read(productFormProvider(product).notifier)
-                  .removeVariant(idx),
-              isCompact: isCompact,
-            ),
+            itemBuilder: (context, index) {
+              final originalIndex = ref
+                  .read(productFormProvider(product))
+                  .variants
+                  .indexOf(variants[index]);
+
+              return _VariantItemRow(
+                variant: variants[index],
+                index: originalIndex,
+                onEdit: onEditVariant,
+                onDelete: (idx) => ref
+                    .read(productFormProvider(product).notifier)
+                    .removeVariant(idx),
+                isCompact: isCompact,
+              );
+            },
           ),
         ],
       ),
@@ -190,12 +235,38 @@ class _VariantItemRow extends StatelessWidget {
           Row(
             children: [
               Expanded(
-                child: Text(
-                  variant.variantName,
-                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.w600,
-                    color: colorScheme.onSurface,
-                  ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      variant.variantName,
+                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: colorScheme.onSurface,
+                      ),
+                    ),
+                    if (variant.type == VariantType.purchase)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 4.0),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 6,
+                            vertical: 2,
+                          ),
+                          decoration: BoxDecoration(
+                            color: colorScheme.tertiaryContainer,
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(
+                            'Compra',
+                            style: Theme.of(context).textTheme.labelSmall
+                                ?.copyWith(
+                                  color: colorScheme.onTertiaryContainer,
+                                ),
+                          ),
+                        ),
+                      ),
+                  ],
                 ),
               ),
               _buildActionButtons(context),
@@ -204,15 +275,17 @@ class _VariantItemRow extends StatelessWidget {
           const SizedBox(height: 8),
           Row(
             children: [
-              // Precio con color primario
               _buildMetricCompact(
                 context,
-                icon: Icons.attach_money_rounded,
-                label: _formatPrice(variant.priceCents),
+                icon: variant.type == VariantType.purchase
+                    ? Icons.monetization_on_outlined
+                    : Icons.attach_money_rounded,
+                label: variant.type == VariantType.purchase
+                    ? 'Costo: \$${_formatPrice(variant.costPriceCents)}'
+                    : 'Precio: \$${_formatPrice(variant.priceCents)}',
                 color: colorScheme.primary,
               ),
               const SizedBox(width: 16),
-              // Stock con color terciario (alternativa elegante al secundario)
               _buildMetricCompact(
                 context,
                 icon: Icons.inventory_2_outlined,
@@ -258,23 +331,52 @@ class _VariantItemRow extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Expanded(
-            child: Text(
-              variant.variantName,
-              style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                fontWeight: FontWeight.w600,
-                color: colorScheme.onSurface,
-              ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  variant.variantName,
+                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: colorScheme.onSurface,
+                  ),
+                ),
+                if (variant.type == VariantType.purchase)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 4.0),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: colorScheme.tertiaryContainer,
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Text(
+                        'Compra (Enlace: ${variant.linkedVariantId ?? "Base"})',
+                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                          color: colorScheme.onTertiaryContainer,
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
             ),
           ),
           const SizedBox(width: 8),
           _buildMetricCompact(
             context,
-            icon: Icons.attach_money_rounded,
-            label: _formatPrice(variant.priceCents),
+            icon: variant.type == VariantType.purchase
+                ? Icons.monetization_on_outlined
+                : Icons.attach_money_rounded,
+            label: variant.type == VariantType.purchase
+                ? 'Costo: \$${_formatPrice(variant.costPriceCents)}'
+                : '\$${_formatPrice(variant.priceCents)}',
             color: colorScheme.primary,
           ),
           const SizedBox(width: 16),
-          // Stock con color terciario (alternativa elegante al secundario)
           _buildMetricCompact(
             context,
             icon: Icons.inventory_2_outlined,

@@ -42,51 +42,55 @@ class VariantPriceSection extends ConsumerWidget {
                 },
               ),
             ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: TextFormField(
-                initialValue: state.price,
-                decoration: const InputDecoration(
-                  labelText: 'Precio de Venta',
-                  prefixText: '\$ ',
-                  prefixIcon: Icon(Icons.sell),
+            if (state.type != VariantType.purchase) ...[
+              const SizedBox(width: 16),
+              Expanded(
+                child: TextFormField(
+                  initialValue: state.price,
+                  decoration: const InputDecoration(
+                    labelText: 'Precio de Venta',
+                    prefixText: '\$ ',
+                    prefixIcon: Icon(Icons.sell),
+                  ),
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
+                  onChanged: notifier.updatePrice,
+                  validator: (value) {
+                    if (value?.isEmpty ?? true) return 'Requerido';
+                    final number = double.tryParse(value!);
+                    if (number == null || number <= 0) {
+                      return 'Debe ser mayor a 0';
+                    }
+                    return null;
+                  },
                 ),
-                keyboardType: const TextInputType.numberWithOptions(
-                  decimal: true,
-                ),
-                onChanged: notifier.updatePrice,
-                validator: (value) {
-                  if (value?.isEmpty ?? true) return 'Requerido';
-                  final number = double.tryParse(value!);
-                  if (number == null || number <= 0) {
-                    return 'Debe ser mayor a 0';
-                  }
-                  return null;
-                },
               ),
-            ),
+            ],
           ],
         ),
-        const SizedBox(height: 16),
-        TextFormField(
-          initialValue: state.wholesalePrice,
-          decoration: const InputDecoration(
-            labelText: 'Precio Mayorista (Opcional)',
-            prefixText: '\$ ',
-            prefixIcon: Icon(Icons.storefront),
-          ),
-          keyboardType: const TextInputType.numberWithOptions(decimal: true),
-          onChanged: notifier.updateWholesalePrice,
-          validator: (value) {
-            if (value?.isNotEmpty ?? false) {
-              final number = double.tryParse(value!);
-              if (number == null || number < 0) {
-                return 'Debe ser mayor o igual a 0';
+        if (state.type != VariantType.purchase) ...[
+          const SizedBox(height: 16),
+          TextFormField(
+            initialValue: state.wholesalePrice,
+            decoration: const InputDecoration(
+              labelText: 'Precio Mayorista (Opcional)',
+              prefixText: '\$ ',
+              prefixIcon: Icon(Icons.storefront),
+            ),
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            onChanged: notifier.updateWholesalePrice,
+            validator: (value) {
+              if (value?.isNotEmpty ?? false) {
+                final number = double.tryParse(value!);
+                if (number == null || number < 0) {
+                  return 'Debe ser mayor o igual a 0';
+                }
               }
-            }
-            return null;
-          },
-        ),
+              return null;
+            },
+          ),
+        ],
       ],
     );
   }

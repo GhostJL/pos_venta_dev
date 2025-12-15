@@ -16,6 +16,32 @@ class DatabaseMigrations {
     if (oldVersion < 23 && newVersion >= 23) {
       await _migrateToVersion23(db);
     }
+    // Migration from version 23 to 24: Add Sales/Purchase variant separation
+    if (oldVersion < 24 && newVersion >= 24) {
+      await _migrateToVersion24(db);
+    }
+  }
+
+  static Future<void> _migrateToVersion24(Database db) async {
+    // Add type column to product_variants
+    try {
+      await db.execute('''
+        ALTER TABLE ${DatabaseConstants.tableProductVariants}
+        ADD COLUMN type TEXT DEFAULT 'sales';
+      ''');
+    } catch (e) {
+      // Column might already exist
+    }
+
+    // Add linked_variant_id column to product_variants
+    try {
+      await db.execute('''
+        ALTER TABLE ${DatabaseConstants.tableProductVariants}
+        ADD COLUMN linked_variant_id INTEGER REFERENCES ${DatabaseConstants.tableProductVariants}(id) ON DELETE SET NULL;
+      ''');
+    } catch (e) {
+      // Column might already exist
+    }
   }
 
   static Future<void> _migrateToVersion22(Database db) async {

@@ -6,14 +6,11 @@ import 'package:posventa/domain/entities/product_tax.dart' as pt;
 import 'package:posventa/domain/entities/product_variant.dart';
 import 'package:posventa/presentation/providers/product_form_provider.dart';
 import 'package:posventa/presentation/providers/tax_rate_provider.dart';
-// Importaciones de widgets de sección
 import 'package:posventa/presentation/widgets/products/forms/product_form/product_basic_info_section.dart';
 import 'package:posventa/presentation/widgets/products/forms/product_form/product_classification_section.dart';
 import 'package:posventa/presentation/widgets/products/forms/product_form/product_pricing_section.dart';
 import 'package:posventa/presentation/widgets/products/forms/product_form/product_tax_selection.dart';
 import 'package:posventa/presentation/widgets/products/forms/product_form/product_variants_list.dart';
-
-// [El resto de ProductFormPage y ProductFormPageState sigue igual hasta _buildSectionTitle]
 
 class ProductFormPage extends ConsumerStatefulWidget {
   final Product? product;
@@ -27,7 +24,6 @@ class ProductFormPage extends ConsumerStatefulWidget {
 class ProductFormPageState extends ConsumerState<ProductFormPage> {
   final _formKey = GlobalKey<FormState>();
 
-  // Controllers
   late TextEditingController _nameController;
   late TextEditingController _codeController;
   late TextEditingController _barcodeController;
@@ -41,7 +37,6 @@ class ProductFormPageState extends ConsumerState<ProductFormPage> {
     super.initState();
     _initializeControllers();
 
-    // Initialize default taxes if new product
     if (widget.product == null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _initializeDefaultTaxes();
@@ -86,14 +81,8 @@ class ProductFormPageState extends ConsumerState<ProductFormPage> {
           .selectedTaxes;
       if (currentTaxes.isEmpty) {
         final newTaxes = defaultTaxes
-            .map(
-              (tax) => pt.ProductTax(
-                taxRateId: tax.id!,
-                applyOrder: 1, // Simplified, or calculate
-              ),
-            )
+            .map((tax) => pt.ProductTax(taxRateId: tax.id!, applyOrder: 1))
             .toList();
-        // Fix applyOrder
         for (int i = 0; i < newTaxes.length; i++) {
           newTaxes[i] = newTaxes[i].copyWith(applyOrder: i + 1);
         }
@@ -139,6 +128,7 @@ class ProductFormPageState extends ConsumerState<ProductFormPage> {
         'variant': variant,
         'productId': widget.product?.id,
         'existingBarcodes': existingBarcodes,
+        'availableVariants': state.variants,
       },
     );
 
@@ -189,7 +179,6 @@ class ProductFormPageState extends ConsumerState<ProductFormPage> {
         );
       }
       if (next.isSuccess && !previous!.isSuccess) {
-        // Mejor práctica: un mensaje de éxito sutil antes de hacer pop
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
@@ -233,7 +222,6 @@ class ProductFormPageState extends ConsumerState<ProductFormPage> {
           children: [
             _buildSectionTitle(context, 'Información Básica'),
 
-            // Optimization: Only rebuild this part when hasVariants changes
             Consumer(
               builder: (context, ref, child) {
                 final hasVariants = ref.watch(
@@ -261,7 +249,7 @@ class ProductFormPageState extends ConsumerState<ProductFormPage> {
                   decoration: BoxDecoration(
                     color: Theme.of(
                       context,
-                    ).colorScheme.surfaceContainerHighest, // Color sutil
+                    ).colorScheme.surfaceContainerHighest,
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: SwitchListTile(
@@ -344,9 +332,6 @@ class ProductFormPageState extends ConsumerState<ProductFormPage> {
                     ),
                     if (usesTaxes) ...[
                       const SizedBox(height: 16),
-                      // Since internal data loading is handled by ProductTaxSelection now,
-                      // we don't need to manually verify taxRates here unless we want to hide it if failed.
-                      // But ProductTaxSelection handles loading/error states gracefully.
                       ProductTaxSelection(product: widget.product),
                     ],
                   ],
@@ -402,29 +387,21 @@ class ProductFormPageState extends ConsumerState<ProductFormPage> {
     final icon = sectionIcons[title];
 
     return Padding(
-      // Añadimos padding superior para asegurarnos de que el título esté bien separado de la sección anterior
       padding: const EdgeInsets.only(top: 24.0, bottom: 8.0),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           if (icon != null) ...[
-            Icon(
-              icon,
-              size: 20,
-              color: Theme.of(context).colorScheme.primary, // Color de acento
-            ),
+            Icon(icon, size: 20, color: Theme.of(context).colorScheme.primary),
             const SizedBox(width: 8),
           ],
           Text(
             title,
             style: TextStyle(
-              fontSize: 18, // Ligeramente más grande para jerarquía
-              fontWeight:
-                  FontWeight.w700, // Más fuerte, pero sin ser negrita pura
-              color: Theme.of(
-                context,
-              ).colorScheme.primary, // Color principal de texto
-              letterSpacing: 0.5, // Un toque moderno
+              fontSize: 18,
+              fontWeight: FontWeight.w700,
+              color: Theme.of(context).colorScheme.primary,
+              letterSpacing: 0.5,
             ),
           ),
         ],

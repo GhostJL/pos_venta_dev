@@ -269,6 +269,7 @@ final routerProvider = Provider<GoRouter>((ref) {
                   variant: extra?['variant'],
                   productId: extra?['productId'],
                   existingBarcodes: extra?['existingBarcodes'],
+                  availableVariants: extra?['availableVariants'],
                 ),
               );
             },

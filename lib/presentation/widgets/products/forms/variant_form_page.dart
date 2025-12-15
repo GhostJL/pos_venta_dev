@@ -12,12 +12,14 @@ class VariantFormPage extends ConsumerStatefulWidget {
   final ProductVariant? variant;
   final int? productId;
   final List<String>? existingBarcodes;
+  final List<ProductVariant>? availableVariants;
 
   const VariantFormPage({
     super.key,
     this.variant,
     this.productId,
     this.existingBarcodes,
+    this.availableVariants,
   });
 
   @override
@@ -78,7 +80,10 @@ class _VariantFormPageState extends ConsumerState<VariantFormPage> {
               vertical: 16.0,
             ),
             children: [
-              VariantBasicInfoSection(variant: widget.variant),
+              VariantBasicInfoSection(
+                variant: widget.variant,
+                availableVariants: widget.availableVariants,
+              ),
               const SizedBox(height: 24),
               VariantPriceSection(variant: widget.variant),
               const SizedBox(height: 24),

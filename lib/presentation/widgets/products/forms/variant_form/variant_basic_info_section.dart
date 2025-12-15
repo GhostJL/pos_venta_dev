@@ -5,13 +5,32 @@ import 'package:posventa/domain/entities/product_variant.dart';
 
 class VariantBasicInfoSection extends ConsumerWidget {
   final ProductVariant? variant;
+  final List<ProductVariant>? availableVariants;
 
-  const VariantBasicInfoSection({super.key, this.variant});
+  const VariantBasicInfoSection({
+    super.key,
+    this.variant,
+    this.availableVariants,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(variantFormProvider(variant));
     final notifier = ref.read(variantFormProvider(variant).notifier);
+
+    // Filter available variants for linking:
+    // 1. Must be Sales type (optional, but logical for a Purchase variant to link to a Sales one)
+    // 2. Exclude self
+    final linkableVariants =
+        availableVariants?.where((v) {
+          if (v.id != null && v.id == variant?.id) return false;
+          // Temporary variants might not have ID, check name if needed, but ID is safer.
+          // If creating new, variant.id is null.
+          // If v is in availableVariants, it might include the one we are editing if passed from parent?
+          // Usually passing "other" variants is better.
+          return v.type == VariantType.sales;
+        }).toList() ??
+        [];
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -29,24 +48,87 @@ class VariantBasicInfoSection extends ConsumerWidget {
           validator: (value) => value?.isEmpty ?? true ? 'Requerido' : null,
         ),
         const SizedBox(height: 16),
-        TextFormField(
-          initialValue: state.quantity,
-          decoration: const InputDecoration(
-            labelText: 'Cantidad / Factor',
-            helperText: 'Cuántas unidades base contiene esta variante',
-            prefixIcon: Icon(Icons.numbers),
-          ),
-          keyboardType: const TextInputType.numberWithOptions(decimal: true),
-          onChanged: notifier.updateQuantity,
-          validator: (value) {
-            if (value?.isEmpty ?? true) return 'Requerido';
-            final number = double.tryParse(value!);
-            if (number == null || number <= 0) {
-              return 'Debe ser mayor a 0';
-            }
-            return null;
-          },
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: TextFormField(
+                initialValue: state.quantity,
+                decoration: const InputDecoration(
+                  labelText: 'Cantidad / Factor',
+                  helperText: 'Unidades base',
+                  prefixIcon: Icon(Icons.numbers),
+                ),
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
+                onChanged: notifier.updateQuantity,
+                validator: (value) {
+                  if (value?.isEmpty ?? true) return 'Requerido';
+                  final number = double.tryParse(value!);
+                  if (number == null || number <= 0) {
+                    return 'Debe ser mayor a 0';
+                  }
+                  return null;
+                },
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: DropdownButtonFormField<VariantType>(
+                initialValue: state.type,
+                decoration: const InputDecoration(
+                  labelText: 'Tipo',
+                  helperText: 'Uso de la variante',
+                  prefixIcon: Icon(Icons.category),
+                ),
+                items: const [
+                  DropdownMenuItem(
+                    value: VariantType.sales,
+                    child: Text('Venta'),
+                  ),
+                  DropdownMenuItem(
+                    value: VariantType.purchase,
+                    child: Text('Compra'),
+                  ),
+                ],
+                onChanged: (value) {
+                  if (value != null) {
+                    notifier.updateType(value);
+                  }
+                },
+              ),
+            ),
+          ],
         ),
+        if (state.type == VariantType.purchase) ...[
+          const SizedBox(height: 16),
+          DropdownButtonFormField<int>(
+            initialValue: state.linkedVariantId,
+            decoration: const InputDecoration(
+              labelText: 'Enlace a Variante de Venta',
+              helperText: 'Al comprar esto, se sumará stock a...',
+              prefixIcon: Icon(Icons.link),
+            ),
+            items: [
+              const DropdownMenuItem<int>(
+                value: null,
+                child: Text('Sin enlace (Abastece al producto base)'),
+              ),
+              ...linkableVariants.map((v) {
+                return DropdownMenuItem<int>(
+                  value: v.id,
+                  child: Text(
+                    '${v.variantName} (x${v.quantity})',
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                );
+              }),
+            ],
+            onChanged: notifier.updateLinkedVariantId,
+            isExpanded: true,
+          ),
+        ],
       ],
     );
   }
