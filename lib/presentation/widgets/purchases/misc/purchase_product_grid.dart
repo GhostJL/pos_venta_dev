@@ -192,9 +192,11 @@ class _PurchaseProductGridState extends ConsumerState<PurchaseProductGrid> {
                 if (variants.isNotEmpty) {
                   // Add each variant as a separate grid item
                   for (final variant in variants) {
-                    gridItems.add(
-                      PurchaseGridItem(product: product, variant: variant),
-                    );
+                    if (variant.type == VariantType.purchase) {
+                      gridItems.add(
+                        PurchaseGridItem(product: product, variant: variant),
+                      );
+                    }
                   }
                 } else {
                   // Add product without variant
