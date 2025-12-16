@@ -26,7 +26,7 @@ class PurchaseStatusBadge extends StatelessWidget {
         break;
       case PurchaseStatus.completed:
         color = AppTheme.transactionSuccess;
-        text = 'COMPLETADA';
+        text = 'RECIBIDA';
         break;
       case PurchaseStatus.cancelled:
         color = AppTheme.transactionFailed;

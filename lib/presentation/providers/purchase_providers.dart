@@ -24,6 +24,9 @@ class PurchaseNotifier extends _$PurchaseNotifier {
     state = const AsyncValue.loading();
     state = await AsyncValue.guard(() async {
       await ref.read(updatePurchaseUseCaseProvider).call(purchase);
+      if (purchase.id != null) {
+        ref.invalidate(purchaseByIdProvider(purchase.id!));
+      }
       return ref.read(getPurchasesUseCaseProvider).call();
     });
   }
@@ -54,6 +57,7 @@ class PurchaseNotifier extends _$PurchaseNotifier {
       await ref
           .read(receivePurchaseUseCaseProvider)
           .call(purchaseId, items, receivedBy);
+      ref.invalidate(purchaseByIdProvider(purchaseId));
       return ref.read(getPurchasesUseCaseProvider).call();
     });
   }
@@ -62,6 +66,7 @@ class PurchaseNotifier extends _$PurchaseNotifier {
     state = const AsyncValue.loading();
     state = await AsyncValue.guard(() async {
       await ref.read(cancelPurchaseUseCaseProvider).call(purchaseId, userId);
+      ref.invalidate(purchaseByIdProvider(purchaseId));
       return ref.read(getPurchasesUseCaseProvider).call();
     });
   }

@@ -59,8 +59,8 @@ class PurchaseInfoCard extends StatelessWidget {
       statusColor = Theme.of(context).colorScheme.primary;
       statusText = 'Parcial';
     } else {
-      statusColor = Theme.of(context).colorScheme.tertiary;
-      statusText = 'Completada';
+      statusColor = AppTheme.transactionSuccess;
+      statusText = 'Recibida';
     }
     return Card(
       child: Padding(
