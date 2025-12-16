@@ -23,6 +23,7 @@ enum MovementType {
 class InventoryMovement {
   final int? id;
   final int productId;
+  final int? variantId;
   final int warehouseId;
   final MovementType movementType;
   final double quantity;
@@ -38,6 +39,7 @@ class InventoryMovement {
   InventoryMovement({
     this.id,
     required this.productId,
+    this.variantId,
     required this.warehouseId,
     required this.movementType,
     required this.quantity,
@@ -54,6 +56,7 @@ class InventoryMovement {
   InventoryMovement copyWith({
     int? id,
     int? productId,
+    int? variantId,
     int? warehouseId,
     MovementType? movementType,
     double? quantity,
@@ -69,6 +72,7 @@ class InventoryMovement {
     return InventoryMovement(
       id: id ?? this.id,
       productId: productId ?? this.productId,
+      variantId: variantId ?? this.variantId,
       warehouseId: warehouseId ?? this.warehouseId,
       movementType: movementType ?? this.movementType,
       quantity: quantity ?? this.quantity,

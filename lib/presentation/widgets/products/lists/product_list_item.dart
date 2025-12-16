@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:posventa/core/constants/ui_constants.dart';
-import 'package:posventa/core/theme/theme.dart';
 import 'package:posventa/domain/entities/product.dart';
+import 'package:posventa/domain/entities/product_variant.dart';
+import 'package:posventa/presentation/pages/products/variant_type_selection_page.dart';
 
 class ProductListItem extends StatelessWidget {
   final Product product;
@@ -23,6 +24,15 @@ class ProductListItem extends StatelessWidget {
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
         onTap: onTap,
+        onLongPress: () {
+          // Open Variant Management Selection Page
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => VariantTypeSelectionPage(product: product),
+            ),
+          );
+        },
         child: Padding(
           padding: const EdgeInsets.all(UIConstants.kItemPadding),
           child: Row(
@@ -137,43 +147,44 @@ class ProductListItem extends StatelessWidget {
 
   // Chip de Stock con lógica de color
   Widget _buildStockChip(ThemeData theme) {
-    final stock = product.stock ?? 0;
+    final variants = product.variants ?? [];
 
-    // Lógica para determinar el color
-    Color chipColor;
-    Color textColor;
-    String text;
-
-    if (stock < UIConstants.kMinStock) {
-      // Usar 'error' para bajo/sin stock
-      chipColor = theme.colorScheme.errorContainer.withValues(alpha: 0.6);
-      textColor = theme.colorScheme.onErrorContainer;
-      text = stock == 0 ? 'Sin Stock' : '$stock Uds.';
-    } else if (stock >= UIConstants.kMinStock &&
-        stock < UIConstants.kLowStock) {
-      // Usar 'warning' (o un color personalizado como AppTheme.alertWarning)
-      chipColor = AppTheme.alertWarning.withValues(alpha: 0.15);
-      textColor = AppTheme.alertWarning;
-      text = '$stock Uds. (bajas)';
-    } else {
-      // Usar 'success' (o un color personalizado como AppTheme.actionConfirm)
-      chipColor = AppTheme.actionConfirm.withValues(alpha: 0.1);
-      textColor = AppTheme.actionConfirm;
-      text = '$stock Uds.';
+    if (variants.isEmpty) {
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+        decoration: BoxDecoration(
+          color: theme.colorScheme.errorContainer.withValues(alpha: 0.6),
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Text(
+          'Sin Variantes',
+          style: theme.textTheme.bodySmall?.copyWith(
+            fontWeight: FontWeight.bold,
+            fontSize: 10,
+            color: theme.colorScheme.onErrorContainer,
+          ),
+        ),
+      );
     }
+
+    final variantCount = variants.length;
+    // Calculate total stock across all sales variants to give a quick overview
+    final totalStock = variants
+        .where((v) => v.type == VariantType.sales)
+        .fold(0.0, (sum, v) => sum + (v.stock ?? 0));
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
-        color: chipColor,
+        color: theme.colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(16),
       ),
       child: Text(
-        text,
+        '$variantCount Variantes (${totalStock.toStringAsFixed(0)} Uds.)',
         style: theme.textTheme.bodySmall?.copyWith(
           fontWeight: FontWeight.bold,
           fontSize: 10,
-          color: textColor,
+          color: theme.colorScheme.onSurfaceVariant,
         ),
       ),
     );

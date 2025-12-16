@@ -238,29 +238,30 @@ class ReceptionItemCard extends StatelessWidget {
                     style: const TextStyle(fontSize: 13),
                   ),
                 ),
-                const SizedBox(width: 12),
-
                 // Caducidad
-                SizedBox(
-                  width: 110,
-                  child: TextField(
-                    controller: expirationController,
-                    readOnly: true,
-                    onTap: onExpirationTap,
-                    decoration: InputDecoration(
-                      labelText: 'Caducidad',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
+                if (product?.hasExpiration ?? false) ...[
+                  const SizedBox(width: 12),
+                  SizedBox(
+                    width: 110,
+                    child: TextField(
+                      controller: expirationController,
+                      readOnly: true,
+                      onTap: onExpirationTap,
+                      decoration: InputDecoration(
+                        labelText: 'Caducidad',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 8,
+                        ),
+                        suffixIcon: const Icon(Icons.calendar_today, size: 16),
                       ),
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 8,
-                      ),
-                      suffixIcon: const Icon(Icons.calendar_today, size: 16),
+                      style: const TextStyle(fontSize: 13),
                     ),
-                    style: const TextStyle(fontSize: 13),
                   ),
-                ),
+                ],
               ],
             ),
           ],

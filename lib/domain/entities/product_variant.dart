@@ -16,6 +16,12 @@ class ProductVariant {
   final bool isForSale;
   final VariantType type;
   final int? linkedVariantId;
+  final double? stock;
+  final double? stockMin;
+  final double? stockMax;
+  final double conversionFactor;
+  final int? unitId;
+  final bool isSoldByWeight;
 
   const ProductVariant({
     this.id,
@@ -30,6 +36,12 @@ class ProductVariant {
     this.isForSale = true,
     this.type = VariantType.sales,
     this.linkedVariantId,
+    this.stock,
+    this.stockMin,
+    this.stockMax,
+    this.conversionFactor = 1.0,
+    this.unitId,
+    this.isSoldByWeight = false,
   });
 
   double get price => priceCents / 100.0;
@@ -51,6 +63,12 @@ class ProductVariant {
     bool? isForSale,
     VariantType? type,
     int? linkedVariantId,
+    double? stock,
+    double? stockMin,
+    double? stockMax,
+    double? conversionFactor,
+    int? unitId,
+    bool? isSoldByWeight,
   }) {
     return ProductVariant(
       id: id ?? this.id,
@@ -65,6 +83,12 @@ class ProductVariant {
       isForSale: isForSale ?? this.isForSale,
       type: type ?? this.type,
       linkedVariantId: linkedVariantId ?? this.linkedVariantId,
+      stock: stock ?? this.stock,
+      stockMin: stockMin ?? this.stockMin,
+      stockMax: stockMax ?? this.stockMax,
+      conversionFactor: conversionFactor ?? this.conversionFactor,
+      unitId: unitId ?? this.unitId,
+      isSoldByWeight: isSoldByWeight ?? this.isSoldByWeight,
     );
   }
 }

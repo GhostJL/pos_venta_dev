@@ -6,14 +6,16 @@ import 'package:posventa/presentation/providers/product_form_provider.dart';
 
 class ProductVariantsList extends ConsumerWidget {
   final Product? product;
-  final VoidCallback onAddVariant;
+  final void Function(VariantType type) onAddVariant;
   final void Function(ProductVariant variant, int index) onEditVariant;
+  final VariantType? filterType;
 
   const ProductVariantsList({
     super.key,
     required this.product,
     required this.onAddVariant,
     required this.onEditVariant,
+    this.filterType,
   });
 
   @override
@@ -26,12 +28,17 @@ class ProductVariantsList extends ConsumerWidget {
     final salesVariants = variants
         .where(
           (v) =>
-              v.type == VariantType.sales ||
-              (v.type == VariantType.purchase && v.isForSale),
+              (filterType == null || filterType == VariantType.sales) &&
+              (v.type == VariantType.sales ||
+                  (v.type == VariantType.purchase && v.isForSale)),
         )
         .toList();
     final purchaseVariants = variants
-        .where((v) => v.type == VariantType.purchase)
+        .where(
+          (v) =>
+              (filterType == null || filterType == VariantType.purchase) &&
+              v.type == VariantType.purchase,
+        )
         .toList();
 
     return LayoutBuilder(
@@ -207,9 +214,52 @@ class ProductVariantsList extends ConsumerWidget {
 
   Widget _buildAddButton(BuildContext context, bool isCompact) {
     return OutlinedButton.icon(
-      onPressed: onAddVariant,
+      onPressed: () {
+        if (filterType != null) {
+          onAddVariant(filterType!);
+        } else {
+          _showVariantTypeSelection(context);
+        }
+      },
       icon: const Icon(Icons.add_rounded, size: 20),
       label: Text(isCompact ? 'Agregar Variante' : 'Agregar Nueva Variante'),
+    );
+  }
+
+  void _showVariantTypeSelection(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      showDragHandle: true,
+      builder: (context) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.sell_outlined),
+              title: const Text('Variante de Venta'),
+              subtitle: const Text(
+                'Para vender el producto en diferentes presentaciones',
+              ),
+              onTap: () {
+                Navigator.pop(context);
+                onAddVariant(VariantType.sales);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.inventory_2_outlined),
+              title: const Text('Variante de Compra'),
+              subtitle: const Text(
+                'Para comprar el producto en cajas, bultos, etc.',
+              ),
+              onTap: () {
+                Navigator.pop(context);
+                onAddVariant(VariantType.purchase);
+              },
+            ),
+            const SizedBox(height: 16),
+          ],
+        ),
+      ),
     );
   }
 }

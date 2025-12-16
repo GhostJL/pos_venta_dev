@@ -42,11 +42,13 @@ class LotDeduction {
 
 class InventoryAdjustment {
   final int productId;
+  final int? variantId;
   final int warehouseId;
   final double quantityToDeduct; // Negative for sales
 
   InventoryAdjustment({
     required this.productId,
+    this.variantId,
     required this.warehouseId,
     required this.quantityToDeduct,
   });

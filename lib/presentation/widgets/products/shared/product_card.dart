@@ -20,7 +20,10 @@ class ProductCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final hasStock = (product.stock ?? 0) > 0;
+    final effectiveStock = variant != null
+        ? (variant!.stock ?? 0)
+        : (product.stock ?? 0);
+    final hasStock = effectiveStock > 0;
 
     final double displayValue = showCost
         ? (variant?.costPriceCents ?? product.costPriceCents) / 100
@@ -96,7 +99,7 @@ class ProductCard extends StatelessWidget {
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: Text(
-                      '${product.stock?.toStringAsFixed(0) ?? '0'} en stock',
+                      '${effectiveStock.toStringAsFixed(0)} en stock',
                       style: TextStyle(
                         color: hasStock
                             ? Theme.of(context).colorScheme.onTertiaryContainer

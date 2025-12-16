@@ -11,15 +11,19 @@ import 'package:posventa/presentation/widgets/products/forms/variant_form/varian
 class VariantFormPage extends ConsumerStatefulWidget {
   final ProductVariant? variant;
   final int? productId;
+  final String? productName;
   final List<String>? existingBarcodes;
   final List<ProductVariant>? availableVariants;
+  final VariantType? initialType;
 
   const VariantFormPage({
     super.key,
     this.variant,
     this.productId,
+    this.productName,
     this.existingBarcodes,
     this.availableVariants,
+    this.initialType,
   });
 
   @override
@@ -34,7 +38,12 @@ class _VariantFormPageState extends ConsumerState<VariantFormPage> {
       return;
     }
 
-    final notifier = ref.read(variantFormProvider(widget.variant).notifier);
+    final notifier = ref.read(
+      variantFormProvider(
+        widget.variant,
+        initialType: widget.initialType,
+      ).notifier,
+    );
     final newVariant = await notifier.save(
       widget.productId ?? 0,
       widget.existingBarcodes,
@@ -48,11 +57,24 @@ class _VariantFormPageState extends ConsumerState<VariantFormPage> {
   @override
   Widget build(BuildContext context) {
     final isEditing = widget.variant != null;
-    final state = ref.watch(variantFormProvider(widget.variant));
+    final state = ref.watch(
+      variantFormProvider(widget.variant, initialType: widget.initialType),
+    );
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(isEditing ? 'Editar Variante' : 'Nueva Variante'),
+        title: Column(
+          children: [
+            Text(isEditing ? 'Editar Variante' : 'Nueva Variante'),
+            if (widget.productName != null)
+              Text(
+                widget.productName!,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+              ),
+          ],
+        ),
         actions: [
           IconButton(
             icon: state.isSaving

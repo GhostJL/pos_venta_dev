@@ -97,8 +97,8 @@ class ReceivePurchaseUseCase {
           if (variant.type == VariantType.purchase &&
               variant.linkedVariantId != null) {
             targetVariantId = variant.linkedVariantId;
-            // Conversion Factor: variant.quantity (e.g., 12 for a box of 12)
-            final conversionFactor = variant.quantity;
+            // Conversion Factor: variant.conversionFactor (e.g., 12 for a box of 12)
+            final conversionFactor = variant.conversionFactor;
 
             if (conversionFactor > 0) {
               adjustedQuantity = quantityToReceive * conversionFactor;
@@ -146,8 +146,8 @@ class ReceivePurchaseUseCase {
         InventoryAdjustment(
           productId: productId,
           warehouseId: warehouseId,
+          variantId: targetVariantId,
           quantityToAdd: adjustedQuantity, // Adjusted
-          // variantId not supported in entity
         ),
       );
 
@@ -155,6 +155,7 @@ class ReceivePurchaseUseCase {
       movements.add(
         InventoryMovement(
           productId: productId,
+          variantId: targetVariantId,
           warehouseId: warehouseId,
           movementType: MovementType.purchase,
           quantity: adjustedQuantity, // Adjusted
@@ -162,7 +163,6 @@ class ReceivePurchaseUseCase {
           quantityAfter: 0,
           referenceType: 'purchase',
           referenceId: purchaseId,
-          // variantId not supported in entity
           reason:
               'Purchase received - Lot: $lotNumber${targetVariantId != null ? " (Variant ID: $targetVariantId)" : ""}',
           performedBy: receivedBy,

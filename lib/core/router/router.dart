@@ -33,6 +33,7 @@ import 'package:posventa/presentation/pages/purchase/purchase_header_page.dart';
 import 'package:posventa/presentation/pages/purchase/purchase_item_detail_page.dart';
 import 'package:posventa/presentation/pages/purchase/purchase_item_form_page.dart';
 import 'package:posventa/presentation/pages/purchase/purchase_items_page.dart';
+import 'package:posventa/presentation/pages/purchase/reception/purchase_reception_page.dart';
 import 'package:posventa/presentation/pages/purchase/purchases_page.dart';
 import 'package:posventa/presentation/pages/sale/sale_detail_page.dart';
 import 'package:posventa/presentation/pages/sale/sale_returns_detail_page.dart';
@@ -210,6 +211,15 @@ final routerProvider = Provider<GoRouter>((ref) {
               }
               return NoTransitionPage(
                 child: PurchaseDetailPage(purchaseId: int.parse(id)),
+              );
+            },
+          ),
+          GoRoute(
+            path: '/purchases/reception/:id',
+            pageBuilder: (context, state) {
+              final id = state.pathParameters['id']!;
+              return NoTransitionPage(
+                child: PurchaseReceptionPage(purchaseId: int.parse(id)),
               );
             },
           ),

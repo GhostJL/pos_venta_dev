@@ -16,7 +16,7 @@ final class VariantFormProvider
     extends $NotifierProvider<VariantForm, VariantFormState> {
   const VariantFormProvider._({
     required VariantFormFamily super.from,
-    required ProductVariant? super.argument,
+    required (ProductVariant?, {VariantType? initialType}) super.argument,
   }) : super(
          retry: null,
          name: r'variantFormProvider',
@@ -32,7 +32,7 @@ final class VariantFormProvider
   String toString() {
     return r'variantFormProvider'
         ''
-        '($argument)';
+        '$argument';
   }
 
   @$internal
@@ -58,7 +58,7 @@ final class VariantFormProvider
   }
 }
 
-String _$variantFormHash() => r'93d00a7fd28d4427b900e69004657a68e204a9b1';
+String _$variantFormHash() => r'7c69fcb5936c0be41cbc73be17c1190566ab40b0';
 
 final class VariantFormFamily extends $Family
     with
@@ -67,7 +67,7 @@ final class VariantFormFamily extends $Family
           VariantFormState,
           VariantFormState,
           VariantFormState,
-          ProductVariant?
+          (ProductVariant?, {VariantType? initialType})
         > {
   const VariantFormFamily._()
     : super(
@@ -78,22 +78,28 @@ final class VariantFormFamily extends $Family
         isAutoDispose: true,
       );
 
-  VariantFormProvider call(ProductVariant? variant) =>
-      VariantFormProvider._(argument: variant, from: this);
+  VariantFormProvider call(
+    ProductVariant? variant, {
+    VariantType? initialType,
+  }) => VariantFormProvider._(
+    argument: (variant, initialType: initialType),
+    from: this,
+  );
 
   @override
   String toString() => r'variantFormProvider';
 }
 
 abstract class _$VariantForm extends $Notifier<VariantFormState> {
-  late final _$args = ref.$arg as ProductVariant?;
-  ProductVariant? get variant => _$args;
+  late final _$args = ref.$arg as (ProductVariant?, {VariantType? initialType});
+  ProductVariant? get variant => _$args.$1;
+  VariantType? get initialType => _$args.initialType;
 
-  VariantFormState build(ProductVariant? variant);
+  VariantFormState build(ProductVariant? variant, {VariantType? initialType});
   @$mustCallSuper
   @override
   void runBuild() {
-    final created = build(_$args);
+    final created = build(_$args.$1, initialType: _$args.initialType);
     final ref = this.ref as $Ref<VariantFormState, VariantFormState>;
     final element =
         ref.element

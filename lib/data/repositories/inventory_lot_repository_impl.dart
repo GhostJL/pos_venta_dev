@@ -28,13 +28,27 @@ class InventoryLotRepositoryImpl implements InventoryLotRepository {
   @override
   Future<List<InventoryLot>> getAvailableLots(
     int productId,
-    int warehouseId,
-  ) async {
+    int warehouseId, {
+    int? variantId,
+  }) async {
     final db = await _databaseHelper.database;
+
+    final String whereClause;
+    final List<Object> whereArgs;
+
+    if (variantId != null) {
+      whereClause =
+          'product_id = ? AND warehouse_id = ? AND variant_id = ? AND quantity > 0';
+      whereArgs = [productId, warehouseId, variantId];
+    } else {
+      whereClause = 'product_id = ? AND warehouse_id = ? AND quantity > 0';
+      whereArgs = [productId, warehouseId];
+    }
+
     final result = await db.query(
       DatabaseHelper.tableInventoryLots,
-      where: 'product_id = ? AND warehouse_id = ? AND quantity > 0',
-      whereArgs: [productId, warehouseId],
+      where: whereClause,
+      whereArgs: whereArgs,
       orderBy: 'received_at ASC', // FIFO: oldest first
     );
 

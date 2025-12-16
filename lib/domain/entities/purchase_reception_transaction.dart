@@ -60,10 +60,12 @@ class PurchaseItemUpdate {
 class InventoryAdjustment {
   final int productId;
   final int warehouseId;
+  final int? variantId;
   final double quantityToAdd;
 
   InventoryAdjustment({
     required this.productId,
+    this.variantId,
     required this.warehouseId,
     required this.quantityToAdd,
   });

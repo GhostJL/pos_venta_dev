@@ -5,6 +5,7 @@ import 'package:posventa/core/theme/theme.dart';
 import 'package:posventa/domain/entities/inventory.dart';
 import 'package:posventa/domain/entities/product.dart';
 import 'package:posventa/domain/entities/warehouse.dart';
+import 'package:posventa/presentation/providers/inventory_providers.dart';
 
 class InventoryCardWidget extends ConsumerWidget {
   final Inventory item;
@@ -56,6 +57,10 @@ class InventoryCardWidget extends ConsumerWidget {
                       ],
                     ),
                   ),
+                  IconButton(
+                    icon: const Icon(Icons.delete_outline, color: Colors.grey),
+                    onPressed: () => _confirmDelete(context, ref),
+                  ),
                 ],
               ),
 
@@ -105,6 +110,62 @@ class InventoryCardWidget extends ConsumerWidget {
         ),
       ),
     );
+  }
+
+  Future<void> _confirmDelete(BuildContext context, WidgetRef ref) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Eliminar inventario'),
+        content: const Text(
+          '¿Estás seguro de que deseas eliminar este registro de inventario? Esta acción no se puede deshacer.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancelar'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            style: TextButton.styleFrom(
+              foregroundColor: Theme.of(context).colorScheme.error,
+            ),
+            child: const Text('Eliminar'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      if (item.id == null) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Error: El ID del inventario es nulo'),
+            ),
+          );
+        }
+        return;
+      }
+      if (context.mounted) {
+        try {
+          await ref.read(inventoryProvider.notifier).deleteInventory(item.id!);
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Inventario eliminado correctamente'),
+              ),
+            );
+          }
+        } catch (e) {
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Error al eliminar inventario: $e')),
+            );
+          }
+        }
+      }
+    }
   }
 }
 

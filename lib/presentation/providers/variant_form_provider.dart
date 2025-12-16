@@ -16,7 +16,13 @@ class VariantFormState extends Equatable {
   final bool isSaving;
   final String? barcodeError;
   final VariantType type;
+
   final int? linkedVariantId;
+  final String conversionFactor;
+  final String stockMin;
+  final String stockMax;
+  final int? unitId;
+  final bool isSoldByWeight;
 
   const VariantFormState({
     required this.name,
@@ -30,9 +36,17 @@ class VariantFormState extends Equatable {
     this.barcodeError,
     this.type = VariantType.sales,
     this.linkedVariantId,
+    this.conversionFactor = '1',
+    this.stockMin = '',
+    this.stockMax = '',
+    this.unitId,
+    this.isSoldByWeight = false,
   });
 
-  factory VariantFormState.initial(ProductVariant? variant) {
+  factory VariantFormState.initial(
+    ProductVariant? variant, {
+    VariantType? initialType,
+  }) {
     return VariantFormState(
       name: variant?.variantName ?? '',
       quantity: variant?.quantity.toString() ?? '1',
@@ -46,9 +60,16 @@ class VariantFormState extends Equatable {
           ? (variant!.wholesalePriceCents! / 100).toStringAsFixed(2)
           : '',
       barcode: variant?.barcode ?? '',
-      isForSale: variant?.isForSale ?? true,
-      type: variant?.type ?? VariantType.sales,
+      isForSale:
+          variant?.isForSale ??
+          (initialType == VariantType.sales || initialType == null),
+      type: variant?.type ?? initialType ?? VariantType.sales,
       linkedVariantId: variant?.linkedVariantId,
+      conversionFactor: variant?.conversionFactor.toString() ?? '1',
+      stockMin: variant?.stockMin?.toString() ?? '',
+      stockMax: variant?.stockMax?.toString() ?? '',
+      unitId: variant?.unitId,
+      isSoldByWeight: variant?.isSoldByWeight ?? false,
     );
   }
 
@@ -64,6 +85,11 @@ class VariantFormState extends Equatable {
     String? barcodeError,
     VariantType? type,
     int? linkedVariantId,
+    String? conversionFactor,
+    String? stockMin,
+    String? stockMax,
+    int? unitId,
+    bool? isSoldByWeight,
   }) {
     return VariantFormState(
       name: name ?? this.name,
@@ -77,6 +103,11 @@ class VariantFormState extends Equatable {
       barcodeError: barcodeError,
       type: type ?? this.type,
       linkedVariantId: linkedVariantId ?? this.linkedVariantId,
+      conversionFactor: conversionFactor ?? this.conversionFactor,
+      stockMin: stockMin ?? this.stockMin,
+      stockMax: stockMax ?? this.stockMax,
+      unitId: unitId ?? this.unitId,
+      isSoldByWeight: isSoldByWeight ?? this.isSoldByWeight,
     );
   }
 
@@ -95,6 +126,12 @@ class VariantFormState extends Equatable {
     VariantType? type,
     int? linkedVariantId,
     bool clearLinkedVariantId = false,
+    String? conversionFactor,
+    String? stockMin,
+    String? stockMax,
+    int? unitId,
+    bool clearUnitId = false,
+    bool? isSoldByWeight,
   }) {
     return VariantFormState(
       name: name ?? this.name,
@@ -112,6 +149,11 @@ class VariantFormState extends Equatable {
       linkedVariantId: clearLinkedVariantId
           ? null
           : (linkedVariantId ?? this.linkedVariantId),
+      conversionFactor: conversionFactor ?? this.conversionFactor,
+      stockMin: stockMin ?? this.stockMin,
+      stockMax: stockMax ?? this.stockMax,
+      unitId: clearUnitId ? null : (unitId ?? this.unitId),
+      isSoldByWeight: isSoldByWeight ?? this.isSoldByWeight,
     );
   }
 
@@ -128,14 +170,19 @@ class VariantFormState extends Equatable {
     barcodeError,
     type,
     linkedVariantId,
+    conversionFactor,
+    stockMin,
+    stockMax,
+    unitId,
+    isSoldByWeight,
   ];
 }
 
 @riverpod
 class VariantForm extends _$VariantForm {
   @override
-  VariantFormState build(ProductVariant? variant) {
-    return VariantFormState.initial(variant);
+  VariantFormState build(ProductVariant? variant, {VariantType? initialType}) {
+    return VariantFormState.initial(variant, initialType: initialType);
   }
 
   void updateName(String value) {
@@ -144,6 +191,10 @@ class VariantForm extends _$VariantForm {
 
   void updateQuantity(String value) {
     state = state.copyWithNullable(quantity: value);
+  }
+
+  void updateConversionFactor(String value) {
+    state = state.copyWithNullable(conversionFactor: value);
   }
 
   void updatePrice(String value) {
@@ -156,6 +207,14 @@ class VariantForm extends _$VariantForm {
 
   void updateWholesalePrice(String value) {
     state = state.copyWithNullable(wholesalePrice: value);
+  }
+
+  void updateStockMin(String value) {
+    state = state.copyWithNullable(stockMin: value);
+  }
+
+  void updateStockMax(String value) {
+    state = state.copyWithNullable(stockMax: value);
   }
 
   void updateBarcode(String value) {
@@ -182,6 +241,14 @@ class VariantForm extends _$VariantForm {
       linkedVariantId: value,
       clearLinkedVariantId: value == null,
     );
+  }
+
+  void updateUnitId(int? value) {
+    state = state.copyWithNullable(unitId: value, clearUnitId: value == null);
+  }
+
+  void updateIsSoldByWeight(bool value) {
+    state = state.copyWithNullable(isSoldByWeight: value);
   }
 
   Future<bool> validateBarcode(List<String>? existingBarcodes) async {
@@ -243,21 +310,50 @@ class VariantForm extends _$VariantForm {
         id: variant?.id,
         productId: productId,
         variantName: state.name,
-        quantity: double.parse(state.quantity),
+        quantity: double.tryParse(state.quantity) ?? 1.0,
         priceCents: (state.type == VariantType.purchase && !state.isForSale)
             ? 0
-            : (double.parse(state.price) * 100).toInt(),
-        costPriceCents: (double.parse(state.cost) * 100).toInt(),
+            : (double.tryParse(state.price) != null
+                  ? (double.parse(state.price) * 100).toInt()
+                  : 0),
+        costPriceCents: double.tryParse(state.cost) != null
+            ? (double.parse(state.cost) * 100).toInt()
+            : 0,
         wholesalePriceCents:
             state.type == VariantType.sales && state.wholesalePrice.isNotEmpty
-            ? (double.parse(state.wholesalePrice) * 100).toInt()
+            ? (double.tryParse(state.wholesalePrice) != null
+                  ? (double.parse(state.wholesalePrice) * 100).toInt()
+                  : null)
             : null,
         barcode: state.barcode.isNotEmpty ? state.barcode : null,
-        // Now we respect state.isForSale even for purchase variants
         isForSale: state.isForSale,
         type: state.type,
         linkedVariantId: state.linkedVariantId,
+        conversionFactor: double.tryParse(state.conversionFactor) ?? 1.0,
+        stockMin: double.tryParse(state.stockMin),
+        stockMax: double.tryParse(state.stockMax),
+        unitId: state.unitId,
+        isSoldByWeight: state.isSoldByWeight,
       );
+
+      // IMMEDIATE SAVING LOGIC
+      // If productId > 0, it means we are editing an existing product.
+      // We should save the variant immediately to the database.
+      if (productId > 0) {
+        final productRepo = ref.read(productRepositoryProvider);
+        if (newVariant.id != null) {
+          await productRepo.updateVariant(newVariant);
+          state = state.copyWithNullable(isSaving: false);
+          return newVariant;
+        } else {
+          final newId = await productRepo.saveVariant(newVariant);
+          final savedVariant = newVariant.copyWith(id: newId);
+          state = state.copyWithNullable(isSaving: false);
+          return savedVariant;
+        }
+      }
+
+      // Default behavior for new products (not yet saved to DB)
       state = state.copyWithNullable(isSaving: false);
       return newVariant;
     } catch (e) {

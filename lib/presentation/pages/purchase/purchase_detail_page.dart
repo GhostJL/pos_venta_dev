@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:posventa/core/theme/theme.dart';
 import 'package:posventa/domain/entities/purchase.dart';
 import 'package:posventa/presentation/providers/auth_provider.dart';
@@ -7,9 +8,8 @@ import 'package:posventa/presentation/providers/purchase_providers.dart';
 import 'package:posventa/presentation/widgets/purchases/dialogs/purchase_cancel_dialog.dart';
 import 'package:posventa/presentation/widgets/purchases/cards/purchase_info_card.dart';
 import 'package:posventa/presentation/widgets/purchases/lists/purchase_items_list.dart';
-import 'package:posventa/presentation/widgets/purchases/reception/purchase_reception_dialog.dart';
+
 import 'package:posventa/presentation/widgets/purchases/cards/purchase_totals_card.dart';
-import 'package:posventa/domain/entities/purchase_reception_item.dart';
 
 class PurchaseDetailPage extends ConsumerWidget {
   final int purchaseId;
@@ -153,59 +153,8 @@ class PurchaseDetailPage extends ConsumerWidget {
     WidgetRef ref,
     Purchase purchase,
   ) async {
-    // Show partial reception dialog
-    final itemsToReceive = await showDialog<List<PurchaseReceptionItem>>(
-      context: context,
-      builder: (context) => PurchaseReceptionDialog(purchase: purchase),
-    );
-
-    if (itemsToReceive == null || itemsToReceive.isEmpty) return;
-
-    try {
-      final user = ref.read(authProvider).user;
-      if (user == null) {
-        throw Exception('Usuario no autenticado');
-      }
-
-      await ref
-          .read(purchaseProvider.notifier)
-          .receivePurchase(purchase.id!, itemsToReceive, user.id!);
-
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Row(
-              children: [
-                Icon(
-                  Icons.check_circle,
-                  color: Theme.of(context).colorScheme.onPrimary,
-                ),
-                SizedBox(width: 8),
-                Expanded(child: Text('Recepción registrada exitosamente')),
-              ],
-            ),
-            backgroundColor: AppTheme.transactionSuccess,
-            duration: Duration(seconds: 3),
-          ),
-        );
-      }
-    } catch (e) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Row(
-              children: [
-                Icon(Icons.error, color: Theme.of(context).colorScheme.onError),
-                SizedBox(width: 8),
-                Expanded(child: Text('Error al recibir compra: $e')),
-              ],
-            ),
-            backgroundColor: Theme.of(context).colorScheme.error,
-            duration: const Duration(seconds: 5),
-          ),
-        );
-      }
-    }
+    // Navigate to full screen reception page
+    context.push('/purchases/reception/${purchase.id}');
   }
 }
 

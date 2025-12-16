@@ -3,14 +3,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:posventa/domain/entities/product.dart';
 import 'package:posventa/domain/entities/product_tax.dart' as pt;
-import 'package:posventa/domain/entities/product_variant.dart';
+
 import 'package:posventa/presentation/providers/product_form_provider.dart';
 import 'package:posventa/presentation/providers/tax_rate_provider.dart';
 import 'package:posventa/presentation/widgets/products/forms/product_form/product_basic_info_section.dart';
 import 'package:posventa/presentation/widgets/products/forms/product_form/product_classification_section.dart';
-import 'package:posventa/presentation/widgets/products/forms/product_form/product_pricing_section.dart';
 import 'package:posventa/presentation/widgets/products/forms/product_form/product_tax_selection.dart';
-import 'package:posventa/presentation/widgets/products/forms/product_form/product_variants_list.dart';
+import 'package:posventa/presentation/pages/products/variant_type_selection_page.dart';
 
 class ProductFormPage extends ConsumerStatefulWidget {
   final Product? product;
@@ -28,9 +27,6 @@ class ProductFormPageState extends ConsumerState<ProductFormPage> {
   late TextEditingController _codeController;
   late TextEditingController _barcodeController;
   late TextEditingController _descriptionController;
-  late TextEditingController _costPriceController;
-  late TextEditingController _salePriceController;
-  late TextEditingController _wholesalePriceController;
 
   @override
   void initState() {
@@ -50,23 +46,6 @@ class ProductFormPageState extends ConsumerState<ProductFormPage> {
     _barcodeController = TextEditingController(text: widget.product?.barcode);
     _descriptionController = TextEditingController(
       text: widget.product?.description,
-    );
-
-    final product = widget.product;
-    _costPriceController = TextEditingController(
-      text: product != null
-          ? (product.costPriceCents / 100).toStringAsFixed(2)
-          : '',
-    );
-    _salePriceController = TextEditingController(
-      text: product != null
-          ? (product.salePriceCents / 100).toStringAsFixed(2)
-          : '',
-    );
-    _wholesalePriceController = TextEditingController(
-      text: product?.wholesalePriceCents != null
-          ? (product!.wholesalePriceCents! / 100).toStringAsFixed(2)
-          : '',
     );
   }
 
@@ -97,9 +76,6 @@ class ProductFormPageState extends ConsumerState<ProductFormPage> {
     _codeController.dispose();
     _barcodeController.dispose();
     _descriptionController.dispose();
-    _costPriceController.dispose();
-    _salePriceController.dispose();
-    _wholesalePriceController.dispose();
     super.dispose();
   }
 
@@ -107,38 +83,6 @@ class ProductFormPageState extends ConsumerState<ProductFormPage> {
     final result = await context.push<String>('/scanner');
     if (result != null && mounted) {
       _barcodeController.text = result;
-    }
-  }
-
-  Future<void> _navigateToVariantForm({
-    ProductVariant? variant,
-    int? index,
-  }) async {
-    final provider = productFormProvider(widget.product);
-    final state = ref.read(provider);
-
-    final existingBarcodes = state.variants
-        .where((v) => v.barcode != null && v.barcode!.isNotEmpty)
-        .map((v) => v.barcode!)
-        .toList();
-
-    final result = await context.push<ProductVariant>(
-      '/product-form/variant',
-      extra: {
-        'variant': variant,
-        'productId': widget.product?.id,
-        'existingBarcodes': existingBarcodes,
-        'availableVariants': state.variants,
-      },
-    );
-
-    if (result != null && mounted) {
-      final notifier = ref.read(provider.notifier);
-      if (index != null) {
-        notifier.updateVariant(index, result);
-      } else {
-        notifier.addVariant(result);
-      }
     }
   }
 
@@ -154,11 +98,6 @@ class ProductFormPageState extends ConsumerState<ProductFormPage> {
       code: _codeController.text,
       barcode: _barcodeController.text,
       description: _descriptionController.text,
-      costPrice: double.tryParse(_costPriceController.text) ?? 0,
-      salePrice: double.tryParse(_salePriceController.text) ?? 0,
-      wholesalePrice: _wholesalePriceController.text.isNotEmpty
-          ? double.tryParse(_wholesalePriceController.text)
-          : null,
     );
   }
 
@@ -194,7 +133,9 @@ class ProductFormPageState extends ConsumerState<ProductFormPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(isNewProduct ? 'Nuevo Producto' : 'Editar Producto'),
+        title: Text(
+          isNewProduct ? 'Registrar Producto' : 'Editar Producto Base',
+        ),
         actions: [
           if (isLoading)
             Center(
@@ -222,53 +163,32 @@ class ProductFormPageState extends ConsumerState<ProductFormPage> {
           children: [
             _buildSectionTitle(context, 'Información Básica'),
 
-            Consumer(
-              builder: (context, ref, child) {
-                final hasVariants = ref.watch(
-                  provider.select((s) => s.hasVariants),
-                );
-                return ProductBasicInfoSection(
-                  nameController: _nameController,
-                  codeController: _codeController,
-                  barcodeController: _barcodeController,
-                  descriptionController: _descriptionController,
-                  onScanBarcode: _openBarcodeScanner,
-                  showBarcode: !hasVariants,
-                );
-              },
+            ProductBasicInfoSection(
+              nameController: _nameController,
+              codeController: _codeController,
+              barcodeController: _barcodeController,
+              descriptionController: _descriptionController,
+              onScanBarcode: _openBarcodeScanner,
+              showBarcode:
+                  false, // Don't show barcode in base product as per request, use Code/SKU
             ),
 
             const SizedBox(height: 16),
 
             Consumer(
               builder: (context, ref, child) {
-                final hasVariants = ref.watch(
-                  provider.select((s) => s.hasVariants),
+                final hasExpiration = ref.watch(
+                  provider.select((s) => s.hasExpiration),
                 );
-                return Container(
-                  decoration: BoxDecoration(
-                    color: Theme.of(
-                      context,
-                    ).colorScheme.surfaceContainerHighest,
-                    borderRadius: BorderRadius.circular(12),
+                return SwitchListTile(
+                  title: const Text(
+                    '¿Tiene Caducidad?',
+                    style: TextStyle(fontWeight: FontWeight.bold),
                   ),
-                  child: SwitchListTile(
-                    title: const Text(
-                      '¿Este producto tiene variantes?',
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    subtitle: const Text(
-                      'Habilita opciones como talla, color, etc. (El código de barras principal se mueve a las variantes)',
-                      style: TextStyle(fontSize: 12),
-                    ),
-                    value: hasVariants,
-                    onChanged: (value) =>
-                        ref.read(provider.notifier).setHasVariants(value),
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 16.0,
-                      vertical: 4.0,
-                    ),
-                  ),
+                  value: hasExpiration,
+                  onChanged: (value) =>
+                      ref.read(provider.notifier).setHasExpiration(value),
+                  contentPadding: EdgeInsets.zero,
                 );
               },
             ),
@@ -279,39 +199,7 @@ class ProductFormPageState extends ConsumerState<ProductFormPage> {
 
             const SizedBox(height: 32),
 
-            Consumer(
-              builder: (context, ref, child) {
-                final hasVariants = ref.watch(
-                  provider.select((s) => s.hasVariants),
-                );
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    if (!hasVariants) ...[
-                      _buildSectionTitle(context, 'Precios y Unidad'),
-                      ProductPricingSection(
-                        product: widget.product,
-                        costPriceController: _costPriceController,
-                        salePriceController: _salePriceController,
-                        wholesalePriceController: _wholesalePriceController,
-                      ),
-                    ] else ...[
-                      _buildSectionTitle(context, 'Unidad de Medida'),
-                      ProductPricingSection(
-                        product: widget.product,
-                        costPriceController: _costPriceController,
-                        salePriceController: _salePriceController,
-                        wholesalePriceController: _wholesalePriceController,
-                        showPrices: false,
-                      ),
-                    ],
-                  ],
-                );
-              },
-            ),
-
             const SizedBox(height: 32),
-
             _buildSectionTitle(context, 'Impuestos'),
             Consumer(
               builder: (context, ref, child) {
@@ -324,6 +212,9 @@ class ProductFormPageState extends ConsumerState<ProductFormPage> {
                       title: const Text(
                         '¿Aplica Impuestos?',
                         style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      subtitle: const Text(
+                        'Estos impuestos se aplicarán a todas las variantes',
                       ),
                       value: usesTaxes,
                       onChanged: (value) =>
@@ -339,33 +230,75 @@ class ProductFormPageState extends ConsumerState<ProductFormPage> {
               },
             ),
 
-            const SizedBox(height: 32),
+            const SizedBox(height: 40),
 
-            Consumer(
-              builder: (context, ref, child) {
-                final hasVariants = ref.watch(
-                  provider.select((s) => s.hasVariants),
-                );
-                if (hasVariants) {
-                  return Column(
-                    children: [
-                      _buildSectionTitle(context, 'Variantes / Presentaciones'),
-                      ProductVariantsList(
-                        product: widget.product,
-                        onAddVariant: () => _navigateToVariantForm(),
-                        onEditVariant: (variant, index) =>
-                            _navigateToVariantForm(
-                              variant: variant,
-                              index: index,
-                            ),
+            if (!isNewProduct) ...[
+              const SizedBox(height: 32),
+              _buildSectionTitle(context, 'Variantes'),
+              Card(
+                margin: EdgeInsets.zero,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  side: BorderSide(
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.outline.withValues(alpha: 0.2),
+                  ),
+                ),
+                child: ListTile(
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
+                  leading: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.primaryContainer.withValues(alpha: 0.5),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Icon(
+                      Icons.layers_outlined,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+                  ),
+                  title: const Text(
+                    'Gestionar Variantes',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  subtitle: const Text(
+                    'Configurar variantes de compra y venta',
+                  ),
+                  trailing: const Icon(
+                    Icons.arrow_forward_ios_rounded,
+                    size: 16,
+                  ),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) =>
+                            VariantTypeSelectionPage(product: widget.product!),
                       ),
-                      const SizedBox(height: 24),
-                    ],
-                  );
-                }
-                return const SizedBox.shrink();
-              },
-            ),
+                    );
+                  },
+                ),
+              ),
+            ] else
+              Center(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 24.0),
+                  child: Text(
+                    'Podrás agregar variantes una vez guardado el producto base.',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      fontStyle: FontStyle.italic,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ),
 
             const SizedBox(height: 40),
           ],
@@ -379,9 +312,8 @@ class ProductFormPageState extends ConsumerState<ProductFormPage> {
       'Información Básica': Icons.info_outline_rounded,
       'Clasificación': Icons.category_rounded,
       'Precios y Unidad': Icons.monetization_on_outlined,
-      'Unidad de Medida': Icons.straighten_rounded,
       'Impuestos': Icons.receipt_long_rounded,
-      'Variantes / Presentaciones': Icons.widgets_outlined,
+      'Variantes': Icons.layers_outlined,
     };
 
     final icon = sectionIcons[title];

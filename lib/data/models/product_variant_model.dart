@@ -14,6 +14,12 @@ class ProductVariantModel extends ProductVariant {
     required super.isForSale,
     required super.type,
     super.linkedVariantId,
+    super.stock,
+    super.stockMin,
+    super.stockMax,
+    super.conversionFactor,
+    super.unitId,
+    super.isSoldByWeight,
   });
 
   factory ProductVariantModel.fromEntity(ProductVariant variant) {
@@ -30,6 +36,12 @@ class ProductVariantModel extends ProductVariant {
       isForSale: variant.isForSale,
       type: variant.type,
       linkedVariantId: variant.linkedVariantId,
+      stock: variant.stock,
+      stockMin: variant.stockMin,
+      stockMax: variant.stockMax,
+      conversionFactor: variant.conversionFactor,
+      unitId: variant.unitId,
+      isSoldByWeight: variant.isSoldByWeight,
     );
   }
 
@@ -50,6 +62,18 @@ class ProductVariantModel extends ProductVariant {
           ? VariantType.purchase
           : VariantType.sales,
       linkedVariantId: map['linked_variant_id'],
+      stock: map['stock'] != null ? (map['stock'] as num).toDouble() : null,
+      stockMin: map['stock_min'] != null
+          ? (map['stock_min'] as num).toDouble()
+          : null,
+      stockMax: map['stock_max'] != null
+          ? (map['stock_max'] as num).toDouble()
+          : null,
+      conversionFactor: map['conversion_factor'] != null
+          ? (map['conversion_factor'] as num).toDouble()
+          : 1.0,
+      unitId: map['unit_id'],
+      isSoldByWeight: map['is_sold_by_weight'] == 1,
     );
   }
 
@@ -67,6 +91,11 @@ class ProductVariantModel extends ProductVariant {
       'is_for_sale': isForSale ? 1 : 0,
       'type': type == VariantType.purchase ? 'purchase' : 'sales',
       'linked_variant_id': linkedVariantId,
+      'stock_min': stockMin,
+      'stock_max': stockMax,
+      'conversion_factor': conversionFactor,
+      'unit_id': unitId,
+      'is_sold_by_weight': isSoldByWeight ? 1 : 0,
     };
   }
 }

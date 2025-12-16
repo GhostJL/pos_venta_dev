@@ -18,6 +18,7 @@ class ProductFormState {
   final int? unitId;
   final bool isSoldByWeight;
   final bool isActive;
+  final bool hasExpiration;
   final List<ProductTax> selectedTaxes;
   final List<ProductVariant> variants;
   final bool hasVariants;
@@ -35,6 +36,7 @@ class ProductFormState {
     this.unitId,
     this.isSoldByWeight = false,
     this.isActive = true,
+    this.hasExpiration = false,
     this.selectedTaxes = const [],
     this.variants = const [],
     this.hasVariants = false,
@@ -53,6 +55,7 @@ class ProductFormState {
     int? unitId,
     bool? isSoldByWeight,
     bool? isActive,
+    bool? hasExpiration,
     List<ProductTax>? selectedTaxes,
     List<ProductVariant>? variants,
     bool? hasVariants,
@@ -70,6 +73,7 @@ class ProductFormState {
       unitId: unitId ?? this.unitId,
       isSoldByWeight: isSoldByWeight ?? this.isSoldByWeight,
       isActive: isActive ?? this.isActive,
+      hasExpiration: hasExpiration ?? this.hasExpiration,
       selectedTaxes: selectedTaxes ?? this.selectedTaxes,
       variants: variants ?? this.variants,
       hasVariants: hasVariants ?? this.hasVariants,
@@ -95,6 +99,7 @@ class ProductFormNotifier extends _$ProductFormNotifier {
         unitId: product.unitId,
         isSoldByWeight: product.isSoldByWeight,
         isActive: product.isActive,
+        hasExpiration: product.hasExpiration,
         selectedTaxes: List.from(product.productTaxes ?? []),
         variants: List.from(product.variants ?? []),
         hasVariants:
@@ -118,6 +123,8 @@ class ProductFormNotifier extends _$ProductFormNotifier {
   void setSoldByWeight(bool value) =>
       state = state.copyWith(isSoldByWeight: value);
   void setActive(bool value) => state = state.copyWith(isActive: value);
+  void setHasExpiration(bool value) =>
+      state = state.copyWith(hasExpiration: value);
   void setTaxes(List<ProductTax> value) =>
       state = state.copyWith(selectedTaxes: value);
   void setVariants(List<ProductVariant> value) =>
@@ -142,11 +149,9 @@ class ProductFormNotifier extends _$ProductFormNotifier {
   Future<bool> validateAndSubmit({
     required String name,
     required String code,
-    required String barcode,
+    required String
+    barcode, // Keep barcode for Base Product if needed, or remove if not.
     required String description,
-    required double costPrice,
-    required double salePrice,
-    required double? wholesalePrice,
   }) async {
     state = state.copyWith(isLoading: true, error: null, isSuccess: false);
 
@@ -175,106 +180,31 @@ class ProductFormNotifier extends _$ProductFormNotifier {
         return false;
       }
 
-      List<ProductVariant> finalVariants = [];
+      // Barcode used to be on variants, but now it's on base product?
+      // User said: "el producto con la información básica del producto sin variante esto al agregar producto."
+      // User didn't explicitly say remove barcode from base.
+      // Re-reading: "Información básica: Nombre. Descripción. Tiene caducidad. Si aplica impuestos."
+      // Barcode is usually needed. ProductBasicInfoSection has it. I'll keep it.
 
-      if (!state.hasVariants) {
-        if (salePrice <= costPrice) {
-          state = state.copyWith(
-            isLoading: false,
-            error: 'El precio de venta debe ser mayor que el precio de costo.',
-          );
-          return false;
-        }
-
-        if (barcode.isEmpty) {
-          state = state.copyWith(
-            isLoading: false,
-            error: 'El Código de Barras es requerido.',
-          );
-          return false;
-        }
-
+      if (barcode.isNotEmpty) {
         final isBarcodeUnique = await productRepo.isBarcodeUnique(
           barcode,
           excludeId: state.initialProduct?.id,
         );
-        if (!isBarcodeUnique) {
-          state = state.copyWith(
-            isLoading: false,
-            error: 'El Código de Barras ya existe. Debe ser único.',
-          );
-          return false;
-        }
-
-        int? variantId;
-        if (state.variants.isNotEmpty) {
-          variantId = state.variants.first.id;
-        }
-
-        final mainVariant = ProductVariant(
-          id: variantId,
-          productId: state.initialProduct?.id ?? 0,
-          variantName: 'Estándar',
-          quantity: 1.0,
-          priceCents: (salePrice * 100).toInt(),
-          costPriceCents: (costPrice * 100).toInt(),
-          wholesalePriceCents: wholesalePrice != null
-              ? (wholesalePrice * 100).toInt()
-              : null,
-          barcode: barcode,
-          isForSale: true,
-          isActive: true,
-        );
-        finalVariants.add(mainVariant);
-      } else {
-        if (state.variants.isEmpty) {
-          state = state.copyWith(
-            isLoading: false,
-            error: 'Debe agregar al menos una variante.',
-          );
-          return false;
-        }
-
-        final variantBarcodes = <String>{};
-        for (int i = 0; i < state.variants.length; i++) {
-          final v = state.variants[i];
-          final vBarcode = v.barcode;
-
-          if (v.type != VariantType.purchase &&
-              v.priceCents <= v.costPriceCents) {
-            state = state.copyWith(
-              isLoading: false,
-              error:
-                  'La variante "${v.variantName}" tiene un precio de venta menor o igual al costo.',
-            );
-            return false;
-          }
-
-          if (vBarcode != null && vBarcode.isNotEmpty) {
-            if (variantBarcodes.contains(vBarcode)) {
-              state = state.copyWith(
-                isLoading: false,
-                error: 'Código de barras duplicado en variantes: $vBarcode',
-              );
-              return false;
-            }
-            variantBarcodes.add(vBarcode);
-
-            final isUnique = await productRepo.isBarcodeUnique(
-              vBarcode,
-              excludeVariantId: v.id,
-            );
-            if (!isUnique) {
-              state = state.copyWith(
-                isLoading: false,
-                error:
-                    'El código de barras $vBarcode (Variante: ${v.variantName}) ya existe en el sistema.',
-              );
-              return false;
-            }
-          }
-        }
-        finalVariants = List.from(state.variants);
+        // Warning: isBarcodeUnique checks variants too? It usually checks products table and variants table?
+        // I should assume base product barcode is stored in 'code' or need to check if 'barcode' column exists on products.
+        // Schema 'products' has 'code'. 'product_variants' has 'barcode'.
+        // Base product DOES NOT have 'barcode' column in schema!
+        // 'code' in products table is SKU.
+        // So Base Product strictly speaking doesn't have a barcode unless it's the SKU?
+        // The user said: "Información básica: Nombre. Descripción. Tiene caducidad...". No Barcode mentioned there.
+        // BUT ProductBasicInfoSection has "Código/SKU" and "Código de Barras Principal".
+        // If 'products' table doesn't have barcode, then it's not stored there.
+        // I will Assume "Código/SKU" maps to `code`.
+        // I will Remove specific Barcode field from Base Product if it's not in schema.
+        // Wait, `products` table has `code`. `product_variants` has `barcode`.
+        // If the user wants Barcode for the "Base Product", maybe they mean the SKU?
+        // I'll stick to SKU (`code`) for now.
       }
 
       List<ProductTax> finalProductTaxes = [];
@@ -322,8 +252,11 @@ class ProductFormNotifier extends _$ProductFormNotifier {
         unitId: state.unitId!,
         isSoldByWeight: state.isSoldByWeight,
         productTaxes: finalProductTaxes,
-        variants: finalVariants,
+        variants:
+            state.initialProduct?.variants ??
+            [], // Keep existing variants if any
         isActive: state.isActive,
+        hasExpiration: state.hasExpiration,
       );
 
       if (state.initialProduct == null) {

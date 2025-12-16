@@ -37,7 +37,48 @@ class InventoryRepositoryImpl implements InventoryRepository {
 
   @override
   Future<void> deleteInventory(int id) async {
-    await _databaseHelper.delete(DatabaseHelper.tableInventory, id);
+    final db = await _databaseHelper.database;
+
+    await db.transaction((txn) async {
+      // 1. Get the inventory record details before deleting
+      final result = await txn.query(
+        DatabaseHelper.tableInventory,
+        columns: ['product_id', 'warehouse_id', 'variant_id'],
+        where: 'id = ?',
+        whereArgs: [id],
+      );
+
+      if (result.isEmpty) return; // Nothing to delete
+
+      final row = result.first;
+      final productId = row['product_id'] as int;
+      final warehouseId = row['warehouse_id'] as int;
+      final variantId = row['variant_id'] as int?;
+
+      // 2. Delete inventory lots associated with this inventory record
+      // Logic: Delete lots for this Product + Warehouse + Variant
+      final whereClause = variantId != null
+          ? 'product_id = ? AND warehouse_id = ? AND variant_id = ?'
+          : 'product_id = ? AND warehouse_id = ? AND variant_id IS NULL'; // Strict check for null variant
+
+      final whereArgs = variantId != null
+          ? [productId, warehouseId, variantId]
+          : [productId, warehouseId];
+
+      await txn.delete(
+        DatabaseHelper.tableInventoryLots,
+        where: whereClause,
+        whereArgs: whereArgs,
+      );
+
+      // 3. Delete the inventory record itself
+      await txn.delete(
+        DatabaseHelper.tableInventory,
+        where: 'id = ?',
+        whereArgs: [id],
+      );
+    });
+
     _databaseHelper.notifyTableChanged(DatabaseHelper.tableInventory);
   }
 
@@ -105,10 +146,17 @@ class InventoryRepositoryImpl implements InventoryRepository {
     final db = await _databaseHelper.database;
     await db.transaction((txn) async {
       // 1. Get current inventory
+      final whereClause = movement.variantId != null
+          ? 'product_id = ? AND warehouse_id = ? AND variant_id = ?'
+          : 'product_id = ? AND warehouse_id = ? AND variant_id IS NULL';
+      final whereArgs = movement.variantId != null
+          ? [movement.productId, movement.warehouseId, movement.variantId]
+          : [movement.productId, movement.warehouseId];
+
       final inventoryResult = await txn.query(
         DatabaseHelper.tableInventory,
-        where: 'product_id = ? AND warehouse_id = ?',
-        whereArgs: [movement.productId, movement.warehouseId],
+        where: whereClause,
+        whereArgs: whereArgs,
       );
 
       if (inventoryResult.isEmpty) {
@@ -116,6 +164,7 @@ class InventoryRepositoryImpl implements InventoryRepository {
         await txn.insert(DatabaseHelper.tableInventory, {
           'product_id': movement.productId,
           'warehouse_id': movement.warehouseId,
+          'variant_id': movement.variantId,
           'quantity_on_hand': movement
               .quantity, // Initial quantity is the adjustment amount (if positive) or negative
           'quantity_reserved': 0,
@@ -128,14 +177,9 @@ class InventoryRepositoryImpl implements InventoryRepository {
           UPDATE ${DatabaseHelper.tableInventory}
           SET quantity_on_hand = quantity_on_hand + ?,
               updated_at = ?
-          WHERE product_id = ? AND warehouse_id = ?
+          WHERE $whereClause
         ''',
-          [
-            movement.quantity,
-            DateTime.now().toIso8601String(),
-            movement.productId,
-            movement.warehouseId,
-          ],
+          [movement.quantity, DateTime.now().toIso8601String(), ...whereArgs],
         );
       }
 
@@ -143,6 +187,7 @@ class InventoryRepositoryImpl implements InventoryRepository {
       await txn.insert(DatabaseHelper.tableInventoryMovements, {
         'product_id': movement.productId,
         'warehouse_id': movement.warehouseId,
+        'variant_id': movement.variantId,
         'movement_type': movement.movementType.value,
         'quantity': movement.quantity,
         'quantity_before': movement.quantityBefore,
@@ -164,10 +209,17 @@ class InventoryRepositoryImpl implements InventoryRepository {
     await db.transaction((txn) async {
       for (final movement in movements) {
         // 1. Get current inventory
+        final whereClause = movement.variantId != null
+            ? 'product_id = ? AND warehouse_id = ? AND variant_id = ?'
+            : 'product_id = ? AND warehouse_id = ? AND variant_id IS NULL';
+        final whereArgs = movement.variantId != null
+            ? [movement.productId, movement.warehouseId, movement.variantId]
+            : [movement.productId, movement.warehouseId];
+
         final inventoryResult = await txn.query(
           DatabaseHelper.tableInventory,
-          where: 'product_id = ? AND warehouse_id = ?',
-          whereArgs: [movement.productId, movement.warehouseId],
+          where: whereClause,
+          whereArgs: whereArgs,
         );
 
         if (inventoryResult.isEmpty) {
@@ -175,6 +227,7 @@ class InventoryRepositoryImpl implements InventoryRepository {
           await txn.insert(DatabaseHelper.tableInventory, {
             'product_id': movement.productId,
             'warehouse_id': movement.warehouseId,
+            'variant_id': movement.variantId,
             'quantity_on_hand': movement.quantity,
             'quantity_reserved': 0,
             'updated_at': DateTime.now().toIso8601String(),
@@ -186,14 +239,9 @@ class InventoryRepositoryImpl implements InventoryRepository {
             UPDATE ${DatabaseHelper.tableInventory}
             SET quantity_on_hand = quantity_on_hand + ?,
                 updated_at = ?
-            WHERE product_id = ? AND warehouse_id = ?
+            WHERE $whereClause
           ''',
-            [
-              movement.quantity,
-              DateTime.now().toIso8601String(),
-              movement.productId,
-              movement.warehouseId,
-            ],
+            [movement.quantity, DateTime.now().toIso8601String(), ...whereArgs],
           );
         }
 
@@ -201,6 +249,7 @@ class InventoryRepositoryImpl implements InventoryRepository {
         await txn.insert(DatabaseHelper.tableInventoryMovements, {
           'product_id': movement.productId,
           'warehouse_id': movement.warehouseId,
+          'variant_id': movement.variantId,
           'movement_type': movement.movementType.value,
           'quantity': movement.quantity,
           'quantity_before': movement.quantityBefore,

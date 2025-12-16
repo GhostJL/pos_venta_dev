@@ -2085,7 +2085,7 @@ final class CreateSaleUseCaseProvider
   }
 }
 
-String _$createSaleUseCaseHash() => r'8383adf6cc1f027ea36f0ff243858a83b1b228c2';
+String _$createSaleUseCaseHash() => r'4cb2dcd092b33487133d66da9a8a02c49ac53b2e';
 
 @ProviderFor(getSalesUseCase)
 const getSalesUseCaseProvider = GetSalesUseCaseProvider._();

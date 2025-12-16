@@ -292,7 +292,6 @@ SaleRepository saleRepository(ref) =>
 CreateSaleUseCase createSaleUseCase(ref) => CreateSaleUseCase(
   ref.watch(saleRepositoryProvider),
   ref.watch(inventoryLotRepositoryProvider),
-  ref.watch(productRepositoryProvider),
 );
 
 @riverpod

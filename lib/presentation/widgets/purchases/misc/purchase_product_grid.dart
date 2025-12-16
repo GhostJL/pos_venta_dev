@@ -198,9 +198,6 @@ class _PurchaseProductGridState extends ConsumerState<PurchaseProductGrid> {
                       );
                     }
                   }
-                } else {
-                  // Add product without variant
-                  gridItems.add(PurchaseGridItem(product: product));
                 }
               }
 

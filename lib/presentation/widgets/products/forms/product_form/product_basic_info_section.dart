@@ -36,11 +36,12 @@ class ProductBasicInfoSection extends StatelessWidget {
         TextFormField(
           controller: codeController,
           decoration: const InputDecoration(
-            labelText: 'Código/SKU',
-            helperText: 'Código único del producto',
+            labelText: 'Código / Referencia Interna',
+            helperText: 'Código único para identificar el producto base',
             prefixIcon: Icon(Icons.tag),
           ),
-          validator: (value) => value?.isEmpty ?? true ? 'Requerido' : null,
+          validator: (value) =>
+              value?.isEmpty ?? true ? 'Requerido para la base de datos' : null,
         ),
         if (showBarcode) ...[
           const SizedBox(height: 16),

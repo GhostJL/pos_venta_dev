@@ -3,6 +3,7 @@ import 'package:posventa/domain/entities/product_tax.dart';
 import 'package:posventa/domain/entities/product_variant.dart';
 import 'package:posventa/presentation/providers/providers.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 part 'product_provider.g.dart';
 
@@ -107,3 +108,7 @@ extension ProductCopyWith on Product {
     );
   }
 }
+
+final productProvider = FutureProvider.family<Product?, int>((ref, id) {
+  return ref.watch(productRepositoryProvider).getProductById(id);
+});

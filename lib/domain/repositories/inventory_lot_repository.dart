@@ -6,7 +6,11 @@ abstract class InventoryLotRepository {
 
   /// Get only available lots (quantity > 0) for a product and warehouse
   /// Ordered by received_at ASC (FIFO)
-  Future<List<InventoryLot>> getAvailableLots(int productId, int warehouseId);
+  Future<List<InventoryLot>> getAvailableLots(
+    int productId,
+    int warehouseId, {
+    int? variantId,
+  });
 
   /// Get a specific lot by ID
   Future<InventoryLot?> getLotById(int id);

@@ -17,6 +17,7 @@ class Product {
   final String? unitName; // Populated from join
   final bool isSoldByWeight;
   final bool isActive;
+  final bool hasExpiration;
   final List<ProductTax>? productTaxes;
   final List<ProductVariant>? variants;
   final int? stock;
@@ -33,8 +34,10 @@ class Product {
     this.supplierId,
     required this.unitId,
     this.unitName,
+
     this.isSoldByWeight = false,
     this.isActive = true,
+    this.hasExpiration = false,
     this.productTaxes,
     this.variants,
     this.stock,
@@ -103,6 +106,7 @@ class Product {
     String? unitName,
     bool? isSoldByWeight,
     bool? isActive,
+    bool? hasExpiration,
     List<ProductTax>? productTaxes,
     List<ProductVariant>? variants,
     int? stock,
@@ -121,6 +125,7 @@ class Product {
       unitName: unitName ?? this.unitName,
       isSoldByWeight: isSoldByWeight ?? this.isSoldByWeight,
       isActive: isActive ?? this.isActive,
+      hasExpiration: hasExpiration ?? this.hasExpiration,
       productTaxes: productTaxes ?? this.productTaxes,
       variants: variants ?? this.variants,
       stock: stock ?? this.stock,

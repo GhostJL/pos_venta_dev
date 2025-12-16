@@ -15,6 +15,7 @@ class ProductModel extends Product {
     super.unitName,
     required super.isSoldByWeight,
     required super.isActive,
+    required super.hasExpiration,
     super.productTaxes,
     super.variants,
     super.stock,
@@ -35,6 +36,7 @@ class ProductModel extends Product {
       unitName: product.unitName,
       isSoldByWeight: product.isSoldByWeight,
       isActive: product.isActive,
+      hasExpiration: product.hasExpiration,
       productTaxes: product.productTaxes,
       variants: product.variants,
       stock: product.stock,
@@ -56,6 +58,7 @@ class ProductModel extends Product {
       unitName: map['unit_name'], // Mapped from join
       isSoldByWeight: map['is_sold_by_weight'] == 1,
       isActive: map['is_active'] == 1,
+      hasExpiration: map['has_expiration'] == 1,
       stock: map['stock'] != null ? (map['stock'] as num).toInt() : null,
     );
   }
@@ -74,6 +77,7 @@ class ProductModel extends Product {
       // unit_name is not stored in products table, so we don't include it here
       'is_sold_by_weight': isSoldByWeight ? 1 : 0,
       'is_active': isActive ? 1 : 0,
+      'has_expiration': hasExpiration ? 1 : 0,
     };
   }
 }

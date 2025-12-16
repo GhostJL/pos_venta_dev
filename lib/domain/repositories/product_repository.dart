@@ -1,5 +1,6 @@
 import 'package:posventa/domain/entities/product.dart';
 import 'package:posventa/domain/entities/product_tax.dart';
+import 'package:posventa/domain/entities/product_variant.dart';
 import 'package:posventa/domain/entities/tax_rate.dart';
 
 abstract class ProductRepository {
@@ -22,4 +23,7 @@ abstract class ProductRepository {
     int? excludeId,
     int? excludeVariantId,
   });
+
+  Future<int> saveVariant(ProductVariant variant);
+  Future<void> updateVariant(ProductVariant variant);
 }

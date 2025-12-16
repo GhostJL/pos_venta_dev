@@ -2,19 +2,13 @@ import 'package:posventa/domain/entities/inventory_movement.dart';
 import 'package:posventa/domain/entities/sale.dart';
 import 'package:posventa/domain/entities/sale_transaction.dart';
 import 'package:posventa/domain/repositories/inventory_lot_repository.dart';
-import 'package:posventa/domain/repositories/product_repository.dart';
 import 'package:posventa/domain/repositories/sale_repository.dart';
 
 class CreateSaleUseCase {
   final SaleRepository _saleRepository;
   final InventoryLotRepository _lotRepository;
-  final ProductRepository _productRepository;
 
-  CreateSaleUseCase(
-    this._saleRepository,
-    this._lotRepository,
-    this._productRepository,
-  );
+  CreateSaleUseCase(this._saleRepository, this._lotRepository);
 
   Future<int> call(Sale sale) async {
     // Prepare transaction data
@@ -25,24 +19,14 @@ class CreateSaleUseCase {
     // Process each sale item
     for (final item in sale.items) {
       // Calculate quantity to deduct (handle variants)
+      // With independent variant stock, we deduct the exact quantity sold
       double quantityToDeduct = item.quantity;
-
-      if (item.variantId != null) {
-        // Fetch variant to get multiplier
-        final product = await _productRepository.getProductById(item.productId);
-        final variant = product?.variants
-            ?.where((v) => v.id == item.variantId)
-            .firstOrNull;
-
-        if (variant != null) {
-          quantityToDeduct = item.quantity * variant.quantity;
-        }
-      }
 
       // FIFO: Get available lots ordered by received_at ASC (oldest first)
       final availableLots = await _lotRepository.getAvailableLots(
         item.productId,
         sale.warehouseId,
+        variantId: item.variantId,
       );
 
       double remainingToDeduct = quantityToDeduct;
@@ -79,6 +63,7 @@ class CreateSaleUseCase {
       inventoryAdjustments.add(
         InventoryAdjustment(
           productId: item.productId,
+          variantId: item.variantId,
           warehouseId: sale.warehouseId,
           quantityToDeduct: quantityToDeduct,
         ),
@@ -89,6 +74,7 @@ class CreateSaleUseCase {
       movements.add(
         InventoryMovement(
           productId: item.productId,
+          variantId: item.variantId,
           warehouseId: sale.warehouseId,
           movementType: MovementType.sale,
           quantity: -quantityToDeduct, // Negative for sale

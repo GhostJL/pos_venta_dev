@@ -18,15 +18,54 @@ class VariantSettingsSection extends ConsumerWidget {
       children: [
         _buildSectionTitle(context, 'Configuración'),
         const SizedBox(height: 8),
-        if (state.type == VariantType.purchase)
-          SwitchListTile(
-            title: const Text('Disponible para Venta'),
-            subtitle: const Text(
-              'Si se desactiva, solo servirá para abastecimiento',
-            ),
-            value: state.isForSale,
-            onChanged: notifier.updateIsForSale,
+        if (state.type == VariantType.sales) ...[
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: TextFormField(
+                  initialValue: state.stockMin,
+                  decoration: const InputDecoration(
+                    labelText: 'Stock Mínimo',
+                    prefixIcon: Icon(Icons.arrow_downward),
+                    helperText: 'Alerta cuando baje de',
+                  ),
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
+                  onChanged: notifier.updateStockMin,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) return null;
+                    final n = double.tryParse(value);
+                    if (n == null || n < 0) return 'Inválido';
+                    return null;
+                  },
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: TextFormField(
+                  initialValue: state.stockMax,
+                  decoration: const InputDecoration(
+                    labelText: 'Stock Máximo',
+                    prefixIcon: Icon(Icons.arrow_upward),
+                    helperText: 'Meta de inventario',
+                  ),
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
+                  onChanged: notifier.updateStockMax,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) return null;
+                    final n = double.tryParse(value);
+                    if (n == null || n < 0) return 'Inválido';
+                    return null;
+                  },
+                ),
+              ),
+            ],
           ),
+        ],
       ],
     );
   }

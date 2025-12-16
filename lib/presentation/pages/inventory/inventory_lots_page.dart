@@ -4,7 +4,9 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:posventa/core/theme/theme.dart';
 import 'package:posventa/domain/entities/inventory_lot.dart';
+import 'package:posventa/domain/entities/product_variant.dart';
 import 'package:posventa/presentation/providers/inventory_lot_providers.dart';
+import 'package:posventa/presentation/providers/product_provider.dart';
 
 class InventoryLotsPage extends ConsumerStatefulWidget {
   final int productId;
@@ -24,17 +26,26 @@ class InventoryLotsPage extends ConsumerStatefulWidget {
 
 class _InventoryLotsPageState extends ConsumerState<InventoryLotsPage> {
   bool _showOnlyAvailable = true;
+  int? _selectedVariantId;
 
   @override
   Widget build(BuildContext context) {
-    final lotsAsync = _showOnlyAvailable
-        ? ref.watch(availableLotsProvider(widget.productId, widget.warehouseId))
-        : ref.watch(productLotsProvider(widget.productId, widget.warehouseId));
+    final productAsync = ref.watch(productProvider(widget.productId));
 
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.productName ?? 'Lotes de Inventario'),
         elevation: 0,
+        leading: _selectedVariantId != null
+            ? IconButton(
+                icon: const Icon(Icons.arrow_back),
+                onPressed: () {
+                  setState(() {
+                    _selectedVariantId = null;
+                  });
+                },
+              )
+            : null, // Default back button
         actions: [
           IconButton(
             icon: Icon(
@@ -49,59 +60,147 @@ class _InventoryLotsPageState extends ConsumerState<InventoryLotsPage> {
           ),
         ],
       ),
-      body: lotsAsync.when(
-        data: (lots) {
-          if (lots.isEmpty) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.inventory_2_outlined,
-                    size: 64,
-                    color: Theme.of(context).colorScheme.outline,
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    'No hay lotes disponibles',
-                    style: TextStyle(
-                      fontSize: 18,
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                ],
-              ),
-            );
+      body: productAsync.when(
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (err, stack) => Center(child: Text('Error: $err')),
+        data: (product) {
+          // Case 1: Product has variants and none selected -> Show Variants List
+          if (product?.variants != null &&
+              product!.variants!.isNotEmpty &&
+              _selectedVariantId == null) {
+            return _buildVariantList(context, product.variants!);
           }
 
-          return ListView.builder(
-            padding: const EdgeInsets.all(16),
-            itemCount: lots.length,
-            itemBuilder: (context, index) {
-              final lot = lots[index];
-              return _LotCard(
-                lot: lot,
-                onTap: () {
-                  context.push('/inventory/lot/${lot.id}');
-                },
-              );
-            },
-          );
+          // Case 2: Product has no variants OR Variant Selected -> Show Lots List
+          return _buildLotsList(context);
         },
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, stack) => Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                Icons.error_outline,
-                size: 48,
-                color: Theme.of(context).colorScheme.error,
-              ),
-              const SizedBox(height: 16),
-              Text('Error: $error'),
-            ],
+      ),
+    );
+  }
+
+  Widget _buildVariantList(
+    BuildContext context,
+    List<ProductVariant> variants,
+  ) {
+    // Filter only Sales variants usually relevant for inventory stock view
+    // But we should show all that have stock?
+    // Let's show all and maybe indicate type.
+    final salesVariants = variants
+        .where((v) => v.type == VariantType.sales)
+        .toList();
+
+    if (salesVariants.isEmpty) {
+      return const Center(child: Text("No hay variantes de venta disponibles"));
+    }
+
+    return ListView.separated(
+      padding: const EdgeInsets.all(16),
+      itemCount: salesVariants.length,
+      separatorBuilder: (context, index) => const SizedBox(height: 12),
+      itemBuilder: (context, index) {
+        final variant = salesVariants[index];
+        return Card(
+          elevation: 2,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
           ),
+          child: ListTile(
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 8,
+            ),
+            leading: CircleAvatar(
+              backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+              child: Icon(
+                variant.type == VariantType.sales
+                    ? Icons.sell
+                    : Icons.inventory_2,
+                color: Theme.of(context).colorScheme.onPrimaryContainer,
+              ),
+            ),
+            title: Text(
+              variant.variantName,
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
+            subtitle: Text(
+              variant.type == VariantType.sales
+                  ? 'Variante de Venta'
+                  : 'Variante de Compra',
+            ),
+            trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+            onTap: () {
+              setState(() {
+                _selectedVariantId = variant.id;
+              });
+            },
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildLotsList(BuildContext context) {
+    final lotsAsync = _showOnlyAvailable
+        ? ref.watch(availableLotsProvider(widget.productId, widget.warehouseId))
+        : ref.watch(productLotsProvider(widget.productId, widget.warehouseId));
+
+    return lotsAsync.when(
+      data: (allLots) {
+        // Filter by selected variant if applicable
+        final lots = _selectedVariantId != null
+            ? allLots.where((l) => l.variantId == _selectedVariantId).toList()
+            : allLots;
+
+        if (lots.isEmpty) {
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.inventory_2_outlined,
+                  size: 64,
+                  color: Theme.of(context).colorScheme.outline,
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'No hay lotes disponibles',
+                  style: TextStyle(
+                    fontSize: 18,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
+          );
+        }
+
+        return ListView.builder(
+          padding: const EdgeInsets.all(16),
+          itemCount: lots.length,
+          itemBuilder: (context, index) {
+            final lot = lots[index];
+            return _LotCard(
+              lot: lot,
+              onTap: () {
+                context.push('/inventory/lot/${lot.id}');
+              },
+            );
+          },
+        );
+      },
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (error, stack) => Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.error_outline,
+              size: 48,
+              color: Theme.of(context).colorScheme.error,
+            ),
+            const SizedBox(height: 16),
+            Text('Error: $error'),
+          ],
         ),
       ),
     );

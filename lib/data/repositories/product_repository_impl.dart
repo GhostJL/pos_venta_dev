@@ -127,10 +127,12 @@ class ProductRepositoryImpl implements ProductRepository {
     }
 
     // Query 3: Get all variants for these products
-    final variantMaps = await db.query(
-      DatabaseHelper.tableProductVariants,
-      where: 'product_id IN (${productIds.join(',')}) AND is_active = 1',
-    );
+    final variantMaps = await db.rawQuery('''
+      SELECT pv.*, 
+             (SELECT SUM(quantity_on_hand) FROM inventory WHERE variant_id = pv.id) as stock
+      FROM ${DatabaseHelper.tableProductVariants} pv
+      WHERE pv.product_id IN (${productIds.join(',')}) AND pv.is_active = 1
+    ''');
 
     // Group variants by product_id
     final variantsByProduct = <int, List<ProductVariantModel>>{};
@@ -197,10 +199,12 @@ class ProductRepositoryImpl implements ProductRepository {
     }
 
     // Query 3: Get all variants for these products
-    final variantMaps = await db.query(
-      DatabaseHelper.tableProductVariants,
-      where: 'product_id IN (${productIds.join(',')}) AND is_active = 1',
-    );
+    final variantMaps = await db.rawQuery('''
+      SELECT pv.*, 
+             (SELECT SUM(quantity_on_hand) FROM inventory WHERE variant_id = pv.id) as stock
+      FROM ${DatabaseHelper.tableProductVariants} pv
+      WHERE pv.product_id IN (${productIds.join(',')}) AND pv.is_active = 1
+    ''');
 
     // Group variants by product_id
     final variantsByProduct = <int, List<ProductVariantModel>>{};
@@ -246,10 +250,14 @@ class ProductRepositoryImpl implements ProductRepository {
       final taxes = await getTaxesForProduct(id);
 
       // Get variants
-      final variantMaps = await db.query(
-        DatabaseHelper.tableProductVariants,
-        where: 'product_id = ? AND is_active = 1',
-        whereArgs: [id],
+      final variantMaps = await db.rawQuery(
+        '''
+        SELECT pv.*, 
+               (SELECT SUM(quantity_on_hand) FROM inventory WHERE variant_id = pv.id) as stock
+        FROM ${DatabaseHelper.tableProductVariants} pv
+        WHERE pv.product_id = ? AND pv.is_active = 1
+      ''',
+        [id],
       );
       final variants = variantMaps
           .map((m) => ProductVariantModel.fromMap(m))
@@ -450,5 +458,31 @@ class ProductRepositoryImpl implements ProductRepository {
 
     // Barcode exists and we're not excluding anything
     return false;
+  }
+
+  @override
+  Future<int> saveVariant(ProductVariant variant) async {
+    final db = await databaseHelper.database;
+    final variantModel = ProductVariantModel.fromEntity(variant);
+    final variantMap = variantModel.toMap();
+    variantMap.remove('id'); // Ensure ID is generated
+
+    final id = await db.insert(DatabaseHelper.tableProductVariants, variantMap);
+    databaseHelper.notifyTableChanged(DatabaseHelper.tableProductVariants);
+    return id;
+  }
+
+  @override
+  Future<void> updateVariant(ProductVariant variant) async {
+    final db = await databaseHelper.database;
+    final variantModel = ProductVariantModel.fromEntity(variant);
+
+    await db.update(
+      DatabaseHelper.tableProductVariants,
+      variantModel.toMap(),
+      where: 'id = ?',
+      whereArgs: [variant.id],
+    );
+    databaseHelper.notifyTableChanged(DatabaseHelper.tableProductVariants);
   }
 }

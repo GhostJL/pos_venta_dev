@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:posventa/presentation/providers/variant_form_provider.dart';
 import 'package:posventa/domain/entities/product_variant.dart';
 
+import 'package:posventa/presentation/providers/providers.dart';
+
 class VariantPriceSection extends ConsumerWidget {
   final ProductVariant? variant;
 
@@ -18,15 +20,62 @@ class VariantPriceSection extends ConsumerWidget {
       children: [
         _buildSectionTitle(context, 'Precios'),
         const SizedBox(height: 16),
+
+        // Unit and Weight Section
+        Row(
+          children: [
+            Expanded(
+              child: Consumer(
+                builder: (context, ref, child) {
+                  final unitsAsync = ref.watch(unitListProvider);
+                  return unitsAsync.when(
+                    data: (units) => DropdownButtonFormField<int>(
+                      // ignore: deprecated_member_use
+                      value: state.unitId,
+                      decoration: const InputDecoration(
+                        labelText: 'Tipo de unidad de medida',
+                        prefixIcon: Icon(Icons.scale),
+                      ),
+                      items: units
+                          .map(
+                            (u) => DropdownMenuItem(
+                              value: u.id,
+                              child: Text(u.name),
+                            ),
+                          )
+                          .toList(),
+                      onChanged: notifier.updateUnitId,
+                    ),
+                    loading: () => const CircularProgressIndicator(),
+                    error: (err, stack) => Text('Error loading units'),
+                  );
+                },
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: SwitchListTile(
+                title: const Text('Venta por peso'),
+                value: state.isSoldByWeight,
+                onChanged: notifier.updateIsSoldByWeight,
+                contentPadding: EdgeInsets.zero,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+
         Row(
           children: [
             Expanded(
               child: TextFormField(
                 initialValue: state.cost,
-                decoration: const InputDecoration(
-                  labelText: 'Costo',
+                decoration: InputDecoration(
+                  labelText: state.type == VariantType.purchase
+                      ? 'Precio de Compra'
+                      : 'Costo',
                   prefixText: '\$ ',
-                  prefixIcon: Icon(Icons.attach_money),
+                  prefixIcon: const Icon(Icons.attach_money),
                 ),
                 keyboardType: const TextInputType.numberWithOptions(
                   decimal: true,
@@ -42,7 +91,7 @@ class VariantPriceSection extends ConsumerWidget {
                 },
               ),
             ),
-            if (state.type != VariantType.purchase || state.isForSale) ...[
+            if (state.type == VariantType.sales || state.isForSale) ...[
               const SizedBox(width: 16),
               Expanded(
                 child: TextFormField(
@@ -69,7 +118,7 @@ class VariantPriceSection extends ConsumerWidget {
             ],
           ],
         ),
-        if (state.type != VariantType.purchase || state.isForSale) ...[
+        if (state.type == VariantType.sales || state.isForSale) ...[
           const SizedBox(height: 16),
           TextFormField(
             initialValue: state.wholesalePrice,

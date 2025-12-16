@@ -192,17 +192,31 @@ class PurchaseRepositoryImpl implements PurchaseRepository {
 
       // 3. Inventory Adjustments
       for (final adj in transaction.inventoryAdjustments) {
-        // Check existence
+        // Prepare query based on variant existence
+        final String whereClause;
+        final List<dynamic> whereArgs;
+
+        if (adj.variantId != null) {
+          whereClause =
+              'product_id = ? AND warehouse_id = ? AND variant_id = ?';
+          whereArgs = [adj.productId, adj.warehouseId, adj.variantId];
+        } else {
+          whereClause =
+              'product_id = ? AND warehouse_id = ? AND variant_id IS NULL';
+          whereArgs = [adj.productId, adj.warehouseId];
+        }
+
         final inventoryResult = await txn.query(
           DatabaseHelper.tableInventory,
-          where: 'product_id = ? AND warehouse_id = ?',
-          whereArgs: [adj.productId, adj.warehouseId],
+          where: whereClause,
+          whereArgs: whereArgs,
         );
 
         if (inventoryResult.isEmpty) {
           await txn.insert(DatabaseHelper.tableInventory, {
             'product_id': adj.productId,
             'warehouse_id': adj.warehouseId,
+            'variant_id': adj.variantId,
             'quantity_on_hand': adj.quantityToAdd,
             'quantity_reserved': 0,
             'updated_at': DateTime.now().toIso8601String(),
@@ -212,15 +226,10 @@ class PurchaseRepositoryImpl implements PurchaseRepository {
             '''
             UPDATE ${DatabaseHelper.tableInventory}
             SET quantity_on_hand = quantity_on_hand + ?,
-                updated_at = ?
-            WHERE product_id = ? AND warehouse_id = ?
+            updated_at = ?
+            WHERE $whereClause
             ''',
-            [
-              adj.quantityToAdd,
-              DateTime.now().toIso8601String(),
-              adj.productId,
-              adj.warehouseId,
-            ],
+            [adj.quantityToAdd, DateTime.now().toIso8601String(), ...whereArgs],
           );
         }
       }
