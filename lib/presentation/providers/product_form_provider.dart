@@ -168,6 +168,30 @@ class ProductFormNotifier extends _$ProductFormNotifier {
         return false;
       }
 
+      if (state.departmentId == null) {
+        state = state.copyWith(
+          isLoading: false,
+          error: 'Debe seleccionar un Departamento.',
+        );
+        return false;
+      }
+
+      if (state.categoryId == null) {
+        state = state.copyWith(
+          isLoading: false,
+          error: 'Debe seleccionar una Categoría.',
+        );
+        return false;
+      }
+
+      if (state.unitId == null) {
+        state = state.copyWith(
+          isLoading: false,
+          error: 'Debe seleccionar una Unidad de medida.',
+        );
+        return false;
+      }
+
       final isCodeUnique = await productRepo.isCodeUnique(
         code,
         excludeId: state.initialProduct?.id,

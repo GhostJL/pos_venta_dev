@@ -9,6 +9,7 @@ import 'package:posventa/presentation/providers/tax_rate_provider.dart';
 import 'package:posventa/presentation/widgets/products/forms/product_form/product_basic_info_section.dart';
 import 'package:posventa/presentation/widgets/products/forms/product_form/product_classification_section.dart';
 import 'package:posventa/presentation/widgets/products/forms/product_form/product_tax_selection.dart';
+import 'package:posventa/presentation/widgets/products/forms/product_form/product_pricing_section.dart';
 import 'package:posventa/presentation/pages/products/variant_type_selection_page.dart';
 
 class ProductFormPage extends ConsumerStatefulWidget {
@@ -27,6 +28,11 @@ class ProductFormPageState extends ConsumerState<ProductFormPage> {
   late TextEditingController _codeController;
   late TextEditingController _barcodeController;
   late TextEditingController _descriptionController;
+
+  // Controllers required for ProductPricingSection (hidden in this view)
+  late TextEditingController _costController;
+  late TextEditingController _priceController;
+  late TextEditingController _wholesaleController;
 
   @override
   void initState() {
@@ -47,6 +53,10 @@ class ProductFormPageState extends ConsumerState<ProductFormPage> {
     _descriptionController = TextEditingController(
       text: widget.product?.description,
     );
+    // Initialize with empty or existing values if available (though prices not shown here)
+    _costController = TextEditingController();
+    _priceController = TextEditingController();
+    _wholesaleController = TextEditingController();
   }
 
   void _initializeDefaultTaxes() {
@@ -76,6 +86,9 @@ class ProductFormPageState extends ConsumerState<ProductFormPage> {
     _codeController.dispose();
     _barcodeController.dispose();
     _descriptionController.dispose();
+    _costController.dispose();
+    _priceController.dispose();
+    _wholesaleController.dispose();
     super.dispose();
   }
 
@@ -87,7 +100,7 @@ class ProductFormPageState extends ConsumerState<ProductFormPage> {
   }
 
   Future<void> _submit() async {
-    if (!_formKey.currentState!.validate()) {
+    if (!(_formKey.currentState?.validate() ?? false)) {
       return;
     }
 
@@ -117,7 +130,8 @@ class ProductFormPageState extends ConsumerState<ProductFormPage> {
           ),
         );
       }
-      if (next.isSuccess && !previous!.isSuccess) {
+      print(next.error);
+      if (next.isSuccess && (previous?.isSuccess != true)) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
@@ -198,6 +212,14 @@ class ProductFormPageState extends ConsumerState<ProductFormPage> {
             ProductClassificationSection(product: widget.product),
 
             const SizedBox(height: 32),
+            _buildSectionTitle(context, 'Precios y Unidad'),
+            ProductPricingSection(
+              product: widget.product,
+              costPriceController: _costController,
+              salePriceController: _priceController,
+              wholesalePriceController: _wholesaleController,
+              showPrices: false, // Only show Unit and Weight options
+            ),
 
             const SizedBox(height: 32),
             _buildSectionTitle(context, 'Impuestos'),

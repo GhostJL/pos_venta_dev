@@ -54,7 +54,8 @@ class ProductModel extends Product {
       categoryId: map['category_id'],
       brandId: map['brand_id'],
       supplierId: map['supplier_id'],
-      unitId: map['unit_id'],
+      unitId:
+          map['unit_id'] ?? 1, // Default to 1 (Pieza) if null to prevent crash
       unitName: map['unit_name'], // Mapped from join
       isSoldByWeight: map['is_sold_by_weight'] == 1,
       isActive: map['is_active'] == 1,

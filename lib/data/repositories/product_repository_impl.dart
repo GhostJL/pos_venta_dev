@@ -129,7 +129,7 @@ class ProductRepositoryImpl implements ProductRepository {
     // Query 3: Get all variants for these products
     final variantMaps = await db.rawQuery('''
       SELECT pv.*, 
-             (SELECT SUM(quantity_on_hand) FROM inventory WHERE variant_id = pv.id) as stock
+             (SELECT SUM(quantity) FROM ${DatabaseHelper.tableInventoryLots} WHERE variant_id = pv.id) as stock
       FROM ${DatabaseHelper.tableProductVariants} pv
       WHERE pv.product_id IN (${productIds.join(',')}) AND pv.is_active = 1
     ''');
@@ -201,7 +201,7 @@ class ProductRepositoryImpl implements ProductRepository {
     // Query 3: Get all variants for these products
     final variantMaps = await db.rawQuery('''
       SELECT pv.*, 
-             (SELECT SUM(quantity_on_hand) FROM inventory WHERE variant_id = pv.id) as stock
+             (SELECT SUM(quantity) FROM ${DatabaseHelper.tableInventoryLots} WHERE variant_id = pv.id) as stock
       FROM ${DatabaseHelper.tableProductVariants} pv
       WHERE pv.product_id IN (${productIds.join(',')}) AND pv.is_active = 1
     ''');
@@ -253,7 +253,7 @@ class ProductRepositoryImpl implements ProductRepository {
       final variantMaps = await db.rawQuery(
         '''
         SELECT pv.*, 
-               (SELECT SUM(quantity_on_hand) FROM inventory WHERE variant_id = pv.id) as stock
+               (SELECT SUM(quantity) FROM ${DatabaseHelper.tableInventoryLots} WHERE variant_id = pv.id) as stock
         FROM ${DatabaseHelper.tableProductVariants} pv
         WHERE pv.product_id = ? AND pv.is_active = 1
       ''',

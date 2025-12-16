@@ -52,13 +52,25 @@ class VariantPriceSection extends ConsumerWidget {
                 },
               ),
             ),
-            const SizedBox(width: 16),
+          ],
+        ),
+
+        const SizedBox(height: 16),
+        Row(
+          children: [
             Expanded(
-              child: SwitchListTile(
-                title: const Text('Venta por peso'),
-                value: state.isSoldByWeight,
-                onChanged: notifier.updateIsSoldByWeight,
-                contentPadding: EdgeInsets.zero,
+              child: Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.all(Radius.circular(12)),
+                  color: Theme.of(context).colorScheme.surfaceContainer,
+                ),
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: SwitchListTile(
+                  title: const Text('Venta por peso'),
+                  value: state.isSoldByWeight,
+                  onChanged: notifier.updateIsSoldByWeight,
+                  contentPadding: EdgeInsets.zero,
+                ),
               ),
             ),
           ],

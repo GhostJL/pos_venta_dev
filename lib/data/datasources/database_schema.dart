@@ -283,6 +283,8 @@ class DatabaseSchema {
         is_for_sale INTEGER NOT NULL DEFAULT 1 CHECK (is_for_sale IN (0,1)),
         type TEXT NOT NULL DEFAULT 'sales',
         linked_variant_id INTEGER,
+        stock_min REAL,
+        stock_max REAL,
         unit_id INTEGER,
         is_sold_by_weight INTEGER NOT NULL DEFAULT 0 CHECK (is_sold_by_weight IN (0,1)),
         conversion_factor REAL DEFAULT 1.0,

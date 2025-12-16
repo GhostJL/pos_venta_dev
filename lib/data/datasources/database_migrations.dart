@@ -41,6 +41,33 @@ class DatabaseMigrations {
     if (oldVersion < 29 && newVersion >= 29) {
       await _migrateToVersion29(db);
     }
+
+    // Migration from version 29 to 30: Ensure stock_min/max columns exist (fix for broken v29 fresh installs)
+    if (oldVersion < 30 && newVersion >= 30) {
+      await _migrateToVersion30(db);
+    }
+  }
+
+  static Future<void> _migrateToVersion30(Database db) async {
+    // Ensure stock_min exists
+    try {
+      await db.execute('''
+        ALTER TABLE ${DatabaseConstants.tableProductVariants}
+        ADD COLUMN stock_min REAL;
+      ''');
+    } catch (e) {
+      // Column might already exist
+    }
+
+    // Ensure stock_max exists
+    try {
+      await db.execute('''
+        ALTER TABLE ${DatabaseConstants.tableProductVariants}
+        ADD COLUMN stock_max REAL;
+      ''');
+    } catch (e) {
+      // Column might already exist
+    }
   }
 
   static Future<void> _migrateToVersion29(Database db) async {

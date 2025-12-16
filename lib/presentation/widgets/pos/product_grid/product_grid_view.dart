@@ -14,6 +14,15 @@ class ProductGridView extends StatelessWidget {
     required this.onItemTap,
   });
 
+  // Define el ancho mínimo ideal para que cada tarjeta se vea bien.
+  // Un valor de 180.0 a 200.0 suele ser ideal para tarjetas de producto en POS.
+  static const double _minItemWidth = 190.0;
+
+  // Define la relación de aspecto ideal (ancho / alto).
+  // Si la tarjeta moderna sugerida tiene 120 (imagen) + 100 (contenido) = 220 de alto
+  // y un ancho mínimo de 190, la proporción es 190 / 220 ≈ 0.86
+  static const double _idealAspectRatio = 0.86;
+
   @override
   Widget build(BuildContext context) {
     if (items.isEmpty) {
@@ -27,16 +36,14 @@ class ProductGridView extends StatelessWidget {
       );
     }
 
-    // Determinar número de columnas según el tamaño
-    final crossAxisCount = isMobile ? 2 : 4;
-
     return GridView.builder(
       padding: const EdgeInsets.all(12),
-      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: crossAxisCount,
-        childAspectRatio: 1,
-        crossAxisSpacing: 8,
-        mainAxisSpacing: 8,
+      gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
+        maxCrossAxisExtent: _minItemWidth,
+        childAspectRatio: _idealAspectRatio,
+
+        crossAxisSpacing: 12,
+        mainAxisSpacing: 12,
       ),
       itemCount: items.length,
       itemBuilder: (context, index) {
