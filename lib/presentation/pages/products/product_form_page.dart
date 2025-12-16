@@ -130,7 +130,6 @@ class ProductFormPageState extends ConsumerState<ProductFormPage> {
           ),
         );
       }
-      print(next.error);
       if (next.isSuccess && (previous?.isSuccess != true)) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(

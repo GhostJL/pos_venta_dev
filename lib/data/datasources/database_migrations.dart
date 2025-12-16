@@ -46,6 +46,17 @@ class DatabaseMigrations {
     if (oldVersion < 30 && newVersion >= 30) {
       await _migrateToVersion30(db);
     }
+
+    // Migration from version 30 to 31: Verify/Fix inventory table for variant_id (fix for broken v25+ fresh installs/upgrades)
+    if (oldVersion < 31 && newVersion >= 31) {
+      await _migrateToVersion31(db);
+    }
+  }
+
+  static Future<void> _migrateToVersion31(Database db) async {
+    // Force recreation of inventory table to ensure variant_id column and constraints are correct.
+    // This reuses the logic from v25 migration which defines the correct schema.
+    await _recreateInventoryTableV25(db);
   }
 
   static Future<void> _migrateToVersion30(Database db) async {

@@ -347,14 +347,16 @@ class DatabaseSchema {
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         product_id INTEGER NOT NULL,
         warehouse_id INTEGER NOT NULL,
+        variant_id INTEGER,
         quantity_on_hand REAL NOT NULL DEFAULT 0,
         quantity_reserved REAL NOT NULL DEFAULT 0,
         min_stock INTEGER,
         max_stock INTEGER,
         updated_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
-        UNIQUE (product_id, warehouse_id),
+        UNIQUE (product_id, warehouse_id, variant_id),
         FOREIGN KEY (product_id) REFERENCES ${DatabaseConstants.tableProducts}(id) ON DELETE CASCADE,
-        FOREIGN KEY (warehouse_id) REFERENCES ${DatabaseConstants.tableWarehouses}(id) ON DELETE CASCADE
+        FOREIGN KEY (warehouse_id) REFERENCES ${DatabaseConstants.tableWarehouses}(id) ON DELETE CASCADE,
+        FOREIGN KEY (variant_id) REFERENCES ${DatabaseConstants.tableProductVariants}(id) ON DELETE CASCADE
       )
     ''');
   }
