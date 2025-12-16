@@ -58,7 +58,7 @@ final class VariantFormProvider
   }
 }
 
-String _$variantFormHash() => r'7c69fcb5936c0be41cbc73be17c1190566ab40b0';
+String _$variantFormHash() => r'1d8fbccf4af94c933ca436ea0db2aaa34ead64ce';
 
 final class VariantFormFamily extends $Family
     with

@@ -25,6 +25,16 @@ class InventoryNotifier extends _$InventoryNotifier {
   Future<void> deleteInventory(int id) async {
     await ref.read(deleteInventoryProvider).call(id);
   }
+
+  Future<void> deleteInventoryByVariant(
+    int productId,
+    int warehouseId,
+    int variantId,
+  ) async {
+    await ref
+        .read(deleteInventoryByVariantProvider)
+        .call(productId, warehouseId, variantId);
+  }
 }
 
 @riverpod

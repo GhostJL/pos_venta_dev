@@ -4,20 +4,20 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:posventa/core/theme/theme.dart';
 import 'package:posventa/domain/entities/inventory_lot.dart';
-import 'package:posventa/domain/entities/product_variant.dart';
 import 'package:posventa/presentation/providers/inventory_lot_providers.dart';
-import 'package:posventa/presentation/providers/product_provider.dart';
 
 class InventoryLotsPage extends ConsumerStatefulWidget {
   final int productId;
   final int warehouseId;
   final String? productName;
+  final int? variantId;
 
   const InventoryLotsPage({
     super.key,
     required this.productId,
     required this.warehouseId,
     this.productName,
+    this.variantId,
   });
 
   @override
@@ -26,26 +26,18 @@ class InventoryLotsPage extends ConsumerStatefulWidget {
 
 class _InventoryLotsPageState extends ConsumerState<InventoryLotsPage> {
   bool _showOnlyAvailable = true;
-  int? _selectedVariantId;
 
   @override
   Widget build(BuildContext context) {
-    final productAsync = ref.watch(productProvider(widget.productId));
+    // We strictly assume we are here for a specific product context.
+    // If variantId is provided, we filter by it.
+    // We removed the 'Variant List' screen logic as requested.
 
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.productName ?? 'Lotes de Inventario'),
         elevation: 0,
-        leading: _selectedVariantId != null
-            ? IconButton(
-                icon: const Icon(Icons.arrow_back),
-                onPressed: () {
-                  setState(() {
-                    _selectedVariantId = null;
-                  });
-                },
-              )
-            : null, // Default back button
+        // Standard back button will pop to previous screen (InventoryPage)
         actions: [
           IconButton(
             icon: Icon(
@@ -60,82 +52,7 @@ class _InventoryLotsPageState extends ConsumerState<InventoryLotsPage> {
           ),
         ],
       ),
-      body: productAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (err, stack) => Center(child: Text('Error: $err')),
-        data: (product) {
-          // Case 1: Product has variants and none selected -> Show Variants List
-          if (product?.variants != null &&
-              product!.variants!.isNotEmpty &&
-              _selectedVariantId == null) {
-            return _buildVariantList(context, product.variants!);
-          }
-
-          // Case 2: Product has no variants OR Variant Selected -> Show Lots List
-          return _buildLotsList(context);
-        },
-      ),
-    );
-  }
-
-  Widget _buildVariantList(
-    BuildContext context,
-    List<ProductVariant> variants,
-  ) {
-    // Filter only Sales variants usually relevant for inventory stock view
-    // But we should show all that have stock?
-    // Let's show all and maybe indicate type.
-    final salesVariants = variants
-        .where((v) => v.type == VariantType.sales)
-        .toList();
-
-    if (salesVariants.isEmpty) {
-      return const Center(child: Text("No hay variantes de venta disponibles"));
-    }
-
-    return ListView.separated(
-      padding: const EdgeInsets.all(16),
-      itemCount: salesVariants.length,
-      separatorBuilder: (context, index) => const SizedBox(height: 12),
-      itemBuilder: (context, index) {
-        final variant = salesVariants[index];
-        return Card(
-          elevation: 2,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: ListTile(
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: 16,
-              vertical: 8,
-            ),
-            leading: CircleAvatar(
-              backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-              child: Icon(
-                variant.type == VariantType.sales
-                    ? Icons.sell
-                    : Icons.inventory_2,
-                color: Theme.of(context).colorScheme.onPrimaryContainer,
-              ),
-            ),
-            title: Text(
-              variant.variantName,
-              style: const TextStyle(fontWeight: FontWeight.bold),
-            ),
-            subtitle: Text(
-              variant.type == VariantType.sales
-                  ? 'Variante de Venta'
-                  : 'Variante de Compra',
-            ),
-            trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-            onTap: () {
-              setState(() {
-                _selectedVariantId = variant.id;
-              });
-            },
-          ),
-        );
-      },
+      body: _buildLotsList(context),
     );
   }
 
@@ -146,9 +63,9 @@ class _InventoryLotsPageState extends ConsumerState<InventoryLotsPage> {
 
     return lotsAsync.when(
       data: (allLots) {
-        // Filter by selected variant if applicable
-        final lots = _selectedVariantId != null
-            ? allLots.where((l) => l.variantId == _selectedVariantId).toList()
+        // Filter by selected variant if provided in widget arguments
+        final lots = widget.variantId != null
+            ? allLots.where((l) => l.variantId == widget.variantId).toList()
             : allLots;
 
         if (lots.isEmpty) {

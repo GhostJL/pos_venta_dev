@@ -33,7 +33,7 @@ final class InventoryNotifierProvider
   InventoryNotifier create() => InventoryNotifier();
 }
 
-String _$inventoryNotifierHash() => r'5c249965437c49e0a926fa8217500c68ecb44c73';
+String _$inventoryNotifierHash() => r'0a4a0eb573b2c1bbf1a5e1e0dbac224813cdef7e';
 
 abstract class _$InventoryNotifier extends $StreamNotifier<List<Inventory>> {
   Stream<List<Inventory>> build();

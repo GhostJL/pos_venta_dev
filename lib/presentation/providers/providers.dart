@@ -13,6 +13,7 @@ import 'package:posventa/domain/use_cases/inventory/create_inventory.dart';
 import 'package:posventa/domain/use_cases/inventory/update_inventory.dart';
 import 'package:posventa/domain/use_cases/inventory/delete_inventory.dart';
 import 'package:posventa/domain/use_cases/inventory/get_inventory_by_product.dart';
+import 'package:posventa/domain/use_cases/inventory/delete_inventory_by_variant.dart';
 import 'package:posventa/domain/repositories/product_repository.dart';
 import 'package:posventa/data/repositories/product_repository_impl.dart';
 import 'package:posventa/domain/use_cases/product/get_all_products.dart';
@@ -148,6 +149,10 @@ DeleteInventory deleteInventory(ref) =>
 @riverpod
 GetInventoryByProduct getInventoryByProduct(ref) =>
     GetInventoryByProduct(ref.watch(inventoryRepositoryProvider));
+
+@riverpod
+DeleteInventoryByVariant deleteInventoryByVariant(ref) =>
+    DeleteInventoryByVariant(ref.watch(inventoryRepositoryProvider));
 
 // Unit of Measure Providers
 @riverpod

@@ -406,12 +406,23 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/inventory/lots/:productId/:warehouseId',
             pageBuilder: (context, state) {
-              final productId = state.pathParameters['productId']!;
-              final warehouseId = state.pathParameters['warehouseId']!;
+              final productId = int.parse(state.pathParameters['productId']!);
+              final warehouseId = int.parse(
+                state.pathParameters['warehouseId']!,
+              );
+              final extra = state.extra as Map<String, dynamic>?;
+              final productName = extra?['productName'] as String?;
+              final variantIdStr = state.uri.queryParameters['variantId'];
+              final variantId = variantIdStr != null
+                  ? int.tryParse(variantIdStr)
+                  : null;
+
               return NoTransitionPage(
                 child: InventoryLotsPage(
-                  productId: int.parse(productId),
-                  warehouseId: int.parse(warehouseId),
+                  productId: productId,
+                  warehouseId: warehouseId,
+                  productName: productName,
+                  variantId: variantId,
                 ),
               );
             },

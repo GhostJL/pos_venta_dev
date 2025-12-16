@@ -582,6 +582,54 @@ final class GetInventoryByProductProvider
 String _$getInventoryByProductHash() =>
     r'fbac78c7ac55ec962f3c22e2cae76d2652d0f046';
 
+@ProviderFor(deleteInventoryByVariant)
+const deleteInventoryByVariantProvider = DeleteInventoryByVariantProvider._();
+
+final class DeleteInventoryByVariantProvider
+    extends
+        $FunctionalProvider<
+          DeleteInventoryByVariant,
+          DeleteInventoryByVariant,
+          DeleteInventoryByVariant
+        >
+    with $Provider<DeleteInventoryByVariant> {
+  const DeleteInventoryByVariantProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'deleteInventoryByVariantProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$deleteInventoryByVariantHash();
+
+  @$internal
+  @override
+  $ProviderElement<DeleteInventoryByVariant> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  DeleteInventoryByVariant create(Ref ref) {
+    return deleteInventoryByVariant(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(DeleteInventoryByVariant value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<DeleteInventoryByVariant>(value),
+    );
+  }
+}
+
+String _$deleteInventoryByVariantHash() =>
+    r'457687b928dbc525201211e56ee104dc0f04ac20';
+
 @ProviderFor(unitOfMeasureRepository)
 const unitOfMeasureRepositoryProvider = UnitOfMeasureRepositoryProvider._();
 

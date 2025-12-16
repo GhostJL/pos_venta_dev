@@ -57,9 +57,13 @@ class InventoryRepositoryImpl implements InventoryRepository {
 
       // 2. Delete inventory lots associated with this inventory record
       // Logic: Delete lots for this Product + Warehouse + Variant
+      // FIX: If variantId is null (valid for legacy data), we should delete ALL lots
+      // for this product/warehouse to ensure we truly "Reset" the stock.
+      // Otherwise, lots with specific variant IDs might persist and keep stock > 0.
+
       final whereClause = variantId != null
           ? 'product_id = ? AND warehouse_id = ? AND variant_id = ?'
-          : 'product_id = ? AND warehouse_id = ? AND variant_id IS NULL'; // Strict check for null variant
+          : 'product_id = ? AND warehouse_id = ?'; // Broad delete if variant is unknown
 
       final whereArgs = variantId != null
           ? [productId, warehouseId, variantId]
@@ -77,6 +81,36 @@ class InventoryRepositoryImpl implements InventoryRepository {
         where: 'id = ?',
         whereArgs: [id],
       );
+    });
+
+    _databaseHelper.notifyTableChanged(DatabaseHelper.tableInventory);
+  }
+
+  @override
+  Future<void> deleteInventoryForProductVariant(
+    int productId,
+    int warehouseId,
+    int variantId,
+  ) async {
+    final db = await _databaseHelper.database;
+
+    await db.transaction((txn) async {
+      // 1. Delete Lots (Strict Match for Variant)
+      await txn.delete(
+        DatabaseHelper.tableInventoryLots,
+        where: 'product_id = ? AND warehouse_id = ? AND variant_id = ?',
+        whereArgs: [productId, warehouseId, variantId],
+      );
+
+      // 2. Delete Inventory Record (Strict Match)
+      await txn.delete(
+        DatabaseHelper.tableInventory,
+        where: 'product_id = ? AND warehouse_id = ? AND variant_id = ?',
+        whereArgs: [productId, warehouseId, variantId],
+      );
+
+      // 3. Fallback: Also try deleting records with NULL variantId if this is the only variant?
+      // Or handled separately? For now, strict deletion is safer for "Virtual Items" which imply specific variant context.
     });
 
     _databaseHelper.notifyTableChanged(DatabaseHelper.tableInventory);

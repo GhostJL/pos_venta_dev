@@ -2,6 +2,7 @@ class Inventory {
   final int? id;
   final int productId;
   final int warehouseId;
+  final int? variantId;
   final double quantityOnHand;
   final double quantityReserved;
   final int? minStock;
@@ -12,6 +13,7 @@ class Inventory {
     this.id,
     required this.productId,
     required this.warehouseId,
+    this.variantId,
     this.quantityOnHand = 0.0,
     this.quantityReserved = 0.0,
     this.minStock,
@@ -23,6 +25,7 @@ class Inventory {
     int? id,
     int? productId,
     int? warehouseId,
+    int? variantId,
     double? quantityOnHand,
     double? quantityReserved,
     int? minStock,
@@ -33,6 +36,7 @@ class Inventory {
       id: id ?? this.id,
       productId: productId ?? this.productId,
       warehouseId: warehouseId ?? this.warehouseId,
+      variantId: variantId ?? this.variantId,
       quantityOnHand: quantityOnHand ?? this.quantityOnHand,
       quantityReserved: quantityReserved ?? this.quantityReserved,
       minStock: minStock ?? this.minStock,

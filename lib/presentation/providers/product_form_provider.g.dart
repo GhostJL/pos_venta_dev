@@ -59,7 +59,7 @@ final class ProductFormNotifierProvider
 }
 
 String _$productFormNotifierHash() =>
-    r'1c95ce9a61c1c90263d9bfe419384496e3713b75';
+    r'dbe0033e76ef4c775299657f7305a7f9a49f244f';
 
 final class ProductFormNotifierFamily extends $Family
     with
