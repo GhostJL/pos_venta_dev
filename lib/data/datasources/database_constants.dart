@@ -30,4 +30,5 @@ class DatabaseConstants {
   static const tableUnitsOfMeasure = 'units_of_measure';
   static const tableInventoryLots = 'inventory_lots';
   static const tableSaleItemLots = 'sale_item_lots';
+  static const tableNotifications = 'notifications';
 }

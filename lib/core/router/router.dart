@@ -23,6 +23,7 @@ import 'package:posventa/presentation/pages/dashboards/dashboard_cashier_page.da
 import 'package:posventa/presentation/pages/departaments/departments_page.dart';
 import 'package:posventa/presentation/pages/inventory/inventory_page.dart';
 import 'package:posventa/presentation/pages/inventory/inventory_form_page.dart';
+import 'package:posventa/presentation/pages/inventory/inventory_notifications_page.dart';
 import 'package:posventa/presentation/pages/login/login_page.dart';
 import 'package:posventa/presentation/pages/login/create_account/create_account_page.dart';
 import 'package:posventa/presentation/pages/pos_sale/pos_sales_page.dart';
@@ -143,6 +144,11 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: '/brands',
             pageBuilder: (context, state) =>
                 const NoTransitionPage(child: BrandsPage()),
+          ),
+          GoRoute(
+            path: '/inventory/notifications',
+            pageBuilder: (context, state) =>
+                const NoTransitionPage(child: InventoryNotificationsPage()),
           ),
           GoRoute(
             path: '/suppliers',

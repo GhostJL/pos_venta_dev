@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:posventa/domain/entities/customer.dart';
 import 'package:posventa/domain/entities/product.dart';
 import 'package:posventa/domain/entities/product_variant.dart';
@@ -8,6 +9,7 @@ import 'package:posventa/domain/entities/sale_payment.dart';
 import 'package:posventa/presentation/providers/auth_provider.dart';
 import 'package:posventa/presentation/providers/product_provider.dart';
 import 'package:posventa/presentation/providers/providers.dart';
+import 'package:posventa/presentation/providers/notification_providers.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'pos_providers.g.dart';
@@ -415,6 +417,41 @@ class POSNotifier extends _$POSNotifier {
 
       // Invalidate product list to refresh stock
       ref.invalidate(productListProvider);
+
+      // Check stock levels and trigger notifications
+      try {
+        final notificationService = ref.read(notificationServiceProvider);
+        final productRepository = ref.read(productRepositoryProvider);
+
+        for (final item in state.cart) {
+          if (item.variantId != null) {
+            // Fetch fresh product/variant data
+            final product = await productRepository.getProductById(
+              item.productId,
+            );
+            if (product != null) {
+              final variant = product.variants?.firstWhere(
+                (v) => v.id == item.variantId,
+                orElse: () => throw Exception('Variant not found'),
+              );
+
+              if (variant != null) {
+                // Determine stock. If getProductById populates it, use it.
+                // Otherwise we might need to fetch it specifically.
+                // Assuming variant.stock is populated (as per implementation plan review).
+                await notificationService.checkStockLevel(
+                  variant: variant,
+                  productName: product.name,
+                  currentStock: variant.stock ?? 0,
+                );
+              }
+            }
+          }
+        }
+      } catch (e) {
+        // Silently fail notification checks to not disrupt sale completion
+        debugPrint('Error checking stock levels: $e');
+      }
 
       state = state.copyWith(
         isLoading: false,

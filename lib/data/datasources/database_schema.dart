@@ -15,6 +15,9 @@ class DatabaseSchema {
     // 3. Tablas de Inventario y Lotes
     await _createInventoryTables(db);
 
+    // 3.1 Tabla de Notificaciones
+    await _createNotificationsTable(db);
+
     // 4. Tablas de Clientes y Proveedores
     await _createPartyTables(db);
 
@@ -1001,6 +1004,23 @@ class DatabaseSchema {
         FOREIGN KEY (user_id) REFERENCES ${DatabaseConstants.tableUsers}(id) ON DELETE CASCADE,
         FOREIGN KEY (permission_id) REFERENCES ${DatabaseConstants.tablePermissions}(id) ON DELETE CASCADE,
         FOREIGN KEY (granted_by) REFERENCES ${DatabaseConstants.tableUsers}(id) ON DELETE SET NULL
+      )
+    ''');
+  }
+
+  static Future<void> _createNotificationsTable(Database db) async {
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS ${DatabaseConstants.tableNotifications} (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        title TEXT NOT NULL,
+        body TEXT NOT NULL,
+        timestamp TEXT NOT NULL,
+        is_read INTEGER NOT NULL DEFAULT 0,
+        type TEXT NOT NULL,
+        related_product_id INTEGER,
+        related_variant_id INTEGER,
+        FOREIGN KEY (related_product_id) REFERENCES ${DatabaseConstants.tableProducts}(id) ON DELETE CASCADE,
+        FOREIGN KEY (related_variant_id) REFERENCES ${DatabaseConstants.tableProductVariants}(id) ON DELETE CASCADE
       )
     ''');
   }

@@ -7,6 +7,7 @@ import 'package:posventa/domain/entities/product.dart';
 import 'package:posventa/domain/entities/product_variant.dart';
 import 'package:posventa/domain/entities/warehouse.dart';
 import 'package:posventa/presentation/providers/inventory_providers.dart';
+import 'package:posventa/presentation/providers/notification_providers.dart';
 import 'package:posventa/presentation/providers/permission_provider.dart';
 import 'package:posventa/presentation/providers/product_provider.dart';
 import 'package:posventa/presentation/widgets/inventory/card/inventory_card_widget.dart';
@@ -60,9 +61,21 @@ class _InventoryPageState extends ConsumerState<InventoryPage> {
         foregroundColor: Colors.black,
         elevation: 0,
         actions: [
-          IconButton(
-            icon: const Icon(Icons.notifications_none_rounded),
-            onPressed: () {},
+          Consumer(
+            builder: (context, ref, child) {
+              final unreadAsync = ref.watch(unreadNotificationsStreamProvider);
+
+              return IconButton(
+                icon: Badge(
+                  isLabelVisible: unreadAsync.asData?.value.isNotEmpty ?? false,
+                  label: Text('${unreadAsync.asData?.value.length ?? 0}'),
+                  child: const Icon(Icons.notifications_none_rounded),
+                ),
+                onPressed: () {
+                  context.push('/inventory/notifications');
+                },
+              );
+            },
           ),
           if (hasAdjustAccess)
             Padding(

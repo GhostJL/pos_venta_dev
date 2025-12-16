@@ -16,7 +16,7 @@ class DatabaseHelper {
 
   // Database configuration
   static const _databaseName = "pos.db";
-  static const _databaseVersion = 31;
+  static const _databaseVersion = 32;
 
   // Table names - Exposed from DatabaseConstants for backward compatibility
   static const tableUsers = DatabaseConstants.tableUsers;
@@ -51,6 +51,7 @@ class DatabaseHelper {
   static const tableUnitsOfMeasure = DatabaseConstants.tableUnitsOfMeasure;
   static const tableInventoryLots = DatabaseConstants.tableInventoryLots;
   static const tableSaleItemLots = DatabaseConstants.tableSaleItemLots;
+  static const tableNotifications = DatabaseConstants.tableNotifications;
 
   static Database? _database;
 

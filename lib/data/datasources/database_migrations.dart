@@ -51,6 +51,28 @@ class DatabaseMigrations {
     if (oldVersion < 31 && newVersion >= 31) {
       await _migrateToVersion31(db);
     }
+
+    // Migration from version 31 to 32: Create notifications table
+    if (oldVersion < 32 && newVersion >= 32) {
+      await _migrateToVersion32(db);
+    }
+  }
+
+  static Future<void> _migrateToVersion32(Database db) async {
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS ${DatabaseConstants.tableNotifications} (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        title TEXT NOT NULL,
+        body TEXT NOT NULL,
+        timestamp TEXT NOT NULL,
+        is_read INTEGER NOT NULL DEFAULT 0,
+        type TEXT NOT NULL,
+        related_product_id INTEGER,
+        related_variant_id INTEGER,
+        FOREIGN KEY (related_product_id) REFERENCES ${DatabaseConstants.tableProducts}(id) ON DELETE CASCADE,
+        FOREIGN KEY (related_variant_id) REFERENCES ${DatabaseConstants.tableProductVariants}(id) ON DELETE CASCADE
+      )
+    ''');
   }
 
   static Future<void> _migrateToVersion31(Database db) async {
