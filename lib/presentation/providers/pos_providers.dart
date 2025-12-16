@@ -72,7 +72,8 @@ class POSNotifier extends _$POSNotifier {
     // Validate stock availability
     final stockError = await _validateStock(
       product.id!,
-      1.0 * quantityMultiplier,
+      1.0,
+      variantId: variant?.id,
     );
     if (stockError != null) {
       return stockError;
@@ -193,40 +194,72 @@ class POSNotifier extends _$POSNotifier {
   /// Returns error message if insufficient stock, null if OK
   Future<String?> _validateStock(
     int productId,
-    double additionalQuantity,
-  ) async {
+    double additionalQuantity, {
+    int? variantId,
+  }) async {
     try {
-      // Get current warehouse from active session
-      final currentSession = await ref.read(getCurrentSessionProvider).call();
-      if (currentSession == null) {
-        return 'No hay sesión de caja activa';
+      // Get current values from product list to ensure we have up-to-date stock including variants
+      final productsAsync = ref.read(productListProvider);
+
+      // If we don't have products loaded, fall back to old method (only for non-variants or if critical)
+      // But for POS we generally have them.
+      if (!productsAsync.hasValue) {
+        // Fallback or error? Let's try to proceed with old logic ONLY if no variantId
+        if (variantId == null) {
+          // ... (existing fallback logic if needed, or just fail safe)
+          // For now, let's assume we need the list.
+          // If the list is empty/loading, we might block or try to fetch.
+          // Given the sync nature of POS usually, let's assume valid state or fail.
+          return 'Inventario no disponible (Cargando productos...)';
+        }
+        return 'Inventario no disponible para validar variante';
       }
 
-      // Get inventory for this product in current warehouse
-      final inventories = await ref
-          .read(getInventoryByProductProvider)
-          .call(productId);
-
-      final inventory = inventories.firstWhere(
-        (inv) => inv.warehouseId == currentSession.warehouseId,
-        orElse: () => throw Exception('No inventory'),
+      final products = productsAsync.value!;
+      final product = products.firstWhere(
+        (p) => p.id == productId,
+        orElse: () => throw Exception('Producto no encontrado'),
       );
+
+      double availableStock = 0.0;
+      String stockLabel = '';
+
+      if (variantId != null) {
+        final variant = product.variants?.firstWhere(
+          (v) => v.id == variantId,
+          orElse: () => throw Exception('Variante no encontrada'),
+        );
+        if (variant == null) return 'Variante no válida';
+
+        // Use variant specific stock
+        // If stock is null, we assume 0 or infinite depending on logic? Usually 0.
+        availableStock = variant.stock ?? 0.0;
+        stockLabel = 'de la variante';
+      } else {
+        // Base product stock
+        availableStock = product.stock == null
+            ? 0.0
+            : product.stock!.toDouble();
+      }
 
       // Calculate total quantity needed (existing in cart + new)
       final currentStockInCart = state.cart
-          .where((item) => item.productId == productId)
-          .fold(0.0, (sum, item) => sum + (item.quantity * item.unitsPerPack));
+          .where(
+            (item) =>
+                item.productId == productId && item.variantId == variantId,
+          )
+          .fold(0.0, (sum, item) => sum + item.quantity);
 
       final totalNeeded = currentStockInCart + additionalQuantity;
 
       // Check if enough stock
-      if (inventory.quantityOnHand < totalNeeded) {
-        return 'Stock insuficiente (disponible: ${inventory.quantityOnHand.toStringAsFixed(0)})';
+      if (availableStock < totalNeeded) {
+        return 'Stock insuficiente$stockLabel (disponible: ${availableStock.toStringAsFixed(0)})';
       }
 
       return null; // Stock OK
     } catch (e) {
-      return 'Producto sin inventario registrado';
+      return 'Error al validar stock: $e';
     }
   }
 
@@ -239,26 +272,30 @@ class POSNotifier extends _$POSNotifier {
     state = state.copyWith(cart: newCart);
   }
 
-  Future<String?> updateQuantity(int productId, double quantity) async {
+  Future<String?> updateQuantity(
+    int productId,
+    double quantity, {
+    int? variantId,
+  }) async {
     if (quantity <= 0) {
-      // Find the item to get its variantId
-      final item = state.cart.firstWhere(
-        (i) => i.productId == productId,
-        orElse: () => state.cart.first,
-      );
-      removeFromCart(productId, variantId: item.variantId);
+      removeFromCart(productId, variantId: variantId);
       return null;
     }
 
-    final index = state.cart.indexWhere((item) => item.productId == productId);
+    final index = state.cart.indexWhere(
+      (item) => item.productId == productId && item.variantId == variantId,
+    );
     if (index >= 0) {
       final existingItem = state.cart[index];
 
       // Validate stock if increasing quantity
       if (quantity > existingItem.quantity) {
-        final additionalNeeded =
-            (quantity - existingItem.quantity) * existingItem.unitsPerPack;
-        final stockError = await _validateStock(productId, additionalNeeded);
+        final additionalNeeded = quantity - existingItem.quantity;
+        final stockError = await _validateStock(
+          productId,
+          additionalNeeded,
+          variantId: variantId,
+        );
         if (stockError != null) {
           return stockError;
         }

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:posventa/presentation/widgets/products/shared/product_card.dart';
+import 'package:posventa/presentation/widgets/pos/product_grid/pos_product_item.dart';
 import 'package:posventa/presentation/widgets/pos/product_grid/product_grid_item_model.dart';
 
 class ProductGridView extends StatelessWidget {
@@ -34,17 +34,16 @@ class ProductGridView extends StatelessWidget {
       padding: const EdgeInsets.all(12),
       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: crossAxisCount,
-        childAspectRatio: 1.2,
+        childAspectRatio: 1,
         crossAxisSpacing: 8,
         mainAxisSpacing: 8,
       ),
       itemCount: items.length,
       itemBuilder: (context, index) {
         final item = items[index];
-        return ProductCard(
+        return PosProductItem(
           product: item.product,
           variant: item.variant,
-          isMobile: isMobile,
           onTap: () => onItemTap(item),
         );
       },
