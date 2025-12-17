@@ -479,7 +479,33 @@ class _VariantItemRow extends StatelessWidget {
         const SizedBox(width: 4),
         IconButton(
           icon: const Icon(Icons.delete_outline_rounded, size: 20),
-          onPressed: () => onDelete(index),
+          onPressed: () {
+            showDialog(
+              context: context,
+              builder: (context) => AlertDialog(
+                title: const Text('Eliminar Variante'),
+                content: const Text(
+                  '¿Estás seguro de que deseas eliminar esta variante? Esta acción no se puede deshacer.',
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    child: const Text('Cancelar'),
+                  ),
+                  TextButton(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                      onDelete(index);
+                    },
+                    child: Text(
+                      'Eliminar',
+                      style: TextStyle(color: colorScheme.error),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
           tooltip: 'Eliminar',
           visualDensity: VisualDensity.compact,
           color: colorScheme.error,

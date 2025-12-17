@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:posventa/domain/entities/product.dart';
-import 'package:posventa/domain/entities/product_variant.dart';
-import 'package:posventa/presentation/providers/product_form_provider.dart';
-import 'package:posventa/presentation/widgets/products/forms/product_form/product_variants_list.dart';
-import 'package:posventa/presentation/widgets/products/forms/variant_form_page.dart';
+import '../../../../domain/entities/product.dart';
+import '../../../../domain/entities/product_variant.dart';
+import '../../providers/product_form_provider.dart';
+import 'variant_list_page.dart';
 
 class VariantTypeSelectionPage extends ConsumerWidget {
   final Product product;
@@ -15,9 +14,9 @@ class VariantTypeSelectionPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     // Ensure the provider is initialized with the product data
     final provider = productFormProvider(product);
-    // We access the state just to ensure it's built/available
-    // ignore: unused_local_variable
-    final state = ref.watch(provider);
+    // State is watched just to ensure provider ALIVE or updated?
+    // Actually we don't need to watch state here if we are just a menu.
+    // The VariantListPage will watch it.
 
     return Scaffold(
       appBar: AppBar(
@@ -128,81 +127,9 @@ class VariantTypeSelectionPage extends ConsumerWidget {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => Scaffold(
-          appBar: AppBar(
-            title: Text(
-              type == VariantType.sales
-                  ? 'Variantes de Venta'
-                  : 'Variantes de Compra',
-            ),
-          ),
-          body: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: ProductVariantsList(
-              product: product,
-              filterType: type,
-              onAddVariant: (_) => _openVariantForm(context, ref, type),
-              onEditVariant: (variant, index) => _openVariantForm(
-                context,
-                ref,
-                type,
-                variant: variant,
-                index: index,
-              ),
-            ),
-          ),
-        ),
+        builder: (context) =>
+            VariantListPage(product: product, filterType: type),
       ),
     );
-  }
-
-  Future<void> _openVariantForm(
-    BuildContext context,
-    WidgetRef ref,
-    VariantType type, {
-    ProductVariant? variant,
-    int? index,
-  }) async {
-    final provider = productFormProvider(product);
-    final currentVariants = ref.read(provider).variants;
-
-    // Get existing barcodes to prevent duplicates
-    final existingBarcodes = currentVariants
-        .where((v) => v != variant && v.barcode != null)
-        .map((v) => v.barcode!)
-        .toList();
-
-    // Pre-configure the new variant with the selected type and productId
-    final initialVariant =
-        variant ??
-        ProductVariant(
-          productId: product.id ?? 0,
-          variantName: '',
-          priceCents: 0,
-          costPriceCents: 0,
-          type: type, // IMPLICITLY SET TYPE BASED ON SELECTION
-          isForSale: type == VariantType.sales, // Default for sales is true
-        );
-
-    final newVariant = await Navigator.push<ProductVariant>(
-      context,
-      MaterialPageRoute(
-        builder: (context) => VariantFormPage(
-          variant: initialVariant,
-          productId: product.id,
-          productName: product.name, // Pass product name
-          existingBarcodes: existingBarcodes,
-          availableVariants: currentVariants,
-        ),
-      ),
-    );
-
-    if (newVariant != null) {
-      if (variant != null && index != null) {
-        ref.read(provider.notifier).updateVariant(index, newVariant);
-      } else {
-        ref.read(provider.notifier).addVariant(newVariant);
-      }
-    }
   }
 }

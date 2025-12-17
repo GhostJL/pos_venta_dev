@@ -9,6 +9,12 @@ class ProductBasicInfoSection extends StatelessWidget {
   final VoidCallback onScanBarcode;
   final bool showBarcode;
 
+  // New callbacks
+  final ValueChanged<String>? onNameChanged;
+  final ValueChanged<String>? onCodeChanged;
+  final ValueChanged<String>? onBarcodeChanged;
+  final ValueChanged<String>? onDescriptionChanged;
+
   const ProductBasicInfoSection({
     super.key,
     required this.nameController,
@@ -17,6 +23,10 @@ class ProductBasicInfoSection extends StatelessWidget {
     required this.descriptionController,
     required this.onScanBarcode,
     this.showBarcode = true,
+    this.onNameChanged,
+    this.onCodeChanged,
+    this.onBarcodeChanged,
+    this.onDescriptionChanged,
   });
 
   @override
@@ -26,6 +36,7 @@ class ProductBasicInfoSection extends StatelessWidget {
       children: [
         TextFormField(
           controller: nameController,
+          onChanged: onNameChanged,
           decoration: const InputDecoration(
             labelText: 'Nombre del Producto',
             prefixIcon: Icon(Icons.shopping_bag),
@@ -35,6 +46,7 @@ class ProductBasicInfoSection extends StatelessWidget {
         const SizedBox(height: 16),
         TextFormField(
           controller: codeController,
+          onChanged: onCodeChanged,
           decoration: const InputDecoration(
             labelText: 'Código / Referencia Interna',
             helperText: 'Código único para identificar el producto base',
@@ -47,6 +59,7 @@ class ProductBasicInfoSection extends StatelessWidget {
           const SizedBox(height: 16),
           TextFormField(
             controller: barcodeController,
+            onChanged: onBarcodeChanged,
             decoration: InputDecoration(
               labelText: 'Código de Barras Principal',
               helperText: 'Código de barras del producto base',
@@ -63,6 +76,7 @@ class ProductBasicInfoSection extends StatelessWidget {
         const SizedBox(height: 16),
         TextFormField(
           controller: descriptionController,
+          onChanged: onDescriptionChanged,
           decoration: const InputDecoration(
             labelText: 'Descripción (Opcional)',
             prefixIcon: Icon(Icons.description),

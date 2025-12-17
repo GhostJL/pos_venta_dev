@@ -105,13 +105,8 @@ class ProductFormPageState extends ConsumerState<ProductFormPage> {
     }
 
     final notifier = ref.read(productFormProvider(widget.product).notifier);
-
-    await notifier.validateAndSubmit(
-      name: _nameController.text,
-      code: _codeController.text,
-      barcode: _barcodeController.text,
-      description: _descriptionController.text,
-    );
+    // Values are now in state, so we can call without args or with nulls
+    await notifier.validateAndSubmit();
   }
 
   @override
@@ -119,6 +114,7 @@ class ProductFormPageState extends ConsumerState<ProductFormPage> {
     final provider = productFormProvider(widget.product);
     final isLoading = ref.watch(provider.select((s) => s.isLoading));
     final isNewProduct = widget.product == null;
+    final notifier = ref.read(provider.notifier);
 
     // Listen for success or error
     ref.listen<ProductFormState>(provider, (previous, next) {
@@ -184,6 +180,11 @@ class ProductFormPageState extends ConsumerState<ProductFormPage> {
               onScanBarcode: _openBarcodeScanner,
               showBarcode:
                   false, // Don't show barcode in base product as per request, use Code/SKU
+              // Add listeners to sync with provider
+              onNameChanged: notifier.setName,
+              onCodeChanged: notifier.setCode,
+              onBarcodeChanged: notifier.setBarcode,
+              onDescriptionChanged: notifier.setDescription,
             ),
 
             const SizedBox(height: 16),

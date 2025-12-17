@@ -1,7 +1,7 @@
 import 'package:posventa/domain/entities/product.dart';
 import 'package:posventa/domain/entities/product_tax.dart';
 import 'package:posventa/domain/entities/product_variant.dart';
-import 'package:posventa/presentation/providers/product_provider.dart';
+
 import 'package:posventa/presentation/providers/providers.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:posventa/domain/entities/tax_rate.dart';
@@ -11,6 +11,10 @@ part 'product_form_provider.g.dart';
 
 class ProductFormState {
   final Product? initialProduct;
+  final String? name;
+  final String? code;
+  final String? barcode;
+  final String? description;
   final int? departmentId;
   final int? categoryId;
   final int? brandId;
@@ -29,6 +33,10 @@ class ProductFormState {
 
   ProductFormState({
     this.initialProduct,
+    this.name,
+    this.code,
+    this.barcode,
+    this.description,
     this.departmentId,
     this.categoryId,
     this.brandId,
@@ -48,6 +56,10 @@ class ProductFormState {
 
   ProductFormState copyWith({
     Product? initialProduct,
+    String? name,
+    String? code,
+    String? barcode,
+    String? description,
     int? departmentId,
     int? categoryId,
     int? brandId,
@@ -66,6 +78,10 @@ class ProductFormState {
   }) {
     return ProductFormState(
       initialProduct: initialProduct ?? this.initialProduct,
+      name: name ?? this.name,
+      code: code ?? this.code,
+      barcode: barcode ?? this.barcode,
+      description: description ?? this.description,
       departmentId: departmentId ?? this.departmentId,
       categoryId: categoryId ?? this.categoryId,
       brandId: brandId ?? this.brandId,
@@ -92,6 +108,10 @@ class ProductFormNotifier extends _$ProductFormNotifier {
     if (product != null) {
       return ProductFormState(
         initialProduct: product,
+        name: product.name,
+        code: product.code,
+        barcode: product.barcode,
+        description: product.description,
         departmentId: product.departmentId,
         categoryId: product.categoryId,
         brandId: product.brandId,
@@ -112,6 +132,11 @@ class ProductFormNotifier extends _$ProductFormNotifier {
     return ProductFormState();
   }
 
+  void setName(String value) => state = state.copyWith(name: value);
+  void setCode(String value) => state = state.copyWith(code: value);
+  void setBarcode(String value) => state = state.copyWith(barcode: value);
+  void setDescription(String value) =>
+      state = state.copyWith(description: value);
   void setHasVariants(bool value) => state = state.copyWith(hasVariants: value);
   void setUsesTaxes(bool value) => state = state.copyWith(usesTaxes: value);
 
@@ -147,15 +172,35 @@ class ProductFormNotifier extends _$ProductFormNotifier {
   }
 
   Future<bool> validateAndSubmit({
-    required String name,
-    required String code,
-    required String
-    barcode, // Keep barcode for Base Product if needed, or remove if not.
-    required String description,
+    String? name,
+    String? code,
+    String? barcode,
+    String? description,
   }) async {
     state = state.copyWith(isLoading: true, error: null, isSuccess: false);
 
+    // Use values from args or state fallback
+    final finalName = name ?? state.name;
+    final finalCode = code ?? state.code;
+    final finalBarcode = barcode ?? state.barcode ?? '';
+    final finalDescription = description ?? state.description;
+
     try {
+      if (finalName == null || finalName.isEmpty) {
+        state = state.copyWith(
+          isLoading: false,
+          error: 'El nombre del producto es requerido.',
+        );
+        return false;
+      }
+      if (finalCode == null || finalCode.isEmpty) {
+        state = state.copyWith(
+          isLoading: false,
+          error: 'El código/SKU del producto es requerido.',
+        );
+        return false;
+      }
+
       final productRepo = ref.read(productRepositoryProvider);
 
       // Validation: If taxes are enabled, at least one must be selected
@@ -193,7 +238,7 @@ class ProductFormNotifier extends _$ProductFormNotifier {
       }
 
       final isCodeUnique = await productRepo.isCodeUnique(
-        code,
+        finalCode,
         excludeId: state.initialProduct?.id,
       );
       if (!isCodeUnique) {
@@ -210,9 +255,9 @@ class ProductFormNotifier extends _$ProductFormNotifier {
       // Re-reading: "Información básica: Nombre. Descripción. Tiene caducidad. Si aplica impuestos."
       // Barcode is usually needed. ProductBasicInfoSection has it. I'll keep it.
 
-      if (barcode.isNotEmpty) {
+      if (finalBarcode.isNotEmpty) {
         final isBarcodeUnique = await productRepo.isBarcodeUnique(
-          barcode,
+          finalBarcode,
           excludeId: state.initialProduct?.id,
         );
         // Warning: isBarcodeUnique checks variants too? It usually checks products table and variants table?
@@ -266,9 +311,9 @@ class ProductFormNotifier extends _$ProductFormNotifier {
 
       final newProduct = Product(
         id: state.initialProduct?.id,
-        name: name,
-        code: code,
-        description: description,
+        name: finalName,
+        code: finalCode,
+        description: finalDescription,
         departmentId: state.departmentId!,
         categoryId: state.categoryId!,
         brandId: state.brandId,
@@ -276,23 +321,45 @@ class ProductFormNotifier extends _$ProductFormNotifier {
         unitId: state.unitId!,
         isSoldByWeight: state.isSoldByWeight,
         productTaxes: finalProductTaxes,
-        variants:
-            state.initialProduct?.variants ??
-            [], // Keep existing variants if any
+        variants: state.variants,
         isActive: state.isActive,
         hasExpiration: state.hasExpiration,
       );
 
+      Product savedProduct;
+      // Use repo directly to ensure we get the ID for new products
+      // and can update the local state correctly
       if (state.initialProduct == null) {
-        await ref.read(productListProvider.notifier).addProduct(newProduct);
+        final newId = await productRepo.createProduct(newProduct);
+        savedProduct = newProduct.copyWith(id: newId);
+        // Trigger list refresh if needed, though stream should handle it
+        // ref.invalidate(productListProvider);
       } else {
-        await ref.read(productListProvider.notifier).updateProduct(newProduct);
+        await productRepo.updateProduct(newProduct);
+        savedProduct = newProduct;
       }
 
-      state = state.copyWith(isLoading: false, isSuccess: true);
+      // Update initialProduct so dirty checks work correctly
+      state = state.copyWith(
+        isLoading: false,
+        isSuccess: true,
+        error: null,
+        initialProduct: savedProduct,
+        // Also update fields to match saved product if needed,
+        // essentially re-syncing to "clean" state
+        name: savedProduct.name,
+        code: savedProduct.code,
+        barcode: savedProduct.barcode,
+        description: savedProduct.description,
+        variants: savedProduct.variants ?? [],
+      );
+
       return true;
     } catch (e) {
-      state = state.copyWith(isLoading: false, error: e.toString());
+      state = state.copyWith(
+        isLoading: false,
+        error: 'Error al guardar el producto: $e',
+      );
       return false;
     }
   }
