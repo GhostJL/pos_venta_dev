@@ -400,36 +400,71 @@ class SaleReturnRepositoryImpl implements SaleReturnRepository {
       );
     }
 
-    // Restore inventory to ALL lots that were deducted (not just the primary lot)
+    // Restore inventory to lots that were deducted (Fix for partial returns)
+    // We only restore the quantity associated with this SPECIFIC return item.
+
+    double remainingToRestore =
+        item.quantity; // This is in sales units (not base units)
+
     // Query sale_item_lots to get all lot deductions for this sale item
     final lotDeductionsResult = await txn.query(
       DatabaseHelper.tableSaleItemLots,
       where: 'sale_item_id = ?',
       whereArgs: [item.saleItemId],
+      orderBy: 'id DESC', // LIFO-ish restoration
     );
 
-    // Restore quantity to each lot that was deducted
+    // Iterate through deductions and restore
     for (final deduction in lotDeductionsResult) {
+      if (remainingToRestore <= 0) break;
+
+      final deductionId = deduction['id'] as int;
       final deductionLotId = deduction['lot_id'] as int;
-      final quantityDeducted = (deduction['quantity_deducted'] as num)
+      final quantityOriginallyDeducted = (deduction['quantity_deducted'] as num)
           .toDouble();
 
-      await txn.rawUpdate(
-        '''
-        UPDATE ${DatabaseHelper.tableInventoryLots}
-        SET quantity = quantity + ?
-        WHERE id = ?
-      ''',
-        [quantityDeducted, deductionLotId],
-      );
-    }
+      // We can only restore up to what was deducted from this specific lot linkage
+      // AND up to what we actually need to return.
+      final amountToRestoreToThisLot =
+          remainingToRestore < quantityOriginallyDeducted
+          ? remainingToRestore
+          : quantityOriginallyDeducted;
 
-    // Delete lot deduction records for this sale item
-    await txn.delete(
-      DatabaseHelper.tableSaleItemLots,
-      where: 'sale_item_id = ?',
-      whereArgs: [item.saleItemId],
-    );
+      if (amountToRestoreToThisLot > 0) {
+        // 1. Restore quantity to the actual Inventory Lot
+        await txn.rawUpdate(
+          '''
+          UPDATE ${DatabaseHelper.tableInventoryLots}
+          SET quantity = quantity + ?
+          WHERE id = ?
+          ''',
+          [amountToRestoreToThisLot, deductionLotId],
+        );
+
+        // 2. Update tracking in sale_item_lots
+        if (amountToRestoreToThisLot >= quantityOriginallyDeducted) {
+          // Fully reversed this deduction
+          await txn.delete(
+            DatabaseHelper.tableSaleItemLots,
+            where: 'id = ?',
+            whereArgs: [deductionId],
+          );
+        } else {
+          // Partially reversed
+          await txn.update(
+            DatabaseHelper.tableSaleItemLots,
+            {
+              'quantity_deducted':
+                  quantityOriginallyDeducted - amountToRestoreToThisLot,
+            },
+            where: 'id = ?',
+            whereArgs: [deductionId],
+          );
+        }
+
+        remainingToRestore -= amountToRestoreToThisLot;
+      }
+    }
   }
 
   Future<void> _createCashMovement(
