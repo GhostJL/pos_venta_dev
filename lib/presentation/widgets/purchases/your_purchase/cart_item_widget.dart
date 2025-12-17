@@ -27,50 +27,57 @@ class CartItemWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final helper = CartItemHelper(item: item, product: product);
-    final isWide = MediaQuery.of(context).size.width > 600;
 
-    return Container(
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Theme.of(context).colorScheme.outline),
-        boxShadow: [
-          BoxShadow(
-            color: Theme.of(context).colorScheme.shadow.withValues(alpha: 0.02),
-            blurRadius: 8,
-            offset: Offset(0, 2),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isWide = constraints.maxWidth > 520;
+
+        return Container(
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.surface,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: Theme.of(context).colorScheme.outline),
+            boxShadow: [
+              BoxShadow(
+                color: Theme.of(
+                  context,
+                ).colorScheme.shadow.withValues(alpha: 0.02),
+                blurRadius: 8,
+                offset: Offset(0, 2),
+              ),
+            ],
           ),
-        ],
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(16),
-        child: Material(
-          color: Colors.transparent,
-          child: InkWell(
-            onTap: () => onEditItem(index),
-            child: Padding(
-              padding: EdgeInsets.all(16),
-              child: isWide
-                  ? CartItemWideLayout(
-                      item: item,
-                      helper: helper,
-                      index: index,
-                      onEditItem: onEditItem,
-                      onRemoveItem: onRemoveItem,
-                      onQuantityChanged: onQuantityChanged,
-                    )
-                  : CartItemNarrowLayout(
-                      item: item,
-                      helper: helper,
-                      index: index,
-                      onEditItem: onEditItem,
-                      onRemoveItem: onRemoveItem,
-                      onQuantityChanged: onQuantityChanged,
-                    ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(16),
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: () => onEditItem(index),
+                child: Padding(
+                  padding: EdgeInsets.all(16),
+                  child: isWide
+                      ? CartItemWideLayout(
+                          item: item,
+                          helper: helper,
+                          index: index,
+                          onEditItem: onEditItem,
+                          onRemoveItem: onRemoveItem,
+                          onQuantityChanged: onQuantityChanged,
+                        )
+                      : CartItemNarrowLayout(
+                          item: item,
+                          helper: helper,
+                          index: index,
+                          onEditItem: onEditItem,
+                          onRemoveItem: onRemoveItem,
+                          onQuantityChanged: onQuantityChanged,
+                        ),
+                ),
+              ),
             ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }
