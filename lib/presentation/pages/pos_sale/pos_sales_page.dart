@@ -67,61 +67,13 @@ class PosSalesPage extends ConsumerWidget {
   }
 }
 
-// Layout para móviles con tabs
-class _MobileLayout extends StatefulWidget {
+// Layout para móviles sin tabs (diseño refactorizado)
+class _MobileLayout extends StatelessWidget {
   const _MobileLayout();
 
   @override
-  State<_MobileLayout> createState() => _MobileLayoutState();
-}
-
-class _MobileLayoutState extends State<_MobileLayout>
-    with SingleTickerProviderStateMixin {
-  late TabController _tabController;
-
-  @override
-  void initState() {
-    super.initState();
-    _tabController = TabController(length: 2, vsync: this);
-  }
-
-  @override
-  void dispose() {
-    _tabController.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-
-    return Column(
-      children: [
-        Material(
-          color: colorScheme.surface,
-          child: TabBar(
-            dividerHeight: 0,
-            controller: _tabController,
-            indicatorColor: colorScheme.primary,
-            labelColor: colorScheme.onSurface,
-            unselectedLabelColor: colorScheme.onSurfaceVariant,
-            tabs: const [
-              Tab(text: 'Productos'),
-              Tab(text: 'Carrito'),
-            ],
-          ),
-        ),
-        Expanded(
-          child: TabBarView(
-            controller: _tabController,
-            children: const [
-              ProductGridSection(isMobile: true),
-              CartSection(isMobile: true),
-            ],
-          ),
-        ),
-      ],
-    );
+    return const ProductGridSection(isMobile: true);
   }
 }
 

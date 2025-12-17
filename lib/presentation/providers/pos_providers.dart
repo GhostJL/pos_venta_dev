@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:posventa/domain/entities/customer.dart';
 import 'package:posventa/domain/entities/product.dart';
 import 'package:posventa/domain/entities/product_variant.dart';
@@ -464,3 +465,15 @@ class POSNotifier extends _$POSNotifier {
     }
   }
 }
+
+final posTaxBreakdownProvider = Provider<Map<String, double>>((ref) {
+  final cart = ref.watch(pOSProvider.select((s) => s.cart));
+  final Map<String, double> taxBreakdown = {};
+  for (var item in cart) {
+    for (var tax in item.taxes) {
+      final key = '${tax.taxName} (${(tax.taxRate * 100).toStringAsFixed(0)}%)';
+      taxBreakdown[key] = (taxBreakdown[key] ?? 0) + (tax.taxAmountCents / 100);
+    }
+  }
+  return taxBreakdown;
+});

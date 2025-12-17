@@ -78,14 +78,7 @@ class _ProductGridSectionState extends ConsumerState<ProductGridSection>
           // Mostrar error de stock
           _showStockError(scannerContext, error);
         } else if (scannerContext.mounted) {
-          // Mostrar feedback de éxito
-          _showProductAdded(
-            scannerContext,
-            matchedVariant != null
-                ? '${product.name} (${matchedVariant.description})'
-                : product.name,
-            matchedVariant != null ? matchedVariant.description : '',
-          );
+          // Success feedback handled silently or via UI update
         }
       } else if (scannerContext.mounted) {
         // Producto no encontrado
@@ -122,11 +115,7 @@ class _ProductGridSectionState extends ConsumerState<ProductGridSection>
     if (error != null && mounted) {
       _showStockError(context, error);
     } else if (mounted) {
-      _showProductAdded(
-        context,
-        item.product.name,
-        item.variant?.description ?? '',
-      );
+      // Success feedback handled silently or via UI update
     }
   }
 
@@ -181,89 +170,43 @@ class _ProductGridSectionState extends ConsumerState<ProductGridSection>
             ),
           ),
         ),
-        // Charge Bottom Bar
-        ChargeBottomBar(
-          cartItems: posState.cart,
-          total: posState.total,
-          onCharge: posState.cart.isEmpty
-              ? null
-              : () {
-                  showDialog(
-                    context: context,
-                    builder: (context) => const PaymentDialog(),
+        // Charge Bottom Bar (Only for Mobile)
+        if (widget.isMobile)
+          ChargeBottomBar(
+            cartItems: posState.cart,
+            total: posState.total,
+            onCharge: posState.cart.isEmpty
+                ? null
+                : () {
+                    showDialog(
+                      context: context,
+                      builder: (context) => const PaymentDialog(),
+                    );
+                  },
+            onRemoveItem: (item) {
+              ref
+                  .read(pOSProvider.notifier)
+                  .removeFromCart(item.productId, variantId: item.variantId);
+            },
+            onUpdateQuantity: (item, quantity) async {
+              final error = await ref
+                  .read(pOSProvider.notifier)
+                  .updateQuantity(
+                    item.productId,
+                    quantity,
+                    variantId: item.variantId,
                   );
-                },
-          onRemoveItem: (item) {
-            ref
-                .read(pOSProvider.notifier)
-                .removeFromCart(item.productId, variantId: item.variantId);
-          },
-          onUpdateQuantity: (item, quantity) async {
-            final error = await ref
-                .read(pOSProvider.notifier)
-                .updateQuantity(
-                  item.productId,
-                  quantity,
-                  variantId: item.variantId,
-                );
-            if (error != null && context.mounted) {
-              _showStockError(context, error);
-            }
-          },
-        ),
+              if (error != null && context.mounted) {
+                _showStockError(context, error);
+              }
+            },
+          ),
       ],
     );
   }
 
-  void _showProductAdded(
-    BuildContext context,
-    String productName,
-    String variantName,
-  ) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              Icons.check_circle,
-              size: 18,
-              color: AppTheme.onActionAddToCart,
-            ),
-            const SizedBox(width: 16),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  productName,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    color: AppTheme.onActionAddToCart,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                Text(
-                  variantName.isNotEmpty ? '($variantName)' : '',
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    color: AppTheme.onActionAddToCart,
-                    fontSize: 10,
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-        duration: const Duration(milliseconds: 500),
-        behavior: SnackBarBehavior.floating,
-        backgroundColor: AppTheme.actionAddToCart,
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      ),
-    );
-  }
-
   void _showStockError(BuildContext context, String message) {
+    ScaffoldMessenger.of(context).removeCurrentSnackBar();
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Row(

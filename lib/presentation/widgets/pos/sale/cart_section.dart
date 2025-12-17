@@ -145,7 +145,6 @@ class CartSection extends ConsumerWidget {
                         },
                         quantity: item.quantity,
                         unitPrice: item.unitPrice,
-                        tax: item.tax,
                         total: item.total,
                       );
                     },

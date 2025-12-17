@@ -8,7 +8,6 @@ class CartItemWidget extends StatelessWidget {
   final Function() onTapMoreProduct;
   final double quantity;
   final double unitPrice;
-  final double tax;
   final double total;
 
   const CartItemWidget({
@@ -20,7 +19,6 @@ class CartItemWidget extends StatelessWidget {
     required this.onTapMoreProduct,
     required this.quantity,
     required this.unitPrice,
-    required this.tax,
     required this.total,
   });
 
@@ -134,13 +132,6 @@ class CartItemWidget extends StatelessWidget {
                       fontSize: 12,
                     ),
                   ),
-                  if (tax > 0)
-                    Text(
-                      '+ Imp: \$${tax.toStringAsFixed(2)}',
-                      style: Theme.of(
-                        context,
-                      ).textTheme.bodySmall?.copyWith(fontSize: 11),
-                    ),
                   const SizedBox(height: 4),
                   Text(
                     '\$${total.toStringAsFixed(2)}',
