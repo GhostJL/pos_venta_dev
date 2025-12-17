@@ -6,7 +6,6 @@ import 'package:posventa/domain/entities/product.dart';
 import 'package:posventa/domain/entities/product_variant.dart';
 import 'package:posventa/presentation/providers/pos_providers.dart';
 import 'package:posventa/presentation/providers/product_provider.dart';
-import 'package:posventa/presentation/widgets/pos/payment/payment_dialog.dart';
 import 'package:posventa/presentation/widgets/pos/product_grid/product_grid_item_model.dart';
 import 'package:posventa/presentation/widgets/pos/product_grid/product_grid_view.dart';
 import 'package:posventa/presentation/widgets/pos/product_grid/product_search_bar.dart';
@@ -122,7 +121,8 @@ class _ProductGridSectionState extends ConsumerState<ProductGridSection>
   @override
   Widget build(BuildContext context) {
     final productsAsync = ref.watch(productListProvider);
-    final posState = ref.watch(pOSProvider);
+    // Remove unnecessary watch of pOSProvider to prevent full redraws
+    // final posState = ref.watch(pOSProvider);
 
     return Column(
       children: [
@@ -171,36 +171,7 @@ class _ProductGridSectionState extends ConsumerState<ProductGridSection>
           ),
         ),
         // Charge Bottom Bar (Only for Mobile)
-        if (widget.isMobile)
-          ChargeBottomBar(
-            cartItems: posState.cart,
-            total: posState.total,
-            onCharge: posState.cart.isEmpty
-                ? null
-                : () {
-                    showDialog(
-                      context: context,
-                      builder: (context) => const PaymentDialog(),
-                    );
-                  },
-            onRemoveItem: (item) {
-              ref
-                  .read(pOSProvider.notifier)
-                  .removeFromCart(item.productId, variantId: item.variantId);
-            },
-            onUpdateQuantity: (item, quantity) async {
-              final error = await ref
-                  .read(pOSProvider.notifier)
-                  .updateQuantity(
-                    item.productId,
-                    quantity,
-                    variantId: item.variantId,
-                  );
-              if (error != null && context.mounted) {
-                _showStockError(context, error);
-              }
-            },
-          ),
+        if (widget.isMobile) const ConnectedChargeBottomBar(),
       ],
     );
   }
