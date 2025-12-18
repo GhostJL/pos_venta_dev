@@ -6,13 +6,17 @@ import 'package:posventa/domain/entities/product_variant.dart';
 class PosProductItem extends StatelessWidget {
   final Product product;
   final ProductVariant? variant;
+  final double quantityInCart;
   final VoidCallback onTap;
+  final VoidCallback onLongPress;
 
   const PosProductItem({
     super.key,
     required this.product,
     this.variant,
+    this.quantityInCart = 0,
     required this.onTap,
+    required this.onLongPress,
   });
 
   @override
@@ -46,6 +50,7 @@ class PosProductItem extends StatelessWidget {
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: onTap,
+        onLongPress: onLongPress,
         child: Padding(
           padding: const EdgeInsets.all(10.0),
           child: Column(
@@ -92,7 +97,7 @@ class PosProductItem extends StatelessWidget {
 
               const Spacer(),
 
-              // Bottom Row: Stock and Add Button
+              // Bottom Row: Stock and Add/Quantity Button
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -118,26 +123,66 @@ class PosProductItem extends StatelessWidget {
                     ),
                   ),
 
-                  // Add Button
-                  Container(
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      color: colorScheme.primary,
-                      shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                          color: colorScheme.primary.withValues(alpha: 0.3),
-                          blurRadius: 6,
-                          offset: const Offset(0, 3),
+                  // Add/Quantity Button
+                  Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      Container(
+                        width: 40,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          color: quantityInCart > 0
+                              ? colorScheme.secondaryContainer
+                              : colorScheme.primary,
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color:
+                                  (quantityInCart > 0
+                                          ? colorScheme.secondaryContainer
+                                          : colorScheme.primary)
+                                      .withValues(alpha: 0.3),
+                              blurRadius: 6,
+                              offset: const Offset(0, 3),
+                            ),
+                          ],
                         ),
-                      ],
-                    ),
-                    child: Icon(
-                      Icons.add,
-                      color: colorScheme.onPrimary,
-                      size: 24,
-                    ),
+                        child: Icon(
+                          Icons.add,
+                          color: quantityInCart > 0
+                              ? colorScheme.onSecondaryContainer
+                              : colorScheme.onPrimary,
+                          size: 24,
+                        ),
+                      ),
+                      if (quantityInCart > 0)
+                        Positioned(
+                          top: -8,
+                          right: -8,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 6,
+                              vertical: 2,
+                            ),
+                            decoration: BoxDecoration(
+                              color: colorScheme.primary,
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(
+                                color: colorScheme.surface,
+                                width: 2,
+                              ),
+                            ),
+                            child: Text(
+                              '${quantityInCart.toStringAsFixed(0)} +',
+                              style: theme.textTheme.labelSmall?.copyWith(
+                                color: colorScheme.onPrimary,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 10,
+                              ),
+                            ),
+                          ),
+                        ),
+                    ],
                   ),
                 ],
               ),

@@ -7,6 +7,7 @@ import 'package:posventa/presentation/providers/pos_providers.dart';
 import 'package:posventa/presentation/providers/product_provider.dart';
 import 'package:posventa/presentation/widgets/pos/product_grid/product_grid_item_model.dart';
 import 'package:posventa/presentation/widgets/pos/product_grid/product_grid_view.dart';
+import 'package:posventa/presentation/widgets/pos/product_grid/product_quantity_dialog.dart';
 import 'package:posventa/presentation/widgets/pos/product_grid/product_search_bar.dart';
 import 'package:posventa/presentation/widgets/pos/sale/charge_bottom_bar.dart';
 import 'package:posventa/presentation/mixins/search_debounce_mixin.dart';
@@ -120,11 +121,26 @@ class _ProductGridSectionState extends ConsumerState<ProductGridSection>
     }
   }
 
+  Future<void> _onProductLongPress(ProductGridItem item) async {
+    showDialog(
+      context: context,
+      builder: (context) => ProductQuantityDialog(item: item),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final productsAsync = ref.watch(productListProvider);
-    // Remove unnecessary watch of pOSProvider to prevent full redraws
-    // final posState = ref.watch(pOSProvider);
+    final cart = ref.watch(pOSProvider.select((s) => s.cart));
+
+    // Efficiently map cart quantities
+    final Map<int, Map<int?, double>> cartQuantities = {};
+    for (final item in cart) {
+      cartQuantities.putIfAbsent(item.productId, () => {});
+      cartQuantities[item.productId]![item.variantId] =
+          (cartQuantities[item.productId]![item.variantId] ?? 0) +
+          item.quantity;
+    }
 
     return Column(
       children: [
@@ -153,6 +169,8 @@ class _ProductGridSectionState extends ConsumerState<ProductGridSection>
                 items: gridItems,
                 isMobile: widget.isMobile,
                 onItemTap: _onProductTap,
+                onItemLongPress: _onProductLongPress,
+                cartQuantities: cartQuantities,
               );
             },
             loading: () => const Center(child: CircularProgressIndicator()),

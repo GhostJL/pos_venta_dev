@@ -275,6 +275,141 @@ class POSNotifier extends _$POSNotifier {
     state = state.copyWith(cart: newCart);
   }
 
+  Future<String?> setQuantity(
+    Product product,
+    double quantity, {
+    ProductVariant? variant,
+  }) async {
+    if (quantity <= 0) {
+      removeFromCart(product.id!, variantId: variant?.id);
+      return null;
+    }
+
+    final index = state.cart.indexWhere(
+      (item) => item.productId == product.id && item.variantId == variant?.id,
+    );
+
+    if (index >= 0) {
+      final existingItem = state.cart[index];
+
+      // Validate stock if increasing quantity
+      if (quantity > existingItem.quantity) {
+        final additionalNeeded = quantity - existingItem.quantity;
+        final stockError = await _validateStock(
+          product.id!,
+          additionalNeeded,
+          variantId: variant?.id,
+        );
+        if (stockError != null) {
+          return stockError;
+        }
+      }
+
+      final unitPriceCents = existingItem.unitPriceCents;
+      final subtotalCents = (unitPriceCents * quantity).round();
+
+      int taxCents = 0;
+      final taxes = <SaleItemTax>[];
+      for (final tax in existingItem.taxes) {
+        final taxAmount = (subtotalCents * tax.taxRate).round();
+        taxCents += taxAmount;
+        taxes.add(
+          SaleItemTax(
+            taxRateId: tax.taxRateId,
+            taxName: tax.taxName,
+            taxRate: tax.taxRate,
+            taxAmountCents: taxAmount,
+          ),
+        );
+      }
+
+      final totalCents = subtotalCents + taxCents;
+
+      final updatedItem = SaleItem(
+        id: existingItem.id,
+        productId: existingItem.productId,
+        variantId: existingItem.variantId, // KEEP VARIANT ID
+        quantity: quantity,
+        unitOfMeasure: existingItem.unitOfMeasure,
+        unitPriceCents: unitPriceCents,
+        subtotalCents: subtotalCents,
+        taxCents: taxCents,
+        totalCents: totalCents,
+        costPriceCents: existingItem.costPriceCents,
+        productName: existingItem.productName,
+        variantDescription: existingItem.variantDescription,
+        taxes: taxes,
+        unitsPerPack: existingItem.unitsPerPack,
+      );
+
+      final newCart = List<SaleItem>.from(state.cart);
+      newCart[index] = updatedItem;
+      state = state.copyWith(cart: newCart);
+    } else {
+      // Add as new item with specific quantity
+      // Validate stock
+      final stockError = await _validateStock(
+        product.id!,
+        quantity,
+        variantId: variant?.id,
+      );
+      if (stockError != null) {
+        return stockError;
+      }
+
+      // Fetch taxes
+      final productRepository = ref.read(productRepositoryProvider);
+      final productTaxes = await productRepository.getTaxRatesForProduct(
+        product.id!,
+      );
+
+      final unitPriceCents = variant != null
+          ? variant.priceCents
+          : (product.price * 100).round();
+      final costPriceCents = variant != null
+          ? variant.costPriceCents
+          : (product.costPrice * 100).round();
+
+      final subtotalCents = (unitPriceCents * quantity).round();
+
+      int taxCents = 0;
+      final taxes = <SaleItemTax>[];
+      for (final tax in productTaxes) {
+        final taxAmount = (subtotalCents * tax.rate).round();
+        taxCents += taxAmount;
+        taxes.add(
+          SaleItemTax(
+            taxRateId: tax.id!,
+            taxName: tax.name,
+            taxRate: tax.rate,
+            taxAmountCents: taxAmount,
+          ),
+        );
+      }
+
+      final totalCents = subtotalCents + taxCents;
+
+      final newItem = SaleItem(
+        productId: product.id!,
+        variantId: variant?.id,
+        quantity: quantity,
+        unitOfMeasure: product.unitOfMeasure,
+        unitPriceCents: unitPriceCents,
+        subtotalCents: subtotalCents,
+        taxCents: taxCents,
+        totalCents: totalCents,
+        costPriceCents: costPriceCents,
+        productName: product.name,
+        variantDescription: variant?.description,
+        taxes: taxes,
+        unitsPerPack: variant?.quantity ?? 1.0,
+      );
+
+      state = state.copyWith(cart: [...state.cart, newItem]);
+    }
+    return null;
+  }
+
   Future<String?> updateQuantity(
     int productId,
     double quantity, {
@@ -327,6 +462,7 @@ class POSNotifier extends _$POSNotifier {
       final updatedItem = SaleItem(
         id: existingItem.id,
         productId: existingItem.productId,
+        variantId: existingItem.variantId,
         quantity: quantity,
         unitOfMeasure: existingItem.unitOfMeasure,
         unitPriceCents: unitPriceCents,

@@ -6,12 +6,16 @@ class ProductGridView extends StatelessWidget {
   final List<ProductGridItem> items;
   final bool isMobile;
   final Function(ProductGridItem) onItemTap;
+  final Function(ProductGridItem) onItemLongPress;
+  final Map<int, Map<int?, double>> cartQuantities;
 
   const ProductGridView({
     super.key,
     required this.items,
     required this.isMobile,
     required this.onItemTap,
+    required this.onItemLongPress,
+    required this.cartQuantities,
   });
 
   // Define el ancho mínimo ideal para que cada tarjeta se vea bien.
@@ -48,10 +52,15 @@ class ProductGridView extends StatelessWidget {
       itemCount: items.length,
       itemBuilder: (context, index) {
         final item = items[index];
+        final quantity =
+            cartQuantities[item.product.id]?[item.variant?.id] ?? 0;
+
         return PosProductItem(
           product: item.product,
           variant: item.variant,
+          quantityInCart: quantity,
           onTap: () => onItemTap(item),
+          onLongPress: () => onItemLongPress(item),
         );
       },
     );
