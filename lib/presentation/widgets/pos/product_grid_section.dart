@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:posventa/core/theme/theme.dart';
 import 'package:posventa/domain/entities/product.dart';
 import 'package:posventa/domain/entities/product_variant.dart';
 import 'package:posventa/presentation/providers/pos_providers.dart';
@@ -187,7 +186,7 @@ class _ProductGridSectionState extends ConsumerState<ProductGridSection>
           children: [
             Icon(
               Icons.warning_amber,
-              color: AppTheme.onAlertCritical,
+              color: Theme.of(context).colorScheme.onErrorContainer,
               size: 18,
             ),
             const SizedBox(width: 16),
@@ -198,7 +197,7 @@ class _ProductGridSectionState extends ConsumerState<ProductGridSection>
         ),
         duration: const Duration(milliseconds: 500),
         behavior: SnackBarBehavior.floating,
-        backgroundColor: AppTheme.alertCritical,
+        backgroundColor: Theme.of(context).colorScheme.errorContainer,
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),

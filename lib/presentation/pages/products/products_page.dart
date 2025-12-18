@@ -109,7 +109,7 @@ class ProductsPageState extends ConsumerState<ProductsPage>
                                 : FontWeight.normal,
                             color: filters.showInactive
                                 ? theme.colorScheme.primary
-                                : Colors.grey[700],
+                                : theme.colorScheme.onSurfaceVariant,
                           ),
                         ),
                         selected: filters.showInactive,
@@ -119,7 +119,7 @@ class ProductsPageState extends ConsumerState<ProductsPage>
                           side: BorderSide(
                             color: filters.showInactive
                                 ? theme.colorScheme.primary
-                                : Colors.grey.shade300,
+                                : theme.colorScheme.outline,
                             width: 1,
                           ),
                         ),
@@ -127,7 +127,7 @@ class ProductsPageState extends ConsumerState<ProductsPage>
                         selectedColor: theme.colorScheme.primary.withValues(
                           alpha: 0.1,
                         ),
-                        backgroundColor: Colors.white,
+                        backgroundColor: theme.colorScheme.surface,
                         labelPadding: const EdgeInsets.symmetric(
                           horizontal: 8,
                           vertical: 0,

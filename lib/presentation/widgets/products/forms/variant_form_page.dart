@@ -246,7 +246,9 @@ class _VariantFormPageState extends ConsumerState<VariantFormPage> {
                         ),
                       ),
                       child: isSaving
-                          ? const CircularProgressIndicator(color: Colors.white)
+                          ? CircularProgressIndicator(
+                              color: theme.colorScheme.onPrimary,
+                            )
                           : Text(
                               isEditing
                                   ? 'Actualizar Variante'
@@ -279,10 +281,10 @@ class _VariantFormPageState extends ConsumerState<VariantFormPage> {
     return Container(
       margin: const EdgeInsets.only(bottom: 24),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: Colors.black.withValues(alpha: 0.05),
+          color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
           width: 0.5,
         ),
       ),

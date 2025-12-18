@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:posventa/core/theme/theme.dart';
+import 'package:posventa/presentation/widgets/common/actions/catalog_module_actions_sheet.dart';
 
 class CardBaseModuleWidget extends StatelessWidget {
   final IconData icon;
@@ -70,7 +71,7 @@ class CardBaseModuleWidget extends StatelessWidget {
                 ),
               ],
             ),
-            _popupMenuButton(context),
+            _actionButton(context),
           ],
         ),
         const SizedBox(height: 8),
@@ -160,7 +161,7 @@ class CardBaseModuleWidget extends StatelessWidget {
           ),
         const SizedBox(width: 12),
         Row(mainAxisSize: MainAxisSize.min, children: [_statusChip()]),
-        _popupMenuButton(context),
+        _actionButton(context),
       ],
     );
   }
@@ -188,45 +189,48 @@ class CardBaseModuleWidget extends StatelessWidget {
     );
   }
 
-  PopupMenuButton<String> _popupMenuButton(BuildContext context) {
-    return PopupMenuButton<String>(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+  Widget _actionButton(BuildContext context) {
+    return IconButton(
       icon: Icon(
         Icons.more_horiz,
         color: Theme.of(context).colorScheme.onSurfaceVariant,
       ),
-      onSelected: (value) {
-        switch (value) {
-          case 'edit':
-            if (onEdit != null) onEdit!();
-            break;
-          case 'delete':
-            if (onDelete != null) onDelete!();
-            break;
-        }
-      },
-      itemBuilder: (context) => [
-        PopupMenuItem(
-          value: 'edit',
-          child: Row(
-            children: [
-              Icon(Icons.edit, color: Theme.of(context).colorScheme.primary),
-              const SizedBox(width: 8),
-              const Text('Editar'),
-            ],
-          ),
-        ),
-        PopupMenuItem(
-          value: 'delete',
-          child: Row(
-            children: [
-              Icon(Icons.delete, color: Theme.of(context).colorScheme.error),
-              const SizedBox(width: 8),
-              const Text('Eliminar'),
-            ],
-          ),
-        ),
-      ],
+      onPressed: () => _showActions(context),
     );
+  }
+
+  void _showActions(BuildContext context) {
+    if (onEdit == null && onDelete == null) return;
+
+    final isTablet = MediaQuery.of(context).size.width > 600;
+
+    final sheet = CatalogModuleActionsSheet(
+      title: title,
+      subtitle: subtitle,
+      icon: icon,
+      isActive: isActive,
+      onEdit: onEdit ?? () {},
+      onDelete: onDelete ?? () {},
+    );
+
+    if (isTablet) {
+      showDialog(
+        context: context,
+        builder: (context) => Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24),
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: sheet,
+        ),
+      );
+    } else {
+      showModalBottomSheet(
+        context: context,
+        isScrollControlled: true,
+        backgroundColor: Colors.transparent,
+        builder: (context) => sheet,
+      );
+    }
   }
 }

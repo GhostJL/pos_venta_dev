@@ -16,7 +16,7 @@ class CartPage extends ConsumerWidget {
     final colorScheme = theme.colorScheme;
 
     return Scaffold(
-      backgroundColor: Colors.grey[50], // surfaceContainerLow
+      backgroundColor: colorScheme.surfaceContainerLow,
       appBar: AppBar(
         title: Text(
           'Carrito',
@@ -25,7 +25,7 @@ class CartPage extends ConsumerWidget {
           ),
         ),
         centerTitle: true,
-        backgroundColor: Colors.white,
+        backgroundColor: colorScheme.surface,
         scrolledUnderElevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
@@ -73,7 +73,7 @@ class CustomerSelectionSection extends ConsumerWidget {
         : 'Cliente General';
 
     return Container(
-      color: Colors.white,
+      color: Theme.of(context).colorScheme.surface,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: InkWell(
         onTap: () {
@@ -85,7 +85,7 @@ class CustomerSelectionSection extends ConsumerWidget {
         borderRadius: BorderRadius.circular(8),
         child: Container(
           decoration: BoxDecoration(
-            color: Colors.grey[50],
+            color: Theme.of(context).colorScheme.surfaceContainerLow,
             borderRadius: BorderRadius.circular(8),
           ),
           padding: const EdgeInsets.all(12),
@@ -93,27 +93,30 @@ class CustomerSelectionSection extends ConsumerWidget {
             children: [
               Icon(
                 Icons.person_outline_rounded,
-                color: Colors.blue[700],
+                color: Theme.of(context).colorScheme.primary,
                 size: 20,
               ),
               const SizedBox(width: 12),
               Text(
                 'Cliente: ',
-                style: TextStyle(color: Colors.grey[600], fontSize: 14),
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  fontSize: 14,
+                ),
               ),
               Expanded(
                 child: Text(
                   displayText,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 14,
-                    color: Colors.black87,
+                    color: Theme.of(context).colorScheme.onSurface,
                   ),
                 ),
               ),
-              const Icon(
+              Icon(
                 Icons.chevron_right_rounded,
-                color: Colors.grey,
+                color: Theme.of(context).colorScheme.outline,
                 size: 20,
               ),
             ],
@@ -139,14 +142,14 @@ class CartListSection extends ConsumerWidget {
             Icon(
               Icons.shopping_cart_outlined,
               size: 64,
-              color: Colors.grey[300],
+              color: Theme.of(context).colorScheme.outlineVariant,
             ),
             const SizedBox(height: 16),
             Text(
               'El carrito está vacío',
-              style: Theme.of(
-                context,
-              ).textTheme.bodyLarge?.copyWith(color: Colors.grey[500]),
+              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
             ),
           ],
         ),
@@ -217,11 +220,11 @@ class CartSummarySection extends ConsumerWidget {
 
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
+            color: Theme.of(context).colorScheme.shadow.withValues(alpha: 0.05),
             offset: const Offset(0, -4),
             blurRadius: 16,
           ),
@@ -243,12 +246,16 @@ class CartSummarySection extends ConsumerWidget {
             },
             child: Row(
               children: [
-                Icon(Icons.local_offer, color: Colors.blue[700], size: 20),
+                Icon(
+                  Icons.local_offer,
+                  color: Theme.of(context).colorScheme.primary,
+                  size: 20,
+                ),
                 const SizedBox(width: 8),
                 Text(
                   'Agregar Código de Descuento',
                   style: TextStyle(
-                    color: Colors.blue[700],
+                    color: Theme.of(context).colorScheme.primary,
                     fontWeight: FontWeight.w600,
                     fontSize: 14,
                   ),
@@ -279,20 +286,20 @@ class CartSummarySection extends ConsumerWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
+              Text(
                 'Total',
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
-                  color: Colors.black87,
+                  color: Theme.of(context).colorScheme.onSurface,
                 ),
               ),
               Text(
                 '\$${total.toStringAsFixed(2)}',
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
-                  color: Colors.black87,
+                  color: Theme.of(context).colorScheme.onSurface,
                 ),
               ),
             ],
@@ -314,7 +321,7 @@ class CartSummarySection extends ConsumerWidget {
                       );
                     },
               style: FilledButton.styleFrom(
-                backgroundColor: Colors.blue[700],
+                backgroundColor: Theme.of(context).colorScheme.primary,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
@@ -325,14 +332,17 @@ class CartSummarySection extends ConsumerWidget {
                 children: [
                   Text(
                     'Cobrar \$${total.toStringAsFixed(2)}',
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
-                      color: Colors.white,
+                      color: Theme.of(context).colorScheme.onPrimary,
                     ),
                   ),
                   const SizedBox(width: 8),
-                  const Icon(Icons.arrow_forward, color: Colors.white),
+                  Icon(
+                    Icons.arrow_forward,
+                    color: Theme.of(context).colorScheme.onPrimary,
+                  ),
                 ],
               ),
             ),
@@ -353,11 +363,19 @@ class CartSummarySection extends ConsumerWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: TextStyle(color: Colors.grey[600], fontSize: 15)),
+          Text(
+            label,
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+              fontSize: 15,
+            ),
+          ),
           Text(
             '\$${amount.toStringAsFixed(2)}',
             style: TextStyle(
-              color: isDiscount ? Colors.green[600] : Colors.black87,
+              color: isDiscount
+                  ? Colors.green[600]
+                  : Theme.of(context).colorScheme.onSurface,
               fontWeight: isDiscount ? FontWeight.w600 : FontWeight.w500,
               fontSize: 15,
             ),

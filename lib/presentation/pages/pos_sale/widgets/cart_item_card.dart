@@ -30,11 +30,11 @@ class CartItemCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
+            color: colorScheme.shadow.withValues(alpha: 0.04),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -57,7 +57,7 @@ class CartItemCard extends StatelessWidget {
                         productName,
                         style: theme.textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.bold,
-                          color: Colors.black87,
+                          color: colorScheme.onSurface,
                         ),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
@@ -70,7 +70,7 @@ class CartItemCard extends StatelessWidget {
                         padding: const EdgeInsets.all(4),
                         child: Icon(
                           Icons.delete_outline_rounded,
-                          color: Colors.grey[400],
+                          color: colorScheme.outline,
                           size: 20,
                         ),
                       ),
@@ -84,7 +84,7 @@ class CartItemCard extends StatelessWidget {
                   Text(
                     variantName!,
                     style: theme.textTheme.bodyMedium?.copyWith(
-                      color: Colors.grey[500],
+                      color: colorScheme.onSurfaceVariant,
                     ),
                   ),
                 ],
@@ -95,7 +95,7 @@ class CartItemCard extends StatelessWidget {
                 Text(
                   '\$${pricePerUnit.toStringAsFixed(2)}/unidad',
                   style: theme.textTheme.bodySmall?.copyWith(
-                    color: Colors.grey[500],
+                    color: colorScheme.onSurfaceVariant,
                   ),
                 ),
 
@@ -107,7 +107,7 @@ class CartItemCard extends StatelessWidget {
                     Text(
                       '\$${total.toStringAsFixed(2)}',
                       style: theme.textTheme.titleMedium?.copyWith(
-                        color: Colors.blue[700],
+                        color: colorScheme.primary,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -116,7 +116,7 @@ class CartItemCard extends StatelessWidget {
                     // Quantity Controls
                     Container(
                       decoration: BoxDecoration(
-                        color: Colors.grey[50],
+                        color: colorScheme.surfaceContainerLow,
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Row(
@@ -130,9 +130,10 @@ class CartItemCard extends StatelessWidget {
                             child: Text(
                               quantity.toStringAsFixed(0),
                               textAlign: TextAlign.center,
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontWeight: FontWeight.bold,
                                 fontSize: 14,
+                                color: colorScheme.onSurface,
                               ),
                             ),
                           ),
@@ -168,8 +169,9 @@ class _QuantityButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Material(
-      color: isBlue ? Colors.blue[700] : Colors.transparent,
+      color: isBlue ? colorScheme.primary : Colors.transparent,
       borderRadius: BorderRadius.circular(8),
       child: InkWell(
         onTap: onTap,
@@ -181,7 +183,7 @@ class _QuantityButton extends StatelessWidget {
           child: Icon(
             icon,
             size: 16,
-            color: isBlue ? Colors.white : Colors.black87,
+            color: isBlue ? colorScheme.onPrimary : colorScheme.onSurface,
           ),
         ),
       ),

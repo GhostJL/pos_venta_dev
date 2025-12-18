@@ -21,12 +21,12 @@ class ProductListItem extends StatelessWidget {
 
     return Container(
       decoration: BoxDecoration(
-        color: isActive ? Colors.white : Colors.grey[50],
+        color: isActive
+            ? theme.colorScheme.surface
+            : theme.colorScheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: isActive
-              ? Colors.black.withValues(alpha: 0.05)
-              : Colors.black.withValues(alpha: 0.02),
+          color: theme.colorScheme.outlineVariant.withValues(alpha: 0.1),
           width: 0.5,
         ),
       ),
@@ -51,7 +51,7 @@ class ProductListItem extends StatelessWidget {
               // 3. Acción
               IconButton(
                 onPressed: onMorePressed,
-                icon: const Icon(Icons.chevron_right_rounded),
+                icon: const Icon(Icons.more_horiz_rounded),
                 color: theme.colorScheme.outlineVariant,
               ),
             ],
@@ -96,7 +96,7 @@ class ProductListItem extends StatelessWidget {
       decoration: BoxDecoration(
         color: isActive
             ? theme.colorScheme.primaryContainer.withValues(alpha: 0.2)
-            : Colors.grey[200],
+            : theme.colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(8),
       ),
       child: Center(
@@ -105,7 +105,9 @@ class ProductListItem extends StatelessWidget {
               ? product.name.substring(0, 1).toUpperCase()
               : 'P',
           style: TextStyle(
-            color: isActive ? theme.colorScheme.primary : Colors.grey[500],
+            color: isActive
+                ? theme.colorScheme.primary
+                : theme.colorScheme.onSurfaceVariant,
             fontWeight: FontWeight.bold,
             fontSize: 16,
           ),

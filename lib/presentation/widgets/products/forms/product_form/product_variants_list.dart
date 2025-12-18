@@ -4,6 +4,7 @@ import 'package:posventa/domain/entities/product.dart';
 import 'package:posventa/domain/entities/product_variant.dart';
 import 'package:posventa/presentation/providers/product_form_provider.dart';
 import 'package:posventa/presentation/providers/providers.dart';
+import 'package:posventa/presentation/widgets/products/actions/variant_actions_sheet.dart';
 
 class ProductVariantsList extends ConsumerWidget {
   final Product? product;
@@ -128,17 +129,17 @@ class _VariantCard extends ConsumerWidget {
 
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
+            color: theme.colorScheme.shadow.withValues(alpha: 0.04),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
         ],
         border: Border.all(
-          color: Colors.black.withValues(alpha: 0.05),
+          color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
           width: 0.5,
         ),
       ),
@@ -154,16 +155,20 @@ class _VariantCard extends ConsumerWidget {
                 width: 44,
                 height: 44,
                 decoration: BoxDecoration(
-                  color: (isSales ? Colors.blue : Colors.teal).withValues(
-                    alpha: 0.1,
-                  ),
+                  color:
+                      (isSales
+                              ? theme.colorScheme.primary
+                              : theme.colorScheme.tertiary)
+                          .withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Center(
                   child: Icon(
                     isSales ? Icons.sell_outlined : Icons.inventory_2_outlined,
                     size: 20,
-                    color: isSales ? Colors.blue[700] : Colors.teal.shade700,
+                    color: isSales
+                        ? theme.colorScheme.primary
+                        : theme.colorScheme.tertiary,
                   ),
                 ),
               ),
@@ -180,7 +185,7 @@ class _VariantCard extends ConsumerWidget {
                           : variant.variantName,
                       style: theme.textTheme.titleSmall?.copyWith(
                         fontWeight: FontWeight.bold,
-                        color: Colors.black87,
+                        color: theme.colorScheme.onSurface,
                       ),
                     ),
                     const SizedBox(height: 4),
@@ -189,7 +194,7 @@ class _VariantCard extends ConsumerWidget {
                         _buildBadge(
                           theme,
                           "${variant.quantity.toInt()} ${unitName ?? ''}",
-                          Colors.grey,
+                          theme.colorScheme.onSurfaceVariant,
                         ),
                       ],
                     ),
@@ -205,14 +210,14 @@ class _VariantCard extends ConsumerWidget {
                     '\$${((isSales ? variant.priceCents : variant.costPriceCents) / 100).toStringAsFixed(2)}',
                     style: theme.textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.w900,
-                      color: Colors.black87,
+                      color: theme.colorScheme.onSurface,
                     ),
                   ),
                   Text(
                     isSales ? "Precio" : "Costo",
                     style: theme.textTheme.labelSmall?.copyWith(
                       fontSize: 10,
-                      color: Colors.grey[500],
+                      color: theme.colorScheme.onSurfaceVariant,
                     ),
                   ),
                 ],
@@ -220,18 +225,31 @@ class _VariantCard extends ConsumerWidget {
 
               const SizedBox(width: 4),
 
-              // Botón de eliminar (discreto)
+              // Botón de más acciones
               IconButton(
                 icon: Icon(
-                  Icons.delete_outline_rounded,
-                  color: Colors.grey[400],
+                  Icons.more_horiz_rounded,
+                  color: theme.colorScheme.outline,
                   size: 20,
                 ),
-                onPressed: () => _confirmDelete(context),
+                onPressed: () => _showActions(context),
               ),
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  void _showActions(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => VariantActionsSheet(
+        variant: variant,
+        onEdit: () => onEdit(variant, index),
+        onDelete: () => _confirmDelete(context),
       ),
     );
   }

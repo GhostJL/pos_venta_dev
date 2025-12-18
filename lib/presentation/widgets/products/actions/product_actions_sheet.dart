@@ -19,9 +19,9 @@ class ProductActionsSheet extends ConsumerWidget {
 
     return Container(
       constraints: BoxConstraints(maxWidth: isTablet ? 480 : double.infinity),
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -138,9 +138,12 @@ class ProductActionsSheet extends ConsumerWidget {
       padding: const EdgeInsets.all(20),
       margin: const EdgeInsets.fromLTRB(24, 20, 24, 8),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: theme.colorScheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.grey.withValues(alpha: 0.1), width: 1),
+        border: Border.all(
+          color: theme.colorScheme.outlineVariant.withValues(alpha: 0.1),
+          width: 1,
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -152,7 +155,7 @@ class ProductActionsSheet extends ConsumerWidget {
                   product.name,
                   style: theme.textTheme.headlineSmall?.copyWith(
                     fontWeight: FontWeight.w800,
-                    color: Colors.black87,
+                    color: theme.colorScheme.onSurface,
                     fontSize: 18,
                   ),
                   maxLines: 1,
@@ -171,7 +174,7 @@ class ProductActionsSheet extends ConsumerWidget {
             "CÓDIGO: ${product.code}",
             style: theme.textTheme.bodySmall?.copyWith(
               fontFamily: 'monospace',
-              color: Colors.blue[700],
+              color: theme.colorScheme.primary,
               fontWeight: FontWeight.bold,
             ),
           ),
@@ -211,9 +214,12 @@ class ProductActionsSheet extends ConsumerWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey.withValues(alpha: 0.1), width: 1),
+        border: Border.all(
+          color: theme.colorScheme.outlineVariant.withValues(alpha: 0.1),
+          width: 1,
+        ),
       ),
       child: InkWell(
         onTap: onTap,
@@ -240,13 +246,13 @@ class ProductActionsSheet extends ConsumerWidget {
                       style: theme.textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.bold,
                         fontSize: 15,
-                        color: Colors.black87,
+                        color: theme.colorScheme.onSurface,
                       ),
                     ),
                     Text(
                       subtitle,
                       style: theme.textTheme.bodySmall?.copyWith(
-                        color: Colors.grey[600],
+                        color: theme.colorScheme.onSurfaceVariant,
                       ),
                     ),
                   ],
@@ -255,7 +261,7 @@ class ProductActionsSheet extends ConsumerWidget {
               Icon(
                 Icons.chevron_right_rounded,
                 size: 20,
-                color: Colors.grey[400],
+                color: theme.colorScheme.outlineVariant,
               ),
             ],
           ),

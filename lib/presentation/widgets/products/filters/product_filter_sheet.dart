@@ -59,11 +59,11 @@ class _ProductFilterSheetState extends ConsumerState<ProductFilterSheet> {
       child: Container(
         constraints: BoxConstraints(maxWidth: isTablet ? 480 : double.infinity),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: theme.colorScheme.surface,
           borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.1),
+              color: theme.colorScheme.shadow.withValues(alpha: 0.1),
               blurRadius: 20,
               offset: const Offset(0, -4),
             ),
@@ -235,11 +235,11 @@ class _ProductFilterSheetState extends ConsumerState<ProductFilterSheet> {
         ),
         decoration: InputDecoration(
           filled: true,
-          fillColor: Colors.grey[50],
+          fillColor: theme.colorScheme.surfaceContainerLow,
           prefixIcon: Icon(icon, size: 20, color: theme.colorScheme.primary),
           labelText: label,
           labelStyle: TextStyle(
-            color: Colors.grey[600],
+            color: theme.colorScheme.onSurfaceVariant,
             fontWeight: FontWeight.w500,
             fontSize: 14,
           ),
@@ -249,7 +249,10 @@ class _ProductFilterSheetState extends ConsumerState<ProductFilterSheet> {
           ),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(color: Colors.grey[200]!, width: 1),
+            borderSide: BorderSide(
+              color: theme.colorScheme.outlineVariant,
+              width: 1,
+            ),
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
@@ -285,7 +288,7 @@ class _ProductFilterSheetState extends ConsumerState<ProductFilterSheet> {
       initialValue: _sortOrder,
       decoration: InputDecoration(
         filled: true,
-        fillColor: Colors.grey[50],
+        fillColor: theme.colorScheme.surfaceContainerLow,
         prefixIcon: Icon(
           Icons.sort_rounded,
           size: 20,
@@ -293,7 +296,7 @@ class _ProductFilterSheetState extends ConsumerState<ProductFilterSheet> {
         ),
         labelText: 'Ordenar por',
         labelStyle: TextStyle(
-          color: Colors.grey[600],
+          color: theme.colorScheme.onSurfaceVariant,
           fontWeight: FontWeight.w500,
           fontSize: 14,
         ),
@@ -303,7 +306,10 @@ class _ProductFilterSheetState extends ConsumerState<ProductFilterSheet> {
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.grey[200]!, width: 1),
+          borderSide: BorderSide(
+            color: theme.colorScheme.outlineVariant,
+            width: 1,
+          ),
         ),
       ),
       items: const [
@@ -358,16 +364,20 @@ class _ProductFilterSheetState extends ConsumerState<ProductFilterSheet> {
               context.pop();
             },
             style: FilledButton.styleFrom(
-              backgroundColor: Colors.blue[700],
+              backgroundColor: theme.colorScheme.primary,
               padding: const EdgeInsets.symmetric(vertical: 16),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
               elevation: 0,
             ),
-            child: const Text(
+            child: Text(
               'APLICAR FILTROS',
-              style: TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1),
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                letterSpacing: 1,
+                color: theme.colorScheme.onPrimary,
+              ),
             ),
           ),
         ),

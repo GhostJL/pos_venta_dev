@@ -145,13 +145,17 @@ class ProductPricingSection extends ConsumerWidget {
                 ? Icons.warning_amber_rounded
                 : Icons.trending_up_rounded,
             size: 14,
-            color: isNegative ? theme.colorScheme.error : Colors.green,
+            color: isNegative
+                ? theme.colorScheme.error
+                : const Color(0xFF00C853), // AppTheme.transactionSuccess
           ),
           const SizedBox(width: 6),
           Text(
             'Margen de utilidad: ${margin.toStringAsFixed(1)}%',
             style: theme.textTheme.labelSmall?.copyWith(
-              color: isNegative ? theme.colorScheme.error : Colors.green,
+              color: isNegative
+                  ? theme.colorScheme.error
+                  : const Color(0xFF00C853), // AppTheme.transactionSuccess
               fontWeight: FontWeight.bold,
             ),
           ),

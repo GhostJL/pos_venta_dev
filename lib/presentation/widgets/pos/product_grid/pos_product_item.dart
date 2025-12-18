@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:posventa/core/theme/theme.dart';
 import 'package:posventa/domain/entities/product.dart';
 import 'package:posventa/domain/entities/product_variant.dart';
 
@@ -32,11 +33,11 @@ class PosProductItem extends StatelessWidget {
     // Stock Color Logic
     Color stockColor;
     if (stock <= 0) {
-      stockColor = colorScheme.error;
+      stockColor = context.outOfStock;
     } else if (stock < 10) {
-      stockColor = Colors.orange;
+      stockColor = context.lowStock;
     } else {
-      stockColor = Colors.green; // Or a specific success color from theme
+      stockColor = context.inStock;
     }
 
     return Card(
@@ -57,7 +58,7 @@ class PosProductItem extends StatelessWidget {
                   Text(
                     '\$${price.toStringAsFixed(2)}',
                     style: theme.textTheme.titleLarge?.copyWith(
-                      color: Colors.blueAccent,
+                      color: colorScheme.primary,
                       fontWeight: FontWeight.w900,
                     ),
                   ),
@@ -122,17 +123,21 @@ class PosProductItem extends StatelessWidget {
                     width: 40,
                     height: 40,
                     decoration: BoxDecoration(
-                      color: Colors.blueAccent,
+                      color: colorScheme.primary,
                       shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.blueAccent.withValues(alpha: 0.3),
+                          color: colorScheme.primary.withValues(alpha: 0.3),
                           blurRadius: 6,
                           offset: const Offset(0, 3),
                         ),
                       ],
                     ),
-                    child: const Icon(Icons.add, color: Colors.white, size: 24),
+                    child: Icon(
+                      Icons.add,
+                      color: colorScheme.onPrimary,
+                      size: 24,
+                    ),
                   ),
                 ],
               ),
