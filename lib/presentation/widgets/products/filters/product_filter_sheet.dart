@@ -71,8 +71,15 @@ class _ProductFilterSheetState extends ConsumerState<ProductFilterSheet> {
       child: Container(
         constraints: BoxConstraints(maxWidth: isTablet ? 480 : double.infinity),
         decoration: BoxDecoration(
-          color: theme.colorScheme.surface,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+          color: Colors.white,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.1),
+              blurRadius: 20,
+              offset: const Offset(0, -4),
+            ),
+          ],
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -207,23 +214,33 @@ class _ProductFilterSheetState extends ConsumerState<ProductFilterSheet> {
           fontWeight: FontWeight.w600,
         ),
         decoration: InputDecoration(
-          prefixIcon: Icon(icon, size: 20),
+          filled: true,
+          fillColor: Colors.grey[50],
+          prefixIcon: Icon(icon, size: 20, color: theme.colorScheme.primary),
           labelText: label,
-          labelStyle: TextStyle(fontWeight: FontWeight.normal),
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 16,
-            vertical: 16,
+          labelStyle: TextStyle(
+            color: Colors.grey[600],
+            fontWeight: FontWeight.w500,
+            fontSize: 14,
+          ),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide.none,
           ),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(color: theme.colorScheme.outlineVariant),
+            borderSide: BorderSide(color: Colors.grey[200]!, width: 1),
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
             borderSide: BorderSide(
-              color: theme.colorScheme.primary,
+              color: theme.colorScheme.primary.withValues(alpha: 0.5),
               width: 1.5,
             ),
+          ),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 12,
           ),
         ),
         items: [
@@ -247,11 +264,26 @@ class _ProductFilterSheetState extends ConsumerState<ProductFilterSheet> {
     return DropdownButtonFormField<String>(
       initialValue: _sortOrder,
       decoration: InputDecoration(
-        prefixIcon: const Icon(Icons.sort_rounded, size: 20),
+        filled: true,
+        fillColor: Colors.grey[50],
+        prefixIcon: Icon(
+          Icons.sort_rounded,
+          size: 20,
+          color: theme.colorScheme.primary,
+        ),
         labelText: 'Ordenar por',
+        labelStyle: TextStyle(
+          color: Colors.grey[600],
+          fontWeight: FontWeight.w500,
+          fontSize: 14,
+        ),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide.none,
+        ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: theme.colorScheme.outlineVariant),
+          borderSide: BorderSide(color: Colors.grey[200]!, width: 1),
         ),
       ),
       items: const [
@@ -306,6 +338,7 @@ class _ProductFilterSheetState extends ConsumerState<ProductFilterSheet> {
               context.pop();
             },
             style: FilledButton.styleFrom(
+              backgroundColor: Colors.blue[700],
               padding: const EdgeInsets.symmetric(vertical: 16),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
@@ -313,8 +346,8 @@ class _ProductFilterSheetState extends ConsumerState<ProductFilterSheet> {
               elevation: 0,
             ),
             child: const Text(
-              'Aplicar filtros',
-              style: TextStyle(fontWeight: FontWeight.bold),
+              'APLICAR FILTROS',
+              style: TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1),
             ),
           ),
         ),

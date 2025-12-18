@@ -45,34 +45,39 @@ class VariantListPage extends ConsumerWidget {
         }
       },
       child: Scaffold(
-        backgroundColor: theme.colorScheme.surface,
+        backgroundColor: Colors.grey[50],
         appBar: AppBar(
+          backgroundColor: Colors.white,
+          scrolledUnderElevation: 0,
           title: Column(
             children: [
               Text(
                 filterType == VariantType.sales
                     ? 'Variantes de Venta'
                     : 'Variantes de Compra',
+                style: const TextStyle(fontWeight: FontWeight.bold),
               ),
               Text(
                 product.name,
                 style: theme.textTheme.labelSmall?.copyWith(
                   color: theme.colorScheme.primary,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
             ],
           ),
           actions: [
-            // El botón solo aparece si hay cambios pendientes
             if (isDirty)
               Padding(
                 padding: const EdgeInsets.only(right: 8.0),
-                child: FilledButton.icon(
+                child: TextButton(
                   onPressed: () => _save(context, notifier),
-                  icon: const Icon(Icons.check_rounded, size: 18),
-                  label: const Text('Guardar'),
-                  style: FilledButton.styleFrom(
-                    visualDensity: VisualDensity.compact,
+                  child: Text(
+                    'GUARDAR',
+                    style: TextStyle(
+                      color: theme.colorScheme.primary,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
               ),
@@ -120,25 +125,40 @@ class VariantListPage extends ConsumerWidget {
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+      padding: const EdgeInsets.all(16),
       margin: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: theme.colorScheme.primaryContainer.withValues(alpha: 1),
+        color: Colors.white,
         borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+        border: Border.all(color: Colors.blue.withValues(alpha: 0.1), width: 1),
       ),
       child: Row(
         children: [
-          Icon(
-            Icons.info_outline_rounded,
-            size: 20,
-            color: theme.colorScheme.onPrimary,
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: Colors.blue.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: const Icon(
+              Icons.info_outline_rounded,
+              size: 20,
+              color: Colors.blue,
+            ),
           ),
           const SizedBox(width: 12),
           Text(
             '${filteredVariants.length} presentaciones configuradas',
             style: theme.textTheme.bodyMedium?.copyWith(
               fontWeight: FontWeight.bold,
-              color: theme.colorScheme.onPrimaryContainer,
+              color: Colors.black87,
             ),
           ),
         ],

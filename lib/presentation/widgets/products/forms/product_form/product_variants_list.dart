@@ -116,10 +116,18 @@ class _VariantCard extends StatelessWidget {
 
     return Container(
       decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
+        color: Colors.white,
         borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
         border: Border.all(
-          color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
+          color: Colors.black.withValues(alpha: 0.05),
+          width: 0.5,
         ),
       ),
       child: InkWell(
@@ -131,20 +139,19 @@ class _VariantCard extends StatelessWidget {
             children: [
               // Identificador Visual (Círculo pequeño con inicial)
               Container(
-                width: 40,
-                height: 40,
+                width: 44,
+                height: 44,
                 decoration: BoxDecoration(
-                  color: (isSales ? theme.colorScheme.primary : Colors.teal)
-                      .withValues(alpha: 0.1),
-                  shape: BoxShape.circle,
+                  color: (isSales ? Colors.blue : Colors.teal).withValues(
+                    alpha: 0.1,
+                  ),
+                  borderRadius: BorderRadius.circular(12),
                 ),
                 child: Center(
                   child: Icon(
                     isSales ? Icons.sell_outlined : Icons.inventory_2_outlined,
                     size: 20,
-                    color: isSales
-                        ? theme.colorScheme.primary
-                        : Colors.teal.shade700,
+                    color: isSales ? Colors.blue[700] : Colors.teal.shade700,
                   ),
                 ),
               ),
@@ -161,6 +168,7 @@ class _VariantCard extends StatelessWidget {
                           : variant.variantName,
                       style: theme.textTheme.titleSmall?.copyWith(
                         fontWeight: FontWeight.bold,
+                        color: Colors.black87,
                       ),
                     ),
                     const SizedBox(height: 4),
@@ -168,13 +176,15 @@ class _VariantCard extends StatelessWidget {
                       children: [
                         _buildBadge(
                           theme,
-                          isSales ? "Venta" : "Compra",
-                          isSales ? theme.colorScheme.primary : Colors.teal,
+                          isSales ? "VENTA" : "COMPRA",
+                          isSales ? Colors.blue : Colors.teal,
                         ),
                         const SizedBox(width: 8),
                         Text(
                           "Stock: ${variant.quantity.toInt()} uds.",
-                          style: theme.textTheme.labelSmall,
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            color: Colors.grey[600],
+                          ),
                         ),
                       ],
                     ),
@@ -190,23 +200,26 @@ class _VariantCard extends StatelessWidget {
                     '\$${((isSales ? variant.priceCents : variant.costPriceCents) / 100).toStringAsFixed(2)}',
                     style: theme.textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.w900,
-                      color: theme.colorScheme.onSurface,
+                      color: Colors.black87,
                     ),
                   ),
                   Text(
                     isSales ? "Precio" : "Costo",
-                    style: theme.textTheme.labelSmall?.copyWith(fontSize: 10),
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      fontSize: 10,
+                      color: Colors.grey[500],
+                    ),
                   ),
                 ],
               ),
 
-              const SizedBox(width: 8),
+              const SizedBox(width: 4),
 
               // Botón de eliminar (discreto)
               IconButton(
                 icon: Icon(
                   Icons.delete_outline_rounded,
-                  color: theme.colorScheme.error,
+                  color: Colors.grey[400],
                   size: 20,
                 ),
                 onPressed: () => _confirmDelete(context),

@@ -141,26 +141,32 @@ class ProductFormPageState extends ConsumerState<ProductFormPage> {
     });
 
     return Scaffold(
+      backgroundColor: Colors.grey[50],
       appBar: AppBar(
+        backgroundColor: Colors.white,
+        scrolledUnderElevation: 0,
         title: Text(
           isNewProduct ? 'Registrar Producto' : 'Editar Producto Base',
+          style: const TextStyle(fontWeight: FontWeight.bold),
         ),
         actions: [
           if (isLoading)
-            Center(
+            const Center(
               child: Padding(
-                padding: const EdgeInsets.only(right: 16.0),
-                child: CircularProgressIndicator(
-                  color: Theme.of(context).colorScheme.onPrimary,
-                ),
+                padding: EdgeInsets.only(right: 16.0),
+                child: CircularProgressIndicator(),
               ),
             )
           else
-            IconButton(
-              icon: const Icon(Icons.check_circle_outline_rounded, size: 28),
+            TextButton(
               onPressed: _submit,
-              tooltip: isNewProduct ? 'Crear Producto' : 'Guardar Cambios',
-              color: Theme.of(context).colorScheme.primary,
+              child: Text(
+                'GUARDAR',
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.primary,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
             ),
           const SizedBox(width: 8.0),
         ],
@@ -168,157 +174,171 @@ class ProductFormPageState extends ConsumerState<ProductFormPage> {
       body: Form(
         key: _formKey,
         child: ListView(
-          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
+          padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 16.0),
           children: [
-            _buildSectionTitle(context, 'Información Básica'),
-
-            ProductBasicInfoSection(
-              nameController: _nameController,
-              codeController: _codeController,
-              barcodeController: _barcodeController,
-              descriptionController: _descriptionController,
-              onScanBarcode: _openBarcodeScanner,
-              showBarcode:
-                  false, // Don't show barcode in base product as per request, use Code/SKU
-              // Add listeners to sync with provider
-              onNameChanged: notifier.setName,
-              onCodeChanged: notifier.setCode,
-              onBarcodeChanged: notifier.setBarcode,
-              onDescriptionChanged: notifier.setDescription,
-            ),
-
-            const SizedBox(height: 16),
-
-            Consumer(
-              builder: (context, ref, child) {
-                final hasExpiration = ref.watch(
-                  provider.select((s) => s.hasExpiration),
-                );
-                return SwitchListTile(
-                  title: const Text(
-                    '¿Tiene Caducidad?',
-                    style: TextStyle(fontWeight: FontWeight.bold),
+            _buildFormSection(
+              context,
+              title: 'Información Básica',
+              icon: Icons.info_outline_rounded,
+              child: Column(
+                children: [
+                  ProductBasicInfoSection(
+                    nameController: _nameController,
+                    codeController: _codeController,
+                    barcodeController: _barcodeController,
+                    descriptionController: _descriptionController,
+                    onScanBarcode: _openBarcodeScanner,
+                    showBarcode: false,
+                    onNameChanged: notifier.setName,
+                    onCodeChanged: notifier.setCode,
+                    onBarcodeChanged: notifier.setBarcode,
+                    onDescriptionChanged: notifier.setDescription,
                   ),
-                  value: hasExpiration,
-                  onChanged: (value) =>
-                      ref.read(provider.notifier).setHasExpiration(value),
-                  contentPadding: EdgeInsets.zero,
-                );
-              },
-            ),
-
-            const SizedBox(height: 32),
-            _buildSectionTitle(context, 'Clasificación'),
-            ProductClassificationSection(product: widget.product),
-
-            const SizedBox(height: 32),
-            _buildSectionTitle(context, 'Precios y Unidad'),
-            ProductPricingSection(
-              product: widget.product,
-              costPriceController: _costController,
-              salePriceController: _priceController,
-              wholesalePriceController: _wholesaleController,
-              showPrices: false, // Only show Unit and Weight options
-            ),
-
-            const SizedBox(height: 32),
-            _buildSectionTitle(context, 'Impuestos'),
-            Consumer(
-              builder: (context, ref, child) {
-                final usesTaxes = ref.watch(
-                  provider.select((s) => s.usesTaxes),
-                );
-                return Column(
-                  children: [
-                    SwitchListTile(
-                      title: const Text(
-                        '¿Aplica Impuestos?',
-                        style: TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                      subtitle: const Text(
-                        'Estos impuestos se aplicarán a todas las variantes',
-                      ),
-                      value: usesTaxes,
-                      onChanged: (value) =>
-                          ref.read(provider.notifier).setUsesTaxes(value),
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 0),
-                    ),
-                    if (usesTaxes) ...[
-                      const SizedBox(height: 16),
-                      ProductTaxSelection(product: widget.product),
-                    ],
-                  ],
-                );
-              },
-            ),
-
-            const SizedBox(height: 40),
-
-            if (!isNewProduct) ...[
-              const SizedBox(height: 32),
-              _buildSectionTitle(context, 'Variantes'),
-              Card(
-                margin: EdgeInsets.zero,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  side: BorderSide(
-                    color: Theme.of(
-                      context,
-                    ).colorScheme.outline.withValues(alpha: 0.2),
+                  const SizedBox(height: 16),
+                  Consumer(
+                    builder: (context, ref, child) {
+                      final hasExpiration = ref.watch(
+                        provider.select((s) => s.hasExpiration),
+                      );
+                      return SwitchListTile(
+                        title: const Text(
+                          '¿Tiene Caducidad?',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
+                          ),
+                        ),
+                        value: hasExpiration,
+                        onChanged: (value) =>
+                            ref.read(provider.notifier).setHasExpiration(value),
+                        contentPadding: EdgeInsets.zero,
+                      );
+                    },
                   ),
-                ),
-                child: ListTile(
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 8,
-                  ),
-                  leading: Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: Theme.of(
-                        context,
-                      ).colorScheme.primaryContainer.withValues(alpha: 0.5),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Icon(
-                      Icons.layers_outlined,
-                      color: Theme.of(context).colorScheme.primary,
-                    ),
-                  ),
-                  title: const Text(
-                    'Gestionar Variantes',
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  subtitle: const Text(
-                    'Configurar variantes de compra y venta',
-                  ),
-                  trailing: const Icon(
-                    Icons.arrow_forward_ios_rounded,
-                    size: 16,
-                  ),
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) =>
-                            VariantTypeSelectionPage(product: widget.product!),
-                      ),
-                    );
-                  },
-                ),
+                ],
               ),
-            ] else
-              Center(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 24.0),
-                  child: Text(
-                    'Podrás agregar variantes una vez guardado el producto base.',
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      fontStyle: FontStyle.italic,
-                    ),
-                    textAlign: TextAlign.center,
+            ),
+
+            _buildFormSection(
+              context,
+              title: 'Clasificación',
+              icon: Icons.category_rounded,
+              child: ProductClassificationSection(product: widget.product),
+            ),
+
+            _buildFormSection(
+              context,
+              title: 'Precios y Unidad',
+              icon: Icons.monetization_on_outlined,
+              child: ProductPricingSection(
+                product: widget.product,
+                costPriceController: _costController,
+                salePriceController: _priceController,
+                wholesalePriceController: _wholesaleController,
+                showPrices: false,
+              ),
+            ),
+
+            _buildFormSection(
+              context,
+              title: 'Impuestos',
+              icon: Icons.receipt_long_rounded,
+              child: Consumer(
+                builder: (context, ref, child) {
+                  final usesTaxes = ref.watch(
+                    provider.select((s) => s.usesTaxes),
+                  );
+                  return Column(
+                    children: [
+                      SwitchListTile(
+                        title: const Text(
+                          '¿Aplica Impuestos?',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
+                          ),
+                        ),
+                        subtitle: const Text(
+                          'Estos impuestos se aplicarán a todas las variantes',
+                          style: TextStyle(fontSize: 12),
+                        ),
+                        value: usesTaxes,
+                        onChanged: (value) =>
+                            ref.read(provider.notifier).setUsesTaxes(value),
+                        contentPadding: EdgeInsets.zero,
+                      ),
+                      if (usesTaxes) ...[
+                        const SizedBox(height: 16),
+                        ProductTaxSelection(product: widget.product),
+                      ],
+                    ],
+                  );
+                },
+              ),
+            ),
+
+            if (!isNewProduct)
+              _buildFormSection(
+                context,
+                title: 'Variantes',
+                icon: Icons.layers_outlined,
+                child: Card(
+                  elevation: 0,
+                  margin: EdgeInsets.zero,
+                  color: Colors.grey[50],
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
                   ),
+                  child: ListTile(
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
+                    leading: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.blue.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Icon(
+                        Icons.layers_outlined,
+                        color: Colors.blue,
+                      ),
+                    ),
+                    title: const Text(
+                      'Gestionar Variantes',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    subtitle: const Text(
+                      'Configurar variantes de compra y venta',
+                    ),
+                    trailing: const Icon(
+                      Icons.arrow_forward_ios_rounded,
+                      size: 16,
+                    ),
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => VariantTypeSelectionPage(
+                            product: widget.product!,
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              )
+            else
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 24.0),
+                child: Text(
+                  'Podrás agregar variantes una vez guardado el producto base.',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    fontStyle: FontStyle.italic,
+                  ),
+                  textAlign: TextAlign.center,
                 ),
               ),
 
@@ -329,35 +349,53 @@ class ProductFormPageState extends ConsumerState<ProductFormPage> {
     );
   }
 
-  Widget _buildSectionTitle(BuildContext context, String title) {
-    final Map<String, IconData> sectionIcons = {
-      'Información Básica': Icons.info_outline_rounded,
-      'Clasificación': Icons.category_rounded,
-      'Precios y Unidad': Icons.monetization_on_outlined,
-      'Impuestos': Icons.receipt_long_rounded,
-      'Variantes': Icons.layers_outlined,
-    };
+  Widget _buildFormSection(
+    BuildContext context, {
+    required String title,
+    required IconData icon,
+    required Widget child,
+  }) {
+    final theme = Theme.of(context);
 
-    final icon = sectionIcons[title];
-
-    return Padding(
-      padding: const EdgeInsets.only(top: 24.0, bottom: 8.0),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
+    return Container(
+      margin: const EdgeInsets.only(bottom: 24),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+        border: Border.all(
+          color: Colors.black.withValues(alpha: 0.05),
+          width: 0.5,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (icon != null) ...[
-            Icon(icon, size: 20, color: Theme.of(context).colorScheme.primary),
-            const SizedBox(width: 8),
-          ],
-          Text(
-            title,
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w700,
-              color: Theme.of(context).colorScheme.primary,
-              letterSpacing: 0.5,
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+            child: Row(
+              children: [
+                Icon(icon, size: 20, color: theme.colorScheme.primary),
+                const SizedBox(width: 8),
+                Text(
+                  title.toUpperCase(),
+                  style: theme.textTheme.labelLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: theme.colorScheme.onSurfaceVariant,
+                    letterSpacing: 1.1,
+                  ),
+                ),
+              ],
             ),
           ),
+          const Divider(height: 1),
+          Padding(padding: const EdgeInsets.all(16.0), child: child),
         ],
       ),
     );

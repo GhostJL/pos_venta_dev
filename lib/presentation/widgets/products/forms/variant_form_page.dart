@@ -68,8 +68,10 @@ class _VariantFormPageState extends ConsumerState<VariantFormPage> {
     );
 
     return Scaffold(
-      backgroundColor: theme.colorScheme.surface, // Fondo limpio
+      backgroundColor: Colors.grey[50], // Fondo limpio
       appBar: AppBar(
+        backgroundColor: Colors.white,
+        scrolledUnderElevation: 0,
         titleSpacing: 0,
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -85,7 +87,7 @@ class _VariantFormPageState extends ConsumerState<VariantFormPage> {
                 widget.productName!,
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: theme.colorScheme.primary,
-                  fontWeight: FontWeight.w500,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
           ],
@@ -208,11 +210,8 @@ class _VariantFormPageState extends ConsumerState<VariantFormPage> {
     return Container(
       margin: const EdgeInsets.only(bottom: 24),
       decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
+        color: Colors.white,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
-        ),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.03),
@@ -220,6 +219,10 @@ class _VariantFormPageState extends ConsumerState<VariantFormPage> {
             offset: const Offset(0, 4),
           ),
         ],
+        border: Border.all(
+          color: Colors.black.withValues(alpha: 0.05),
+          width: 0.5,
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

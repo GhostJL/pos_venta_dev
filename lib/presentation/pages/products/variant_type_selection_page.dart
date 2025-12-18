@@ -14,13 +14,12 @@ class VariantTypeSelectionPage extends ConsumerWidget {
     final theme = Theme.of(context);
 
     return Scaffold(
-      backgroundColor: theme.colorScheme.surface,
+      backgroundColor: Colors.grey[50],
       appBar: AppBar(
         title: const Text('Gestión de Inventario'),
-        centerTitle: false, // Alineación moderna a la izquierda
-        elevation: 0,
-        backgroundColor: theme.colorScheme.surface,
-        foregroundColor: theme.colorScheme.onSurface,
+        centerTitle: true,
+        scrolledUnderElevation: 0,
+        backgroundColor: Colors.white,
       ),
       body: Center(
         child: Container(
@@ -73,22 +72,45 @@ class VariantTypeSelectionPage extends ConsumerWidget {
   }
 
   Widget _buildProductHeader(ThemeData theme) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          product.name,
-          style: theme.textTheme.headlineMedium?.copyWith(
-            fontWeight: FontWeight.w800,
-            color: theme.colorScheme.onSurface,
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
           ),
+        ],
+        border: Border.all(
+          color: Colors.black.withValues(alpha: 0.05),
+          width: 0.5,
         ),
-        const SizedBox(height: 4),
-        Text(
-          'SKU: ${product.code}',
-          style: theme.textTheme.bodyLarge?.copyWith(fontFamily: 'monospace'),
-        ),
-      ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            product.name,
+            style: theme.textTheme.headlineSmall?.copyWith(
+              fontWeight: FontWeight.w800,
+              color: Colors.black87,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'CÓDIGO: ${product.code}',
+            style: theme.textTheme.bodyMedium?.copyWith(
+              fontFamily: 'monospace',
+              color: Colors.blue[700],
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -101,40 +123,66 @@ class VariantTypeSelectionPage extends ConsumerWidget {
   }) {
     final theme = Theme.of(context);
 
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: theme.colorScheme.outlineVariant),
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+        border: Border.all(
+          color: Colors.black.withValues(alpha: 0.05),
+          width: 0.5,
         ),
-        child: Row(
-          children: [
-            Icon(icon, size: 28, color: theme.colorScheme.primary),
-            const SizedBox(width: 20),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(subtitle, style: theme.textTheme.bodySmall),
-                ],
+      ),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.blue.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(icon, size: 28, color: Colors.blue[700]),
               ),
-            ),
-            Icon(
-              Icons.arrow_forward_ios_rounded,
-              size: 14,
-              color: theme.colorScheme.outlineVariant,
-            ),
-          ],
+              const SizedBox(width: 20),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black87,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      subtitle,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: Colors.grey[600],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(
+                Icons.arrow_forward_ios_rounded,
+                size: 14,
+                color: Colors.grey[400],
+              ),
+            ],
+          ),
         ),
       ),
     );

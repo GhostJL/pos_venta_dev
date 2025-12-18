@@ -25,8 +25,15 @@ class ProductActionsSheet extends ConsumerWidget {
     return Container(
       constraints: BoxConstraints(maxWidth: isTablet ? 480 : double.infinity),
       decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+        color: Colors.white,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.1),
+            blurRadius: 20,
+            offset: const Offset(0, -4),
+          ),
+        ],
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -133,8 +140,25 @@ class ProductActionsSheet extends ConsumerWidget {
   }
 
   Widget _buildSheetHeader(ThemeData theme) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(24, 20, 24, 20),
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      margin: const EdgeInsets.fromLTRB(24, 20, 24, 8),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+        border: Border.all(
+          color: Colors.black.withValues(alpha: 0.05),
+          width: 0.5,
+        ),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -145,12 +169,14 @@ class ProductActionsSheet extends ConsumerWidget {
                   product.name,
                   style: theme.textTheme.headlineSmall?.copyWith(
                     fontWeight: FontWeight.w800,
-                    fontSize: 20,
+                    color: Colors.black87,
+                    fontSize: 18,
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
+              const SizedBox(width: 8),
               if (product.isActive)
                 _buildStatusChip(Colors.teal, 'ACTIVO')
               else
@@ -159,9 +185,11 @@ class ProductActionsSheet extends ConsumerWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            "SKU: ${product.code}",
-            style: theme.textTheme.bodyMedium?.copyWith(
+            "CÓDIGO: ${product.code}",
+            style: theme.textTheme.bodySmall?.copyWith(
               fontFamily: 'monospace',
+              color: Colors.blue[700],
+              fontWeight: FontWeight.bold,
             ),
           ),
         ],
@@ -171,17 +199,18 @@ class ProductActionsSheet extends ConsumerWidget {
 
   Widget _buildStatusChip(Color color, String text) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        border: Border.all(color: color.withValues(alpha: 0.5)),
-        borderRadius: BorderRadius.circular(4),
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(8),
       ),
       child: Text(
         text,
         style: TextStyle(
           color: color,
           fontSize: 10,
-          fontWeight: FontWeight.bold,
+          fontWeight: FontWeight.w900,
+          letterSpacing: 0.5,
         ),
       ),
     );
@@ -196,20 +225,38 @@ class ProductActionsSheet extends ConsumerWidget {
     required VoidCallback onTap,
   }) {
     final theme = Theme.of(context);
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+        border: Border.all(
+          color: Colors.black.withValues(alpha: 0.05),
+          width: 0.5,
+        ),
+      ),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: Container(
+        borderRadius: BorderRadius.circular(16),
+        child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: theme.colorScheme.outlineVariant),
-          ),
           child: Row(
             children: [
-              Icon(icon, color: color, size: 24),
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(icon, color: color, size: 24),
+              ),
               const SizedBox(width: 16),
               Expanded(
                 child: Column(
@@ -220,16 +267,22 @@ class ProductActionsSheet extends ConsumerWidget {
                       style: theme.textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.bold,
                         fontSize: 15,
+                        color: Colors.black87,
                       ),
                     ),
-                    Text(subtitle, style: theme.textTheme.bodySmall),
+                    Text(
+                      subtitle,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: Colors.grey[600],
+                      ),
+                    ),
                   ],
                 ),
               ),
               Icon(
                 Icons.chevron_right_rounded,
                 size: 20,
-                color: theme.colorScheme.outlineVariant,
+                color: Colors.grey[400],
               ),
             ],
           ),

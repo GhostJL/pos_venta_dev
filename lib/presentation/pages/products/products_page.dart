@@ -54,15 +54,19 @@ class ProductsPageState extends ConsumerState<ProductsPage>
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final products = ref.watch(productNotifierProvider);
     final hasManagePermission = ref.watch(
       hasPermissionProvider(PermissionConstants.catalogManage),
     );
 
     return Scaffold(
+      backgroundColor: Colors.grey[50],
       appBar: AppBar(
         title: const Text('Productos'),
         centerTitle: true,
+        scrolledUnderElevation: 0,
+        backgroundColor: Colors.white,
         actions: [
           if (hasManagePermission)
             IconButton(
@@ -75,7 +79,7 @@ class ProductsPageState extends ConsumerState<ProductsPage>
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24.0),
           child: Column(
-            crossAxisAlignment: .start,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const SizedBox(height: 12),
               ProductSearchBar(
@@ -97,34 +101,34 @@ class ProductsPageState extends ConsumerState<ProductsPage>
                       'Ver Inactivos',
                       style: TextStyle(
                         fontSize: 12,
-
+                        fontWeight: _showInactive
+                            ? FontWeight.bold
+                            : FontWeight.normal,
                         color: _showInactive
-                            ? Theme.of(context).colorScheme.error
-                            : Theme.of(context).colorScheme.onSurface,
+                            ? theme.colorScheme.primary
+                            : Colors.grey[700],
                       ),
                     ),
                     selected: _showInactive,
                     onSelected: (value) =>
                         setState(() => _showInactive = value),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
+                      borderRadius: BorderRadius.circular(12),
                       side: BorderSide(
                         color: _showInactive
-                            ? Theme.of(context).colorScheme.error
-                            : Theme.of(context).colorScheme.outline,
-                        width: _showInactive ? 1.5 : 1,
+                            ? theme.colorScheme.primary
+                            : Colors.grey.shade300,
+                        width: 1,
                       ),
                     ),
-                    checkmarkColor: Theme.of(context).colorScheme.error,
-                    selectedShadowColor: Theme.of(context).colorScheme.error,
-                    selectedColor: Theme.of(
-                      context,
-                    ).colorScheme.error.withValues(alpha: 0.2),
-                    backgroundColor: Theme.of(context).colorScheme.surface,
-
+                    checkmarkColor: theme.colorScheme.primary,
+                    selectedColor: theme.colorScheme.primary.withValues(
+                      alpha: 0.1,
+                    ),
+                    backgroundColor: Colors.white,
                     labelPadding: const EdgeInsets.symmetric(
-                      horizontal: 4,
-                      vertical: 2,
+                      horizontal: 8,
+                      vertical: 0,
                     ),
                   ),
 
