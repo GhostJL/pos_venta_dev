@@ -32,7 +32,6 @@ class _SideMenuState extends ConsumerState<SideMenu> {
 
     return NavigationDrawer(
       elevation: 0,
-      backgroundColor: Colors.transparent,
       children: [
         // Header minimalista
         _MinimalHeader(user: user),

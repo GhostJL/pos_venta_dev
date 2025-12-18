@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:posventa/presentation/widgets/menu/side_menu.dart';
 import 'package:posventa/presentation/widgets/common/theme_toggle_button.dart';
 
@@ -30,10 +31,16 @@ class _MainLayoutState extends State<MainLayout> {
         final bool isSmallScreen = constraints.maxWidth < 1200;
 
         if (isSmallScreen) {
-          return SafeArea(
+          return AnnotatedRegion<SystemUiOverlayStyle>(
+            value: SystemUiOverlayStyle(
+              statusBarColor: Colors.transparent,
+              statusBarIconBrightness: colorScheme.brightness == Brightness.dark
+                  ? Brightness.light
+                  : Brightness.dark,
+              statusBarBrightness: colorScheme.brightness,
+            ),
             child: Scaffold(
               appBar: AppBar(
-                forceMaterialTransparency: true,
                 elevation: 0,
                 leading: Builder(
                   builder: (context) => IconButton(
