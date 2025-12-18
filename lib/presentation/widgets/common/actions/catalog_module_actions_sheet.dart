@@ -27,7 +27,7 @@ class CatalogModuleActionsSheet extends StatelessWidget {
       constraints: BoxConstraints(maxWidth: isTablet ? 480 : double.infinity),
       decoration: BoxDecoration(
         color: theme.colorScheme.surface,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        borderRadius: BorderRadius.circular(20),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,

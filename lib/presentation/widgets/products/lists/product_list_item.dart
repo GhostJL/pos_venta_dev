@@ -22,13 +22,10 @@ class ProductListItem extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: isActive
-            ? theme.colorScheme.surface
+            ? theme.colorScheme.surfaceContainer
             : theme.colorScheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: theme.colorScheme.outlineVariant.withValues(alpha: 0.1),
-          width: 0.5,
-        ),
+        border: Border.all(color: theme.colorScheme.outline, width: 0.5),
       ),
       child: InkWell(
         borderRadius: BorderRadius.circular(16),

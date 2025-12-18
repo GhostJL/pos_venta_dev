@@ -60,7 +60,7 @@ class _ProductFilterSheetState extends ConsumerState<ProductFilterSheet> {
         constraints: BoxConstraints(maxWidth: isTablet ? 480 : double.infinity),
         decoration: BoxDecoration(
           color: theme.colorScheme.surface,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+          borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
               color: theme.colorScheme.shadow.withValues(alpha: 0.1),

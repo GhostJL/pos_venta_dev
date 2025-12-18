@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:posventa/presentation/providers/auth_provider.dart';
 import 'package:posventa/presentation/providers/providers.dart';
-import 'package:posventa/presentation/widgets/dashboard/dashboard_search_delegate.dart';
 import 'package:posventa/core/theme/theme.dart';
 
 class DashboardAppBar extends ConsumerWidget implements PreferredSizeWidget {
@@ -19,46 +18,11 @@ class DashboardAppBar extends ConsumerWidget implements PreferredSizeWidget {
       toolbarHeight: 80,
       backgroundColor: Theme.of(context).colorScheme.surface,
       surfaceTintColor: Theme.of(context).colorScheme.surface,
-      title: Container(
-        constraints: const BoxConstraints(maxWidth: 600),
-        child: InkWell(
-          onTap: () async {
-            final result = await showSearch(
-              context: context,
-              delegate: DashboardSearchDelegate(),
-            );
-            if (result != null && context.mounted) {
-              context.go(result);
-            }
-          },
-          borderRadius: BorderRadius.circular(12),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surfaceContainer,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Theme.of(context).colorScheme.outline),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withAlpha(5),
-                  blurRadius: 10,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: Row(
-              children: [
-                Icon(Icons.search_rounded),
-                const SizedBox(width: 12),
-                Text(
-                  'Buscar funciones...',
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
-                ),
-              ],
-            ),
-          ),
+      title: Text(
+        'Panel de Control',
+        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+          fontWeight: FontWeight.bold,
+          color: Theme.of(context).colorScheme.onSurface,
         ),
       ),
       actions: [

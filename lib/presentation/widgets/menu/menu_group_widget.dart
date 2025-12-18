@@ -103,6 +103,7 @@ class _MenuGroupWidgetState extends ConsumerState<MenuGroupWidget>
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
     final isExpanded = ref.watch(
       menuStateProvider.select(
         (state) => state.expandedGroupId == widget.menuGroup.id,
@@ -119,33 +120,21 @@ class _MenuGroupWidgetState extends ConsumerState<MenuGroupWidget>
         children: [
           // Header del grupo
           MouseRegion(
-            onEnter: (_) {
-              if (mounted) setState(() => _isHovered = true);
-            },
-            onExit: (_) {
-              if (mounted) setState(() => _isHovered = false);
-            },
+            onEnter: (_) => setState(() => _isHovered = true),
+            onExit: (_) => setState(() => _isHovered = false),
             cursor: SystemMouseCursors.click,
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 12),
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 200),
+                height: 48,
                 decoration: BoxDecoration(
                   color: isExpanded
-                      ? colorScheme.surface
+                      ? colorScheme.surfaceContainer
                       : _isHovered
-                      ? colorScheme.surface.withValues(alpha: 0.5)
+                      ? colorScheme.onSurface.withValues(alpha: 0.05)
                       : Colors.transparent,
-                  borderRadius: BorderRadius.circular(12),
-                  boxShadow: isExpanded
-                      ? [
-                          BoxShadow(
-                            color: colorScheme.shadow.withValues(alpha: 0.15),
-                            blurRadius: 10,
-                            offset: const Offset(0, 2),
-                          ),
-                        ]
-                      : null,
+                  borderRadius: BorderRadius.circular(24),
                 ),
                 child: Material(
                   color: Colors.transparent,
@@ -155,46 +144,40 @@ class _MenuGroupWidgetState extends ConsumerState<MenuGroupWidget>
                           .read(menuStateProvider.notifier)
                           .toggleGroup(widget.menuGroup.id);
                     },
-                    borderRadius: BorderRadius.circular(12),
-                    splashColor: colorScheme.primary.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(24),
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 11,
-                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
                       child: Row(
                         children: [
-                          // Icono del grupo
                           if (widget.menuGroup.groupIcon != null) ...[
                             Icon(
                               widget.menuGroup.groupIcon,
-                              size: 20,
+                              size: 24,
                               color: isExpanded
                                   ? colorScheme.primary
-                                  : colorScheme.onSurface,
+                                  : colorScheme.onSurfaceVariant,
                             ),
                             const SizedBox(width: 12),
                           ],
-                          // Título del grupo
                           Expanded(
                             child: Text(
                               widget.menuGroup.title,
-                              style: TextStyle(
+                              style: textTheme.titleSmall?.copyWith(
                                 color: isExpanded
                                     ? colorScheme.onSurface
                                     : colorScheme.onSurface,
                                 fontWeight: isExpanded
                                     ? FontWeight.w600
-                                    : FontWeight.w400,
-                                fontSize: 14,
-                                letterSpacing: -0.1,
+                                    : FontWeight.w500,
+                                letterSpacing: 0.1,
                               ),
                             ),
                           ),
-                          // Icono expandir/colapsar
                           Icon(
-                            isExpanded ? Icons.remove : Icons.add,
-                            size: 16,
+                            isExpanded
+                                ? Icons.expand_less_rounded
+                                : Icons.expand_more_rounded,
+                            size: 24,
                             color: isExpanded
                                 ? colorScheme.primary
                                 : colorScheme.onSurfaceVariant,
@@ -207,27 +190,21 @@ class _MenuGroupWidgetState extends ConsumerState<MenuGroupWidget>
               ),
             ),
           ),
-          // Items del grupo con línea vertical izquierda
+          // Items del grupo (sin línea, solo indentación)
           AnimatedCrossFade(
             firstChild: const SizedBox(width: double.infinity, height: 0),
-            secondChild: Container(
-              margin: const EdgeInsets.only(left: 16, top: 4),
-              padding: const EdgeInsets.only(left: 12),
-              decoration: BoxDecoration(
-                border: Border(
-                  left: BorderSide(
-                    color: colorScheme.outline.withValues(alpha: 0.3),
-                    width: 1.5,
-                  ),
-                ),
-              ),
+            secondChild: Padding(
+              padding: const EdgeInsets.only(top: 4),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: widget.menuGroup.items
                     .map(
-                      (item) => MenuItemWidget(
-                        menuItem: item,
-                        currentPath: widget.currentPath,
+                      (item) => Padding(
+                        padding: const EdgeInsets.only(left: 12),
+                        child: MenuItemWidget(
+                          menuItem: item,
+                          currentPath: widget.currentPath,
+                        ),
                       ),
                     )
                     .toList(),

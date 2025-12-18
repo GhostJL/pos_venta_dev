@@ -18,19 +18,9 @@ class SideMenu extends ConsumerStatefulWidget {
 }
 
 class _SideMenuState extends ConsumerState<SideMenu> {
-  String _searchQuery = '';
-  final TextEditingController _searchController = TextEditingController();
-
-  @override
-  void dispose() {
-    _searchController.dispose();
-    super.dispose();
-  }
-
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     final authState = ref.watch(authProvider);
     final user = authState.user;
@@ -40,113 +30,59 @@ class _SideMenuState extends ConsumerState<SideMenu> {
     final permissionsAsync = ref.watch(currentUserPermissionsProvider);
     final permissions = permissionsAsync.asData?.value ?? [];
 
-    return SafeArea(
-      child: Container(
-        width: 280,
-        decoration: BoxDecoration(
-          // Fondo adaptado al tema
-          color: isDark
-              ? colorScheme.surface
-              : colorScheme.surfaceContainerLowest,
-          boxShadow: [
-            BoxShadow(
-              color: colorScheme.shadow.withValues(alpha: 0.06),
-              blurRadius: 20,
-              offset: const Offset(2, 0),
-            ),
-          ],
-        ),
-        child: Column(
-          children: [
-            // Header minimalista
-            _MinimalHeader(user: user),
+    return NavigationDrawer(
+      elevation: 0,
+      backgroundColor: Colors.transparent,
+      children: [
+        // Header minimalista
+        _MinimalHeader(user: user),
 
-            // Campo de búsqueda
-            _buildSearchBar(colorScheme),
+        // Contenido del menú
+        ..._buildMenuContent(context, user, permissions, currentPath),
 
-            // Contenido del menú
-            Expanded(
-              child: _buildMenuContent(context, user, permissions, currentPath),
-            ),
-
-            // Logout button
-            const SideMenuLogout(),
-          ],
-        ),
-      ),
+        const SizedBox(height: 16),
+        // Logout button
+        const SideMenuLogout(),
+        const SizedBox(height: 16),
+      ],
     );
   }
 
-  Widget _buildSearchBar(ColorScheme colorScheme) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      child: TextField(
-        controller: _searchController,
-        onChanged: (value) {
-          setState(() {
-            _searchQuery = value.toLowerCase();
-          });
-        },
-        style: TextStyle(color: colorScheme.onSurface, fontSize: 14),
-        decoration: InputDecoration(
-          hintText: 'Buscar...',
-          hintStyle: TextStyle(
-            color: colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
-          ),
-          prefixIcon: Icon(
-            Icons.search,
-            color: colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
-            size: 20,
-          ),
-          filled: true,
-          fillColor: colorScheme.surface.withValues(alpha: 0.3),
-          contentPadding: const EdgeInsets.symmetric(
-            vertical: 0,
-            horizontal: 12,
-          ),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide.none,
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildMenuContent(
+  List<Widget> _buildMenuContent(
     BuildContext context,
     User? user,
     List<String> permissions,
     String currentPath,
   ) {
     if (user == null) {
-      return const Center(child: Text('No user logged in'));
+      return [
+        const NavigationDrawerDestination(
+          icon: Icon(Icons.error),
+          label: Text('No user logged in'),
+        ),
+      ];
     }
 
     final menuData = MenuConfig.getMenuForUser(user);
     final useGroups = MenuConfig.shouldUseGroups(user);
 
-    return ListView(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
-      children: [
-        if (useGroups)
-          ..._buildGroupedMenu(
-            context,
-            menuData as List<MenuGroup>,
-            user,
-            permissions,
-            currentPath,
-          )
-        else
-          ..._buildFlatMenu(
-            context,
-            menuData as List<MenuItem>,
-            user,
-            permissions,
-            currentPath,
-          ),
-      ],
-    );
+    if (useGroups) {
+      return _buildGroupedMenu(
+        context,
+        menuData as List<MenuGroup>,
+        user,
+        permissions,
+        currentPath,
+      );
+    } else {
+      return _buildFlatMenu(
+        context,
+        menuData as List<MenuItem>,
+        user,
+        permissions,
+        currentPath,
+      );
+    }
   }
 
   List<Widget> _buildGroupedMenu(
@@ -165,16 +101,6 @@ class _SideMenuState extends ConsumerState<SideMenu> {
 
       var accessibleItems = group.getAccessibleItems(user, permissions);
 
-      if (_searchQuery.isNotEmpty) {
-        accessibleItems = accessibleItems
-            .where(
-              (item) =>
-                  item.title.toLowerCase().contains(_searchQuery) ||
-                  group.title.toLowerCase().contains(_searchQuery),
-            )
-            .toList();
-      }
-
       if (accessibleItems.isEmpty) continue;
 
       final filteredGroup = MenuGroup(
@@ -191,12 +117,14 @@ class _SideMenuState extends ConsumerState<SideMenu> {
       }
 
       widgets.add(
-        MenuGroupWidget(menuGroup: filteredGroup, currentPath: currentPath),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8),
+          child: MenuGroupWidget(
+            menuGroup: filteredGroup,
+            currentPath: currentPath,
+          ),
+        ),
       );
-    }
-
-    if (widgets.isEmpty && _searchQuery.isNotEmpty) {
-      widgets.add(_buildNoResults(context));
     }
 
     return widgets;
@@ -211,52 +139,20 @@ class _SideMenuState extends ConsumerState<SideMenu> {
   ) {
     final widgets = <Widget>[];
 
-    var accessibleItems = items
+    final accessibleItems = items
         .where((item) => item.hasAccess(user, permissions))
         .toList();
 
-    if (_searchQuery.isNotEmpty) {
-      accessibleItems = accessibleItems
-          .where((item) => item.title.toLowerCase().contains(_searchQuery))
-          .toList();
-    }
-
     for (final item in accessibleItems) {
-      widgets.add(MenuItemWidget(menuItem: item, currentPath: currentPath));
-    }
-
-    if (accessibleItems.isEmpty && _searchQuery.isNotEmpty) {
-      widgets.add(_buildNoResults(context));
+      widgets.add(
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8),
+          child: MenuItemWidget(menuItem: item, currentPath: currentPath),
+        ),
+      );
     }
 
     return widgets;
-  }
-
-  Widget _buildNoResults(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-
-    return Padding(
-      padding: const EdgeInsets.all(32),
-      child: Column(
-        children: [
-          Icon(
-            Icons.search_off_rounded,
-            size: 48,
-            color: colorScheme.onSurface.withValues(alpha: 0.3),
-          ),
-          const SizedBox(height: 16),
-          Text(
-            'No se encontraron resultados',
-            style: TextStyle(
-              color: colorScheme.onSurface.withValues(alpha: 0.6),
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-            ),
-            textAlign: TextAlign.center,
-          ),
-        ],
-      ),
-    );
   }
 }
 
@@ -269,32 +165,20 @@ class _MinimalHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
 
     return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        border: Border(
-          bottom: BorderSide(
-            color: colorScheme.onSurface.withValues(alpha: 0.08),
-            width: 1,
-          ),
-        ),
-      ),
+      padding: const EdgeInsets.fromLTRB(28, 24, 16, 20),
       child: Row(
         children: [
-          Icon(
-            Icons.menu_rounded,
-            size: 20,
-            color: colorScheme.onSurface.withValues(alpha: 0.7),
-          ),
-          const SizedBox(width: 10),
+          Icon(Icons.store_rounded, size: 24, color: colorScheme.primary),
+          const SizedBox(width: 12),
           Text(
-            'Menu',
-            style: TextStyle(
-              color: colorScheme.onSurface.withValues(alpha: 0.85),
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-              letterSpacing: -0.2,
+            'POS Venta',
+            style: textTheme.titleMedium?.copyWith(
+              color: colorScheme.onSurface,
+              fontWeight: FontWeight.bold,
+              letterSpacing: 0.2,
             ),
           ),
         ],

@@ -25,102 +25,63 @@ class _MenuItemWidgetState extends State<MenuItemWidget> {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
     final currentPath = GoRouterState.of(context).uri.toString();
     final isSelected = currentPath == widget.menuItem.route;
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
       child: MouseRegion(
-        onEnter: (_) {
-          if (mounted) setState(() => _isHovered = true);
-        },
-        onExit: (_) {
-          if (mounted) setState(() => _isHovered = false);
-        },
+        onEnter: (_) => setState(() => _isHovered = true),
+        onExit: (_) => setState(() => _isHovered = false),
         cursor: SystemMouseCursors.click,
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),
-          curve: Curves.easeOut,
+          height: 48, // Standard M3 Drawer item height
           decoration: BoxDecoration(
-            // Fondo adaptado al tema
             color: isSelected
-                ? colorScheme.primary.withValues(alpha: 0.12)
+                ? colorScheme.primaryContainer
                 : _isHovered
-                ? colorScheme.primary.withValues(alpha: 0.06)
+                ? colorScheme.onSurface.withValues(alpha: 0.08)
                 : Colors.transparent,
-            borderRadius: BorderRadius.circular(12),
-            boxShadow: isSelected
-                ? [
-                    BoxShadow(
-                      color: colorScheme.shadow.withValues(alpha: 0.08),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
-                    ),
-                  ]
-                : null,
+            borderRadius: BorderRadius.circular(24), // Pill shape
           ),
           child: Material(
             color: Colors.transparent,
             child: InkWell(
               onTap: () => _handleTap(context),
-              borderRadius: BorderRadius.circular(12),
-              splashColor: colorScheme.primary.withValues(alpha: 0.08),
-              highlightColor: colorScheme.primary.withValues(alpha: 0.05),
+              borderRadius: BorderRadius.circular(24),
+              splashColor: colorScheme.onSurface.withValues(alpha: 0.1),
+              highlightColor: Colors.transparent,
               child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 11,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: Row(
                   children: [
                     // Icono
                     Icon(
                       widget.menuItem.icon,
-                      size: 20,
+                      size: 24, // M3 standard icon size
                       color: isSelected
-                          ? colorScheme.onSurface
-                          : _isHovered
-                          ? colorScheme.onSurface.withValues(alpha: 0.7)
-                          : colorScheme.onSurface,
+                          ? colorScheme.onPrimaryContainer
+                          : colorScheme.onSurfaceVariant,
                     ),
                     const SizedBox(width: 12),
                     // Texto
                     Expanded(
                       child: Text(
                         widget.menuItem.title,
-                        style: TextStyle(
+                        style: textTheme.labelLarge?.copyWith(
                           color: isSelected
-                              ? colorScheme.onSurface
+                              ? colorScheme.onPrimaryContainer
                               : colorScheme.onSurface,
                           fontWeight: isSelected
                               ? FontWeight.w600
-                              : FontWeight.w400,
-                          fontSize: 14,
-                          letterSpacing: -0.1,
+                              : FontWeight.w500,
                         ),
                       ),
                     ),
-                    // Indicador de selección
-                    if (isSelected)
-                      Container(
-                        width: 6,
-                        height: 6,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: colorScheme.onSurface,
-                          boxShadow: [
-                            BoxShadow(
-                              color: colorScheme.onSurface.withValues(
-                                alpha: 0.4,
-                              ),
-                              blurRadius: 4,
-                              spreadRadius: 1,
-                            ),
-                          ],
-                        ),
-                      )
                     // Badge si existe
-                    else if (widget.menuItem.badgeCount != null &&
+                    if (widget.menuItem.badgeCount != null &&
                         widget.menuItem.badgeCount! > 0)
                       _buildBadge(colorScheme),
                   ],
