@@ -32,6 +32,9 @@ class DatabaseSchema {
 
     // 8. Tablas de Seguridad y Auditoría
     await _createSecurityAndAuditTables(db);
+
+    // 9. Tabla de Información de la Tienda
+    await _createStoreTable(db);
   }
 
   // =================================================================
@@ -1023,5 +1026,35 @@ class DatabaseSchema {
         FOREIGN KEY (related_variant_id) REFERENCES ${DatabaseConstants.tableProductVariants}(id) ON DELETE CASCADE
       )
     ''');
+  }
+
+  static Future<void> _createStoreTable(Database db) async {
+    await db.execute('''
+      CREATE TABLE ${DatabaseConstants.tableStore} (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        business_name TEXT,
+        tax_id TEXT,
+        address TEXT,
+        phone TEXT,
+        email TEXT,
+        website TEXT,
+        logo_path TEXT,
+        receipt_footer TEXT,
+        currency TEXT NOT NULL DEFAULT 'MXN',
+        timezone TEXT NOT NULL DEFAULT 'America/Mexico_City',
+        created_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
+        updated_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
+      )
+    ''');
+
+    // Insert default store if not exists
+    await db.insert(DatabaseConstants.tableStore, {
+      'name': 'Mi Tienda',
+      'currency': 'MXN',
+      'timezone': 'America/Mexico_City',
+      'created_at': DateTime.now().toIso8601String(),
+      'updated_at': DateTime.now().toIso8601String(),
+    });
   }
 }

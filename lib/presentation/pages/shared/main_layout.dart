@@ -112,7 +112,7 @@ class _DesktopHeader extends StatelessWidget {
         color: colorScheme.surface,
         border: Border(
           bottom: BorderSide(
-            color: colorScheme.outlineVariant.withOpacity(0.5),
+            color: colorScheme.outlineVariant.withValues(alpha: 0.5),
             width: 1,
           ),
         ),

@@ -31,4 +31,5 @@ class DatabaseConstants {
   static const tableInventoryLots = 'inventory_lots';
   static const tableSaleItemLots = 'sale_item_lots';
   static const tableNotifications = 'notifications';
+  static const tableStore = 'stores';
 }

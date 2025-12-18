@@ -91,6 +91,8 @@ import 'package:posventa/domain/repositories/user_permission_repository.dart';
 import 'package:posventa/data/repositories/user_permission_repository_impl.dart';
 import 'package:posventa/domain/repositories/inventory_lot_repository.dart';
 import 'package:posventa/data/repositories/inventory_lot_repository_impl.dart';
+import 'package:posventa/domain/repositories/i_store_repository.dart';
+import 'package:posventa/data/repositories/store_repository_impl.dart';
 import 'package:posventa/presentation/providers/return_processing_provider.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -461,3 +463,7 @@ final saleDetailStreamProvider = StreamProvider.family<Sale?, int>((
 ) {
   return ref.watch(getSaleByIdUseCaseProvider).stream(saleId);
 });
+
+@riverpod
+IStoreRepository storeRepository(ref) =>
+    StoreRepositoryImpl(databaseHelper: ref.watch(databaseHelperProvider));

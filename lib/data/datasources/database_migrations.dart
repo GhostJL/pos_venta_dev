@@ -56,6 +56,11 @@ class DatabaseMigrations {
     if (oldVersion < 32 && newVersion >= 32) {
       await _migrateToVersion32(db);
     }
+
+    // Migration from version 32 to 33: Create stores table
+    if (oldVersion < 33 && newVersion >= 33) {
+      await _migrateToVersion33(db);
+    }
   }
 
   static Future<void> _migrateToVersion32(Database db) async {
@@ -404,5 +409,42 @@ class DatabaseMigrations {
       CREATE INDEX IF NOT EXISTS idx_sale_item_lots_lot 
       ON ${DatabaseConstants.tableSaleItemLots}(lot_id)
     ''');
+  }
+
+  static Future<void> _migrateToVersion33(Database db) async {
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS ${DatabaseConstants.tableStore} (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        business_name TEXT,
+        tax_id TEXT,
+        address TEXT,
+        phone TEXT,
+        email TEXT,
+        website TEXT,
+        logo_path TEXT,
+        receipt_footer TEXT,
+        currency TEXT NOT NULL DEFAULT 'MXN',
+        timezone TEXT NOT NULL DEFAULT 'America/Mexico_City',
+        created_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
+        updated_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
+      )
+    ''');
+
+    // Insert default store if not exists
+    final List<Map<String, dynamic>> existing = await db.query(
+      DatabaseConstants.tableStore,
+      limit: 1,
+    );
+
+    if (existing.isEmpty) {
+      await db.insert(DatabaseConstants.tableStore, {
+        'name': 'Mi Tienda',
+        'currency': 'MXN',
+        'timezone': 'America/Mexico_City',
+        'created_at': DateTime.now().toIso8601String(),
+        'updated_at': DateTime.now().toIso8601String(),
+      });
+    }
   }
 }

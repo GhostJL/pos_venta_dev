@@ -177,7 +177,7 @@ class MenuConfig {
           MenuItem(
             title: 'Mi Tienda',
             icon: Icons.store_mall_directory_rounded,
-            route: '/profile',
+            route: '/store',
             customAccessCheck: (user) => user?.role == UserRole.administrador,
           ),
           MenuItem(

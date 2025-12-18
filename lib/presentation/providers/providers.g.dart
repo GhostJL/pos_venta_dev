@@ -3476,3 +3476,49 @@ final class GetRecentPurchaseItemsUseCaseProvider
 
 String _$getRecentPurchaseItemsUseCaseHash() =>
     r'b12abfd99f33e59a7a5eb0b8223f71ed0022a271';
+
+@ProviderFor(storeRepository)
+const storeRepositoryProvider = StoreRepositoryProvider._();
+
+final class StoreRepositoryProvider
+    extends
+        $FunctionalProvider<
+          IStoreRepository,
+          IStoreRepository,
+          IStoreRepository
+        >
+    with $Provider<IStoreRepository> {
+  const StoreRepositoryProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'storeRepositoryProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$storeRepositoryHash();
+
+  @$internal
+  @override
+  $ProviderElement<IStoreRepository> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  IStoreRepository create(Ref ref) {
+    return storeRepository(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(IStoreRepository value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<IStoreRepository>(value),
+    );
+  }
+}
+
+String _$storeRepositoryHash() => r'30fe53669b14c6b541751e4cc63370597b98bc92';
