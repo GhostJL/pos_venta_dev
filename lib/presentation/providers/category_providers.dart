@@ -16,7 +16,7 @@ CategoryRepository categoryRepository(ref) {
   return CategoryRepositoryImpl(dbHelper);
 }
 
-@riverpod
+@Riverpod(keepAlive: true)
 GetAllCategories getAllCategoriesUseCase(ref) {
   return GetAllCategories(ref.watch(categoryRepositoryProvider));
 }
@@ -36,7 +36,7 @@ DeleteCategory deleteCategoryUseCase(ref) {
   return DeleteCategory(ref.watch(categoryRepositoryProvider));
 }
 
-@riverpod
+@Riverpod(keepAlive: true)
 class CategoryList extends _$CategoryList {
   @override
   Future<List<Category>> build() async {

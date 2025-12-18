@@ -105,8 +105,58 @@ class ProductPricingSection extends ConsumerWidget {
             ),
             keyboardType: TextInputType.numberWithOptions(decimal: true),
           ),
+          const SizedBox(height: 12),
+          ListenableBuilder(
+            listenable: Listenable.merge([
+              salePriceController,
+              costPriceController,
+            ]),
+            builder: (context, _) => _buildMarginIndicator(
+              context,
+              costPriceController.text,
+              salePriceController.text,
+            ),
+          ),
         ],
       ],
+    );
+  }
+
+  Widget _buildMarginIndicator(
+    BuildContext context,
+    String costStr,
+    String priceStr,
+  ) {
+    final cost = double.tryParse(costStr) ?? 0;
+    final price = double.tryParse(priceStr) ?? 0;
+    final theme = Theme.of(context);
+
+    if (cost <= 0 || price <= 0) return const SizedBox.shrink();
+
+    final margin = ((price - cost) / price) * 100;
+    final isNegative = margin < 0;
+
+    return Padding(
+      padding: const EdgeInsets.only(left: 4),
+      child: Row(
+        children: [
+          Icon(
+            isNegative
+                ? Icons.warning_amber_rounded
+                : Icons.trending_up_rounded,
+            size: 14,
+            color: isNegative ? theme.colorScheme.error : Colors.green,
+          ),
+          const SizedBox(width: 6),
+          Text(
+            'Margen de utilidad: ${margin.toStringAsFixed(1)}%',
+            style: theme.textTheme.labelSmall?.copyWith(
+              color: isNegative ? theme.colorScheme.error : Colors.green,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

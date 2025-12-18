@@ -14,12 +14,10 @@ class VariantTypeSelectionPage extends ConsumerWidget {
     final theme = Theme.of(context);
 
     return Scaffold(
-      backgroundColor: Colors.grey[50],
       appBar: AppBar(
         title: const Text('Gestión de Inventario'),
         centerTitle: true,
         scrolledUnderElevation: 0,
-        backgroundColor: Colors.white,
       ),
       body: Center(
         child: Container(

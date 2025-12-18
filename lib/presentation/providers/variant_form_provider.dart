@@ -295,9 +295,30 @@ class VariantForm extends _$VariantForm {
 
   Future<ProductVariant?> save(
     int productId,
-    List<String>? existingBarcodes,
-  ) async {
-    state = state.copyWithNullable(isSaving: true);
+    List<String>? existingBarcodes, {
+    String? name,
+    String? quantity,
+    String? price,
+    String? cost,
+    String? wholesalePrice,
+    String? conversionFactor,
+    String? stockMin,
+    String? stockMax,
+    String? barcode,
+  }) async {
+    // Sync state with passed values if provided
+    state = state.copyWithNullable(
+      isSaving: true,
+      name: name,
+      quantity: quantity,
+      price: price,
+      cost: cost,
+      wholesalePrice: wholesalePrice,
+      conversionFactor: conversionFactor,
+      stockMin: stockMin,
+      stockMax: stockMax,
+      barcode: barcode,
+    );
 
     final isValid = await validateBarcode(existingBarcodes);
     if (!isValid) {

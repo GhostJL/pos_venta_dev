@@ -70,7 +70,7 @@ final class GetAllSuppliersUseCaseProvider
         argument: null,
         retry: null,
         name: r'getAllSuppliersUseCaseProvider',
-        isAutoDispose: true,
+        isAutoDispose: false,
         dependencies: null,
         $allTransitiveDependencies: null,
       );
@@ -98,7 +98,7 @@ final class GetAllSuppliersUseCaseProvider
 }
 
 String _$getAllSuppliersUseCaseHash() =>
-    r'c028edd486ba903004b1360b0c1bbe4a206bb620';
+    r'3c1513a8844dd29d51116c49e8b750ed0ad99843';
 
 @ProviderFor(createSupplierUseCase)
 const createSupplierUseCaseProvider = CreateSupplierUseCaseProvider._();
@@ -237,7 +237,7 @@ final class SupplierListProvider
         argument: null,
         retry: null,
         name: r'supplierListProvider',
-        isAutoDispose: true,
+        isAutoDispose: false,
         dependencies: null,
         $allTransitiveDependencies: null,
       );
@@ -250,7 +250,7 @@ final class SupplierListProvider
   SupplierList create() => SupplierList();
 }
 
-String _$supplierListHash() => r'066dbed287b2ad6ddc253271adbe8d43cfb4a393';
+String _$supplierListHash() => r'69d176644af8c9bee97158acb5bfbe9110757893';
 
 abstract class _$SupplierList extends $AsyncNotifier<List<Supplier>> {
   FutureOr<List<Supplier>> build();

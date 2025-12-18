@@ -16,7 +16,7 @@ DepartmentRepository departmentRepository(ref) {
   return DepartmentRepositoryImpl(dbHelper);
 }
 
-@riverpod
+@Riverpod(keepAlive: true)
 GetAllDepartments getAllDepartmentsUseCase(ref) {
   return GetAllDepartments(ref.watch(departmentRepositoryProvider));
 }
@@ -36,7 +36,7 @@ DeleteDepartment deleteDepartmentUseCase(ref) {
   return DeleteDepartment(ref.watch(departmentRepositoryProvider));
 }
 
-@riverpod
+@Riverpod(keepAlive: true)
 class DepartmentList extends _$DepartmentList {
   @override
   Future<List<Department>> build() async {

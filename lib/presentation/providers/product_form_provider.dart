@@ -106,7 +106,7 @@ class ProductFormNotifier extends _$ProductFormNotifier {
   @override
   ProductFormState build(Product? product) {
     if (product != null) {
-      return ProductFormState(
+      final state = ProductFormState(
         initialProduct: product,
         name: product.name,
         code: product.code,
@@ -128,8 +128,34 @@ class ProductFormNotifier extends _$ProductFormNotifier {
                 product.variants!.first.variantName != 'Estándar'),
         usesTaxes: (product.productTaxes?.isNotEmpty ?? false),
       );
+
+      // Si tenemos ID, intentamos cargar los datos más frescos en el siguiente frame
+      if (product.id != null) {
+        Future.microtask(() => refreshFromDb());
+      }
+
+      return state;
     }
     return ProductFormState();
+  }
+
+  Future<void> refreshFromDb() async {
+    final id = state.initialProduct?.id;
+    if (id == null) return;
+
+    try {
+      final productRepo = ref.read(productRepositoryProvider);
+      final freshProduct = await productRepo.getProductById(id);
+      if (freshProduct != null) {
+        state = state.copyWith(
+          initialProduct: freshProduct,
+          variants: List.from(freshProduct.variants ?? []),
+          // Actualizamos otros campos si es necesario
+        );
+      }
+    } catch (e) {
+      // Ignorar errores en el refresh silencioso
+    }
   }
 
   void setName(String value) => state = state.copyWith(name: value);
@@ -176,6 +202,7 @@ class ProductFormNotifier extends _$ProductFormNotifier {
     String? code,
     String? barcode,
     String? description,
+    bool silent = false,
   }) async {
     state = state.copyWith(isLoading: true, error: null, isSuccess: false);
 
@@ -342,7 +369,7 @@ class ProductFormNotifier extends _$ProductFormNotifier {
       // Update initialProduct so dirty checks work correctly
       state = state.copyWith(
         isLoading: false,
-        isSuccess: true,
+        isSuccess: !silent,
         error: null,
         initialProduct: savedProduct,
         // Also update fields to match saved product if needed,

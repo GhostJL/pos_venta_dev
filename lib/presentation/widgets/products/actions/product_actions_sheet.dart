@@ -15,111 +15,104 @@ class ProductActionsSheet extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final size = MediaQuery.of(context).size;
-    final isTablet = size.width > 600;
-
-    final hasManagePermission = ref.watch(
-      hasPermissionProvider(PermissionConstants.catalogManage),
-    );
+    final isTablet = MediaQuery.of(context).size.width > 600;
 
     return Container(
       constraints: BoxConstraints(maxWidth: isTablet ? 480 : double.infinity),
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: Colors.white,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.1),
-            blurRadius: 20,
-            offset: const Offset(0, -4),
-          ),
-        ],
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Handle minimalista
           if (!isTablet) Center(child: _buildHandle(context)),
-
           _buildSheetHeader(theme),
           const Divider(height: 1, thickness: 0.5),
-
           Flexible(
             child: SingleChildScrollView(
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  if (hasManagePermission) ...[
-                    _buildSectionLabel(theme, 'Gestión de Catálogo'),
-                    const SizedBox(height: 12),
-                    _buildFlatAction(
-                      context,
-                      icon: Icons.edit_outlined,
-                      color: theme.colorScheme.primary,
-                      label: 'Editar información',
-                      subtitle: 'Nombre, códigos y precios base',
-                      onTap: () {
-                        context.pop();
-                        context.push('/products/form', extra: product);
-                      },
-                    ),
-                    _buildFlatAction(
-                      context,
-                      icon: Icons.inventory_2_outlined,
-                      color: Colors.blueGrey,
-                      label: 'Variantes y Stock',
-                      subtitle: 'Gestionar tallas, colores y existencias',
-                      onTap: () {
-                        context.pop();
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) =>
-                                VariantTypeSelectionPage(product: product),
-                          ),
-                        );
-                      },
-                    ),
-                    _buildFlatAction(
-                      context,
-                      icon: Icons.copy_all_outlined,
-                      color: theme.colorScheme.secondary,
-                      label: 'Duplicar producto',
-                      subtitle: 'Crear una copia idéntica de este item',
-                      onTap: () {
-                        context.pop();
-                        final newProduct = product.copyWith(
-                          id: null,
-                          name: '${product.name} (Copia)',
-                        );
-                        context.push('/products/form', extra: newProduct);
-                      },
-                    ),
-                    const SizedBox(height: 24),
-                    _buildSectionLabel(theme, 'Estado del Producto'),
-                    const SizedBox(height: 12),
-                    _buildFlatAction(
-                      context,
-                      icon: product.isActive
-                          ? Icons.visibility_off_outlined
-                          : Icons.visibility_outlined,
-                      color: product.isActive
-                          ? theme.colorScheme.error
-                          : Colors.teal,
-                      label: product.isActive
-                          ? 'Desactivar para la venta'
-                          : 'Activar para la venta',
-                      subtitle: product.isActive
-                          ? 'Ocultar producto de la caja'
-                          : 'Mostrar producto en la caja',
-                      onTap: () => _handleToggleActive(context, ref),
-                    ),
-                  ] else ...[
-                    _buildNoPermissionState(theme),
-                  ],
-                ],
+              child: Consumer(
+                builder: (context, ref, child) {
+                  final hasManagePermission = ref.watch(
+                    hasPermissionProvider(PermissionConstants.catalogManage),
+                  );
+
+                  if (!hasManagePermission) {
+                    return _buildNoPermissionState(theme);
+                  }
+
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildSectionLabel(theme, 'Gestión de Catálogo'),
+                      const SizedBox(height: 12),
+                      _buildFlatAction(
+                        context,
+                        icon: Icons.edit_outlined,
+                        color: theme.colorScheme.primary,
+                        label: 'Editar información',
+                        subtitle: 'Nombre, códigos y precios base',
+                        onTap: () {
+                          context.pop();
+                          context.push('/products/form', extra: product);
+                        },
+                      ),
+                      _buildFlatAction(
+                        context,
+                        icon: Icons.inventory_2_outlined,
+                        color: Colors.blueGrey,
+                        label: 'Variantes y Stock',
+                        subtitle: 'Gestionar tallas, colores y existencias',
+                        onTap: () {
+                          context.pop();
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                  VariantTypeSelectionPage(product: product),
+                            ),
+                          );
+                        },
+                      ),
+                      _buildFlatAction(
+                        context,
+                        icon: Icons.copy_all_outlined,
+                        color: theme.colorScheme.secondary,
+                        label: 'Duplicar producto',
+                        subtitle: 'Crear una copia idéntica de este item',
+                        onTap: () {
+                          context.pop();
+                          final newProduct = product.copyWith(
+                            id: null,
+                            name: '${product.name} (Copia)',
+                          );
+                          context.push('/products/form', extra: newProduct);
+                        },
+                      ),
+                      const SizedBox(height: 24),
+                      _buildSectionLabel(theme, 'Estado del Producto'),
+                      const SizedBox(height: 12),
+                      _buildFlatAction(
+                        context,
+                        icon: product.isActive
+                            ? Icons.visibility_off_outlined
+                            : Icons.visibility_outlined,
+                        color: product.isActive
+                            ? theme.colorScheme.error
+                            : Colors.teal,
+                        label: product.isActive
+                            ? 'Desactivar para la venta'
+                            : 'Activar para la venta',
+                        subtitle: product.isActive
+                            ? 'Ocultar producto de la caja'
+                            : 'Mostrar producto en la caja',
+                        onTap: () => _handleToggleActive(context, ref),
+                      ),
+                    ],
+                  );
+                },
               ),
             ),
           ),
@@ -147,17 +140,7 @@ class ProductActionsSheet extends ConsumerWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-        border: Border.all(
-          color: Colors.black.withValues(alpha: 0.05),
-          width: 0.5,
-        ),
+        border: Border.all(color: Colors.grey.withValues(alpha: 0.1), width: 1),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -230,17 +213,7 @@ class ProductActionsSheet extends ConsumerWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-        border: Border.all(
-          color: Colors.black.withValues(alpha: 0.05),
-          width: 0.5,
-        ),
+        border: Border.all(color: Colors.grey.withValues(alpha: 0.1), width: 1),
       ),
       child: InkWell(
         onTap: onTap,

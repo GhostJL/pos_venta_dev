@@ -1,9 +1,10 @@
+import 'package:equatable/equatable.dart';
 import 'package:flutter/foundation.dart';
 
 enum VariantType { sales, purchase }
 
 @immutable
-class ProductVariant {
+class ProductVariant extends Equatable {
   final int? id;
   final int productId;
   final String variantName;
@@ -91,4 +92,26 @@ class ProductVariant {
       isSoldByWeight: isSoldByWeight ?? this.isSoldByWeight,
     );
   }
+
+  @override
+  List<Object?> get props => [
+    id,
+    productId,
+    variantName,
+    barcode,
+    quantity,
+    priceCents,
+    costPriceCents,
+    wholesalePriceCents,
+    isActive,
+    isForSale,
+    type,
+    linkedVariantId,
+    stock,
+    stockMin,
+    stockMax,
+    conversionFactor,
+    unitId,
+    isSoldByWeight,
+  ];
 }

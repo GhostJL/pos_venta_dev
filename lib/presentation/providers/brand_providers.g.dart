@@ -63,7 +63,7 @@ final class GetAllBrandsUseCaseProvider
         argument: null,
         retry: null,
         name: r'getAllBrandsUseCaseProvider',
-        isAutoDispose: true,
+        isAutoDispose: false,
         dependencies: null,
         $allTransitiveDependencies: null,
       );
@@ -91,7 +91,7 @@ final class GetAllBrandsUseCaseProvider
 }
 
 String _$getAllBrandsUseCaseHash() =>
-    r'343b9b4a5dba9d757b322242a70a14150d8b1a0d';
+    r'b252bf930e1b5c7f1892f6f69708a3de4d53362e';
 
 @ProviderFor(createBrandUseCase)
 const createBrandUseCaseProvider = CreateBrandUseCaseProvider._();
@@ -230,7 +230,7 @@ final class BrandListProvider
         argument: null,
         retry: null,
         name: r'brandListProvider',
-        isAutoDispose: true,
+        isAutoDispose: false,
         dependencies: null,
         $allTransitiveDependencies: null,
       );
@@ -243,7 +243,7 @@ final class BrandListProvider
   BrandList create() => BrandList();
 }
 
-String _$brandListHash() => r'9a74ea24d7140827aae092a448db06a251fd27a7';
+String _$brandListHash() => r'b40f241e07b24b232887d72202bf7aeb137361d5';
 
 abstract class _$BrandList extends $AsyncNotifier<List<Brand>> {
   FutureOr<List<Brand>> build();

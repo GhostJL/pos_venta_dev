@@ -17,20 +17,16 @@ class ProductListItem extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isTablet = MediaQuery.of(context).size.width > 600;
+    final isActive = product.isActive;
 
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: isActive ? Colors.white : Colors.grey[50],
         borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.08),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
         border: Border.all(
-          color: Colors.black.withValues(alpha: 0.05),
+          color: isActive
+              ? Colors.black.withValues(alpha: 0.05)
+              : Colors.black.withValues(alpha: 0.02),
           width: 0.5,
         ),
       ),
@@ -41,18 +37,18 @@ class ProductListItem extends StatelessWidget {
           padding: const EdgeInsets.all(12),
           child: Row(
             children: [
-              // 1. Visual (Fijo a la izquierda)
-              _buildLeading(theme),
+              // 1. Visual
+              _buildLeading(theme, isActive),
               const SizedBox(width: 12),
 
-              // 2. Información y Precio (Flexible)
+              // 2. Información
               Expanded(
                 child: isTablet
-                    ? _buildTabletLayout(theme)
-                    : _buildMobileLayout(theme),
+                    ? _buildTabletLayout(theme, isActive)
+                    : _buildMobileLayout(theme, isActive),
               ),
 
-              // 3. Acción (Fijo a la derecha)
+              // 3. Acción
               IconButton(
                 onPressed: onMorePressed,
                 icon: const Icon(Icons.chevron_right_rounded),
@@ -68,37 +64,39 @@ class ProductListItem extends StatelessWidget {
   // --- LAYOUTS ADAPTATIVOS ---
 
   // Layout para Tablet: Todo en una línea
-  Widget _buildTabletLayout(ThemeData theme) {
+  Widget _buildTabletLayout(ThemeData theme, bool isActive) {
     return Row(
       children: [
-        Expanded(child: _buildMainInfo(theme)),
+        Expanded(child: _buildMainInfo(theme, isActive)),
         const SizedBox(width: 16),
-        _buildPriceInfo(theme),
+        _buildPriceInfo(theme, isActive),
       ],
     );
   }
 
   // Layout para Móvil: Información arriba, precio abajo del nombre
-  Widget _buildMobileLayout(ThemeData theme) {
+  Widget _buildMobileLayout(ThemeData theme, bool isActive) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
-        _buildMainInfo(theme),
+        _buildMainInfo(theme, isActive),
         const SizedBox(height: 4),
-        _buildPriceInfo(theme, isHorizontal: true),
+        _buildPriceInfo(theme, isActive, isHorizontal: true),
       ],
     );
   }
 
   // --- SUB-WIDGETS ---
 
-  Widget _buildLeading(ThemeData theme) {
+  Widget _buildLeading(ThemeData theme, bool isActive) {
     return Container(
       width: 44,
       height: 44,
       decoration: BoxDecoration(
-        color: theme.colorScheme.primaryContainer.withValues(alpha: 0.2),
+        color: isActive
+            ? theme.colorScheme.primaryContainer.withValues(alpha: 0.2)
+            : Colors.grey[200],
         borderRadius: BorderRadius.circular(8),
       ),
       child: Center(
@@ -107,7 +105,7 @@ class ProductListItem extends StatelessWidget {
               ? product.name.substring(0, 1).toUpperCase()
               : 'P',
           style: TextStyle(
-            color: theme.colorScheme.primary,
+            color: isActive ? theme.colorScheme.primary : Colors.grey[500],
             fontWeight: FontWeight.bold,
             fontSize: 16,
           ),
@@ -116,7 +114,10 @@ class ProductListItem extends StatelessWidget {
     );
   }
 
-  Widget _buildMainInfo(ThemeData theme) {
+  Widget _buildMainInfo(ThemeData theme, bool isActive) {
+    final textColor = isActive
+        ? theme.colorScheme.onSurface
+        : theme.colorScheme.onSurface.withValues(alpha: 0.5);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -125,23 +126,31 @@ class ProductListItem extends StatelessWidget {
           style: theme.textTheme.titleMedium?.copyWith(
             fontWeight: FontWeight.bold,
             fontSize: 14,
+            color: textColor,
           ),
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
         ),
-        _buildSubInfo(theme),
+        _buildSubInfo(theme, isActive),
       ],
     );
   }
 
-  Widget _buildSubInfo(ThemeData theme) {
+  Widget _buildSubInfo(ThemeData theme, bool isActive) {
+    final primaryColor = isActive
+        ? theme.colorScheme.primary
+        : theme.colorScheme.primary.withValues(alpha: 0.5);
+    final secondaryColor = isActive
+        ? theme.colorScheme.onSurfaceVariant
+        : theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.5);
+
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
         Text(
           "#${product.code}",
           style: theme.textTheme.labelSmall?.copyWith(
-            color: theme.colorScheme.primary,
+            color: primaryColor,
             fontWeight: FontWeight.bold,
           ),
         ),
@@ -150,7 +159,9 @@ class ProductListItem extends StatelessWidget {
           Flexible(
             child: Text(
               "• ${product.departmentName!}",
-              style: theme.textTheme.labelSmall,
+              style: theme.textTheme.labelSmall?.copyWith(
+                color: secondaryColor,
+              ),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
@@ -160,19 +171,30 @@ class ProductListItem extends StatelessWidget {
     );
   }
 
-  Widget _buildPriceInfo(ThemeData theme, {bool isHorizontal = false}) {
+  Widget _buildPriceInfo(
+    ThemeData theme,
+    bool isActive, {
+    bool isHorizontal = false,
+  }) {
+    final textColor = isActive
+        ? theme.colorScheme.onSurface
+        : theme.colorScheme.onSurface.withValues(alpha: 0.5);
+
     final priceWidget = Text(
       '\$${(product.salePriceCents / 100).toStringAsFixed(2)}',
       style: theme.textTheme.titleMedium?.copyWith(
         fontWeight: FontWeight.w900,
-        color: theme.colorScheme.onSurface,
+        color: textColor,
       ),
     );
 
     final variantsWidget = product.variants != null
         ? Text(
             "${product.variants!.length} var.",
-            style: theme.textTheme.labelSmall?.copyWith(fontSize: 10),
+            style: theme.textTheme.labelSmall?.copyWith(
+              fontSize: 10,
+              color: textColor.withValues(alpha: 0.7),
+            ),
           )
         : const SizedBox.shrink();
 

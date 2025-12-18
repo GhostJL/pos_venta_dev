@@ -74,7 +74,7 @@ final class GetAllDepartmentsUseCaseProvider
         argument: null,
         retry: null,
         name: r'getAllDepartmentsUseCaseProvider',
-        isAutoDispose: true,
+        isAutoDispose: false,
         dependencies: null,
         $allTransitiveDependencies: null,
       );
@@ -103,7 +103,7 @@ final class GetAllDepartmentsUseCaseProvider
 }
 
 String _$getAllDepartmentsUseCaseHash() =>
-    r'80fa7e9afd4dddc070afc44250baf21059d6762a';
+    r'4c8407cb76a4106246fb9d85e021a0fdd3cb9955';
 
 @ProviderFor(createDepartmentUseCase)
 const createDepartmentUseCaseProvider = CreateDepartmentUseCaseProvider._();
@@ -257,7 +257,7 @@ final class DepartmentListProvider
         argument: null,
         retry: null,
         name: r'departmentListProvider',
-        isAutoDispose: true,
+        isAutoDispose: false,
         dependencies: null,
         $allTransitiveDependencies: null,
       );
@@ -270,7 +270,7 @@ final class DepartmentListProvider
   DepartmentList create() => DepartmentList();
 }
 
-String _$departmentListHash() => r'e9655c8752311fe4a572d6855141a4201f71aef5';
+String _$departmentListHash() => r'dd6f484dda4aa69c215bf643bbea8947a8d40e04';
 
 abstract class _$DepartmentList extends $AsyncNotifier<List<Department>> {
   FutureOr<List<Department>> build();

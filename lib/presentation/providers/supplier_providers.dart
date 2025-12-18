@@ -16,7 +16,7 @@ SupplierRepository supplierRepository(ref) {
   return SupplierRepositoryImpl(dbHelper);
 }
 
-@riverpod
+@Riverpod(keepAlive: true)
 GetAllSuppliers getAllSuppliersUseCase(ref) {
   return GetAllSuppliers(ref.watch(supplierRepositoryProvider));
 }
@@ -36,7 +36,7 @@ DeleteSupplier deleteSupplierUseCase(ref) {
   return DeleteSupplier(ref.watch(supplierRepositoryProvider));
 }
 
-@riverpod
+@Riverpod(keepAlive: true)
 class SupplierList extends _$SupplierList {
   @override
   Future<List<Supplier>> build() async {

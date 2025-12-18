@@ -1,9 +1,10 @@
+import 'package:equatable/equatable.dart';
 import 'package:flutter/foundation.dart';
 import 'package:posventa/domain/entities/product_tax.dart';
 import 'package:posventa/domain/entities/product_variant.dart';
 
 @immutable
-class Product {
+class Product extends Equatable {
   final int? id;
   final String code;
   final String name;
@@ -131,4 +132,7 @@ class Product {
       stock: stock ?? this.stock,
     );
   }
+
+  @override
+  List<Object?> get props => [id];
 }

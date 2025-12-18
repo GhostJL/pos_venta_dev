@@ -1,18 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:posventa/presentation/providers/variant_form_provider.dart';
 import 'package:posventa/domain/entities/product_variant.dart';
 
 class VariantSettingsSection extends ConsumerWidget {
   final ProductVariant? variant;
+  final TextEditingController stockMinController;
+  final TextEditingController stockMaxController;
 
-  const VariantSettingsSection({super.key, this.variant});
+  const VariantSettingsSection({
+    super.key,
+    this.variant,
+    required this.stockMinController,
+    required this.stockMaxController,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final state = ref.watch(variantFormProvider(variant));
-    final notifier = ref.read(variantFormProvider(variant).notifier);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -31,7 +35,7 @@ class VariantSettingsSection extends ConsumerWidget {
             // CAMPO: STOCK MÍNIMO
             Expanded(
               child: TextFormField(
-                initialValue: state.stockMin,
+                controller: stockMinController,
                 decoration: InputDecoration(
                   labelText: 'Stock Mínimo',
                   helperText: 'Alerta de resurtido',
@@ -43,7 +47,6 @@ class VariantSettingsSection extends ConsumerWidget {
                 keyboardType: const TextInputType.numberWithOptions(
                   decimal: true,
                 ),
-                onChanged: notifier.updateStockMin,
                 validator: (value) {
                   if (value == null || value.isEmpty) return null;
                   final n = double.tryParse(value);
@@ -58,7 +61,7 @@ class VariantSettingsSection extends ConsumerWidget {
             // CAMPO: STOCK MÁXIMO
             Expanded(
               child: TextFormField(
-                initialValue: state.stockMax,
+                controller: stockMaxController,
                 decoration: const InputDecoration(
                   labelText: 'Stock Máximo',
                   helperText: 'Capacidad ideal',
@@ -67,14 +70,13 @@ class VariantSettingsSection extends ConsumerWidget {
                 keyboardType: const TextInputType.numberWithOptions(
                   decimal: true,
                 ),
-                onChanged: notifier.updateStockMax,
                 validator: (value) {
                   if (value == null || value.isEmpty) return null;
                   final n = double.tryParse(value);
                   if (n == null || n < 0) return 'Inválido';
 
                   // Validación lógica cruzada
-                  final min = double.tryParse(state.stockMin) ?? 0;
+                  final min = double.tryParse(stockMinController.text) ?? 0;
                   if (n < min) return 'Debe ser > Mín';
 
                   return null;

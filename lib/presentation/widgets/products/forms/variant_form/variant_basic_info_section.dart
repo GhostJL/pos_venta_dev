@@ -6,18 +6,32 @@ import 'package:posventa/domain/entities/product_variant.dart';
 class VariantBasicInfoSection extends ConsumerWidget {
   final ProductVariant? variant;
   final List<ProductVariant>? availableVariants;
+  final TextEditingController nameController;
+  final TextEditingController quantityController;
+  final TextEditingController conversionController;
 
   const VariantBasicInfoSection({
     super.key,
     this.variant,
     this.availableVariants,
+    required this.nameController,
+    required this.quantityController,
+    required this.conversionController,
   });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final state = ref.watch(variantFormProvider(variant));
-    final notifier = ref.read(variantFormProvider(variant).notifier);
+    final provider = variantFormProvider(variant);
+
+    // Watch only necessary fields to avoid full rebuilds on typing
+    final isForSale = ref.watch(provider.select((s) => s.isForSale));
+    final type = ref.watch(provider.select((s) => s.type));
+    final linkedVariantId = ref.watch(
+      provider.select((s) => s.linkedVariantId),
+    );
+
+    final notifier = ref.read(provider.notifier);
 
     // Filtrar variantes para enlazar (Solo de tipo venta)
     final linkableVariants =
@@ -52,7 +66,7 @@ class VariantBasicInfoSection extends ConsumerWidget {
             subtitle: const Text(
               'Permite seleccionar este paquete directamente en el carrito',
             ),
-            value: state.isForSale,
+            value: isForSale,
             onChanged: notifier.updateIsForSale,
             secondary: Icon(Icons.storefront, color: theme.colorScheme.primary),
             contentPadding: const EdgeInsets.symmetric(
@@ -71,13 +85,12 @@ class VariantBasicInfoSection extends ConsumerWidget {
           Icons.edit_note_rounded,
         ),
         TextFormField(
-          initialValue: state.name,
+          controller: nameController,
           decoration: const InputDecoration(
             labelText: 'Nombre de la Variante',
             hintText: 'Ej: Caja con 12 pzas',
             prefixIcon: Icon(Icons.label_important_outline),
           ),
-          onChanged: notifier.updateName,
           validator: (value) =>
               value?.isEmpty ?? true ? 'Campo requerido' : null,
         ),
@@ -85,25 +98,23 @@ class VariantBasicInfoSection extends ConsumerWidget {
         const SizedBox(height: 20),
 
         // Campo dinámico basado en tipo (Contenido o Factor)
-        if (state.type == VariantType.sales)
+        if (type == VariantType.sales)
           _buildNumberField(
             label: 'Unidades por paquete',
             helper: 'Cantidad de piezas físicas que contiene',
-            initialValue: state.quantity,
+            controller: quantityController,
             icon: Icons.inventory_2_outlined,
-            onChanged: notifier.updateQuantity,
           )
         else
           _buildNumberField(
             label: 'Factor de Conversión',
             helper: 'Cuántas unidades del producto base representa',
-            initialValue: state.conversionFactor,
+            controller: conversionController,
             icon: Icons.calculate_outlined,
-            onChanged: notifier.updateConversionFactor,
           ),
 
         // --- SECCIÓN 3: ENLACE (SOLO COMPRA) ---
-        if (state.type == VariantType.purchase) ...[
+        if (type == VariantType.purchase) ...[
           const SizedBox(height: 32),
           _buildSectionHeader(
             context,
@@ -112,7 +123,7 @@ class VariantBasicInfoSection extends ConsumerWidget {
           ),
 
           DropdownButtonFormField<int>(
-            initialValue: state.linkedVariantId,
+            initialValue: linkedVariantId,
             decoration: const InputDecoration(
               labelText: 'Vincular a Variante de Venta',
               prefixIcon: Icon(Icons.link_rounded),
@@ -138,9 +149,19 @@ class VariantBasicInfoSection extends ConsumerWidget {
             isExpanded: true,
           ),
 
-          if (state.linkedVariantId != null) ...[
+          if (linkedVariantId != null) ...[
             const SizedBox(height: 20),
-            _buildConversionCard(context, state, linkableVariants),
+            ListenableBuilder(
+              listenable: conversionController,
+              builder: (context, child) {
+                return _buildConversionCard(
+                  context,
+                  linkedVariantId,
+                  conversionController.text,
+                  linkableVariants,
+                );
+              },
+            ),
           ],
         ],
       ],
@@ -175,19 +196,17 @@ class VariantBasicInfoSection extends ConsumerWidget {
   Widget _buildNumberField({
     required String label,
     required String helper,
-    required String initialValue,
+    required TextEditingController controller,
     required IconData icon,
-    required Function(String) onChanged,
   }) {
     return TextFormField(
-      initialValue: initialValue,
+      controller: controller,
       decoration: InputDecoration(
         labelText: label,
         helperText: helper,
         prefixIcon: Icon(icon),
       ),
       keyboardType: const TextInputType.numberWithOptions(decimal: true),
-      onChanged: onChanged,
       validator: (val) {
         if (val == null || val.isEmpty) return 'Requerido';
         if (double.tryParse(val) == null || double.tryParse(val)! <= 0) {
@@ -200,12 +219,13 @@ class VariantBasicInfoSection extends ConsumerWidget {
 
   Widget _buildConversionCard(
     BuildContext context,
-    dynamic state,
+    int? linkedVariantId,
+    String conversionFactor,
     List<ProductVariant> linkable,
   ) {
     final theme = Theme.of(context);
     final linked = linkable.firstWhere(
-      (v) => v.id == state.linkedVariantId,
+      (v) => v.id == linkedVariantId,
       orElse: () => ProductVariant(
         productId: 0,
         variantName: '...',
@@ -213,7 +233,7 @@ class VariantBasicInfoSection extends ConsumerWidget {
         priceCents: 0,
       ),
     );
-    final factor = double.tryParse(state.conversionFactor) ?? 0;
+    final factor = double.tryParse(conversionFactor) ?? 0;
 
     return Container(
       padding: const EdgeInsets.all(16),

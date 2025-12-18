@@ -6,12 +6,9 @@ import 'package:posventa/presentation/providers/category_providers.dart';
 import 'package:posventa/presentation/providers/department_providers.dart';
 import 'package:posventa/presentation/providers/supplier_providers.dart';
 
+import 'package:posventa/presentation/providers/product_filters.dart';
+
 class ProductFilterSheet extends ConsumerStatefulWidget {
-  final int? departmentFilter;
-  final int? categoryFilter;
-  final int? brandFilter;
-  final int? supplierFilter;
-  final String sortOrder;
   final Function(int?) onDepartmentChanged;
   final Function(int?) onCategoryChanged;
   final Function(int?) onBrandChanged;
@@ -22,11 +19,6 @@ class ProductFilterSheet extends ConsumerStatefulWidget {
 
   const ProductFilterSheet({
     super.key,
-    required this.departmentFilter,
-    required this.categoryFilter,
-    required this.brandFilter,
-    required this.supplierFilter,
-    required this.sortOrder,
     required this.onDepartmentChanged,
     required this.onCategoryChanged,
     required this.onBrandChanged,
@@ -50,22 +42,18 @@ class _ProductFilterSheetState extends ConsumerState<ProductFilterSheet> {
   @override
   void initState() {
     super.initState();
-    _departmentFilter = widget.departmentFilter;
-    _categoryFilter = widget.categoryFilter;
-    _brandFilter = widget.brandFilter;
-    _supplierFilter = widget.supplierFilter;
-    _sortOrder = widget.sortOrder;
+    final currentFilters = ref.read(productFiltersProvider);
+    _departmentFilter = currentFilters.departmentId;
+    _categoryFilter = currentFilters.categoryId;
+    _brandFilter = currentFilters.brandId;
+    _supplierFilter = currentFilters.supplierId;
+    _sortOrder = currentFilters.sortOrder;
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isTablet = MediaQuery.of(context).size.width > 600;
-
-    final departments = ref.watch(departmentListProvider);
-    final categories = ref.watch(categoryListProvider);
-    final brands = ref.watch(brandListProvider);
-    final suppliers = ref.watch(supplierListProvider);
 
     return SafeArea(
       child: Container(
@@ -99,35 +87,67 @@ class _ProductFilterSheetState extends ConsumerState<ProductFilterSheet> {
                   children: [
                     _buildSectionLabel(theme, 'Filtros de Catálogo'),
                     const SizedBox(height: 16),
-                    _buildAsyncDropdown(
-                      asyncValue: departments,
-                      label: 'Departamento',
-                      currentValue: _departmentFilter,
-                      icon: Icons.business_outlined,
-                      onChanged: (val) =>
-                          setState(() => _departmentFilter = val),
+
+                    // Departamento
+                    Consumer(
+                      builder: (context, ref, child) {
+                        final departments = ref.watch(departmentListProvider);
+                        return _buildAsyncDropdown(
+                          asyncValue: departments,
+                          label: 'Departamento',
+                          currentValue: _departmentFilter,
+                          icon: Icons.business_outlined,
+                          onChanged: (val) =>
+                              setState(() => _departmentFilter = val),
+                        );
+                      },
                     ),
-                    _buildAsyncDropdown(
-                      asyncValue: categories,
-                      label: 'Categoría',
-                      currentValue: _categoryFilter,
-                      icon: Icons.category_outlined,
-                      onChanged: (val) => setState(() => _categoryFilter = val),
+
+                    // Categoría
+                    Consumer(
+                      builder: (context, ref, child) {
+                        final categories = ref.watch(categoryListProvider);
+                        return _buildAsyncDropdown(
+                          asyncValue: categories,
+                          label: 'Categoría',
+                          currentValue: _categoryFilter,
+                          icon: Icons.category_outlined,
+                          onChanged: (val) =>
+                              setState(() => _categoryFilter = val),
+                        );
+                      },
                     ),
-                    _buildAsyncDropdown(
-                      asyncValue: brands,
-                      label: 'Marca',
-                      currentValue: _brandFilter,
-                      icon: Icons.branding_watermark_outlined,
-                      onChanged: (val) => setState(() => _brandFilter = val),
+
+                    // Marca
+                    Consumer(
+                      builder: (context, ref, child) {
+                        final brands = ref.watch(brandListProvider);
+                        return _buildAsyncDropdown(
+                          asyncValue: brands,
+                          label: 'Marca',
+                          currentValue: _brandFilter,
+                          icon: Icons.branding_watermark_outlined,
+                          onChanged: (val) =>
+                              setState(() => _brandFilter = val),
+                        );
+                      },
                     ),
-                    _buildAsyncDropdown(
-                      asyncValue: suppliers,
-                      label: 'Proveedor',
-                      currentValue: _supplierFilter,
-                      icon: Icons.local_shipping_outlined,
-                      onChanged: (val) => setState(() => _supplierFilter = val),
+
+                    // Proveedor
+                    Consumer(
+                      builder: (context, ref, child) {
+                        final suppliers = ref.watch(supplierListProvider);
+                        return _buildAsyncDropdown(
+                          asyncValue: suppliers,
+                          label: 'Proveedor',
+                          currentValue: _supplierFilter,
+                          icon: Icons.local_shipping_outlined,
+                          onChanged: (val) =>
+                              setState(() => _supplierFilter = val),
+                        );
+                      },
                     ),
+
                     const SizedBox(height: 24),
                     _buildSectionLabel(theme, 'Preferencias de Lista'),
                     const SizedBox(height: 16),

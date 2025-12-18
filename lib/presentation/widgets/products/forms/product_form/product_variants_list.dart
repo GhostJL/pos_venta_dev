@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:posventa/domain/entities/product.dart';
 import 'package:posventa/domain/entities/product_variant.dart';
 import 'package:posventa/presentation/providers/product_form_provider.dart';
+import 'package:posventa/presentation/providers/providers.dart';
 
 class ProductVariantsList extends ConsumerWidget {
   final Product? product;
@@ -96,7 +97,7 @@ class ProductVariantsList extends ConsumerWidget {
   }
 }
 
-class _VariantCard extends StatelessWidget {
+class _VariantCard extends ConsumerWidget {
   final ProductVariant variant;
   final int index;
   final void Function(ProductVariant variant, int index) onEdit;
@@ -110,9 +111,20 @@ class _VariantCard extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final isSales = variant.type == VariantType.sales;
+
+    // Obtener el nombre de la unidad
+    final unitsAsync = ref.watch(unitListProvider);
+    final unitName = unitsAsync.maybeWhen(
+      data: (units) => units
+          .where((u) => u.id == variant.unitId)
+          .firstOrNull
+          ?.name
+          .toLowerCase(),
+      orElse: () => null,
+    );
 
     return Container(
       decoration: BoxDecoration(
@@ -176,15 +188,8 @@ class _VariantCard extends StatelessWidget {
                       children: [
                         _buildBadge(
                           theme,
-                          isSales ? "VENTA" : "COMPRA",
-                          isSales ? Colors.blue : Colors.teal,
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          "Stock: ${variant.quantity.toInt()} uds.",
-                          style: theme.textTheme.labelSmall?.copyWith(
-                            color: Colors.grey[600],
-                          ),
+                          "${variant.quantity.toInt()} ${unitName ?? ''}",
+                          Colors.grey,
                         ),
                       ],
                     ),

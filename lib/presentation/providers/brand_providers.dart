@@ -16,7 +16,7 @@ BrandRepository brandRepository(ref) {
   return BrandRepositoryImpl(dbHelper);
 }
 
-@riverpod
+@Riverpod(keepAlive: true)
 GetAllBrands getAllBrandsUseCase(ref) {
   return GetAllBrands(ref.watch(brandRepositoryProvider));
 }
@@ -36,7 +36,7 @@ DeleteBrand deleteBrandUseCase(ref) {
   return DeleteBrand(ref.watch(brandRepositoryProvider));
 }
 
-@riverpod
+@Riverpod(keepAlive: true)
 class BrandList extends _$BrandList {
   @override
   Future<List<Brand>> build() async {

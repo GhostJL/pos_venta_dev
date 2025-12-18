@@ -55,7 +55,7 @@ final class NotificationRepositoryProvider
 }
 
 String _$notificationRepositoryHash() =>
-    r'f449a1d11bf051052f0e46891a4af4651cad8ed4';
+    r'1e59ccd2f75f3a7b300a93afefa9603cd9e05284';
 
 @ProviderFor(flutterLocalNotificationsPlugin)
 const flutterLocalNotificationsPluginProvider =
@@ -106,7 +106,7 @@ final class FlutterLocalNotificationsPluginProvider
 }
 
 String _$flutterLocalNotificationsPluginHash() =>
-    r'2373bd9ec51aa954b67eb3a4fe59f0734c5c9d15';
+    r'7ddacc6af7d67f7f1a34d7166a7d48420e7fa892';
 
 @ProviderFor(notificationService)
 const notificationServiceProvider = NotificationServiceProvider._();
@@ -154,7 +154,7 @@ final class NotificationServiceProvider
 }
 
 String _$notificationServiceHash() =>
-    r'a448ffeea129cd7edad4b153adf3a02d9013e324';
+    r'b0f36c2a0a9791640bc6da9c3159307392c266b2';
 
 @ProviderFor(notificationsStream)
 const notificationsStreamProvider = NotificationsStreamProvider._();
@@ -196,7 +196,7 @@ final class NotificationsStreamProvider
 }
 
 String _$notificationsStreamHash() =>
-    r'8d004367bf2455f3f6f18d879bed15203a391686';
+    r'e166d0b6d698aa15e50198a27346213b0dc7ca74';
 
 @ProviderFor(unreadNotificationsStream)
 const unreadNotificationsStreamProvider = UnreadNotificationsStreamProvider._();
@@ -238,7 +238,7 @@ final class UnreadNotificationsStreamProvider
 }
 
 String _$unreadNotificationsStreamHash() =>
-    r'7079a26c972b4be9eb57ed005d76b28d6f9cf446';
+    r'34c521ada5097bdf1123ce87b9d443ace70c05da';
 
 @ProviderFor(markNotificationAsRead)
 const markNotificationAsReadProvider = MarkNotificationAsReadFamily._();
@@ -291,7 +291,7 @@ final class MarkNotificationAsReadProvider
 }
 
 String _$markNotificationAsReadHash() =>
-    r'1ceffbc2cda0b8d867c58a834f60d1e90bfeef17';
+    r'dc7962ffbecfe54202aaced7a4ef886d6130662c';
 
 final class MarkNotificationAsReadFamily extends $Family
     with $FunctionalFamilyOverride<FutureOr<void>, int> {
@@ -344,7 +344,7 @@ final class MarkAllNotificationsAsReadProvider
 }
 
 String _$markAllNotificationsAsReadHash() =>
-    r'c33d84b821f2d526b7da20006a64de81951bdcf3';
+    r'dcb02f51c42fc8456cf2e1c9e8c7cf7a4f80c05a';
 
 @ProviderFor(clearAllNotifications)
 const clearAllNotificationsProvider = ClearAllNotificationsProvider._();
@@ -378,4 +378,4 @@ final class ClearAllNotificationsProvider
 }
 
 String _$clearAllNotificationsHash() =>
-    r'5a6714536236bd94a854e7794a61f36a00fa6a34';
+    r'0f5a9872896fe7a6c4fa8a99437ce0afd5f7118d';

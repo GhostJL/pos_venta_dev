@@ -74,7 +74,7 @@ final class GetAllCategoriesUseCaseProvider
         argument: null,
         retry: null,
         name: r'getAllCategoriesUseCaseProvider',
-        isAutoDispose: true,
+        isAutoDispose: false,
         dependencies: null,
         $allTransitiveDependencies: null,
       );
@@ -102,7 +102,7 @@ final class GetAllCategoriesUseCaseProvider
 }
 
 String _$getAllCategoriesUseCaseHash() =>
-    r'a213d4efd4d428822d7b4298c918defdbeffa330';
+    r'e8986edc42afe95995fe585a6073b69f58784ba0';
 
 @ProviderFor(createCategoryUseCase)
 const createCategoryUseCaseProvider = CreateCategoryUseCaseProvider._();
@@ -241,7 +241,7 @@ final class CategoryListProvider
         argument: null,
         retry: null,
         name: r'categoryListProvider',
-        isAutoDispose: true,
+        isAutoDispose: false,
         dependencies: null,
         $allTransitiveDependencies: null,
       );
@@ -254,7 +254,7 @@ final class CategoryListProvider
   CategoryList create() => CategoryList();
 }
 
-String _$categoryListHash() => r'd5decdce4711396fb5e6cfed726ef27f0421ef9c';
+String _$categoryListHash() => r'395ff7168b8e659962bda753bcef6d1b836a4f42';
 
 abstract class _$CategoryList extends $AsyncNotifier<List<Category>> {
   FutureOr<List<Category>> build();

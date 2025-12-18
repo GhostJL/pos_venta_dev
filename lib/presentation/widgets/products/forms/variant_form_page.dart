@@ -33,9 +33,49 @@ class VariantFormPage extends ConsumerStatefulWidget {
 class _VariantFormPageState extends ConsumerState<VariantFormPage> {
   final _formKey = GlobalKey<FormState>();
 
+  late TextEditingController _nameController;
+  late TextEditingController _quantityController;
+  late TextEditingController _priceController;
+  late TextEditingController _costController;
+  late TextEditingController _wholesaleController;
+  late TextEditingController _barcodeController;
+  late TextEditingController _conversionController;
+  late TextEditingController _stockMinController;
+  late TextEditingController _stockMaxController;
+
+  @override
+  void initState() {
+    super.initState();
+    final state = ref.read(
+      variantFormProvider(widget.variant, initialType: widget.initialType),
+    );
+    _nameController = TextEditingController(text: state.name);
+    _quantityController = TextEditingController(text: state.quantity);
+    _priceController = TextEditingController(text: state.price);
+    _costController = TextEditingController(text: state.cost);
+    _wholesaleController = TextEditingController(text: state.wholesalePrice);
+    _barcodeController = TextEditingController(text: state.barcode);
+    _conversionController = TextEditingController(text: state.conversionFactor);
+    _stockMinController = TextEditingController(text: state.stockMin);
+    _stockMaxController = TextEditingController(text: state.stockMax);
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _quantityController.dispose();
+    _priceController.dispose();
+    _costController.dispose();
+    _wholesaleController.dispose();
+    _barcodeController.dispose();
+    _conversionController.dispose();
+    _stockMinController.dispose();
+    _stockMaxController.dispose();
+    super.dispose();
+  }
+
   Future<void> _saveVariant() async {
     if (!_formKey.currentState!.validate()) {
-      // Feedback táctico en caso de error
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Por favor, revisa los campos marcados.')),
       );
@@ -52,9 +92,24 @@ class _VariantFormPageState extends ConsumerState<VariantFormPage> {
     final newVariant = await notifier.save(
       widget.productId ?? 0,
       widget.existingBarcodes,
+      name: _nameController.text,
+      quantity: _quantityController.text,
+      price: _priceController.text,
+      cost: _costController.text,
+      wholesalePrice: _wholesaleController.text,
+      conversionFactor: _conversionController.text,
+      stockMin: _stockMinController.text,
+      stockMax: _stockMaxController.text,
+      barcode: _barcodeController.text,
     );
 
     if (newVariant != null && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Variante guardada con éxito'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
       context.pop(newVariant);
     }
   }
@@ -63,14 +118,17 @@ class _VariantFormPageState extends ConsumerState<VariantFormPage> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isEditing = widget.variant != null;
-    final state = ref.watch(
-      variantFormProvider(widget.variant, initialType: widget.initialType),
+
+    // Watch only necessary properties to avoid rebuilds on every typing change
+    final provider = variantFormProvider(
+      widget.variant,
+      initialType: widget.initialType,
     );
+    final isSaving = ref.watch(provider.select((s) => s.isSaving));
+    final type = ref.watch(provider.select((s) => s.type));
 
     return Scaffold(
-      backgroundColor: Colors.grey[50], // Fondo limpio
       appBar: AppBar(
-        backgroundColor: Colors.white,
         scrolledUnderElevation: 0,
         titleSpacing: 0,
         title: Column(
@@ -93,8 +151,7 @@ class _VariantFormPageState extends ConsumerState<VariantFormPage> {
           ],
         ),
         actions: [
-          // Botón de guardado rápido en el AppBar
-          if (!state.isSaving)
+          if (!isSaving)
             TextButton(
               onPressed: _saveVariant,
               child: Text(
@@ -119,9 +176,7 @@ class _VariantFormPageState extends ConsumerState<VariantFormPage> {
       body: SafeArea(
         child: Center(
           child: Container(
-            constraints: const BoxConstraints(
-              maxWidth: 600,
-            ), // Optimización Tablet
+            constraints: const BoxConstraints(maxWidth: 600),
             child: Form(
               key: _formKey,
               child: ListView(
@@ -137,6 +192,9 @@ class _VariantFormPageState extends ConsumerState<VariantFormPage> {
                     child: VariantBasicInfoSection(
                       variant: widget.variant,
                       availableVariants: widget.availableVariants,
+                      nameController: _nameController,
+                      quantityController: _quantityController,
+                      conversionController: _conversionController,
                     ),
                   ),
 
@@ -144,39 +202,50 @@ class _VariantFormPageState extends ConsumerState<VariantFormPage> {
                     context,
                     title: 'Precios y Costos',
                     icon: Icons.payments_outlined,
-                    child: VariantPriceSection(variant: widget.variant),
+                    child: VariantPriceSection(
+                      variant: widget.variant,
+                      priceController: _priceController,
+                      costController: _costController,
+                      wholesalePriceController: _wholesaleController,
+                    ),
                   ),
 
                   _buildFormSection(
                     context,
                     title: 'Identificación',
                     icon: Icons.qr_code_scanner_rounded,
-                    child: VariantBarcodeSection(variant: widget.variant),
+                    child: VariantBarcodeSection(
+                      variant: widget.variant,
+                      barcodeController: _barcodeController,
+                    ),
                   ),
-                  if (state.type != VariantType.sales)
-                    SizedBox.shrink()
+                  if (type != VariantType.sales)
+                    const SizedBox.shrink()
                   else
                     _buildFormSection(
                       context,
                       title: 'Configuración Adicional',
                       icon: Icons.settings_outlined,
-                      child: VariantSettingsSection(variant: widget.variant),
+                      child: VariantSettingsSection(
+                        variant: widget.variant,
+                        stockMinController: _stockMinController,
+                        stockMaxController: _stockMaxController,
+                      ),
                     ),
 
                   const SizedBox(height: 24),
 
-                  // Botón principal de guardado al final del scroll
                   SizedBox(
                     width: double.infinity,
                     height: 56,
                     child: FilledButton(
-                      onPressed: state.isSaving ? null : _saveVariant,
+                      onPressed: isSaving ? null : _saveVariant,
                       style: FilledButton.styleFrom(
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(16),
                         ),
                       ),
-                      child: state.isSaving
+                      child: isSaving
                           ? const CircularProgressIndicator(color: Colors.white)
                           : Text(
                               isEditing
@@ -212,13 +281,6 @@ class _VariantFormPageState extends ConsumerState<VariantFormPage> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
         border: Border.all(
           color: Colors.black.withValues(alpha: 0.05),
           width: 0.5,
@@ -245,7 +307,9 @@ class _VariantFormPageState extends ConsumerState<VariantFormPage> {
             ),
           ),
           const Divider(height: 1),
-          Padding(padding: const EdgeInsets.all(16.0), child: child),
+          RepaintBoundary(
+            child: Padding(padding: const EdgeInsets.all(16.0), child: child),
+          ),
         ],
       ),
     );

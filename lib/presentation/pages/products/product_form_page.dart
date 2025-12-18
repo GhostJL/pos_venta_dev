@@ -105,8 +105,14 @@ class ProductFormPageState extends ConsumerState<ProductFormPage> {
     }
 
     final notifier = ref.read(productFormProvider(widget.product).notifier);
-    // Values are now in state, so we can call without args or with nulls
-    await notifier.validateAndSubmit();
+
+    // Pass current controller values to the notifier only on submission
+    await notifier.validateAndSubmit(
+      name: _nameController.text,
+      code: _codeController.text,
+      barcode: _barcodeController.text,
+      description: _descriptionController.text,
+    );
   }
 
   @override
@@ -114,7 +120,6 @@ class ProductFormPageState extends ConsumerState<ProductFormPage> {
     final provider = productFormProvider(widget.product);
     final isLoading = ref.watch(provider.select((s) => s.isLoading));
     final isNewProduct = widget.product == null;
-    final notifier = ref.read(provider.notifier);
 
     // Listen for success or error
     ref.listen<ProductFormState>(provider, (previous, next) {
@@ -141,9 +146,7 @@ class ProductFormPageState extends ConsumerState<ProductFormPage> {
     });
 
     return Scaffold(
-      backgroundColor: Colors.grey[50],
       appBar: AppBar(
-        backgroundColor: Colors.white,
         scrolledUnderElevation: 0,
         title: Text(
           isNewProduct ? 'Registrar Producto' : 'Editar Producto Base',
@@ -189,10 +192,7 @@ class ProductFormPageState extends ConsumerState<ProductFormPage> {
                     descriptionController: _descriptionController,
                     onScanBarcode: _openBarcodeScanner,
                     showBarcode: false,
-                    onNameChanged: notifier.setName,
-                    onCodeChanged: notifier.setCode,
-                    onBarcodeChanged: notifier.setBarcode,
-                    onDescriptionChanged: notifier.setDescription,
+                    // REMOVED: onNameChanged etc - We sync on submit now
                   ),
                   const SizedBox(height: 16),
                   Consumer(
@@ -362,13 +362,6 @@ class ProductFormPageState extends ConsumerState<ProductFormPage> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
         border: Border.all(
           color: Colors.black.withValues(alpha: 0.05),
           width: 0.5,
@@ -395,7 +388,9 @@ class ProductFormPageState extends ConsumerState<ProductFormPage> {
             ),
           ),
           const Divider(height: 1),
-          Padding(padding: const EdgeInsets.all(16.0), child: child),
+          RepaintBoundary(
+            child: Padding(padding: const EdgeInsets.all(16.0), child: child),
+          ),
         ],
       ),
     );

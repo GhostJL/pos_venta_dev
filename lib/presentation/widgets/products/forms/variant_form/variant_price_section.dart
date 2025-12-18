@@ -6,14 +6,29 @@ import 'package:posventa/presentation/providers/providers.dart';
 
 class VariantPriceSection extends ConsumerWidget {
   final ProductVariant? variant;
+  final TextEditingController priceController;
+  final TextEditingController costController;
+  final TextEditingController wholesalePriceController;
 
-  const VariantPriceSection({super.key, this.variant});
+  const VariantPriceSection({
+    super.key,
+    this.variant,
+    required this.priceController,
+    required this.costController,
+    required this.wholesalePriceController,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final state = ref.watch(variantFormProvider(variant));
-    final notifier = ref.read(variantFormProvider(variant).notifier);
+    final provider = variantFormProvider(variant);
+
+    final unitId = ref.watch(provider.select((s) => s.unitId));
+    final isSoldByWeight = ref.watch(provider.select((s) => s.isSoldByWeight));
+    final isForSale = ref.watch(provider.select((s) => s.isForSale));
+    final type = ref.watch(provider.select((s) => s.type));
+
+    final notifier = ref.read(provider.notifier);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -30,7 +45,7 @@ class VariantPriceSection extends ConsumerWidget {
             final unitsAsync = ref.watch(unitListProvider);
             return unitsAsync.when(
               data: (units) => DropdownButtonFormField<int>(
-                initialValue: state.unitId,
+                initialValue: unitId,
                 decoration: const InputDecoration(
                   labelText: 'Unidad de medida',
                   prefixIcon: Icon(Icons.scale_rounded),
@@ -64,7 +79,7 @@ class VariantPriceSection extends ConsumerWidget {
               style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
             ),
             subtitle: const Text('Habilitar decimales en cantidad al vender'),
-            value: state.isSoldByWeight,
+            value: isSoldByWeight,
             onChanged: notifier.updateIsSoldByWeight,
             secondary: Icon(
               Icons.monitor_weight_outlined,
@@ -87,23 +102,21 @@ class VariantPriceSection extends ConsumerWidget {
           children: [
             Expanded(
               child: _buildMoneyField(
-                label: state.type == VariantType.purchase
+                label: type == VariantType.purchase
                     ? 'Precio Compra'
                     : 'Costo Unitario',
-                initialValue: state.cost,
+                controller: costController,
                 icon: Icons.shopping_cart_checkout_rounded,
-                onChanged: notifier.updateCost,
                 theme: theme,
               ),
             ),
-            if (state.type == VariantType.sales || state.isForSale) ...[
+            if (type == VariantType.sales || isForSale) ...[
               const SizedBox(width: 16),
               Expanded(
                 child: _buildMoneyField(
                   label: 'Precio Venta',
-                  initialValue: state.price,
+                  controller: priceController,
                   icon: Icons.sell_rounded,
-                  onChanged: notifier.updatePrice,
                   theme: theme,
                   isPrimary: true,
                 ),
@@ -113,20 +126,26 @@ class VariantPriceSection extends ConsumerWidget {
         ),
 
         // 4. Precio Mayorista
-        if (state.type == VariantType.sales || state.isForSale) ...[
+        if (type == VariantType.sales || isForSale) ...[
           const SizedBox(height: 20),
           _buildMoneyField(
             label: 'Precio Mayorista (Opcional)',
-            initialValue: state.wholesalePrice,
+            controller: wholesalePriceController,
             icon: Icons.groups_rounded,
-            onChanged: notifier.updateWholesalePrice,
             theme: theme,
           ),
         ],
 
         // 5. Indicador de Margen (UX Sugerida)
-        if (state.type == VariantType.sales || state.isForSale)
-          _buildMarginIndicator(context, state),
+        if (type == VariantType.sales || isForSale)
+          ListenableBuilder(
+            listenable: Listenable.merge([priceController, costController]),
+            builder: (context, _) => _buildMarginIndicator(
+              context,
+              costController.text,
+              priceController.text,
+            ),
+          ),
       ],
     );
   }
@@ -158,19 +177,17 @@ class VariantPriceSection extends ConsumerWidget {
 
   Widget _buildMoneyField({
     required String label,
-    required String initialValue,
+    required TextEditingController controller,
     required IconData icon,
-    required Function(String) onChanged,
     required ThemeData theme,
     bool isPrimary = false,
   }) {
     return TextFormField(
-      initialValue: initialValue,
+      controller: controller,
       decoration: InputDecoration(
         labelText: label,
         prefixText: '\$ ',
         prefixIcon: Icon(icon),
-        // Si es el precio de venta, le damos un borde ligeramente más visible
         enabledBorder: isPrimary
             ? OutlineInputBorder(
                 borderRadius: BorderRadius.circular(16),
@@ -182,7 +199,6 @@ class VariantPriceSection extends ConsumerWidget {
             : null,
       ),
       keyboardType: const TextInputType.numberWithOptions(decimal: true),
-      onChanged: onChanged,
       validator: (val) {
         if (val == null || val.isEmpty) return 'Requerido';
         final n = double.tryParse(val);
@@ -192,9 +208,13 @@ class VariantPriceSection extends ConsumerWidget {
     );
   }
 
-  Widget _buildMarginIndicator(BuildContext context, dynamic state) {
-    final cost = double.tryParse(state.cost) ?? 0;
-    final price = double.tryParse(state.price) ?? 0;
+  Widget _buildMarginIndicator(
+    BuildContext context,
+    String costStr,
+    String priceStr,
+  ) {
+    final cost = double.tryParse(costStr) ?? 0;
+    final price = double.tryParse(priceStr) ?? 0;
     final theme = Theme.of(context);
 
     if (cost <= 0 || price <= 0) return const SizedBox.shrink();
