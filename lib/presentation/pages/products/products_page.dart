@@ -35,7 +35,10 @@ class ProductsPageState extends ConsumerState<ProductsPage>
 
   @override
   List<dynamic> get providersToInvalidate => [productNotifierProvider];
+  // 1. Añade esta variable al inicio del estado
+  bool _showInactive = false;
 
+  // 2. Actualiza el conteo de filtros para incluir el estado de inactivos
   int get _activeFilterCount => ProductFilterUtils.countActiveFilters(
     departmentFilter: _departmentFilter,
     categoryFilter: _categoryFilter,
@@ -85,8 +88,46 @@ class ProductsPageState extends ConsumerState<ProductsPage>
               const SizedBox(height: 4),
 
               Row(
-                mainAxisAlignment: .end,
+                mainAxisAlignment: MainAxisAlignment
+                    .spaceBetween, // Cambiado para separar los elementos
                 children: [
+                  // Nuevo Chip para alternar inactivos
+                  FilterChip(
+                    label: Text(
+                      'Ver Inactivos',
+                      style: TextStyle(
+                        fontSize: 12,
+
+                        color: _showInactive
+                            ? Theme.of(context).colorScheme.error
+                            : Theme.of(context).colorScheme.onSurface,
+                      ),
+                    ),
+                    selected: _showInactive,
+                    onSelected: (value) =>
+                        setState(() => _showInactive = value),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      side: BorderSide(
+                        color: _showInactive
+                            ? Theme.of(context).colorScheme.error
+                            : Theme.of(context).colorScheme.outline,
+                        width: _showInactive ? 1.5 : 1,
+                      ),
+                    ),
+                    checkmarkColor: Theme.of(context).colorScheme.error,
+                    selectedShadowColor: Theme.of(context).colorScheme.error,
+                    selectedColor: Theme.of(
+                      context,
+                    ).colorScheme.error.withValues(alpha: 0.2),
+                    backgroundColor: Theme.of(context).colorScheme.surface,
+
+                    labelPadding: const EdgeInsets.symmetric(
+                      horizontal: 4,
+                      vertical: 2,
+                    ),
+                  ),
+
                   ChipFilterWidget(
                     label: 'Filtros ($_activeFilterCount)',
                     activeFilterCount: _activeFilterCount,
@@ -132,8 +173,16 @@ class ProductsPageState extends ConsumerState<ProductsPage>
   }
 
   Widget _buildProductList(List<Product> productList) {
+    // Primero aplicamos el filtro de activo/inactivo manualmente si la utilidad no lo tiene
+    final baseList = productList.where((p) {
+      if (_showInactive) {
+        return true; // Si queremos ver inactivos, mostramos todos
+      }
+      return p.isActive; // Si no, solo los activos
+    }).toList();
+
     final filteredList = ProductFilterUtils.filterAndSort(
-      products: productList,
+      products: baseList, // Usamos la lista filtrada por estado
       searchQuery: _searchQuery,
       departmentFilter: _departmentFilter,
       categoryFilter: _categoryFilter,
@@ -147,9 +196,13 @@ class ProductsPageState extends ConsumerState<ProductsPage>
       separatorBuilder: (context, index) => const SizedBox(height: 12),
       itemBuilder: (context, index) {
         final product = filteredList[index];
-        return ProductListItem(
-          product: product,
-          onMorePressed: () => _showActionsSheet(product),
+        // Opcional: Podrías envolver el item en un Opacity si está inactivo
+        return Opacity(
+          opacity: product.isActive ? 1.0 : 0.6,
+          child: ProductListItem(
+            product: product,
+            onMorePressed: () => _showActions(context, product),
+          ),
         );
       },
     );
@@ -176,39 +229,82 @@ class ProductsPageState extends ConsumerState<ProductsPage>
   }
 
   void _showFilterSheet() {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Theme.of(context).colorScheme.onSurface,
-      barrierColor: Colors.transparent,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.all(Radius.circular(24)),
-      ),
-      showDragHandle: true,
-      builder: (context) => ProductFilterSheet(
-        departmentFilter: _departmentFilter,
-        categoryFilter: _categoryFilter,
-        brandFilter: _brandFilter,
-        supplierFilter: _supplierFilter,
-        sortOrder: _sortOrder,
-        onDepartmentChanged: (val) => _departmentFilter = val,
-        onCategoryChanged: (val) => _categoryFilter = val,
-        onBrandChanged: (val) => _brandFilter = val,
-        onSupplierChanged: (val) => _supplierFilter = val,
-        onSortOrderChanged: (val) => _sortOrder = val,
-        onClearFilters: _clearFilters,
-        onApplyFilters: () => setState(() {}),
-      ),
-    );
+    final isTablet = MediaQuery.of(context).size.width > 600;
+
+    if (isTablet) {
+      showDialog(
+        context: context,
+        builder: (context) => Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: SizedBox(
+            width: 400, // Ancho fijo para que no se estire
+            child: ProductFilterSheet(
+              departmentFilter: _departmentFilter,
+              categoryFilter: _categoryFilter,
+              brandFilter: _brandFilter,
+              supplierFilter: _supplierFilter,
+              sortOrder: _sortOrder,
+              onDepartmentChanged: (val) => _departmentFilter = val,
+              onCategoryChanged: (val) => _categoryFilter = val,
+              onBrandChanged: (val) => _brandFilter = val,
+              onSupplierChanged: (val) => _supplierFilter = val,
+              onSortOrderChanged: (val) => _sortOrder = val,
+              onClearFilters: _clearFilters,
+              onApplyFilters: () => setState(() {}),
+            ), // Reutilizamos el widget
+          ),
+        ),
+      );
+    } else {
+      showModalBottomSheet(
+        context: context,
+        isScrollControlled: true,
+        builder: (context) => ProductFilterSheet(
+          departmentFilter: _departmentFilter,
+          categoryFilter: _categoryFilter,
+          brandFilter: _brandFilter,
+          supplierFilter: _supplierFilter,
+          sortOrder: _sortOrder,
+          onDepartmentChanged: (val) => _departmentFilter = val,
+          onCategoryChanged: (val) => _categoryFilter = val,
+          onBrandChanged: (val) => _brandFilter = val,
+          onSupplierChanged: (val) => _supplierFilter = val,
+          onSortOrderChanged: (val) => _sortOrder = val,
+          onClearFilters: _clearFilters,
+          onApplyFilters: () => setState(() {}),
+        ),
+      );
+    }
   }
 
-  void _showActionsSheet(product) {
-    showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (context) => ProductActionsSheet(product: product),
-    );
+  void _showActions(BuildContext context, Product product) {
+    final isTablet = MediaQuery.of(context).size.width > 600;
+
+    if (isTablet) {
+      // Diseño para Tablet: Un diálogo compacto y centrado (o lateral)
+      showDialog(
+        context: context,
+        builder: (context) => Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: SizedBox(
+            width: 400, // Ancho fijo para que no se estire
+            child: ProductActionsSheet(
+              product: product,
+            ), // Reutilizamos el widget
+          ),
+        ),
+      );
+    } else {
+      // Diseño para Móvil: El sheet que ya tenemos
+      showModalBottomSheet(
+        context: context,
+        isScrollControlled: true,
+        builder: (context) => ProductActionsSheet(product: product),
+      );
+    }
   }
 }

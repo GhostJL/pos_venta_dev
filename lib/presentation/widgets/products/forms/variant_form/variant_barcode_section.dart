@@ -33,19 +33,29 @@ class _VariantBarcodeSectionState extends ConsumerState<VariantBarcodeSection> {
   Future<void> _openBarcodeScanner() async {
     final result = await context.push<String>('/scanner');
     if (result != null && mounted) {
-      _controller.text = result;
-      ref
-          .read(variantFormProvider(widget.variant).notifier)
-          .updateBarcode(result);
+      _updateBarcodeValue(result);
     }
+  }
+
+  void _generateInternalCode() {
+    // Lógica para generar un código único temporal (puedes ajustarla a tu backend)
+    final timestamp = DateTime.now().millisecondsSinceEpoch.toString();
+    final internalCode = 'INT$timestamp';
+    _updateBarcodeValue(internalCode);
+  }
+
+  void _updateBarcodeValue(String value) {
+    _controller.text = value;
+    ref.read(variantFormProvider(widget.variant).notifier).updateBarcode(value);
   }
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final state = ref.watch(variantFormProvider(widget.variant));
     final notifier = ref.read(variantFormProvider(widget.variant).notifier);
 
-    // Sync controller if state changes externally (though unlikely with this setup, good practice)
+    // Sincronización del controlador
     if (state.barcode != _controller.text) {
       _controller.text = state.barcode;
       _controller.selection = TextSelection.fromPosition(
@@ -56,64 +66,63 @@ class _VariantBarcodeSectionState extends ConsumerState<VariantBarcodeSection> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildSectionTitle(context, 'Código de Barras'),
         const SizedBox(height: 16),
+        // Campo de Texto con Estilo Monoespaciado
         TextFormField(
           controller: _controller,
+          style: const TextStyle(
+            fontFamily: 'monospace', // Mejor legibilidad para códigos
+            letterSpacing: 1.2,
+          ),
           decoration: InputDecoration(
-            labelText: 'Código de Barras',
-            helperText: 'Debe ser único en todo el sistema',
+            labelText: 'Código de Barras / SKU',
+            hintText: 'Escanea o ingresa el código',
+            helperText:
+                'Este código identificará la variante en el punto de venta.',
             errorText: state.barcodeError,
-            prefixIcon: const Icon(Icons.qr_code),
-            suffixIcon: IconButton(
-              icon: const Icon(Icons.qr_code_scanner),
-              onPressed: _openBarcodeScanner,
-              tooltip: 'Escanear',
+            prefixIcon: const Icon(Icons.qr_code_2_rounded),
+            suffixIcon: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (_controller.text.isNotEmpty)
+                  IconButton(
+                    icon: const Icon(Icons.clear_rounded, size: 20),
+                    onPressed: () => _updateBarcodeValue(''),
+                  ),
+                IconButton(
+                  icon: Icon(
+                    Icons.camera_alt_rounded,
+                    color: theme.colorScheme.primary,
+                  ),
+                  onPressed: _openBarcodeScanner,
+                  tooltip: 'Escanear con cámara',
+                ),
+              ],
             ),
           ),
           onChanged: notifier.updateBarcode,
-          validator: (value) => value?.isEmpty ?? true ? 'Requerido' : null,
+          validator: (value) =>
+              value?.isEmpty ?? true ? 'Campo requerido' : null,
         ),
-      ],
-    );
-  }
 
-  Widget _buildSectionTitle(BuildContext context, String title) {
-    // Mapa de iconos para un toque visual (opcional)
-    final Map<String, IconData> sectionIcons = {
-      'Código de Barras': Icons.qr_code,
-    };
+        const SizedBox(height: 12),
 
-    final icon = sectionIcons[title];
-
-    return Padding(
-      // Añadimos padding superior para asegurarnos de que el título esté bien separado de la sección anterior
-      padding: const EdgeInsets.only(top: 24.0, bottom: 8.0),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          if (icon != null) ...[
-            Icon(
-              icon,
-              size: 20,
-              color: Theme.of(context).colorScheme.primary, // Color de acento
-            ),
-            const SizedBox(width: 8),
-          ],
-          Text(
-            title,
-            style: TextStyle(
-              fontSize: 18, // Ligeramente más grande para jerarquía
-              fontWeight:
-                  FontWeight.w700, // Más fuerte, pero sin ser negrita pura
-              color: Theme.of(
-                context,
-              ).colorScheme.primary, // Color principal de texto
-              letterSpacing: 0.5, // Un toque moderno
+        // Botón de Acción Secundaria: Generar código
+        Align(
+          alignment: Alignment.centerRight,
+          child: TextButton.icon(
+            onPressed: _generateInternalCode,
+            icon: const Icon(Icons.auto_fix_high_rounded, size: 18),
+            label: const Text('Generar código interno'),
+            style: TextButton.styleFrom(
+              visualDensity: VisualDensity.compact,
+              textStyle: theme.textTheme.labelMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }

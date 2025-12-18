@@ -29,7 +29,7 @@ class ProductSearchBar extends StatelessWidget {
         const SizedBox(width: 8),
         Container(
           decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.primary,
+            color: Theme.of(context).colorScheme.surface,
             borderRadius: BorderRadius.circular(8),
           ),
           child: IconButton(

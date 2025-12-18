@@ -35,6 +35,10 @@ class _VariantFormPageState extends ConsumerState<VariantFormPage> {
 
   Future<void> _saveVariant() async {
     if (!_formKey.currentState!.validate()) {
+      // Feedback táctico en caso de error
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Por favor, revisa los campos marcados.')),
+      );
       return;
     }
 
@@ -44,6 +48,7 @@ class _VariantFormPageState extends ConsumerState<VariantFormPage> {
         initialType: widget.initialType,
       ).notifier,
     );
+
     final newVariant = await notifier.save(
       widget.productId ?? 0,
       widget.existingBarcodes,
@@ -56,66 +61,189 @@ class _VariantFormPageState extends ConsumerState<VariantFormPage> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final isEditing = widget.variant != null;
     final state = ref.watch(
       variantFormProvider(widget.variant, initialType: widget.initialType),
     );
 
     return Scaffold(
+      backgroundColor: theme.colorScheme.surface, // Fondo limpio
       appBar: AppBar(
+        titleSpacing: 0,
         title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(isEditing ? 'Editar Variante' : 'Nueva Variante'),
+            Text(
+              isEditing ? 'Editar Variante' : 'Nueva Variante',
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
             if (widget.productName != null)
               Text(
                 widget.productName!,
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.primary,
+                  fontWeight: FontWeight.w500,
                 ),
               ),
           ],
         ),
         actions: [
-          IconButton(
-            icon: state.isSaving
-                ? const SizedBox(
-                    width: 24,
-                    height: 24,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: Colors.white,
-                    ),
-                  )
-                : Icon(Icons.check_circle_outline_rounded, size: 28),
-            onPressed: state.isSaving ? null : _saveVariant,
-            tooltip: isEditing ? 'Guardar Cambios' : 'Guardar',
-            color: Theme.of(context).colorScheme.primary,
-          ),
+          // Botón de guardado rápido en el AppBar
+          if (!state.isSaving)
+            TextButton(
+              onPressed: _saveVariant,
+              child: Text(
+                'GUARDAR',
+                style: TextStyle(
+                  color: theme.colorScheme.primary,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            )
+          else
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 16.0),
+              child: SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
+            ),
         ],
       ),
       body: SafeArea(
-        child: Form(
-          key: _formKey,
-          child: ListView(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 24.0,
-              vertical: 16.0,
-            ),
-            children: [
-              VariantBasicInfoSection(
-                variant: widget.variant,
-                availableVariants: widget.availableVariants,
+        child: Center(
+          child: Container(
+            constraints: const BoxConstraints(
+              maxWidth: 600,
+            ), // Optimización Tablet
+            child: Form(
+              key: _formKey,
+              child: ListView(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 16,
+                ),
+                children: [
+                  _buildFormSection(
+                    context,
+                    title: 'Información General',
+                    icon: Icons.info_outline_rounded,
+                    child: VariantBasicInfoSection(
+                      variant: widget.variant,
+                      availableVariants: widget.availableVariants,
+                    ),
+                  ),
+
+                  _buildFormSection(
+                    context,
+                    title: 'Precios y Costos',
+                    icon: Icons.payments_outlined,
+                    child: VariantPriceSection(variant: widget.variant),
+                  ),
+
+                  _buildFormSection(
+                    context,
+                    title: 'Identificación',
+                    icon: Icons.qr_code_scanner_rounded,
+                    child: VariantBarcodeSection(variant: widget.variant),
+                  ),
+                  if (state.type != VariantType.sales)
+                    SizedBox.shrink()
+                  else
+                    _buildFormSection(
+                      context,
+                      title: 'Configuración Adicional',
+                      icon: Icons.settings_outlined,
+                      child: VariantSettingsSection(variant: widget.variant),
+                    ),
+
+                  const SizedBox(height: 24),
+
+                  // Botón principal de guardado al final del scroll
+                  SizedBox(
+                    width: double.infinity,
+                    height: 56,
+                    child: FilledButton(
+                      onPressed: state.isSaving ? null : _saveVariant,
+                      style: FilledButton.styleFrom(
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                      ),
+                      child: state.isSaving
+                          ? const CircularProgressIndicator(color: Colors.white)
+                          : Text(
+                              isEditing
+                                  ? 'Actualizar Variante'
+                                  : 'Crear Variante',
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                    ),
+                  ),
+                  const SizedBox(height: 40),
+                ],
               ),
-              const SizedBox(height: 24),
-              VariantPriceSection(variant: widget.variant),
-              const SizedBox(height: 24),
-              VariantBarcodeSection(variant: widget.variant),
-              const SizedBox(height: 24),
-              VariantSettingsSection(variant: widget.variant),
-              const SizedBox(height: 32),
-            ],
+            ),
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildFormSection(
+    BuildContext context, {
+    required String title,
+    required IconData icon,
+    required Widget child,
+  }) {
+    final theme = Theme.of(context);
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 24),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+            child: Row(
+              children: [
+                Icon(icon, size: 20, color: theme.colorScheme.primary),
+                const SizedBox(width: 8),
+                Text(
+                  title.toUpperCase(),
+                  style: theme.textTheme.labelLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: theme.colorScheme.onSurfaceVariant,
+                    letterSpacing: 1.1,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const Divider(height: 1),
+          Padding(padding: const EdgeInsets.all(16.0), child: child),
+        ],
       ),
     );
   }

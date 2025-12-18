@@ -1,8 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:posventa/core/constants/ui_constants.dart';
 import 'package:posventa/domain/entities/product.dart';
-import 'package:posventa/domain/entities/product_variant.dart';
-import 'package:posventa/presentation/pages/products/variant_type_selection_page.dart';
 
 class ProductListItem extends StatelessWidget {
   final Product product;
@@ -19,31 +16,40 @@ class ProductListItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isTablet = MediaQuery.of(context).size.width > 600;
 
-    return Card(
+    return Container(
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
+        ),
+      ),
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
         onTap: onTap,
-        onLongPress: () {
-          // Open Variant Management Selection Page
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => VariantTypeSelectionPage(product: product),
-            ),
-          );
-        },
         child: Padding(
-          padding: const EdgeInsets.all(UIConstants.kItemPadding),
+          padding: const EdgeInsets.all(12),
           child: Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              // Icono de Producto
-              _buildProductVisual(theme),
-              const SizedBox(width: UIConstants.kItemPadding),
+              // 1. Visual (Fijo a la izquierda)
+              _buildLeading(theme),
+              const SizedBox(width: 12),
 
-              // Información del Producto
-              Expanded(child: _buildProductInfo(theme, context)),
+              // 2. Información y Precio (Flexible)
+              Expanded(
+                child: isTablet
+                    ? _buildTabletLayout(theme)
+                    : _buildMobileLayout(theme),
+              ),
+
+              // 3. Acción (Fijo a la derecha)
+              IconButton(
+                onPressed: onMorePressed,
+                icon: const Icon(Icons.chevron_right_rounded),
+                color: theme.colorScheme.outlineVariant,
+              ),
             ],
           ),
         ),
@@ -51,195 +57,127 @@ class ProductListItem extends StatelessWidget {
     );
   }
 
-  // --- Widgets de Construcción Privados ---
+  // --- LAYOUTS ADAPTATIVOS ---
 
-  Widget _buildProductVisual(ThemeData theme) {
+  // Layout para Tablet: Todo en una línea
+  Widget _buildTabletLayout(ThemeData theme) {
+    return Row(
+      children: [
+        Expanded(child: _buildMainInfo(theme)),
+        const SizedBox(width: 16),
+        _buildPriceInfo(theme),
+      ],
+    );
+  }
+
+  // Layout para Móvil: Información arriba, precio abajo del nombre
+  Widget _buildMobileLayout(ThemeData theme) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        _buildMainInfo(theme),
+        const SizedBox(height: 4),
+        _buildPriceInfo(theme, isHorizontal: true),
+      ],
+    );
+  }
+
+  // --- SUB-WIDGETS ---
+
+  Widget _buildLeading(ThemeData theme) {
     return Container(
-      width: 60,
-      height: 60,
+      width: 44,
+      height: 44,
       decoration: BoxDecoration(
-        color: theme.colorScheme.primaryContainer.withValues(alpha: 0.4),
-        borderRadius: BorderRadius.circular(8), // Bordes menos agresivos
+        color: theme.colorScheme.primaryContainer.withValues(alpha: 0.2),
+        borderRadius: BorderRadius.circular(8),
       ),
-      child: Icon(
-        Icons.widgets_rounded,
-        size: 32,
-        color: theme.colorScheme.primary,
+      child: Center(
+        child: Text(
+          product.name.isNotEmpty
+              ? product.name.substring(0, 1).toUpperCase()
+              : 'P',
+          style: TextStyle(
+            color: theme.colorScheme.primary,
+            fontWeight: FontWeight.bold,
+            fontSize: 16,
+          ),
+        ),
       ),
     );
   }
 
-  Widget _buildProductInfo(ThemeData theme, BuildContext context) {
+  Widget _buildMainInfo(ThemeData theme) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // 1. Nombre y icono de acciones (Énfasis principal)
-        Row(
-          children: [
-            Expanded(
-              child: Text(
-                product.name,
-                style: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w600,
-                  color: theme.colorScheme.onSurface,
-                ),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-
-            _buildTrailing(theme, context),
-          ],
+        Text(
+          product.name,
+          style: theme.textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.bold,
+            fontSize: 14,
+          ),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
         ),
-        const SizedBox(height: 4),
-
-        // 2. Precio de Venta (Secundario, animado)
-        _buildPriceRow(theme),
-        const SizedBox(height: 4),
-
-        // 3. Código y Departamento (Detalle)
-        _buildCodeAndDepartment(theme),
+        _buildSubInfo(theme),
       ],
     );
   }
 
-  Widget _buildPriceRow(ThemeData theme) {
+  Widget _buildSubInfo(ThemeData theme) {
     return Row(
-      crossAxisAlignment: CrossAxisAlignment.center,
+      mainAxisSize: MainAxisSize.min,
       children: [
-        // Precio con animación de escala
-        AnimatedSwitcher(
-          duration: const Duration(milliseconds: 250),
-          transitionBuilder: (child, anim) => ScaleTransition(
-            scale: anim,
-            alignment: Alignment.centerLeft,
-            child: child,
-          ),
-          child: Text(
-            '\$${(product.salePriceCents / 100).toStringAsFixed(2)}',
-            key: ValueKey(product.salePriceCents),
-            style: theme.textTheme.titleSmall?.copyWith(
-              fontWeight: FontWeight.bold,
-              color: theme.colorScheme.primary,
-            ),
+        Text(
+          "#${product.code}",
+          style: theme.textTheme.labelSmall?.copyWith(
+            color: theme.colorScheme.primary,
+            fontWeight: FontWeight.bold,
           ),
         ),
-
-        // Separador
-        if (product.stock != null) ...[
-          const SizedBox(width: 8),
-          Container(
-            width: 4,
-            height: 4,
-            decoration: BoxDecoration(
-              color: theme.colorScheme.outline,
-              shape: BoxShape.circle,
+        if (product.departmentName != null) ...[
+          const SizedBox(width: 6),
+          Flexible(
+            child: Text(
+              "• ${product.departmentName!}",
+              style: theme.textTheme.labelSmall,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
           ),
-          const SizedBox(width: 8),
-
-          // Indicador de Stock
-          _buildStockChip(theme),
         ],
       ],
     );
   }
 
-  // Chip de Stock con lógica de color
-  Widget _buildStockChip(ThemeData theme) {
-    final variants = product.variants ?? [];
+  Widget _buildPriceInfo(ThemeData theme, {bool isHorizontal = false}) {
+    final priceWidget = Text(
+      '\$${(product.salePriceCents / 100).toStringAsFixed(2)}',
+      style: theme.textTheme.titleMedium?.copyWith(
+        fontWeight: FontWeight.w900,
+        color: theme.colorScheme.onSurface,
+      ),
+    );
 
-    if (variants.isEmpty) {
-      return Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-        decoration: BoxDecoration(
-          color: theme.colorScheme.errorContainer.withValues(alpha: 0.6),
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Text(
-          'Sin Variantes',
-          style: theme.textTheme.bodySmall?.copyWith(
-            fontWeight: FontWeight.bold,
-            fontSize: 10,
-            color: theme.colorScheme.onErrorContainer,
-          ),
-        ),
+    final variantsWidget = product.variants != null
+        ? Text(
+            "${product.variants!.length} var.",
+            style: theme.textTheme.labelSmall?.copyWith(fontSize: 10),
+          )
+        : const SizedBox.shrink();
+
+    if (isHorizontal) {
+      return Row(
+        children: [priceWidget, const SizedBox(width: 8), variantsWidget],
       );
     }
 
-    final variantCount = variants.length;
-    // Calculate total stock across all sales variants to give a quick overview
-    final totalStock = variants
-        .where((v) => v.type == VariantType.sales)
-        .fold(0.0, (sum, v) => sum + (v.stock ?? 0));
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Text(
-        '$variantCount Variantes (${totalStock.toStringAsFixed(0)} Uds.)',
-        style: theme.textTheme.bodySmall?.copyWith(
-          fontWeight: FontWeight.bold,
-          fontSize: 10,
-          color: theme.colorScheme.onSurfaceVariant,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildCodeAndDepartment(ThemeData theme) {
-    final style = theme.textTheme.bodySmall?.copyWith(
-      color: theme.colorScheme.onSurfaceVariant,
-    );
-
-    return Row(
-      children: [
-        // Código del Producto
-        Text(product.code, style: style),
-
-        // Separador condicional y Departamento
-        if (product.departmentName?.isNotEmpty == true) ...[
-          const SizedBox(width: 8),
-
-          // Separador Vertical
-          Container(
-            width: 1,
-            height: 10,
-            color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
-          ),
-          const SizedBox(width: 8),
-
-          // Nombre del Departamento
-          Expanded(
-            child: Text(
-              product.departmentName!,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: style?.copyWith(fontWeight: FontWeight.w500),
-            ),
-          ),
-        ],
-      ],
-    );
-  }
-
-  Widget _buildTrailing(ThemeData theme, BuildContext context) {
-    // 2. UX en Móviles: Usar un InkWell en lugar de solo el IconButton
-    // para aumentar el "hit target" sin aumentar el tamaño visual del icono.
-    return InkWell(
-      onTap: onMorePressed,
-      borderRadius: BorderRadius.circular(20),
-      child: Padding(
-        padding: const EdgeInsets.all(4.0), // Aumenta el área táctil
-        child: Icon(
-          Icons
-              .more_horiz_rounded, // Icono de 3 puntos más común para "más opciones" en apps modernas
-          color: theme.colorScheme.onSurfaceVariant,
-        ),
-      ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.end,
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [priceWidget, variantsWidget],
     );
   }
 }

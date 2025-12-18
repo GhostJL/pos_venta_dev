@@ -89,6 +89,9 @@ class _ProductGridSectionState extends ConsumerState<ProductGridSection>
   List<ProductGridItem> _buildGridItems(List<Product> products) {
     final List<ProductGridItem> gridItems = [];
     for (final product in products) {
+      // Omitir productos inactivos en el POS
+      if (!product.isActive) continue;
+
       final sellableVariants =
           product.variants?.where((v) => v.isForSale).toList() ?? [];
 

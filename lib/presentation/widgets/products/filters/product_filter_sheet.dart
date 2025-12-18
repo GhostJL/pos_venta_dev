@@ -5,7 +5,6 @@ import 'package:posventa/presentation/providers/brand_providers.dart';
 import 'package:posventa/presentation/providers/category_providers.dart';
 import 'package:posventa/presentation/providers/department_providers.dart';
 import 'package:posventa/presentation/providers/supplier_providers.dart';
-import 'package:posventa/core/constants/ui_constants.dart';
 
 class ProductFilterSheet extends ConsumerStatefulWidget {
   final int? departmentFilter;
@@ -60,158 +59,217 @@ class _ProductFilterSheetState extends ConsumerState<ProductFilterSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isTablet = MediaQuery.of(context).size.width > 600;
+
     final departments = ref.watch(departmentListProvider);
     final categories = ref.watch(categoryListProvider);
     final brands = ref.watch(brandListProvider);
     final suppliers = ref.watch(supplierListProvider);
 
     return SafeArea(
-      child: Padding(
-        padding: EdgeInsets.fromLTRB(
-          UIConstants.paddingLarge,
-          0,
-          UIConstants.paddingLarge,
-          UIConstants.paddingLarge + MediaQuery.of(context).viewInsets.bottom,
+      child: Container(
+        constraints: BoxConstraints(maxWidth: isTablet ? 480 : double.infinity),
+        decoration: BoxDecoration(
+          color: theme.colorScheme.surface,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildFilterDropdowns(departments, categories, brands, suppliers),
-            const SizedBox(height: 24),
-            _buildSortDropdown(),
-            const SizedBox(height: 32),
-            _buildActionButtons(context),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildFilterDropdowns(
-    AsyncValue departments,
-    AsyncValue categories,
-    AsyncValue brands,
-    AsyncValue suppliers,
-  ) {
-    return Column(
-      children: [
-        Row(
-          children: [
-            Text(
-              'Filtrar y ordenar',
-              style: Theme.of(
-                context,
-              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+            if (!isTablet) Center(child: _buildHandle(theme)),
+            _buildHeader(theme),
+            const Divider(height: 1, thickness: 0.5),
+            Flexible(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 20,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildSectionLabel(theme, 'Filtros de Catálogo'),
+                    const SizedBox(height: 16),
+                    _buildAsyncDropdown(
+                      asyncValue: departments,
+                      label: 'Departamento',
+                      currentValue: _departmentFilter,
+                      icon: Icons.business_outlined,
+                      onChanged: (val) =>
+                          setState(() => _departmentFilter = val),
+                    ),
+                    _buildAsyncDropdown(
+                      asyncValue: categories,
+                      label: 'Categoría',
+                      currentValue: _categoryFilter,
+                      icon: Icons.category_outlined,
+                      onChanged: (val) => setState(() => _categoryFilter = val),
+                    ),
+                    _buildAsyncDropdown(
+                      asyncValue: brands,
+                      label: 'Marca',
+                      currentValue: _brandFilter,
+                      icon: Icons.branding_watermark_outlined,
+                      onChanged: (val) => setState(() => _brandFilter = val),
+                    ),
+                    _buildAsyncDropdown(
+                      asyncValue: suppliers,
+                      label: 'Proveedor',
+                      currentValue: _supplierFilter,
+                      icon: Icons.local_shipping_outlined,
+                      onChanged: (val) => setState(() => _supplierFilter = val),
+                    ),
+                    const SizedBox(height: 24),
+                    _buildSectionLabel(theme, 'Preferencias de Lista'),
+                    const SizedBox(height: 16),
+                    _buildSortSelector(theme),
+                    const SizedBox(height: 32),
+                    _buildFooterActions(context, theme),
+                  ],
+                ),
+              ),
             ),
           ],
         ),
-        SizedBox(height: 12),
-        departments.when(
-          data: (data) => _buildFilterDropdown(
-            data,
-            'Departamento',
-            _departmentFilter,
-            (val) => setState(() => _departmentFilter = val),
-            Icons.business_rounded,
-          ),
-          loading: () => const Center(child: CircularProgressIndicator()),
-          error: (e, s) => Text('Error: $e'),
-        ),
-        const SizedBox(height: 16),
-        categories.when(
-          data: (data) => _buildFilterDropdown(
-            data,
-            'Categoría',
-            _categoryFilter,
-            (val) => setState(() => _categoryFilter = val),
-            Icons.category_rounded,
-          ),
-          loading: () => const Center(child: CircularProgressIndicator()),
-          error: (e, s) => Text('Error: $e'),
-        ),
-        const SizedBox(height: 16),
-        brands.when(
-          data: (data) => _buildFilterDropdown(
-            data,
-            'Marca',
-            _brandFilter,
-            (val) => setState(() => _brandFilter = val),
-            Icons.branding_watermark_rounded,
-          ),
-          loading: () => const Center(child: CircularProgressIndicator()),
-          error: (e, s) => Text('Error: $e'),
-        ),
-        const SizedBox(height: 16),
-        suppliers.when(
-          data: (data) => _buildFilterDropdown(
-            data,
-            'Proveedor',
-            _supplierFilter,
-            (val) => setState(() => _supplierFilter = val),
-            Icons.local_shipping_rounded,
-          ),
-          loading: () => const Center(child: CircularProgressIndicator()),
-          error: (e, s) => Text('Error: $e'),
-        ),
-      ],
+      ),
     );
   }
 
-  Widget _buildFilterDropdown(
-    List<dynamic> items,
-    String label,
-    int? currentValue,
-    void Function(int?) onChanged,
-    IconData icon,
-  ) {
-    return DropdownButtonFormField<int>(
-      initialValue: currentValue,
-      decoration: InputDecoration(
-        labelText: label,
-        prefixIcon: Icon(icon, size: 20),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+  Widget _buildSectionLabel(ThemeData theme, String text) {
+    return Text(
+      text.toUpperCase(),
+      style: theme.textTheme.labelLarge?.copyWith(
+        fontWeight: FontWeight.w800,
+        letterSpacing: 1.1,
+        fontSize: 11,
       ),
-      items: items
-          .map(
-            (e) => DropdownMenuItem(
+    );
+  }
+
+  Widget _buildHeader(ThemeData theme) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(24, 20, 16, 20),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            'Filtrar productos',
+            style: theme.textTheme.headlineSmall?.copyWith(
+              fontWeight: FontWeight.w800,
+              fontSize: 20,
+            ),
+          ),
+          IconButton(
+            onPressed: () => context.pop(),
+            icon: const Icon(Icons.close_rounded),
+            visualDensity: VisualDensity.compact,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAsyncDropdown({
+    required AsyncValue asyncValue,
+    required String label,
+    required int? currentValue,
+    required IconData icon,
+    required Function(int?) onChanged,
+  }) {
+    return asyncValue.when(
+      data: (items) => _buildFlatDropdownField(
+        items: items as List<dynamic>,
+        label: label,
+        currentValue: currentValue,
+        icon: icon,
+        onChanged: onChanged,
+      ),
+      loading: () => const LinearProgressIndicator(),
+      error: (_, __) => const SizedBox.shrink(),
+    );
+  }
+
+  Widget _buildFlatDropdownField({
+    required List<dynamic> items,
+    required String label,
+    required int? currentValue,
+    required IconData icon,
+    required Function(int?) onChanged,
+  }) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: DropdownButtonFormField<int>(
+        initialValue: currentValue,
+        style: theme.textTheme.bodyMedium?.copyWith(
+          fontWeight: FontWeight.w600,
+        ),
+        decoration: InputDecoration(
+          prefixIcon: Icon(icon, size: 20),
+          labelText: label,
+          labelStyle: TextStyle(fontWeight: FontWeight.normal),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 16,
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: theme.colorScheme.outlineVariant),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(
+              color: theme.colorScheme.primary,
+              width: 1.5,
+            ),
+          ),
+        ),
+        items: [
+          DropdownMenuItem<int>(
+            value: null,
+            child: Text('Todos los ${label}s'),
+          ),
+          ...items.map(
+            (e) => DropdownMenuItem<int>(
               value: e.id as int,
               child: Text(e.name as String),
             ),
-          )
-          .toList(),
-      onChanged: onChanged,
+          ),
+        ],
+        onChanged: onChanged,
+      ),
     );
   }
 
-  Widget _buildSortDropdown() {
+  Widget _buildSortSelector(ThemeData theme) {
     return DropdownButtonFormField<String>(
       initialValue: _sortOrder,
       decoration: InputDecoration(
-        labelText: 'Ordenar por',
         prefixIcon: const Icon(Icons.sort_rounded, size: 20),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        labelText: 'Ordenar por',
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: theme.colorScheme.outlineVariant),
+        ),
       ),
       items: const [
-        DropdownMenuItem(value: 'name', child: Text('Nombre')),
+        DropdownMenuItem(value: 'name', child: Text('Nombre (A-Z)')),
         DropdownMenuItem(value: 'price', child: Text('Precio')),
-        DropdownMenuItem(value: 'created_at', child: Text('Fecha')),
+        DropdownMenuItem(value: 'created_at', child: Text('Más recientes')),
       ],
-      onChanged: (value) {
-        if (value != null) {
-          setState(() => _sortOrder = value);
-        }
+      onChanged: (val) {
+        if (val != null) setState(() => _sortOrder = val);
       },
     );
   }
 
-  Widget _buildActionButtons(BuildContext context) {
+  Widget _buildFooterActions(BuildContext context, ThemeData theme) {
     return Row(
       children: [
         Expanded(
-          child: TextButton(
+          child: OutlinedButton(
             onPressed: () {
               setState(() {
                 _departmentFilter = null;
@@ -221,17 +279,22 @@ class _ProductFilterSheetState extends ConsumerState<ProductFilterSheet> {
               });
               widget.onClearFilters();
             },
-            style: TextButton.styleFrom(
+            style: OutlinedButton.styleFrom(
               padding: const EdgeInsets.symmetric(vertical: 16),
+              side: BorderSide(color: theme.colorScheme.outlineVariant),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
             ),
-            child: const Text('Limpiar todo'),
+            child: Text(
+              'Limpiar',
+              style: TextStyle(color: theme.colorScheme.onSurface),
+            ),
           ),
         ),
-        const SizedBox(width: 16),
+        const SizedBox(width: 12),
         Expanded(
+          flex: 2,
           child: FilledButton(
             onPressed: () {
               widget.onDepartmentChanged(_departmentFilter);
@@ -247,11 +310,27 @@ class _ProductFilterSheetState extends ConsumerState<ProductFilterSheet> {
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
+              elevation: 0,
             ),
-            child: const Text('Aplicar filtros'),
+            child: const Text(
+              'Aplicar filtros',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildHandle(ThemeData theme) {
+    return Container(
+      margin: const EdgeInsets.only(top: 12),
+      width: 32,
+      height: 4,
+      decoration: BoxDecoration(
+        color: theme.colorScheme.outlineVariant,
+        borderRadius: BorderRadius.circular(2),
+      ),
     );
   }
 }

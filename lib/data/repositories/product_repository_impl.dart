@@ -106,7 +106,6 @@ class ProductRepositoryImpl implements ProductRepository {
       FROM ${DatabaseHelper.tableProducts} p
       LEFT JOIN ${DatabaseHelper.tableUnitsOfMeasure} u ON p.unit_id = u.id
       LEFT JOIN ${DatabaseHelper.tableDepartments} d ON p.department_id = d.id
-      WHERE p.is_active = 1
     ''');
 
     if (productMaps.isEmpty) return [];
@@ -171,7 +170,7 @@ class ProductRepositoryImpl implements ProductRepository {
       LEFT JOIN ${DatabaseHelper.tableProductVariants} pv ON p.id = pv.product_id AND pv.is_active = 1
       LEFT JOIN ${DatabaseHelper.tableUnitsOfMeasure} u ON p.unit_id = u.id
       LEFT JOIN ${DatabaseHelper.tableDepartments} d ON p.department_id = d.id
-      WHERE p.is_active = 1 AND (
+      WHERE (
         p.name LIKE ? OR 
         p.code LIKE ? OR 
         pv.barcode LIKE ? OR
