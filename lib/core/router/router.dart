@@ -42,7 +42,7 @@ import 'package:posventa/presentation/pages/sale/sale_returns_detail_page.dart';
 import 'package:posventa/presentation/pages/sale/sales_history_page.dart';
 import 'package:posventa/presentation/pages/suppliers/suppliers_page.dart';
 import 'package:posventa/presentation/pages/tax/tax_rate_page.dart';
-import 'package:posventa/presentation/pages/tax/tax_store_config_page.dart';
+
 import 'package:posventa/presentation/pages/users/users_permissions_page.dart';
 import 'package:posventa/presentation/pages/warehouses/warehouses_page.dart';
 import 'package:posventa/presentation/widgets/common/misc/barcode_scanner_widget.dart';
@@ -403,11 +403,6 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: '/users-permissions',
             pageBuilder: (context, state) =>
                 const NoTransitionPage(child: UsersPermissionsPage()),
-          ),
-          GoRoute(
-            path: '/tax-store-config',
-            pageBuilder: (context, state) =>
-                const NoTransitionPage(child: TaxStoreConfigPage()),
           ),
 
           GoRoute(

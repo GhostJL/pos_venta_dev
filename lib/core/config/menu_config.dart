@@ -186,12 +186,7 @@ class MenuConfig {
             route: '/cashiers',
             customAccessCheck: (user) => user?.role == UserRole.administrador,
           ),
-          MenuItem(
-            title: 'Impuestos',
-            icon: Icons.percent_rounded,
-            route: '/tax-store-config',
-            customAccessCheck: (user) => user?.role == UserRole.administrador,
-          ),
+
           const MenuItem(
             title: 'Tasas de Impuesto',
             icon: Icons.price_change_rounded,
