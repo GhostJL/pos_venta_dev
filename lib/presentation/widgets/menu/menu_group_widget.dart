@@ -56,9 +56,12 @@ class _MenuGroupWidgetState extends ConsumerState<MenuGroupWidget>
 
     if (oldWidget.currentPath != widget.currentPath) {
       if (_hasSelectedItem() && !_isCurrentlyExpanded()) {
-        ref
-            .read(menuStateProvider.notifier)
-            .setExpandedGroup(widget.menuGroup.id);
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!mounted) return;
+          ref
+              .read(menuStateProvider.notifier)
+              .setExpandedGroup(widget.menuGroup.id);
+        });
       }
     }
   }

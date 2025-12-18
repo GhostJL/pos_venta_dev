@@ -41,7 +41,7 @@ class Auth extends _$Auth {
   @override
   AuthState build() {
     _authRepository = ref.watch(authRepositoryProvider);
-    _loadSession();
+    Future.microtask(() => _loadSession());
     return AuthState.initial();
   }
 

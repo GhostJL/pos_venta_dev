@@ -7,7 +7,6 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 part 'inventory_providers.g.dart';
 
 @riverpod
-@riverpod
 class InventoryNotifier extends _$InventoryNotifier {
   @override
   Stream<List<Inventory>> build() {
