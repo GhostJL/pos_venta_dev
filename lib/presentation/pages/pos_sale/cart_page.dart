@@ -5,7 +5,7 @@ import 'package:posventa/domain/entities/sale_item.dart';
 import 'package:posventa/presentation/providers/pos_providers.dart';
 import 'package:posventa/presentation/pages/pos_sale/widgets/cart_item_card.dart';
 import 'package:posventa/presentation/widgets/pos/consumer_selection_dialog_widget.dart';
-import 'package:posventa/presentation/widgets/pos/payment/payment_dialog.dart';
+import 'package:go_router/go_router.dart';
 
 class CartPage extends ConsumerWidget {
   const CartPage({super.key});
@@ -237,7 +237,6 @@ class CartSummarySection extends ConsumerWidget {
           // Add Discount Code
           InkWell(
             onTap: () {
-              // TODO: Implement discount code dialog
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
                   content: Text('Función de código de descuento pendiente'),
@@ -315,10 +314,7 @@ class CartSummarySection extends ConsumerWidget {
               onPressed: cartIsEmpty
                   ? null
                   : () {
-                      showDialog(
-                        context: context,
-                        builder: (context) => const PaymentDialog(),
-                      );
+                      context.push('/pos/payment');
                     },
               style: FilledButton.styleFrom(
                 backgroundColor: Theme.of(context).colorScheme.primary,

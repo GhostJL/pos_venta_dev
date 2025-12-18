@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:posventa/domain/entities/sale_item.dart';
 import 'package:posventa/presentation/providers/pos_providers.dart';
-import 'package:posventa/presentation/widgets/pos/payment/payment_dialog.dart';
 
 class ConnectedChargeBottomBar extends ConsumerWidget {
   const ConnectedChargeBottomBar({super.key});
@@ -14,18 +13,16 @@ class ConnectedChargeBottomBar extends ConsumerWidget {
     final total = ref.watch(pOSProvider.select((s) => s.total));
     final cartItems = ref.watch(pOSProvider.select((s) => s.cart));
     final cartIsEmpty = cartItems.isEmpty;
+    final taxBreakdown = ref.watch(posTaxBreakdownProvider);
 
     return ChargeBottomBar(
       cartItems: cartItems,
       total: total,
+      taxBreakdown: taxBreakdown,
       onCharge: cartIsEmpty
           ? null
           : () {
-              // Just open payment dialog directly as per original flow
-              showDialog(
-                context: context,
-                builder: (context) => const PaymentDialog(),
-              );
+              context.push('/pos/payment');
             },
       onViewCart: () {
         context.push('/cart');
@@ -37,6 +34,7 @@ class ConnectedChargeBottomBar extends ConsumerWidget {
 class ChargeBottomBar extends StatelessWidget {
   final List<SaleItem> cartItems;
   final double total;
+  final Map<String, double> taxBreakdown;
   final VoidCallback? onCharge;
   final VoidCallback? onViewCart;
 
@@ -44,6 +42,7 @@ class ChargeBottomBar extends StatelessWidget {
     super.key,
     required this.cartItems,
     required this.total,
+    required this.taxBreakdown,
     this.onCharge,
     this.onViewCart,
   });
@@ -102,17 +101,11 @@ class ChargeBottomBar extends StatelessWidget {
                     color: colorScheme.onSurfaceVariant,
                   ),
                   const Spacer(),
-                  Text(
-                    'Total: ',
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                  Text(
-                    '\$${total.toStringAsFixed(2)}',
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: colorScheme.onSurface,
+                  ...taxBreakdown.entries.map(
+                    (entry) => _buildTotalRow(
+                      context,
+                      entry.key.toString(),
+                      entry.value,
                     ),
                   ),
                 ],
@@ -144,7 +137,7 @@ class ChargeBottomBar extends StatelessWidget {
                   ),
                   const Spacer(),
                   Text(
-                    '\$${total.toStringAsFixed(2)}',
+                    'Total: \$${total.toStringAsFixed(2)}',
                     style: const TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w800,
@@ -154,6 +147,39 @@ class ChargeBottomBar extends StatelessWidget {
                   const Icon(Icons.arrow_forward, size: 24),
                 ],
               ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTotalRow(
+    BuildContext context,
+    String label,
+    double amount, {
+    bool isDiscount = false,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            label,
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+              fontSize: 14,
+            ),
+          ),
+          Text(
+            '\$${amount.toStringAsFixed(2)}',
+            style: TextStyle(
+              color: isDiscount
+                  ? Colors.green[600]
+                  : Theme.of(context).colorScheme.onSurface,
+              fontWeight: isDiscount ? FontWeight.w600 : FontWeight.w500,
+              fontSize: 14,
             ),
           ),
         ],

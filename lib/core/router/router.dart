@@ -28,6 +28,7 @@ import 'package:posventa/presentation/pages/login/login_page.dart';
 import 'package:posventa/presentation/pages/login/create_account/create_account_page.dart';
 import 'package:posventa/presentation/pages/pos_sale/pos_sales_page.dart';
 import 'package:posventa/presentation/pages/pos_sale/cart_page.dart';
+import 'package:posventa/presentation/pages/pos_sale/payment_page.dart';
 import 'package:posventa/presentation/pages/products/products_page.dart';
 import 'package:posventa/presentation/pages/purchase/purchase_detail_page.dart';
 import 'package:posventa/presentation/pages/purchase/purchase_form_page.dart';
@@ -191,6 +192,11 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: '/cart',
             pageBuilder: (context, state) =>
                 const NoTransitionPage(child: CartPage()),
+          ),
+          GoRoute(
+            path: '/pos/payment',
+            pageBuilder: (context, state) =>
+                const NoTransitionPage(child: PaymentPage()),
           ),
           GoRoute(
             path: '/sales-history',

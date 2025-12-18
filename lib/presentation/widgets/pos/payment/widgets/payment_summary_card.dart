@@ -33,11 +33,7 @@ class PaymentSummaryCard extends StatelessWidget {
           const SizedBox(height: 8),
           Text(
             '\$${total.toStringAsFixed(2)}',
-            style: TextStyle(
-              fontSize: 36,
-              fontWeight: FontWeight.bold,
-              color: Theme.of(context).primaryColor,
-            ),
+            style: TextStyle(fontSize: 36, fontWeight: FontWeight.bold),
           ),
         ],
       ),
@@ -48,17 +44,10 @@ class PaymentSummaryCard extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(
-          label,
-          style: const TextStyle(fontSize: 14, color: Colors.black54),
-        ),
+        Text(label, style: const TextStyle(fontSize: 14)),
         Text(
           '\$${amount.toStringAsFixed(2)}',
-          style: const TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.bold,
-            color: Colors.black54,
-          ),
+          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
         ),
       ],
     );

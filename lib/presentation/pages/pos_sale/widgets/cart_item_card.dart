@@ -68,11 +68,7 @@ class CartItemCard extends StatelessWidget {
                       borderRadius: BorderRadius.circular(20),
                       child: Padding(
                         padding: const EdgeInsets.all(4),
-                        child: Icon(
-                          Icons.delete_outline_rounded,
-                          color: colorScheme.outline,
-                          size: 20,
-                        ),
+                        child: Icon(Icons.delete_outline_rounded, size: 20),
                       ),
                     ),
                   ],

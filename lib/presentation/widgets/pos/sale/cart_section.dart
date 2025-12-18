@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:posventa/presentation/providers/pos_providers.dart';
 import 'package:posventa/presentation/pages/pos_sale/widgets/cart_item_card.dart';
 import 'package:posventa/presentation/widgets/pos/consumer_selection_dialog_widget.dart';
-import 'package:posventa/presentation/widgets/pos/payment/payment_dialog.dart';
+import 'package:go_router/go_router.dart';
 
 class CartSection extends ConsumerWidget {
   final bool isMobile;
@@ -310,10 +310,7 @@ class CartSection extends ConsumerWidget {
                     onPressed: cart.isEmpty
                         ? null
                         : () {
-                            showDialog(
-                              context: context,
-                              builder: (context) => const PaymentDialog(),
-                            );
+                            context.push('/pos/payment');
                           },
                     style: FilledButton.styleFrom(
                       backgroundColor: Theme.of(context).colorScheme.primary,
