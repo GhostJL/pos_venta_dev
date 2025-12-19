@@ -21,50 +21,82 @@ class GenericFormScaffold extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return Scaffold(
-      appBar: AppBar(title: Text(title), centerTitle: true),
+      backgroundColor: colorScheme.surface,
+      appBar: AppBar(
+        title: Text(
+          title,
+          style: theme.textTheme.titleLarge?.copyWith(
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        centerTitle: true,
+        elevation: 0,
+        scrolledUnderElevation: 2,
+        backgroundColor: colorScheme.surface,
+      ),
       body: Stack(
         children: [
           Form(
             key: formKey,
             autovalidateMode: AutovalidateMode.onUserInteraction,
             child: SingleChildScrollView(
-              padding: const EdgeInsets.all(UIConstants.paddingLarge),
+              padding: const EdgeInsets.symmetric(
+                horizontal: UIConstants.paddingLarge,
+                vertical: UIConstants.paddingMedium,
+              ),
               child: child,
             ),
           ),
           if (isLoading)
             Container(
-              color: Colors.black.withAlpha(50),
+              color: colorScheme.surface.withAlpha(128),
               child: const Center(child: CircularProgressIndicator()),
             ),
         ],
       ),
-      bottomNavigationBar: Padding(
+      bottomNavigationBar: Container(
+        decoration: BoxDecoration(
+          color: colorScheme.surface,
+          border: Border(
+            top: BorderSide(
+              color: colorScheme.outlineVariant.withAlpha(50),
+              width: 1,
+            ),
+          ),
+        ),
         padding: EdgeInsets.fromLTRB(
           UIConstants.paddingLarge,
-          UIConstants.paddingSmall,
+          UIConstants.paddingMedium,
           UIConstants.paddingLarge,
           UIConstants.paddingLarge + MediaQuery.of(context).viewInsets.bottom,
         ),
-        child: ElevatedButton(
+        child: FilledButton(
           onPressed: isLoading ? null : onSubmit,
-
+          style: FilledButton.styleFrom(
+            minimumSize: const Size(double.infinity, 56),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(
+                UIConstants.borderRadiusMedium,
+              ),
+            ),
+          ),
           child: isLoading
-              ? SizedBox(
-                  height: UIConstants.iconSizeSmall,
-                  width: UIConstants.iconSizeSmall,
+              ? const SizedBox(
+                  height: 24,
+                  width: 24,
                   child: CircularProgressIndicator(
                     strokeWidth: 2,
-                    valueColor: AlwaysStoppedAnimation<Color>(
-                      Theme.of(context).colorScheme.onSurface,
-                    ),
+                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                   ),
                 )
               : Text(
                   submitButtonText,
-                  style: const TextStyle(
-                    fontSize: UIConstants.fontSizeLarge,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    color: colorScheme.onPrimary,
                     fontWeight: FontWeight.bold,
                   ),
                 ),

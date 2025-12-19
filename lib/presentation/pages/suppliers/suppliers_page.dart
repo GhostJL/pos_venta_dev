@@ -3,14 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:posventa/domain/entities/supplier.dart';
 import 'package:go_router/go_router.dart';
 import 'package:posventa/presentation/providers/supplier_providers.dart';
-import 'package:posventa/presentation/widgets/common/tables/custom_data_table.dart';
 import 'package:posventa/core/constants/permission_constants.dart';
 import 'package:posventa/presentation/providers/permission_provider.dart';
 import 'package:posventa/presentation/widgets/common/confirm_delete_dialog.dart';
-import 'package:posventa/presentation/widgets/common/data_table_actions.dart';
-import 'package:posventa/presentation/widgets/common/tables/data_cell_text.dart';
 import 'package:posventa/presentation/widgets/common/async_value_handler.dart';
 import 'package:posventa/presentation/mixins/page_lifecycle_mixin.dart';
+import 'package:posventa/presentation/widgets/suppliers/supplier_card.dart';
 
 class SuppliersPage extends ConsumerStatefulWidget {
   const SuppliersPage({super.key});
@@ -36,8 +34,47 @@ class SuppliersPageState extends ConsumerState<SuppliersPage>
     final hasManagePermission = ref.watch(
       hasPermissionProvider(PermissionConstants.catalogManage),
     );
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
 
     return Scaffold(
+      backgroundColor: colorScheme.surface,
+      appBar: AppBar(
+        title: Text(
+          'Proveedores',
+          style: theme.textTheme.titleLarge?.copyWith(
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        scrolledUnderElevation: 2,
+        backgroundColor: colorScheme.surface,
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(70),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+            child: TextField(
+              onChanged: (value) => setState(() => _searchQuery = value),
+              decoration: InputDecoration(
+                hintText: 'Buscar proveedores...',
+                prefixIcon: Icon(
+                  Icons.search_rounded,
+                  color: colorScheme.primary,
+                ),
+                filled: true,
+                fillColor: colorScheme.surfaceContainerHighest.withAlpha(100),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(28),
+                  borderSide: BorderSide.none,
+                ),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 0,
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
       body: AsyncValueHandler<List<Supplier>>(
         value: suppliers,
         data: (supplierList) {
@@ -46,54 +83,50 @@ class SuppliersPageState extends ConsumerState<SuppliersPage>
                 s.name.toLowerCase().contains(_searchQuery.toLowerCase());
           }).toList();
 
-          return Padding(
-            padding: const EdgeInsets.all(24.0),
-            child: CustomDataTable<Supplier>(
-              title: 'Proveedores',
-              columns: const [
-                DataColumn(label: Text('Nombre')),
-                DataColumn(label: Text('Contacto')),
-                DataColumn(label: Text('Teléfono')),
-                DataColumn(label: Text('Email')),
-                DataColumn(label: Text('Acciones')),
-              ],
-              rows: filteredList
-                  .map(
-                    (supplier) => DataRow(
-                      cells: [
-                        DataCell(DataCellPrimaryText(supplier.name)),
-                        DataCell(
-                          DataCellSecondaryText(supplier.contactPerson ?? '-'),
-                        ),
-                        DataCell(DataCellMonospaceText(supplier.phone ?? '-')),
-                        DataCell(DataCellLinkText(supplier.email ?? '-')),
-                        DataCell(
-                          DataTableActions(
-                            hasEditPermission: hasManagePermission,
-                            hasDeletePermission: hasManagePermission,
-                            onEdit: () => _navigateToForm(supplier),
-                            onDelete: () =>
-                                _confirmDelete(context, ref, supplier),
-                            editTooltip: 'Editar',
-                            deleteTooltip: 'Eliminar',
-                          ),
-                        ),
-                      ],
+          if (filteredList.isEmpty) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.business_rounded,
+                    size: 64,
+                    color: colorScheme.onSurfaceVariant.withAlpha(100),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'No se encontraron proveedores',
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      color: colorScheme.onSurfaceVariant,
                     ),
-                  )
-                  .toList(),
-              itemCount: filteredList.length,
-              onAddItem: hasManagePermission ? () => _navigateToForm() : () {},
-              searchQuery: _searchQuery,
-              onSearch: (value) {
-                setState(() {
-                  _searchQuery = value;
-                });
-              },
-            ),
+                  ),
+                ],
+              ),
+            );
+          }
+
+          return ListView.builder(
+            padding: const EdgeInsets.all(16),
+            itemCount: filteredList.length,
+            itemBuilder: (context, index) {
+              final supplier = filteredList[index];
+              return SupplierCard(
+                supplier: supplier,
+                hasManagePermission: hasManagePermission,
+                onEdit: () => _navigateToForm(supplier),
+                onDelete: () => _confirmDelete(context, ref, supplier),
+              );
+            },
           );
         },
       ),
+      floatingActionButton: hasManagePermission
+          ? FloatingActionButton.extended(
+              onPressed: () => _navigateToForm(),
+              icon: const Icon(Icons.add_rounded),
+              label: const Text('Nuevo Proveedor'),
+            )
+          : null,
     );
   }
 

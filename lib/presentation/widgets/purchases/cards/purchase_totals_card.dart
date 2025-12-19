@@ -19,37 +19,39 @@ class PurchaseTotalsCard extends StatelessWidget {
 
     return Card(
       elevation: 0,
-      color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+      clipBehavior: Clip.antiAlias,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
         side: BorderSide(color: colorScheme.outlineVariant, width: 1),
       ),
       child: Padding(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(24),
         child: Column(
           children: [
             _buildRow(context, 'Subtotal', subtotalCents),
-            const SizedBox(height: 8),
+            const SizedBox(height: 12),
             _buildRow(context, 'Impuestos', taxCents),
-            const Padding(
-              padding: EdgeInsets.symmetric(vertical: 12),
-              child: Divider(height: 1),
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 20),
+              child: Divider(height: 1, color: colorScheme.outlineVariant),
             ),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  'TOTAL',
-                  style: textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 1,
+                  'TOTAL COMPRA',
+                  style: textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w800,
+                    color: colorScheme.onSurfaceVariant,
+                    letterSpacing: 1.2,
                   ),
                 ),
                 Text(
                   '\$ ${(totalCents / 100).toStringAsFixed(2)}',
-                  style: textTheme.headlineSmall?.copyWith(
+                  style: textTheme.headlineMedium?.copyWith(
                     fontWeight: FontWeight.w900,
                     color: colorScheme.primary,
+                    letterSpacing: -1,
                   ),
                 ),
               ],

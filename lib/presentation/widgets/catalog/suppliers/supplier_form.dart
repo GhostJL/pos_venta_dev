@@ -90,90 +90,95 @@ class SupplierFormState extends ConsumerState<SupplierForm> {
 
   @override
   Widget build(BuildContext context) {
-    var title = widget.supplier == null
+    final theme = Theme.of(context);
+    final title = widget.supplier == null
         ? 'Nuevo Proveedor'
         : 'Editar Proveedor';
-    var submitText = widget.supplier == null ? 'Crear' : 'Actualizar';
+    final submitText = widget.supplier == null ? 'Crear' : 'Actualizar';
 
-    var formContent = Column(
+    final formContent = Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        TextFormField(
-          initialValue: _name,
-          decoration: const InputDecoration(
-            labelText: 'Nombre del Proveedor',
-            prefixIcon: Icon(Icons.business_rounded),
-          ),
-          validator: (value) {
-            if (value == null || value.isEmpty) {
-              return 'Por favor, introduce un nombre de proveedor';
-            }
-            if (value.length < 2) {
-              return 'El nombre debe tener al menos 2 caracteres';
-            }
-            return null;
-          },
-          onSaved: (value) => _name = value!,
-        ),
-        const SizedBox(height: UIConstants.spacingLarge),
-        TextFormField(
-          initialValue: _code,
-          decoration: const InputDecoration(
-            labelText: 'Código del Proveedor',
-            prefixIcon: Icon(Icons.qr_code_rounded),
-          ),
-          validator: (value) {
-            if (value == null || value.isEmpty) {
-              return 'Por favor, introduce un código de proveedor';
-            }
-            return null;
-          },
-          onSaved: (value) => _code = value!,
-        ),
-        const SizedBox(height: UIConstants.spacingLarge),
-        TextFormField(
-          initialValue: _contactName,
-          decoration: const InputDecoration(
-            labelText: 'Nombre de Contacto',
-            prefixIcon: Icon(Icons.person_outline_rounded),
-          ),
-          onSaved: (value) => _contactName = value,
-        ),
-        const SizedBox(height: UIConstants.spacingLarge),
-        TextFormField(
-          initialValue: _phone,
-          decoration: const InputDecoration(
-            labelText: 'Teléfono',
-            prefixIcon: Icon(Icons.phone_rounded),
-          ),
-          onSaved: (value) => _phone = value,
-        ),
-        const SizedBox(height: UIConstants.spacingLarge),
-        TextFormField(
-          initialValue: _email,
-          decoration: const InputDecoration(
-            labelText: 'Correo Electrónico',
-            prefixIcon: Icon(Icons.email_outlined),
-          ),
-          validator: (value) {
-            if (value != null && value.isNotEmpty) {
-              if (!value.contains('@')) {
-                return 'Por favor, introduce un correo electrónico válido';
+        _buildSection(theme, 'Información General', Icons.business_rounded, [
+          TextFormField(
+            initialValue: _name,
+            decoration: const InputDecoration(
+              labelText: 'Nombre del Proveedor',
+              prefixIcon: Icon(Icons.business_rounded),
+            ),
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return 'El nombre es requerido';
               }
-            }
-            return null;
-          },
-          onSaved: (value) => _email = value,
-        ),
-        const SizedBox(height: UIConstants.spacingLarge),
-        TextFormField(
-          initialValue: _address,
-          decoration: const InputDecoration(
-            labelText: 'Dirección',
-            prefixIcon: Icon(Icons.location_on_outlined),
+              return null;
+            },
+            onSaved: (value) => _name = value!,
           ),
-          onSaved: (value) => _address = value,
-        ),
+          const SizedBox(height: UIConstants.spacingMedium),
+          TextFormField(
+            initialValue: _code,
+            decoration: const InputDecoration(
+              labelText: 'Código del Proveedor',
+              prefixIcon: Icon(Icons.qr_code_rounded),
+            ),
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return 'El código es requerido';
+              }
+              return null;
+            },
+            onSaved: (value) => _code = value!,
+          ),
+        ]),
+        const SizedBox(height: UIConstants.spacingLarge),
+        _buildSection(theme, 'Contacto', Icons.contact_phone_outlined, [
+          TextFormField(
+            initialValue: _contactName,
+            decoration: const InputDecoration(
+              labelText: 'Nombre de Contacto',
+              prefixIcon: Icon(Icons.person_outline_rounded),
+            ),
+            onSaved: (value) => _contactName = value,
+          ),
+          const SizedBox(height: UIConstants.spacingMedium),
+          TextFormField(
+            initialValue: _phone,
+            decoration: const InputDecoration(
+              labelText: 'Teléfono',
+              prefixIcon: Icon(Icons.phone_rounded),
+            ),
+            keyboardType: TextInputType.phone,
+            onSaved: (value) => _phone = value,
+          ),
+          const SizedBox(height: UIConstants.spacingMedium),
+          TextFormField(
+            initialValue: _email,
+            decoration: const InputDecoration(
+              labelText: 'Correo Electrónico',
+              prefixIcon: Icon(Icons.email_outlined),
+            ),
+            validator: (value) {
+              if (value != null && value.isNotEmpty) {
+                if (!value.contains('@')) {
+                  return 'Email inválido';
+                }
+              }
+              return null;
+            },
+            onSaved: (value) => _email = value,
+          ),
+          const SizedBox(height: UIConstants.spacingMedium),
+          TextFormField(
+            initialValue: _address,
+            decoration: const InputDecoration(
+              labelText: 'Dirección',
+              prefixIcon: Icon(Icons.location_on_outlined),
+            ),
+            maxLines: 2,
+            onSaved: (value) => _address = value,
+          ),
+        ]),
+        const SizedBox(height: UIConstants.spacingXLarge),
       ],
     );
 
@@ -195,6 +200,49 @@ class SupplierFormState extends ConsumerState<SupplierForm> {
       submitButtonText: submitText,
       formKey: _formKey,
       child: formContent,
+    );
+  }
+
+  Widget _buildSection(
+    ThemeData theme,
+    String title,
+    IconData icon,
+    List<Widget> children,
+  ) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+          child: Row(
+            children: [
+              Icon(icon, size: 20, color: theme.colorScheme.primary),
+              const SizedBox(width: 8),
+              Text(
+                title,
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: theme.colorScheme.primary,
+                ),
+              ),
+            ],
+          ),
+        ),
+        Card(
+          elevation: 0,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+            side: BorderSide(
+              color: theme.colorScheme.outlineVariant.withAlpha(80),
+            ),
+          ),
+          color: theme.colorScheme.surface,
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(children: children),
+          ),
+        ),
+      ],
     );
   }
 }

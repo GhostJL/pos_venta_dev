@@ -8,53 +8,64 @@ class SaleTotalsCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceContainer,
+    return Card(
+      elevation: 0,
+      clipBehavior: Clip.antiAlias,
+      shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Theme.of(context).colorScheme.outline),
+        side: BorderSide(
+          color: Theme.of(context).colorScheme.outlineVariant,
+          width: 1,
+        ),
       ),
-      padding: const EdgeInsets.all(24),
-      child: Column(
-        children: [
-          _buildTotalRow(context, 'Subtotal', sale.subtotalCents / 100),
-          const SizedBox(height: 12),
-          _buildTotalRow(context, 'Impuestos', sale.taxCents / 100),
-          if (sale.discountCents > 0) ...[
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          children: [
+            _buildTotalRow(context, 'Subtotal', sale.subtotalCents / 100),
             const SizedBox(height: 12),
-            _buildTotalRow(
-              context,
-              'Descuento',
-              sale.discountCents / 100,
-              isDiscount: true,
-            ),
-          ],
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 16),
-            child: Divider(height: 1),
-          ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'TOTAL',
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: Theme.of(context).colorScheme.onSurface,
-                ),
-              ),
-              Text(
-                '\$${(sale.totalCents / 100).toStringAsFixed(2)}',
-                style: const TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: -0.5,
-                ),
+            _buildTotalRow(context, 'Impuestos', sale.taxCents / 100),
+            if (sale.discountCents > 0) ...[
+              const SizedBox(height: 12),
+              _buildTotalRow(
+                context,
+                'Descuento',
+                sale.discountCents / 100,
+                isDiscount: true,
               ),
             ],
-          ),
-        ],
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 20),
+              child: Divider(
+                height: 1,
+                color: Theme.of(context).colorScheme.outlineVariant,
+              ),
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'TOTAL A PAGAR',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w800,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    letterSpacing: 1.2,
+                  ),
+                ),
+                Text(
+                  '\$${(sale.totalCents / 100).toStringAsFixed(2)}',
+                  style: TextStyle(
+                    fontSize: 28,
+                    fontWeight: FontWeight.w900,
+                    color: Theme.of(context).colorScheme.primary,
+                    letterSpacing: -1,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }

@@ -33,12 +33,13 @@ class PurchaseItemTile extends ConsumerWidget {
               .firstOrNull;
         }
 
-        return Container(
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surface,
+        return Card(
+          elevation: 0,
+          clipBehavior: Clip.antiAlias,
+          shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: Theme.of(context).colorScheme.outline,
+            side: BorderSide(
+              color: Theme.of(context).colorScheme.outlineVariant,
               width: 1,
             ),
           ),
@@ -48,17 +49,15 @@ class PurchaseItemTile extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 _PurchaseItemHeader(item: item, variant: variant),
-                const SizedBox(height: 16),
                 Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 2),
+                  padding: const EdgeInsets.symmetric(vertical: 16),
                   child: Divider(
                     height: 1,
-                    color: Theme.of(context).colorScheme.outline,
+                    color: Theme.of(context).colorScheme.outlineVariant,
                   ),
                 ),
-                const SizedBox(height: 12),
                 _PurchaseItemDetails(item: item, variant: variant),
-                const SizedBox(height: 12),
+                const SizedBox(height: 16),
                 _PurchaseItemFooter(item: item, purchase: purchase),
               ],
             ),

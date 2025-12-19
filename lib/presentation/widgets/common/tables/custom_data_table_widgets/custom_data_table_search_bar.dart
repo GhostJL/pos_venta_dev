@@ -15,6 +15,8 @@ class _CustomDataTableSearchBarState extends State<CustomDataTableSearchBar>
     with SearchDebounceMixin {
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return TextField(
       onChanged: (value) {
         debounceSearch(() {
@@ -23,19 +25,32 @@ class _CustomDataTableSearchBarState extends State<CustomDataTableSearchBar>
       },
       decoration: InputDecoration(
         hintText: 'Buscar...',
+        hintStyle: TextStyle(
+          color: colorScheme.onSurfaceVariant.withAlpha(150),
+          fontSize: 14,
+        ),
         prefixIcon: Icon(
           Icons.search_rounded,
-          color: Theme.of(context).colorScheme.onSurfaceVariant,
+          color: colorScheme.primary,
+          size: 20,
         ),
         filled: true,
-        fillColor: Theme.of(context).colorScheme.surface,
+        fillColor: colorScheme.surfaceContainerHighest.withAlpha(100),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(28),
           borderSide: BorderSide.none,
         ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(28),
+          borderSide: BorderSide.none,
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(28),
+          borderSide: BorderSide(color: colorScheme.primary, width: 1),
+        ),
         contentPadding: const EdgeInsets.symmetric(
-          horizontal: 16,
-          vertical: 12,
+          horizontal: 20,
+          vertical: 10,
         ),
         isDense: true,
       ),

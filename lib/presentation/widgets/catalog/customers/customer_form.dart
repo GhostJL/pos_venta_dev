@@ -111,6 +111,9 @@ class CustomerFormState extends ConsumerState<CustomerForm> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return GenericFormScaffold(
       title: widget.customer == null ? 'Nuevo Cliente' : 'Editar Cliente',
       isLoading: _isLoading,
@@ -122,123 +125,172 @@ class CustomerFormState extends ConsumerState<CustomerForm> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          TextFormField(
-            controller: TextEditingController(text: _code),
-            readOnly: true,
-            enabled: false,
-            decoration: const InputDecoration(
-              labelText: 'Código (Auto-generado)',
-              prefixIcon: Icon(Icons.qr_code),
-            ),
-            validator: (value) {
-              if (value == null || value.isEmpty) {
-                return 'Generando código...';
-              }
-              return null;
-            },
-          ),
-          const SizedBox(height: UIConstants.spacingMedium),
-          Row(
-            children: [
-              Expanded(
-                child: TextFormField(
-                  initialValue: _firstName,
-                  decoration: const InputDecoration(
-                    labelText: 'Nombre',
-                    prefixIcon: Icon(Icons.person),
-                  ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'El nombre es requerido';
-                    }
-                    if (value.length < 2) {
-                      return 'El nombre debe tener al menos 2 caracteres';
-                    }
-                    return null;
-                  },
-                  onSaved: (value) => _firstName = value!,
+          _buildSection(theme, 'Información Básica', Icons.person_outline, [
+            TextFormField(
+              initialValue: _code,
+              readOnly: true,
+              enabled: false,
+              decoration: InputDecoration(
+                labelText: 'Código (Auto-generado)',
+                prefixIcon: const Icon(Icons.qr_code),
+                filled: true,
+                fillColor: colorScheme.surfaceContainerHighest.withAlpha(50),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide.none,
                 ),
               ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: TextFormField(
-                  initialValue: _lastName,
-                  decoration: const InputDecoration(
-                    labelText: 'Apellido',
-                    prefixIcon: Icon(Icons.person_outline),
+            ),
+            const SizedBox(height: UIConstants.spacingMedium),
+            Row(
+              children: [
+                Expanded(
+                  child: TextFormField(
+                    initialValue: _firstName,
+                    decoration: const InputDecoration(
+                      labelText: 'Nombre',
+                      prefixIcon: Icon(Icons.person),
+                    ),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'El nombre es requerido';
+                      }
+                      return null;
+                    },
+                    onSaved: (value) => _firstName = value!,
                   ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'El apellido es requerido';
-                    }
-                    if (value.length < 2) {
-                      return 'El apellido debe tener al menos 2 caracteres';
-                    }
-                    return null;
-                  },
-                  onSaved: (value) => _lastName = value!,
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: TextFormField(
+                    initialValue: _lastName,
+                    decoration: const InputDecoration(
+                      labelText: 'Apellido',
+                      prefixIcon: Icon(Icons.person_outline),
+                    ),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'El apellido es requerido';
+                      }
+                      return null;
+                    },
+                    onSaved: (value) => _lastName = value!,
+                  ),
+                ),
+              ],
+            ),
+          ]),
+          const SizedBox(height: UIConstants.spacingLarge),
+          _buildSection(theme, 'Contacto', Icons.contact_mail_outlined, [
+            TextFormField(
+              initialValue: _phone,
+              decoration: const InputDecoration(
+                labelText: 'Teléfono',
+                prefixIcon: Icon(Icons.phone),
+              ),
+              keyboardType: TextInputType.phone,
+              onSaved: (value) => _phone = value,
+            ),
+            const SizedBox(height: UIConstants.spacingMedium),
+            TextFormField(
+              initialValue: _email,
+              decoration: const InputDecoration(
+                labelText: 'Email',
+                prefixIcon: Icon(Icons.email),
+              ),
+              keyboardType: TextInputType.emailAddress,
+              validator: (value) {
+                if (value != null && value.isNotEmpty) {
+                  if (!value.contains('@') || !value.contains('.')) {
+                    return 'Email inválido';
+                  }
+                }
+                return null;
+              },
+              onSaved: (value) => _email = value,
+            ),
+            const SizedBox(height: UIConstants.spacingMedium),
+            TextFormField(
+              initialValue: _address,
+              decoration: const InputDecoration(
+                labelText: 'Dirección',
+                prefixIcon: Icon(Icons.location_on),
+              ),
+              maxLines: 2,
+              onSaved: (value) => _address = value,
+            ),
+          ]),
+          const SizedBox(height: UIConstants.spacingLarge),
+          _buildSection(
+            theme,
+            'Información Fiscal',
+            Icons.receipt_long_outlined,
+            [
+              TextFormField(
+                initialValue: _taxId,
+                decoration: const InputDecoration(
+                  labelText: 'RFC / Tax ID',
+                  prefixIcon: Icon(Icons.badge_outlined),
+                ),
+                onSaved: (value) => _taxId = value,
+              ),
+              const SizedBox(height: UIConstants.spacingMedium),
+              TextFormField(
+                initialValue: _businessName,
+                decoration: const InputDecoration(
+                  labelText: 'Razón Social',
+                  prefixIcon: Icon(Icons.business),
+                ),
+                onSaved: (value) => _businessName = value,
+              ),
+            ],
+          ),
+          const SizedBox(height: UIConstants.spacingXLarge),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSection(
+    ThemeData theme,
+    String title,
+    IconData icon,
+    List<Widget> children,
+  ) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+          child: Row(
+            children: [
+              Icon(icon, size: 20, color: theme.colorScheme.primary),
+              const SizedBox(width: 8),
+              Text(
+                title,
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: theme.colorScheme.primary,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: UIConstants.spacingMedium),
-          TextFormField(
-            initialValue: _phone,
-            decoration: const InputDecoration(
-              labelText: 'Teléfono',
-              prefixIcon: Icon(Icons.phone),
+        ),
+        Card(
+          elevation: 0,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+            side: BorderSide(
+              color: theme.colorScheme.outlineVariant.withAlpha(80),
             ),
-            keyboardType: TextInputType.phone,
-            onSaved: (value) => _phone = value,
           ),
-          const SizedBox(height: UIConstants.spacingMedium),
-          TextFormField(
-            initialValue: _email,
-            decoration: const InputDecoration(
-              labelText: 'Email',
-              prefixIcon: Icon(Icons.email),
-            ),
-            keyboardType: TextInputType.emailAddress,
-            validator: (value) {
-              if (value != null && value.isNotEmpty) {
-                if (!value.contains('@') || !value.contains('.')) {
-                  return 'Por favor, introduce un email válido';
-                }
-              }
-              return null;
-            },
-            onSaved: (value) => _email = value,
+          color: theme.colorScheme.surface,
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(children: children),
           ),
-          const SizedBox(height: UIConstants.spacingMedium),
-          TextFormField(
-            initialValue: _address,
-            decoration: const InputDecoration(
-              labelText: 'Dirección',
-              prefixIcon: Icon(Icons.location_on),
-            ),
-            maxLines: 2,
-            onSaved: (value) => _address = value,
-          ),
-          const SizedBox(height: UIConstants.spacingMedium),
-          TextFormField(
-            initialValue: _taxId,
-            decoration: const InputDecoration(
-              labelText: 'RFC / Tax ID',
-              prefixIcon: Icon(Icons.receipt_long),
-            ),
-            onSaved: (value) => _taxId = value,
-          ),
-          const SizedBox(height: UIConstants.spacingMedium),
-          TextFormField(
-            initialValue: _businessName,
-            decoration: const InputDecoration(
-              labelText: 'Razón Social (Opcional)',
-              prefixIcon: Icon(Icons.business),
-            ),
-            onSaved: (value) => _businessName = value,
-          ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }

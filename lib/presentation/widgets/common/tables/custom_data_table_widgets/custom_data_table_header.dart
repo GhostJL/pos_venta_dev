@@ -20,21 +20,22 @@ class CustomDataTableHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Padding(
-      padding: const EdgeInsets.all(24.0),
+      padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (isSmallScreen)
-            _buildMobileLayout(context)
+            _buildMobileLayout(context, theme)
           else
-            _buildDesktopLayout(context),
+            _buildDesktopLayout(context, theme),
         ],
       ),
     );
   }
 
-  Widget _buildMobileLayout(BuildContext context) {
+  Widget _buildMobileLayout(BuildContext context, ThemeData theme) {
     return Column(
       children: [
         Row(
@@ -43,13 +44,13 @@ class CustomDataTableHeader extends StatelessWidget {
             Expanded(
               child: Text(
                 title,
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                style: theme.textTheme.headlineSmall?.copyWith(
                   fontWeight: FontWeight.bold,
-                  color: Theme.of(context).colorScheme.onSurface,
+                  color: theme.colorScheme.onSurface,
                 ),
               ),
             ),
-            _buildCountBadge(context),
+            _buildCountBadge(context, theme),
           ],
         ),
         const SizedBox(height: 16),
@@ -65,7 +66,7 @@ class CustomDataTableHeader extends StatelessWidget {
     );
   }
 
-  Widget _buildDesktopLayout(BuildContext context) {
+  Widget _buildDesktopLayout(BuildContext context, ThemeData theme) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -73,21 +74,21 @@ class CustomDataTableHeader extends StatelessWidget {
           children: [
             Text(
               title,
-              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+              style: theme.textTheme.headlineSmall?.copyWith(
                 fontWeight: FontWeight.bold,
-                color: Theme.of(context).colorScheme.onSurface,
-                fontSize: 24,
+                color: theme.colorScheme.onSurface,
+                letterSpacing: -0.5,
               ),
             ),
-            const SizedBox(width: 12),
-            _buildCountBadge(context),
+            const SizedBox(width: 16),
+            _buildCountBadge(context, theme),
           ],
         ),
         Row(
           children: [
             if (onSearch != null) ...[
               SizedBox(
-                width: 250,
+                width: 300,
                 child: CustomDataTableSearchBar(onSearch: onSearch),
               ),
               const SizedBox(width: 16),
@@ -99,19 +100,18 @@ class CustomDataTableHeader extends StatelessWidget {
     );
   }
 
-  Widget _buildCountBadge(BuildContext context) {
+  Widget _buildCountBadge(BuildContext context, ThemeData theme) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.primary.withAlpha(10),
-        borderRadius: BorderRadius.circular(20),
+        color: theme.colorScheme.primaryContainer.withAlpha(150),
+        borderRadius: BorderRadius.circular(12),
       ),
       child: Text(
         '$itemCount',
-        style: TextStyle(
-          fontSize: 14,
+        style: theme.textTheme.labelLarge?.copyWith(
           fontWeight: FontWeight.bold,
-          color: Theme.of(context).colorScheme.primary,
+          color: theme.colorScheme.onPrimaryContainer,
         ),
       ),
     );
