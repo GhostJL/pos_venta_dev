@@ -99,7 +99,57 @@ class _ReturnProcessingPageState extends ConsumerState<ReturnProcessingPage> {
         ),
       ),
       body: _buildReturnProcessingView(state),
+      bottomNavigationBar: state.selectedItems.isNotEmpty
+          ? SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: FilledButton.icon(
+                  onPressed: state.canProcess && !state.isProcessing
+                      ? () => _triggerProcessReturn()
+                      : null,
+                  icon: state.isProcessing
+                      ? SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              Theme.of(context).colorScheme.onSurface,
+                            ),
+                          ),
+                        )
+                      : const Icon(Icons.check_circle),
+                  label: Text(
+                    state.isProcessing
+                        ? 'Procesando...'
+                        : 'Procesar Devolución',
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: Theme.of(context).colorScheme.secondary,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+              ),
+            )
+          : null,
     );
+  }
+
+  Future<void> _triggerProcessReturn() async {
+    final success = await ref
+        .read(returnProcessingProvider.notifier)
+        .processReturn();
+
+    if (success && mounted) {
+      // Success is handled by the provider listener in build
+    }
   }
 
   Widget _buildReturnProcessingView(ReturnProcessingState state) {
@@ -173,16 +223,11 @@ class _ReturnProcessingPageState extends ConsumerState<ReturnProcessingPage> {
                               context,
                             ).colorScheme.onSurfaceVariant,
                           ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
                     ],
                   ),
-                ),
-                TextButton.icon(
-                  onPressed: () {
-                    ref.read(returnProcessingProvider.notifier).reset();
-                  },
-                  icon: const Icon(Icons.close, size: 18),
-                  label: const Text('Cambiar'),
                 ),
               ],
             ),

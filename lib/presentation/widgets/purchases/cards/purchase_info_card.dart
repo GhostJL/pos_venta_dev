@@ -8,153 +8,176 @@ class PurchaseInfoCard extends StatelessWidget {
 
   const PurchaseInfoCard({super.key, required this.purchase});
 
-  Widget _buildInfoRow(BuildContext context, String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
-        mainAxisAlignment: .spaceBetween,
-        children: [
-          SizedBox(
-            width: 120,
-            child: Text(
-              label,
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
-            ),
-          ),
-
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w500,
-              color: Theme.of(context).colorScheme.onSurface,
-            ),
-            overflow: TextOverflow.ellipsis,
-          ),
-        ],
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
-    final dateFormat = DateFormat('dd/MM/yyyy HH:mm');
-    final isPending = purchase.status == PurchaseStatus.pending;
-    final isCancelled = purchase.status == PurchaseStatus.cancelled;
-    final isPartial = purchase.status == PurchaseStatus.partial;
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+    final tt = theme.textTheme;
+
+    final dateFormat = DateFormat('dd MMM yyyy · HH:mm', 'es');
+    final status = purchase.status;
 
     Color statusColor;
-    String statusText;
-    if (isPending) {
-      statusColor = AppTheme.transactionPending;
-      statusText = 'Pendiente';
-    } else if (isCancelled) {
-      statusColor = Theme.of(context).colorScheme.error;
-      statusText = 'Cancelada';
-    } else if (isPartial) {
-      statusColor = Theme.of(context).colorScheme.primary;
-      statusText = 'Parcial';
-    } else {
-      statusColor = AppTheme.transactionSuccess;
-      statusText = 'Recibida';
+    String statusLabel;
+    switch (status) {
+      case PurchaseStatus.pending:
+        statusColor = AppTheme.transactionPending;
+        statusLabel = 'PENDIENTE';
+        break;
+      case PurchaseStatus.partial:
+        statusColor = cs.primary;
+        statusLabel = 'PARCIAL';
+        break;
+      case PurchaseStatus.cancelled:
+        statusColor = cs.error;
+        statusLabel = 'CANCELADA';
+        break;
+      case PurchaseStatus.completed:
+        statusColor = AppTheme.transactionSuccess;
+        statusLabel = 'RECIBIDA';
+        break;
     }
+
     return Card(
+      elevation: 0,
+      margin: EdgeInsets.zero,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: cs.outlineVariant.withValues(alpha: 0.5)),
+      ),
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            /// Header con número de compra y estado
             Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Container(
-                  width: 3,
-                  height: 36,
-                  decoration: BoxDecoration(
-                    color: statusColor,
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-                const SizedBox(width: 12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
                         purchase.purchaseNumber,
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          letterSpacing: -0.2,
+                        style: tt.headlineSmall?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: -0.5,
                         ),
                       ),
-                      const SizedBox(height: 2),
+                      const SizedBox(height: 4),
                       Text(
                         dateFormat.format(purchase.purchaseDate),
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        style: tt.bodyMedium?.copyWith(
+                          color: cs.onSurfaceVariant,
                         ),
                       ),
                     ],
                   ),
                 ),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 5,
-                  ),
-                  decoration: BoxDecoration(
-                    color: statusColor.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(6),
-                    border: Border.all(
-                      color: statusColor.withValues(alpha: 0.4),
-                    ),
-                  ),
-                  child: Text(
-                    statusText.toUpperCase(),
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
-                      color: statusColor,
-                    ),
-                  ),
-                ),
+                _StatusBadge(color: statusColor, label: statusLabel),
               ],
             ),
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              child: Divider(
-                height: 1,
-                color: Theme.of(context).colorScheme.outline,
-              ),
+            const SizedBox(height: 24),
+            _InfoItem(
+              icon: Icons.business_outlined,
+              label: 'Proveedor',
+              value: purchase.supplierName ?? 'N/A',
             ),
-
-            _buildInfoRow(context, 'Proveedor', purchase.supplierName ?? 'N/A'),
-            _buildInfoRow(
-              context,
-              'Fecha',
-              dateFormat.format(purchase.purchaseDate),
+            const SizedBox(height: 16),
+            if (purchase.supplierInvoiceNumber != null) ...[
+              _InfoItem(
+                icon: Icons.receipt_outlined,
+                label: 'Factura Proveedor',
+                value: purchase.supplierInvoiceNumber!,
+              ),
+              const SizedBox(height: 16),
+            ],
+            if (purchase.receivedDate != null) ...[
+              _InfoItem(
+                icon: Icons.warehouse_outlined,
+                label: 'Última Recepción',
+                value: dateFormat.format(purchase.receivedDate!),
+              ),
+              const SizedBox(height: 16),
+            ],
+            _InfoItem(
+              icon: Icons.location_on_outlined,
+              label: 'Almacén',
+              value: 'Almacén #${purchase.warehouseId}',
             ),
-            if (purchase.supplierInvoiceNumber != null)
-              _buildInfoRow(
-                context,
-                'Factura Prov.',
-                purchase.supplierInvoiceNumber!,
-              ),
-            if (purchase.receivedDate != null)
-              _buildInfoRow(
-                context,
-                'Última Recepción',
-                dateFormat.format(purchase.receivedDate!),
-              ),
           ],
         ),
       ),
+    );
+  }
+}
+
+class _StatusBadge extends StatelessWidget {
+  final Color color;
+  final String label;
+
+  const _StatusBadge({required this.color, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: color.withValues(alpha: 0.2)),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontSize: 10,
+          fontWeight: FontWeight.w900,
+          color: color,
+          letterSpacing: 0.5,
+        ),
+      ),
+    );
+  }
+}
+
+class _InfoItem extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final String value;
+
+  const _InfoItem({
+    required this.icon,
+    required this.label,
+    required this.value,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+    final tt = theme.textTheme;
+
+    return Row(
+      children: [
+        Icon(icon, size: 18, color: cs.onSurfaceVariant),
+        const SizedBox(width: 12),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              label,
+              style: tt.labelSmall?.copyWith(color: cs.onSurfaceVariant),
+            ),
+            Text(
+              value,
+              style: tt.bodyLarge?.copyWith(
+                fontWeight: FontWeight.w500,
+                color: cs.onSurface,
+              ),
+            ),
+          ],
+        ),
+      ],
     );
   }
 }

@@ -56,19 +56,15 @@ class _SalesHistoryPageState extends ConsumerState<SalesHistoryPage> {
 
     return Scaffold(
       appBar: AppBar(
-        elevation: 0,
-        surfaceTintColor: Theme.of(context).colorScheme.surface,
-        backgroundColor: Theme.of(context).colorScheme.surface,
-        title: const Text(
-          'Historial de Ventas',
-          style: TextStyle(fontWeight: FontWeight.w600),
-        ),
+        title: const Text('Historial de Ventas'),
+        forceMaterialTransparency: true,
         actions: [
           DateRangeFilter(
             startDate: _startDate,
             endDate: _endDate,
             onDateRangeChanged: _onDateRangeChanged,
           ),
+          const SizedBox(width: 8),
         ],
       ),
       body: AsyncValueHandler(

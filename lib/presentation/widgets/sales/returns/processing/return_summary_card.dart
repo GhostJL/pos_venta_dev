@@ -41,12 +41,16 @@ class _ReturnSummaryCardState extends ConsumerState<ReturnSummaryCard> {
                   size: 24,
                 ),
                 const SizedBox(width: 12),
-                Text(
-                  'Resumen de Devolución',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: Theme.of(context).colorScheme.onSurface,
+                Expanded(
+                  child: Text(
+                    'Resumen de Devolución',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Theme.of(context).colorScheme.onSurface,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
               ],
@@ -107,7 +111,7 @@ class _ReturnSummaryCardState extends ConsumerState<ReturnSummaryCard> {
                   ).colorScheme.secondaryContainer,
                   labelStyle: TextStyle(
                     color: isSelected
-                        ? Theme.of(context).colorScheme.secondary
+                        ? Theme.of(context).colorScheme.onSecondary
                         : Theme.of(context).colorScheme.onSurface,
                     fontWeight: isSelected
                         ? FontWeight.w600
@@ -163,39 +167,6 @@ class _ReturnSummaryCardState extends ConsumerState<ReturnSummaryCard> {
               },
             ),
             const SizedBox(height: 24),
-
-            // Process button
-            FilledButton.icon(
-              onPressed: state.canProcess && !state.isProcessing
-                  ? () => _processReturn()
-                  : null,
-              icon: state.isProcessing
-                  ? SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        valueColor: AlwaysStoppedAnimation<Color>(
-                          Theme.of(context).colorScheme.onSurface,
-                        ),
-                      ),
-                    )
-                  : Icon(Icons.check_circle),
-              label: Text(
-                state.isProcessing ? 'Procesando...' : 'Procesar Devolución',
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              style: FilledButton.styleFrom(
-                backgroundColor: Theme.of(context).colorScheme.secondary,
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-            ),
           ],
         ),
       ),
@@ -205,21 +176,25 @@ class _ReturnSummaryCardState extends ConsumerState<ReturnSummaryCard> {
   Widget _buildSummaryRow(String label, String value, {bool isTotal = false}) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: isTotal ? 18 : 14,
-            fontWeight: isTotal ? FontWeight.bold : FontWeight.normal,
-            color: isTotal
-                ? Theme.of(context).colorScheme.onSurface
-                : Theme.of(context).colorScheme.onSurfaceVariant,
+        Expanded(
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: isTotal ? 16 : 14,
+              fontWeight: isTotal ? FontWeight.bold : FontWeight.normal,
+              color: isTotal
+                  ? Theme.of(context).colorScheme.onSurface
+                  : Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
           ),
         ),
+        const SizedBox(width: 8),
         Text(
           value,
           style: TextStyle(
-            fontSize: isTotal ? 24 : 16,
+            fontSize: isTotal ? 20 : 16,
             fontWeight: FontWeight.bold,
             color: isTotal
                 ? Theme.of(context).colorScheme.secondary
@@ -228,15 +203,5 @@ class _ReturnSummaryCardState extends ConsumerState<ReturnSummaryCard> {
         ),
       ],
     );
-  }
-
-  Future<void> _processReturn() async {
-    final success = await ref
-        .read(returnProcessingProvider.notifier)
-        .processReturn();
-
-    if (success && mounted) {
-      // Success message is handled by the page listener
-    }
   }
 }

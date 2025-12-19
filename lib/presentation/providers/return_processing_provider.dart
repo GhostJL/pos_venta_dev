@@ -152,9 +152,10 @@ class ReturnProcessing extends _$ReturnProcessing {
     if (selected) {
       newItems[item.id!] = ReturnItemData(
         saleItem: item,
-        returnQuantity:
-            maxQuantity, // Use maxQuantity (available to return) not item.quantity (original sale quantity)
+        returnQuantity: maxQuantity,
         maxQuantity: maxQuantity,
+        reason:
+            state.generalReason, // Pre-fill with general reason if available
       );
     } else {
       newItems.remove(item.id!);
@@ -200,7 +201,23 @@ class ReturnProcessing extends _$ReturnProcessing {
   }
 
   void setGeneralReason(String reason) {
-    state = state.copyWith(generalReason: reason, clearError: true);
+    // Also update all selected items that don't have a specific reason or have the same as previous general reason
+    final newItems = Map<int, ReturnItemData>.from(state.selectedItems);
+    bool changed = false;
+
+    newItems.forEach((id, item) {
+      // If item has no reason, or its reason matches the OLD general reason, update it
+      if (item.reason == null || item.reason == state.generalReason) {
+        newItems[id] = item.copyWith(reason: reason);
+        changed = true;
+      }
+    });
+
+    state = state.copyWith(
+      generalReason: reason,
+      selectedItems: changed ? newItems : null,
+      clearError: true,
+    );
   }
 
   void setNotes(String notes) {

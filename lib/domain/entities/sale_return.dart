@@ -5,7 +5,7 @@ enum SaleReturnStatus { completed, cancelled }
 enum RefundMethod {
   cash('cash', 'Efectivo'),
   card('card', 'Tarjeta'),
-  credit('credit', 'Crédito');
+  credit('tra', 'Crédito');
 
   const RefundMethod(this.code, this.displayName);
   final String code;

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:posventa/core/theme/theme.dart';
 import 'package:posventa/domain/entities/purchase.dart';
 
 /// Widget reutilizable para mostrar el diálogo de confirmación de cancelación de compra.
@@ -14,9 +13,13 @@ class PurchaseCancelDialog {
     required BuildContext context,
     required Purchase purchase,
   }) {
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+
     return showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         title: const Text('Cancelar Compra'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
@@ -24,39 +27,31 @@ class PurchaseCancelDialog {
           children: [
             Text(
               '¿Está seguro de cancelar la compra #${purchase.purchaseNumber}?',
+              style: theme.textTheme.bodyLarge,
             ),
-            if (purchase.status == PurchaseStatus.partial ||
-                purchase.status == PurchaseStatus.completed) ...[
-              const SizedBox(height: 16),
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.secondaryContainer,
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(
-                    color: Theme.of(context).colorScheme.secondaryContainer,
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.warning_amber_rounded,
-                      color: AppTheme.transactionPending,
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        'Esta compra tiene items recibidos. Al cancelar, se revertirá el inventario recibido.',
-                        style: TextStyle(
-                          color: Theme.of(context).colorScheme.secondary,
-                          fontSize: 13,
-                        ),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: cs.errorContainer.withValues(alpha: 0.5),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.info_outline, color: cs.error, size: 20),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      'Esta acción cancelará la orden de compra permanentemente.',
+                      style: TextStyle(
+                        color: cs.onErrorContainer,
+                        fontSize: 13,
                       ),
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-            ],
+            ),
           ],
         ),
         actions: [
@@ -64,10 +59,13 @@ class PurchaseCancelDialog {
             onPressed: () => context.pop(false),
             child: const Text('No, Salir'),
           ),
-          ElevatedButton.icon(
+          FilledButton.tonal(
             onPressed: () => context.pop(true),
-            icon: const Icon(Icons.cancel),
-            label: const Text('Sí, Cancelar'),
+            style: FilledButton.styleFrom(
+              backgroundColor: cs.errorContainer,
+              foregroundColor: cs.onErrorContainer,
+            ),
+            child: const Text('Sí, Cancelar'),
           ),
         ],
       ),

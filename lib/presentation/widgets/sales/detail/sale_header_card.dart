@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:posventa/core/theme/theme.dart';
 import 'package:posventa/domain/entities/sale.dart';
-import 'package:posventa/presentation/widgets/common/base/base_card.dart';
-import 'package:posventa/presentation/widgets/common/base/info_row.dart';
 
 class SaleHeaderCard extends StatelessWidget {
   final Sale sale;
@@ -12,120 +10,167 @@ class SaleHeaderCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final dateFormat = DateFormat('dd/MM/yyyy · HH:mm');
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+    final tt = theme.textTheme;
+
+    final dateFormat = DateFormat('dd MMM yyyy · HH:mm', 'es');
     final isCancelled = sale.status == SaleStatus.cancelled;
     final isReturned = sale.status == SaleStatus.returned;
 
-    return BaseCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                width: 4,
-                height: 44,
-                decoration: BoxDecoration(
-                  color: isCancelled
-                      ? AppTheme.actionCancel
-                      : isReturned
-                      ? AppTheme.alertWarning
-                      : AppTheme.transactionSuccess,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
+    Color statusColor;
+    String statusLabel;
+    if (isCancelled) {
+      statusColor = cs.error;
+      statusLabel = 'CANCELADA';
+    } else if (isReturned) {
+      statusColor = AppTheme.alertWarning;
+      statusLabel = 'DEVUELTA';
+    } else {
+      statusColor = AppTheme.transactionSuccess;
+      statusLabel = 'COMPLETADA';
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Card(
+          elevation: 0,
+          margin: EdgeInsets.zero,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+            side: BorderSide(color: cs.outlineVariant.withValues(alpha: 0.5)),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      sale.saleNumber,
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
-                        letterSpacing: -0.3,
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            sale.saleNumber,
+                            style: tt.headlineSmall?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: -0.5,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            dateFormat.format(sale.saleDate),
+                            style: tt.bodyMedium?.copyWith(
+                              color: cs.onSurfaceVariant,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                    const SizedBox(height: 2),
-                    Text(
-                      dateFormat.format(sale.saleDate),
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      ),
-                    ),
+                    _StatusBadge(color: statusColor, label: statusLabel),
                   ],
                 ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 6,
+                const SizedBox(height: 24),
+                _InfoItem(
+                  icon: Icons.person_outline,
+                  label: 'Cliente',
+                  value: sale.customerName ?? 'Público General',
                 ),
-                decoration: BoxDecoration(
-                  color: isCancelled
-                      ? AppTheme.actionCancel
-                      : isReturned
-                      ? AppTheme.alertWarning
-                      : AppTheme.transactionSuccess,
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(
-                    color: isCancelled
-                        ? AppTheme.actionCancel
-                        : isReturned
-                        ? AppTheme.alertWarning
-                        : AppTheme.transactionSuccess,
+                const SizedBox(height: 16),
+                _InfoItem(
+                  icon: Icons.warehouse_outlined,
+                  label: 'Almacén',
+                  value: 'Almacén #${sale.warehouseId}',
+                ),
+                if (isCancelled && sale.cancellationReason != null) ...[
+                  const SizedBox(height: 16),
+                  _InfoItem(
+                    icon: Icons.cancel_outlined,
+                    label: 'Motivo de cancelación',
+                    value: sale.cancellationReason!,
+                    isError: true,
                   ),
-                ),
-                child: Text(
-                  isCancelled
-                      ? 'Cancelada'
-                      : isReturned
-                      ? 'Devuelta'
-                      : 'Completada',
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: isCancelled
-                        ? AppTheme.onActionCancel
-                        : isReturned
-                        ? AppTheme.onAlertWarning
-                        : AppTheme.onAlertSuccess,
-                  ),
-                ),
+                ],
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _StatusBadge extends StatelessWidget {
+  final Color color;
+  final String label;
+
+  const _StatusBadge({required this.color, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: color.withValues(alpha: 0.2)),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontSize: 10,
+          fontWeight: FontWeight.w900,
+          color: color,
+          letterSpacing: 0.5,
+        ),
+      ),
+    );
+  }
+}
+
+class _InfoItem extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final String value;
+  final bool isError;
+
+  const _InfoItem({
+    required this.icon,
+    required this.label,
+    required this.value,
+    this.isError = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+    final tt = theme.textTheme;
+
+    return Row(
+      children: [
+        Icon(icon, size: 18, color: isError ? cs.error : cs.onSurfaceVariant),
+        const SizedBox(width: 12),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              label,
+              style: tt.labelSmall?.copyWith(color: cs.onSurfaceVariant),
+            ),
+            Text(
+              value,
+              style: tt.bodyLarge?.copyWith(
+                fontWeight: FontWeight.w500,
+                color: isError ? cs.error : cs.onSurface,
               ),
-            ],
-          ),
-          const Padding(
-            padding: EdgeInsets.symmetric(vertical: 16),
-            child: Divider(),
-          ),
-          InfoRow(
-            icon: Icons.person_outline,
-            label: 'Cliente',
-            value: sale.customerName ?? 'Público General',
-            labelWidth: 120,
-          ),
-          const SizedBox(height: 12),
-          InfoRow(
-            icon: Icons.warehouse_outlined,
-            label: 'Almacén',
-            value: 'Almacén #${sale.warehouseId}',
-            labelWidth: 120,
-          ),
-          if (isCancelled) ...[
-            const SizedBox(height: 12),
-            InfoRow(
-              icon: Icons.cancel_outlined,
-              label: 'Motivo de cancelación',
-              value: sale.cancellationReason ?? 'No especificado',
-              labelWidth: 120,
-              isError: true,
             ),
           ],
-        ],
-      ),
+        ),
+      ],
     );
   }
 }

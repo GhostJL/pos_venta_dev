@@ -92,6 +92,8 @@ class _ReturnItemsSelectorState extends ConsumerState<ReturnItemsSelector> {
                       color: Theme.of(context).colorScheme.onSurfaceVariant,
                       decoration: TextDecoration.lineThrough,
                     ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                   ),
                   Text(
                     'Ya devuelto completamente',
@@ -166,6 +168,8 @@ class _ReturnItemsSelectorState extends ConsumerState<ReturnItemsSelector> {
                           fontWeight: FontWeight.w600,
                           color: Theme.of(context).colorScheme.onSurface,
                         ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                       ),
                       const SizedBox(height: 4),
                       Text(
@@ -188,129 +192,150 @@ class _ReturnItemsSelectorState extends ConsumerState<ReturnItemsSelector> {
                 ),
               ],
             ),
-            if (isSelected) ...[
-              const Divider(height: 24),
-              Row(
-                children: [
-                  Expanded(
-                    flex: 2,
-                    child: TextFormField(
-                      controller: _quantityControllers[item.id],
-                      decoration: InputDecoration(
-                        labelText: 'Cantidad',
-                        border: OutlineInputBorder(
-                          borderSide: BorderSide(
-                            color: Theme.of(context).colorScheme.onSurface,
+            AnimatedSize(
+              duration: const Duration(milliseconds: 250),
+              curve: Curves.easeInOut,
+              child: isSelected
+                  ? Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Divider(height: 24),
+                        Column(
+                          children: [
+                            TextFormField(
+                              controller: _quantityControllers[item.id],
+                              decoration: InputDecoration(
+                                labelText: 'Cantidad',
+                                border: OutlineInputBorder(
+                                  borderSide: BorderSide(
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.onSurface,
+                                  ),
+                                ),
+                                suffixText: item.unitOfMeasure,
+                                errorMaxLines: 2,
+                              ),
+                              keyboardType:
+                                  const TextInputType.numberWithOptions(
+                                    decimal: true,
+                                  ),
+                              inputFormatters: [
+                                FilteringTextInputFormatter.allow(
+                                  RegExp(r'^\d+\.?\d{0,2}'),
+                                ),
+                              ],
+                              autovalidateMode:
+                                  AutovalidateMode.onUserInteraction,
+                              validator: (value) {
+                                if (value == null || value.isEmpty) {
+                                  return 'Requerido';
+                                }
+                                final qty = double.tryParse(value);
+                                if (qty == null) {
+                                  return 'Inválido';
+                                }
+                                if (qty <= 0) {
+                                  return 'Debe ser > 0';
+                                }
+                                if (qty > maxQuantity) {
+                                  return 'Máx: $maxQuantity';
+                                }
+                                return null;
+                              },
+                              onChanged: (value) {
+                                final qty = double.tryParse(value);
+                                if (qty != null) {
+                                  ref
+                                      .read(returnProcessingProvider.notifier)
+                                      .updateItemQuantity(item.id!, qty);
+                                }
+                              },
+                            ),
+                            const SizedBox(height: 12),
+                            DropdownButtonFormField<ReturnReason>(
+                              isExpanded: true,
+                              initialValue: itemData?.reason != null
+                                  ? ReturnReason.values.firstWhere(
+                                      (e) => e.label == itemData?.reason,
+                                      orElse: () => ReturnReason.other,
+                                    )
+                                  : null,
+                              decoration: const InputDecoration(
+                                labelText: 'Motivo',
+                                border: OutlineInputBorder(),
+                              ),
+                              items: ReturnReason.values.map((reason) {
+                                return DropdownMenuItem(
+                                  value: reason,
+                                  child: Text(
+                                    reason.label,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                );
+                              }).toList(),
+                              onChanged: (value) {
+                                if (value != null) {
+                                  _reasonControllers[item.id]?.text =
+                                      value.label;
+                                  ref
+                                      .read(returnProcessingProvider.notifier)
+                                      .updateItemReason(item.id!, value.label);
+                                }
+                              },
+                            ),
+                          ],
+                        ),
+                        if (itemData != null) ...[
+                          const SizedBox(height: 12),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 12,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .secondaryContainer
+                                  .withValues(alpha: 0.7),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.secondary.withValues(alpha: 0.2),
+                              ),
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  'Subtotal a devolver:',
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.onSecondaryContainer,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                Text(
+                                  '\$${(itemData.totalCents / 100.0).toStringAsFixed(2)}',
+                                  style: TextStyle(
+                                    fontSize: 15,
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.onSecondaryContainer,
+                                    fontWeight: FontWeight.w900,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
-                        ),
-                        suffixText: item.unitOfMeasure,
-                        errorMaxLines: 2,
-                      ),
-                      keyboardType: const TextInputType.numberWithOptions(
-                        decimal: true,
-                      ),
-                      inputFormatters: [
-                        FilteringTextInputFormatter.allow(
-                          RegExp(r'^\d+\.?\d{0,2}'),
-                        ),
+                        ],
                       ],
-                      autovalidateMode: AutovalidateMode.onUserInteraction,
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Requerido';
-                        }
-                        final qty = double.tryParse(value);
-                        if (qty == null) {
-                          return 'Inválido';
-                        }
-                        if (qty <= 0) {
-                          return 'Debe ser > 0';
-                        }
-                        if (qty > maxQuantity) {
-                          return 'Máx: $maxQuantity';
-                        }
-                        return null;
-                      },
-                      onChanged: (value) {
-                        final qty = double.tryParse(value);
-                        if (qty != null) {
-                          ref
-                              .read(returnProcessingProvider.notifier)
-                              .updateItemQuantity(item.id!, qty);
-                        }
-                      },
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    flex: 3,
-                    child: DropdownButtonFormField<ReturnReason>(
-                      isExpanded: true,
-                      initialValue:
-                          _reasonControllers[item.id]?.text.isNotEmpty == true
-                          ? ReturnReason.values.firstWhere(
-                              (e) =>
-                                  e.label == _reasonControllers[item.id]?.text,
-                              orElse: () => ReturnReason.other,
-                            )
-                          : null,
-                      decoration: const InputDecoration(
-                        labelText: 'Motivo',
-                        border: OutlineInputBorder(),
-                      ),
-                      items: ReturnReason.values.map((reason) {
-                        return DropdownMenuItem(
-                          value: reason,
-                          child: Text(
-                            reason.label,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        );
-                      }).toList(),
-                      onChanged: (value) {
-                        if (value != null) {
-                          _reasonControllers[item.id]?.text = value.label;
-                          ref
-                              .read(returnProcessingProvider.notifier)
-                              .updateItemReason(item.id!, value.label);
-                        }
-                      },
-                    ),
-                  ),
-                ],
-              ),
-              if (itemData != null) ...[
-                const SizedBox(height: 12),
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.secondaryContainer,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        'Subtotal a devolver:',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Theme.of(context).colorScheme.secondary,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                      Text(
-                        '\$${(itemData.totalCents / 100.0).toStringAsFixed(2)}',
-                        style: TextStyle(
-                          fontSize: 16,
-                          color: Theme.of(context).colorScheme.secondary,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ],
+                    )
+                  : const SizedBox.shrink(),
+            ),
           ],
         ),
       ),

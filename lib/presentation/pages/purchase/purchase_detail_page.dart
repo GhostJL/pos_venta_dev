@@ -23,6 +23,7 @@ class PurchaseDetailPage extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Detalle de Compra'),
+        forceMaterialTransparency: true,
         actions: [
           // Show receive button only for pending or partial purchases
           purchaseAsync.when(
@@ -33,7 +34,8 @@ class PurchaseDetailPage extends ConsumerWidget {
                   purchase.status == PurchaseStatus.pending ||
                   purchase.status == PurchaseStatus.partial;
 
-              final canCancel = purchase.status != PurchaseStatus.cancelled;
+              // Cancellation is only allowed for pending purchases
+              final canCancel = purchase.status == PurchaseStatus.pending;
 
               return Row(
                 mainAxisSize: MainAxisSize.min,
