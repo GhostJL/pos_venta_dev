@@ -11,197 +11,176 @@ class PurchaseCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final dateFormat = DateFormat('dd/MM/yyyy · HH:mm');
-    final isPending = purchase.status == PurchaseStatus.pending;
-    final isCancelled = purchase.status == PurchaseStatus.cancelled;
-    final isPartial = purchase.status == PurchaseStatus.partial;
+    final dateFormat = DateFormat('dd MMM yyyy · HH:mm', 'es');
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
 
-    Color statusColor;
-    String statusText;
-    if (isPending) {
-      statusColor = AppTheme.transactionPending;
-      statusText = 'Pendiente';
-    } else if (isCancelled) {
-      statusColor = Theme.of(context).colorScheme.error;
-      statusText = 'Cancelada';
-    } else if (isPartial) {
-      statusColor = Theme.of(context).colorScheme.primary;
-      statusText = 'Parcial';
-    } else {
-      statusColor = AppTheme.transactionSuccess;
-      statusText = 'Recibida';
-    }
-
-    return Container(
+    return Card(
+      elevation: 0,
+      clipBehavior: Clip.antiAlias,
       margin: const EdgeInsets.only(bottom: 12),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Theme.of(context).colorScheme.outline),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: colorScheme.outlineVariant, width: 1),
       ),
       child: InkWell(
         onTap: () => context.push('/purchases/${purchase.id}'),
-        borderRadius: BorderRadius.circular(12),
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              /// Header
               Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Container(
-                    width: 3,
-                    height: 36,
-                    decoration: BoxDecoration(
-                      color: statusColor,
-                      borderRadius: BorderRadius.circular(2),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
                           purchase.purchaseNumber,
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
+                          style: textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
                             letterSpacing: -0.2,
                           ),
                         ),
                         const SizedBox(height: 2),
                         Text(
                           dateFormat.format(purchase.purchaseDate),
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Theme.of(
-                              context,
-                            ).colorScheme.onSurfaceVariant,
+                          style: textTheme.bodySmall?.copyWith(
+                            color: colorScheme.onSurfaceVariant,
                           ),
                         ),
                       ],
                     ),
                   ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 5,
-                    ),
-                    decoration: BoxDecoration(
-                      color: statusColor.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(6),
-                      border: Border.all(
-                        color: statusColor.withValues(alpha: 0.4),
-                      ),
-                    ),
-                    child: Text(
-                      statusText.toUpperCase(),
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w600,
-                        color: statusColor,
-                      ),
-                    ),
-                  ),
+                  _StatusBadge(status: purchase.status),
                 ],
               ),
-
               const SizedBox(height: 16),
-
-              /// Supplier
               Row(
                 children: [
                   Icon(
-                    Icons.store_outlined,
-                    size: 14,
-                    color: Theme.of(context).colorScheme.outline,
+                    Icons.business_outlined,
+                    size: 16,
+                    color: colorScheme.onSurfaceVariant,
                   ),
-                  const SizedBox(width: 6),
-                  Text(
-                    purchase.supplierName ?? 'Proveedor desconocido',
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      fontWeight: FontWeight.w500,
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      purchase.supplierName ?? 'Proveedor desconocido',
+                      style: textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.w500,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
                 ],
               ),
-
-              const SizedBox(height: 12),
-
-              /// Items + Warehouse
+              const SizedBox(height: 8),
               Row(
                 children: [
                   Icon(
-                    Icons.list,
-                    size: 14,
-                    color: Theme.of(context).colorScheme.outline,
+                    Icons.inventory_2_outlined,
+                    size: 16,
+                    color: colorScheme.onSurfaceVariant,
                   ),
-                  const SizedBox(width: 6),
+                  const SizedBox(width: 8),
                   Text(
                     '${purchase.items.length} ${purchase.items.length == 1 ? 'producto' : 'productos'}',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
+                    style: textTheme.bodySmall,
                   ),
-                  const Spacer(),
+                  const SizedBox(width: 16),
                   Icon(
                     Icons.warehouse_outlined,
-                    size: 14,
-                    color: Theme.of(context).colorScheme.outline,
+                    size: 16,
+                    color: colorScheme.onSurfaceVariant,
                   ),
-                  const SizedBox(width: 6),
+                  const SizedBox(width: 8),
                   Text(
                     'Almacén #${purchase.warehouseId}',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
+                    style: textTheme.bodySmall,
                   ),
                 ],
               ),
-
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                child: Divider(
-                  height: 1,
-                  color: Theme.of(context).colorScheme.outline,
-                ),
-              ),
-
-              /// Totals
+              const SizedBox(height: 16),
+              const Divider(height: 1),
+              const SizedBox(height: 12),
               Row(
-                mainAxisAlignment: MainAxisAlignment.end,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Text(
-                        'Total',
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        '\$${(purchase.totalCents / 100).toStringAsFixed(2)}',
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w700,
-                          letterSpacing: -0.3,
-                        ),
-                      ),
-                    ],
+                  Text(
+                    'Monto Total',
+                    style: textTheme.bodySmall?.copyWith(
+                      color: colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                  Text(
+                    '\$ ${(purchase.totalCents / 100).toStringAsFixed(2)}',
+                    style: textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.w900,
+                      color: colorScheme.primary,
+                      letterSpacing: -0.5,
+                    ),
                   ),
                 ],
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _StatusBadge extends StatelessWidget {
+  final PurchaseStatus status;
+
+  const _StatusBadge({required this.status});
+
+  @override
+  Widget build(BuildContext context) {
+    Color containerColor;
+    Color textColor;
+    String label;
+
+    switch (status) {
+      case PurchaseStatus.pending:
+        containerColor = AppTheme.transactionPending.withValues(alpha: 0.15);
+        textColor = AppTheme.transactionPending;
+        label = 'PENDIENTE';
+        break;
+      case PurchaseStatus.partial:
+        containerColor = Theme.of(context).colorScheme.primaryContainer;
+        textColor = Theme.of(context).colorScheme.onPrimaryContainer;
+        label = 'PARCIAL';
+        break;
+      case PurchaseStatus.cancelled:
+        containerColor = Theme.of(context).colorScheme.errorContainer;
+        textColor = Theme.of(context).colorScheme.onErrorContainer;
+        label = 'CANCELADA';
+        break;
+      case PurchaseStatus.completed:
+        containerColor = AppTheme.transactionSuccess.withValues(alpha: 0.15);
+        textColor = AppTheme.transactionSuccess;
+        label = 'RECIBIDA';
+        break;
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: containerColor,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontSize: 10,
+          fontWeight: FontWeight.w900,
+          color: textColor,
+          letterSpacing: 0.5,
         ),
       ),
     );

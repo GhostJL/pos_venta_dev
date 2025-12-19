@@ -2,74 +2,62 @@ import 'package:flutter/material.dart';
 
 /// Widget that displays purchase totals (subtotal, tax, total) in a footer
 class PurchaseTotalsFooter extends StatelessWidget {
+  final int itemsCount;
   final double total;
 
-  const PurchaseTotalsFooter({super.key, required this.total});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
-        boxShadow: [
-          BoxShadow(
-            color: Theme.of(context).colorScheme.shadow.withAlpha(100),
-            blurRadius: 4,
-            offset: const Offset(0, -2),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          _TotalRow(
-            label: 'TOTAL:',
-            value: total,
-            isTotal: true,
-            color: Theme.of(context).primaryColor,
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// Internal widget for displaying a total row
-class _TotalRow extends StatelessWidget {
-  final String label;
-  final double value;
-  final bool isTotal;
-  final Color? color;
-
-  const _TotalRow({
-    required this.label,
-    required this.value,
-    this.isTotal = false,
-    this.color,
+  const PurchaseTotalsFooter({
+    super.key,
+    required this.itemsCount,
+    required this.total,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(
-          label,
-          style: isTotal
-              ? const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)
-              : null,
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+      decoration: BoxDecoration(
+        color: colorScheme.surface,
+        border: Border(
+          top: BorderSide(color: colorScheme.outlineVariant, width: 1),
         ),
-        Text(
-          '\$${value.toStringAsFixed(2)}',
-          style: isTotal
-              ? TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: color,
-                )
-              : null,
+      ),
+      child: SafeArea(
+        top: false,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'TOTAL DE LA ORDEN',
+                  style: textTheme.labelSmall?.copyWith(
+                    color: colorScheme.onSurfaceVariant,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 1,
+                  ),
+                ),
+                Text(
+                  '$itemsCount Productos en Carrito',
+                  style: textTheme.bodySmall,
+                ),
+              ],
+            ),
+            Text(
+              '\$ ${total.toStringAsFixed(2)}',
+              style: textTheme.headlineMedium?.copyWith(
+                fontWeight: FontWeight.w900,
+                color: colorScheme.primary,
+                letterSpacing: -1,
+              ),
+            ),
+          ],
         ),
-      ],
+      ),
     );
   }
 }

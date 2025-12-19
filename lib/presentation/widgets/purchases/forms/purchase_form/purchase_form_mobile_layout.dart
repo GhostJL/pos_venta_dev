@@ -32,19 +32,36 @@ class PurchaseFormMobileLayout extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+
     return DefaultTabController(
       length: 2,
       child: Scaffold(
         appBar: AppBar(
           title: const Text('Nueva Compra'),
-          bottom: const TabBar(
-            tabs: [
-              Tab(text: 'Productos'),
-              Tab(text: 'Tu compra'),
+          backgroundColor: Colors.transparent,
+          bottom: TabBar(
+            dividerColor: Colors.transparent,
+            indicatorSize: TabBarIndicatorSize.label,
+            labelStyle: textTheme.labelLarge?.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
+            unselectedLabelStyle: textTheme.labelLarge,
+            tabs: const [
+              Tab(text: 'Catálogo'),
+              Tab(text: 'Orden'),
             ],
           ),
           actions: [
-            IconButton(icon: const Icon(Icons.save), onPressed: onSavePurchase),
+            Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: IconButton(
+                onPressed: onSavePurchase,
+                icon: const Icon(Icons.check),
+                tooltip: 'Confirmar Orden',
+              ),
+            ),
           ],
         ),
         body: Form(
@@ -59,26 +76,9 @@ class PurchaseFormMobileLayout extends StatelessWidget {
                       onProductSelected: onProductSelected,
                     ),
                   ),
-                  // Mini summary bar
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    color: Theme.of(context).primaryColor.withAlpha(20),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          '${formState.items.length} productos',
-                          style: const TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                        Text(
-                          'Total: \$${formState.total.toStringAsFixed(2)}',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            color: Theme.of(context).primaryColor,
-                          ),
-                        ),
-                      ],
-                    ),
+                  _MiniSummary(
+                    itemCount: formState.items.length,
+                    total: formState.total,
                   ),
                 ],
               ),
@@ -87,37 +87,91 @@ class PurchaseFormMobileLayout extends StatelessWidget {
               Column(
                 children: [
                   Expanded(
-                    child: SingleChildScrollView(
+                    child: ListView(
                       padding: const EdgeInsets.all(16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          if (formState.supplier != null &&
-                              formState.warehouse != null)
-                            PurchaseHeaderCard(
-                              supplier: formState.supplier!,
-                              warehouse: formState.warehouse!,
-                              invoiceNumber: formState.invoiceNumber,
-                              purchaseDate:
-                                  formState.purchaseDate ?? DateTime.now(),
-                            ),
-                          const SizedBox(height: 24),
-                          PurchaseItemsListWidget(
-                            items: formState.items,
-                            productMap: productMap,
-                            onEditItem: onEditItem,
-                            onRemoveItem: onRemoveItem,
-                            onQuantityChanged: onQuantityChanged,
+                      children: [
+                        if (formState.supplier != null &&
+                            formState.warehouse != null)
+                          PurchaseHeaderCard(
+                            supplier: formState.supplier!,
+                            warehouse: formState.warehouse!,
+                            invoiceNumber: formState.invoiceNumber,
+                            purchaseDate:
+                                formState.purchaseDate ?? DateTime.now(),
                           ),
-                        ],
-                      ),
+                        const SizedBox(height: 24),
+                        Text(
+                          'Detalle de Productos',
+                          style: textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        PurchaseItemsListWidget(
+                          items: formState.items,
+                          productMap: productMap,
+                          onEditItem: onEditItem,
+                          onRemoveItem: onRemoveItem,
+                          onQuantityChanged: onQuantityChanged,
+                        ),
+                        const SizedBox(height: 80), // Space for footer
+                      ],
                     ),
                   ),
-                  PurchaseTotalsFooter(total: formState.total),
+                  PurchaseTotalsFooter(
+                    itemsCount: formState.items.length,
+                    total: formState.total,
+                  ),
                 ],
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _MiniSummary extends StatelessWidget {
+  final int itemCount;
+  final double total;
+
+  const _MiniSummary({required this.itemCount, required this.total});
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+      decoration: BoxDecoration(color: colorScheme.primaryContainer),
+      child: SafeArea(
+        top: false,
+        child: Row(
+          children: [
+            Icon(
+              Icons.shopping_bag_outlined,
+              color: colorScheme.onPrimaryContainer,
+              size: 20,
+            ),
+            const SizedBox(width: 12),
+            Text(
+              '$itemCount Producto ${itemCount > 1 ? 's' : ''}',
+              style: textTheme.titleSmall?.copyWith(
+                color: colorScheme.onPrimaryContainer,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const Spacer(),
+            Text(
+              '\$ ${total.toStringAsFixed(2)}',
+              style: textTheme.titleMedium?.copyWith(
+                color: colorScheme.onPrimaryContainer,
+                fontWeight: FontWeight.w900,
+              ),
+            ),
+          ],
         ),
       ),
     );

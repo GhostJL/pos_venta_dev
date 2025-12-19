@@ -18,80 +18,91 @@ class ReceptionSummaryCard extends StatelessWidget {
     required this.totalPending,
   });
 
-  Widget _buildColumn(
-    String label,
-    double value,
-    Color valueColor,
-    BuildContext context,
-  ) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 11,
-            color: Theme.of(context).colorScheme.onSurfaceVariant,
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+
+    return Card(
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: colorScheme.outlineVariant, width: 1),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: IntrinsicHeight(
+          child: Row(
+            children: [
+              _MetricItem(
+                label: 'PEDIDO',
+                value: totalOrdered,
+                color: colorScheme.primary,
+              ),
+              VerticalDivider(
+                width: 32,
+                thickness: 1,
+                color: colorScheme.outlineVariant,
+              ),
+              _MetricItem(
+                label: 'RECIBIDO',
+                value: totalReceived,
+                color: colorScheme.tertiary,
+              ),
+              VerticalDivider(
+                width: 32,
+                thickness: 1,
+                color: colorScheme.outlineVariant,
+              ),
+              _MetricItem(
+                label: 'PENDIENTE',
+                value: totalPending,
+                color: colorScheme.secondary,
+              ),
+            ],
           ),
         ),
-        const SizedBox(height: 2),
-        Text(
-          '${value.toStringAsFixed(value % 1 == 0 ? 0 : 2)} u',
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w700,
-            color: valueColor,
-          ),
-        ),
-      ],
+      ),
     );
   }
+}
+
+class _MetricItem extends StatelessWidget {
+  final String label;
+  final double value;
+  final Color color;
+
+  const _MetricItem({
+    required this.label,
+    required this.value,
+    required this.color,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      elevation: 0,
-      surfaceTintColor: Theme.of(context).colorScheme.surface,
+    final textTheme = Theme.of(context).textTheme;
 
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: Theme.of(context).colorScheme.outline),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            _buildColumn(
-              'Total Pedido',
-              totalOrdered,
-              Theme.of(context).colorScheme.primary,
-              context,
+    return Expanded(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: textTheme.labelSmall?.copyWith(
+              fontWeight: FontWeight.bold,
+              letterSpacing: 1,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
-            Container(
-              width: 1,
-              height: 28,
-              color: Theme.of(context).colorScheme.outline,
+          ),
+          const SizedBox(height: 4),
+          Text(
+            '${value.toStringAsFixed(value % 1 == 0 ? 0 : 2)} u',
+            style: textTheme.titleLarge?.copyWith(
+              fontWeight: FontWeight.w900,
+              color: color,
             ),
-            _buildColumn(
-              'Ya Recibido',
-              totalReceived,
-              Theme.of(context).colorScheme.tertiary,
-              context,
-            ),
-            Container(
-              width: 1,
-              height: 28,
-              color: Theme.of(context).colorScheme.outline,
-            ),
-            _buildColumn(
-              'A Recibir',
-              totalPending,
-              Theme.of(context).colorScheme.secondary,
-              context,
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

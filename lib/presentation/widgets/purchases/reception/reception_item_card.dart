@@ -102,17 +102,15 @@ class ReceptionItemCard extends StatelessWidget {
                       vertical: 2,
                     ),
                     decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.primary,
-                      borderRadius: BorderRadius.circular(4),
-                      border: Border.all(
-                        color: Theme.of(context).colorScheme.primary,
-                      ),
+                      color: Theme.of(context).colorScheme.primaryContainer,
+                      borderRadius: BorderRadius.circular(6),
                     ),
                     child: Text(
                       '${variant!.quantity.toStringAsFixed(0)} un/caja',
                       style: TextStyle(
                         fontSize: 10,
-                        color: Theme.of(context).colorScheme.primary,
+                        fontWeight: FontWeight.bold,
+                        color: Theme.of(context).colorScheme.onPrimaryContainer,
                       ),
                     ),
                   ),
@@ -190,79 +188,90 @@ class ReceptionItemCard extends StatelessWidget {
             const SizedBox(height: 12),
 
             /// Campos de entrada
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Cantidad
-                SizedBox(
-                  width: 100,
-                  child: TextField(
-                    controller: quantityController,
-                    keyboardType: const TextInputType.numberWithOptions(
-                      decimal: true,
-                    ),
-                    decoration: InputDecoration(
-                      labelText: 'Recibir',
-                      suffixText: item.unitOfMeasure,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 8,
-                      ),
-                    ),
-                    style: const TextStyle(fontSize: 13),
-                    onChanged: (value) {
-                      final qty = double.tryParse(value) ?? 0;
-                      onQuantityChanged(qty);
-                    },
-                  ),
-                ),
-                const SizedBox(width: 12),
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final isNarrow = constraints.maxWidth < 400;
 
-                // Lote
-                Expanded(
-                  child: TextField(
-                    controller: lotController,
-                    decoration: InputDecoration(
-                      labelText: 'Lote',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
+                return Wrap(
+                  spacing: 12,
+                  runSpacing: 12,
+                  children: [
+                    // Cantidad
+                    TextField(
+                      controller: quantityController,
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
                       ),
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 8,
-                      ),
-                    ),
-                    style: const TextStyle(fontSize: 13),
-                  ),
-                ),
-                // Caducidad
-                if (product?.hasExpiration ?? false) ...[
-                  const SizedBox(width: 12),
-                  SizedBox(
-                    width: 110,
-                    child: TextField(
-                      controller: expirationController,
-                      readOnly: true,
-                      onTap: onExpirationTap,
                       decoration: InputDecoration(
-                        labelText: 'Caducidad',
+                        labelText: 'Recibir',
+                        suffixText: item.unitOfMeasure,
+                        filled: true,
+                        fillColor: Theme.of(context).colorScheme.surface,
                         border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: BorderRadius.circular(12),
                         ),
                         contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 8,
+                          horizontal: 12,
+                          vertical: 12,
                         ),
-                        suffixIcon: const Icon(Icons.calendar_today, size: 16),
                       ),
-                      style: const TextStyle(fontSize: 13),
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      onChanged: (value) {
+                        final qty = double.tryParse(value) ?? 0;
+                        onQuantityChanged(qty);
+                      },
                     ),
-                  ),
-                ],
-              ],
+
+                    // Lote
+                    TextField(
+                      controller: lotController,
+                      decoration: InputDecoration(
+                        helperText: 'Campo de lote vacio = lote autogenerado',
+                        labelText: 'Lote',
+                        hintText: 'Auto-gen',
+                        filled: true,
+                        fillColor: Theme.of(context).colorScheme.surface,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 12,
+                        ),
+                      ),
+                      style: const TextStyle(fontSize: 14),
+                    ),
+
+                    // Caducidad
+                    if (product?.hasExpiration ?? false)
+                      TextField(
+                        controller: expirationController,
+                        readOnly: true,
+                        onTap: onExpirationTap,
+                        decoration: InputDecoration(
+                          labelText: 'Caducidad',
+                          filled: true,
+                          fillColor: Theme.of(context).colorScheme.surface,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 12,
+                          ),
+                          suffixIcon: const Icon(
+                            Icons.calendar_today,
+                            size: 18,
+                          ),
+                        ),
+                        style: const TextStyle(fontSize: 14),
+                      ),
+                  ],
+                );
+              },
             ),
           ],
         ),

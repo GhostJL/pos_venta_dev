@@ -32,101 +32,138 @@ class PurchaseFormDesktopLayout extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Nueva Compra'),
+        backgroundColor: Colors.transparent,
         actions: [
-          IconButton(icon: const Icon(Icons.save), onPressed: onSavePurchase),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: FilledButton.icon(
+              onPressed: onSavePurchase,
+              icon: const Icon(Icons.check),
+              label: const Text('Confirmar Orden'),
+            ),
+          ),
         ],
       ),
       body: Form(
         key: formKey,
-        child: Column(
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Left Side: Product Selection
             Expanded(
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Left Side: Product Grid (60% width)
-                  Expanded(
-                    flex: 6,
-                    child: Container(
-                      padding: const EdgeInsets.all(12),
-                      color: Theme.of(context).colorScheme.surface,
+              flex: 3,
+              child: Container(
+                decoration: BoxDecoration(
+                  color: colorScheme.surface,
+                  border: Border(
+                    right: BorderSide(
+                      color: colorScheme.outlineVariant,
+                      width: 1,
+                    ),
+                  ),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.all(24),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text(
-                            'Selección de Productos',
-                            style: TextStyle(
-                              fontSize: 18,
+                          Text(
+                            'Catálogo de Productos',
+                            style: textTheme.headlineSmall?.copyWith(
                               fontWeight: FontWeight.bold,
+                              letterSpacing: -0.5,
                             ),
                           ),
-                          const SizedBox(height: 12),
-                          Expanded(
-                            child: PurchaseProductGrid(
-                              onProductSelected: onProductSelected,
+                          Text(
+                            'Seleccione los artículos para agregar a la orden.',
+                            style: textTheme.bodyMedium?.copyWith(
+                              color: colorScheme.onSurfaceVariant,
                             ),
                           ),
                         ],
                       ),
                     ),
-                  ),
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        child: PurchaseProductGrid(
+                          onProductSelected: onProductSelected,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
 
-                  // Vertical Divider
-                  const VerticalDivider(width: 1),
-
-                  // Right Side: Order Details (40% width)
+            // Right Side: Order Summary
+            Expanded(
+              flex: 2,
+              child: Column(
+                children: [
                   Expanded(
-                    flex: 4,
-                    child: Column(
+                    child: ListView(
+                      padding: const EdgeInsets.all(24),
                       children: [
-                        Expanded(
-                          child: SingleChildScrollView(
-                            padding: const EdgeInsets.all(16),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                // Header Info Card
-                                if (formState.supplier != null &&
-                                    formState.warehouse != null)
-                                  PurchaseHeaderCard(
-                                    supplier: formState.supplier!,
-                                    warehouse: formState.warehouse!,
-                                    invoiceNumber: formState.invoiceNumber,
-                                    purchaseDate:
-                                        formState.purchaseDate ??
-                                        DateTime.now(),
-                                  ),
-                                const SizedBox(height: 24),
-
-                                const Text(
-                                  'Items del Pedido',
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                const SizedBox(height: 8),
-
-                                // Items List
-                                PurchaseItemsListWidget(
-                                  items: formState.items,
-                                  productMap: productMap,
-                                  onEditItem: onEditItem,
-                                  onRemoveItem: onRemoveItem,
-                                  onQuantityChanged: onQuantityChanged,
-                                ),
-                              ],
-                            ),
+                        Text(
+                          'Resumen de Orden',
+                          style: textTheme.titleLarge?.copyWith(
+                            fontWeight: FontWeight.bold,
                           ),
                         ),
-
-                        // Totals Footer
-                        PurchaseTotalsFooter(total: formState.total),
+                        const SizedBox(height: 20),
+                        if (formState.supplier != null &&
+                            formState.warehouse != null)
+                          PurchaseHeaderCard(
+                            supplier: formState.supplier!,
+                            warehouse: formState.warehouse!,
+                            invoiceNumber: formState.invoiceNumber,
+                            purchaseDate:
+                                formState.purchaseDate ?? DateTime.now(),
+                          ),
+                        const SizedBox(height: 32),
+                        Row(
+                          children: [
+                            const Icon(Icons.shopping_cart_outlined, size: 20),
+                            const SizedBox(width: 12),
+                            Text(
+                              'Artículos Seleccionados',
+                              style: textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const Spacer(),
+                            Text(
+                              '${formState.items.length} Productos',
+                              style: textTheme.labelLarge?.copyWith(
+                                color: colorScheme.onSurfaceVariant,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+                        PurchaseItemsListWidget(
+                          items: formState.items,
+                          productMap: productMap,
+                          onEditItem: onEditItem,
+                          onRemoveItem: onRemoveItem,
+                          onQuantityChanged: onQuantityChanged,
+                        ),
                       ],
                     ),
+                  ),
+                  PurchaseTotalsFooter(
+                    itemsCount: formState.items.length,
+                    total: formState.total,
                   ),
                 ],
               ),

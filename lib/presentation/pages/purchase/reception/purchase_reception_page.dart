@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:posventa/core/theme/theme.dart';
 import 'package:posventa/domain/entities/purchase.dart';
+import 'package:posventa/domain/entities/purchase_item.dart';
 import 'package:posventa/domain/entities/purchase_reception_item.dart';
 import 'package:posventa/presentation/providers/product_provider.dart';
 import 'package:posventa/presentation/providers/purchase_providers.dart';
@@ -219,40 +220,7 @@ class _PurchaseReceptionPageState extends ConsumerState<PurchaseReceptionPage> {
 
           return Column(
             children: [
-              // Summary & Actions
-              Container(
-                padding: const EdgeInsets.all(16),
-                color: Theme.of(context).colorScheme.surface,
-                child: Column(
-                  children: [
-                    ReceptionSummaryCard(
-                      totalOrdered: totalOrdered,
-                      totalReceived: totalReceived,
-                      totalPending: totalPending,
-                    ),
-                    const SizedBox(height: 16),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        TextButton.icon(
-                          onPressed: _clearAll,
-                          icon: const Icon(Icons.clear_all),
-                          label: const Text('Limpiar'),
-                        ),
-                        const SizedBox(width: 8),
-                        FilledButton.icon(
-                          onPressed: () => _receiveAll(purchase),
-                          icon: const Icon(Icons.done_all),
-                          label: const Text('Recibir Todo'),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-              const Divider(height: 1),
-
-              // Items List
+              // Items List + Header
               Expanded(
                 child: productsAsync.when(
                   loading: () =>
@@ -261,73 +229,86 @@ class _PurchaseReceptionPageState extends ConsumerState<PurchaseReceptionPage> {
                   data: (products) {
                     final productMap = {for (var p in products) p.id!: p};
 
-                    return ListView.separated(
-                      padding: const EdgeInsets.all(16),
-                      itemCount: purchase.items.length,
-                      separatorBuilder: (_, __) => const SizedBox(height: 12),
-                      itemBuilder: (context, index) {
-                        final item = purchase.items[index];
-                        final remaining = item.quantity - item.quantityReceived;
-                        final id = item.id;
-                        final product = productMap[item.productId];
-                        final variant = product?.variants
-                            ?.where((v) => v.id == item.variantId)
-                            .firstOrNull;
+                    return ListView(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      children: [
+                        // Scrollable Header
+                        Padding(
+                          padding: const EdgeInsets.only(top: 8, bottom: 24),
+                          child: Column(
+                            key: const ValueKey('reception_header'),
+                            children: [
+                              ReceptionSummaryCard(
+                                totalOrdered: totalOrdered,
+                                totalReceived: totalReceived,
+                                totalPending: totalPending,
+                              ),
+                              const SizedBox(height: 16),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.end,
+                                children: [
+                                  TextButton.icon(
+                                    onPressed: _clearAll,
+                                    icon: const Icon(Icons.refresh),
+                                    label: const Text('Reiniciar'),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  FilledButton.tonalIcon(
+                                    onPressed: () => _receiveAll(purchase),
+                                    icon: const Icon(Icons.done_all),
+                                    label: const Text('Recibir Todo'),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
 
-                        if (remaining <= 0) {
-                          // Completed Item
-                          return Card(
-                            elevation: 0,
-                            color: Theme.of(context)
-                                .colorScheme
-                                .surfaceContainerHighest
-                                .withValues(alpha: 0.5),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              side: BorderSide(
-                                color: Theme.of(
-                                  context,
-                                ).colorScheme.outline.withValues(alpha: 0.2),
-                              ),
-                            ),
-                            child: ListTile(
-                              leading: Icon(
-                                Icons.check_circle,
-                                color: AppTheme.transactionSuccess,
-                              ),
-                              title: Text(
-                                item.productName ?? 'Producto',
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                              subtitle: Text(
-                                'Completado (${_formatNumber(item.quantity)} ${item.unitOfMeasure})',
-                              ),
+                        // Actual Items
+                        ...purchase.items.map((item) {
+                          final remaining =
+                              item.quantity - item.quantityReceived;
+                          final id = item.id;
+                          final product = productMap[item.productId];
+                          final variant = product?.variants
+                              ?.where((v) => v.id == item.variantId)
+                              .firstOrNull;
+
+                          if (remaining <= 0) {
+                            return Padding(
+                              padding: const EdgeInsets.only(bottom: 12),
+                              child: _CompletedItemCard(item: item),
+                            );
+                          }
+
+                          final state = _itemStates[id];
+                          if (state == null) return const SizedBox.shrink();
+
+                          return Padding(
+                            padding: const EdgeInsets.only(bottom: 12),
+                            child: ReceptionItemCard(
+                              item: item,
+                              product: product,
+                              variant: variant,
+                              quantityController: state.quantityController,
+                              lotController: state.lotController,
+                              expirationController: state.expirationController,
+                              onQuantityChanged: (qty) {
+                                setState(() {
+                                  if (qty >= 0 && qty <= remaining) {
+                                    state.quantity = qty;
+                                  }
+                                });
+                              },
+                              onExpirationTap: () =>
+                                  _selectDate(context, state),
                             ),
                           );
-                        }
+                        }),
 
-                        final state = _itemStates[id];
-                        if (state == null) return const SizedBox.shrink();
-
-                        return ReceptionItemCard(
-                          item: item,
-                          product: product,
-                          variant: variant,
-                          quantityController: state.quantityController,
-                          lotController: state.lotController,
-                          expirationController: state.expirationController,
-                          onQuantityChanged: (qty) {
-                            setState(() {
-                              if (qty >= 0 && qty <= remaining) {
-                                state.quantity = qty;
-                              }
-                            });
-                          },
-                          onExpirationTap: () => _selectDate(context, state),
-                        );
-                      },
+                        // Extra space for bottom bar
+                        const SizedBox(height: 16),
+                      ],
                     );
                   },
                 ),
@@ -335,16 +316,18 @@ class _PurchaseReceptionPageState extends ConsumerState<PurchaseReceptionPage> {
 
               // Bottom confirm bar
               Container(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 20,
+                ),
                 decoration: BoxDecoration(
                   color: Theme.of(context).colorScheme.surface,
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.05),
-                      blurRadius: 10,
-                      offset: const Offset(0, -4),
+                  border: Border(
+                    top: BorderSide(
+                      color: Theme.of(context).colorScheme.outlineVariant,
+                      width: 1,
                     ),
-                  ],
+                  ),
                 ),
                 child: SafeArea(
                   child: Row(
@@ -353,9 +336,12 @@ class _PurchaseReceptionPageState extends ConsumerState<PurchaseReceptionPage> {
                         child: OutlinedButton(
                           onPressed: () => context.pop(),
                           style: OutlinedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            minimumSize: const Size.fromHeight(52),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
                           ),
-                          child: const Text('Cancelar'),
+                          child: const Text('Cancelar Recepción'),
                         ),
                       ),
                       const SizedBox(width: 16),
@@ -365,7 +351,10 @@ class _PurchaseReceptionPageState extends ConsumerState<PurchaseReceptionPage> {
                               ? () => _confirmReception(purchase)
                               : null,
                           style: FilledButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            minimumSize: const Size.fromHeight(52),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
                           ),
                           child: const Text('Confirmar Recepción'),
                         ),
@@ -377,6 +366,47 @@ class _PurchaseReceptionPageState extends ConsumerState<PurchaseReceptionPage> {
             ],
           );
         },
+      ),
+    );
+  }
+}
+
+class _CompletedItemCard extends StatelessWidget {
+  final PurchaseItem item;
+  const _CompletedItemCard({required this.item});
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+
+    return Card(
+      elevation: 0,
+      color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(
+          color: colorScheme.outlineVariant.withValues(alpha: 0.5),
+          width: 1,
+        ),
+      ),
+      child: ListTile(
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+        leading: Icon(
+          Icons.check_circle,
+          color: AppTheme.transactionSuccess,
+          size: 24,
+        ),
+        title: Text(
+          item.productName ?? 'Producto',
+          style: textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
+        ),
+        subtitle: Text(
+          'Totalmente recibido (${item.quantity} ${item.unitOfMeasure})',
+          style: textTheme.labelSmall?.copyWith(
+            color: colorScheme.onSurfaceVariant,
+          ),
+        ),
       ),
     );
   }

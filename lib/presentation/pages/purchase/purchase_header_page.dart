@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 import 'package:posventa/domain/entities/supplier.dart';
 import 'package:posventa/domain/entities/warehouse.dart';
 import 'package:posventa/presentation/providers/supplier_providers.dart';
@@ -40,7 +41,6 @@ class _PurchaseHeaderPageState extends ConsumerState<PurchaseHeaderPage> {
       return;
     }
 
-    // Navigate to product selection page with header data
     context.push(
       '/purchases/new/products',
       extra: {
@@ -56,147 +56,169 @@ class _PurchaseHeaderPageState extends ConsumerState<PurchaseHeaderPage> {
   Widget build(BuildContext context) {
     final suppliersAsync = ref.watch(supplierListProvider);
     final warehousesAsync = ref.watch(warehouseProvider);
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Nueva Compra - Paso 1')),
+      appBar: AppBar(
+        title: const Text('Nueva Compra'),
+        backgroundColor: Colors.transparent,
+      ),
       body: Form(
         key: _formKey,
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Header
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.info_outline,
-                            color: Theme.of(context).primaryColor,
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            'Información General',
-                            style: Theme.of(context).textTheme.titleMedium,
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Complete los datos generales de la orden de compra',
-                        style: Theme.of(context).textTheme.bodySmall,
-                      ),
-                    ],
-                  ),
+              Text(
+                'Datos de la Orden',
+                style: textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: -0.5,
                 ),
               ),
-              const SizedBox(height: 24),
-
-              // Supplier Selection
-              suppliersAsync.when(
-                data: (suppliers) {
-                  return DropdownButtonFormField<Supplier>(
-                    initialValue: _selectedSupplier,
-                    decoration: const InputDecoration(
-                      labelText: 'Proveedor *',
-                      border: OutlineInputBorder(),
-                      prefixIcon: Icon(Icons.business),
-                    ),
-                    items: suppliers
-                        .map(
-                          (s) =>
-                              DropdownMenuItem(value: s, child: Text(s.name)),
-                        )
-                        .toList(),
-                    onChanged: (value) =>
-                        setState(() => _selectedSupplier = value),
-                    validator: (value) => value == null ? 'Requerido' : null,
-                  );
-                },
-                loading: () => const CircularProgressIndicator(),
-                error: (_, __) => const Text('Error al cargar proveedores'),
-              ),
-              const SizedBox(height: 16),
-
-              // Warehouse Selection
-              warehousesAsync.when(
-                data: (warehouses) {
-                  return DropdownButtonFormField<Warehouse>(
-                    initialValue: _selectedWarehouse,
-                    decoration: const InputDecoration(
-                      labelText: 'Almacén Destino *',
-                      border: OutlineInputBorder(),
-                      prefixIcon: Icon(Icons.warehouse),
-                    ),
-                    items: warehouses
-                        .map(
-                          (w) =>
-                              DropdownMenuItem(value: w, child: Text(w.name)),
-                        )
-                        .toList(),
-                    onChanged: (value) =>
-                        setState(() => _selectedWarehouse = value),
-                    validator: (value) => value == null ? 'Requerido' : null,
-                  );
-                },
-                loading: () => const CircularProgressIndicator(),
-                error: (_, __) => const Text('Error al cargar almacenes'),
-              ),
-              const SizedBox(height: 16),
-
-              // Invoice Number
-              TextFormField(
-                controller: _invoiceController,
-                decoration: const InputDecoration(
-                  labelText: 'Factura Proveedor (Opcional)',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.receipt),
-                  hintText: 'Ej: FAC-12345',
-                ),
-              ),
-              const SizedBox(height: 16),
-
-              // Purchase Date
-              InkWell(
-                onTap: () async {
-                  final picked = await showDatePicker(
-                    context: context,
-                    initialDate: _purchaseDate,
-                    firstDate: DateTime(2000),
-                    lastDate: DateTime.now(),
-                  );
-                  if (picked != null) {
-                    setState(() => _purchaseDate = picked);
-                  }
-                },
-                child: InputDecorator(
-                  decoration: const InputDecoration(
-                    labelText: 'Fecha de Compra',
-                    border: OutlineInputBorder(),
-                    prefixIcon: Icon(Icons.calendar_today),
-                  ),
-                  child: Text(
-                    "${_purchaseDate.day.toString().padLeft(2, '0')}/${_purchaseDate.month.toString().padLeft(2, '0')}/${_purchaseDate.year}",
-                  ),
+              const SizedBox(height: 8),
+              Text(
+                'Configure los detalles iniciales para su orden de compra.',
+                style: textTheme.bodyMedium?.copyWith(
+                  color: colorScheme.onSurfaceVariant,
                 ),
               ),
               const SizedBox(height: 32),
 
-              // Continue Button
-              ElevatedButton.icon(
+              // Group 1: Entities
+              _FormSection(
+                title: 'Proveedor y Destino',
+                children: [
+                  suppliersAsync.when(
+                    data: (suppliers) => DropdownButtonFormField<Supplier>(
+                      initialValue: _selectedSupplier,
+                      decoration: const InputDecoration(
+                        labelText: 'Proveedor',
+                        prefixIcon: Icon(Icons.business_outlined),
+                      ),
+                      items: suppliers
+                          .map(
+                            (s) =>
+                                DropdownMenuItem(value: s, child: Text(s.name)),
+                          )
+                          .toList(),
+                      onChanged: (value) =>
+                          setState(() => _selectedSupplier = value),
+                      validator: (value) =>
+                          value == null ? 'Seleccione un proveedor' : null,
+                    ),
+                    loading: () => const LinearProgressIndicator(),
+                    error: (_, __) => const Text('Error al cargar proveedores'),
+                  ),
+                  const SizedBox(height: 16),
+                  warehousesAsync.when(
+                    data: (warehouses) => DropdownButtonFormField<Warehouse>(
+                      initialValue: _selectedWarehouse,
+                      decoration: const InputDecoration(
+                        labelText: 'Almacén de Recepción',
+                        prefixIcon: Icon(Icons.warehouse_outlined),
+                      ),
+                      items: warehouses
+                          .map(
+                            (w) =>
+                                DropdownMenuItem(value: w, child: Text(w.name)),
+                          )
+                          .toList(),
+                      onChanged: (value) =>
+                          setState(() => _selectedWarehouse = value),
+                      validator: (value) =>
+                          value == null ? 'Seleccione un almacén' : null,
+                    ),
+                    loading: () => const LinearProgressIndicator(),
+                    error: (_, __) => const Text('Error al cargar almacenes'),
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 32),
+
+              // Group 2: Document Info
+              _FormSection(
+                title: 'Información del Documento',
+                children: [
+                  TextFormField(
+                    controller: _invoiceController,
+                    decoration: const InputDecoration(
+                      labelText: 'Número de Factura (Opcional)',
+                      prefixIcon: Icon(Icons.receipt_long_outlined),
+                      hintText: 'Ej: FAC-001-1234',
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  InkWell(
+                    onTap: () async {
+                      final picked = await showDatePicker(
+                        context: context,
+                        initialDate: _purchaseDate,
+                        firstDate: DateTime(2000),
+                        lastDate: DateTime.now(),
+                      );
+                      if (picked != null) {
+                        setState(() => _purchaseDate = picked);
+                      }
+                    },
+                    borderRadius: BorderRadius.circular(12),
+                    child: InputDecorator(
+                      decoration: const InputDecoration(
+                        labelText: 'Fecha de Compra',
+                        prefixIcon: Icon(Icons.calendar_today_outlined),
+                      ),
+                      child: Text(
+                        DateFormat('dd / MM / yyyy').format(_purchaseDate),
+                        style: textTheme.bodyLarge,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 48),
+
+              FilledButton.icon(
                 onPressed: _continue,
+                style: FilledButton.styleFrom(
+                  minimumSize: const Size.fromHeight(56),
+                ),
                 icon: const Icon(Icons.arrow_forward),
-                label: const Text('Continuar a Productos'),
+                label: const Text('Continuar a Selección de Productos'),
               ),
             ],
           ),
         ),
       ),
+    );
+  }
+}
+
+class _FormSection extends StatelessWidget {
+  final String title;
+  final List<Widget> children;
+
+  const _FormSection({required this.title, required this.children});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title.toUpperCase(),
+          style: Theme.of(context).textTheme.labelLarge?.copyWith(
+            color: Theme.of(context).colorScheme.primary,
+            fontWeight: FontWeight.bold,
+            letterSpacing: 1.2,
+          ),
+        ),
+        const SizedBox(height: 16),
+        ...children,
+      ],
     );
   }
 }

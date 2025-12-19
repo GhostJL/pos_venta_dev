@@ -12,93 +12,200 @@ class CartItemInfo extends StatelessWidget {
   Widget build(BuildContext context) {
     final variant = helper.variant;
     final stock = variant?.stock ?? 0;
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+
+    // Data for margin calculation
+    final currentCost = variant?.costPrice ?? 0.0;
+    final newCost = item.unitCost;
+    // Resolve Selling Price: Variant Price -> Product Base Price * Conversion Factor
+    double sellingPrice = variant?.price ?? 0.0;
+    if (sellingPrice == 0 && helper.product != null) {
+      final basePrice = helper.product!.price;
+      final factor = variant?.conversionFactor ?? 1.0;
+      sellingPrice = basePrice * factor;
+    }
+
+    final hasPriceChange =
+        currentCost > 0 && (currentCost - newCost).abs() > 0.01;
+
+    // Margin Calculation: (Price - Cost) / Price
+    double margin = 0;
+    bool hasValidPrice = sellingPrice > 0;
+    if (hasValidPrice) {
+      margin = ((sellingPrice - newCost) / sellingPrice) * 100;
+    }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // 1. Nombre del producto base
-        Text(
-          item.productName ?? 'Producto',
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w700,
-            color: Theme.of(context).colorScheme.onSurface,
-            height: 1.2,
-          ),
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
-        ),
-        SizedBox(height: 4),
-
-        // 2. Nombre de la variante de compra
-        if (variant != null)
-          Text(
-            variant.variantName,
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-              color: Theme.of(context).colorScheme.primary,
-            ),
-          ),
-
-        SizedBox(height: 8),
-
-        // 3. Stock y Precio
+        // 1. Nombre del producto y variantes
         Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Stock de la variante
-            Flexible(
-              child: Container(
-                padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.surfaceContainerHighest,
-                  borderRadius: BorderRadius.circular(6),
-                  border: Border.all(
-                    color: Theme.of(context).colorScheme.outlineVariant,
-                  ),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      Icons.inventory_2_outlined,
-                      size: 14,
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    item.productName ?? 'Producto',
+                    style: textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      height: 1.2,
                     ),
-                    SizedBox(width: 6),
-                    Flexible(
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  if (variant != null)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 2),
                       child: Text(
-                        'Stock: ${stock.toStringAsFixed(0)}',
-                        style: TextStyle(
-                          fontSize: 12,
+                        variant.variantName,
+                        style: textTheme.bodySmall?.copyWith(
+                          color: colorScheme.primary,
                           fontWeight: FontWeight.w600,
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
                         ),
-                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
-                  ],
-                ),
-              ),
-            ),
-
-            SizedBox(width: 12),
-
-            // Precio compra de la variante
-            Expanded(
-              child: Text(
-                '\$${item.unitCost.toStringAsFixed(2)}',
-                style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w700,
-                  color: Theme.of(context).colorScheme.onSurface,
-                ),
-                textAlign: TextAlign.end,
+                ],
               ),
             ),
           ],
         ),
+
+        const SizedBox(height: 12),
+
+        // 2. Info Row: Stock, Cost History, and Margin
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          crossAxisAlignment: WrapCrossAlignment.center,
+          children: [
+            // Stock Chip
+            _InfoChip(
+              icon: Icons.inventory_2_outlined,
+              label: 'Stock: ${stock.toStringAsFixed(0)}',
+            ),
+
+            // Margin Chip
+            if (hasValidPrice) _MarginChip(margin: margin),
+
+            // Cost History
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (hasPriceChange)
+                  Padding(
+                    padding: const EdgeInsets.only(right: 6),
+                    child: Text(
+                      '\$${currentCost.toStringAsFixed(2)}',
+                      style: textTheme.bodySmall?.copyWith(
+                        color: colorScheme.onSurfaceVariant,
+                        decoration: TextDecoration.lineThrough,
+                        fontSize: 11,
+                      ),
+                    ),
+                  ),
+                Text(
+                  '\$${newCost.toStringAsFixed(2)}',
+                  style: textTheme.bodyLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: hasPriceChange
+                        ? (newCost > currentCost
+                              ? colorScheme.error
+                              : Colors.green)
+                        : colorScheme.onSurface,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
       ],
+    );
+  }
+}
+
+class _InfoChip extends StatelessWidget {
+  final IconData icon;
+  final String label;
+
+  const _InfoChip({required this.icon, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(
+          color: colorScheme.outlineVariant.withValues(alpha: 0.5),
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 14, color: colorScheme.onSurfaceVariant),
+          const SizedBox(width: 6),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.bold,
+              color: colorScheme.onSurfaceVariant,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _MarginChip extends StatelessWidget {
+  final double margin;
+
+  const _MarginChip({required this.margin});
+
+  @override
+  Widget build(BuildContext context) {
+    final isNegative = margin < 0;
+    final isLow = margin < 15; // Arbitrary "low" threshold
+
+    Color color = Colors.green;
+    IconData icon = Icons.trending_up;
+
+    if (isNegative) {
+      color = Theme.of(context).colorScheme.error;
+      icon = Icons.trending_down;
+    } else if (isLow) {
+      color = Colors.orange;
+      icon = Icons.trending_flat;
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: color.withValues(alpha: 0.2)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 14, color: color),
+          const SizedBox(width: 4),
+          Text(
+            'Margen: ${margin.toStringAsFixed(1)}%',
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w900,
+              color: color,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

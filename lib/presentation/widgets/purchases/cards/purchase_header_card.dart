@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:posventa/domain/entities/supplier.dart';
 import 'package:posventa/domain/entities/warehouse.dart';
-import 'package:posventa/presentation/widgets/common/base/info_row.dart';
 
 /// Widget that displays purchase header information (supplier, warehouse, invoice, date)
 class PurchaseHeaderCard extends StatelessWidget {
@@ -20,55 +19,51 @@ class PurchaseHeaderCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+
     return Card(
-      color: Theme.of(context).colorScheme.surface,
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: colorScheme.outlineVariant, width: 1),
+      ),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
-                Icon(
-                  Icons.info_outline,
-                  color: Theme.of(context).colorScheme.onSurface,
+                _HeaderItem(
+                  icon: Icons.business_outlined,
+                  label: 'Proveedor',
+                  value: supplier.name,
                 ),
-                const SizedBox(width: 8),
-                Text(
-                  'Información de la Compra',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: Theme.of(context).colorScheme.onSurface,
-                  ),
+                _HeaderItem(
+                  icon: Icons.warehouse_outlined,
+                  label: 'Almacén',
+                  value: warehouse.name,
                 ),
               ],
             ),
-            const Divider(),
-            Row(
-              children: [
-                Expanded(
-                  child: InfoField(label: 'Proveedor:', value: supplier.name),
+            if (invoiceNumber.isNotEmpty || true) // Show common row
+              Padding(
+                padding: const EdgeInsets.only(top: 16),
+                child: Row(
+                  children: [
+                    _HeaderItem(
+                      icon: Icons.receipt_long_outlined,
+                      label: 'Factura',
+                      value: invoiceNumber.isNotEmpty ? invoiceNumber : '—',
+                    ),
+                    _HeaderItem(
+                      icon: Icons.calendar_today_outlined,
+                      label: 'Fecha',
+                      value: _formatDate(purchaseDate),
+                    ),
+                  ],
                 ),
-                Expanded(
-                  child: InfoField(label: 'Almacén:', value: warehouse.name),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                if (invoiceNumber.isNotEmpty)
-                  Expanded(
-                    child: InfoField(label: 'Factura:', value: invoiceNumber),
-                  ),
-                Expanded(
-                  child: InfoField(
-                    label: 'Fecha:',
-                    value: _formatDate(purchaseDate),
-                  ),
-                ),
-              ],
-            ),
+              ),
           ],
         ),
       ),
@@ -77,5 +72,56 @@ class PurchaseHeaderCard extends StatelessWidget {
 
   String _formatDate(DateTime date) {
     return "${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}";
+  }
+}
+
+class _HeaderItem extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final String value;
+
+  const _HeaderItem({
+    required this.icon,
+    required this.label,
+    required this.value,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+
+    return Expanded(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, size: 16, color: colorScheme.primary),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label.toUpperCase(),
+                  style: textTheme.labelSmall?.copyWith(
+                    color: colorScheme.onSurfaceVariant,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+                Text(
+                  value,
+                  style: textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
