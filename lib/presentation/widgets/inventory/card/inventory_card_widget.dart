@@ -46,16 +46,13 @@ class InventoryCardWidget extends ConsumerWidget {
 
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey.shade200),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.02),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
+        color: Theme.of(context).colorScheme.surface,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: Theme.of(
+            context,
+          ).colorScheme.outlineVariant.withValues(alpha: 0.5),
+        ),
       ),
       child: Column(
         children: [
@@ -66,18 +63,20 @@ class InventoryCardWidget extends ConsumerWidget {
               children: [
                 // Icon / Image Placeholder
                 Container(
-                  width: 48,
-                  height: 48,
+                  width: 52,
+                  height: 52,
                   decoration: BoxDecoration(
-                    color: Colors.grey[100],
-                    borderRadius: BorderRadius.circular(12),
+                    color: Theme.of(context).colorScheme.surfaceContainerHighest
+                        .withValues(alpha: 0.5),
+                    borderRadius: BorderRadius.circular(16),
                   ),
-                  child: const Icon(
+                  child: Icon(
                     Icons.inventory_2_outlined,
-                    color: Colors.grey,
+                    color: Theme.of(context).colorScheme.primary,
+                    size: 24,
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: 16),
 
                 // Content
                 Expanded(
@@ -87,9 +86,10 @@ class InventoryCardWidget extends ConsumerWidget {
                       // 1. Name Row (Now just Name)
                       Text(
                         product.name,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 16,
+                          color: Theme.of(context).colorScheme.onSurface,
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -98,7 +98,10 @@ class InventoryCardWidget extends ConsumerWidget {
                       const SizedBox(height: 4),
                       Text(
                         'SKU: ${variant.barcode ?? 'N/A'} • ${variant.variantName}',
-                        style: TextStyle(color: Colors.grey[500], fontSize: 12),
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                          fontSize: 12,
+                        ),
                       ),
                       const SizedBox(height: 8),
 
@@ -109,9 +112,13 @@ class InventoryCardWidget extends ConsumerWidget {
                           vertical: 4,
                         ),
                         decoration: BoxDecoration(
-                          color: Colors.grey[50],
-                          borderRadius: BorderRadius.circular(6),
-                          border: Border.all(color: Colors.grey.shade200),
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.surfaceContainerLowest,
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: Theme.of(context).colorScheme.outlineVariant,
+                          ),
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
@@ -119,14 +126,14 @@ class InventoryCardWidget extends ConsumerWidget {
                             Icon(
                               Icons.warehouse_outlined,
                               size: 14,
-                              color: Colors.grey[600],
+                              color: Theme.of(context).colorScheme.primary,
                             ),
                             const SizedBox(width: 4),
                             Text(
                               warehouse?.name ?? 'Almacén Desconocido',
                               style: TextStyle(
-                                fontSize: 12,
-                                color: Colors.grey[800],
+                                fontSize: 11,
+                                color: Theme.of(context).colorScheme.onSurface,
                                 fontWeight: FontWeight.w500,
                               ),
                             ),
@@ -140,20 +147,26 @@ class InventoryCardWidget extends ConsumerWidget {
                         if (isZeroStock)
                           _StatusBadge(
                             text: 'SIN STOCK',
-                            color: const Color(0xFFFF5252),
-                            bgColor: const Color(0xFFFFEBEE),
+                            color: Theme.of(context).colorScheme.error,
+                            bgColor: Theme.of(
+                              context,
+                            ).colorScheme.errorContainer,
                           )
                         else if (isLowStock)
                           _StatusBadge(
                             text: 'BAJO STOCK',
-                            color: const Color(0xFFFF5252),
-                            bgColor: const Color(0xFFFFEBEE),
+                            color: Theme.of(context).colorScheme.error,
+                            bgColor: Theme.of(
+                              context,
+                            ).colorScheme.errorContainer,
                           )
                         else if (isNearLowStock)
                           _StatusBadge(
-                            text: 'STOCK CERCA DEL MÍNIMO',
-                            color: const Color(0xFFFFA000),
-                            bgColor: const Color(0xFFFFF8E1),
+                            text: 'CERCA DEL MÍNIMO',
+                            color: Theme.of(context).colorScheme.tertiary,
+                            bgColor: Theme.of(
+                              context,
+                            ).colorScheme.tertiaryContainer,
                           ),
                       ],
                     ],
@@ -168,7 +181,10 @@ class InventoryCardWidget extends ConsumerWidget {
                     PopupMenuButton<String>(
                       padding: EdgeInsets.zero,
                       constraints: const BoxConstraints(),
-                      icon: const Icon(Icons.more_horiz, color: Colors.grey),
+                      icon: Icon(
+                        Icons.more_horiz,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
                       onSelected: (value) {
                         if (value == 'delete') {
                           _confirmDelete(context, ref);
@@ -203,8 +219,8 @@ class InventoryCardWidget extends ConsumerWidget {
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
                         color: isZeroStock || isLowStock
-                            ? Colors.red
-                            : Colors.black87,
+                            ? Theme.of(context).colorScheme.error
+                            : Theme.of(context).colorScheme.onSurface,
                       ),
                     ),
 
@@ -220,17 +236,29 @@ class InventoryCardWidget extends ConsumerWidget {
                           'pzas | $count lotes',
                           style: TextStyle(
                             fontSize: 12,
-                            color: Colors.grey[500],
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onSurfaceVariant,
                           ),
                         );
                       },
                       loading: () => Text(
                         'pzas | - lotes',
-                        style: TextStyle(fontSize: 12, color: Colors.grey[300]),
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
+                        ),
                       ),
                       error: (_, __) => Text(
                         'pzas | ? lotes',
-                        style: TextStyle(fontSize: 12, color: Colors.grey[300]),
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
+                        ),
                       ),
                     ),
                   ],
@@ -239,7 +267,12 @@ class InventoryCardWidget extends ConsumerWidget {
             ),
           ),
 
-          Divider(color: Colors.grey.shade100, height: 1),
+          Divider(
+            color: Theme.of(
+              context,
+            ).colorScheme.outlineVariant.withValues(alpha: 0.3),
+            height: 1,
+          ),
 
           InkWell(
             onTap: () {
@@ -349,10 +382,10 @@ class _StatusBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
         color: bgColor,
-        borderRadius: BorderRadius.circular(4),
+        borderRadius: BorderRadius.circular(8),
       ),
       child: Text(
         text,

@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
-import 'package:posventa/core/theme/theme.dart';
 import 'package:posventa/domain/entities/inventory_lot.dart';
 import 'package:posventa/presentation/providers/inventory_lot_providers.dart';
 
@@ -34,8 +33,11 @@ class _InventoryLotsPageState extends ConsumerState<InventoryLotsPage> {
     // We removed the 'Variant List' screen logic as requested.
 
     return Scaffold(
+      backgroundColor: Theme.of(context).colorScheme.surface,
       appBar: AppBar(
         title: Text(widget.productName ?? 'Lotes de Inventario'),
+        backgroundColor: Theme.of(context).colorScheme.surface,
+        foregroundColor: Theme.of(context).colorScheme.onSurface,
         elevation: 0,
         // Standard back button will pop to previous screen (InventoryPage)
         actions: [
@@ -145,6 +147,16 @@ class _LotCard extends StatelessWidget {
 
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20),
+        side: BorderSide(
+          color: Theme.of(
+            context,
+          ).colorScheme.outlineVariant.withValues(alpha: 0.5),
+        ),
+      ),
+      color: Theme.of(context).colorScheme.surface,
       child: InkWell(
         onTap: onTap,
         child: Padding(
@@ -165,23 +177,25 @@ class _LotCard extends StatelessWidget {
                   ),
                   Container(
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 6,
+                      horizontal: 10,
+                      vertical: 4,
                     ),
                     decoration: BoxDecoration(
                       color: lot.quantity > 0
-                          ? Theme.of(context).colorScheme.tertiary
-                          : Theme.of(context).colorScheme.surfaceContainer,
+                          ? Theme.of(context).colorScheme.tertiaryContainer
+                          : Theme.of(
+                              context,
+                            ).colorScheme.surfaceContainerHighest,
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Text(
                       lot.quantity > 0 ? 'Disponible' : 'Agotado',
                       style: TextStyle(
                         color: lot.quantity > 0
-                            ? Theme.of(context).colorScheme.onTertiary
+                            ? Theme.of(context).colorScheme.onTertiaryContainer
                             : Theme.of(context).colorScheme.onSurfaceVariant,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
                   ),
@@ -221,34 +235,50 @@ class _LotCard extends StatelessWidget {
                 ],
               ),
               if (lot.expirationDate != null) ...[
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    Icon(
-                      Icons.warning_amber_rounded,
-                      size: 16,
-                      color: isExpired
-                          ? AppTheme.transactionFailed
-                          : isExpiringSoon
-                          ? AppTheme.transactionPending
-                          : Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      'Expira: ${dateFormat.format(lot.expirationDate!)}',
-                      style: TextStyle(
-                        fontSize: 12,
+                const SizedBox(height: 12),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 6,
+                  ),
+                  decoration: BoxDecoration(
+                    color: (isExpired || isExpiringSoon)
+                        ? (isExpired
+                              ? Theme.of(context).colorScheme.errorContainer
+                              : Theme.of(context).colorScheme.tertiaryContainer
+                                    .withValues(alpha: 0.3))
+                        : Theme.of(context).colorScheme.surfaceContainerLow,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.event_note,
+                        size: 14,
                         color: isExpired
-                            ? AppTheme.transactionFailed
+                            ? Theme.of(context).colorScheme.error
                             : isExpiringSoon
-                            ? AppTheme.transactionPending
+                            ? Theme.of(context).colorScheme.tertiary
                             : Theme.of(context).colorScheme.onSurfaceVariant,
-                        fontWeight: isExpired || isExpiringSoon
-                            ? FontWeight.w600
-                            : FontWeight.normal,
                       ),
-                    ),
-                  ],
+                      const SizedBox(width: 6),
+                      Text(
+                        'Expira: ${dateFormat.format(lot.expirationDate!)}',
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: isExpired
+                              ? Theme.of(context).colorScheme.error
+                              : isExpiringSoon
+                              ? Theme.of(context).colorScheme.tertiary
+                              : Theme.of(context).colorScheme.onSurfaceVariant,
+                          fontWeight: isExpired || isExpiringSoon
+                              ? FontWeight.bold
+                              : FontWeight.normal,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ],

@@ -50,15 +50,14 @@ class _InventoryPageState extends ConsumerState<InventoryPage> {
     }
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F7FA),
       appBar: AppBar(
         title: const Text(
           'Inventario',
           style: TextStyle(fontWeight: FontWeight.bold, fontSize: 24),
         ),
         centerTitle: false,
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
+        backgroundColor: Theme.of(context).colorScheme.surface,
+        foregroundColor: Theme.of(context).colorScheme.onSurface,
         elevation: 0,
         actions: [
           Consumer(
@@ -77,19 +76,7 @@ class _InventoryPageState extends ConsumerState<InventoryPage> {
               );
             },
           ),
-          if (hasAdjustAccess)
-            Padding(
-              padding: const EdgeInsets.only(right: 16),
-              child: IconButton(
-                onPressed: () => context.push('/inventory/form'),
-                icon: const Icon(Icons.add, color: Colors.white),
-                style: IconButton.styleFrom(
-                  backgroundColor: Theme.of(context).colorScheme.primary,
-                  shape: const CircleBorder(),
-                ),
-                tooltip: 'Agregar inventario',
-              ),
-            ),
+          const SizedBox(width: 8),
         ],
       ),
       body: productsAsync.when(
@@ -200,30 +187,37 @@ class _InventoryPageState extends ConsumerState<InventoryPage> {
                   return Column(
                     children: [
                       // Search
-                      Container(
-                        color: Colors.white,
-                        padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
                         child: TextField(
                           onChanged: (val) =>
                               setState(() => _searchQuery = val),
                           decoration: InputDecoration(
                             hintText: 'Buscar nombre, SKU, o escanear...',
-                            prefixIcon: const Icon(
+                            prefixIcon: Icon(
                               Icons.search,
-                              color: Colors.grey,
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onSurfaceVariant,
                             ),
-                            suffixIcon: const Icon(
+                            suffixIcon: Icon(
                               Icons.qr_code_scanner,
-                              color: Colors.grey,
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onSurfaceVariant,
                             ),
                             filled: true,
-                            fillColor: const Color(0xFFF5F7FA),
+                            fillColor: Theme.of(context)
+                                .colorScheme
+                                .surfaceContainerHighest
+                                .withValues(alpha: 0.5),
                             border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
+                              borderRadius: BorderRadius.circular(28),
                               borderSide: BorderSide.none,
                             ),
                             contentPadding: const EdgeInsets.symmetric(
-                              vertical: 0,
+                              vertical: 12,
+                              horizontal: 20,
                             ),
                           ),
                         ),
@@ -242,8 +236,7 @@ class _InventoryPageState extends ConsumerState<InventoryPage> {
                                     value: '$lowStockCount',
                                     subValue: 'Atención requerida',
                                     icon: Icons.warning_amber_rounded,
-                                    iconColor: const Color(0xFFFF5252),
-                                    backgroundColor: const Color(0xFFFFEBEE),
+                                    color: Theme.of(context).colorScheme.error,
                                   ),
                                   const SizedBox(width: 12),
                                   _SummaryCard(
@@ -251,8 +244,9 @@ class _InventoryPageState extends ConsumerState<InventoryPage> {
                                     value: '\$${totalInfo.toStringAsFixed(1)}',
                                     subValue: 'Total en inventario',
                                     icon: Icons.attach_money,
-                                    iconColor: const Color(0xFF2979FF),
-                                    backgroundColor: const Color(0xFFE3F2FD),
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.primary,
                                   ),
                                 ],
                               ),
@@ -334,16 +328,14 @@ class _SummaryCard extends StatelessWidget {
   final String value;
   final String subValue;
   final IconData icon;
-  final Color iconColor;
-  final Color backgroundColor;
+  final Color color;
 
   const _SummaryCard({
     required this.label,
     required this.value,
     required this.subValue,
     required this.icon,
-    required this.iconColor,
-    required this.backgroundColor,
+    required this.color,
   });
 
   @override
@@ -352,9 +344,8 @@ class _SummaryCard extends StatelessWidget {
       width: 160,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey.shade200),
+        color: Theme.of(context).colorScheme.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(20),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -364,10 +355,10 @@ class _SummaryCard extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: backgroundColor,
-                  borderRadius: BorderRadius.circular(8),
+                  color: color.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
                 ),
-                child: Icon(icon, color: iconColor, size: 20),
+                child: Icon(icon, color: color, size: 20),
               ),
               const Spacer(),
             ],
@@ -376,8 +367,8 @@ class _SummaryCard extends StatelessWidget {
           Text(
             label,
             style: TextStyle(
-              color: Colors.grey[600],
-              fontSize: 12,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+              fontSize: 11,
               fontWeight: FontWeight.bold,
               letterSpacing: 0.5,
             ),
@@ -385,18 +376,18 @@ class _SummaryCard extends StatelessWidget {
           const SizedBox(height: 4),
           Text(
             value,
-            style: const TextStyle(
-              fontSize: 24,
+            style: TextStyle(
+              fontSize: 22,
               fontWeight: FontWeight.bold,
-              color: Colors.black87,
+              color: Theme.of(context).colorScheme.onSurface,
             ),
           ),
           const SizedBox(height: 4),
           Text(
             subValue,
             style: TextStyle(
-              fontSize: 12,
-              color: iconColor,
+              fontSize: 11,
+              color: color,
               fontWeight: FontWeight.w500,
             ),
             maxLines: 1,

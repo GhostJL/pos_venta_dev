@@ -22,7 +22,6 @@ import 'package:posventa/presentation/pages/dashboards/dashboard_admin_page.dart
 import 'package:posventa/presentation/pages/dashboards/dashboard_cashier_page.dart';
 import 'package:posventa/presentation/pages/departaments/departments_page.dart';
 import 'package:posventa/presentation/pages/inventory/inventory_page.dart';
-import 'package:posventa/presentation/pages/inventory/inventory_form_page.dart';
 import 'package:posventa/presentation/pages/inventory/inventory_notifications_page.dart';
 import 'package:posventa/presentation/pages/login/login_page.dart';
 import 'package:posventa/presentation/pages/login/create_account/create_account_page.dart';
@@ -346,15 +345,6 @@ final routerProvider = Provider<GoRouter>((ref) {
             },
           ),
 
-          GoRoute(
-            path: '/inventory/form',
-            pageBuilder: (context, state) {
-              final inventory = state.extra as dynamic;
-              return NoTransitionPage(
-                child: InventoryFormPage(inventory: inventory),
-              );
-            },
-          ),
           GoRoute(
             path: '/cashiers/form',
             pageBuilder: (context, state) {
