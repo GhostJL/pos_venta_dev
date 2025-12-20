@@ -48,7 +48,7 @@ class _TaxRatePageState extends ConsumerState<TaxRatePage> {
             side: BorderSide(
               color: Theme.of(
                 context,
-              ).colorScheme.outlineVariant.withOpacity(0.6),
+              ).colorScheme.outlineVariant.withValues(alpha: 0.6),
             ),
           ),
           clipBehavior: Clip.antiAlias,
@@ -62,7 +62,7 @@ class _TaxRatePageState extends ConsumerState<TaxRatePage> {
               decoration: BoxDecoration(
                 color: Theme.of(
                   context,
-                ).colorScheme.primaryContainer.withOpacity(0.6),
+                ).colorScheme.primaryContainer.withValues(alpha: 0.6),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Icon(

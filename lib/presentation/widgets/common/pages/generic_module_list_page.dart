@@ -77,7 +77,9 @@ class _GenericModuleListPageState<T> extends State<GenericModuleListPage<T>> {
               child: SearchBar(
                 elevation: WidgetStateProperty.all(0),
                 backgroundColor: WidgetStateProperty.all(
-                  theme.colorScheme.surfaceContainerHighest.withOpacity(0.5),
+                  theme.colorScheme.surfaceContainerHighest.withValues(
+                    alpha: 0.5,
+                  ),
                 ),
                 hintText: widget.filterPlaceholder,
                 leading: const Icon(Icons.search_rounded),

@@ -209,7 +209,7 @@ class _SettingsCard extends StatelessWidget {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
         side: BorderSide(
-          color: theme.colorScheme.outlineVariant.withOpacity(0.6),
+          color: theme.colorScheme.outlineVariant.withValues(alpha: 0.6),
         ),
       ),
       child: InkWell(
@@ -222,7 +222,9 @@ class _SettingsCard extends StatelessWidget {
                 width: 40,
                 height: 40,
                 decoration: BoxDecoration(
-                  color: theme.colorScheme.secondaryContainer.withOpacity(0.4),
+                  color: theme.colorScheme.secondaryContainer.withValues(
+                    alpha: 0.4,
+                  ),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Icon(icon, color: theme.colorScheme.primary, size: 20),
@@ -252,7 +254,9 @@ class _SettingsCard extends StatelessWidget {
               ),
               Icon(
                 Icons.chevron_right_rounded,
-                color: theme.colorScheme.onSurfaceVariant.withOpacity(0.5),
+                color: theme.colorScheme.onSurfaceVariant.withValues(
+                  alpha: 0.5,
+                ),
                 size: 20,
               ),
             ],

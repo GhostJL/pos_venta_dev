@@ -95,7 +95,9 @@ class _DepartmentCard extends StatelessWidget {
       clipBehavior: Clip.antiAlias,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: colorScheme.outlineVariant.withOpacity(0.6)),
+        side: BorderSide(
+          color: colorScheme.outlineVariant.withValues(alpha: 0.6),
+        ),
       ),
       child: InkWell(
         onTap: onEdit,
@@ -139,7 +141,9 @@ class _DepartmentCard extends StatelessWidget {
                                   fontWeight: FontWeight.bold,
                                   color: department.isActive
                                       ? colorScheme.onSurface
-                                      : colorScheme.onSurface.withOpacity(0.6),
+                                      : colorScheme.onSurface.withValues(
+                                          alpha: 0.6,
+                                        ),
                                 ),
                               ),
                             ),
@@ -208,7 +212,7 @@ class _DepartmentCard extends StatelessWidget {
                   width: double.infinity,
                   padding: const EdgeInsets.symmetric(vertical: 4),
                   decoration: BoxDecoration(
-                    color: colorScheme.errorContainer.withOpacity(0.2),
+                    color: colorScheme.errorContainer.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Center(

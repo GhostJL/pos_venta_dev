@@ -89,7 +89,9 @@ class _BrandCard extends StatelessWidget {
       clipBehavior: Clip.antiAlias,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: colorScheme.outlineVariant.withOpacity(0.6)),
+        side: BorderSide(
+          color: colorScheme.outlineVariant.withValues(alpha: 0.6),
+        ),
       ),
       child: InkWell(
         onTap: onEdit,
@@ -107,7 +109,7 @@ class _BrandCard extends StatelessWidget {
                     height: 48,
                     decoration: BoxDecoration(
                       color: brand.isActive
-                          ? colorScheme.primaryContainer.withOpacity(0.4)
+                          ? colorScheme.primaryContainer.withValues(alpha: 0.4)
                           : colorScheme.surfaceContainerHigh,
                       borderRadius: BorderRadius.circular(12),
                     ),
@@ -133,7 +135,9 @@ class _BrandCard extends StatelessWidget {
                                   fontWeight: FontWeight.bold,
                                   color: brand.isActive
                                       ? colorScheme.onSurface
-                                      : colorScheme.onSurface.withOpacity(0.6),
+                                      : colorScheme.onSurface.withValues(
+                                          alpha: 0.6,
+                                        ),
                                 ),
                               ),
                             ),
@@ -192,7 +196,7 @@ class _BrandCard extends StatelessWidget {
                   width: double.infinity,
                   padding: const EdgeInsets.symmetric(vertical: 4),
                   decoration: BoxDecoration(
-                    color: colorScheme.errorContainer.withOpacity(0.2),
+                    color: colorScheme.errorContainer.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Center(

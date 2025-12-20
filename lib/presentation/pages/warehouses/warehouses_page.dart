@@ -79,7 +79,9 @@ class _WarehouseCard extends StatelessWidget {
       clipBehavior: Clip.antiAlias,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: colorScheme.outlineVariant.withOpacity(0.6)),
+        side: BorderSide(
+          color: colorScheme.outlineVariant.withValues(alpha: 0.6),
+        ),
       ),
       child: InkWell(
         onTap: onEdit,
@@ -128,7 +130,9 @@ class _WarehouseCard extends StatelessWidget {
                                   fontWeight: FontWeight.bold,
                                   color: warehouse.isActive
                                       ? colorScheme.onSurface
-                                      : colorScheme.onSurface.withOpacity(0.6),
+                                      : colorScheme.onSurface.withValues(
+                                          alpha: 0.6,
+                                        ),
                                 ),
                               ),
                             ),
@@ -140,8 +144,8 @@ class _WarehouseCard extends StatelessWidget {
                                   vertical: 2,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: colorScheme.errorContainer.withOpacity(
-                                    0.5,
+                                  color: colorScheme.errorContainer.withValues(
+                                    alpha: 0.5,
                                   ),
                                   borderRadius: BorderRadius.circular(6),
                                 ),
@@ -278,8 +282,8 @@ class _WarehouseCard extends StatelessWidget {
           icon,
           size: 14,
           color: isPlaceholder
-              ? colorScheme.onSurfaceVariant.withOpacity(0.5)
-              : colorScheme.primary.withOpacity(0.7),
+              ? colorScheme.onSurfaceVariant.withValues(alpha: 0.5)
+              : colorScheme.primary.withValues(alpha: 0.7),
         ),
         const SizedBox(width: 6),
         Expanded(
@@ -287,7 +291,7 @@ class _WarehouseCard extends StatelessWidget {
             text,
             style: theme.textTheme.bodyMedium?.copyWith(
               color: isPlaceholder
-                  ? colorScheme.onSurfaceVariant.withOpacity(0.5)
+                  ? colorScheme.onSurfaceVariant.withValues(alpha: 0.5)
                   : colorScheme.onSurfaceVariant,
               fontSize: 13,
             ),
