@@ -6,7 +6,7 @@ import 'package:posventa/presentation/providers/product_provider.dart';
 import 'package:posventa/core/constants/permission_constants.dart';
 import 'package:posventa/presentation/providers/permission_provider.dart';
 import 'package:posventa/presentation/widgets/products/filters/product_filter_sheet.dart';
-import 'package:posventa/presentation/widgets/products/lists/product_list_item.dart';
+import 'package:posventa/presentation/widgets/products/lists/product_card.dart';
 import 'package:posventa/presentation/widgets/products/search/product_search_bar.dart';
 import 'package:posventa/presentation/widgets/products/actions/product_actions_sheet.dart';
 import 'package:posventa/presentation/providers/department_providers.dart';
@@ -179,8 +179,9 @@ class ProductsPageState extends ConsumerState<ProductsPage>
       itemBuilder: (context, index) {
         final product = productList[index];
         return RepaintBoundary(
-          child: ProductListItem(
+          child: ProductCard(
             product: product,
+            onTap: () => _showActions(context, product),
             onMorePressed: () => _showActions(context, product),
           ),
         );
@@ -234,6 +235,7 @@ class ProductsPageState extends ConsumerState<ProductsPage>
       showModalBottomSheet(
         context: context,
         isScrollControlled: true,
+        showDragHandle: true,
         builder: (context) => ProductFilterSheet(
           onDepartmentChanged: (val) =>
               ref.read(productFiltersProvider.notifier).setDepartment(val),
@@ -276,6 +278,7 @@ class ProductsPageState extends ConsumerState<ProductsPage>
       showModalBottomSheet(
         context: context,
         isScrollControlled: true,
+        showDragHandle: true,
         builder: (context) => ProductActionsSheet(product: product),
       );
     }

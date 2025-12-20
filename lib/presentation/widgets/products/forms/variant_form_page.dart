@@ -278,40 +278,45 @@ class _VariantFormPageState extends ConsumerState<VariantFormPage> {
   }) {
     final theme = Theme.of(context);
 
-    return Container(
+    return Card(
       margin: const EdgeInsets.only(bottom: 24),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
-          width: 0.5,
-        ),
-      ),
+      elevation: 0,
+      color: theme.colorScheme.surfaceContainer,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+            padding: const EdgeInsets.fromLTRB(20, 20, 20, 8),
             child: Row(
               children: [
-                Icon(icon, size: 20, color: theme.colorScheme.primary),
-                const SizedBox(width: 8),
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.primaryContainer,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(
+                    icon,
+                    size: 18,
+                    color: theme.colorScheme.onPrimaryContainer,
+                  ),
+                ),
+                const SizedBox(width: 12),
                 Text(
-                  title.toUpperCase(),
-                  style: theme.textTheme.labelLarge?.copyWith(
+                  title,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.bold,
-                    color: theme.colorScheme.onSurfaceVariant,
-                    letterSpacing: 1.1,
+                    color: theme.colorScheme.onSurface,
                   ),
                 ),
               ],
             ),
           ),
-          const Divider(height: 1),
-          RepaintBoundary(
-            child: Padding(padding: const EdgeInsets.all(16.0), child: child),
-          ),
+          const Divider(height: 1, indent: 20, endIndent: 20),
+          Padding(padding: const EdgeInsets.all(20.0), child: child),
         ],
       ),
     );

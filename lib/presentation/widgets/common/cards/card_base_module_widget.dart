@@ -228,7 +228,7 @@ class CardBaseModuleWidget extends StatelessWidget {
       showModalBottomSheet(
         context: context,
         isScrollControlled: true,
-        backgroundColor: Colors.transparent,
+        showDragHandle: true,
         builder: (context) => sheet,
       );
     }

@@ -82,48 +82,30 @@ class VariantListPage extends ConsumerWidget {
         .where((v) => v.type == filterType)
         .toList();
 
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
+    return Card(
       margin: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: theme.colorScheme.shadow.withValues(alpha: 0.03),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-        border: Border.all(
-          color: theme.colorScheme.primary.withValues(alpha: 0.1),
-          width: 1,
-        ),
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: theme.colorScheme.primary.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Icon(
+      elevation: 0,
+      color: theme.colorScheme.secondaryContainer,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          children: [
+            Icon(
               Icons.info_outline_rounded,
               size: 20,
-              color: theme.colorScheme.primary,
+              color: theme.colorScheme.onSecondaryContainer,
             ),
-          ),
-          const SizedBox(width: 12),
-          Text(
-            '${filteredVariants.length} presentaciones configuradas',
-            style: theme.textTheme.bodyMedium?.copyWith(
-              fontWeight: FontWeight.bold,
-              color: theme.colorScheme.onSurface,
+            const SizedBox(width: 12),
+            Text(
+              '${filteredVariants.length} presentaciones configuradas',
+              style: theme.textTheme.bodyMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: theme.colorScheme.onSecondaryContainer,
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

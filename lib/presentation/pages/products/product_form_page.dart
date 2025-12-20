@@ -285,39 +285,13 @@ class ProductFormPageState extends ConsumerState<ProductFormPage> {
                 child: Card(
                   elevation: 0,
                   margin: EdgeInsets.zero,
-                  color: Theme.of(context).colorScheme.surfaceContainerLow,
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.secondaryContainer.withValues(alpha: 0.2),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(16),
                   ),
-                  child: ListTile(
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 8,
-                    ),
-                    leading: Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: Theme.of(
-                          context,
-                        ).colorScheme.primary.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Icon(
-                        Icons.layers_outlined,
-                        color: Theme.of(context).colorScheme.primary,
-                      ),
-                    ),
-                    title: const Text(
-                      'Gestionar Variantes',
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    subtitle: const Text(
-                      'Configurar variantes de compra y venta',
-                    ),
-                    trailing: const Icon(
-                      Icons.arrow_forward_ios_rounded,
-                      size: 16,
-                    ),
+                  child: InkWell(
                     onTap: () {
                       Navigator.push(
                         context,
@@ -328,6 +302,50 @@ class ProductFormPageState extends ConsumerState<ProductFormPage> {
                         ),
                       );
                     },
+                    borderRadius: BorderRadius.circular(16),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 20,
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.layers_rounded,
+                            color: Theme.of(context).colorScheme.primary,
+                            size: 24,
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Gestionar Variantes',
+                                  style: Theme.of(context).textTheme.titleMedium
+                                      ?.copyWith(fontWeight: FontWeight.bold),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  'Configurar variantes de compra y venta',
+                                  style: Theme.of(context).textTheme.bodySmall
+                                      ?.copyWith(
+                                        color: Theme.of(
+                                          context,
+                                        ).colorScheme.onSurfaceVariant,
+                                      ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Icon(
+                            Icons.arrow_forward_rounded,
+                            size: 20,
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
                 ),
               )
@@ -359,39 +377,46 @@ class ProductFormPageState extends ConsumerState<ProductFormPage> {
   }) {
     final theme = Theme.of(context);
 
-    return Container(
+    return Card(
+      elevation: 0,
       margin: const EdgeInsets.only(bottom: 24),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
-          width: 0.5,
-        ),
-      ),
+      color: theme.colorScheme.surfaceContainer,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+            padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
             child: Row(
               children: [
-                Icon(icon, size: 20, color: theme.colorScheme.primary),
-                const SizedBox(width: 8),
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.primaryContainer,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(
+                    icon,
+                    size: 20,
+                    color: theme.colorScheme.onPrimaryContainer,
+                  ),
+                ),
+                const SizedBox(width: 12),
                 Text(
-                  title.toUpperCase(),
-                  style: theme.textTheme.labelLarge?.copyWith(
+                  title,
+                  style: theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.bold,
-                    color: theme.colorScheme.onSurfaceVariant,
-                    letterSpacing: 1.1,
+                    color: theme.colorScheme.onSurface,
                   ),
                 ),
               ],
             ),
           ),
-          const Divider(height: 1),
           RepaintBoundary(
-            child: Padding(padding: const EdgeInsets.all(16.0), child: child),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+              child: child,
+            ),
           ),
         ],
       ),

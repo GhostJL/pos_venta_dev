@@ -58,22 +58,12 @@ class _ProductFilterSheetState extends ConsumerState<ProductFilterSheet> {
     return SafeArea(
       child: Container(
         constraints: BoxConstraints(maxWidth: isTablet ? 480 : double.infinity),
-        decoration: BoxDecoration(
-          color: theme.colorScheme.surface,
-          borderRadius: BorderRadius.circular(20),
-          boxShadow: [
-            BoxShadow(
-              color: theme.colorScheme.shadow.withValues(alpha: 0.1),
-              blurRadius: 20,
-              offset: const Offset(0, -4),
-            ),
-          ],
-        ),
+        // Removed explicit decoration to rely on sheet surface or dialog surface
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            if (!isTablet) Center(child: _buildHandle(theme)),
+            // Handle managed by sheet property
             _buildHeader(theme),
             const Divider(height: 1, thickness: 0.5),
             Flexible(
@@ -385,15 +375,5 @@ class _ProductFilterSheetState extends ConsumerState<ProductFilterSheet> {
     );
   }
 
-  Widget _buildHandle(ThemeData theme) {
-    return Container(
-      margin: const EdgeInsets.only(top: 12),
-      width: 32,
-      height: 4,
-      decoration: BoxDecoration(
-        color: theme.colorScheme.outlineVariant,
-        borderRadius: BorderRadius.circular(2),
-      ),
-    );
-  }
+  // Handle managed by showModalBottomSheet property
 }

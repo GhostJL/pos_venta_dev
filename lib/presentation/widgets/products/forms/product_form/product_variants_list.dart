@@ -127,20 +127,14 @@ class _VariantCard extends ConsumerWidget {
       orElse: () => null,
     );
 
-    return Container(
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
+    return Card(
+      elevation: 0,
+      color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.4),
+      margin: EdgeInsets.zero,
+      shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: theme.colorScheme.shadow.withValues(alpha: 0.04),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-        border: Border.all(
-          color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
-          width: 0.5,
+        side: BorderSide(
+          color: theme.colorScheme.outlineVariant.withValues(alpha: 0.4),
         ),
       ),
       child: InkWell(
@@ -183,6 +177,8 @@ class _VariantCard extends ConsumerWidget {
                       variant.variantName.isEmpty
                           ? "Sin nombre"
                           : variant.variantName,
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 2,
                       style: theme.textTheme.titleSmall?.copyWith(
                         fontWeight: FontWeight.bold,
                         color: theme.colorScheme.onSurface,
@@ -245,7 +241,7 @@ class _VariantCard extends ConsumerWidget {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.transparent,
+      showDragHandle: true,
       builder: (context) => VariantActionsSheet(
         variant: variant,
         onEdit: () => onEdit(variant, index),

@@ -70,44 +70,34 @@ class VariantTypeSelectionPage extends ConsumerWidget {
   }
 
   Widget _buildProductHeader(ThemeData theme) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: theme.colorScheme.shadow.withValues(alpha: 0.03),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-        border: Border.all(
-          color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
-          width: 0.5,
+    return Card(
+      elevation: 0,
+      color: theme.colorScheme.secondaryContainer,
+      margin: EdgeInsets.zero,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              product.name,
+              style: theme.textTheme.headlineSmall?.copyWith(
+                fontWeight: FontWeight.w800,
+                color: theme.colorScheme.onSecondaryContainer,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              'CÓDIGO: ${product.code}',
+              style: theme.textTheme.bodyMedium?.copyWith(
+                fontFamily: 'monospace',
+                color: theme.colorScheme.onSecondaryContainer,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
         ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            product.name,
-            style: theme.textTheme.headlineSmall?.copyWith(
-              fontWeight: FontWeight.w800,
-              color: theme.colorScheme.onSurface,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            'CÓDIGO: ${product.code}',
-            style: theme.textTheme.bodyMedium?.copyWith(
-              fontFamily: 'monospace',
-              color: theme.colorScheme.primary,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ],
       ),
     );
   }
@@ -121,25 +111,14 @@ class VariantTypeSelectionPage extends ConsumerWidget {
   }) {
     final theme = Theme.of(context);
 
-    return Container(
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: theme.colorScheme.shadow.withValues(alpha: 0.04),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-        border: Border.all(
-          color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
-          width: 0.5,
-        ),
-      ),
+    return Card(
+      elevation: 0,
+      margin: EdgeInsets.zero,
+      color: theme.colorScheme.surfaceContainer,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(20),
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
           child: Row(
@@ -147,10 +126,14 @@ class VariantTypeSelectionPage extends ConsumerWidget {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: theme.colorScheme.primary.withValues(alpha: 0.1),
+                  color: theme.colorScheme.primaryContainer,
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: Icon(icon, size: 28, color: theme.colorScheme.primary),
+                child: Icon(
+                  icon,
+                  size: 28,
+                  color: theme.colorScheme.onPrimaryContainer,
+                ),
               ),
               const SizedBox(width: 20),
               Expanded(
