@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:posventa/core/config/menu_config.dart';
 import 'package:posventa/presentation/widgets/menu/menu_item_widget.dart';
 import 'package:posventa/presentation/providers/menu_state_provider.dart';
@@ -104,11 +105,18 @@ class _MenuGroupWidgetState extends ConsumerState<MenuGroupWidget>
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
+    final bool isRouteActive =
+        widget.menuGroup.route != null &&
+        widget.currentPath.startsWith(widget.menuGroup.route!);
+
     final isExpanded = ref.watch(
       menuStateProvider.select(
         (state) => state.expandedGroupId == widget.menuGroup.id,
       ),
     );
+
+    // Use active state for styling if it's a direct link
+    final isActive = isRouteActive || isExpanded;
 
     _updateAnimation(isExpanded);
 
@@ -129,7 +137,7 @@ class _MenuGroupWidgetState extends ConsumerState<MenuGroupWidget>
                 duration: const Duration(milliseconds: 200),
                 height: 48,
                 decoration: BoxDecoration(
-                  color: isExpanded
+                  color: isActive
                       ? colorScheme.surfaceContainer
                       : _isHovered
                       ? colorScheme.onSurface.withValues(alpha: 0.05)
@@ -140,9 +148,13 @@ class _MenuGroupWidgetState extends ConsumerState<MenuGroupWidget>
                   color: Colors.transparent,
                   child: InkWell(
                     onTap: () {
-                      ref
-                          .read(menuStateProvider.notifier)
-                          .toggleGroup(widget.menuGroup.id);
+                      if (widget.menuGroup.route != null) {
+                        GoRouter.of(context).go(widget.menuGroup.route!);
+                      } else {
+                        ref
+                            .read(menuStateProvider.notifier)
+                            .toggleGroup(widget.menuGroup.id);
+                      }
                     },
                     borderRadius: BorderRadius.circular(24),
                     child: Padding(
@@ -153,7 +165,7 @@ class _MenuGroupWidgetState extends ConsumerState<MenuGroupWidget>
                             Icon(
                               widget.menuGroup.groupIcon,
                               size: 24,
-                              color: isExpanded
+                              color: isExpanded || isRouteActive
                                   ? colorScheme.primary
                                   : colorScheme.onSurfaceVariant,
                             ),
@@ -163,25 +175,26 @@ class _MenuGroupWidgetState extends ConsumerState<MenuGroupWidget>
                             child: Text(
                               widget.menuGroup.title,
                               style: textTheme.titleSmall?.copyWith(
-                                color: isExpanded
+                                color: isActive
                                     ? colorScheme.onSurface
                                     : colorScheme.onSurface,
-                                fontWeight: isExpanded
+                                fontWeight: isActive
                                     ? FontWeight.w600
                                     : FontWeight.w500,
                                 letterSpacing: 0.1,
                               ),
                             ),
                           ),
-                          Icon(
-                            isExpanded
-                                ? Icons.expand_less_rounded
-                                : Icons.expand_more_rounded,
-                            size: 24,
-                            color: isExpanded
-                                ? colorScheme.primary
-                                : colorScheme.onSurfaceVariant,
-                          ),
+                          if (widget.menuGroup.route == null)
+                            Icon(
+                              isExpanded
+                                  ? Icons.expand_less_rounded
+                                  : Icons.expand_more_rounded,
+                              size: 24,
+                              color: isExpanded
+                                  ? colorScheme.primary
+                                  : colorScheme.onSurfaceVariant,
+                            ),
                         ],
                       ),
                     ),

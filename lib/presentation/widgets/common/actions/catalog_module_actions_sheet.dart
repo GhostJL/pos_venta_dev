@@ -89,7 +89,7 @@ class CatalogModuleActionsSheet extends StatelessWidget {
   Widget _buildSheetHeader(ThemeData theme) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(24, 0, 24, 8),
+      padding: const EdgeInsets.fromLTRB(24, 24, 24, 8),
       child: Row(
         children: [
           Container(

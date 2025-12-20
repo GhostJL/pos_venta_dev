@@ -43,6 +43,7 @@ class MenuGroup {
   final List<MenuItem> items;
   final bool collapsible;
   final bool defaultExpanded;
+  final String? route;
   final bool Function(User?)? visibilityCheck;
 
   const MenuGroup({
@@ -52,6 +53,7 @@ class MenuGroup {
     this.groupIcon,
     this.collapsible = true,
     this.defaultExpanded = true,
+    this.route,
     this.visibilityCheck,
   });
 
@@ -167,58 +169,6 @@ class MenuConfig {
       // ═══════════════════════════════════════════════════════════
       // SECCIÓN 4: CONFIGURACIÓN DEL SISTEMA (Solo Admin)
       // ═══════════════════════════════════════════════════════════
-      MenuGroup(
-        id: 'system_configuration',
-        title: 'Configuración del Sistema',
-        groupIcon: Icons.settings_rounded,
-        defaultExpanded: false,
-        visibilityCheck: (user) => user?.role == UserRole.administrador,
-        items: [
-          MenuItem(
-            title: 'Mi Tienda',
-            icon: Icons.store_mall_directory_rounded,
-            route: '/store',
-            customAccessCheck: (user) => user?.role == UserRole.administrador,
-          ),
-          MenuItem(
-            title: 'Usuarios y Permisos',
-            icon: Icons.admin_panel_settings_rounded,
-            route: '/cashiers',
-            customAccessCheck: (user) => user?.role == UserRole.administrador,
-          ),
-
-          const MenuItem(
-            title: 'Tasas de Impuesto',
-            icon: Icons.price_change_rounded,
-            route: '/tax-rates',
-            requiredPermissions: [PermissionConstants.catalogManage],
-          ),
-          const MenuItem(
-            title: 'Departamentos',
-            icon: Icons.apartment_rounded,
-            route: '/departments',
-            requiredPermissions: [PermissionConstants.catalogManage],
-          ),
-          const MenuItem(
-            title: 'Categorías',
-            icon: Icons.category_rounded,
-            route: '/categories',
-            requiredPermissions: [PermissionConstants.catalogManage],
-          ),
-          const MenuItem(
-            title: 'Marcas',
-            icon: Icons.label_rounded,
-            route: '/brands',
-            requiredPermissions: [PermissionConstants.catalogManage],
-          ),
-          const MenuItem(
-            title: 'Almacenes',
-            icon: Icons.warehouse_rounded,
-            route: '/warehouses',
-            requiredPermissions: [PermissionConstants.catalogManage],
-          ),
-        ],
-      ),
     ];
   }
 

@@ -100,7 +100,7 @@ class _SideMenuState extends ConsumerState<SideMenu> {
 
       var accessibleItems = group.getAccessibleItems(user, permissions);
 
-      if (accessibleItems.isEmpty) continue;
+      if (accessibleItems.isEmpty && group.route == null) continue;
 
       final filteredGroup = MenuGroup(
         id: group.id,
@@ -109,6 +109,7 @@ class _SideMenuState extends ConsumerState<SideMenu> {
         items: accessibleItems,
         collapsible: group.collapsible,
         defaultExpanded: group.defaultExpanded,
+        route: group.route,
       );
 
       if (i > 0) {
@@ -180,6 +181,24 @@ class _MinimalHeader extends StatelessWidget {
               letterSpacing: 0.2,
             ),
           ),
+          if (user?.role == UserRole.administrador) ...[
+            const Spacer(),
+            IconButton(
+              icon: const Icon(Icons.settings_rounded, size: 20),
+              onPressed: () {
+                GoRouter.of(context).push('/settings');
+                final scaffold = Scaffold.maybeOf(context);
+                if (scaffold?.isDrawerOpen ?? false) {
+                  scaffold!.closeDrawer();
+                }
+              },
+              tooltip: 'Configuración',
+              style: IconButton.styleFrom(
+                padding: EdgeInsets.zero,
+                visualDensity: VisualDensity.compact,
+              ),
+            ),
+          ],
         ],
       ),
     );

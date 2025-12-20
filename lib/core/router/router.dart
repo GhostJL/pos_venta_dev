@@ -43,6 +43,7 @@ import 'package:posventa/presentation/pages/sale/sales_history_page.dart';
 import 'package:posventa/presentation/pages/suppliers/suppliers_page.dart';
 import 'package:posventa/presentation/pages/store/store_page.dart';
 import 'package:posventa/presentation/pages/tax/tax_rate_page.dart';
+import 'package:posventa/presentation/pages/settings/settings_page.dart';
 
 import 'package:posventa/presentation/pages/users/users_permissions_page.dart';
 import 'package:posventa/presentation/pages/warehouses/warehouses_page.dart';
@@ -405,6 +406,11 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: '/users-permissions',
             pageBuilder: (context, state) =>
                 const NoTransitionPage(child: UsersPermissionsPage()),
+          ),
+          GoRoute(
+            path: '/settings',
+            pageBuilder: (context, state) =>
+                const NoTransitionPage(child: SettingsPage()),
           ),
 
           GoRoute(

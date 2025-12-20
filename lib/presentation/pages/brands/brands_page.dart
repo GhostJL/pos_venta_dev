@@ -3,11 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:posventa/domain/entities/brand.dart';
 import 'package:go_router/go_router.dart';
 import 'package:posventa/presentation/providers/brand_providers.dart';
-import 'package:posventa/presentation/widgets/common/cards/card_base_module_widget.dart';
 import 'package:posventa/core/constants/permission_constants.dart';
 import 'package:posventa/presentation/widgets/common/confirm_delete_dialog.dart';
 import 'package:posventa/presentation/providers/permission_provider.dart';
-import 'package:posventa/presentation/widgets/common/async_value_handler.dart';
+import 'package:posventa/presentation/widgets/common/actions/catalog_module_actions_sheet.dart';
+import 'package:posventa/presentation/widgets/common/pages/generic_module_list_page.dart';
 import 'package:posventa/presentation/mixins/page_lifecycle_mixin.dart';
 
 class BrandsPage extends ConsumerStatefulWidget {
@@ -45,60 +45,169 @@ class _BrandsPageState extends ConsumerState<BrandsPage>
       hasPermissionProvider(PermissionConstants.catalogManage),
     );
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Marcas'),
-        actions: [
-          if (hasManagePermission)
-            IconButton(
-              onPressed: () => _navigateToForm(),
-              icon: const Icon(Icons.add),
-              tooltip: 'Añadir Marca',
-            ),
-        ],
+    return GenericModuleListPage<Brand>(
+      title: 'Marcas',
+      items: brandList.asData?.value ?? [],
+      isLoading: brandList.isLoading,
+      emptyIcon: Icons.label_off_rounded,
+      emptyMessage: 'No se encontraron marcas',
+      addButtonLabel: 'Añadir Marca',
+      onAddPressed: hasManagePermission ? () => _navigateToForm() : null,
+      filterPlaceholder: 'Buscar marcas...',
+      filterCallback: (brand, query) =>
+          brand.name.toLowerCase().contains(query.toLowerCase()),
+      itemBuilder: (context, brand) {
+        return _BrandCard(
+          brand: brand,
+          onEdit: () => _navigateToForm(brand),
+          onDelete: () => _confirmDelete(context, ref, brand),
+        );
+      },
+    );
+  }
+}
+
+class _BrandCard extends StatelessWidget {
+  final Brand brand;
+  final VoidCallback onEdit;
+  final VoidCallback onDelete;
+
+  const _BrandCard({
+    required this.brand,
+    required this.onEdit,
+    required this.onDelete,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    return Card(
+      elevation: 0,
+      color: colorScheme.surfaceContainerLowest,
+      clipBehavior: Clip.antiAlias,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(color: colorScheme.outlineVariant.withOpacity(0.6)),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(24.0),
-        child: AsyncValueHandler<List<Brand>>(
-          value: brandList,
-          data: (brands) {
-            if (brands.isEmpty) {
-              return Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      Icons.build,
-                      size: 64,
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+      child: InkWell(
+        onTap: onEdit,
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    width: 48,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      color: brand.isActive
+                          ? colorScheme.primaryContainer.withOpacity(0.4)
+                          : colorScheme.surfaceContainerHigh,
+                      borderRadius: BorderRadius.circular(12),
                     ),
-                    const SizedBox(height: 12),
-                    Text(
-                      'No se encontraron marcas',
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
+                    child: Icon(
+                      Icons.label_rounded,
+                      color: brand.isActive
+                          ? colorScheme.onPrimaryContainer
+                          : colorScheme.onSurfaceVariant,
+                      size: 24,
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                brand.name,
+                                style: theme.textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  color: brand.isActive
+                                      ? colorScheme.onSurface
+                                      : colorScheme.onSurface.withOpacity(0.6),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 6,
+                            vertical: 2,
+                          ),
+                          decoration: BoxDecoration(
+                            color: colorScheme.surfaceContainerHigh,
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text(
+                            brand.code,
+                            style: theme.textTheme.labelSmall?.copyWith(
+                              color: colorScheme.onSurfaceVariant,
+                              fontFamily: 'Monospace',
+                              letterSpacing: 0.5,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.more_vert_rounded),
+                    onPressed: () {
+                      showModalBottomSheet(
+                        context: context,
+                        builder: (context) => CatalogModuleActionsSheet(
+                          icon: Icons.label_rounded,
+                          title: brand.name,
+                          onEdit: () {
+                            Navigator.pop(context);
+                            onEdit();
+                          },
+                          onDelete: () {
+                            Navigator.pop(context);
+                            onDelete();
+                          },
+                        ),
+                      );
+                    },
+                    visualDensity: VisualDensity.compact,
+                    color: colorScheme.onSurfaceVariant,
+                  ),
+                ],
+              ),
+
+              if (!brand.isActive) ...[
+                const SizedBox(height: 12),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(vertical: 4),
+                  decoration: BoxDecoration(
+                    color: colorScheme.errorContainer.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Center(
+                    child: Text(
+                      'Marca Inactiva',
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: colorScheme.error,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
-                  ],
+                  ),
                 ),
-              );
-            }
-            return ListView.separated(
-              itemCount: brands.length,
-              separatorBuilder: (_, __) => const SizedBox(height: 12),
-              itemBuilder: (context, index) {
-                final brand = brands[index];
-
-                return CardBaseModuleWidget(
-                  icon: Icons.label_rounded,
-                  title: brand.name,
-                  onEdit: () => _navigateToForm(brand),
-                  onDelete: () => _confirmDelete(context, ref, brand),
-                  isActive: brand.isActive,
-                );
-              },
-            );
-          },
+              ],
+            ],
+          ),
         ),
       ),
     );
