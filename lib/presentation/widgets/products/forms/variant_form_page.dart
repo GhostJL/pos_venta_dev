@@ -195,6 +195,10 @@ class _VariantFormPageState extends ConsumerState<VariantFormPage> {
                       nameController: _nameController,
                       quantityController: _quantityController,
                       conversionController: _conversionController,
+                      imageFile: ref.watch(provider.select((s) => s.imageFile)),
+                      photoUrl: ref.watch(provider.select((s) => s.photoUrl)),
+                      onImageSelected: ref.read(provider.notifier).pickImage,
+                      onRemoveImage: ref.read(provider.notifier).removeImage,
                     ),
                   ),
 

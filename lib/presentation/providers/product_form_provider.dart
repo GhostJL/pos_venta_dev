@@ -1,3 +1,6 @@
+import 'dart:io';
+import 'package:path/path.dart' as path;
+import 'package:path_provider/path_provider.dart';
 import 'package:posventa/domain/entities/product.dart';
 import 'package:posventa/domain/entities/product_tax.dart';
 import 'package:posventa/domain/entities/product_variant.dart';
@@ -30,6 +33,8 @@ class ProductFormState {
   final bool isLoading;
   final String? error;
   final bool isSuccess;
+  final File? imageFile;
+  final String? photoUrl;
 
   ProductFormState({
     this.initialProduct,
@@ -52,6 +57,8 @@ class ProductFormState {
     this.isLoading = false,
     this.error,
     this.isSuccess = false,
+    this.imageFile,
+    this.photoUrl,
   });
 
   ProductFormState copyWith({
@@ -75,6 +82,10 @@ class ProductFormState {
     bool? isLoading,
     String? error,
     bool? isSuccess,
+    File? imageFile,
+    bool clearImageFile = false,
+    String? photoUrl,
+    bool clearPhotoUrl = false,
   }) {
     return ProductFormState(
       initialProduct: initialProduct ?? this.initialProduct,
@@ -97,6 +108,8 @@ class ProductFormState {
       isLoading: isLoading ?? this.isLoading,
       error: error,
       isSuccess: isSuccess ?? this.isSuccess,
+      imageFile: clearImageFile ? null : (imageFile ?? this.imageFile),
+      photoUrl: clearPhotoUrl ? null : (photoUrl ?? this.photoUrl),
     );
   }
 }
@@ -127,6 +140,7 @@ class ProductFormNotifier extends _$ProductFormNotifier {
             ((product.variants?.isNotEmpty ?? false) &&
                 product.variants!.first.variantName != 'Estándar'),
         usesTaxes: (product.productTaxes?.isNotEmpty ?? false),
+        photoUrl: product.photoUrl,
       );
 
       // Si tenemos ID, intentamos cargar los datos más frescos en el siguiente frame
@@ -150,6 +164,7 @@ class ProductFormNotifier extends _$ProductFormNotifier {
         state = state.copyWith(
           initialProduct: freshProduct,
           variants: List.from(freshProduct.variants ?? []),
+          photoUrl: freshProduct.photoUrl,
           // Actualizamos otros campos si es necesario
         );
       }
@@ -180,6 +195,14 @@ class ProductFormNotifier extends _$ProductFormNotifier {
       state = state.copyWith(selectedTaxes: value);
   void setVariants(List<ProductVariant> value) =>
       state = state.copyWith(variants: value);
+
+  void pickImage(File file) {
+    state = state.copyWith(imageFile: file, photoUrl: null);
+  }
+
+  void removeImage() {
+    state = state.copyWith(clearImageFile: true, clearPhotoUrl: true);
+  }
 
   void addVariant(ProductVariant variant) {
     state = state.copyWith(variants: [...state.variants, variant]);
@@ -336,6 +359,24 @@ class ProductFormNotifier extends _$ProductFormNotifier {
         }
       }
 
+      // Handle Image Saving
+      String? savedPhotoUrl = state.photoUrl;
+      if (state.imageFile != null) {
+        try {
+          final appDir = await getApplicationDocumentsDirectory();
+          final fileName =
+              '${DateTime.now().millisecondsSinceEpoch}_${path.basename(state.imageFile!.path)}';
+          final savedImage = await state.imageFile!.copy(
+            '${appDir.path}/$fileName',
+          );
+          savedPhotoUrl = savedImage.path;
+        } catch (e) {
+          // If image save fails, log it but don't stop product save?
+          // For now, allow it to fail silently or we could show error.
+          // Choosing to proceed.
+        }
+      }
+
       final newProduct = Product(
         id: state.initialProduct?.id,
         name: finalName,
@@ -351,6 +392,7 @@ class ProductFormNotifier extends _$ProductFormNotifier {
         variants: state.variants,
         isActive: state.isActive,
         hasExpiration: state.hasExpiration,
+        photoUrl: savedPhotoUrl,
       );
 
       Product savedProduct;
@@ -379,6 +421,8 @@ class ProductFormNotifier extends _$ProductFormNotifier {
         barcode: savedProduct.barcode,
         description: savedProduct.description,
         variants: savedProduct.variants ?? [],
+        photoUrl: savedProduct.photoUrl,
+        clearImageFile: true,
       );
 
       return true;

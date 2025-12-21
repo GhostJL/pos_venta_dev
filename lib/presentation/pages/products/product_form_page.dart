@@ -191,8 +191,10 @@ class ProductFormPageState extends ConsumerState<ProductFormPage> {
                     barcodeController: _barcodeController,
                     descriptionController: _descriptionController,
                     onScanBarcode: _openBarcodeScanner,
-                    showBarcode: false,
-                    // REMOVED: onNameChanged etc - We sync on submit now
+                    imageFile: ref.watch(provider.select((s) => s.imageFile)),
+                    photoUrl: ref.watch(provider.select((s) => s.photoUrl)),
+                    onImageSelected: ref.read(provider.notifier).pickImage,
+                    onRemoveImage: ref.read(provider.notifier).removeImage,
                   ),
                   const SizedBox(height: 16),
                   Consumer(

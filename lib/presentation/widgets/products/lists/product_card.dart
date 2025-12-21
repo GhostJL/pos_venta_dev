@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:posventa/domain/entities/product.dart';
 
@@ -186,14 +187,43 @@ class ProductCard extends StatelessWidget {
   }
 
   Widget _buildLeading(ThemeData theme, bool isActive) {
+    if (product.photoUrl != null && product.photoUrl!.isNotEmpty) {
+      if (product.photoUrl!.startsWith('http')) {
+        return ClipRRect(
+          borderRadius: BorderRadius.circular(12),
+          child: Image.network(
+            product.photoUrl!,
+            width: 48,
+            height: 48,
+            fit: BoxFit.cover,
+            errorBuilder: (_, __, ___) => _buildPlaceholder(theme, isActive),
+          ),
+        );
+      } else {
+        return ClipRRect(
+          borderRadius: BorderRadius.circular(12),
+          child: Image.file(
+            File(product.photoUrl!),
+            width: 48,
+            height: 48,
+            fit: BoxFit.cover,
+            errorBuilder: (_, __, ___) => _buildPlaceholder(theme, isActive),
+          ),
+        );
+      }
+    }
+    return _buildPlaceholder(theme, isActive);
+  }
+
+  Widget _buildPlaceholder(ThemeData theme, bool isActive) {
     return Container(
-      width: 48, // Slightly larger
+      width: 48,
       height: 48,
       decoration: BoxDecoration(
         color: isActive
             ? theme.colorScheme.primaryContainer
             : theme.colorScheme.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(12), // Softer corners
+        borderRadius: BorderRadius.circular(12),
       ),
       child: Center(
         child: Text(

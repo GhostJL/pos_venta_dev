@@ -23,6 +23,7 @@ class ProductVariant extends Equatable {
   final double conversionFactor;
   final int? unitId;
   final bool isSoldByWeight;
+  final String? photoUrl;
 
   const ProductVariant({
     this.id,
@@ -43,6 +44,7 @@ class ProductVariant extends Equatable {
     this.conversionFactor = 1.0,
     this.unitId,
     this.isSoldByWeight = false,
+    this.photoUrl,
   });
 
   double get price => priceCents / 100.0;
@@ -70,6 +72,7 @@ class ProductVariant extends Equatable {
     double? conversionFactor,
     int? unitId,
     bool? isSoldByWeight,
+    String? photoUrl,
   }) {
     return ProductVariant(
       id: id ?? this.id,
@@ -90,6 +93,7 @@ class ProductVariant extends Equatable {
       conversionFactor: conversionFactor ?? this.conversionFactor,
       unitId: unitId ?? this.unitId,
       isSoldByWeight: isSoldByWeight ?? this.isSoldByWeight,
+      photoUrl: photoUrl ?? this.photoUrl,
     );
   }
 
@@ -112,6 +116,8 @@ class ProductVariant extends Equatable {
     stockMax,
     conversionFactor,
     unitId,
+    unitId,
     isSoldByWeight,
+    photoUrl,
   ];
 }

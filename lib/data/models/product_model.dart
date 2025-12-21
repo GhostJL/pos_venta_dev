@@ -19,6 +19,7 @@ class ProductModel extends Product {
     super.productTaxes,
     super.variants,
     super.stock,
+    super.photoUrl,
   });
 
   factory ProductModel.fromEntity(Product product) {
@@ -40,6 +41,7 @@ class ProductModel extends Product {
       productTaxes: product.productTaxes,
       variants: product.variants,
       stock: product.stock,
+      photoUrl: product.photoUrl,
     );
   }
 
@@ -61,6 +63,7 @@ class ProductModel extends Product {
       isActive: map['is_active'] == 1,
       hasExpiration: map['has_expiration'] == 1,
       stock: map['stock'] != null ? (map['stock'] as num).toInt() : null,
+      photoUrl: map['photo_url'],
     );
   }
 
@@ -79,6 +82,7 @@ class ProductModel extends Product {
       'is_sold_by_weight': isSoldByWeight ? 1 : 0,
       'is_active': isActive ? 1 : 0,
       'has_expiration': hasExpiration ? 1 : 0,
+      'photo_url': photoUrl,
     };
   }
 }

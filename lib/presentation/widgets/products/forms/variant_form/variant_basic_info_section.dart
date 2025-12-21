@@ -1,7 +1,10 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:posventa/presentation/providers/variant_form_provider.dart';
 import 'package:posventa/domain/entities/product_variant.dart';
+import 'package:posventa/presentation/widgets/shared/image_picker_widget.dart';
 
 class VariantBasicInfoSection extends ConsumerWidget {
   final ProductVariant? variant;
@@ -10,6 +13,12 @@ class VariantBasicInfoSection extends ConsumerWidget {
   final TextEditingController quantityController;
   final TextEditingController conversionController;
 
+  // Image handling
+  final File? imageFile;
+  final String? photoUrl;
+  final Function(File)? onImageSelected;
+  final VoidCallback? onRemoveImage;
+
   const VariantBasicInfoSection({
     super.key,
     this.variant,
@@ -17,6 +26,10 @@ class VariantBasicInfoSection extends ConsumerWidget {
     required this.nameController,
     required this.quantityController,
     required this.conversionController,
+    this.imageFile,
+    this.photoUrl,
+    this.onImageSelected,
+    this.onRemoveImage,
   });
 
   @override
@@ -45,6 +58,18 @@ class VariantBasicInfoSection extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        if (onImageSelected != null && onRemoveImage != null)
+          Center(
+            child: Padding(
+              padding: const EdgeInsets.only(bottom: 24.0),
+              child: ImagePickerWidget(
+                imageFile: imageFile,
+                imageUrl: photoUrl,
+                onImageSelected: onImageSelected!,
+                onRemoveImage: onRemoveImage!,
+              ),
+            ),
+          ),
         // --- SECCIÓN 1: VISIBILIDAD ---
         _buildSectionHeader(
           context,

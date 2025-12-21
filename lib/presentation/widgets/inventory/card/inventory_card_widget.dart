@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -61,7 +62,7 @@ class InventoryCardWidget extends ConsumerWidget {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Icon / Image Placeholder
+                // Icon / Image
                 Container(
                   width: 52,
                   height: 52,
@@ -69,12 +70,36 @@ class InventoryCardWidget extends ConsumerWidget {
                     color: Theme.of(context).colorScheme.surfaceContainerHighest
                         .withValues(alpha: 0.5),
                     borderRadius: BorderRadius.circular(16),
+                    image:
+                        (variant.photoUrl ?? product.photoUrl) != null &&
+                            (variant.photoUrl ?? product.photoUrl)!.isNotEmpty
+                        ? DecorationImage(
+                            image:
+                                (variant.photoUrl ?? product.photoUrl)!
+                                    .startsWith('http')
+                                ? NetworkImage(
+                                    (variant.photoUrl ?? product.photoUrl)!,
+                                  )
+                                : FileImage(
+                                        File(
+                                          (variant.photoUrl ??
+                                              product.photoUrl)!,
+                                        ),
+                                      )
+                                      as ImageProvider,
+                            fit: BoxFit.cover,
+                          )
+                        : null,
                   ),
-                  child: Icon(
-                    Icons.inventory_2_outlined,
-                    color: Theme.of(context).colorScheme.primary,
-                    size: 24,
-                  ),
+                  child:
+                      (variant.photoUrl ?? product.photoUrl) == null ||
+                          (variant.photoUrl ?? product.photoUrl)!.isEmpty
+                      ? Icon(
+                          Icons.inventory_2_outlined,
+                          color: Theme.of(context).colorScheme.primary,
+                          size: 24,
+                        )
+                      : null,
                 ),
                 const SizedBox(width: 16),
 

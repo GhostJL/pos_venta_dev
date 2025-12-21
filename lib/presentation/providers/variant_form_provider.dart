@@ -1,7 +1,11 @@
+import 'dart:io';
+
 import 'package:equatable/equatable.dart';
-import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:path/path.dart' as path;
+import 'package:path_provider/path_provider.dart';
 import 'package:posventa/domain/entities/product_variant.dart';
 import 'package:posventa/presentation/providers/providers.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'variant_form_provider.g.dart';
 
@@ -23,6 +27,8 @@ class VariantFormState extends Equatable {
   final String stockMax;
   final int? unitId;
   final bool isSoldByWeight;
+  final File? imageFile;
+  final String? photoUrl;
 
   const VariantFormState({
     required this.name,
@@ -41,6 +47,8 @@ class VariantFormState extends Equatable {
     this.stockMax = '',
     this.unitId,
     this.isSoldByWeight = false,
+    this.imageFile,
+    this.photoUrl,
   });
 
   factory VariantFormState.initial(
@@ -70,6 +78,7 @@ class VariantFormState extends Equatable {
       stockMax: variant?.stockMax?.toString() ?? '',
       unitId: variant?.unitId,
       isSoldByWeight: variant?.isSoldByWeight ?? false,
+      photoUrl: variant?.photoUrl,
     );
   }
 
@@ -90,6 +99,8 @@ class VariantFormState extends Equatable {
     String? stockMax,
     int? unitId,
     bool? isSoldByWeight,
+    File? imageFile,
+    String? photoUrl,
   }) {
     return VariantFormState(
       name: name ?? this.name,
@@ -108,6 +119,8 @@ class VariantFormState extends Equatable {
       stockMax: stockMax ?? this.stockMax,
       unitId: unitId ?? this.unitId,
       isSoldByWeight: isSoldByWeight ?? this.isSoldByWeight,
+      imageFile: imageFile ?? this.imageFile,
+      photoUrl: photoUrl ?? this.photoUrl,
     );
   }
 
@@ -132,6 +145,10 @@ class VariantFormState extends Equatable {
     int? unitId,
     bool clearUnitId = false,
     bool? isSoldByWeight,
+    File? imageFile,
+    bool clearImageFile = false,
+    String? photoUrl,
+    bool clearPhotoUrl = false,
   }) {
     return VariantFormState(
       name: name ?? this.name,
@@ -154,6 +171,8 @@ class VariantFormState extends Equatable {
       stockMax: stockMax ?? this.stockMax,
       unitId: clearUnitId ? null : (unitId ?? this.unitId),
       isSoldByWeight: isSoldByWeight ?? this.isSoldByWeight,
+      imageFile: clearImageFile ? null : (imageFile ?? this.imageFile),
+      photoUrl: clearPhotoUrl ? null : (photoUrl ?? this.photoUrl),
     );
   }
 
@@ -175,6 +194,8 @@ class VariantFormState extends Equatable {
     stockMax,
     unitId,
     isSoldByWeight,
+    imageFile,
+    photoUrl,
   ];
 }
 
@@ -249,6 +270,14 @@ class VariantForm extends _$VariantForm {
 
   void updateIsSoldByWeight(bool value) {
     state = state.copyWithNullable(isSoldByWeight: value);
+  }
+
+  void pickImage(File file) {
+    state = state.copyWithNullable(imageFile: file, clearPhotoUrl: true);
+  }
+
+  void removeImage() {
+    state = state.copyWithNullable(clearImageFile: true, clearPhotoUrl: true);
   }
 
   Future<bool> validateBarcode(List<String>? existingBarcodes) async {
@@ -326,6 +355,22 @@ class VariantForm extends _$VariantForm {
       return null;
     }
 
+    // Handle Image Saving
+    String? savedPhotoUrl = state.photoUrl;
+    if (state.imageFile != null) {
+      try {
+        final appDir = await getApplicationDocumentsDirectory();
+        final fileName =
+            'variant_${DateTime.now().millisecondsSinceEpoch}_${path.basename(state.imageFile!.path)}';
+        final savedImage = await state.imageFile!.copy(
+          '${appDir.path}/$fileName',
+        );
+        savedPhotoUrl = savedImage.path;
+      } catch (e) {
+        // Log error but proceed
+      }
+    }
+
     try {
       final newVariant = ProductVariant(
         id: variant?.id,
@@ -355,6 +400,7 @@ class VariantForm extends _$VariantForm {
         stockMax: double.tryParse(state.stockMax),
         unitId: state.unitId,
         isSoldByWeight: state.isSoldByWeight,
+        photoUrl: savedPhotoUrl,
       );
 
       // IMMEDIATE SAVING LOGIC

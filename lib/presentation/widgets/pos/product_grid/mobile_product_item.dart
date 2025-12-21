@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:posventa/domain/entities/product.dart';
@@ -75,7 +76,7 @@ class MobileProductItem extends ConsumerWidget {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Image Placeholder
+              // Image Display
               Container(
                 width: 72,
                 height: 72,
@@ -84,14 +85,40 @@ class MobileProductItem extends ConsumerWidget {
                     alpha: 0.5,
                   ),
                   borderRadius: BorderRadius.circular(12),
+                  image:
+                      (variant?.photoUrl ?? product.photoUrl) != null &&
+                          (variant?.photoUrl ?? product.photoUrl)!.isNotEmpty
+                      ? DecorationImage(
+                          image:
+                              (variant?.photoUrl ?? product.photoUrl)!
+                                  .startsWith('http')
+                              ? NetworkImage(
+                                  (variant?.photoUrl ?? product.photoUrl)!,
+                                )
+                              : FileImage(
+                                      File(
+                                        (variant?.photoUrl ??
+                                            product.photoUrl)!,
+                                      ),
+                                    )
+                                    as ImageProvider,
+                          fit: BoxFit.cover,
+                        )
+                      : null,
                 ),
-                child: Center(
-                  child: Icon(
-                    Icons.image_outlined,
-                    size: 24,
-                    color: colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
-                  ),
-                ),
+                child:
+                    (variant?.photoUrl ?? product.photoUrl) == null ||
+                        (variant?.photoUrl ?? product.photoUrl)!.isEmpty
+                    ? Center(
+                        child: Icon(
+                          Icons.image_outlined,
+                          size: 24,
+                          color: colorScheme.onSurfaceVariant.withValues(
+                            alpha: 0.5,
+                          ),
+                        ),
+                      )
+                    : null,
               ),
 
               const SizedBox(width: 16),

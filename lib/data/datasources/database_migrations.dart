@@ -61,6 +61,32 @@ class DatabaseMigrations {
     if (oldVersion < 33 && newVersion >= 33) {
       await _migrateToVersion33(db);
     }
+    // Migration from version 33 to 34: Add photo_url to products and product_variants
+    if (oldVersion < 34 && newVersion >= 34) {
+      await _migrateToVersion34(db);
+    }
+  }
+
+  static Future<void> _migrateToVersion34(Database db) async {
+    // Add photo_url to products
+    try {
+      await db.execute('''
+        ALTER TABLE ${DatabaseConstants.tableProducts}
+        ADD COLUMN photo_url TEXT;
+      ''');
+    } catch (e) {
+      // Column might already exist
+    }
+
+    // Add photo_url to product_variants
+    try {
+      await db.execute('''
+        ALTER TABLE ${DatabaseConstants.tableProductVariants}
+        ADD COLUMN photo_url TEXT;
+      ''');
+    } catch (e) {
+      // Column might already exist
+    }
   }
 
   static Future<void> _migrateToVersion32(Database db) async {

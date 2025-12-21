@@ -20,6 +20,7 @@ class ProductVariantModel extends ProductVariant {
     super.conversionFactor,
     super.unitId,
     super.isSoldByWeight,
+    super.photoUrl,
   });
 
   factory ProductVariantModel.fromEntity(ProductVariant variant) {
@@ -42,6 +43,7 @@ class ProductVariantModel extends ProductVariant {
       conversionFactor: variant.conversionFactor,
       unitId: variant.unitId,
       isSoldByWeight: variant.isSoldByWeight,
+      photoUrl: variant.photoUrl,
     );
   }
 
@@ -74,6 +76,7 @@ class ProductVariantModel extends ProductVariant {
           : 1.0,
       unitId: map['unit_id'],
       isSoldByWeight: map['is_sold_by_weight'] == 1,
+      photoUrl: map['photo_url'],
     );
   }
 
@@ -96,6 +99,7 @@ class ProductVariantModel extends ProductVariant {
       'conversion_factor': conversionFactor,
       'unit_id': unitId,
       'is_sold_by_weight': isSoldByWeight ? 1 : 0,
+      'photo_url': photoUrl,
     };
   }
 }

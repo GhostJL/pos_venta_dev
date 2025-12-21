@@ -1,4 +1,7 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:posventa/presentation/widgets/shared/image_picker_widget.dart';
 
 /// Widget for basic product information section
 class ProductBasicInfoSection extends StatelessWidget {
@@ -15,6 +18,12 @@ class ProductBasicInfoSection extends StatelessWidget {
   final ValueChanged<String>? onBarcodeChanged;
   final ValueChanged<String>? onDescriptionChanged;
 
+  // Image handling
+  final File? imageFile;
+  final String? photoUrl;
+  final Function(File)? onImageSelected;
+  final VoidCallback? onRemoveImage;
+
   const ProductBasicInfoSection({
     super.key,
     required this.nameController,
@@ -27,6 +36,10 @@ class ProductBasicInfoSection extends StatelessWidget {
     this.onCodeChanged,
     this.onBarcodeChanged,
     this.onDescriptionChanged,
+    this.imageFile,
+    this.photoUrl,
+    this.onImageSelected,
+    this.onRemoveImage,
   });
 
   @override
@@ -34,6 +47,18 @@ class ProductBasicInfoSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        if (onImageSelected != null && onRemoveImage != null)
+          Center(
+            child: Padding(
+              padding: const EdgeInsets.only(bottom: 24.0),
+              child: ImagePickerWidget(
+                imageFile: imageFile,
+                imageUrl: photoUrl,
+                onImageSelected: onImageSelected!,
+                onRemoveImage: onRemoveImage!,
+              ),
+            ),
+          ),
         TextFormField(
           controller: nameController,
           textInputAction: TextInputAction.next,

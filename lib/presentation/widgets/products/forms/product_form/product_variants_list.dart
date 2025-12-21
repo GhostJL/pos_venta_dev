@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:posventa/domain/entities/product.dart';
@@ -144,7 +145,7 @@ class _VariantCard extends ConsumerWidget {
           padding: const EdgeInsets.all(16.0),
           child: Row(
             children: [
-              // Identificador Visual (Círculo pequeño con inicial)
+              // Identificador Visual (Círculo pequeño con inicial o imagen)
               Container(
                 width: 44,
                 height: 44,
@@ -155,16 +156,30 @@ class _VariantCard extends ConsumerWidget {
                               : theme.colorScheme.tertiary)
                           .withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
+                  image:
+                      (variant.photoUrl != null && variant.photoUrl!.isNotEmpty)
+                      ? DecorationImage(
+                          image: variant.photoUrl!.startsWith('http')
+                              ? NetworkImage(variant.photoUrl!)
+                              : FileImage(File(variant.photoUrl!))
+                                    as ImageProvider,
+                          fit: BoxFit.cover,
+                        )
+                      : null,
                 ),
-                child: Center(
-                  child: Icon(
-                    isSales ? Icons.sell_outlined : Icons.inventory_2_outlined,
-                    size: 20,
-                    color: isSales
-                        ? theme.colorScheme.primary
-                        : theme.colorScheme.tertiary,
-                  ),
-                ),
+                child: (variant.photoUrl == null || variant.photoUrl!.isEmpty)
+                    ? Center(
+                        child: Icon(
+                          isSales
+                              ? Icons.sell_outlined
+                              : Icons.inventory_2_outlined,
+                          size: 20,
+                          color: isSales
+                              ? theme.colorScheme.primary
+                              : theme.colorScheme.tertiary,
+                        ),
+                      )
+                    : null,
               ),
               const SizedBox(width: 12),
 

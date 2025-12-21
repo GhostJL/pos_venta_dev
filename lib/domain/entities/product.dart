@@ -22,6 +22,7 @@ class Product extends Equatable {
   final List<ProductTax>? productTaxes;
   final List<ProductVariant>? variants;
   final int? stock;
+  final String? photoUrl;
 
   const Product({
     this.id,
@@ -42,6 +43,7 @@ class Product extends Equatable {
     this.productTaxes,
     this.variants,
     this.stock,
+    this.photoUrl,
   });
 
   // Helper getters to maintain compatibility or ease of use
@@ -111,6 +113,7 @@ class Product extends Equatable {
     List<ProductTax>? productTaxes,
     List<ProductVariant>? variants,
     int? stock,
+    String? photoUrl,
   }) {
     return Product(
       id: id ?? this.id,
@@ -130,6 +133,7 @@ class Product extends Equatable {
       productTaxes: productTaxes ?? this.productTaxes,
       variants: variants ?? this.variants,
       stock: stock ?? this.stock,
+      photoUrl: photoUrl ?? this.photoUrl,
     );
   }
 
