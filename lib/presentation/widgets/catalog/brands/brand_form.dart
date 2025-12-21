@@ -78,6 +78,7 @@ class BrandFormState extends ConsumerState<BrandForm> {
       children: [
         TextFormField(
           initialValue: _name,
+          textInputAction: TextInputAction.next,
           decoration: const InputDecoration(
             labelText: 'Nombre de la Marca',
             prefixIcon: Icon(Icons.branding_watermark_rounded),
@@ -96,6 +97,8 @@ class BrandFormState extends ConsumerState<BrandForm> {
         const SizedBox(height: UIConstants.spacingLarge),
         TextFormField(
           initialValue: _code,
+          textInputAction: TextInputAction.done,
+          onFieldSubmitted: (_) => _submit(),
           decoration: const InputDecoration(
             labelText: 'Código de la Marca',
             prefixIcon: Icon(Icons.qr_code_rounded),

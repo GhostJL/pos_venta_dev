@@ -20,6 +20,12 @@ class MoneyInputField extends StatelessWidget {
   /// Texto del hint (por defecto: "0.00")
   final String hintText;
 
+  /// Acción del teclado
+  final TextInputAction? textInputAction;
+
+  /// Callback al enviar
+  final ValueChanged<String>? onSubmitted;
+
   const MoneyInputField({
     super.key,
     required this.controller,
@@ -27,6 +33,8 @@ class MoneyInputField extends StatelessWidget {
     this.helpText,
     this.autofocus = false,
     this.hintText = '0.00',
+    this.textInputAction,
+    this.onSubmitted,
   });
 
   @override
@@ -44,6 +52,8 @@ class MoneyInputField extends StatelessWidget {
         TextField(
           controller: controller,
           keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          textInputAction: textInputAction,
+          onSubmitted: onSubmitted,
           style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
           decoration: InputDecoration(
             prefixText: '\$ ',

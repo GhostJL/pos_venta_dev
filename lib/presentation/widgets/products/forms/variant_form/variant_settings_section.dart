@@ -36,6 +36,7 @@ class VariantSettingsSection extends ConsumerWidget {
             Expanded(
               child: TextFormField(
                 controller: stockMinController,
+                textInputAction: TextInputAction.next,
                 decoration: InputDecoration(
                   labelText: 'Stock Mínimo',
                   helperText: 'Alerta de resurtido',
@@ -62,6 +63,7 @@ class VariantSettingsSection extends ConsumerWidget {
             Expanded(
               child: TextFormField(
                 controller: stockMaxController,
+                textInputAction: TextInputAction.done,
                 decoration: const InputDecoration(
                   labelText: 'Stock Máximo',
                   helperText: 'Capacidad ideal',

@@ -102,6 +102,7 @@ class SupplierFormState extends ConsumerState<SupplierForm> {
         _buildSection(theme, 'Información General', Icons.business_rounded, [
           TextFormField(
             initialValue: _name,
+            textInputAction: TextInputAction.next,
             decoration: const InputDecoration(
               labelText: 'Nombre del Proveedor',
               prefixIcon: Icon(Icons.business_rounded),
@@ -117,6 +118,7 @@ class SupplierFormState extends ConsumerState<SupplierForm> {
           const SizedBox(height: UIConstants.spacingMedium),
           TextFormField(
             initialValue: _code,
+            textInputAction: TextInputAction.next,
             decoration: const InputDecoration(
               labelText: 'Código del Proveedor',
               prefixIcon: Icon(Icons.qr_code_rounded),
@@ -134,6 +136,7 @@ class SupplierFormState extends ConsumerState<SupplierForm> {
         _buildSection(theme, 'Contacto', Icons.contact_phone_outlined, [
           TextFormField(
             initialValue: _contactName,
+            textInputAction: TextInputAction.next,
             decoration: const InputDecoration(
               labelText: 'Nombre de Contacto',
               prefixIcon: Icon(Icons.person_outline_rounded),
@@ -143,6 +146,7 @@ class SupplierFormState extends ConsumerState<SupplierForm> {
           const SizedBox(height: UIConstants.spacingMedium),
           TextFormField(
             initialValue: _phone,
+            textInputAction: TextInputAction.next,
             decoration: const InputDecoration(
               labelText: 'Teléfono',
               prefixIcon: Icon(Icons.phone_rounded),
@@ -153,6 +157,7 @@ class SupplierFormState extends ConsumerState<SupplierForm> {
           const SizedBox(height: UIConstants.spacingMedium),
           TextFormField(
             initialValue: _email,
+            textInputAction: TextInputAction.next,
             decoration: const InputDecoration(
               labelText: 'Correo Electrónico',
               prefixIcon: Icon(Icons.email_outlined),
@@ -170,6 +175,8 @@ class SupplierFormState extends ConsumerState<SupplierForm> {
           const SizedBox(height: UIConstants.spacingMedium),
           TextFormField(
             initialValue: _address,
+            textInputAction: TextInputAction.done,
+            onFieldSubmitted: (_) => _submit(),
             decoration: const InputDecoration(
               labelText: 'Dirección',
               prefixIcon: Icon(Icons.location_on_outlined),

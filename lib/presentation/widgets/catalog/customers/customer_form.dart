@@ -133,6 +133,7 @@ class CustomerFormState extends ConsumerState<CustomerForm> {
                 if (isMobile) ...[
                   TextFormField(
                     initialValue: _firstName,
+                    textInputAction: TextInputAction.next,
                     decoration: const InputDecoration(
                       labelText: 'Nombre',
                       prefixIcon: Icon(Icons.person),
@@ -148,6 +149,7 @@ class CustomerFormState extends ConsumerState<CustomerForm> {
                   const SizedBox(height: UIConstants.spacingMedium),
                   TextFormField(
                     initialValue: _lastName,
+                    textInputAction: TextInputAction.next,
                     decoration: const InputDecoration(
                       labelText: 'Apellido',
                       prefixIcon: Icon(Icons.person_outline),
@@ -166,6 +168,7 @@ class CustomerFormState extends ConsumerState<CustomerForm> {
                       Expanded(
                         child: TextFormField(
                           initialValue: _firstName,
+                          textInputAction: TextInputAction.next,
                           decoration: const InputDecoration(
                             labelText: 'Nombre',
                             prefixIcon: Icon(Icons.person),
@@ -183,6 +186,7 @@ class CustomerFormState extends ConsumerState<CustomerForm> {
                       Expanded(
                         child: TextFormField(
                           initialValue: _lastName,
+                          textInputAction: TextInputAction.next,
                           decoration: const InputDecoration(
                             labelText: 'Apellido',
                             prefixIcon: Icon(Icons.person_outline),
@@ -203,6 +207,7 @@ class CustomerFormState extends ConsumerState<CustomerForm> {
               _buildSection(theme, 'Contacto', Icons.contact_mail_outlined, [
                 TextFormField(
                   initialValue: _phone,
+                  textInputAction: TextInputAction.next,
                   decoration: const InputDecoration(
                     labelText: 'Teléfono',
                     prefixIcon: Icon(Icons.phone),
@@ -213,6 +218,7 @@ class CustomerFormState extends ConsumerState<CustomerForm> {
                 const SizedBox(height: UIConstants.spacingMedium),
                 TextFormField(
                   initialValue: _email,
+                  textInputAction: TextInputAction.next,
                   decoration: const InputDecoration(
                     labelText: 'Email',
                     prefixIcon: Icon(Icons.email),
@@ -231,6 +237,7 @@ class CustomerFormState extends ConsumerState<CustomerForm> {
                 const SizedBox(height: UIConstants.spacingMedium),
                 TextFormField(
                   initialValue: _address,
+                  textInputAction: TextInputAction.next,
                   decoration: const InputDecoration(
                     labelText: 'Dirección',
                     prefixIcon: Icon(Icons.location_on),
@@ -247,6 +254,7 @@ class CustomerFormState extends ConsumerState<CustomerForm> {
                 [
                   TextFormField(
                     initialValue: _taxId,
+                    textInputAction: TextInputAction.next,
                     decoration: const InputDecoration(
                       labelText: 'RFC / Tax ID',
                       prefixIcon: Icon(Icons.badge_outlined),
@@ -256,6 +264,8 @@ class CustomerFormState extends ConsumerState<CustomerForm> {
                   const SizedBox(height: UIConstants.spacingMedium),
                   TextFormField(
                     initialValue: _businessName,
+                    textInputAction: TextInputAction.done,
+                    onFieldSubmitted: (_) => _submit(),
                     decoration: const InputDecoration(
                       labelText: 'Razón Social',
                       prefixIcon: Icon(Icons.business),

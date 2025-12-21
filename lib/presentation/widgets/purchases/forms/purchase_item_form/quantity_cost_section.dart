@@ -25,6 +25,7 @@ class QuantityCostSection extends StatelessWidget {
             Expanded(
               child: TextFormField(
                 controller: quantityController,
+                textInputAction: TextInputAction.next,
                 decoration: const InputDecoration(
                   labelText: 'Cantidad *',
                   border: OutlineInputBorder(),
@@ -51,6 +52,7 @@ class QuantityCostSection extends StatelessWidget {
             Expanded(
               child: TextFormField(
                 controller: unitCostController,
+                textInputAction: TextInputAction.done,
                 decoration: const InputDecoration(
                   labelText: 'Costo Unitario *',
                   border: OutlineInputBorder(),

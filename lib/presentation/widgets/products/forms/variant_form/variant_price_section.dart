@@ -184,6 +184,7 @@ class VariantPriceSection extends ConsumerWidget {
   }) {
     return TextFormField(
       controller: controller,
+      textInputAction: TextInputAction.next,
       decoration: InputDecoration(
         labelText: label,
         prefixText: '\$ ',

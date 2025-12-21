@@ -86,6 +86,7 @@ class VariantBasicInfoSection extends ConsumerWidget {
         ),
         TextFormField(
           controller: nameController,
+          textInputAction: TextInputAction.next,
           decoration: const InputDecoration(
             labelText: 'Nombre de la Variante',
             hintText: 'Ej: Caja con 12 pzas',
@@ -201,6 +202,7 @@ class VariantBasicInfoSection extends ConsumerWidget {
   }) {
     return TextFormField(
       controller: controller,
+      textInputAction: TextInputAction.next,
       decoration: InputDecoration(
         labelText: label,
         helperText: helper,

@@ -38,6 +38,7 @@ class VariantBarcodeSection extends ConsumerWidget {
         const SizedBox(height: 16),
         TextFormField(
           controller: barcodeController,
+          textInputAction: TextInputAction.next,
           style: const TextStyle(fontFamily: 'monospace', letterSpacing: 1.2),
           decoration: InputDecoration(
             labelText: 'Código de Barras / SKU',

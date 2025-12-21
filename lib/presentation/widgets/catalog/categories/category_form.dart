@@ -94,6 +94,7 @@ class CategoryFormState extends ConsumerState<CategoryForm> {
       children: [
         TextFormField(
           initialValue: _name,
+          textInputAction: TextInputAction.next,
           decoration: const InputDecoration(
             labelText: 'Nombre de la Categoría',
             prefixIcon: Icon(Icons.category_rounded),
@@ -112,6 +113,8 @@ class CategoryFormState extends ConsumerState<CategoryForm> {
         const SizedBox(height: UIConstants.spacingLarge),
         TextFormField(
           initialValue: _code,
+          textInputAction: TextInputAction.done,
+          onFieldSubmitted: (_) => _submit(),
           decoration: const InputDecoration(
             labelText: 'Código de la Categoría',
             prefixIcon: Icon(Icons.qr_code_rounded),

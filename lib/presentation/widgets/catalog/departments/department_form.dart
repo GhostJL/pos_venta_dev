@@ -89,6 +89,7 @@ class DepartmentFormState extends ConsumerState<DepartmentForm> {
       children: [
         TextFormField(
           initialValue: _name,
+          textInputAction: TextInputAction.next,
           decoration: const InputDecoration(
             labelText: 'Nombre del Departamento',
             prefixIcon: Icon(Icons.business_rounded),
@@ -107,6 +108,8 @@ class DepartmentFormState extends ConsumerState<DepartmentForm> {
         const SizedBox(height: UIConstants.spacingLarge),
         TextFormField(
           initialValue: _code,
+          textInputAction: TextInputAction.done,
+          onFieldSubmitted: (_) => _submit(),
           decoration: const InputDecoration(
             labelText: 'Código del Departamento',
             prefixIcon: Icon(Icons.qr_code_rounded),

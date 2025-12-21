@@ -72,6 +72,8 @@ class _CashSessionCloseFormState extends State<CashSessionCloseForm> {
           label: 'Conteo de Efectivo',
           helpText: 'Ingrese el total de efectivo contado en caja',
           autofocus: true,
+          textInputAction: TextInputAction.done,
+          onSubmitted: (_) => _handleSubmit(),
         ),
         const SizedBox(height: 24),
         if (_localErrorMessage != null) ...[

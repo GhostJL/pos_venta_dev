@@ -59,6 +59,7 @@ class _LoginFormState extends ConsumerState<LoginForm> {
           const SizedBox(height: 32),
           TextFormField(
             controller: _usernameController,
+            textInputAction: TextInputAction.next,
             decoration: const InputDecoration(
               labelText: 'Usuario',
               prefixIcon: Icon(Icons.person_outline_rounded),
@@ -73,6 +74,8 @@ class _LoginFormState extends ConsumerState<LoginForm> {
           TextFormField(
             controller: _passwordController,
             obscureText: _isPasswordObscured,
+            textInputAction: TextInputAction.done,
+            onFieldSubmitted: (_) => _login(),
             decoration: InputDecoration(
               labelText: 'Contraseña',
               prefixIcon: const Icon(Icons.lock_outline_rounded),

@@ -36,6 +36,7 @@ class ProductBasicInfoSection extends StatelessWidget {
       children: [
         TextFormField(
           controller: nameController,
+          textInputAction: TextInputAction.next,
           onChanged: onNameChanged,
           decoration: const InputDecoration(
             labelText: 'Nombre del Producto',
@@ -46,6 +47,7 @@ class ProductBasicInfoSection extends StatelessWidget {
         const SizedBox(height: 16),
         TextFormField(
           controller: codeController,
+          textInputAction: TextInputAction.next,
           onChanged: onCodeChanged,
           decoration: const InputDecoration(
             labelText: 'Código / Referencia Interna',
@@ -59,6 +61,7 @@ class ProductBasicInfoSection extends StatelessWidget {
           const SizedBox(height: 16),
           TextFormField(
             controller: barcodeController,
+            textInputAction: TextInputAction.next,
             onChanged: onBarcodeChanged,
             decoration: InputDecoration(
               labelText: 'Código de Barras Principal',
