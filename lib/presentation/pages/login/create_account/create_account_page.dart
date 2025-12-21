@@ -49,14 +49,14 @@ class _CreateAccountPageState extends ConsumerState<CreateAccountPage> {
       ),
       body: Center(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24.0),
+          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 32.0),
           child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 500),
+            constraints: const BoxConstraints(maxWidth: 600),
             child: const Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 CreateAccountHeader(),
-                SizedBox(height: 32),
+                SizedBox(height: 48),
                 CreateAccountForm(),
               ],
             ),

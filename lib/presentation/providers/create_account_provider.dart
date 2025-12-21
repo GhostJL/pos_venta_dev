@@ -1,8 +1,10 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:posventa/domain/entities/user.dart';
 import 'package:posventa/domain/entities/user_permission.dart';
+import 'package:posventa/domain/entities/warehouse.dart';
 import 'package:posventa/presentation/providers/auth_provider.dart';
 import 'package:posventa/presentation/providers/providers.dart';
+import 'package:posventa/presentation/providers/warehouse_providers.dart';
 
 class CreateAccountState {
   final bool isLoading;
@@ -40,6 +42,7 @@ class CreateAccountNotifier extends Notifier<CreateAccountState> {
     required String firstName,
     required String lastName,
     required String email,
+    required String warehouseName,
   }) async {
     state = state.copyWith(isLoading: true, error: null, isSuccess: false);
 
@@ -96,6 +99,21 @@ class CreateAccountNotifier extends Notifier<CreateAccountState> {
             ),
           );
         }
+
+        // 5. Create Default Warehouse
+        final createWarehouse = ref.read(createWarehouseProvider);
+        final newWarehouse = Warehouse(
+          name: warehouseName,
+          code: 'MAIN-001', // Default code
+          address: 'Dirección Principal', // Default placeholder
+          isMain: true,
+          isActive: true,
+        );
+
+        await createWarehouse.call(newWarehouse);
+
+        // 6. Invalidate warehouse provider to refresh the list in other screens
+        ref.invalidate(warehouseProvider);
       }
 
       state = state.copyWith(isLoading: false, isSuccess: true);

@@ -7,8 +7,6 @@ import 'package:posventa/presentation/providers/warehouse_providers.dart';
 import 'package:posventa/core/constants/permission_constants.dart';
 import 'package:posventa/presentation/providers/permission_provider.dart';
 import 'package:posventa/presentation/widgets/common/layouts/permission_denied_widget.dart';
-import 'package:posventa/domain/entities/user.dart';
-import 'package:posventa/presentation/widgets/catalog/warehouses/warehouse_form_widget.dart';
 import 'package:posventa/presentation/widgets/common/error_message_box.dart';
 import 'package:posventa/presentation/widgets/common/money_input_field.dart';
 import 'package:posventa/presentation/widgets/common/centered_form_card.dart';
@@ -72,6 +70,7 @@ class _CashSessionOpenPageState extends ConsumerState<CashSessionOpenPage> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
+            behavior: SnackBarBehavior.floating,
             duration: Duration(seconds: 1),
             content: Text('Caja abierta exitosamente'),
             backgroundColor: AppTheme.transactionSuccess,
@@ -84,11 +83,6 @@ class _CashSessionOpenPageState extends ConsumerState<CashSessionOpenPage> {
         if (mounted) {
           context.go('/');
         }
-
-        // Reset loading state
-        setState(() {
-          _isLoading = false;
-        });
       }
     } catch (e) {
       if (mounted) {
@@ -102,6 +96,17 @@ class _CashSessionOpenPageState extends ConsumerState<CashSessionOpenPage> {
 
   @override
   Widget build(BuildContext context) {
+    // Listen to warehouse provider to auto-select if there is only one
+    ref.listen(warehouseProvider, (previous, next) {
+      next.whenData((warehouses) {
+        if (warehouses.length == 1 && _selectedWarehouseId == null) {
+          setState(() {
+            _selectedWarehouseId = warehouses.first.id;
+          });
+        }
+      });
+    });
+
     final warehousesAsync = ref.watch(warehouseProvider);
     final user = ref.watch(authProvider).user;
     final hasOpenPermission = ref.watch(
@@ -126,11 +131,12 @@ class _CashSessionOpenPageState extends ConsumerState<CashSessionOpenPage> {
       appBar: AppBar(
         title: const Text('Apertura de Caja'),
         centerTitle: true,
-        automaticallyImplyLeading: false, // No permitir cerrar sin abrir caja
+        backgroundColor: Colors.transparent,
+        automaticallyImplyLeading: false,
       ),
       body: CenteredFormCard(
-        icon: Icons.account_balance_wallet,
-        title: 'Apertura de Turno',
+        icon: Icons.storefront_rounded,
+        title: 'Iniciar Jornada',
         subtitle: 'Bienvenido, ${user?.firstName ?? 'Usuario'}',
         children: [
           // Selección de sucursal
@@ -142,69 +148,61 @@ class _CashSessionOpenPageState extends ConsumerState<CashSessionOpenPage> {
           warehousesAsync.when(
             data: (warehouses) {
               if (warehouses.isEmpty) {
-                final isAdmin = user?.role == UserRole.administrador;
-                if (isAdmin) {
-                  return Column(
-                    children: [
-                      Text(
-                        'No hay sucursales registradas.',
-                        style: TextStyle(
+                return Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      children: [
+                        Icon(
+                          Icons.domain_disabled_rounded,
                           color: Theme.of(context).colorScheme.error,
+                          size: 32,
                         ),
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 8),
-                      ElevatedButton.icon(
-                        onPressed: () {
-                          showDialog(
-                            context: context,
-                            builder: (context) => WarehouseFormWidget(
-                              onSuccess: () {
-                                Navigator.of(context).pop();
-                                ref.invalidate(warehouseProvider);
-                              },
-                            ),
-                          );
-                        },
-                        icon: const Icon(Icons.add),
-                        label: const Text('Crear Sucursal'),
-                      ),
-                    ],
-                  );
-                }
-                return Text(
-                  'No hay sucursales disponibles',
-                  style: TextStyle(color: Theme.of(context).colorScheme.error),
+                        const SizedBox(height: 8),
+                        Text(
+                          'No hay sucursales registradas.\nContacte al administrador.',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.error,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 );
               }
-              // Seleccionar automáticamente si solo hay una
-              if (_selectedWarehouseId == null && warehouses.length == 1) {
-                // Use Future.microtask to avoid setState during build if needed,
-                // but since we are in build, we should not call setState directly.
-                // However, ref.listen is the better approach.
-                // We'll leave this empty here and handle it via ref.listen below or in initState.
-                // Actually, we can just set it if it's null and we are rebuilding.
-                // But we can't setState in build.
-                // So we rely on the ref.listen added in build or initState.
+
+              // If only one, show it as read-only or auto-selected
+              if (warehouses.length == 1 && _selectedWarehouseId == null) {
+                // Already handled by listener, but for build safety:
+                // We don't setState here.
               }
+
               return Container(
                 decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(12),
                   border: Border.all(
-                    color: Theme.of(context).colorScheme.outline,
+                    color: Theme.of(context).colorScheme.outlineVariant,
                   ),
-                  borderRadius: BorderRadius.circular(8),
+                  color: Theme.of(context).colorScheme.surfaceContainerLowest,
                 ),
                 child: DropdownButtonHideUnderline(
                   child: DropdownButton<int>(
                     value: _selectedWarehouseId,
                     isExpanded: true,
+                    icon: const Icon(Icons.arrow_drop_down_rounded),
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     hint: const Text('Seleccione una sucursal'),
                     items: warehouses
                         .map(
                           (warehouse) => DropdownMenuItem(
                             value: warehouse.id,
-                            child: Text(warehouse.name),
+                            child: Text(
+                              warehouse.name,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
                           ),
                         )
                         .toList(),
@@ -219,7 +217,7 @@ class _CashSessionOpenPageState extends ConsumerState<CashSessionOpenPage> {
             },
             loading: () => const Center(child: CircularProgressIndicator()),
             error: (err, stack) => Text(
-              'Error: $err',
+              'Error al cargar sucursales',
               style: TextStyle(color: Theme.of(context).colorScheme.error),
             ),
           ),
@@ -228,8 +226,8 @@ class _CashSessionOpenPageState extends ConsumerState<CashSessionOpenPage> {
           // Fondo inicial
           MoneyInputField(
             controller: _amountController,
-            label: 'Fondo Inicial de Caja',
-            helpText: 'Ingrese el monto en efectivo con el que inicia su turno',
+            label: 'Fondo Inicial',
+            helpText: 'Efectivo disponible en caja al inicio',
             autofocus: true,
           ),
           const SizedBox(height: 24),
@@ -241,26 +239,32 @@ class _CashSessionOpenPageState extends ConsumerState<CashSessionOpenPage> {
           ],
 
           // Botón de apertura
-          ElevatedButton(
-            onPressed: _isLoading ? null : _openSession,
-
-            child: _isLoading
-                ? SizedBox(
-                    width: 24,
-                    height: 16,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: Theme.of(context).colorScheme.onSurface,
+          SizedBox(
+            height: 50,
+            child: FilledButton(
+              onPressed: _isLoading ? null : _openSession,
+              style: FilledButton.styleFrom(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: _isLoading
+                  ? SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Theme.of(context).colorScheme.onPrimary,
+                      ),
+                    )
+                  : const Text(
+                      'ABRIR TURNO',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
-                  )
-                : const Text(
-                    'ABRIR CAJA',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 0.5,
-                    ),
-                  ),
+            ),
           ),
         ],
       ),

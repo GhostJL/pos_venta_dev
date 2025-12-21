@@ -182,7 +182,7 @@ class _CashSessionClosePageState extends ConsumerState<CashSessionClosePage> {
           final duration = DateTime.now().difference(openedAt);
 
           return CenteredFormCard(
-            icon: Icons.lock_clock,
+            icon: Icons.lock_clock_outlined,
             title: 'Cierre de Turno',
             children: [
               // Información de la sesión
@@ -190,7 +190,7 @@ class _CashSessionClosePageState extends ConsumerState<CashSessionClosePage> {
                 openingBalance: openingBalance,
                 duration: duration,
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 32),
 
               // Formulario de cierre
               CashSessionCloseForm(

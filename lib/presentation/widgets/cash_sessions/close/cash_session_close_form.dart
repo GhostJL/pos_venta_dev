@@ -80,19 +80,26 @@ class _CashSessionCloseFormState extends State<CashSessionCloseForm> {
         ],
         SizedBox(
           height: 50,
-          child: ElevatedButton(
+          child: FilledButton(
             onPressed: widget.isLoading ? null : _handleSubmit,
-
+            style: FilledButton.styleFrom(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
             child: widget.isLoading
                 ? SizedBox(
                     width: 20,
                     height: 20,
                     child: CircularProgressIndicator(
                       strokeWidth: 2,
-                      color: Theme.of(context).colorScheme.onSurface,
+                      color: Theme.of(context).colorScheme.onPrimary,
                     ),
                   )
-                : const Text('CERRAR CAJA'),
+                : const Text(
+                    'CERRAR TURNO',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
           ),
         ),
       ],

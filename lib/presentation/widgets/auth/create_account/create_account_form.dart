@@ -17,8 +17,10 @@ class _CreateAccountFormState extends ConsumerState<CreateAccountForm> {
   final _firstNameController = TextEditingController();
   final _lastNameController = TextEditingController();
   final _emailController = TextEditingController();
+  final _warehouseNameController = TextEditingController();
   bool _isPasswordObscured = true;
   bool _isConfirmPasswordObscured = true;
+  int _currentStep = 0;
 
   @override
   void dispose() {
@@ -28,7 +30,18 @@ class _CreateAccountFormState extends ConsumerState<CreateAccountForm> {
     _firstNameController.dispose();
     _lastNameController.dispose();
     _emailController.dispose();
+    _warehouseNameController.dispose();
     super.dispose();
+  }
+
+  void _nextStep() {
+    if (_formKey.currentState!.validate()) {
+      setState(() => _currentStep = 1);
+    }
+  }
+
+  void _prevStep() {
+    setState(() => _currentStep = 0);
   }
 
   void _submit() {
@@ -42,6 +55,7 @@ class _CreateAccountFormState extends ConsumerState<CreateAccountForm> {
           firstName: _firstNameController.text.trim(),
           lastName: _lastNameController.text.trim(),
           email: _emailController.text.trim(),
+          warehouseName: _warehouseNameController.text.trim(),
         );
   }
 
@@ -56,19 +70,97 @@ class _CreateAccountFormState extends ConsumerState<CreateAccountForm> {
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: Theme.of(context).colorScheme.onSurface.withAlpha(15),
+            color: Theme.of(context).colorScheme.shadow.withValues(alpha: 0.1),
             blurRadius: 30,
             offset: const Offset(0, 10),
           ),
         ],
+        border: Border.all(
+          color: Theme.of(
+            context,
+          ).colorScheme.outlineVariant.withValues(alpha: 0.3),
+        ),
       ),
       child: Form(
         key: _formKey,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            // Step Indicator
+            Text(
+              _currentStep == 0
+                  ? 'Información Personal (1/2)'
+                  : 'Seguridad y Sucursal (2/2)',
+              style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                color: Theme.of(context).colorScheme.primary,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 24),
+
+            // Form Fields
+            if (_currentStep == 0) _buildStep1(context) else _buildStep2(),
+
+            const SizedBox(height: 32),
+
+            // Navigation Buttons
+            Row(
+              children: [
+                if (_currentStep == 1)
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: state.isLoading ? null : _prevStep,
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                      ),
+                      child: const Text('Atrás'),
+                    ),
+                  ),
+                if (_currentStep == 1) const SizedBox(width: 16),
+                Expanded(
+                  flex: 2,
+                  child: FilledButton(
+                    onPressed: state.isLoading
+                        ? null
+                        : (_currentStep == 0 ? _nextStep : _submit),
+                    style: FilledButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                    ),
+                    child: state.isLoading
+                        ? SizedBox(
+                            height: 24,
+                            width: 24,
+                            child: CircularProgressIndicator(
+                              color: Theme.of(context).colorScheme.onPrimary,
+                              strokeWidth: 2.5,
+                            ),
+                          )
+                        : Text(
+                            _currentStep == 0 ? 'Siguiente' : 'Crear Cuenta',
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStep1(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isNarrow = constraints.maxWidth < 500;
+        return Column(
+          children: [
             TextFormField(
               controller: _usernameController,
+              textInputAction: TextInputAction.next,
               decoration: const InputDecoration(
                 labelText: 'Usuario',
                 prefixIcon: Icon(Icons.person_outline_rounded),
@@ -77,36 +169,63 @@ class _CreateAccountFormState extends ConsumerState<CreateAccountForm> {
                   value!.isEmpty ? 'El usuario es obligatorio' : null,
             ),
             const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  child: TextFormField(
-                    controller: _firstNameController,
-                    decoration: const InputDecoration(
-                      labelText: 'Nombre',
-                      prefixIcon: Icon(Icons.badge_outlined),
-                    ),
-                    validator: (value) =>
-                        value!.isEmpty ? 'El nombre es obligatorio' : null,
-                  ),
+            if (isNarrow) ...[
+              TextFormField(
+                controller: _firstNameController,
+                textInputAction: TextInputAction.next,
+                decoration: const InputDecoration(
+                  labelText: 'Nombre',
+                  prefixIcon: Icon(Icons.badge_outlined),
                 ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: TextFormField(
-                    controller: _lastNameController,
-                    decoration: const InputDecoration(
-                      labelText: 'Apellido',
-                      prefixIcon: Icon(Icons.badge_outlined),
-                    ),
-                    validator: (value) =>
-                        value!.isEmpty ? 'El apellido es obligatorio' : null,
-                  ),
+                validator: (value) =>
+                    value!.isEmpty ? 'El nombre es obligatorio' : null,
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _lastNameController,
+                textInputAction: TextInputAction.next,
+                decoration: const InputDecoration(
+                  labelText: 'Apellido',
+                  prefixIcon: Icon(Icons.badge_outlined),
                 ),
-              ],
-            ),
+                validator: (value) =>
+                    value!.isEmpty ? 'El apellido es obligatorio' : null,
+              ),
+            ] else
+              Row(
+                children: [
+                  Expanded(
+                    child: TextFormField(
+                      controller: _firstNameController,
+                      textInputAction: TextInputAction.next,
+                      decoration: const InputDecoration(
+                        labelText: 'Nombre',
+                        prefixIcon: Icon(Icons.badge_outlined),
+                      ),
+                      validator: (value) =>
+                          value!.isEmpty ? 'El nombre es obligatorio' : null,
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: TextFormField(
+                      controller: _lastNameController,
+                      textInputAction: TextInputAction.next,
+                      decoration: const InputDecoration(
+                        labelText: 'Apellido',
+                        prefixIcon: Icon(Icons.badge_outlined),
+                      ),
+                      validator: (value) =>
+                          value!.isEmpty ? 'El apellido es obligatorio' : null,
+                    ),
+                  ),
+                ],
+              ),
             const SizedBox(height: 16),
             TextFormField(
               controller: _emailController,
+              textInputAction: TextInputAction.go,
+              onFieldSubmitted: (_) => _nextStep(),
               decoration: const InputDecoration(
                 labelText: 'Correo Electrónico',
                 prefixIcon: Icon(Icons.email_outlined),
@@ -122,84 +241,86 @@ class _CreateAccountFormState extends ConsumerState<CreateAccountForm> {
                 return null;
               },
             ),
-            const SizedBox(height: 16),
-            TextFormField(
-              controller: _passwordController,
-              obscureText: _isPasswordObscured,
-              decoration: InputDecoration(
-                labelText: 'Contraseña',
-                prefixIcon: const Icon(Icons.lock_outline_rounded),
-                suffixIcon: IconButton(
-                  icon: Icon(
-                    _isPasswordObscured
-                        ? Icons.visibility_off_outlined
-                        : Icons.visibility_outlined,
-                  ),
-                  onPressed: () {
-                    setState(() => _isPasswordObscured = !_isPasswordObscured);
-                  },
-                ),
-              ),
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'La contraseña es obligatoria';
-                }
-                if (value.length < 6) {
-                  return 'Mínimo 6 caracteres';
-                }
-                return null;
-              },
-            ),
-            const SizedBox(height: 16),
-            TextFormField(
-              controller: _confirmPasswordController,
-              obscureText: _isConfirmPasswordObscured,
-              decoration: InputDecoration(
-                labelText: 'Confirmar Contraseña',
-                prefixIcon: const Icon(Icons.lock_outline_rounded),
-                suffixIcon: IconButton(
-                  icon: Icon(
-                    _isConfirmPasswordObscured
-                        ? Icons.visibility_off_outlined
-                        : Icons.visibility_outlined,
-                  ),
-                  onPressed: () {
-                    setState(
-                      () => _isConfirmPasswordObscured =
-                          !_isConfirmPasswordObscured,
-                    );
-                  },
-                ),
-              ),
-              validator: (value) {
-                if (value != _passwordController.text) {
-                  return 'Las contraseñas no coinciden';
-                }
-                return null;
-              },
-            ),
-            const SizedBox(height: 32),
-            ElevatedButton(
-              onPressed: state.isLoading ? null : _submit,
-              child: state.isLoading
-                  ? SizedBox(
-                      height: 24,
-                      width: 24,
-                      child: CircularProgressIndicator(
-                        color: Theme.of(context).colorScheme.onSurface,
-                        strokeWidth: 2.5,
-                      ),
-                    )
-                  : Text(
-                      'Crear Cuenta',
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurface,
-                      ),
-                    ),
-            ),
           ],
+        );
+      },
+    );
+  }
+
+  Widget _buildStep2() {
+    return Column(
+      children: [
+        TextFormField(
+          controller: _warehouseNameController,
+          textInputAction: TextInputAction.next,
+          decoration: const InputDecoration(
+            labelText: 'Nombre Sucursal',
+            helperText: 'Se creará como sucursal principal',
+            prefixIcon: Icon(Icons.store_outlined),
+          ),
+          validator: (value) =>
+              value!.isEmpty ? 'El nombre de la sucursal es obligatorio' : null,
         ),
-      ),
+        const SizedBox(height: 16),
+        TextFormField(
+          controller: _passwordController,
+          obscureText: _isPasswordObscured,
+          textInputAction: TextInputAction.next,
+          decoration: InputDecoration(
+            labelText: 'Contraseña',
+            prefixIcon: const Icon(Icons.lock_outline_rounded),
+            suffixIcon: IconButton(
+              icon: Icon(
+                _isPasswordObscured
+                    ? Icons.visibility_off_outlined
+                    : Icons.visibility_outlined,
+              ),
+              onPressed: () {
+                setState(() => _isPasswordObscured = !_isPasswordObscured);
+              },
+            ),
+          ),
+          validator: (value) {
+            if (value == null || value.isEmpty) {
+              return 'La contraseña es obligatoria';
+            }
+            if (value.length < 6) {
+              return 'Mínimo 6 caracteres';
+            }
+            return null;
+          },
+        ),
+        const SizedBox(height: 16),
+        TextFormField(
+          controller: _confirmPasswordController,
+          obscureText: _isConfirmPasswordObscured,
+          textInputAction: TextInputAction.done,
+          onFieldSubmitted: (_) => _submit(),
+          decoration: InputDecoration(
+            labelText: 'Confirmar Contraseña',
+            prefixIcon: const Icon(Icons.lock_outline_rounded),
+            suffixIcon: IconButton(
+              icon: Icon(
+                _isConfirmPasswordObscured
+                    ? Icons.visibility_off_outlined
+                    : Icons.visibility_outlined,
+              ),
+              onPressed: () {
+                setState(
+                  () =>
+                      _isConfirmPasswordObscured = !_isConfirmPasswordObscured,
+                );
+              },
+            ),
+          ),
+          validator: (value) {
+            if (value != _passwordController.text) {
+              return 'Las contraseñas no coinciden';
+            }
+            return null;
+          },
+        ),
+      ],
     );
   }
 }

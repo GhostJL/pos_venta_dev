@@ -87,7 +87,7 @@ class CashSessionCloseSummaryDialog extends StatelessWidget {
         ],
       ),
       actions: [
-        TextButton(
+        FilledButton(
           onPressed: () => Navigator.of(context).pop(),
           child: const Text('ACEPTAR'),
         ),
@@ -108,7 +108,7 @@ class CashSessionCloseSummaryDialog extends StatelessWidget {
           label,
           style: TextStyle(
             fontSize: isBold ? 16 : 14,
-            fontWeight: isBold ? FontWeight.bold : FontWeight.bold,
+            fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
           ),
         ),
         Text(
