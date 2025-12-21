@@ -118,7 +118,14 @@ class CartItemCard extends StatelessWidget {
                           alignment: Alignment.center,
                           padding: const EdgeInsets.symmetric(horizontal: 4),
                           child: Text(
-                            quantity.toStringAsFixed(0),
+                            quantity % 1 == 0
+                                ? quantity.toStringAsFixed(0)
+                                : quantity
+                                      .toStringAsFixed(3)
+                                      .replaceAll(
+                                        RegExp(r'([.]*0)(?!.*\d)'),
+                                        '',
+                                      ),
                             style: theme.textTheme.titleMedium?.copyWith(
                               fontWeight: FontWeight.w700,
                             ),

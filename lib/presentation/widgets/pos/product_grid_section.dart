@@ -11,6 +11,7 @@ import 'package:posventa/presentation/widgets/pos/product_grid/product_quantity_
 import 'package:posventa/presentation/widgets/pos/product_grid/product_search_bar.dart';
 import 'package:posventa/presentation/widgets/pos/sale/charge_bottom_bar.dart';
 import 'package:posventa/presentation/mixins/search_debounce_mixin.dart';
+import 'package:posventa/presentation/widgets/pos/product_grid/weight_input_dialog.dart';
 
 class ProductGridSection extends ConsumerStatefulWidget {
   final bool isMobile;
@@ -68,10 +69,24 @@ class _ProductGridSectionState extends ConsumerState<ProductGridSection>
       }
 
       if (product != null) {
+        // Validation for weight-based products
+        double quantity = 1.0;
+        if (product.isSoldByWeight ||
+            (matchedVariant?.isSoldByWeight ?? false)) {
+          if (!scannerContext.mounted) return;
+          final result = await showDialog<double>(
+            context: scannerContext,
+            builder: (context) =>
+                WeightInputDialog(product: product!, variant: matchedVariant),
+          );
+          if (result == null) return; // Cancelled
+          quantity = result;
+        }
+
         // Agregar al carrito con validación de stock
         final error = await ref
             .read(pOSProvider.notifier)
-            .addToCart(product, variant: matchedVariant);
+            .addToCart(product, variant: matchedVariant, quantity: quantity);
 
         if (error != null && scannerContext.mounted) {
           // Mostrar error de stock
@@ -109,10 +124,23 @@ class _ProductGridSectionState extends ConsumerState<ProductGridSection>
   }
 
   Future<void> _onProductTap(ProductGridItem item) async {
-    // Add directly to cart without dialog
+    // Check if product is sold by weight
+    double quantity = 1.0;
+    if (item.product.isSoldByWeight ||
+        (item.variant?.isSoldByWeight ?? false)) {
+      final result = await showDialog<double>(
+        context: context,
+        builder: (context) =>
+            WeightInputDialog(product: item.product, variant: item.variant),
+      );
+      if (result == null) return; // Cancelled
+      quantity = result;
+    }
+
+    // Add directly to cart without dialog (unless weight input was needed)
     final error = await ref
         .read(pOSProvider.notifier)
-        .addToCart(item.product, variant: item.variant);
+        .addToCart(item.product, variant: item.variant, quantity: quantity);
 
     if (error != null && mounted) {
       _showStockError(context, error);

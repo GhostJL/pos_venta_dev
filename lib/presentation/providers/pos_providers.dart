@@ -69,14 +69,20 @@ class POSNotifier extends _$POSNotifier {
     return const POSState();
   }
 
-  Future<String?> addToCart(Product product, {ProductVariant? variant}) async {
+  Future<String?> addToCart(
+    Product product, {
+    ProductVariant? variant,
+    double quantity = 1.0,
+  }) async {
     // Calculate quantity multiplier (how much stock to deduct per unit sold)
-    final quantityMultiplier = variant?.quantity ?? 1.0;
+    // For weight products, this might need adjustment if stock is tracked differently,
+    // but assuming stock is in same unit as sales for now.
+    // final quantityMultiplier = variant?.quantity ?? 1.0;
 
     // Validate stock availability
     final stockError = await _validateStock(
       product.id!,
-      1.0,
+      quantity,
       variantId: variant?.id,
     );
     if (stockError != null) {
@@ -92,7 +98,7 @@ class POSNotifier extends _$POSNotifier {
     if (existingIndex >= 0) {
       // Update quantity
       final existingItem = state.cart[existingIndex];
-      final newQuantity = existingItem.quantity + 1;
+      final newQuantity = existingItem.quantity + quantity;
 
       // Recalculate totals for item
       // Use existing item's unit price to respect variant price
@@ -151,7 +157,7 @@ class POSNotifier extends _$POSNotifier {
           : (product.costPrice * 100).round();
       final productName = product.name;
       final variantDescription = variant?.description;
-      final quantity = 1.0;
+      // final quantity = 1.0; // REMOVED: Use argument quantity
       final subtotalCents = (unitPriceCents * quantity).round();
 
       int taxCents = 0;
