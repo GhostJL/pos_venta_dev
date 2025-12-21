@@ -156,7 +156,7 @@ class _SideMenuState extends ConsumerState<SideMenu> {
   }
 }
 
-/// Header minimalista adaptable al tema
+/// Header minimalista adaptable al tema con información del usuario
 class _MinimalHeader extends StatelessWidget {
   final User? user;
 
@@ -168,34 +168,81 @@ class _MinimalHeader extends StatelessWidget {
     final textTheme = Theme.of(context).textTheme;
 
     return Container(
-      padding: const EdgeInsets.fromLTRB(28, 24, 16, 20),
-      child: Row(
+      padding: const EdgeInsets.fromLTRB(
+        28,
+        24,
+        28,
+        24,
+      ), // Standard M3 drawer padding
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(Icons.store_rounded, size: 24, color: colorScheme.primary),
-          const SizedBox(width: 12),
-          Text(
-            'POS Venta',
-            style: textTheme.titleMedium?.copyWith(
-              color: colorScheme.onSurface,
-              fontWeight: FontWeight.bold,
-              letterSpacing: 0.2,
-            ),
+          Row(
+            children: [
+              Icon(Icons.store_rounded, size: 28, color: colorScheme.primary),
+              const SizedBox(width: 12),
+              Text(
+                'POS Venta',
+                style: textTheme.titleMedium?.copyWith(
+                  color: colorScheme.onSurfaceVariant,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 0.5,
+                ),
+              ),
+              if (user?.role == UserRole.administrador) ...[
+                const Spacer(),
+                IconButton(
+                  icon: const Icon(Icons.settings_rounded, size: 20),
+                  onPressed: () {
+                    GoRouter.of(context).push('/settings');
+                    final scaffold = Scaffold.maybeOf(context);
+                    if (scaffold?.isDrawerOpen ?? false) {
+                      scaffold!.closeDrawer();
+                    }
+                  },
+                  tooltip: 'Configuración',
+                  style: IconButton.styleFrom(
+                    padding: EdgeInsets.zero,
+                    visualDensity: VisualDensity.compact,
+                    foregroundColor: colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ],
           ),
-          if (user?.role == UserRole.administrador) ...[
-            const Spacer(),
-            IconButton(
-              icon: const Icon(Icons.settings_rounded, size: 20),
-              onPressed: () {
-                GoRouter.of(context).push('/settings');
-                final scaffold = Scaffold.maybeOf(context);
-                if (scaffold?.isDrawerOpen ?? false) {
-                  scaffold!.closeDrawer();
-                }
-              },
-              tooltip: 'Configuración',
-              style: IconButton.styleFrom(
-                padding: EdgeInsets.zero,
-                visualDensity: VisualDensity.compact,
+          const SizedBox(height: 24),
+          // User Info Section
+          if (user != null) ...[
+            Text(
+              'Hola,',
+              style: textTheme.bodySmall?.copyWith(
+                color: colorScheme.onSurfaceVariant,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              user!.name, // Ensure user has a name field or use username
+              style: textTheme.headlineSmall?.copyWith(
+                color: colorScheme.onSurface,
+                fontWeight: FontWeight.bold,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+            const SizedBox(height: 4),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+              decoration: BoxDecoration(
+                color: colorScheme.secondaryContainer,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                user!.role.name.toUpperCase(),
+                style: textTheme.labelSmall?.copyWith(
+                  color: colorScheme.onSecondaryContainer,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 0.5,
+                ),
               ),
             ),
           ],

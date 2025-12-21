@@ -27,6 +27,8 @@ class User {
     required this.updatedAt,
   });
 
+  String get name => '$firstName $lastName';
+
   Map<String, dynamic> toMap() {
     return {
       'id': id,

@@ -29,54 +29,64 @@ class _MenuItemWidgetState extends State<MenuItemWidget> {
     final currentPath = GoRouterState.of(context).uri.toString();
     final isSelected = currentPath == widget.menuItem.route;
 
+    // Material 3 State Colors
+    final backgroundColor = isSelected
+        ? colorScheme.secondaryContainer
+        : _isHovered
+        ? colorScheme.onSurface.withValues(alpha: 0.08)
+        : Colors.transparent;
+
+    final foregroundColor = isSelected
+        ? colorScheme.onSecondaryContainer
+        : colorScheme.onSurfaceVariant;
+
+    final iconColor = isSelected
+        ? colorScheme.onSecondaryContainer
+        : colorScheme.onSurfaceVariant;
+
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+      padding: const EdgeInsets.symmetric(
+        horizontal: 12,
+        vertical: 4,
+      ), // Increased vertical spacing slightly
       child: MouseRegion(
         onEnter: (_) => setState(() => _isHovered = true),
         onExit: (_) => setState(() => _isHovered = false),
         cursor: SystemMouseCursors.click,
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),
-          height: 48, // Standard M3 Drawer item height
-          decoration: BoxDecoration(
-            color: isSelected
-                ? colorScheme.primaryContainer
-                : _isHovered
-                ? colorScheme.onSurface.withValues(alpha: 0.08)
-                : Colors.transparent,
-            borderRadius: BorderRadius.circular(24), // Pill shape
+          curve: Curves.easeOut,
+          height: 56, // M3 Navigation Drawer item height standard is often 56
+          decoration: ShapeDecoration(
+            color: backgroundColor,
+            shape: const StadiumBorder(), // Pill shape
           ),
           child: Material(
             color: Colors.transparent,
             child: InkWell(
               onTap: () => _handleTap(context),
-              borderRadius: BorderRadius.circular(24),
+              customBorder: const StadiumBorder(),
               splashColor: colorScheme.onSurface.withValues(alpha: 0.1),
               highlightColor: Colors.transparent,
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                ), // Increased horizontal padding
                 child: Row(
                   children: [
                     // Icono
-                    Icon(
-                      widget.menuItem.icon,
-                      size: 24, // M3 standard icon size
-                      color: isSelected
-                          ? colorScheme.onPrimaryContainer
-                          : colorScheme.onSurfaceVariant,
-                    ),
+                    Icon(widget.menuItem.icon, size: 24, color: iconColor),
                     const SizedBox(width: 12),
                     // Texto
                     Expanded(
                       child: Text(
                         widget.menuItem.title,
                         style: textTheme.labelLarge?.copyWith(
-                          color: isSelected
-                              ? colorScheme.onPrimaryContainer
-                              : colorScheme.onSurface,
+                          color: foregroundColor,
                           fontWeight: isSelected
-                              ? FontWeight.w600
+                              ? FontWeight.bold
                               : FontWeight.w500,
+                          letterSpacing: 0.5,
                         ),
                       ),
                     ),

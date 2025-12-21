@@ -120,29 +120,45 @@ class _MenuGroupWidgetState extends ConsumerState<MenuGroupWidget>
 
     _updateAnimation(isExpanded);
 
+    // M3 Colors for Group Header
+    final headerColor = isActive
+        ? colorScheme.surfaceContainerHighest.withValues(
+            alpha: 0.5,
+          ) // Subtle highlight for open group
+        : _isHovered
+        ? colorScheme.onSurface.withValues(alpha: 0.08)
+        : Colors.transparent;
+
+    final headerTextColor = isActive
+        ? colorScheme.onSurface
+        : colorScheme.onSurfaceVariant;
+
+    final iconColor = isActive
+        ? colorScheme.primary
+        : colorScheme.onSurfaceVariant;
+
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 2),
+      padding: const EdgeInsets.symmetric(
+        vertical: 4,
+      ), // Consistent vertical spacing
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Header del grupo
-          MouseRegion(
-            onEnter: (_) => setState(() => _isHovered = true),
-            onExit: (_) => setState(() => _isHovered = false),
-            cursor: SystemMouseCursors.click,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            child: MouseRegion(
+              onEnter: (_) => setState(() => _isHovered = true),
+              onExit: (_) => setState(() => _isHovered = false),
+              cursor: SystemMouseCursors.click,
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 200),
-                height: 48,
-                decoration: BoxDecoration(
-                  color: isActive
-                      ? colorScheme.surfaceContainer
-                      : _isHovered
-                      ? colorScheme.onSurface.withValues(alpha: 0.05)
-                      : Colors.transparent,
-                  borderRadius: BorderRadius.circular(24),
+                curve: Curves.easeOut,
+                height: 56, // Match MenuItem height
+                decoration: ShapeDecoration(
+                  color: headerColor,
+                  shape: const StadiumBorder(),
                 ),
                 child: Material(
                   color: Colors.transparent,
@@ -156,32 +172,32 @@ class _MenuGroupWidgetState extends ConsumerState<MenuGroupWidget>
                             .toggleGroup(widget.menuGroup.id);
                       }
                     },
-                    borderRadius: BorderRadius.circular(24),
+                    customBorder: const StadiumBorder(),
+                    splashColor: colorScheme.onSurface.withValues(alpha: 0.1),
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 24,
+                      ), // Match MenuItem padding
                       child: Row(
                         children: [
                           if (widget.menuGroup.groupIcon != null) ...[
                             Icon(
                               widget.menuGroup.groupIcon,
                               size: 24,
-                              color: isExpanded || isRouteActive
-                                  ? colorScheme.primary
-                                  : colorScheme.onSurfaceVariant,
+                              color: iconColor,
                             ),
                             const SizedBox(width: 12),
                           ],
                           Expanded(
                             child: Text(
                               widget.menuGroup.title,
-                              style: textTheme.titleSmall?.copyWith(
-                                color: isActive
-                                    ? colorScheme.onSurface
-                                    : colorScheme.onSurface,
+                              style: textTheme.labelLarge?.copyWith(
+                                // Use labelLarge like items
+                                color: headerTextColor,
                                 fontWeight: isActive
-                                    ? FontWeight.w600
+                                    ? FontWeight.bold
                                     : FontWeight.w500,
-                                letterSpacing: 0.1,
+                                letterSpacing: 0.5,
                               ),
                             ),
                           ),
@@ -191,9 +207,7 @@ class _MenuGroupWidgetState extends ConsumerState<MenuGroupWidget>
                                   ? Icons.expand_less_rounded
                                   : Icons.expand_more_rounded,
                               size: 24,
-                              color: isExpanded
-                                  ? colorScheme.primary
-                                  : colorScheme.onSurfaceVariant,
+                              color: iconColor,
                             ),
                         ],
                       ),
@@ -207,13 +221,23 @@ class _MenuGroupWidgetState extends ConsumerState<MenuGroupWidget>
           AnimatedCrossFade(
             firstChild: const SizedBox(width: double.infinity, height: 0),
             secondChild: Padding(
-              padding: const EdgeInsets.only(top: 4),
+              padding: const EdgeInsets.only(
+                top: 2,
+              ), // Small gap between header and children
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: widget.menuGroup.items
                     .map(
                       (item) => Padding(
-                        padding: const EdgeInsets.only(left: 12),
+                        padding: const EdgeInsets.only(
+                          left: 0,
+                        ), // Flat list look, indentation handled by item itself being generic? No, keeping distinct list.
+                        // Ideally strictly following M3 drawer groups, items are just items.
+                        // But here we want indentation to show hierarchy.
+                        // Let's add left padding to the wrapper of MenuItemWidget?
+                        // Or just render them.
+                        // Actually, M3 guidelines often show nested items with same left alignment but maybe different icon or text style?
+                        // Usually indenting the whole item is common.
                         child: MenuItemWidget(
                           menuItem: item,
                           currentPath: widget.currentPath,
