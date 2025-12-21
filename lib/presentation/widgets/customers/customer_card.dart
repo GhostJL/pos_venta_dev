@@ -114,13 +114,13 @@ class CustomerCard extends StatelessWidget {
               ),
               const Divider(height: 24),
               Row(
+                mainAxisAlignment: .spaceBetween,
                 children: [
                   _InfoChip(
                     icon: Icons.phone_outlined,
                     label: customer.phone ?? '-',
                     colorScheme: colorScheme,
                   ),
-                  const SizedBox(width: 12),
                   _InfoChip(
                     icon: Icons.email_outlined,
                     label: customer.email ?? '-',
