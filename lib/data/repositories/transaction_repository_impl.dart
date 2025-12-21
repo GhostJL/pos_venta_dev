@@ -50,13 +50,16 @@ class TransactionRepositoryImpl implements TransactionRepository {
       59,
     ).toIso8601String();
 
+    // Query sales table instead of transactions
     final result = await db.rawQuery(
-      'SELECT SUM(amount) as total FROM transactions WHERE type = ? AND timestamp BETWEEN ? AND ?',
-      ['income', startOfDay, endOfDay],
+      'SELECT SUM(total_cents) as total FROM sales WHERE status != ? AND sale_date BETWEEN ? AND ?',
+      ['cancelled', startOfDay, endOfDay],
     );
 
-    final total = result.first['total'];
-    return (total as double?) ?? 0.0;
+    final totalCents = result.first['total'];
+    if (totalCents == null) return 0.0;
+
+    return (totalCents as int) / 100.0;
   }
 
   @override
@@ -77,9 +80,10 @@ class TransactionRepositoryImpl implements TransactionRepository {
       59,
     ).toIso8601String();
 
+    // Query sales table count
     final result = await db.rawQuery(
-      'SELECT COUNT(*) as count FROM transactions WHERE timestamp BETWEEN ? AND ?',
-      [startOfDay, endOfDay],
+      'SELECT COUNT(*) as count FROM sales WHERE status != ? AND sale_date BETWEEN ? AND ?',
+      ['cancelled', startOfDay, endOfDay],
     );
 
     final count = result.first['count'];

@@ -19,14 +19,9 @@ class DashboardStatusSection extends ConsumerWidget {
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surfaceContainer,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Theme.of(context).colorScheme.outline),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withAlpha(5),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
+        border: Border.all(
+          color: Theme.of(context).colorScheme.outlineVariant.withAlpha(50),
+        ),
       ),
       child: Flex(
         direction: isSmall ? Axis.vertical : Axis.horizontal,
@@ -39,24 +34,17 @@ class DashboardStatusSection extends ConsumerWidget {
           Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.primary.withAlpha(10),
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                child: Icon(
-                  Icons.calendar_today_rounded,
-                  color: Theme.of(context).colorScheme.primary,
-                  size: 24,
-                ),
+              Icon(
+                Icons.calendar_today_rounded,
+                color: Theme.of(context).colorScheme.primary,
+                size: 20,
               ),
-              const SizedBox(width: 16),
+              const SizedBox(width: 12),
               const ClockWidget(),
             ],
           ),
 
-          if (isSmall) const SizedBox(height: 20),
+          if (isSmall) const SizedBox(height: 16),
 
           // Session Status Section
           sessionAsync.when(
@@ -72,45 +60,38 @@ class DashboardStatusSection extends ConsumerWidget {
                   : 'Usuario';
 
               final statusText = isOpen
-                  ? 'Caja Abierta: $displayRole'
+                  ? 'Caja Abierta • $displayRole'
                   : 'Caja Cerrada';
 
               return Container(
                 padding: const EdgeInsets.symmetric(
-                  horizontal: 20,
-                  vertical: 10,
+                  horizontal: 16,
+                  vertical: 8,
                 ),
                 decoration: BoxDecoration(
-                  color: statusColor.withAlpha(10),
+                  color: statusColor.withAlpha(20),
                   borderRadius: BorderRadius.circular(30),
-                  border: Border.all(color: statusColor.withAlpha(30)),
+                  border: Border.all(color: statusColor.withAlpha(50)),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Container(
-                      width: 10,
-                      height: 10,
+                      width: 8,
+                      height: 8,
                       decoration: BoxDecoration(
                         color: statusColor,
                         shape: BoxShape.circle,
-                        boxShadow: [
-                          BoxShadow(
-                            color: statusColor.withAlpha(100),
-                            blurRadius: 6,
-                            spreadRadius: 1,
-                          ),
-                        ],
                       ),
                     ),
-                    const SizedBox(width: 12),
+                    const SizedBox(width: 8),
                     Flexible(
                       child: Text(
                         statusText,
                         style: TextStyle(
                           color: statusColor,
-                          fontWeight: FontWeight.w700,
-                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 13,
                         ),
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -120,8 +101,8 @@ class DashboardStatusSection extends ConsumerWidget {
               );
             },
             loading: () => const SizedBox(
-              width: 24,
-              height: 24,
+              width: 20,
+              height: 20,
               child: CircularProgressIndicator(strokeWidth: 2),
             ),
             error: (_, __) => const SizedBox.shrink(),

@@ -2047,6 +2047,54 @@ final class GenerateNextCustomerCodeUseCaseProvider
 String _$generateNextCustomerCodeUseCaseHash() =>
     r'551db1bc5936022131f56675aa29316bb8ce10f2';
 
+@ProviderFor(transactionRepository)
+const transactionRepositoryProvider = TransactionRepositoryProvider._();
+
+final class TransactionRepositoryProvider
+    extends
+        $FunctionalProvider<
+          TransactionRepository,
+          TransactionRepository,
+          TransactionRepository
+        >
+    with $Provider<TransactionRepository> {
+  const TransactionRepositoryProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'transactionRepositoryProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$transactionRepositoryHash();
+
+  @$internal
+  @override
+  $ProviderElement<TransactionRepository> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  TransactionRepository create(Ref ref) {
+    return transactionRepository(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(TransactionRepository value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<TransactionRepository>(value),
+    );
+  }
+}
+
+String _$transactionRepositoryHash() =>
+    r'61cfd232e82782b11a43310c4b4de119181d0b76';
+
 @ProviderFor(saleRepository)
 const saleRepositoryProvider = SaleRepositoryProvider._();
 
@@ -2322,6 +2370,73 @@ final class CancelSaleUseCaseProvider
 }
 
 String _$cancelSaleUseCaseHash() => r'9944252307a4ca1b2a7f8216c41b12ac65fb5bc7';
+
+@ProviderFor(todaysRevenue)
+const todaysRevenueProvider = TodaysRevenueProvider._();
+
+final class TodaysRevenueProvider
+    extends $FunctionalProvider<AsyncValue<double>, double, FutureOr<double>>
+    with $FutureModifier<double>, $FutureProvider<double> {
+  const TodaysRevenueProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'todaysRevenueProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$todaysRevenueHash();
+
+  @$internal
+  @override
+  $FutureProviderElement<double> $createElement($ProviderPointer pointer) =>
+      $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<double> create(Ref ref) {
+    return todaysRevenue(ref);
+  }
+}
+
+String _$todaysRevenueHash() => r'f6c06176b9dacb3e23e55d67a8b72243a4ea6ef0';
+
+@ProviderFor(todaysTransactions)
+const todaysTransactionsProvider = TodaysTransactionsProvider._();
+
+final class TodaysTransactionsProvider
+    extends $FunctionalProvider<AsyncValue<int>, int, FutureOr<int>>
+    with $FutureModifier<int>, $FutureProvider<int> {
+  const TodaysTransactionsProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'todaysTransactionsProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$todaysTransactionsHash();
+
+  @$internal
+  @override
+  $FutureProviderElement<int> $createElement($ProviderPointer pointer) =>
+      $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<int> create(Ref ref) {
+    return todaysTransactions(ref);
+  }
+}
+
+String _$todaysTransactionsHash() =>
+    r'bf05b523e555e0610321bcb94f472e6c7fc60153';
 
 @ProviderFor(cashSessionRepository)
 const cashSessionRepositoryProvider = CashSessionRepositoryProvider._();

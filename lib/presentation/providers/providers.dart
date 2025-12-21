@@ -59,6 +59,8 @@ import 'package:posventa/domain/use_cases/sale/get_sale_by_id_use_case.dart';
 import 'package:posventa/domain/use_cases/sale/generate_next_sale_number_use_case.dart';
 import 'package:posventa/domain/use_cases/sale/cancel_sale_use_case.dart';
 import 'package:posventa/domain/entities/sale.dart';
+import 'package:posventa/domain/repositories/transaction_repository.dart';
+import 'package:posventa/data/repositories/transaction_repository_impl.dart';
 
 import 'package:posventa/domain/repositories/cash_session_repository.dart';
 import 'package:posventa/data/repositories/cash_session_repository_impl.dart';
@@ -292,6 +294,12 @@ SearchCustomersUseCase searchCustomersUseCase(ref) =>
 GenerateNextCustomerCodeUseCase generateNextCustomerCodeUseCase(ref) =>
     GenerateNextCustomerCodeUseCase(ref.watch(customerRepositoryProvider));
 
+// --- Transaction Providers ---
+
+@riverpod
+TransactionRepository transactionRepository(ref) =>
+    TransactionRepositoryImpl(ref.watch(databaseHelperProvider));
+
 // --- Sale Providers ---
 
 @riverpod
@@ -341,6 +349,18 @@ final allSaleReturnsProvider = StreamProvider.autoDispose<List<SaleReturn>>((
 
   return repository.getSaleReturnsStream();
 });
+
+// --- Dashboard Metrics Providers ---
+
+@riverpod
+Future<double> todaysRevenue(Ref ref) {
+  return ref.watch(transactionRepositoryProvider).getTodaysRevenue();
+}
+
+@riverpod
+Future<int> todaysTransactions(Ref ref) {
+  return ref.watch(transactionRepositoryProvider).getTodaysMovements();
+}
 
 // --- Cash Session Providers ---
 

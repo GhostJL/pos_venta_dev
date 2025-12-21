@@ -99,4 +99,4 @@ final class AllTaxRatesProvider
   }
 }
 
-String _$allTaxRatesHash() => r'aca0db09a7f25cd1791a3c3e04335c397662fb7d';
+String _$allTaxRatesHash() => r'56989f18b0e49db9bf72bd2e7e24d37473181175';

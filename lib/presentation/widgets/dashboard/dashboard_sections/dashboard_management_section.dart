@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:posventa/presentation/widgets/common/cards/dashboard_card.dart';
+import 'package:posventa/presentation/widgets/dashboard/items/dashboard_action_card.dart';
 
 class DashboardManagementSection extends StatelessWidget {
   final bool isTablet;
@@ -9,27 +9,30 @@ class DashboardManagementSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final actionCards = [
-      DashboardCard(
+      DashboardActionCard(
         title: 'Inventario',
-        value: 'Productos y Stock',
+        description: 'Productos y existencias',
         icon: Icons.inventory_2_rounded,
-        iconColor: Colors.indigo.shade600,
+        color: Colors.indigo.shade600,
         onTap: () => context.go('/inventory'),
+        isTablet: isTablet,
       ),
 
-      DashboardCard(
+      DashboardActionCard(
         title: 'Clientes',
-        value: 'Informacion y detalles',
+        description: 'Gestionar clientes',
         icon: Icons.people_alt_rounded,
-        iconColor: Theme.of(context).colorScheme.primary,
+        color: Theme.of(context).colorScheme.primary,
         onTap: () => context.go('/customers'),
+        isTablet: isTablet,
       ),
-      DashboardCard(
+      DashboardActionCard(
         title: 'Compras',
-        value: 'Proveedores y Productos',
+        description: 'Proveedores y ordenes',
         icon: Icons.shopping_cart_rounded,
-        iconColor: Colors.teal.shade600,
+        color: Colors.teal.shade600,
         onTap: () => context.go('/purchases'),
+        isTablet: isTablet,
       ),
     ];
 
@@ -42,16 +45,22 @@ class DashboardManagementSection extends StatelessWidget {
           Icons.admin_panel_settings_rounded,
         ),
 
-        Wrap(
-          spacing: 16,
-          runSpacing: 16,
-          children: actionCards.map((card) {
-            return SizedBox(
-              width: isTablet ? 300 : double.infinity,
-              child: card,
-            );
-          }).toList(),
-        ),
+        isTablet
+            ? Column(
+                children: actionCards.map((card) {
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 16.0),
+                    child: SizedBox(width: double.infinity, child: card),
+                  );
+                }).toList(),
+              )
+            : Wrap(
+                spacing: 16,
+                runSpacing: 16,
+                children: actionCards.map((card) {
+                  return SizedBox(width: double.infinity, child: card);
+                }).toList(),
+              ),
       ],
     );
   }

@@ -555,6 +555,9 @@ class POSNotifier extends _$POSNotifier {
 
       // Invalidate product list to refresh stock
       ref.invalidate(productListProvider);
+      // Invalidate dashboard metrics
+      ref.invalidate(todaysRevenueProvider);
+      ref.invalidate(todaysTransactionsProvider);
 
       // Check stock levels and trigger notifications
       try {

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:posventa/presentation/widgets/common/cards/dashboard_card.dart';
+import 'package:posventa/presentation/widgets/dashboard/items/dashboard_action_card.dart';
 
 class DashboardOperationsSection extends StatelessWidget {
   final bool isTablet;
@@ -9,26 +9,29 @@ class DashboardOperationsSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final actionCards = [
-      DashboardCard(
+      DashboardActionCard(
         title: 'Punto de Venta',
-        value: 'Iniciar Venta',
+        description: 'Iniciar nueva venta',
         icon: Icons.point_of_sale_rounded,
-        iconColor: Theme.of(context).colorScheme.primary,
+        color: Theme.of(context).colorScheme.primary,
         onTap: () => context.go('/sales'),
+        isTablet: isTablet,
       ),
-      DashboardCard(
-        title: 'Historial de Ventas',
-        value: 'Ver Registros y detalles',
+      DashboardActionCard(
+        title: 'Historial',
+        description: 'Ver ventas y detalles',
         icon: Icons.receipt_long_rounded,
-        iconColor: Theme.of(context).colorScheme.primary,
+        color: Theme.of(context).colorScheme.primary,
         onTap: () => context.go('/sales-history'),
+        isTablet: isTablet,
       ),
-      DashboardCard(
+      DashboardActionCard(
         title: 'Cortes de Caja',
-        value: 'Sesiones de Caja y detalles',
+        description: 'Sesiones y movimientos',
         icon: Icons.history_edu_rounded,
-        iconColor: Theme.of(context).colorScheme.secondary,
+        color: Theme.of(context).colorScheme.secondary,
         onTap: () => context.go('/cash-sessions-history'),
+        isTablet: isTablet,
       ),
     ];
 
@@ -40,16 +43,22 @@ class DashboardOperationsSection extends StatelessWidget {
           'Operaciones Diarias',
           Icons.storefront_rounded,
         ),
-        Wrap(
-          spacing: 16,
-          runSpacing: 16,
-          children: actionCards.map((card) {
-            return SizedBox(
-              width: isTablet ? 300 : double.infinity,
-              child: card,
-            );
-          }).toList(),
-        ),
+        isTablet
+            ? Column(
+                children: actionCards.map((card) {
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 16.0),
+                    child: SizedBox(width: double.infinity, child: card),
+                  );
+                }).toList(),
+              )
+            : Wrap(
+                spacing: 16,
+                runSpacing: 16,
+                children: actionCards.map((card) {
+                  return SizedBox(width: double.infinity, child: card);
+                }).toList(),
+              ),
       ],
     );
   }
