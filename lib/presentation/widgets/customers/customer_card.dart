@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:posventa/domain/entities/customer.dart';
+import 'package:posventa/presentation/widgets/common/actions/catalog_module_actions_sheet.dart';
 
 class CustomerCard extends StatelessWidget {
   final Customer customer;
@@ -23,14 +24,29 @@ class CustomerCard extends StatelessWidget {
     return Card(
       elevation: 0,
       margin: const EdgeInsets.only(bottom: 12),
+      clipBehavior: Clip.antiAlias,
+      color: colorScheme.surfaceContainer,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: colorScheme.outlineVariant.withAlpha(80)),
+        borderRadius: BorderRadius.circular(20),
+        side: BorderSide.none,
       ),
-      color: colorScheme.surface,
       child: InkWell(
-        onTap: hasManagePermission ? onEdit : null,
-        borderRadius: BorderRadius.circular(16),
+        onTap: hasManagePermission
+            ? () {
+                showModalBottomSheet(
+                  context: context,
+                  isScrollControlled: true,
+                  backgroundColor: Colors.transparent,
+                  builder: (ctx) => CatalogModuleActionsSheet(
+                    title: customer.fullName,
+                    subtitle: 'Código: ${customer.code}',
+                    icon: Icons.person_rounded,
+                    onEdit: onEdit,
+                    onDelete: onDelete,
+                  ),
+                );
+              }
+            : null,
         child: Padding(
           padding: const EdgeInsets.all(16.0),
           child: Column(
@@ -39,13 +55,23 @@ class CustomerCard extends StatelessWidget {
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  CircleAvatar(
-                    backgroundColor: colorScheme.primaryContainer,
-                    child: Text(
-                      customer.firstName[0].toUpperCase(),
-                      style: TextStyle(
-                        color: colorScheme.onPrimaryContainer,
-                        fontWeight: FontWeight.bold,
+                  Container(
+                    width: 48,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      color: colorScheme.primaryContainer,
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: Center(
+                      child: Text(
+                        customer.firstName.isNotEmpty
+                            ? customer.firstName[0].toUpperCase()
+                            : '?',
+                        style: TextStyle(
+                          color: colorScheme.onPrimaryContainer,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 20,
+                        ),
                       ),
                     ),
                   ),
@@ -58,93 +84,94 @@ class CustomerCard extends StatelessWidget {
                           customer.fullName,
                           style: theme.textTheme.titleMedium?.copyWith(
                             fontWeight: FontWeight.bold,
+                            letterSpacing: -0.5,
                           ),
                         ),
-                        Text(
-                          'Código: ${customer.code}',
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: colorScheme.onSurfaceVariant,
-                            fontFamily: 'monospace',
+                        const SizedBox(height: 4),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 6,
+                            vertical: 2,
+                          ),
+                          decoration: BoxDecoration(
+                            color: colorScheme.surface,
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text(
+                            customer.code,
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              fontFamily: 'monospace',
+                              color: colorScheme.onSurfaceVariant,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
                         ),
                       ],
                     ),
                   ),
                   if (hasManagePermission)
-                    PopupMenuButton<String>(
+                    IconButton(
                       icon: Icon(
-                        Icons.more_vert_rounded,
+                        Icons.more_horiz_rounded,
                         color: colorScheme.onSurfaceVariant,
                       ),
-                      onSelected: (value) {
-                        if (value == 'edit') onEdit();
-                        if (value == 'delete') onDelete();
+                      onPressed: () {
+                        showModalBottomSheet(
+                          context: context,
+                          isScrollControlled: true,
+                          backgroundColor: Colors.transparent,
+                          builder: (ctx) => CatalogModuleActionsSheet(
+                            title: customer.fullName,
+                            subtitle: 'Código: ${customer.code}',
+                            icon: Icons.person_rounded,
+                            onEdit: onEdit,
+                            onDelete: onDelete,
+                          ),
+                        );
                       },
-                      itemBuilder: (context) => [
-                        const PopupMenuItem(
-                          value: 'edit',
-                          child: Row(
-                            children: [
-                              Icon(Icons.edit_outlined, size: 20),
-                              SizedBox(width: 8),
-                              Text('Editar'),
-                            ],
-                          ),
-                        ),
-                        PopupMenuItem(
-                          value: 'delete',
-                          child: Row(
-                            children: [
-                              Icon(
-                                Icons.delete_outline_rounded,
-                                size: 20,
-                                color: colorScheme.error,
-                              ),
-                              const SizedBox(width: 8),
-                              Text(
-                                'Eliminar',
-                                style: TextStyle(color: colorScheme.error),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
                     ),
                 ],
               ),
-              const Divider(height: 24),
-              Row(
-                mainAxisAlignment: .spaceBetween,
-                children: [
-                  _InfoChip(
-                    icon: Icons.phone_outlined,
-                    label: customer.phone ?? '-',
-                    colorScheme: colorScheme,
-                  ),
-                  _InfoChip(
-                    icon: Icons.email_outlined,
-                    label: customer.email ?? '-',
-                    colorScheme: colorScheme,
-                  ),
-                ],
-              ),
+              if (_hasContactInfo) ...[
+                const SizedBox(height: 16),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    if (customer.phone != null && customer.phone!.isNotEmpty)
+                      _InfoChip(
+                        icon: Icons.phone_outlined,
+                        label: customer.phone!,
+                        colorScheme: colorScheme,
+                      ),
+                    if (customer.email != null && customer.email!.isNotEmpty)
+                      _InfoChip(
+                        icon: Icons.email_outlined,
+                        label: customer.email!,
+                        colorScheme: colorScheme,
+                      ),
+                  ],
+                ),
+              ],
               if (customer.businessName != null &&
                   customer.businessName!.isNotEmpty) ...[
-                const SizedBox(height: 8),
+                const SizedBox(height: 12),
                 Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Icon(
                       Icons.business_rounded,
-                      size: 16,
-                      color: colorScheme.onSurfaceVariant,
+                      size: 14,
+                      color: colorScheme.primary,
                     ),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: 6),
                     Expanded(
                       child: Text(
                         customer.businessName!,
                         style: theme.textTheme.bodySmall?.copyWith(
                           color: colorScheme.onSurfaceVariant,
                         ),
+                        maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
@@ -157,6 +184,10 @@ class CustomerCard extends StatelessWidget {
       ),
     );
   }
+
+  bool get _hasContactInfo =>
+      (customer.phone != null && customer.phone!.isNotEmpty) ||
+      (customer.email != null && customer.email!.isNotEmpty);
 }
 
 class _InfoChip extends StatelessWidget {
@@ -173,19 +204,27 @@ class _InfoChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerHighest.withAlpha(100),
+        color: colorScheme.surface,
         borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: colorScheme.outlineVariant.withAlpha(50)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(icon, size: 14, color: colorScheme.primary),
-          const SizedBox(width: 6),
-          Text(
-            label,
-            style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant),
+          const SizedBox(width: 8),
+          Flexible(
+            child: Text(
+              label,
+              style: TextStyle(
+                fontSize: 12,
+                color: colorScheme.onSurfaceVariant,
+                fontWeight: FontWeight.w500,
+              ),
+              overflow: TextOverflow.ellipsis,
+            ),
           ),
         ],
       ),

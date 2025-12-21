@@ -122,30 +122,16 @@ class CustomerFormState extends ConsumerState<CustomerForm> {
           ? 'Crear Cliente'
           : 'Actualizar Cliente',
       formKey: _formKey,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          _buildSection(theme, 'Información Básica', Icons.person_outline, [
-            TextFormField(
-              initialValue: _code,
-              readOnly: true,
-              enabled: false,
-              decoration: InputDecoration(
-                labelText: 'Código (Auto-generado)',
-                prefixIcon: const Icon(Icons.qr_code),
-                filled: true,
-                fillColor: colorScheme.surfaceContainerHighest.withAlpha(50),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide.none,
-                ),
-              ),
-            ),
-            const SizedBox(height: UIConstants.spacingMedium),
-            Row(
-              children: [
-                Expanded(
-                  child: TextFormField(
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final isMobile = constraints.maxWidth < 600;
+
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              _buildSection(theme, 'Información Básica', Icons.person_outline, [
+                if (isMobile) ...[
+                  TextFormField(
                     initialValue: _firstName,
                     decoration: const InputDecoration(
                       labelText: 'Nombre',
@@ -159,10 +145,8 @@ class CustomerFormState extends ConsumerState<CustomerForm> {
                     },
                     onSaved: (value) => _firstName = value!,
                   ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: TextFormField(
+                  const SizedBox(height: UIConstants.spacingMedium),
+                  TextFormField(
                     initialValue: _lastName,
                     decoration: const InputDecoration(
                       labelText: 'Apellido',
@@ -176,77 +160,114 @@ class CustomerFormState extends ConsumerState<CustomerForm> {
                     },
                     onSaved: (value) => _lastName = value!,
                   ),
+                ] else
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextFormField(
+                          initialValue: _firstName,
+                          decoration: const InputDecoration(
+                            labelText: 'Nombre',
+                            prefixIcon: Icon(Icons.person),
+                          ),
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'El nombre es requerido';
+                            }
+                            return null;
+                          },
+                          onSaved: (value) => _firstName = value!,
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: TextFormField(
+                          initialValue: _lastName,
+                          decoration: const InputDecoration(
+                            labelText: 'Apellido',
+                            prefixIcon: Icon(Icons.person_outline),
+                          ),
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'El apellido es requerido';
+                            }
+                            return null;
+                          },
+                          onSaved: (value) => _lastName = value!,
+                        ),
+                      ),
+                    ],
+                  ),
+              ]),
+              const SizedBox(height: UIConstants.spacingLarge),
+              _buildSection(theme, 'Contacto', Icons.contact_mail_outlined, [
+                TextFormField(
+                  initialValue: _phone,
+                  decoration: const InputDecoration(
+                    labelText: 'Teléfono',
+                    prefixIcon: Icon(Icons.phone),
+                  ),
+                  keyboardType: TextInputType.phone,
+                  onSaved: (value) => _phone = value,
                 ),
-              ],
-            ),
-          ]),
-          const SizedBox(height: UIConstants.spacingLarge),
-          _buildSection(theme, 'Contacto', Icons.contact_mail_outlined, [
-            TextFormField(
-              initialValue: _phone,
-              decoration: const InputDecoration(
-                labelText: 'Teléfono',
-                prefixIcon: Icon(Icons.phone),
-              ),
-              keyboardType: TextInputType.phone,
-              onSaved: (value) => _phone = value,
-            ),
-            const SizedBox(height: UIConstants.spacingMedium),
-            TextFormField(
-              initialValue: _email,
-              decoration: const InputDecoration(
-                labelText: 'Email',
-                prefixIcon: Icon(Icons.email),
-              ),
-              keyboardType: TextInputType.emailAddress,
-              validator: (value) {
-                if (value != null && value.isNotEmpty) {
-                  if (!value.contains('@') || !value.contains('.')) {
-                    return 'Email inválido';
-                  }
-                }
-                return null;
-              },
-              onSaved: (value) => _email = value,
-            ),
-            const SizedBox(height: UIConstants.spacingMedium),
-            TextFormField(
-              initialValue: _address,
-              decoration: const InputDecoration(
-                labelText: 'Dirección',
-                prefixIcon: Icon(Icons.location_on),
-              ),
-              maxLines: 2,
-              onSaved: (value) => _address = value,
-            ),
-          ]),
-          const SizedBox(height: UIConstants.spacingLarge),
-          _buildSection(
-            theme,
-            'Información Fiscal',
-            Icons.receipt_long_outlined,
-            [
-              TextFormField(
-                initialValue: _taxId,
-                decoration: const InputDecoration(
-                  labelText: 'RFC / Tax ID',
-                  prefixIcon: Icon(Icons.badge_outlined),
+                const SizedBox(height: UIConstants.spacingMedium),
+                TextFormField(
+                  initialValue: _email,
+                  decoration: const InputDecoration(
+                    labelText: 'Email',
+                    prefixIcon: Icon(Icons.email),
+                  ),
+                  keyboardType: TextInputType.emailAddress,
+                  validator: (value) {
+                    if (value != null && value.isNotEmpty) {
+                      if (!value.contains('@') || !value.contains('.')) {
+                        return 'Email inválido';
+                      }
+                    }
+                    return null;
+                  },
+                  onSaved: (value) => _email = value,
                 ),
-                onSaved: (value) => _taxId = value,
-              ),
-              const SizedBox(height: UIConstants.spacingMedium),
-              TextFormField(
-                initialValue: _businessName,
-                decoration: const InputDecoration(
-                  labelText: 'Razón Social',
-                  prefixIcon: Icon(Icons.business),
+                const SizedBox(height: UIConstants.spacingMedium),
+                TextFormField(
+                  initialValue: _address,
+                  decoration: const InputDecoration(
+                    labelText: 'Dirección',
+                    prefixIcon: Icon(Icons.location_on),
+                  ),
+                  maxLines: 2,
+                  onSaved: (value) => _address = value,
                 ),
-                onSaved: (value) => _businessName = value,
+              ]),
+              const SizedBox(height: UIConstants.spacingLarge),
+              _buildSection(
+                theme,
+                'Información Fiscal',
+                Icons.receipt_long_outlined,
+                [
+                  TextFormField(
+                    initialValue: _taxId,
+                    decoration: const InputDecoration(
+                      labelText: 'RFC / Tax ID',
+                      prefixIcon: Icon(Icons.badge_outlined),
+                    ),
+                    onSaved: (value) => _taxId = value,
+                  ),
+                  const SizedBox(height: UIConstants.spacingMedium),
+                  TextFormField(
+                    initialValue: _businessName,
+                    decoration: const InputDecoration(
+                      labelText: 'Razón Social',
+                      prefixIcon: Icon(Icons.business),
+                    ),
+                    onSaved: (value) => _businessName = value,
+                  ),
+                ],
               ),
+              const SizedBox(height: UIConstants.spacingXLarge),
             ],
-          ),
-          const SizedBox(height: UIConstants.spacingXLarge),
-        ],
+          );
+        },
       ),
     );
   }
@@ -261,7 +282,7 @@ class CustomerFormState extends ConsumerState<CustomerForm> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+          padding: const EdgeInsets.only(left: 4, bottom: 8),
           child: Row(
             children: [
               Icon(icon, size: 20, color: theme.colorScheme.primary),
@@ -276,19 +297,14 @@ class CustomerFormState extends ConsumerState<CustomerForm> {
             ],
           ),
         ),
-        Card(
-          elevation: 0,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-            side: BorderSide(
-              color: theme.colorScheme.outlineVariant.withAlpha(80),
-            ),
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: theme.colorScheme.surfaceContainer,
+            borderRadius: BorderRadius.circular(20),
           ),
-          color: theme.colorScheme.surface,
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(children: children),
-          ),
+          child: Column(children: children),
         ),
       ],
     );

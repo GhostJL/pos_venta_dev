@@ -147,7 +147,9 @@ class InventoryCardWidget extends ConsumerWidget {
                         if (isZeroStock)
                           _StatusBadge(
                             text: 'SIN STOCK',
-                            color: Theme.of(context).colorScheme.error,
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onErrorContainer,
                             bgColor: Theme.of(
                               context,
                             ).colorScheme.errorContainer,
@@ -155,7 +157,9 @@ class InventoryCardWidget extends ConsumerWidget {
                         else if (isLowStock)
                           _StatusBadge(
                             text: 'BAJO STOCK',
-                            color: Theme.of(context).colorScheme.error,
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onErrorContainer,
                             bgColor: Theme.of(
                               context,
                             ).colorScheme.errorContainer,
@@ -163,7 +167,9 @@ class InventoryCardWidget extends ConsumerWidget {
                         else if (isNearLowStock)
                           _StatusBadge(
                             text: 'CERCA DEL MÍNIMO',
-                            color: Theme.of(context).colorScheme.tertiary,
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onTertiaryContainer,
                             bgColor: Theme.of(
                               context,
                             ).colorScheme.tertiaryContainer,

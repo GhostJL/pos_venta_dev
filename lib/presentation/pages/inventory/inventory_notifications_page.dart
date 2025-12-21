@@ -125,7 +125,7 @@ class _NotificationTile extends ConsumerWidget {
             isAlert ? Icons.warning_amber_rounded : Icons.info_outline,
             color: isAlert
                 ? (notification.type == 'out_of_stock'
-                      ? colorScheme.error
+                      ? colorScheme.onErrorContainer
                       : Colors.orange.shade800)
                 : colorScheme.onSurface,
           ),

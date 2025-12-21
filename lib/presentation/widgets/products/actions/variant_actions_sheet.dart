@@ -22,10 +22,6 @@ class VariantActionsSheet extends StatelessWidget {
 
     return Container(
       constraints: BoxConstraints(maxWidth: isTablet ? 480 : double.infinity),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
-        borderRadius: BorderRadius.circular(20),
-      ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,

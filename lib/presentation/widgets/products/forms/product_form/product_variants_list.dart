@@ -224,8 +224,8 @@ class _VariantCard extends ConsumerWidget {
               // Botón de más acciones
               IconButton(
                 icon: Icon(
-                  Icons.more_horiz_rounded,
-                  color: theme.colorScheme.outline,
+                  Icons.more_vert_rounded,
+                  color: theme.colorScheme.onSurface,
                   size: 20,
                 ),
                 onPressed: () => _showActions(context),
