@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:posventa/core/theme/theme.dart';
 import 'package:posventa/domain/entities/product.dart';
 import 'package:posventa/domain/entities/product_variant.dart';
 import 'package:posventa/presentation/providers/product_provider.dart';
 import 'package:posventa/presentation/widgets/products/shared/product_card.dart';
+import 'package:posventa/presentation/widgets/common/misc/scanner_arguments.dart';
 
 /// Helper class to represent a product or variant as a single grid item
 class PurchaseGridItem {
@@ -53,56 +53,54 @@ class _PurchaseProductGridState extends ConsumerState<PurchaseProductGrid> {
   }
 
   void _openScanner() async {
-    final barcode = await context.push<String>('/scanner');
-    if (barcode != null && mounted) {
-      _handleScannedBarcode(barcode);
-    }
+    await context.push<String>(
+      '/scanner',
+      extra: ScannerArguments(
+        onScan: (context, barcode) async {
+          return _handleScannedBarcode(barcode);
+        },
+      ),
+    );
   }
 
-  void _handleScannedBarcode(String barcode) {
+  Future<(bool, String)> _handleScannedBarcode(String barcode) async {
     final productsAsync = ref.read(productListProvider);
 
-    productsAsync.whenData((products) {
-      Product? product;
-      ProductVariant? matchedVariant;
+    return productsAsync.when(
+      data: (products) {
+        Product? product;
+        ProductVariant? matchedVariant;
 
-      for (final p in products) {
-        if (p.barcode == barcode) {
-          product = p;
-          break;
-        }
-        if (p.variants != null) {
-          final variant = p.variants!
-              .where((v) => v.barcode == barcode)
-              .firstOrNull;
-          if (variant != null) {
+        for (final p in products) {
+          // Check variants first
+          if (p.variants != null) {
+            final variant = p.variants!
+                .where((v) => v.barcode == barcode)
+                .firstOrNull;
+            if (variant != null) {
+              product = p;
+              matchedVariant = variant;
+              break;
+            }
+          }
+
+          // Then check parent
+          if (p.barcode == barcode) {
             product = p;
-            matchedVariant = variant;
             break;
           }
         }
-      }
 
-      if (product != null) {
-        widget.onProductSelected(product, matchedVariant);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'Agregado: ${product.name} ${matchedVariant != null ? "(${matchedVariant.description})" : ""}',
-            ),
-            duration: const Duration(milliseconds: 800),
-            backgroundColor: AppTheme.transactionSuccess,
-          ),
-        );
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Producto no encontrado: $barcode'),
-            backgroundColor: AppTheme.transactionPending,
-          ),
-        );
-      }
-    });
+        if (product != null) {
+          widget.onProductSelected(product, matchedVariant);
+          return (true, 'Agregado: ${product.name}');
+        } else {
+          return (false, 'No encontrado: $barcode');
+        }
+      },
+      loading: () => (false, 'Cargando...'),
+      error: (_, __) => (false, 'Error al buscar producto'),
+    );
   }
 
   @override

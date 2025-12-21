@@ -12,6 +12,7 @@ import 'package:posventa/presentation/widgets/pos/product_grid/product_search_ba
 import 'package:posventa/presentation/widgets/pos/sale/charge_bottom_bar.dart';
 import 'package:posventa/presentation/mixins/search_debounce_mixin.dart';
 import 'package:posventa/presentation/widgets/pos/product_grid/weight_input_dialog.dart';
+import 'package:posventa/presentation/widgets/common/misc/scanner_arguments.dart';
 
 class ProductGridSection extends ConsumerStatefulWidget {
   final bool isMobile;
@@ -33,72 +34,80 @@ class _ProductGridSectionState extends ConsumerState<ProductGridSection>
   }
 
   void _openScanner() async {
-    final barcode = await context.push<String>('/scanner');
-    if (barcode != null && mounted) {
-      _handleScannedBarcode(context, barcode);
-    }
+    await context.push<String>(
+      '/scanner',
+      extra: ScannerArguments(
+        onScan: (context, barcode) async {
+          return await _handleScannedBarcode(context, barcode);
+        },
+      ),
+    );
   }
 
-  void _handleScannedBarcode(
+  Future<(bool, String)> _handleScannedBarcode(
     BuildContext scannerContext,
     String barcode,
   ) async {
     // Buscar producto por código de barras
     final productsAsync = ref.read(productListProvider);
 
-    productsAsync.whenData((products) async {
-      // Find product by its barcode OR by one of its variants' barcode
-      Product? product;
-      ProductVariant? matchedVariant;
+    return productsAsync.when(
+      data: (products) async {
+        // Find product by its barcode OR by one of its variants' barcode
+        Product? product;
+        ProductVariant? matchedVariant;
 
-      for (final p in products) {
-        if (p.barcode == barcode) {
-          product = p;
-          break;
-        }
-        if (p.variants != null) {
-          final variant = p.variants!
-              .where((v) => v.barcode == barcode && v.isForSale)
-              .firstOrNull;
-          if (variant != null) {
+        for (final p in products) {
+          // Check variants first for more specific match
+          if (p.variants != null) {
+            final variant = p.variants!
+                .where((v) => v.barcode == barcode && v.isForSale)
+                .firstOrNull;
+            if (variant != null) {
+              product = p;
+              matchedVariant = variant;
+              break;
+            }
+          }
+
+          // Then check parent product
+          if (p.barcode == barcode) {
             product = p;
-            matchedVariant = variant;
             break;
           }
         }
-      }
 
-      if (product != null) {
-        // Validation for weight-based products
-        double quantity = 1.0;
-        if (product.isSoldByWeight ||
-            (matchedVariant?.isSoldByWeight ?? false)) {
-          if (!scannerContext.mounted) return;
-          final result = await showDialog<double>(
-            context: scannerContext,
-            builder: (context) =>
-                WeightInputDialog(product: product!, variant: matchedVariant),
-          );
-          if (result == null) return; // Cancelled
-          quantity = result;
+        if (product != null) {
+          // Validation for weight-based products
+          double quantity = 1.0;
+          if (product.isSoldByWeight ||
+              (matchedVariant?.isSoldByWeight ?? false)) {
+            if (!scannerContext.mounted) return (false, 'Error de contexto');
+            final result = await showDialog<double>(
+              context: scannerContext,
+              builder: (context) =>
+                  WeightInputDialog(product: product!, variant: matchedVariant),
+            );
+            if (result == null) return (false, 'Cancelado'); // Cancelled
+            quantity = result;
+          }
+
+          // Agregar al carrito con validación de stock
+          final error = await ref
+              .read(pOSProvider.notifier)
+              .addToCart(product, variant: matchedVariant, quantity: quantity);
+
+          if (error != null) {
+            return (false, error);
+          }
+          return (true, 'Agregado: ${product.name}'); // Added successfully
+        } else {
+          return (false, 'No encontrado: $barcode'); // Not found
         }
-
-        // Agregar al carrito con validación de stock
-        final error = await ref
-            .read(pOSProvider.notifier)
-            .addToCart(product, variant: matchedVariant, quantity: quantity);
-
-        if (error != null && scannerContext.mounted) {
-          // Mostrar error de stock
-          _showStockError(scannerContext, error);
-        } else if (scannerContext.mounted) {
-          // Success feedback handled silently or via UI update
-        }
-      } else if (scannerContext.mounted) {
-        // Producto no encontrado
-        _showStockError(scannerContext, 'Producto no encontrado: $barcode');
-      }
-    });
+      },
+      loading: () => (false, 'Cargando...'),
+      error: (_, __) => (false, 'Error al buscar producto'),
+    );
   }
 
   List<ProductGridItem> _buildGridItems(List<Product> products) {

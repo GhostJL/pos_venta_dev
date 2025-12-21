@@ -1,16 +1,22 @@
+import 'dart:async';
+import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
+import 'package:posventa/presentation/widgets/common/misc/scanner_arguments.dart';
 
 class BarcodeScannerWidget extends StatefulWidget {
   final Function(BuildContext context, String barcode) onBarcodeScanned;
   final String? title;
   final String? hint;
+  final ScannerArguments? args;
 
   const BarcodeScannerWidget({
     super.key,
     required this.onBarcodeScanned,
     this.title,
     this.hint,
+    this.args,
   });
 
   @override
@@ -19,40 +25,128 @@ class BarcodeScannerWidget extends StatefulWidget {
 
 class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget> {
   MobileScannerController cameraController = MobileScannerController(
-    detectionSpeed: DetectionSpeed.noDuplicates,
+    detectionSpeed: DetectionSpeed.normal,
     formats: [BarcodeFormat.ean13, BarcodeFormat.ean8, BarcodeFormat.code128],
   );
 
+  late AudioPlayer _audioPlayer;
+
   bool _isProcessing = false;
+  int _scannedCount = 0;
+  Timer? _inactivityTimer;
+  String? _lastScannedMessage;
+  bool _lastScanSuccess = true;
+  String? _lastScannedCode;
+  DateTime? _lastScanTime;
+
+  @override
+  void initState() {
+    super.initState();
+    _audioPlayer = AudioPlayer();
+    _resetInactivityTimer();
+  }
 
   @override
   void dispose() {
+    _inactivityTimer?.cancel();
     cameraController.dispose();
+    _audioPlayer.dispose();
     super.dispose();
   }
 
-  void _handleBarcode(BarcodeCapture capture) {
-    if (_isProcessing) return;
+  void _resetInactivityTimer() {
+    _inactivityTimer?.cancel();
+    // Solo activar timer si estamos en modo batch (callback provided)
+    if (widget.args?.onScan != null) {
+      _inactivityTimer = Timer(const Duration(seconds: 30), () {
+        if (mounted) {
+          context.pop();
+        }
+      });
+    }
+  }
 
+  Future<void> _playSound(bool success) async {
+    try {
+      if (success) {
+        await _audioPlayer.play(AssetSource('sounds/beep.mp3'));
+      } else {
+        // Optional: Error sound
+        // await _audioPlayer.play(AssetSource('sounds/error.mp3'));
+      }
+    } catch (e) {
+      debugPrint('Error playing sound: $e');
+    }
+  }
+
+  void _handleBarcode(BarcodeCapture capture) async {
     final List<Barcode> barcodes = capture.barcodes;
     if (barcodes.isEmpty) return;
 
     final barcode = barcodes.first;
     if (barcode.rawValue == null) return;
 
+    final String code = barcode.rawValue!;
+
+    // Manual Debounce Logic for same code
+    if (code == _lastScannedCode &&
+        _lastScanTime != null &&
+        DateTime.now().difference(_lastScanTime!) <
+            const Duration(seconds: 1)) {
+      return;
+    }
+
+    if (_isProcessing) return;
+
     setState(() => _isProcessing = true);
+    _resetInactivityTimer();
 
-    // Vibrar para feedback
-    // HapticFeedback.mediumImpact();
+    // Update debounce info
+    _lastScannedCode = code;
+    _lastScanTime = DateTime.now();
 
-    widget.onBarcodeScanned(context, barcode.rawValue!);
+    // Batch Mode
+    if (widget.args?.onScan != null) {
+      final (success, message) = await widget.args!.onScan!(context, code);
 
-    // Pequeño delay para evitar escaneos duplicados
-    Future.delayed(const Duration(milliseconds: 500), () {
       if (mounted) {
-        setState(() => _isProcessing = false);
+        if (success) _playSound(true);
+
+        setState(() {
+          _lastScanSuccess = success;
+          if (success) {
+            _scannedCount++;
+          } else {
+            _isProcessing = false; // Allow retrying immediately if needed
+          }
+          _lastScannedMessage = message;
+
+          // Show message for 400ms but allow next scan if different code
+          Future.delayed(const Duration(seconds: 1), () {
+            if (mounted) {
+              setState(() {
+                _isProcessing = false;
+                _lastScannedMessage = null;
+              });
+            }
+          });
+        });
+
+        // IMPORTANT: Allow scanning different code immediately
       }
-    });
+    } else {
+      // Single Mode (Default)
+      if (!mounted) return;
+      _playSound(true);
+      widget.onBarcodeScanned(context, code);
+
+      // Delay handled by caller or router pop generally, but here for safety
+      Future.delayed(const Duration(milliseconds: 500), () {
+        if (mounted) {
+          setState(() => _isProcessing = false);
+        }
+      });
+    }
   }
 
   @override
@@ -60,10 +154,16 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget> {
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
-        title: Text(widget.title ?? 'Escanear Código de Barras'),
+        title: Text(
+          widget.args?.titleOverride ?? widget.title ?? 'Escanear Código',
+        ),
         backgroundColor: Colors.black,
-        foregroundColor: Theme.of(context).colorScheme.onSurface,
+        foregroundColor: Colors.white,
         elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.close),
+          onPressed: () => context.pop(),
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.flash_on),
@@ -85,7 +185,7 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget> {
           // Overlay con área de escaneo
           CustomPaint(painter: ScannerOverlayPainter(), child: Container()),
 
-          // Instrucciones
+          // Feedback & Instrucciones
           Positioned(
             bottom: 0,
             left: 0,
@@ -96,72 +196,127 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget> {
                 gradient: LinearGradient(
                   begin: Alignment.bottomCenter,
                   end: Alignment.topCenter,
-                  colors: [Colors.black.withAlpha(10), Colors.transparent],
+                  colors: [
+                    Colors.black.withValues(alpha: 0.8),
+                    Colors.transparent,
+                  ],
                 ),
               ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  if (_isProcessing)
+                  // Batch Mode Counter & Status
+                  if (widget.args?.onScan != null) ...[
                     Container(
+                      margin: const EdgeInsets.only(bottom: 20),
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 8,
+                        horizontal: 20,
+                        vertical: 12,
                       ),
                       decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.tertiary,
-                        borderRadius: BorderRadius.circular(20),
+                        color: _lastScannedMessage != null
+                            ? (_lastScanSuccess
+                                  ? Colors.green.withValues(alpha: 0.8)
+                                  : Colors.red.withValues(alpha: 0.8))
+                            : Colors.black.withValues(alpha: 0.5),
+                        borderRadius: BorderRadius.circular(30),
+                        border: Border.all(
+                          color: Colors.white.withValues(alpha: 0.2),
+                          width: 1,
+                        ),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Icon(
-                            Icons.check_circle,
-                            color: Theme.of(context).colorScheme.onSurface,
+                            _lastScannedMessage != null
+                                ? (_lastScanSuccess
+                                      ? Icons.check_circle
+                                      : Icons.error)
+                                : Icons.shopping_cart,
+                            color: Colors.white,
                             size: 20,
                           ),
-                          SizedBox(width: 8),
-                          Text(
-                            'Código detectado',
-                            style: TextStyle(
-                              color: Theme.of(context).colorScheme.onSurface,
-                              fontWeight: FontWeight.bold,
+                          const SizedBox(width: 10),
+                          Flexible(
+                            child: Text(
+                              _lastScannedMessage ??
+                                  'Productos escaneados: $_scannedCount',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
                             ),
                           ),
                         ],
                       ),
-                    )
-                  else
-                    Column(
-                      children: [
-                        Icon(
-                          Icons.qr_code_scanner,
-                          color: Theme.of(context).colorScheme.onSurface,
-                          size: 48,
-                        ),
-                        const SizedBox(height: 12),
-                        Text(
-                          widget.hint ??
-                              'Coloca el código de barras dentro del marco',
-                          style: TextStyle(
-                            color: Theme.of(context).colorScheme.onSurface,
-                            fontSize: 16,
-                            fontWeight: FontWeight.w500,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          'EAN-13, EAN-8, Code 128',
-                          style: TextStyle(
-                            color: Theme.of(
-                              context,
-                            ).colorScheme.onSurface.withAlpha(10),
-                            fontSize: 12,
-                          ),
-                        ),
-                      ],
                     ),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: () => context.pop(),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Theme.of(context).primaryColor,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        child: const Text(
+                          'Finalizar',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ] else ...[
+                    // Single Mode Feedback
+                    if (_isProcessing)
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 8,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).colorScheme.tertiary,
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.check_circle,
+                              color: Theme.of(context).colorScheme.onSurface,
+                              size: 20,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              'Código detectado',
+                              style: TextStyle(
+                                color: Theme.of(context).colorScheme.onSurface,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                      )
+                    else
+                      Text(
+                        widget.hint ?? 'Coloca el código dentro del marco',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                  ],
                 ],
               ),
             ),
@@ -182,7 +337,7 @@ class ScannerOverlayPainter extends CustomPainter {
 
     // Fondo oscuro
     final backgroundPaint = Paint()
-      ..color = Colors.black.withAlpha(10)
+      ..color = Colors.black.withValues(alpha: 0.5)
       ..style = PaintingStyle.fill;
 
     final scanAreaRect = Rect.fromLTWH(
@@ -206,7 +361,7 @@ class ScannerOverlayPainter extends CustomPainter {
 
     // Esquinas del marco
     final cornerPaint = Paint()
-      ..color = Colors.white
+      ..color = Colors.white.withValues(alpha: 0.2)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 4
       ..strokeCap = StrokeCap.round;
@@ -261,9 +416,9 @@ class ScannerOverlayPainter extends CustomPainter {
       cornerPaint,
     );
 
-    // Línea de escaneo animada (opcional, se puede animar con AnimationController)
+    // Línea de escaneo (visual only)
     final scanLinePaint = Paint()
-      ..color = Colors.white
+      ..color = Colors.redAccent.withValues(alpha: 0.8)
       ..style = PaintingStyle.fill;
 
     canvas.drawRect(

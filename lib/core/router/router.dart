@@ -48,6 +48,7 @@ import 'package:posventa/presentation/pages/settings/settings_page.dart';
 import 'package:posventa/presentation/pages/users/users_permissions_page.dart';
 import 'package:posventa/presentation/pages/warehouses/warehouses_page.dart';
 import 'package:posventa/presentation/widgets/common/misc/barcode_scanner_widget.dart';
+import 'package:posventa/presentation/widgets/common/misc/scanner_arguments.dart';
 import 'package:posventa/presentation/widgets/cash_sessions/misc/cash_session_guard.dart';
 
 import 'package:posventa/domain/entities/sale.dart';
@@ -374,8 +375,10 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/scanner',
             pageBuilder: (context, state) {
+              final args = state.extra as ScannerArguments?;
               return NoTransitionPage(
                 child: BarcodeScannerWidget(
+                  args: args,
                   onBarcodeScanned: (context, barcode) {
                     context.pop(barcode);
                   },
