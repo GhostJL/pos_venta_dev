@@ -1,6 +1,9 @@
 import 'package:posventa/data/datasources/database_helper.dart';
 import 'package:posventa/data/repositories/warehouse_repository_impl.dart';
 import 'package:posventa/domain/entities/sale_return.dart';
+import 'package:posventa/domain/repositories/tax_rate_repository.dart';
+import 'package:posventa/data/repositories/tax_rate_repository_impl.dart';
+import 'package:posventa/domain/use_cases/tax_rate/get_all_tax_rates.dart';
 import 'package:posventa/domain/repositories/warehouse_repository.dart';
 import 'package:posventa/domain/use_cases/warehouse/create_warehouse.dart';
 import 'package:posventa/domain/use_cases/warehouse/delete_warehouse.dart';
@@ -467,3 +470,12 @@ final saleDetailStreamProvider = StreamProvider.family<Sale?, int>((
 @riverpod
 IStoreRepository storeRepository(ref) =>
     StoreRepositoryImpl(databaseHelper: ref.watch(databaseHelperProvider));
+
+// Tax Rate Providers
+@riverpod
+TaxRateRepository taxRateRepository(ref) =>
+    TaxRateRepositoryImpl(ref.watch(databaseHelperProvider));
+
+@riverpod
+GetAllTaxRates getAllTaxRatesUseCase(ref) =>
+    GetAllTaxRates(ref.watch(taxRateRepositoryProvider));

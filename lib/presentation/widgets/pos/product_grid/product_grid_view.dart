@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:posventa/presentation/widgets/pos/product_grid/pos_product_item.dart';
+import 'package:posventa/presentation/widgets/pos/product_grid/mobile_product_item.dart';
 import 'package:posventa/presentation/widgets/pos/product_grid/product_grid_item_model.dart';
 
 class ProductGridView extends StatelessWidget {
@@ -25,7 +26,8 @@ class ProductGridView extends StatelessWidget {
   // Define la relación de aspecto ideal (ancho / alto).
   // Si la tarjeta moderna sugerida tiene 120 (imagen) + 100 (contenido) = 220 de alto
   // y un ancho mínimo de 190, la proporción es 190 / 220 ≈ 0.86
-  static const double _idealAspectRatio = 0.86;
+  // Ajuste para soporte de imágenes e layout vertical: ~0.65
+  static const double _idealAspectRatio = 0.65;
 
   @override
   Widget build(BuildContext context) {
@@ -37,6 +39,27 @@ class ProductGridView extends StatelessWidget {
             color: Theme.of(context).colorScheme.onSurfaceVariant,
           ),
         ),
+      );
+    }
+
+    if (isMobile) {
+      return ListView.separated(
+        padding: const EdgeInsets.all(12),
+        itemCount: items.length,
+        separatorBuilder: (context, index) => const SizedBox(height: 12),
+        itemBuilder: (context, index) {
+          final item = items[index];
+          final quantity =
+              cartQuantities[item.product.id]?[item.variant?.id] ?? 0;
+
+          return MobileProductItem(
+            product: item.product,
+            variant: item.variant,
+            quantityInCart: quantity,
+            onTap: () => onItemTap(item),
+            onLongPress: () => onItemLongPress(item),
+          );
+        },
       );
     }
 

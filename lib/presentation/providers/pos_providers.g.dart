@@ -41,7 +41,7 @@ final class POSNotifierProvider
   }
 }
 
-String _$pOSNotifierHash() => r'b97a9b9f0aecce90c3cd19f391be4dcfd321cd1d';
+String _$pOSNotifierHash() => r'54f50d6c5fcab87f50f6e4c7e904987f480c30a0';
 
 abstract class _$POSNotifier extends $Notifier<POSState> {
   POSState build();
@@ -61,3 +61,42 @@ abstract class _$POSNotifier extends $Notifier<POSState> {
     element.handleValue(ref, created);
   }
 }
+
+@ProviderFor(allTaxRates)
+const allTaxRatesProvider = AllTaxRatesProvider._();
+
+final class AllTaxRatesProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<List<TaxRate>>,
+          List<TaxRate>,
+          FutureOr<List<TaxRate>>
+        >
+    with $FutureModifier<List<TaxRate>>, $FutureProvider<List<TaxRate>> {
+  const AllTaxRatesProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'allTaxRatesProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$allTaxRatesHash();
+
+  @$internal
+  @override
+  $FutureProviderElement<List<TaxRate>> $createElement(
+    $ProviderPointer pointer,
+  ) => $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<List<TaxRate>> create(Ref ref) {
+    return allTaxRates(ref);
+  }
+}
+
+String _$allTaxRatesHash() => r'aca0db09a7f25cd1791a3c3e04335c397662fb7d';

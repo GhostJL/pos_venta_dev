@@ -40,6 +40,7 @@ class PosSalesPage extends ConsumerWidget {
     }
 
     return Scaffold(
+      backgroundColor: Theme.of(context).colorScheme.surfaceContainerLow,
       body: LayoutBuilder(
         builder: (context, constraints) {
           // Determinar si es móvil o tablet basado en el ancho

@@ -5,6 +5,7 @@ import 'package:posventa/domain/entities/sale_item.dart';
 import 'package:posventa/presentation/providers/pos_providers.dart';
 import 'package:posventa/presentation/pages/pos_sale/widgets/cart_item_card.dart';
 import 'package:posventa/presentation/widgets/pos/consumer_selection_dialog_widget.dart';
+import 'package:posventa/presentation/widgets/pos/sale/cart_quantity_dialog.dart';
 import 'package:go_router/go_router.dart';
 
 class CartPage extends ConsumerWidget {
@@ -32,17 +33,23 @@ class CartPage extends ConsumerWidget {
           onPressed: () => Navigator.of(context).pop(),
         ),
         actions: [
-          TextButton(
+          TextButton.icon(
             onPressed: () {
               ref.read(pOSProvider.notifier).clearCart();
             },
-            child: Text(
+            icon: Icon(
+              Icons.delete_outline,
+              size: 20,
+              color: colorScheme.error,
+            ),
+            label: Text(
               'Limpiar',
               style: TextStyle(
                 color: colorScheme.error,
                 fontWeight: FontWeight.w600,
               ),
             ),
+            style: TextButton.styleFrom(foregroundColor: colorScheme.error),
           ),
           const SizedBox(width: 8),
         ],
@@ -74,7 +81,7 @@ class CustomerSelectionSection extends ConsumerWidget {
 
     return Container(
       color: Theme.of(context).colorScheme.surface,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
       child: InkWell(
         onTap: () {
           showDialog(
@@ -82,42 +89,56 @@ class CustomerSelectionSection extends ConsumerWidget {
             builder: (context) => const CustomerSelectionDialogWidget(),
           );
         },
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(12),
         child: Container(
           decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surfaceContainerLow,
-            borderRadius: BorderRadius.circular(8),
+            color: Theme.of(
+              context,
+            ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: Theme.of(
+                context,
+              ).colorScheme.outlineVariant.withValues(alpha: 0.5),
+            ),
           ),
-          padding: const EdgeInsets.all(12),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           child: Row(
             children: [
-              Icon(
-                Icons.person_outline_rounded,
-                color: Theme.of(context).colorScheme.primary,
-                size: 20,
+              CircleAvatar(
+                radius: 16,
+                backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+                child: Icon(
+                  Icons.person,
+                  color: Theme.of(context).colorScheme.onPrimaryContainer,
+                  size: 18,
+                ),
               ),
               const SizedBox(width: 12),
-              Text(
-                'Cliente: ',
-                style: TextStyle(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  fontSize: 14,
-                ),
-              ),
               Expanded(
-                child: Text(
-                  displayText,
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 14,
-                    color: Theme.of(context).colorScheme.onSurface,
-                  ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Cliente',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                    Text(
+                      displayText,
+                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
                 ),
               ),
               Icon(
-                Icons.chevron_right_rounded,
-                color: Theme.of(context).colorScheme.outline,
-                size: 20,
+                Icons.expand_more_rounded,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                size: 24,
               ),
             ],
           ),
@@ -139,15 +160,26 @@ class CartListSection extends ConsumerWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.shopping_cart_outlined,
-              size: 64,
-              color: Theme.of(context).colorScheme.outlineVariant,
+            Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: Theme.of(
+                  context,
+                ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.shopping_cart_outlined,
+                size: 48,
+                color: Theme.of(
+                  context,
+                ).colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
+              ),
             ),
             const SizedBox(height: 16),
             Text(
               'El carrito está vacío',
-              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
                 color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
             ),
@@ -159,7 +191,7 @@ class CartListSection extends ConsumerWidget {
     return ListView.separated(
       padding: const EdgeInsets.all(16),
       itemCount: cart.length,
-      separatorBuilder: (context, index) => const SizedBox(height: 16),
+      separatorBuilder: (context, index) => const SizedBox(height: 12),
       itemBuilder: (context, index) {
         final item = cart[index];
         return CartItemWrapper(item: item);
@@ -184,6 +216,18 @@ class CartItemWrapper extends ConsumerWidget {
       quantity: item.quantity,
       onRemove: () {
         posNotifier.removeFromCart(item.productId, variantId: item.variantId);
+      },
+      onLongPress: () {
+        showDialog(
+          context: context,
+          builder: (context) => CartQuantityDialog(
+            productId: item.productId,
+            variantId: item.variantId,
+            productName: item.productName ?? '',
+            variantName: item.variantDescription,
+            currentQuantity: item.quantity,
+          ),
+        );
       },
       onDecrement: () {
         if (item.quantity > 1) {
@@ -234,37 +278,6 @@ class CartSummarySection extends ConsumerWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Add Discount Code
-          InkWell(
-            onTap: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Función de código de descuento pendiente'),
-                ),
-              );
-            },
-            child: Row(
-              children: [
-                Icon(
-                  Icons.local_offer,
-                  color: Theme.of(context).colorScheme.primary,
-                  size: 20,
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  'Agregar Código de Descuento',
-                  style: TextStyle(
-                    color: Theme.of(context).colorScheme.primary,
-                    fontWeight: FontWeight.w600,
-                    fontSize: 14,
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          const SizedBox(height: 20),
-
           // Summary Rows
           _buildSummaryRow(context, 'Subtotal', subtotal),
 

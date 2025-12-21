@@ -17,7 +17,7 @@ class ProductSearchBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.all(12.0),
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
       child: Row(
         children: [
           Expanded(
@@ -25,32 +25,61 @@ class ProductSearchBar extends StatelessWidget {
               controller: controller,
               decoration: InputDecoration(
                 hintText: 'Buscar productos...',
-                prefixIcon: const Icon(Icons.search, size: 20),
+                hintStyle: TextStyle(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+                prefixIcon: Icon(
+                  Icons.search,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
                 suffixIcon: controller.text.isNotEmpty
                     ? IconButton(
-                        icon: const Icon(Icons.clear, size: 20),
+                        icon: const Icon(Icons.clear),
                         onPressed: onClear,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
                       )
                     : null,
+                filled: true,
+                fillColor: Theme.of(context).colorScheme.surface,
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide.none,
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.outlineVariant.withValues(alpha: 0.5),
+                  ),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(
+                    color: Theme.of(context).colorScheme.primary,
+                    width: 1.5,
+                  ),
+                ),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 14,
                 ),
                 isDense: true,
               ),
               onChanged: onChanged,
             ),
           ),
-          const SizedBox(width: 8),
-          Container(
-            decoration: BoxDecoration(borderRadius: BorderRadius.circular(8)),
-            child: IconButton(
-              icon: Icon(
-                Icons.qr_code_scanner,
-                color: Theme.of(context).colorScheme.onSurface,
+          const SizedBox(width: 12),
+          FilledButton.icon(
+            onPressed: onScan,
+            style: FilledButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
               ),
-              onPressed: onScan,
-              tooltip: 'Escanear código',
             ),
+            icon: const Icon(Icons.qr_code_scanner, size: 20),
+            label: const Text("Escanear"),
           ),
         ],
       ),

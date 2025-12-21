@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:posventa/presentation/providers/pos_providers.dart';
 import 'package:posventa/presentation/pages/pos_sale/widgets/cart_item_card.dart';
 import 'package:posventa/presentation/widgets/pos/consumer_selection_dialog_widget.dart';
+import 'package:posventa/presentation/widgets/pos/sale/cart_quantity_dialog.dart';
 import 'package:go_router/go_router.dart';
 
 class CartSection extends ConsumerWidget {
@@ -31,23 +32,12 @@ class CartSection extends ConsumerWidget {
         : 'Cliente General';
 
     return Container(
-      decoration: BoxDecoration(
-        color: Theme.of(
-          context,
-        ).colorScheme.surfaceContainerLow, // Match CartPage background
-        border: isMobile
-            ? null
-            : Border(
-                left: BorderSide(
-                  color: Theme.of(context).colorScheme.outlineVariant,
-                ),
-              ),
-      ),
+      color: Theme.of(context).colorScheme.surfaceContainerLow,
       child: Column(
         children: [
           // Header with Customer & Clear Cart
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
             color: Theme.of(context).colorScheme.surface,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -59,23 +49,35 @@ class CartSection extends ConsumerWidget {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text(
+                        Text(
                           'Carrito',
                           style: TextStyle(
-                            fontSize: 20,
+                            fontSize: 24,
                             fontWeight: FontWeight.bold,
+                            color: Theme.of(context).colorScheme.onSurface,
+                            letterSpacing: -0.5,
                           ),
                         ),
                         if (cart.isNotEmpty)
-                          TextButton(
+                          TextButton.icon(
                             onPressed: () =>
                                 _confirmClearCart(context, posNotifier),
-                            child: Text(
+                            icon: Icon(
+                              Icons.delete_outline,
+                              size: 20,
+                              color: Theme.of(context).colorScheme.error,
+                            ),
+                            label: Text(
                               'Limpiar',
                               style: TextStyle(
                                 color: Theme.of(context).colorScheme.error,
                                 fontWeight: FontWeight.w600,
                               ),
+                            ),
+                            style: TextButton.styleFrom(
+                              foregroundColor: Theme.of(
+                                context,
+                              ).colorScheme.error,
                             ),
                           ),
                       ],
@@ -91,40 +93,66 @@ class CartSection extends ConsumerWidget {
                           const CustomerSelectionDialogWidget(),
                     );
                   },
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(12),
                   child: Container(
-                    padding: const EdgeInsets.all(12),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
+                    ),
                     decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.surfaceContainerLow,
-                      borderRadius: BorderRadius.circular(8),
+                      color: Theme.of(context)
+                          .colorScheme
+                          .surfaceContainerHighest
+                          .withValues(alpha: 0.3),
+                      borderRadius: BorderRadius.circular(12),
                       border: Border.all(
-                        color: Theme.of(context).colorScheme.outlineVariant,
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.outlineVariant.withValues(alpha: 0.5),
                       ),
                     ),
                     child: Row(
                       children: [
-                        Icon(
-                          Icons.person_outline_rounded,
-                          color: Theme.of(context).colorScheme.primary,
-                          size: 20,
-                        ),
-                        const SizedBox(width: 12),
-                        const Text('Cliente: ', style: TextStyle(fontSize: 14)),
-                        Expanded(
-                          child: Text(
-                            customerName,
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 14,
-                              color: Theme.of(context).colorScheme.onSurface,
-                            ),
-                            overflow: TextOverflow.ellipsis,
+                        CircleAvatar(
+                          radius: 16,
+                          backgroundColor: Theme.of(
+                            context,
+                          ).colorScheme.primaryContainer,
+                          child: Icon(
+                            Icons.person,
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onPrimaryContainer,
+                            size: 18,
                           ),
                         ),
-                        const Icon(
-                          Icons.chevron_right_rounded,
-                          color: Colors.grey,
-                          size: 20,
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Cliente',
+                                style: Theme.of(context).textTheme.bodySmall
+                                    ?.copyWith(
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.onSurfaceVariant,
+                                    ),
+                              ),
+                              Text(
+                                customerName,
+                                style: Theme.of(context).textTheme.titleSmall
+                                    ?.copyWith(fontWeight: FontWeight.bold),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ],
+                          ),
+                        ),
+                        Icon(
+                          Icons.expand_more_rounded,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                          size: 24,
                         ),
                       ],
                     ),
@@ -134,6 +162,8 @@ class CartSection extends ConsumerWidget {
             ),
           ),
 
+          // ... (imports remain)
+
           // Cart Items List
           Expanded(
             child: cart.isEmpty
@@ -141,20 +171,44 @@ class CartSection extends ConsumerWidget {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(
-                          Icons.shopping_cart_outlined,
-                          size: 64,
-                          color: Theme.of(context).colorScheme.outlineVariant,
+                        Container(
+                          padding: const EdgeInsets.all(24),
+                          decoration: BoxDecoration(
+                            color: Theme.of(context)
+                                .colorScheme
+                                .surfaceContainerHighest
+                                .withValues(alpha: 0.3),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(
+                            Icons.shopping_cart_outlined,
+                            size: 48,
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onSurfaceVariant
+                                .withValues(alpha: 0.5),
+                          ),
                         ),
                         const SizedBox(height: 16),
                         Text(
-                          'Carrito vacío',
-                          style: TextStyle(
-                            color: Theme.of(
-                              context,
-                            ).colorScheme.onSurfaceVariant,
-                            fontSize: 16,
-                          ),
+                          'El carrito está vacío',
+                          style: Theme.of(context).textTheme.titleMedium
+                              ?.copyWith(
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurfaceVariant,
+                              ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Agrega productos para comenzar',
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .onSurfaceVariant
+                                    .withValues(alpha: 0.7),
+                              ),
                         ),
                       ],
                     ),
@@ -176,6 +230,18 @@ class CartSection extends ConsumerWidget {
                           posNotifier.removeFromCart(
                             item.productId,
                             variantId: item.variantId,
+                          );
+                        },
+                        onLongPress: () {
+                          showDialog(
+                            context: context,
+                            builder: (context) => CartQuantityDialog(
+                              productId: item.productId,
+                              variantId: item.variantId,
+                              productName: item.productName ?? '',
+                              variantName: item.variantDescription,
+                              currentQuantity: item.quantity,
+                            ),
                           );
                         },
                         onDecrement: () async {
@@ -212,135 +278,106 @@ class CartSection extends ConsumerWidget {
 
           // Summary Section
           Container(
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.fromLTRB(20, 20, 20, 20),
             decoration: BoxDecoration(
               color: Theme.of(context).colorScheme.surface,
               borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(24),
+                top: Radius.circular(28),
               ),
               boxShadow: [
                 BoxShadow(
-                  color: Theme.of(
-                    context,
-                  ).colorScheme.shadow.withValues(alpha: 0.05),
-                  offset: const Offset(0, -4),
-                  blurRadius: 16,
+                  color: Colors.black.withValues(alpha: 0.03),
+                  offset: const Offset(0, -2),
+                  blurRadius: 12,
                 ),
               ],
             ),
-            child: Column(
-              children: [
-                // Discount Mock (matching CartPage)
-                InkWell(
-                  onTap: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text(
-                          'Función de código de descuento pendiente',
-                        ),
-                      ),
-                    );
-                  },
-                  child: Row(
+            child: SafeArea(
+              top: false,
+              child: Column(
+                children: [
+                  // Discount Mock removed as per request
+                  _buildTotalRow(context, 'Subtotal', subtotal),
+                  ...taxBreakdown.entries.map(
+                    (entry) => _buildTotalRow(context, entry.key, entry.value),
+                  ),
+                  if (discount > 0)
+                    _buildTotalRow(
+                      context,
+                      'Descuento',
+                      -discount,
+                      isDiscount: true,
+                    ),
+
+                  const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 16),
+                    child: Divider(height: 1),
+                  ),
+
+                  // Total
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Icon(
-                        Icons.local_offer,
-                        color: Theme.of(context).colorScheme.primary,
-                        size: 18,
-                      ),
-                      const SizedBox(width: 8),
                       Text(
-                        'Agregar Código',
-                        style: TextStyle(
-                          color: Theme.of(context).colorScheme.primary,
-                          fontWeight: FontWeight.w600,
-                          fontSize: 14,
+                        'Total',
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
                         ),
+                      ),
+                      Text(
+                        '\$${total.toStringAsFixed(2)}',
+                        style: Theme.of(context).textTheme.headlineMedium
+                            ?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: Theme.of(context).colorScheme.onSurface,
+                              height: 1,
+                            ),
                       ),
                     ],
                   ),
-                ),
-                const SizedBox(height: 16),
 
-                _buildTotalRow(context, 'Subtotal', subtotal),
-                ...taxBreakdown.entries.map(
-                  (entry) => _buildTotalRow(context, entry.key, entry.value),
-                ),
-                if (discount > 0)
-                  _buildTotalRow(
-                    context,
-                    'Descuento',
-                    -discount,
-                    isDiscount: true,
-                  ),
+                  const SizedBox(height: 20),
 
-                const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 12),
-                  child: Divider(),
-                ),
-
-                // Total
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text(
-                      'Total',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
+                  // Checkout Button
+                  SizedBox(
+                    width: double.infinity,
+                    height: 56,
+                    child: FilledButton(
+                      onPressed: cart.isEmpty
+                          ? null
+                          : () {
+                              context.push('/pos/payment');
+                            },
+                      style: FilledButton.styleFrom(
+                        backgroundColor: Theme.of(context).colorScheme.primary,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        elevation: 0,
                       ),
-                    ),
-                    Text(
-                      '\$${total.toStringAsFixed(2)}',
-                      style: const TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
-                ),
-
-                const SizedBox(height: 16),
-
-                // Checkout Button
-                SizedBox(
-                  width: double.infinity,
-                  height: 50,
-                  child: FilledButton(
-                    onPressed: cart.isEmpty
-                        ? null
-                        : () {
-                            context.push('/pos/payment');
-                          },
-                    style: FilledButton.styleFrom(
-                      backgroundColor: Theme.of(context).colorScheme.primary,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      elevation: 0,
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          'COBRAR \$${total.toStringAsFixed(2)}',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: Theme.of(context).colorScheme.onPrimary,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            'Cobrar \$${total.toStringAsFixed(2)}',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Theme.of(context).colorScheme.onPrimary,
+                            ),
                           ),
-                        ),
-                        const SizedBox(width: 8),
-                        Icon(
-                          Icons.arrow_forward,
-                          color: Theme.of(context).colorScheme.onPrimary,
-                          size: 20,
-                        ),
-                      ],
+                          const SizedBox(width: 8),
+                          Icon(
+                            Icons.arrow_forward_rounded,
+                            color: Theme.of(context).colorScheme.onPrimary,
+                            size: 24,
+                          ),
+                        ],
+                      ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ],

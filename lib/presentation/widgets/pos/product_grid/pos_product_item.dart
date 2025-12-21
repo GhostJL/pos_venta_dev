@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:posventa/core/theme/theme.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:posventa/domain/entities/product.dart';
+import 'package:posventa/domain/entities/product_tax.dart';
 import 'package:posventa/domain/entities/product_variant.dart';
+import 'package:posventa/domain/entities/tax_rate.dart';
+import 'package:posventa/presentation/providers/pos_providers.dart';
 
-class PosProductItem extends StatelessWidget {
+class PosProductItem extends ConsumerWidget {
   final Product product;
   final ProductVariant? variant;
   final double quantityInCart;
@@ -20,16 +23,27 @@ class PosProductItem extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
-    // Determine effective stock and price
+    // Determine effective stock
     final int stock = variant != null
         ? (variant!.stock ?? 0).toInt()
         : (product.stock ?? 0);
 
-    final double price = variant != null ? variant!.price : product.price;
+    // Calculate Gross Price
+    final double basePrice = variant != null ? variant!.price : product.price;
+    final AsyncValue<List<TaxRate>> taxRatesAsync = ref.watch(
+      allTaxRatesProvider,
+    );
+    final List<TaxRate> taxRates = taxRatesAsync.asData?.value ?? [];
+
+    final double grossPrice = _calculateGrossPrice(
+      basePrice,
+      product.productTaxes,
+      taxRates,
+    );
 
     final String displayName = product.name;
     final String? variantName = variant?.description;
@@ -37,159 +51,185 @@ class PosProductItem extends StatelessWidget {
     // Stock Color Logic
     Color stockColor;
     if (stock <= 0) {
-      stockColor = context.outOfStock;
+      stockColor = colorScheme.error;
     } else if (stock < 10) {
-      stockColor = context.lowStock;
+      stockColor = colorScheme.tertiary;
     } else {
-      stockColor = context.inStock;
+      stockColor = colorScheme.primary;
     }
 
     return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      elevation: 0,
+      color: colorScheme.surface,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(
+          color: quantityInCart > 0
+              ? colorScheme.primary
+              : colorScheme.outlineVariant,
+          width: quantityInCart > 0 ? 2 : 1,
+        ),
+      ),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: onTap,
         onLongPress: onLongPress,
-        child: Padding(
-          padding: const EdgeInsets.all(10.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // Top Row: Price (Right aligned for prominence)
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  Text(
-                    '\$${price.toStringAsFixed(2)}',
-                    style: theme.textTheme.titleLarge?.copyWith(
-                      color: colorScheme.primary,
-                      fontWeight: FontWeight.w900,
-                    ),
+        borderRadius: BorderRadius.circular(16),
+        child: Column(
+          children: [
+            // Image Placeholder Area
+            Expanded(
+              flex: 3,
+              child: Container(
+                width: double.infinity,
+                color: colorScheme.surfaceContainerHighest.withValues(
+                  alpha: 0.3,
+                ),
+                child: Center(
+                  child: Icon(
+                    Icons.image_outlined,
+                    size: 48,
+                    color: colorScheme.onSurfaceVariant.withValues(alpha: 0.4),
                   ),
-                ],
-              ),
-              const SizedBox(height: 8),
-
-              // Name
-              Text(
-                displayName,
-                maxLines: 3,
-                overflow: TextOverflow.ellipsis,
-                style: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  height: 1.2,
                 ),
               ),
+            ),
 
-              if (variantName != null && variantName.isNotEmpty) ...[
-                const SizedBox(height: 4),
-                Text(
-                  variantName,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: colorScheme.onSurfaceVariant,
-                    fontStyle: FontStyle.italic,
-                  ),
-                ),
-              ],
-
-              const Spacer(),
-
-              // Bottom Row: Stock and Add/Quantity Button
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  // Stock Indicator
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: stockColor.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(
-                        color: stockColor.withValues(alpha: 0.3),
+            // Content Area
+            Expanded(
+              flex: 5,
+              child: Padding(
+                padding: const EdgeInsets.all(12.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Stock Badge (Small & Top)
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: stockColor.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Text(
+                        stock <= 0 ? 'Agotado' : '$stock Disp.',
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          color: stockColor,
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
-                    child: Text(
-                      stock <= 0 ? 'Sin Stock' : '$stock Disp.',
-                      style: theme.textTheme.labelSmall?.copyWith(
-                        color: stockColor,
-                        fontWeight: FontWeight.bold,
+
+                    const SizedBox(height: 8),
+
+                    // Product Name
+                    Text(
+                      displayName,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w600,
+                        height: 1.1,
                       ),
                     ),
-                  ),
 
-                  // Add/Quantity Button
-                  Stack(
-                    clipBehavior: Clip.none,
-                    children: [
-                      Container(
-                        width: 40,
-                        height: 40,
-                        decoration: BoxDecoration(
-                          color: quantityInCart > 0
-                              ? colorScheme.secondaryContainer
-                              : colorScheme.primary,
-                          shape: BoxShape.circle,
-                          boxShadow: [
-                            BoxShadow(
-                              color:
-                                  (quantityInCart > 0
-                                          ? colorScheme.secondaryContainer
-                                          : colorScheme.primary)
-                                      .withValues(alpha: 0.3),
-                              blurRadius: 6,
-                              offset: const Offset(0, 3),
-                            ),
-                          ],
-                        ),
-                        child: Icon(
-                          Icons.add,
-                          color: quantityInCart > 0
-                              ? colorScheme.onSecondaryContainer
-                              : colorScheme.onPrimary,
-                          size: 24,
+                    if (variantName != null && variantName.isNotEmpty) ...[
+                      const SizedBox(height: 2),
+                      Text(
+                        variantName,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: colorScheme.onSurfaceVariant,
+                          fontSize: 11,
                         ),
                       ),
-                      if (quantityInCart > 0)
-                        Positioned(
-                          top: -8,
-                          right: -8,
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 6,
-                              vertical: 2,
-                            ),
-                            decoration: BoxDecoration(
-                              color: colorScheme.primary,
-                              borderRadius: BorderRadius.circular(10),
-                              border: Border.all(
-                                color: colorScheme.surface,
-                                width: 2,
-                              ),
-                            ),
-                            child: Text(
-                              '${quantityInCart.toStringAsFixed(0)} +',
-                              style: theme.textTheme.labelSmall?.copyWith(
-                                color: colorScheme.onPrimary,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 10,
-                              ),
-                            ),
-                          ),
-                        ),
                     ],
-                  ),
-                ],
+
+                    const Spacer(),
+
+                    // Price
+                    Text(
+                      '\$${grossPrice.toStringAsFixed(2)}',
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        color: colorScheme.primary,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+
+                    const SizedBox(height: 8),
+
+                    // Add Button / Cart Quantity
+                    SizedBox(
+                      width: double.infinity,
+                      height: 32,
+                      child: quantityInCart > 0
+                          ? FilledButton.tonal(
+                              onPressed: onTap,
+                              style: FilledButton.styleFrom(
+                                padding: EdgeInsets.zero,
+                                backgroundColor: colorScheme.primaryContainer,
+                                foregroundColor: colorScheme.onPrimaryContainer,
+                              ),
+                              child: Text(
+                                '${quantityInCart.toInt()} en carrito',
+                                style: const TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            )
+                          : FilledButton.icon(
+                              onPressed: onTap,
+                              style: FilledButton.styleFrom(
+                                padding: EdgeInsets.zero,
+                                backgroundColor:
+                                    colorScheme.surfaceContainerHigh,
+                                foregroundColor: colorScheme.onSurface,
+                                elevation: 0,
+                              ),
+                              icon: const Icon(Icons.add, size: 16),
+                              label: const Text(
+                                'Agregar',
+                                style: TextStyle(fontSize: 12),
+                              ),
+                            ),
+                    ),
+                  ],
+                ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
+  }
+
+  double _calculateGrossPrice(
+    double basePrice,
+    List<ProductTax>? taxes,
+    List<TaxRate> rates,
+  ) {
+    if (taxes == null || taxes.isEmpty) return basePrice;
+
+    double taxAmount = 0;
+    for (var productTax in taxes) {
+      // Find the matching tax rate
+      final rateObj = rates.firstWhere(
+        (r) => r.id == productTax.taxRateId,
+        orElse: () => TaxRate(id: -1, name: '', code: '', rate: 0),
+      );
+
+      if (rateObj.id != -1) {
+        taxAmount += basePrice * rateObj.rate;
+      }
+    }
+
+    return basePrice + taxAmount;
   }
 }

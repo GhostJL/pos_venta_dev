@@ -9,6 +9,7 @@ class CartItemCard extends StatelessWidget {
   final VoidCallback onRemove;
   final VoidCallback onIncrement;
   final VoidCallback onDecrement;
+  final VoidCallback? onLongPress;
 
   const CartItemCard({
     super.key,
@@ -20,6 +21,7 @@ class CartItemCard extends StatelessWidget {
     required this.onRemove,
     required this.onIncrement,
     required this.onDecrement,
+    this.onLongPress,
   });
 
   @override
@@ -27,126 +29,137 @@ class CartItemCard extends StatelessWidget {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: colorScheme.surface,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: colorScheme.shadow.withValues(alpha: 0.04),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Content
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Header Row: Name & Delete
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      child: Text(
-                        productName,
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: colorScheme.onSurface,
-                        ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    InkWell(
-                      onTap: onRemove,
-                      borderRadius: BorderRadius.circular(20),
-                      child: Padding(
-                        padding: const EdgeInsets.all(4),
-                        child: Icon(Icons.delete_outline_rounded, size: 20),
-                      ),
-                    ),
-                  ],
-                ),
+    // Calculate Gross Unit Price (Total / Quantity) to show "Price + IVA" per unit
+    final grossPricePerUnit = quantity > 0 ? total / quantity : 0.0;
 
-                // Variant Name
-                if (variantName != null && variantName!.isNotEmpty) ...[
-                  const SizedBox(height: 4),
-                  Text(
-                    variantName!,
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: colorScheme.onSurfaceVariant,
+    return Card(
+      elevation: 0,
+      color: colorScheme.surface,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(
+          color: colorScheme.outlineVariant.withValues(alpha: 0.5),
+        ),
+      ),
+      margin: EdgeInsets.zero,
+      child: InkWell(
+        onLongPress: onLongPress,
+        borderRadius: BorderRadius.circular(16),
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Header: Name & Delete
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          productName,
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 16,
+                            height: 1.2,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        if (variantName != null && variantName!.isNotEmpty) ...[
+                          const SizedBox(height: 4),
+                          Text(
+                            variantName!,
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              color: colorScheme.onSurfaceVariant,
+                              fontSize: 14,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.close, size: 20),
+                    onPressed: onRemove,
+                    style: IconButton.styleFrom(
+                      foregroundColor: colorScheme.onSurfaceVariant,
+                      padding: EdgeInsets.zero,
+                      visualDensity: VisualDensity.compact,
                     ),
                   ),
                 ],
+              ),
 
-                const SizedBox(height: 4),
+              const SizedBox(height: 12),
 
-                // Price Per Unit
-                Text(
-                  '\$${pricePerUnit.toStringAsFixed(2)}/unidad',
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: colorScheme.onSurfaceVariant,
-                  ),
-                ),
-
-                const SizedBox(height: 12),
-
-                // Bottom Row: Total & Quantity
-                Row(
-                  children: [
-                    Text(
-                      '\$${total.toStringAsFixed(2)}',
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        color: colorScheme.primary,
-                        fontWeight: FontWeight.bold,
+              // Body: Quantity & Price
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  // Quantity Controls
+                  Container(
+                    decoration: BoxDecoration(
+                      color: colorScheme.surfaceContainerHighest.withValues(
+                        alpha: 0.3,
                       ),
+                      borderRadius: BorderRadius.circular(12),
                     ),
-                    const Spacer(),
-
-                    // Quantity Controls
-                    Container(
-                      decoration: BoxDecoration(
-                        color: colorScheme.surfaceContainerLow,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Row(
-                        children: [
-                          _QuantityButton(
-                            icon: Icons.remove,
-                            onTap: onDecrement,
-                          ),
-                          SizedBox(
-                            width: 32,
-                            child: Text(
-                              quantity.toStringAsFixed(0),
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 14,
-                                color: colorScheme.onSurface,
-                              ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        _QuantityButton(icon: Icons.remove, onTap: onDecrement),
+                        Container(
+                          constraints: const BoxConstraints(minWidth: 32),
+                          alignment: Alignment.center,
+                          padding: const EdgeInsets.symmetric(horizontal: 4),
+                          child: Text(
+                            quantity.toStringAsFixed(0),
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.w700,
                             ),
                           ),
-                          _QuantityButton(
-                            icon: Icons.add,
-                            onTap: onIncrement,
-                            isBlue: true,
-                          ),
-                        ],
-                      ),
+                        ),
+                        _QuantityButton(icon: Icons.add, onTap: onIncrement),
+                      ],
                     ),
-                  ],
-                ),
-              ],
-            ),
+                  ),
+
+                  // Prices
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      RichText(
+                        text: TextSpan(
+                          children: [
+                            TextSpan(
+                              text: '\$${total.toStringAsFixed(2)}',
+                              style: theme.textTheme.titleLarge?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: colorScheme.primary,
+                                fontSize: 18,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Text(
+                        '\$${grossPricePerUnit.toStringAsFixed(2)} x un.',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
@@ -155,33 +168,18 @@ class CartItemCard extends StatelessWidget {
 class _QuantityButton extends StatelessWidget {
   final IconData icon;
   final VoidCallback onTap;
-  final bool isBlue;
 
-  const _QuantityButton({
-    required this.icon,
-    required this.onTap,
-    this.isBlue = false,
-  });
+  const _QuantityButton({required this.icon, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    return Material(
-      color: isBlue ? colorScheme.primary : Colors.transparent,
-      borderRadius: BorderRadius.circular(8),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(8),
-        child: Container(
-          width: 32,
-          height: 32,
-          alignment: Alignment.center,
-          child: Icon(
-            icon,
-            size: 16,
-            color: isBlue ? colorScheme.onPrimary : colorScheme.onSurface,
-          ),
-        ),
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Padding(
+        padding: const EdgeInsets.all(10),
+        child: Icon(icon, size: 20, color: colorScheme.onSurface),
       ),
     );
   }

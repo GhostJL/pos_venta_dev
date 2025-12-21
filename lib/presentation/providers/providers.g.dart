@@ -3522,3 +3522,92 @@ final class StoreRepositoryProvider
 }
 
 String _$storeRepositoryHash() => r'30fe53669b14c6b541751e4cc63370597b98bc92';
+
+@ProviderFor(taxRateRepository)
+const taxRateRepositoryProvider = TaxRateRepositoryProvider._();
+
+final class TaxRateRepositoryProvider
+    extends
+        $FunctionalProvider<
+          TaxRateRepository,
+          TaxRateRepository,
+          TaxRateRepository
+        >
+    with $Provider<TaxRateRepository> {
+  const TaxRateRepositoryProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'taxRateRepositoryProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$taxRateRepositoryHash();
+
+  @$internal
+  @override
+  $ProviderElement<TaxRateRepository> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  TaxRateRepository create(Ref ref) {
+    return taxRateRepository(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(TaxRateRepository value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<TaxRateRepository>(value),
+    );
+  }
+}
+
+String _$taxRateRepositoryHash() => r'5168ef2317efca985e0628b3526af992605e6cb0';
+
+@ProviderFor(getAllTaxRatesUseCase)
+const getAllTaxRatesUseCaseProvider = GetAllTaxRatesUseCaseProvider._();
+
+final class GetAllTaxRatesUseCaseProvider
+    extends $FunctionalProvider<GetAllTaxRates, GetAllTaxRates, GetAllTaxRates>
+    with $Provider<GetAllTaxRates> {
+  const GetAllTaxRatesUseCaseProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'getAllTaxRatesUseCaseProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$getAllTaxRatesUseCaseHash();
+
+  @$internal
+  @override
+  $ProviderElement<GetAllTaxRates> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  GetAllTaxRates create(Ref ref) {
+    return getAllTaxRatesUseCase(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(GetAllTaxRates value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<GetAllTaxRates>(value),
+    );
+  }
+}
+
+String _$getAllTaxRatesUseCaseHash() =>
+    r'6100e3389d68e15fc52ae8784d6dbd7237e68328';

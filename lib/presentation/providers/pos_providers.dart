@@ -7,6 +7,7 @@ import 'package:posventa/domain/entities/sale.dart';
 import 'package:posventa/domain/entities/sale_item.dart';
 import 'package:posventa/domain/entities/sale_item_tax.dart';
 import 'package:posventa/domain/entities/sale_payment.dart';
+import 'package:posventa/domain/entities/tax_rate.dart';
 import 'package:posventa/presentation/providers/auth_provider.dart';
 import 'package:posventa/presentation/providers/product_provider.dart';
 import 'package:posventa/presentation/providers/providers.dart';
@@ -613,3 +614,9 @@ final posTaxBreakdownProvider = Provider<Map<String, double>>((ref) {
   }
   return taxBreakdown;
 });
+
+@Riverpod(keepAlive: true)
+Future<List<TaxRate>> allTaxRates(Ref ref) async {
+  final getAllTaxRates = ref.read(getAllTaxRatesUseCaseProvider);
+  return await getAllTaxRates.call();
+}
