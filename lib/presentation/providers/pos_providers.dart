@@ -620,3 +620,12 @@ Future<List<TaxRate>> allTaxRates(Ref ref) async {
   final getAllTaxRates = ref.read(getAllTaxRatesUseCaseProvider);
   return await getAllTaxRates.call();
 }
+
+/// Provides a Map of TaxRates keyed by ID for O(1) lookup
+final taxRatesMapProvider = Provider<Map<int, TaxRate>>((ref) {
+  final ratesAsync = ref.watch(allTaxRatesProvider);
+  return ratesAsync.maybeWhen(
+    data: (rates) => {for (var rate in rates) rate.id!: rate},
+    orElse: () => const {},
+  );
+});

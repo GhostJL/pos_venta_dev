@@ -34,10 +34,7 @@ class PosProductItem extends ConsumerWidget {
 
     // Calculate Gross Price
     final double basePrice = variant != null ? variant!.price : product.price;
-    final AsyncValue<List<TaxRate>> taxRatesAsync = ref.watch(
-      allTaxRatesProvider,
-    );
-    final List<TaxRate> taxRates = taxRatesAsync.asData?.value ?? [];
+    final Map<int, TaxRate> taxRates = ref.watch(taxRatesMapProvider);
 
     final double grossPrice = _calculateGrossPrice(
       basePrice,
@@ -213,19 +210,14 @@ class PosProductItem extends ConsumerWidget {
   double _calculateGrossPrice(
     double basePrice,
     List<ProductTax>? taxes,
-    List<TaxRate> rates,
+    Map<int, TaxRate> ratesMap,
   ) {
     if (taxes == null || taxes.isEmpty) return basePrice;
 
     double taxAmount = 0;
     for (var productTax in taxes) {
-      // Find the matching tax rate
-      final rateObj = rates.firstWhere(
-        (r) => r.id == productTax.taxRateId,
-        orElse: () => TaxRate(id: -1, name: '', code: '', rate: 0),
-      );
-
-      if (rateObj.id != -1) {
+      final rateObj = ratesMap[productTax.taxRateId];
+      if (rateObj != null) {
         taxAmount += basePrice * rateObj.rate;
       }
     }
