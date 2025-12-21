@@ -4,7 +4,6 @@ import 'package:posventa/domain/entities/brand.dart';
 import 'package:posventa/presentation/providers/brand_providers.dart';
 import 'package:posventa/presentation/widgets/common/generic_form_scaffold.dart';
 import 'package:posventa/presentation/widgets/common/simple_dialog_form.dart';
-import 'package:posventa/core/constants/ui_constants.dart';
 
 class BrandForm extends ConsumerStatefulWidget {
   final Brand? brand;
@@ -35,6 +34,17 @@ class BrandFormState extends ConsumerState<BrandForm> {
       setState(() => _isLoading = true);
 
       try {
+        // Generar código automático si es nuevo o está vacío
+        if (_code.isEmpty) {
+          final prefix = _name.length >= 3
+              ? _name.substring(0, 3).toUpperCase()
+              : _name.toUpperCase().padRight(3, 'X');
+          final random = DateTime.now().millisecondsSinceEpoch
+              .toString()
+              .substring(9);
+          _code = '$prefix-$random';
+        }
+
         final brand = Brand(id: widget.brand?.id, name: _name, code: _code);
         Brand? newBrand;
         if (widget.brand == null) {
@@ -78,7 +88,8 @@ class BrandFormState extends ConsumerState<BrandForm> {
       children: [
         TextFormField(
           initialValue: _name,
-          textInputAction: TextInputAction.next,
+          textInputAction: TextInputAction.done,
+          onFieldSubmitted: (_) => _submit(),
           decoration: const InputDecoration(
             labelText: 'Nombre de la Marca',
             prefixIcon: Icon(Icons.branding_watermark_rounded),
@@ -93,23 +104,6 @@ class BrandFormState extends ConsumerState<BrandForm> {
             return null;
           },
           onSaved: (value) => _name = value!,
-        ),
-        const SizedBox(height: UIConstants.spacingLarge),
-        TextFormField(
-          initialValue: _code,
-          textInputAction: TextInputAction.done,
-          onFieldSubmitted: (_) => _submit(),
-          decoration: const InputDecoration(
-            labelText: 'Código de la Marca',
-            prefixIcon: Icon(Icons.qr_code_rounded),
-          ),
-          validator: (value) {
-            if (value == null || value.isEmpty) {
-              return 'Por favor, introduce un código de marca';
-            }
-            return null;
-          },
-          onSaved: (value) => _code = value!,
         ),
       ],
     );

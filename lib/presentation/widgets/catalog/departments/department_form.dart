@@ -5,8 +5,6 @@ import 'package:posventa/presentation/providers/department_providers.dart';
 import 'package:posventa/presentation/widgets/common/generic_form_scaffold.dart';
 import 'package:posventa/presentation/widgets/common/simple_dialog_form.dart';
 
-import 'package:posventa/core/constants/ui_constants.dart';
-
 class DepartmentForm extends ConsumerStatefulWidget {
   final Department? department;
   final bool isDialog;
@@ -36,6 +34,17 @@ class DepartmentFormState extends ConsumerState<DepartmentForm> {
       setState(() => _isLoading = true);
 
       try {
+        // Generar código automático si es nuevo o está vacío
+        if (_code.isEmpty) {
+          final prefix = _name.length >= 3
+              ? _name.substring(0, 3).toUpperCase()
+              : _name.toUpperCase().padRight(3, 'X');
+          final random = DateTime.now().millisecondsSinceEpoch
+              .toString()
+              .substring(9);
+          _code = '$prefix-$random';
+        }
+
         final department = Department(
           id: widget.department?.id,
           name: _name,
@@ -89,7 +98,8 @@ class DepartmentFormState extends ConsumerState<DepartmentForm> {
       children: [
         TextFormField(
           initialValue: _name,
-          textInputAction: TextInputAction.next,
+          textInputAction: TextInputAction.done,
+          onFieldSubmitted: (_) => _submit(),
           decoration: const InputDecoration(
             labelText: 'Nombre del Departamento',
             prefixIcon: Icon(Icons.business_rounded),
@@ -104,23 +114,6 @@ class DepartmentFormState extends ConsumerState<DepartmentForm> {
             return null;
           },
           onSaved: (value) => _name = value!,
-        ),
-        const SizedBox(height: UIConstants.spacingLarge),
-        TextFormField(
-          initialValue: _code,
-          textInputAction: TextInputAction.done,
-          onFieldSubmitted: (_) => _submit(),
-          decoration: const InputDecoration(
-            labelText: 'Código del Departamento',
-            prefixIcon: Icon(Icons.qr_code_rounded),
-          ),
-          validator: (value) {
-            if (value == null || value.isEmpty) {
-              return 'Por favor, introduce un código de departamento';
-            }
-            return null;
-          },
-          onSaved: (value) => _code = value!,
         ),
       ],
     );

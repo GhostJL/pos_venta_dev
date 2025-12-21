@@ -43,6 +43,17 @@ class SupplierFormState extends ConsumerState<SupplierForm> {
       setState(() => _isLoading = true);
 
       try {
+        // Generar código automático si es nuevo o está vacío
+        if (_code.isEmpty) {
+          final prefix = _name.length >= 3
+              ? _name.substring(0, 3).toUpperCase()
+              : _name.toUpperCase().padRight(3, 'X');
+          final random = DateTime.now().millisecondsSinceEpoch
+              .toString()
+              .substring(9);
+          _code = '$prefix-$random';
+        }
+
         final supplier = Supplier(
           id: widget.supplier?.id,
           name: _name,
@@ -114,22 +125,6 @@ class SupplierFormState extends ConsumerState<SupplierForm> {
               return null;
             },
             onSaved: (value) => _name = value!,
-          ),
-          const SizedBox(height: UIConstants.spacingMedium),
-          TextFormField(
-            initialValue: _code,
-            textInputAction: TextInputAction.next,
-            decoration: const InputDecoration(
-              labelText: 'Código del Proveedor',
-              prefixIcon: Icon(Icons.qr_code_rounded),
-            ),
-            validator: (value) {
-              if (value == null || value.isEmpty) {
-                return 'El código es requerido';
-              }
-              return null;
-            },
-            onSaved: (value) => _code = value!,
           ),
         ]),
         const SizedBox(height: UIConstants.spacingLarge),

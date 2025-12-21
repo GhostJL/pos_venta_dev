@@ -39,6 +39,17 @@ class CategoryFormState extends ConsumerState<CategoryForm> {
       setState(() => _isLoading = true);
 
       try {
+        // Generar código automático si es nuevo o está vacío
+        if (_code.isEmpty) {
+          final prefix = _name.length >= 3
+              ? _name.substring(0, 3).toUpperCase()
+              : _name.toUpperCase().padRight(3, 'X');
+          final random = DateTime.now().millisecondsSinceEpoch
+              .toString()
+              .substring(9);
+          _code = '$prefix-$random';
+        }
+
         final category = Category(
           id: widget.category?.id,
           name: _name,
@@ -109,23 +120,6 @@ class CategoryFormState extends ConsumerState<CategoryForm> {
             return null;
           },
           onSaved: (value) => _name = value!,
-        ),
-        const SizedBox(height: UIConstants.spacingLarge),
-        TextFormField(
-          initialValue: _code,
-          textInputAction: TextInputAction.done,
-          onFieldSubmitted: (_) => _submit(),
-          decoration: const InputDecoration(
-            labelText: 'Código de la Categoría',
-            prefixIcon: Icon(Icons.qr_code_rounded),
-          ),
-          validator: (value) {
-            if (value == null || value.isEmpty) {
-              return 'Por favor, introduce un código de categoría';
-            }
-            return null;
-          },
-          onSaved: (value) => _code = value!,
         ),
         const SizedBox(height: UIConstants.spacingLarge),
         departmentsAsync.when(
