@@ -1,40 +1,10 @@
 import 'package:posventa/domain/entities/supplier.dart';
 import 'package:posventa/presentation/providers/providers.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:posventa/domain/repositories/supplier_repository.dart';
-import 'package:posventa/data/repositories/supplier_repository_impl.dart';
-import 'package:posventa/domain/use_cases/supplier/create_supplier.dart';
-import 'package:posventa/domain/use_cases/supplier/delete_supplier.dart';
-import 'package:posventa/domain/use_cases/supplier/get_all_suppliers.dart';
-import 'package:posventa/domain/use_cases/supplier/update_supplier.dart';
 
 part 'supplier_providers.g.dart';
 
-@riverpod
-SupplierRepository supplierRepository(ref) {
-  final dbHelper = ref.watch(databaseHelperProvider);
-  return SupplierRepositoryImpl(dbHelper);
-}
-
-@Riverpod(keepAlive: true)
-GetAllSuppliers getAllSuppliersUseCase(ref) {
-  return GetAllSuppliers(ref.watch(supplierRepositoryProvider));
-}
-
-@riverpod
-CreateSupplier createSupplierUseCase(ref) {
-  return CreateSupplier(ref.watch(supplierRepositoryProvider));
-}
-
-@riverpod
-UpdateSupplier updateSupplierUseCase(ref) {
-  return UpdateSupplier(ref.watch(supplierRepositoryProvider));
-}
-
-@riverpod
-DeleteSupplier deleteSupplierUseCase(ref) {
-  return DeleteSupplier(ref.watch(supplierRepositoryProvider));
-}
+// Providers moved to product_di.dart
 
 @Riverpod(keepAlive: true)
 class SupplierList extends _$SupplierList {

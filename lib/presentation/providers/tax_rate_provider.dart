@@ -1,21 +1,14 @@
 import 'package:posventa/domain/entities/tax_rate.dart';
 import 'package:posventa/presentation/providers/providers.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:posventa/domain/repositories/tax_rate_repository.dart';
-import 'package:posventa/data/repositories/tax_rate_repository_impl.dart';
-import 'package:posventa/domain/use_cases/tax_rate/get_all_tax_rates.dart';
-import 'package:posventa/domain/use_cases/tax_rate/create_tax_rate.dart';
-import 'package:posventa/domain/use_cases/tax_rate/update_tax_rate.dart';
-import 'package:posventa/domain/use_cases/tax_rate/delete_tax_rate.dart';
-import 'package:posventa/domain/use_cases/tax_rate/set_default_tax_rate.dart';
 
 part 'tax_rate_provider.g.dart';
 
-@riverpod
+@Riverpod(keepAlive: true)
 class TaxRateList extends _$TaxRateList {
   @override
   Future<List<TaxRate>> build() async {
-    final getAllTaxRates = ref.watch(getAllTaxRatesProvider);
+    final getAllTaxRates = ref.watch(getAllTaxRatesUseCaseProvider);
     return getAllTaxRates();
   }
 
@@ -23,7 +16,7 @@ class TaxRateList extends _$TaxRateList {
     state = const AsyncValue.loading();
     state = await AsyncValue.guard(() async {
       await ref.read(createTaxRateProvider).call(taxRate);
-      return ref.read(getAllTaxRatesProvider).call();
+      return ref.read(getAllTaxRatesUseCaseProvider).call();
     });
   }
 
@@ -31,7 +24,7 @@ class TaxRateList extends _$TaxRateList {
     state = const AsyncValue.loading();
     state = await AsyncValue.guard(() async {
       await ref.read(updateTaxRateProvider).call(taxRate);
-      return ref.read(getAllTaxRatesProvider).call();
+      return ref.read(getAllTaxRatesUseCaseProvider).call();
     });
   }
 
@@ -39,7 +32,7 @@ class TaxRateList extends _$TaxRateList {
     state = const AsyncValue.loading();
     state = await AsyncValue.guard(() async {
       await ref.read(deleteTaxRateProvider).call(id);
-      return ref.read(getAllTaxRatesProvider).call();
+      return ref.read(getAllTaxRatesUseCaseProvider).call();
     });
   }
 
@@ -47,7 +40,7 @@ class TaxRateList extends _$TaxRateList {
     state = const AsyncValue.loading();
     state = await AsyncValue.guard(() async {
       await ref.read(setDefaultTaxRateProvider).call(id);
-      return ref.read(getAllTaxRatesProvider).call();
+      return ref.read(getAllTaxRatesUseCaseProvider).call();
     });
   }
 
@@ -74,38 +67,4 @@ class TaxRateList extends _$TaxRateList {
 
 // Re-implementing the use case providers using riverpod_generator in this file for now to avoid breaking changes in other files that might import them from here.
 
-@riverpod
-TaxRateRepository taxRateRepository(ref) {
-  final dbHelper = ref.watch(databaseHelperProvider);
-  return TaxRateRepositoryImpl(dbHelper);
-}
-
-@riverpod
-GetAllTaxRates getAllTaxRates(ref) {
-  final repository = ref.watch(taxRateRepositoryProvider);
-  return GetAllTaxRates(repository);
-}
-
-@riverpod
-CreateTaxRate createTaxRate(ref) {
-  final repository = ref.watch(taxRateRepositoryProvider);
-  return CreateTaxRate(repository);
-}
-
-@riverpod
-UpdateTaxRate updateTaxRate(ref) {
-  final repository = ref.watch(taxRateRepositoryProvider);
-  return UpdateTaxRate(repository);
-}
-
-@riverpod
-DeleteTaxRate deleteTaxRate(ref) {
-  final repository = ref.watch(taxRateRepositoryProvider);
-  return DeleteTaxRate(repository);
-}
-
-@riverpod
-SetDefaultTaxRate setDefaultTaxRate(ref) {
-  final repository = ref.watch(taxRateRepositoryProvider);
-  return SetDefaultTaxRate(repository);
-}
+// Providers moved to product_di.dart

@@ -1,40 +1,10 @@
 import 'package:posventa/domain/entities/department.dart';
 import 'package:posventa/presentation/providers/providers.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:posventa/domain/repositories/department_repository.dart';
-import 'package:posventa/data/repositories/department_repository_impl.dart';
-import 'package:posventa/domain/use_cases/department/create_department.dart';
-import 'package:posventa/domain/use_cases/department/delete_department.dart';
-import 'package:posventa/domain/use_cases/department/get_all_departments.dart';
-import 'package:posventa/domain/use_cases/department/update_department.dart';
 
 part 'department_providers.g.dart';
 
-@riverpod
-DepartmentRepository departmentRepository(ref) {
-  final dbHelper = ref.watch(databaseHelperProvider);
-  return DepartmentRepositoryImpl(dbHelper);
-}
-
-@Riverpod(keepAlive: true)
-GetAllDepartments getAllDepartmentsUseCase(ref) {
-  return GetAllDepartments(ref.watch(departmentRepositoryProvider));
-}
-
-@riverpod
-CreateDepartment createDepartmentUseCase(ref) {
-  return CreateDepartment(ref.watch(departmentRepositoryProvider));
-}
-
-@riverpod
-UpdateDepartment updateDepartmentUseCase(ref) {
-  return UpdateDepartment(ref.watch(departmentRepositoryProvider));
-}
-
-@riverpod
-DeleteDepartment deleteDepartmentUseCase(ref) {
-  return DeleteDepartment(ref.watch(departmentRepositoryProvider));
-}
+// Providers moved to product_di.dart
 
 @Riverpod(keepAlive: true)
 class DepartmentList extends _$DepartmentList {

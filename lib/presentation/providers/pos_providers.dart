@@ -10,7 +10,10 @@ import 'package:posventa/domain/entities/sale_payment.dart';
 import 'package:posventa/domain/entities/tax_rate.dart';
 import 'package:posventa/presentation/providers/auth_provider.dart';
 import 'package:posventa/presentation/providers/product_provider.dart';
-import 'package:posventa/presentation/providers/providers.dart';
+import 'package:posventa/presentation/providers/di/sale_di.dart';
+import 'package:posventa/presentation/providers/di/product_di.dart';
+import 'package:posventa/presentation/providers/di/inventory_di.dart';
+
 import 'package:posventa/presentation/providers/notification_providers.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -74,17 +77,17 @@ class POSNotifier extends _$POSNotifier {
     ProductVariant? variant,
     double quantity = 1.0,
   }) async {
-    // Calculate quantity multiplier (how much stock to deduct per unit sold)
-    // For weight products, this might need adjustment if stock is tracked differently,
-    // but assuming stock is in same unit as sales for now.
-    // final quantityMultiplier = variant?.quantity ?? 1.0;
+    // Validate stock availability using domain service
+    // We need the current cart to calculate total stock needed
+    final stockError = await ref
+        .read(stockValidatorServiceProvider)
+        .validateStock(
+          product: product,
+          quantityToAdd: quantity,
+          variant: variant,
+          currentCart: state.cart,
+        );
 
-    // Validate stock availability
-    final stockError = await _validateStock(
-      product.id!,
-      quantity,
-      variantId: variant?.id,
-    );
     if (stockError != null) {
       return stockError;
     }
@@ -200,79 +203,6 @@ class POSNotifier extends _$POSNotifier {
     return null; // Success
   }
 
-  /// Validates if there's enough stock for the requested quantity
-  /// Returns error message if insufficient stock, null if OK
-  Future<String?> _validateStock(
-    int productId,
-    double additionalQuantity, {
-    int? variantId,
-  }) async {
-    try {
-      // Get current values from product list to ensure we have up-to-date stock including variants
-      final productsAsync = ref.read(productListProvider);
-
-      // If we don't have products loaded, fall back to old method (only for non-variants or if critical)
-      // But for POS we generally have them.
-      if (!productsAsync.hasValue) {
-        // Fallback or error? Let's try to proceed with old logic ONLY if no variantId
-        if (variantId == null) {
-          // ... (existing fallback logic if needed, or just fail safe)
-          // For now, let's assume we need the list.
-          // If the list is empty/loading, we might block or try to fetch.
-          // Given the sync nature of POS usually, let's assume valid state or fail.
-          return 'Inventario no disponible (Cargando productos...)';
-        }
-        return 'Inventario no disponible para validar variante';
-      }
-
-      final products = productsAsync.value!;
-      final product = products.firstWhere(
-        (p) => p.id == productId,
-        orElse: () => throw Exception('Producto no encontrado'),
-      );
-
-      double availableStock = 0.0;
-      String stockLabel = '';
-
-      if (variantId != null) {
-        final variant = product.variants?.firstWhere(
-          (v) => v.id == variantId,
-          orElse: () => throw Exception('Variante no encontrada'),
-        );
-        if (variant == null) return 'Variante no válida';
-
-        // Use variant specific stock
-        // If stock is null, we assume 0 or infinite depending on logic? Usually 0.
-        availableStock = variant.stock ?? 0.0;
-        stockLabel = 'de la variante';
-      } else {
-        // Base product stock
-        availableStock = product.stock == null
-            ? 0.0
-            : product.stock!.toDouble();
-      }
-
-      // Calculate total quantity needed (existing in cart + new)
-      final currentStockInCart = state.cart
-          .where(
-            (item) =>
-                item.productId == productId && item.variantId == variantId,
-          )
-          .fold(0.0, (sum, item) => sum + item.quantity);
-
-      final totalNeeded = currentStockInCart + additionalQuantity;
-
-      // Check if enough stock
-      if (availableStock < totalNeeded) {
-        return 'Stock insuficiente$stockLabel (disponible: ${availableStock.toStringAsFixed(0)})';
-      }
-
-      return null; // Stock OK
-    } catch (e) {
-      return 'Error al validar stock: $e';
-    }
-  }
-
   void removeFromCart(int productId, {int? variantId}) {
     final newCart = state.cart.where((item) {
       if (item.productId != productId) return true;
@@ -302,11 +232,16 @@ class POSNotifier extends _$POSNotifier {
       // Validate stock if increasing quantity
       if (quantity > existingItem.quantity) {
         final additionalNeeded = quantity - existingItem.quantity;
-        final stockError = await _validateStock(
-          product.id!,
-          additionalNeeded,
-          variantId: variant?.id,
-        );
+
+        final stockError = await ref
+            .read(stockValidatorServiceProvider)
+            .validateStock(
+              product: product,
+              quantityToAdd: additionalNeeded,
+              variant: variant,
+              currentCart: state.cart,
+            );
+
         if (stockError != null) {
           return stockError;
         }
@@ -355,11 +290,15 @@ class POSNotifier extends _$POSNotifier {
     } else {
       // Add as new item with specific quantity
       // Validate stock
-      final stockError = await _validateStock(
-        product.id!,
-        quantity,
-        variantId: variant?.id,
-      );
+      final stockError = await ref
+          .read(stockValidatorServiceProvider)
+          .validateStock(
+            product: product,
+            quantityToAdd: quantity,
+            variant: variant,
+            currentCart: state.cart,
+          );
+
       if (stockError != null) {
         return stockError;
       }
@@ -436,13 +375,34 @@ class POSNotifier extends _$POSNotifier {
       // Validate stock if increasing quantity
       if (quantity > existingItem.quantity) {
         final additionalNeeded = quantity - existingItem.quantity;
-        final stockError = await _validateStock(
-          productId,
-          additionalNeeded,
-          variantId: variantId,
-        );
-        if (stockError != null) {
-          return stockError;
+
+        try {
+          final productRepo = ref.read(productRepositoryProvider);
+          final product = await productRepo.getProductById(productId);
+
+          if (product != null) {
+            ProductVariant? variant;
+            if (variantId != null && product.variants != null) {
+              try {
+                variant = product.variants!.firstWhere(
+                  (v) => v.id == variantId,
+                );
+              } catch (_) {}
+            }
+
+            final stockError = await ref
+                .read(stockValidatorServiceProvider)
+                .validateStock(
+                  product: product,
+                  quantityToAdd: additionalNeeded,
+                  variant: variant,
+                  currentCart: state.cart,
+                );
+
+            if (stockError != null) return stockError;
+          }
+        } catch (e) {
+          debugPrint('Error validating stock in updateQuantity: $e');
         }
       }
 

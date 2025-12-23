@@ -9,54 +9,6 @@ part of 'cash_session_providers.dart';
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
 
-@ProviderFor(cashSessionRepository)
-const cashSessionRepositoryProvider = CashSessionRepositoryProvider._();
-
-final class CashSessionRepositoryProvider
-    extends
-        $FunctionalProvider<
-          CashSessionRepository,
-          CashSessionRepository,
-          CashSessionRepository
-        >
-    with $Provider<CashSessionRepository> {
-  const CashSessionRepositoryProvider._()
-    : super(
-        from: null,
-        argument: null,
-        retry: null,
-        name: r'cashSessionRepositoryProvider',
-        isAutoDispose: true,
-        dependencies: null,
-        $allTransitiveDependencies: null,
-      );
-
-  @override
-  String debugGetCreateSourceHash() => _$cashSessionRepositoryHash();
-
-  @$internal
-  @override
-  $ProviderElement<CashSessionRepository> $createElement(
-    $ProviderPointer pointer,
-  ) => $ProviderElement(pointer);
-
-  @override
-  CashSessionRepository create(Ref ref) {
-    return cashSessionRepository(ref);
-  }
-
-  /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(CashSessionRepository value) {
-    return $ProviderOverride(
-      origin: this,
-      providerOverride: $SyncValueProvider<CashSessionRepository>(value),
-    );
-  }
-}
-
-String _$cashSessionRepositoryHash() =>
-    r'e25e81f9bba26e8d0acd95b96c64ac784038c4f2';
-
 @ProviderFor(warehouseList)
 const warehouseListProvider = WarehouseListProvider._();
 

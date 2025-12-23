@@ -1,19 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:posventa/data/repositories/sale_return_repository_impl.dart';
-import 'package:posventa/domain/repositories/sale_return_repository.dart';
-import 'package:posventa/domain/use_cases/sale_return/create_sale_return_use_case.dart';
-import 'package:posventa/domain/use_cases/sale_return/generate_next_return_number_use_case.dart';
-import 'package:posventa/domain/use_cases/sale_return/get_returns_stats_use_case.dart';
-import 'package:posventa/domain/use_cases/sale_return/get_sale_return_by_id_use_case.dart';
-import 'package:posventa/domain/use_cases/sale_return/get_sale_returns_use_case.dart';
-import 'package:posventa/domain/use_cases/sale_return/validate_return_eligibility_use_case.dart';
+
 import 'package:posventa/domain/entities/sale.dart';
 import 'package:posventa/domain/entities/sale_item.dart';
 import 'package:posventa/domain/entities/sale_return.dart';
 import 'package:posventa/domain/entities/sale_return_item.dart';
 import 'package:posventa/presentation/providers/providers.dart';
 import 'package:posventa/presentation/providers/auth_provider.dart';
+import 'package:posventa/presentation/providers/di/sale_di.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'return_processing_provider.g.dart';
@@ -326,42 +320,7 @@ class ReturnProcessing extends _$ReturnProcessing {
 // Providers
 // ============================================================================
 
-// Repository Provider
-final saleReturnRepositoryProvider = Provider<SaleReturnRepository>((ref) {
-  final dbHelper = ref.watch(databaseHelperProvider);
-  return SaleReturnRepositoryImpl(dbHelper);
-});
-
-// Use Case Providers
-final createSaleReturnUseCaseProvider = Provider((ref) {
-  final repository = ref.watch(saleReturnRepositoryProvider);
-  return CreateSaleReturnUseCase(repository);
-});
-
-final getSaleReturnsUseCaseProvider = Provider((ref) {
-  final repository = ref.watch(saleReturnRepositoryProvider);
-  return GetSaleReturnsUseCase(repository);
-});
-
-final getSaleReturnByIdUseCaseProvider = Provider((ref) {
-  final repository = ref.watch(saleReturnRepositoryProvider);
-  return GetSaleReturnByIdUseCase(repository);
-});
-
-final generateNextReturnNumberUseCaseProvider = Provider((ref) {
-  final repository = ref.watch(saleReturnRepositoryProvider);
-  return GenerateNextReturnNumberUseCase(repository);
-});
-
-final validateReturnEligibilityUseCaseProvider = Provider((ref) {
-  final repository = ref.watch(saleReturnRepositoryProvider);
-  return ValidateReturnEligibilityUseCase(repository);
-});
-
-final getReturnsStatsUseCaseProvider = Provider((ref) {
-  final repository = ref.watch(saleReturnRepositoryProvider);
-  return GetReturnsStatsUseCase(repository);
-});
+// Providers moved to sale_di.dart
 
 // Returns List Provider - Now using StreamProvider for real-time updates
 final saleReturnsProvider = StreamProvider.autoDispose<List<SaleReturn>>((ref) {

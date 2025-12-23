@@ -1,23 +1,15 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:posventa/data/datasources/database_helper.dart';
-import 'package:posventa/data/repositories/cash_session_repository_impl.dart';
+
 import 'package:posventa/domain/entities/cash_movement.dart';
 import 'package:posventa/domain/entities/cash_session.dart';
 import 'package:posventa/domain/entities/sale_payment.dart';
-import 'package:posventa/domain/repositories/cash_session_repository.dart';
-import 'package:posventa/presentation/providers/auth_provider.dart';
 import 'package:posventa/presentation/providers/providers.dart';
 import 'package:posventa/domain/entities/warehouse.dart';
 
 part 'cash_session_providers.g.dart';
 
 // Repository Provider
-@riverpod
-CashSessionRepository cashSessionRepository(Ref ref) {
-  final authState = ref.watch(authProvider);
-  final userId = authState.user?.id ?? 0;
-  return CashSessionRepositoryImpl(DatabaseHelper.instance, userId);
-}
+// Repository provider moved to sale_di.dart
 
 @riverpod
 Future<List<Warehouse>> warehouseList(Ref ref) async {

@@ -2,7 +2,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:posventa/domain/entities/user.dart';
 import 'package:posventa/domain/repositories/auth_repository.dart';
-import 'package:posventa/data/repositories/auth_repository_impl.dart';
+
 import 'package:posventa/presentation/providers/providers.dart';
 
 part 'auth_provider.g.dart';
@@ -24,13 +24,6 @@ class AuthState {
   factory AuthState.loading() => AuthState._(status: AuthStatus.loading);
   factory AuthState.error(String message) =>
       AuthState._(status: AuthStatus.error, errorMessage: message);
-}
-
-// Provider for AuthRepository
-@riverpod
-AuthRepository authRepository(Ref ref) {
-  final dbHelper = ref.watch(databaseHelperProvider);
-  return AuthRepositoryImpl(dbHelper);
 }
 
 // Notifier for authentication logic
