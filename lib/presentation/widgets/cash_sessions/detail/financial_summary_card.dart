@@ -53,8 +53,8 @@ class FinancialSummaryCard extends StatelessWidget {
             const SizedBox(height: 8),
             _buildFinancialRow(
               context,
-              'Ventas en Efectivo',
-              detail.totalCashSales,
+              'Entradas de Efectivo',
+              detail.totalCashTendered,
               currencyFormat,
               color: AppTheme.transactionSuccess,
               prefix: '+',
@@ -62,11 +62,29 @@ class FinancialSummaryCard extends StatelessWidget {
             const SizedBox(height: 8),
             _buildFinancialRow(
               context,
-              'Movimientos Manuales',
-              detail.totalManualMovements,
+              'Cambio Entregado',
+              -detail.totalChangeGiven, // Show as negative
               currencyFormat,
-              color: detail.totalManualMovements >= 0 ? AppTheme.transactionSuccess : AppTheme.transactionFailed,
-              prefix: detail.totalManualMovements >= 0 ? '+' : '',
+              color: Colors.blueGrey, // Neutral color
+            ),
+            const SizedBox(height: 8),
+            _buildFinancialRow(
+              context,
+              'Devoluciones / Cancelaciones',
+              -detail.totalCancellations, // Show as negative
+              currencyFormat,
+              color: Colors.orange,
+            ),
+            const SizedBox(height: 8),
+            _buildFinancialRow(
+              context,
+              'Movimientos Manuales',
+              detail.totalRealManualMovements,
+              currencyFormat,
+              color: detail.totalRealManualMovements >= 0
+                  ? AppTheme.transactionSuccess
+                  : AppTheme.transactionFailed,
+              prefix: detail.totalRealManualMovements >= 0 ? '+' : '',
             ),
             const Divider(height: 24),
             _buildFinancialRow(
@@ -109,7 +127,9 @@ class FinancialSummaryCard extends StatelessWidget {
                                     : Icons.trending_up),
                           color: difference == 0
                               ? Colors.blue
-                              : (isNegative ? AppTheme.transactionFailed : AppTheme.transactionSuccess),
+                              : (isNegative
+                                    ? AppTheme.transactionFailed
+                                    : AppTheme.transactionSuccess),
                         ),
                         const SizedBox(width: 8),
                         Text(
@@ -119,7 +139,9 @@ class FinancialSummaryCard extends StatelessWidget {
                             fontWeight: FontWeight.bold,
                             color: difference == 0
                                 ? Colors.blue
-                                : (isNegative ? AppTheme.transactionFailed : AppTheme.transactionSuccess),
+                                : (isNegative
+                                      ? AppTheme.transactionFailed
+                                      : AppTheme.transactionSuccess),
                           ),
                         ),
                       ],
@@ -131,7 +153,9 @@ class FinancialSummaryCard extends StatelessWidget {
                         fontWeight: FontWeight.bold,
                         color: difference == 0
                             ? Colors.blue
-                            : (isNegative ? AppTheme.transactionFailed : AppTheme.transactionSuccess),
+                            : (isNegative
+                                  ? AppTheme.transactionFailed
+                                  : AppTheme.transactionSuccess),
                       ),
                     ),
                   ],

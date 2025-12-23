@@ -66,12 +66,73 @@ class SalesSummaryCard extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    'Monto total:',
+                    'Monto total (Recaudado):',
                     style: Theme.of(context).textTheme.bodyLarge,
                   ),
                   Text(
-                    currencyFormat.format(detail.totalSales / 100),
+                    currencyFormat.format(detail.totalCashTendered / 100),
                     style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      // No strike-through or grey, this is the Cash In
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              if (detail.totalChangeGiven > 0)
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Cambio entregado:',
+                      style: Theme.of(
+                        context,
+                      ).textTheme.bodyLarge?.copyWith(color: Colors.blueGrey),
+                    ),
+                    Text(
+                      '-${currencyFormat.format(detail.totalChangeGiven / 100)}',
+                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.blueGrey,
+                      ),
+                    ),
+                  ],
+                ),
+              if (detail.totalCancellations > 0) ...[
+                const SizedBox(height: 8),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Ventas Canceladas (Info):',
+                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                        color: Colors.orange,
+                        fontStyle: FontStyle.italic,
+                      ),
+                    ),
+                    Text(
+                      currencyFormat.format(detail.totalCancellations / 100),
+                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.orange,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+              const Divider(height: 16),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Ventas Totales (Reales):',
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  Text(
+                    currencyFormat.format(detail.totalNetSales / 100),
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.bold,
                       color: AppTheme.transactionSuccess,
                     ),

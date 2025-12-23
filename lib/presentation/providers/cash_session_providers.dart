@@ -122,22 +122,61 @@ class CashSessionDetail {
     required this.payments,
   });
 
-  int get totalCashSales => payments
+  // 1. Cash In (Tendered) - Sum of all cash payments
+  int get totalCashTendered => payments
       .where((p) => p.paymentMethod == 'Efectivo')
       .fold(0, (sum, p) => sum + p.amountCents);
-  int get totalSales => payments.fold(0, (sum, p) => sum + p.amountCents);
-  int get totalManualMovements => movements.fold(0, (sum, m) {
-    // Align with UI logic: 'entry' is deposit, everything else is withdrawal
-    final isEntry = m.movementType == 'entry';
-    return isEntry ? sum + m.amountCents : sum - m.amountCents;
-  });
+
+  // 2. Change Given - Sum of 'Cambio' movements
+  int get totalChangeGiven => movements
+      .where((m) => m.reason == 'Cambio')
+      .fold(0, (sum, m) => sum + m.amountCents.abs());
+
+  // 3. Cancellations/Returns - Sum of 'return' movements (or reason based)
+  int get totalCancellations => movements
+      .where((m) => m.movementType == 'return' || m.reason == 'Cancelación')
+      .fold(0, (sum, m) => sum + m.amountCents.abs());
+
+  // 4. True Manual Movements - Everything else
+  int get totalRealManualMovements => movements
+      .where(
+        (m) =>
+            m.reason != 'Cambio' &&
+            m.movementType != 'return' &&
+            m.reason != 'Cancelación',
+      )
+      .fold(0, (sum, m) {
+        final isEntry = m.movementType == 'entry';
+        return isEntry ? sum + m.amountCents : sum - m.amountCents;
+      });
+
+  // 5. Sales Total (Revenue) - Sum of payments linked to valid sales?
+  // User wants "Ventas Totales: Valor real de los productos".
+  // This is best derived from the payments or passed separately.
+  // Assuming payments.amountCents is 'Tendered', we need 'Sale Total'.
+  // Currently SalePayment has 'amountCents'. If partial payment, it's the amount paid.
+  // If overpayment (change), it's the tendered amount.
+  // To get "Sale Value", we ideally need the Sale entity.
+  // BUT, 'totalSales' (the old getter) was sum of payments.
+  // Let's use 'totalCashTendered' for the Cash Block.
+  // For the Sales Block, we'll calculate 'Net Sales' as:
+  // Tendered - Change - Cancellations
+  // This ensures that:
+  // 1. Valid Sales: Tendered - Change = Sale Total
+  // 2. Cancelled Sales: Tendered - Change - CancellationRefund = 0 (Net impact 0 on sales)
+  int get totalNetSales =>
+      totalCashTendered - totalChangeGiven - totalCancellations;
 
   int get expectedBalance {
     if (session.status == 'closed') {
       return session.expectedBalanceCents ?? 0;
     }
-    // For open sessions, calculate dynamically
-    return session.openingBalanceCents + totalCashSales + totalManualMovements;
+    // Formula: Initial + Tendered - Change - Cancellations + Manual
+    return session.openingBalanceCents +
+        totalCashTendered -
+        totalChangeGiven -
+        totalCancellations +
+        totalRealManualMovements;
   }
 }
 

@@ -16,6 +16,11 @@ class ManualMovementsCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Filter out "Change" movements
+    final filteredMovements = detail.movements
+        .where((m) => m.reason != 'Cambio')
+        .toList();
+
     return Card(
       elevation: 2,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -40,7 +45,7 @@ class ManualMovementsCard extends StatelessWidget {
               ],
             ),
             const Divider(height: 24),
-            if (detail.movements.isEmpty)
+            if (filteredMovements.isEmpty)
               const Padding(
                 padding: EdgeInsets.all(16.0),
                 child: Center(
@@ -51,10 +56,10 @@ class ManualMovementsCard extends StatelessWidget {
               ListView.separated(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
-                itemCount: detail.movements.length,
+                itemCount: filteredMovements.length,
                 separatorBuilder: (_, __) => const Divider(height: 1),
                 itemBuilder: (context, index) {
-                  final movement = detail.movements[index];
+                  final movement = filteredMovements[index];
                   final isEntry = movement.movementType == 'entry';
                   final isReturn = movement.movementType == 'return';
 

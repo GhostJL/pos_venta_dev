@@ -56,10 +56,17 @@ class TransactionRepositoryImpl implements TransactionRepository {
       ['cancelled', startOfDay, endOfDay],
     );
 
-    final totalCents = result.first['total'];
-    if (totalCents == null) return 0.0;
+    final totalSalesCents = (result.first['total'] as int?) ?? 0;
 
-    return (totalCents as int) / 100.0;
+    // Subtract manual returns (cash movements of type 'return')
+    final returnsResult = await db.rawQuery(
+      'SELECT SUM(amount_cents) as total FROM cash_movements WHERE movement_type = ? AND movement_date BETWEEN ? AND ?',
+      ['return', startOfDay, endOfDay],
+    );
+
+    final totalReturnsCents = (returnsResult.first['total'] as int?) ?? 0;
+
+    return (totalSalesCents - totalReturnsCents) / 100.0;
   }
 
   @override

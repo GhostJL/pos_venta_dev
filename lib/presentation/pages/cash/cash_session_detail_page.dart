@@ -8,6 +8,7 @@ import 'package:posventa/presentation/widgets/cash_sessions/detail/session_info_
 import 'package:posventa/presentation/widgets/cash_sessions/detail/financial_summary_card.dart';
 import 'package:posventa/presentation/widgets/cash_sessions/detail/sales_summary_card.dart';
 import 'package:posventa/presentation/widgets/cash_sessions/detail/manual_movements_card.dart';
+import 'package:posventa/presentation/widgets/cash_sessions/detail/changes_card.dart';
 import 'package:posventa/presentation/widgets/cash_sessions/detail/payment_methods_card.dart';
 import 'package:posventa/core/theme/theme.dart';
 
@@ -87,6 +88,10 @@ class CashSessionDetailPage extends ConsumerWidget {
                   detail: detail,
                   currencyFormat: currencyFormat,
                 ),
+                const SizedBox(height: 16),
+
+                // Changes Card
+                ChangesCard(detail: detail, currencyFormat: currencyFormat),
                 const SizedBox(height: 16),
 
                 // Payment Methods Summary
