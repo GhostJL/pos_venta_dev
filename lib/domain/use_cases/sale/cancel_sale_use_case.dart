@@ -1,11 +1,20 @@
+import 'package:flutter/foundation.dart';
 import 'package:posventa/domain/entities/inventory_movement.dart';
 import 'package:posventa/domain/entities/sale_transaction.dart';
+import 'package:posventa/domain/use_cases/cash_movement/get_current_session.dart';
+import 'package:posventa/domain/use_cases/cash_movement/create_cash_movement.dart';
 import 'package:posventa/domain/repositories/sale_repository.dart';
 
 class CancelSaleUseCase {
   final SaleRepository _repository;
+  final CreateCashMovement _createCashMovement;
+  final GetCurrentSession _getCurrentSession;
 
-  CancelSaleUseCase(this._repository);
+  CancelSaleUseCase(
+    this._repository,
+    this._createCashMovement,
+    this._getCurrentSession,
+  );
 
   Future<void> call(int saleId, int userId, String reason) async {
     // Fetch the sale to get its details
@@ -40,5 +49,36 @@ class CancelSaleUseCase {
     );
 
     await _repository.executeSaleCancellation(transaction);
+
+    // Calculate total amount paid
+    int totalPaidCents = 0;
+    for (final payment in sale.payments) {
+      totalPaidCents += payment.amountCents;
+    }
+
+    // Determine refund amount:
+    // If we paid more than the sale total (i.e., we got change),
+    // we should only refund the sale total, because the change was already given back.
+    // If we paid partially (less than total), we refund what was paid.
+    final int refundAmountCents = (totalPaidCents >= sale.totalCents)
+        ? sale.totalCents
+        : totalPaidCents;
+
+    if (refundAmountCents > 0) {
+      try {
+        final currentSession = await _getCurrentSession();
+        if (currentSession != null) {
+          await _createCashMovement(
+            currentSession.id!,
+            'return',
+            refundAmountCents,
+            'Cancelación',
+            description: 'Cancelación Venta #${sale.saleNumber}',
+          );
+        }
+      } catch (e) {
+        debugPrint('Error creating cash movement for cancellation: $e');
+      }
+    }
   }
 }

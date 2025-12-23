@@ -55,7 +55,7 @@ class CashSessionCloseSummaryDialog extends StatelessWidget {
               decoration: BoxDecoration(
                 color: difference > 0
                     ? Theme.of(context).colorScheme.primary
-                    : Theme.of(context).colorScheme.errorContainer,
+                    : Theme.of(context).colorScheme.onErrorContainer,
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Row(
@@ -64,7 +64,7 @@ class CashSessionCloseSummaryDialog extends StatelessWidget {
                     difference > 0 ? Icons.arrow_upward : Icons.arrow_downward,
                     color: difference > 0
                         ? Theme.of(context).colorScheme.primary
-                        : Theme.of(context).colorScheme.error,
+                        : Theme.of(context).colorScheme.errorContainer,
                   ),
                   const SizedBox(width: 8),
                   Expanded(
@@ -75,7 +75,7 @@ class CashSessionCloseSummaryDialog extends StatelessWidget {
                       style: TextStyle(
                         color: difference > 0
                             ? Theme.of(context).colorScheme.primary
-                            : Theme.of(context).colorScheme.error,
+                            : Theme.of(context).colorScheme.errorContainer,
                         fontWeight: FontWeight.w600,
                       ),
                     ),

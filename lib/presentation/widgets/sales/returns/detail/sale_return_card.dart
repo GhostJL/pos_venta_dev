@@ -144,7 +144,7 @@ class SaleReturnCard extends StatelessWidget {
                                   decoration: BoxDecoration(
                                     color: Theme.of(
                                       context,
-                                    ).colorScheme.onSurface,
+                                    ).colorScheme.surfaceContainer,
                                     borderRadius: BorderRadius.circular(6),
                                     border: Border.all(
                                       color: Theme.of(

@@ -519,6 +519,29 @@ class POSNotifier extends _$POSNotifier {
 
       await ref.read(createSaleUseCaseProvider).call(sale);
 
+      // Record change as a cash movement if applicable
+      final change = amountPaid - (totalCents / 100.0);
+      if (change > 0) {
+        try {
+          final currentSession = await ref
+              .read(getCurrentSessionProvider)
+              .call();
+          if (currentSession != null) {
+            await ref
+                .read(createCashMovementUseCaseProvider)
+                .call(
+                  currentSession.id!,
+                  'withdrawal',
+                  (change * 100).round(),
+                  'Cambio',
+                  description: 'Cambio Venta #$saleNumber',
+                );
+          }
+        } catch (e) {
+          debugPrint('Error recording change movement: $e');
+        }
+      }
+
       // Invalidate product list to refresh stock
       ref.invalidate(productListProvider);
       // Invalidate dashboard metrics

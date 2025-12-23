@@ -331,7 +331,7 @@ final class CancelSaleUseCaseProvider
   }
 }
 
-String _$cancelSaleUseCaseHash() => r'9944252307a4ca1b2a7f8216c41b12ac65fb5bc7';
+String _$cancelSaleUseCaseHash() => r'45be2e60f7ce08c88bdfb3d77a2d21635bab5e23';
 
 @ProviderFor(todaysRevenue)
 const todaysRevenueProvider = TodaysRevenueProvider._();
@@ -1015,3 +1015,99 @@ final class GetReturnsStatsUseCaseProvider
 
 String _$getReturnsStatsUseCaseHash() =>
     r'5227190d610f00eceda24709fcd4c03a122e34c8';
+
+@ProviderFor(cashMovementRepository)
+const cashMovementRepositoryProvider = CashMovementRepositoryProvider._();
+
+final class CashMovementRepositoryProvider
+    extends
+        $FunctionalProvider<
+          CashMovementRepository,
+          CashMovementRepository,
+          CashMovementRepository
+        >
+    with $Provider<CashMovementRepository> {
+  const CashMovementRepositoryProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'cashMovementRepositoryProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$cashMovementRepositoryHash();
+
+  @$internal
+  @override
+  $ProviderElement<CashMovementRepository> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  CashMovementRepository create(Ref ref) {
+    return cashMovementRepository(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(CashMovementRepository value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<CashMovementRepository>(value),
+    );
+  }
+}
+
+String _$cashMovementRepositoryHash() =>
+    r'7b5a6ec498dacab61cb0a16578910020e459ab6a';
+
+@ProviderFor(createCashMovementUseCase)
+const createCashMovementUseCaseProvider = CreateCashMovementUseCaseProvider._();
+
+final class CreateCashMovementUseCaseProvider
+    extends
+        $FunctionalProvider<
+          CreateCashMovement,
+          CreateCashMovement,
+          CreateCashMovement
+        >
+    with $Provider<CreateCashMovement> {
+  const CreateCashMovementUseCaseProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'createCashMovementUseCaseProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$createCashMovementUseCaseHash();
+
+  @$internal
+  @override
+  $ProviderElement<CreateCashMovement> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  CreateCashMovement create(Ref ref) {
+    return createCashMovementUseCase(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(CreateCashMovement value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<CreateCashMovement>(value),
+    );
+  }
+}
+
+String _$createCashMovementUseCaseHash() =>
+    r'11d7fff84da89960446d5bcbc08b9627e2672cba';

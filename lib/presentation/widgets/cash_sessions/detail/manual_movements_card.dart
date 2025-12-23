@@ -56,16 +56,33 @@ class ManualMovementsCard extends StatelessWidget {
                 itemBuilder: (context, index) {
                   final movement = detail.movements[index];
                   final isEntry = movement.movementType == 'entry';
+                  final isReturn = movement.movementType == 'return';
+
+                  Color iconColor;
+                  IconData iconData;
+                  Color backgroundColor;
+
+                  if (isEntry) {
+                    iconColor = AppTheme.transactionSuccess;
+                    iconData = Icons.add;
+                    backgroundColor = AppTheme.transactionSuccess.withAlpha(25);
+                  } else if (isReturn) {
+                    iconColor = Colors.orange;
+                    iconData = Icons.assignment_return;
+                    backgroundColor = Colors.orange.withAlpha(25);
+                  } else {
+                    iconColor = AppTheme.transactionFailed;
+                    iconData = Icons.remove;
+                    backgroundColor = Theme.of(
+                      context,
+                    ).colorScheme.error.withAlpha(25);
+                  }
+
                   return ListTile(
                     contentPadding: const EdgeInsets.symmetric(vertical: 8),
                     leading: CircleAvatar(
-                      backgroundColor: isEntry
-                          ? AppTheme.transactionSuccess.withAlpha(25)
-                          : Theme.of(context).colorScheme.error.withAlpha(25),
-                      child: Icon(
-                        isEntry ? Icons.add : Icons.remove,
-                        color: isEntry ? AppTheme.transactionSuccess : AppTheme.transactionFailed,
-                      ),
+                      backgroundColor: backgroundColor,
+                      child: Icon(iconData, color: iconColor),
                     ),
                     title: Text(
                       movement.reason,
@@ -90,7 +107,9 @@ class ManualMovementsCard extends StatelessWidget {
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 16,
-                        color: isEntry ? AppTheme.transactionSuccess : AppTheme.transactionFailed,
+                        color: isEntry
+                            ? AppTheme.transactionSuccess
+                            : AppTheme.transactionFailed,
                       ),
                     ),
                   );

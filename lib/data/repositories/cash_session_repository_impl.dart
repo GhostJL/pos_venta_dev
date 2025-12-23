@@ -71,9 +71,9 @@ class CashSessionRepositoryImpl implements CashSessionRepository {
         INNER JOIN sales s ON sp.sale_id = s.id
         WHERE s.cashier_id = ?
           AND sp.payment_method = 'Efectivo'
-          AND s.sale_date >= ?
-          AND s.sale_date <= ?
-          AND s.status IN ('completed', 'returned')
+            AND sp.payment_method = 'Efectivo'
+            AND s.sale_date >= ?
+            AND s.sale_date <= ?
       ''',
         [_userId, session.openedAt.toIso8601String(), now.toIso8601String()],
       );
@@ -286,7 +286,6 @@ class CashSessionRepositoryImpl implements CashSessionRepository {
         WHERE s.cashier_id = ?
         AND s.sale_date >= ?
         AND s.sale_date <= ?
-        AND s.status IN ('completed', 'returned')
       ''',
       [session.userId, session.openedAt.toIso8601String(), endTime],
     );

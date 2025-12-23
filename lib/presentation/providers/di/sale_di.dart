@@ -22,6 +22,9 @@ import 'package:posventa/data/repositories/transaction_repository_impl.dart';
 import 'package:posventa/domain/repositories/cash_session_repository.dart';
 import 'package:posventa/data/repositories/cash_session_repository_impl.dart';
 import 'package:posventa/domain/use_cases/cash_movement/get_current_session.dart';
+import 'package:posventa/domain/use_cases/cash_movement/create_cash_movement.dart';
+import 'package:posventa/domain/repositories/cash_movement_repository.dart';
+import 'package:posventa/data/repositories/cash_movement_repository_impl.dart';
 import 'package:posventa/domain/use_cases/cash_session/open_cash_session_use_case.dart';
 import 'package:posventa/domain/use_cases/cash_session/close_cash_session_use_case.dart';
 import 'package:posventa/domain/use_cases/cash_session/get_current_cash_session_use_case.dart';
@@ -62,8 +65,11 @@ GenerateNextSaleNumberUseCase generateNextSaleNumberUseCase(ref) =>
     GenerateNextSaleNumberUseCase(ref.watch(saleRepositoryProvider));
 
 @riverpod
-CancelSaleUseCase cancelSaleUseCase(ref) =>
-    CancelSaleUseCase(ref.watch(saleRepositoryProvider));
+CancelSaleUseCase cancelSaleUseCase(ref) => CancelSaleUseCase(
+  ref.watch(saleRepositoryProvider),
+  ref.watch(createCashMovementUseCaseProvider),
+  ref.watch(getCurrentSessionProvider),
+);
 
 final salesListStreamProvider = StreamProvider.autoDispose
     .family<List<Sale>, ({DateTime? startDate, DateTime? endDate})>((
@@ -169,3 +175,22 @@ ValidateReturnEligibilityUseCase validateReturnEligibilityUseCase(ref) =>
 @riverpod
 GetReturnsStatsUseCase getReturnsStatsUseCase(ref) =>
     GetReturnsStatsUseCase(ref.watch(saleReturnRepositoryProvider));
+
+// --- Cash Movement Providers ---
+
+@riverpod
+CashMovementRepository cashMovementRepository(Ref ref) {
+  final authState = ref.watch(authProvider);
+  final user = authState.user;
+  if (user == null) {
+    throw Exception('User not authenticated');
+  }
+  return CashMovementRepositoryImpl(
+    ref.watch(databaseHelperProvider),
+    user.id!,
+  );
+}
+
+@riverpod
+CreateCashMovement createCashMovementUseCase(Ref ref) =>
+    CreateCashMovement(ref.watch(cashMovementRepositoryProvider));
