@@ -55,7 +55,7 @@ class CashSessionCloseSummaryDialog extends StatelessWidget {
               decoration: BoxDecoration(
                 color: difference > 0
                     ? Theme.of(context).colorScheme.primary
-                    : Theme.of(context).colorScheme.onErrorContainer,
+                    : Theme.of(context).colorScheme.errorContainer,
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Row(
@@ -63,8 +63,8 @@ class CashSessionCloseSummaryDialog extends StatelessWidget {
                   Icon(
                     difference > 0 ? Icons.arrow_upward : Icons.arrow_downward,
                     color: difference > 0
-                        ? Theme.of(context).colorScheme.primary
-                        : Theme.of(context).colorScheme.errorContainer,
+                        ? Theme.of(context).colorScheme.onPrimary
+                        : Theme.of(context).colorScheme.onErrorContainer,
                   ),
                   const SizedBox(width: 8),
                   Expanded(
@@ -74,8 +74,8 @@ class CashSessionCloseSummaryDialog extends StatelessWidget {
                           : 'Faltante de efectivo',
                       style: TextStyle(
                         color: difference > 0
-                            ? Theme.of(context).colorScheme.primary
-                            : Theme.of(context).colorScheme.errorContainer,
+                            ? Theme.of(context).colorScheme.onPrimary
+                            : Theme.of(context).colorScheme.onErrorContainer,
                         fontWeight: FontWeight.w600,
                       ),
                     ),

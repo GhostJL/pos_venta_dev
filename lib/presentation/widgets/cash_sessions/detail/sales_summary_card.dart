@@ -50,11 +50,17 @@ class SalesSummaryCard extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    'Total de transacciones:',
+                    'Ventas Totales (Brutas):',
                     style: Theme.of(context).textTheme.bodyLarge,
                   ),
                   Text(
-                    '${detail.payments.length}',
+                    // Gross = Net + Cancellations (Implicitly Tendered - Change)
+                    // But to be consistent with "Net = Tendered - Change - Cancellations":
+                    // Gross should be "Sales before cancellations".
+                    // So we display (Net + Cancellations).
+                    currencyFormat.format(
+                      (detail.totalNetSales + detail.totalCancellations) / 100,
+                    ),
                     style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
@@ -66,66 +72,24 @@ class SalesSummaryCard extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    'Monto total (Recaudado):',
-                    style: Theme.of(context).textTheme.bodyLarge,
+                    'Can / Dev :',
+                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(),
                   ),
                   Text(
-                    currencyFormat.format(detail.totalCashTendered / 100),
+                    '-${currencyFormat.format(detail.totalCancellations / 100)}',
                     style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                       fontWeight: FontWeight.bold,
-                      // No strike-through or grey, this is the Cash In
+                      color: Colors.orange,
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 8),
-              if (detail.totalChangeGiven > 0)
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'Cambio entregado:',
-                      style: Theme.of(
-                        context,
-                      ).textTheme.bodyLarge?.copyWith(color: Colors.blueGrey),
-                    ),
-                    Text(
-                      '-${currencyFormat.format(detail.totalChangeGiven / 100)}',
-                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: Colors.blueGrey,
-                      ),
-                    ),
-                  ],
-                ),
-              if (detail.totalCancellations > 0) ...[
-                const SizedBox(height: 8),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'Ventas Canceladas (Info):',
-                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        color: Colors.orange,
-                        fontStyle: FontStyle.italic,
-                      ),
-                    ),
-                    Text(
-                      currencyFormat.format(detail.totalCancellations / 100),
-                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: Colors.orange,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
               const Divider(height: 16),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    'Ventas Totales (Reales):',
+                    'VENTAS NETAS:',
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
@@ -135,6 +99,22 @@ class SalesSummaryCard extends StatelessWidget {
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.bold,
                       color: AppTheme.transactionSuccess,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Total de transacciones:',
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
+                  Text(
+                    '${detail.payments.length}',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
                 ],

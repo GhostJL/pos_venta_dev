@@ -53,7 +53,7 @@ class FinancialSummaryCard extends StatelessWidget {
             const SizedBox(height: 8),
             _buildFinancialRow(
               context,
-              'Entradas de Efectivo',
+              'Efectivo Recibido (Bruto)',
               detail.totalCashTendered,
               currencyFormat,
               color: AppTheme.transactionSuccess,
@@ -63,33 +63,36 @@ class FinancialSummaryCard extends StatelessWidget {
             _buildFinancialRow(
               context,
               'Cambio Entregado',
-              -detail.totalChangeGiven, // Show as negative
+              -detail.totalChangeGiven,
               currencyFormat,
-              color: Colors.blueGrey, // Neutral color
+              color: Colors.blueGrey, // Neutral
             ),
             const SizedBox(height: 8),
             _buildFinancialRow(
               context,
-              'Devoluciones / Cancelaciones',
-              -detail.totalCancellations, // Show as negative
+              'Devoluciones en Efectivo',
+              -detail.totalCancellations,
               currencyFormat,
               color: Colors.orange,
             ),
             const SizedBox(height: 8),
-            _buildFinancialRow(
-              context,
-              'Movimientos Manuales',
-              detail.totalRealManualMovements,
-              currencyFormat,
-              color: detail.totalRealManualMovements >= 0
-                  ? AppTheme.transactionSuccess
-                  : AppTheme.transactionFailed,
-              prefix: detail.totalRealManualMovements >= 0 ? '+' : '',
-            ),
+            if (detail.totalRealManualMovements != 0) ...[
+              _buildFinancialRow(
+                context,
+                'Salidas/Entradas Manuales',
+                detail.totalRealManualMovements,
+                currencyFormat,
+                color: detail.totalRealManualMovements >= 0
+                    ? AppTheme.transactionSuccess
+                    : AppTheme.transactionFailed,
+                prefix: detail.totalRealManualMovements >= 0 ? '+' : '',
+              ),
+              const SizedBox(height: 8),
+            ],
             const Divider(height: 24),
             _buildFinancialRow(
               context,
-              'Balance Esperado',
+              'EFECTIVO ESPERADO',
               detail.expectedBalance,
               currencyFormat,
               isBold: true,

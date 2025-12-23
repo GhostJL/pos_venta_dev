@@ -6,6 +6,20 @@ import 'package:posventa/presentation/providers/auth_provider.dart';
 import 'package:posventa/presentation/providers/providers.dart';
 import 'package:posventa/presentation/widgets/transactions/void/transaction_void_dialog.dart';
 
+// Provider to check if a sale has any returns
+final saleHasReturnsProvider = FutureProvider.family<bool, int>((
+  ref,
+  saleId,
+) async {
+  // Ensure we listen to updates on the sale (which happen on return creation)
+  ref.watch(saleDetailStreamProvider(saleId));
+
+  final repository = ref.read(saleReturnRepositoryProvider);
+  final returnedQuantities = await repository.getReturnedQuantities(saleId);
+  // Check if any item has a returned quantity > 0
+  return returnedQuantities.values.any((qty) => qty > 0);
+});
+
 class SaleActionButtons extends ConsumerWidget {
   final Sale sale;
 
@@ -18,6 +32,12 @@ class SaleActionButtons extends ConsumerWidget {
 
     if (isCancelled || isReturned) return const SizedBox.shrink();
 
+    // Check if there are any partial returns
+    final hasReturnsAsync = ref.watch(saleHasReturnsProvider(sale.id!));
+    final hasReturns = hasReturnsAsync.value ?? false;
+
+    if (hasReturns) return const SizedBox.shrink();
+
     return Column(
       children: [
         const SizedBox(height: 24),
@@ -28,7 +48,6 @@ class SaleActionButtons extends ConsumerWidget {
             onPressed: () {
               context.push('/adjustments/return-processing', extra: sale);
             },
-
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [

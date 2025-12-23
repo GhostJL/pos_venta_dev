@@ -46,17 +46,17 @@ class TransactionVoidDialog {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.secondaryContainer,
+                    color: Theme.of(context).colorScheme.errorContainer,
                     borderRadius: BorderRadius.circular(8),
                     border: Border.all(
-                      color: Theme.of(context).colorScheme.secondaryContainer,
+                      color: Theme.of(context).colorScheme.errorContainer,
                     ),
                   ),
                   child: Row(
                     children: [
                       Icon(
                         Icons.info_outline,
-                        color: Theme.of(context).colorScheme.secondary,
+                        color: Theme.of(context).colorScheme.onErrorContainer,
                         size: 20,
                       ),
                       SizedBox(width: 8),
@@ -65,7 +65,9 @@ class TransactionVoidDialog {
                           'Esta acción no se puede deshacer. El inventario será restaurado automáticamente.',
                           style: TextStyle(
                             fontSize: 13,
-                            color: Theme.of(context).colorScheme.secondary,
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onErrorContainer,
                           ),
                         ),
                       ),

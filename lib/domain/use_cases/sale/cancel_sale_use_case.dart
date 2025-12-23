@@ -23,6 +23,16 @@ class CancelSaleUseCase {
       throw Exception('Sale not found');
     }
 
+    if (sale.status == 'cancelled') {
+      throw Exception('La venta ya está cancelada');
+    }
+
+    if (sale.status == 'returned') {
+      throw Exception(
+        'No se puede cancelar una venta que ya ha sido devuelta. Utilice el módulo de devoluciones para más detalles.',
+      );
+    }
+
     // Prepare transaction data
     final List<LotRestoration> lotRestorations = [];
     final List<InventoryAdjustment> inventoryAdjustments = [];

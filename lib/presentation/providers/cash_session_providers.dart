@@ -134,7 +134,12 @@ class CashSessionDetail {
 
   // 3. Cancellations/Returns - Sum of 'return' movements (or reason based)
   int get totalCancellations => movements
-      .where((m) => m.movementType == 'return' || m.reason == 'Cancelación')
+      .where(
+        (m) =>
+            m.movementType == 'return' ||
+            m.reason == 'Cancelación' ||
+            m.reason == 'Devolución',
+      )
       .fold(0, (sum, m) => sum + m.amountCents.abs());
 
   // 4. True Manual Movements - Everything else
@@ -143,7 +148,8 @@ class CashSessionDetail {
         (m) =>
             m.reason != 'Cambio' &&
             m.movementType != 'return' &&
-            m.reason != 'Cancelación',
+            m.reason != 'Cancelación' &&
+            m.reason != 'Devolución',
       )
       .fold(0, (sum, m) {
         final isEntry = m.movementType == 'entry';
