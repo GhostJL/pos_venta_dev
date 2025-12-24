@@ -153,7 +153,7 @@ class PurchaseRepositoryImpl implements PurchaseRepository {
       // However, `itemUpdates` has a `newLot` field which is the object.
       // We can create a map of Object -> ID after insertion.
 
-      final Map<InventoryLot, int> lotIdMap = {};
+      final Map<InventoryLot, int> lotIdMap = Map.identity();
 
       for (final lot in transaction.newLots) {
         final lotId = await txn.insert(DatabaseHelper.tableInventoryLots, {

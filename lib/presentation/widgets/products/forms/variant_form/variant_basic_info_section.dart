@@ -148,32 +148,51 @@ class VariantBasicInfoSection extends ConsumerWidget {
             Icons.sync_alt_rounded,
           ),
 
-          DropdownButtonFormField<int>(
-            initialValue: linkedVariantId,
-            decoration: const InputDecoration(
-              labelText: 'Vincular a Variante de Venta',
-              prefixIcon: Icon(Icons.link_rounded),
-            ),
-            items: [
-              const DropdownMenuItem<int>(
-                value: null,
-                child: Text(
-                  'Sin enlace (Abastece stock base)',
-                  style: TextStyle(fontStyle: FontStyle.italic),
-                ),
+          if (linkableVariants.isEmpty)
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.errorContainer,
+                borderRadius: BorderRadius.circular(8),
               ),
-              ...linkableVariants.map(
-                (v) => DropdownMenuItem<int>(
-                  value: v.id,
-                  child: Text(
-                    '${v.variantName} (En stock: ${v.quantity.toInt()} uds)',
+              child: Row(
+                children: [
+                  Icon(Icons.error_outline, color: theme.colorScheme.error),
+                  const SizedBox(width: 12),
+                  const Expanded(
+                    child: Text(
+                      'No hay variantes de venta disponibles para vincular. Debe crear una variante de venta primero.',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
                   ),
-                ),
+                ],
               ),
-            ],
-            onChanged: notifier.updateLinkedVariantId,
-            isExpanded: true,
-          ),
+            )
+          else
+            DropdownButtonFormField<int>(
+              initialValue: linkedVariantId,
+              decoration: const InputDecoration(
+                labelText: 'Vincular a Variante de Venta *',
+                prefixIcon: Icon(Icons.link_rounded),
+                helperText:
+                    'Requerido: Seleccione la variante que se abastecerá.',
+              ),
+              items: linkableVariants
+                  .map(
+                    (v) => DropdownMenuItem<int>(
+                      value: v.id,
+                      child: Text(
+                        '${v.variantName} (En stock: ${v.quantity.toInt()} uds)',
+                      ),
+                    ),
+                  )
+                  .toList(),
+              onChanged: notifier.updateLinkedVariantId,
+              validator: (value) => value == null
+                  ? 'Debe seleccionar una variante de venta'
+                  : null,
+              isExpanded: true,
+            ),
 
           if (linkedVariantId != null) ...[
             const SizedBox(height: 20),

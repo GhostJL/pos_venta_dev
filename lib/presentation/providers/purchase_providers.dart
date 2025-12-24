@@ -3,6 +3,9 @@ import 'package:posventa/presentation/providers/providers.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:posventa/domain/entities/purchase_reception_item.dart';
 
+import 'package:posventa/presentation/providers/inventory_providers.dart';
+import 'package:posventa/presentation/providers/product_provider.dart';
+
 part 'purchase_providers.g.dart';
 
 @riverpod
@@ -58,6 +61,9 @@ class PurchaseNotifier extends _$PurchaseNotifier {
           .read(receivePurchaseUseCaseProvider)
           .call(purchaseId, items, receivedBy);
       ref.invalidate(purchaseByIdProvider(purchaseId));
+      // Invalidate Inventory Providers to refresh UI immediately
+      ref.invalidate(inventoryProvider);
+      ref.invalidate(productNotifierProvider);
       return ref.read(getPurchasesUseCaseProvider).call();
     });
   }
