@@ -3,6 +3,7 @@ import 'package:posventa/domain/entities/inventory_movement.dart';
 import 'package:posventa/domain/entities/sale_transaction.dart';
 import 'package:posventa/domain/use_cases/cash_movement/get_current_session.dart';
 import 'package:posventa/domain/use_cases/cash_movement/create_cash_movement.dart';
+import 'package:posventa/domain/entities/sale.dart';
 import 'package:posventa/domain/repositories/sale_repository.dart';
 
 class CancelSaleUseCase {
@@ -23,11 +24,11 @@ class CancelSaleUseCase {
       throw Exception('Sale not found');
     }
 
-    if (sale.status == 'cancelled') {
+    if (sale.status == SaleStatus.cancelled) {
       throw Exception('La venta ya está cancelada');
     }
 
-    if (sale.status == 'returned') {
+    if (sale.status == SaleStatus.returned) {
       throw Exception(
         'No se puede cancelar una venta que ya ha sido devuelta. Utilice el módulo de devoluciones para más detalles.',
       );
