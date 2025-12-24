@@ -53,120 +53,125 @@ class _ProductQuantityDialogState extends ConsumerState<ProductQuantityDialog> {
 
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      child: Padding(
-        padding: const EdgeInsets.all(24.0),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(
-              widget.item.product.name,
-              style: theme.textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            if (widget.item.variant != null) ...[
-              const SizedBox(height: 4),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 400),
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
               Text(
-                widget.item.variant!.description,
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: colorScheme.onSurfaceVariant,
-                  fontStyle: FontStyle.italic,
+                widget.item.product.name,
+                style: theme.textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.bold,
                 ),
                 textAlign: TextAlign.center,
               ),
-            ],
-            const SizedBox(height: 24),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                _buildActionButton(
-                  icon: Icons.remove,
-                  onPressed: () => _updateQuantity(-1),
-                ),
-                const SizedBox(width: 16),
-                SizedBox(
-                  width: 100,
-                  child: TextField(
-                    controller: _controller,
-                    keyboardType: const TextInputType.numberWithOptions(
-                      decimal: true,
-                    ),
-                    textAlign: TextAlign.center,
-                    style: theme.textTheme.headlineMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-                    decoration: const InputDecoration(border: InputBorder.none),
-                    onChanged: (value) {
-                      final val = double.tryParse(value);
-                      if (val != null) {
-                        _quantity = val;
-                      }
-                    },
+              if (widget.item.variant != null) ...[
+                const SizedBox(height: 4),
+                Text(
+                  widget.item.variant!.description,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: colorScheme.onSurfaceVariant,
+                    fontStyle: FontStyle.italic,
                   ),
-                ),
-                const SizedBox(width: 16),
-                _buildActionButton(
-                  icon: Icons.add,
-                  isBlue: true,
-                  onPressed: () => _updateQuantity(1),
+                  textAlign: TextAlign.center,
                 ),
               ],
-            ),
-            const SizedBox(height: 32),
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: () {
-                      ref
-                          .read(pOSProvider.notifier)
-                          .removeFromCart(
-                            widget.item.product.id!,
-                            variantId: widget.item.variant?.id,
-                          );
-                      Navigator.pop(context);
-                    },
-                    icon: const Icon(Icons.delete_outline),
-                    label: const Text('Eliminar'),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: colorScheme.error,
-                      side: BorderSide(color: colorScheme.error),
-                      padding: const EdgeInsets.symmetric(vertical: 12),
+              const SizedBox(height: 24),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  _buildActionButton(
+                    icon: Icons.remove,
+                    onPressed: () => _updateQuantity(-1),
+                  ),
+                  const SizedBox(width: 16),
+                  SizedBox(
+                    width: 100,
+                    child: TextField(
+                      controller: _controller,
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
+                      ),
+                      textAlign: TextAlign.center,
+                      style: theme.textTheme.headlineMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                      decoration: const InputDecoration(
+                        border: InputBorder.none,
+                      ),
+                      onChanged: (value) {
+                        final val = double.tryParse(value);
+                        if (val != null) {
+                          _quantity = val;
+                        }
+                      },
                     ),
                   ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: () async {
-                      final error = await ref
-                          .read(pOSProvider.notifier)
-                          .setQuantity(
-                            widget.item.product,
-                            _quantity,
-                            variant: widget.item.variant,
-                          );
-                      if (error != null && context.mounted) {
-                        ScaffoldMessenger.of(
-                          context,
-                        ).showSnackBar(SnackBar(content: Text(error)));
-                      } else if (context.mounted) {
+                  const SizedBox(width: 16),
+                  _buildActionButton(
+                    icon: Icons.add,
+                    isBlue: true,
+                    onPressed: () => _updateQuantity(1),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 32),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: () {
+                        ref
+                            .read(pOSProvider.notifier)
+                            .removeFromCart(
+                              widget.item.product.id!,
+                              variantId: widget.item.variant?.id,
+                            );
                         Navigator.pop(context);
-                      }
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: colorScheme.primary,
-                      foregroundColor: colorScheme.onPrimary,
-                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      },
+                      icon: const Icon(Icons.delete_outline),
+                      label: const Text('Eliminar'),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: colorScheme.error,
+                        side: BorderSide(color: colorScheme.error),
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                      ),
                     ),
-                    child: const Text('Actualizar'),
                   ),
-                ),
-              ],
-            ),
-          ],
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () async {
+                        final error = await ref
+                            .read(pOSProvider.notifier)
+                            .setQuantity(
+                              widget.item.product,
+                              _quantity,
+                              variant: widget.item.variant,
+                            );
+                        if (error != null && context.mounted) {
+                          ScaffoldMessenger.of(
+                            context,
+                          ).showSnackBar(SnackBar(content: Text(error)));
+                        } else if (context.mounted) {
+                          Navigator.pop(context);
+                        }
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: colorScheme.primary,
+                        foregroundColor: colorScheme.onPrimary,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                      ),
+                      child: const Text('Actualizar'),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );

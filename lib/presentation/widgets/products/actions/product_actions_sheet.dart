@@ -135,7 +135,7 @@ class ProductActionsSheet extends ConsumerWidget {
   Widget _buildSheetHeader(ThemeData theme) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(24, 0, 24, 8), // Adjusted padding
+      padding: const EdgeInsets.fromLTRB(24, 24, 24, 8), // Adjusted padding
       // Removed Container decoration for cleaner look
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

@@ -27,7 +27,7 @@ class ProductGridView extends StatelessWidget {
   // Si la tarjeta moderna sugerida tiene 120 (imagen) + 100 (contenido) = 220 de alto
   // y un ancho mínimo de 190, la proporción es 190 / 220 ≈ 0.86
   // Ajuste para soporte de imágenes e layout vertical: ~0.65
-  static const double _idealAspectRatio = 0.65;
+  static const double _idealAspectRatio = 0.6;
 
   @override
   Widget build(BuildContext context) {

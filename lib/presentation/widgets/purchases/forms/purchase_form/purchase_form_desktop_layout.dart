@@ -41,7 +41,7 @@ class PurchaseFormDesktopLayout extends StatelessWidget {
         backgroundColor: Colors.transparent,
         actions: [
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
             child: FilledButton.icon(
               onPressed: onSavePurchase,
               icon: const Icon(Icons.check),
