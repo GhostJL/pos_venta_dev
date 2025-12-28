@@ -9,6 +9,54 @@ part of 'product_di.dart';
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
 
+@ProviderFor(productLocalDataSource)
+const productLocalDataSourceProvider = ProductLocalDataSourceProvider._();
+
+final class ProductLocalDataSourceProvider
+    extends
+        $FunctionalProvider<
+          ProductLocalDataSource,
+          ProductLocalDataSource,
+          ProductLocalDataSource
+        >
+    with $Provider<ProductLocalDataSource> {
+  const ProductLocalDataSourceProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'productLocalDataSourceProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$productLocalDataSourceHash();
+
+  @$internal
+  @override
+  $ProviderElement<ProductLocalDataSource> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  ProductLocalDataSource create(Ref ref) {
+    return productLocalDataSource(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(ProductLocalDataSource value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<ProductLocalDataSource>(value),
+    );
+  }
+}
+
+String _$productLocalDataSourceHash() =>
+    r'a89ea13d04dc82d73bab5a171bfdc9c6448807d1';
+
 @ProviderFor(productRepository)
 const productRepositoryProvider = ProductRepositoryProvider._();
 
@@ -54,7 +102,7 @@ final class ProductRepositoryProvider
   }
 }
 
-String _$productRepositoryHash() => r'b51564a0778ce901e0f1f141b2080754ea386fb8';
+String _$productRepositoryHash() => r'93c77cfa01bbb8aac03e50a25b3959ef83e79930';
 
 @ProviderFor(getAllProducts)
 const getAllProductsProvider = GetAllProductsProvider._();

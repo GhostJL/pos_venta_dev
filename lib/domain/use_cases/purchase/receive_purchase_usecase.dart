@@ -87,31 +87,38 @@ class ReceivePurchaseUseCase {
       int adjustedUnitCostCents = unitCostCents;
 
       if (variantId != null) {
-        final product = await _productRepository.getProductById(productId);
-        final variant = product?.variants
-            ?.where((v) => v.id == variantId)
-            .firstOrNull;
+        final productResult = await _productRepository.getProductById(
+          productId,
+        );
 
-        if (variant != null) {
-          // Apply linking logic
-          if (variant.type == VariantType.purchase &&
-              variant.linkedVariantId != null) {
-            targetVariantId = variant.linkedVariantId;
-            // Conversion Factor: variant.conversionFactor (e.g., 12 for a box of 12)
-            final conversionFactor = variant.conversionFactor;
+        // Handle Either
+        await productResult.fold(
+          (failure) async => throw Exception(
+            'Failed to fetch product for variant logic: ${failure.message}',
+          ),
+          (product) async {
+            final variant = product?.variants
+                ?.where((v) => v.id == variantId)
+                .firstOrNull;
 
-            if (conversionFactor > 0) {
-              adjustedQuantity = quantityToReceive * conversionFactor;
-              // Cost per unit = Cost per pack / items per pack
-              adjustedUnitCostCents = (unitCostCents / conversionFactor)
-                  .round();
+            if (variant != null) {
+              // Apply linking logic
+              if (variant.type == VariantType.purchase &&
+                  variant.linkedVariantId != null) {
+                targetVariantId = variant.linkedVariantId;
+                // Conversion Factor: variant.conversionFactor (e.g., 12 for a box of 12)
+                final conversionFactor = variant.conversionFactor;
+
+                if (conversionFactor > 0) {
+                  adjustedQuantity = quantityToReceive * conversionFactor;
+                  // Cost per unit = Cost per pack / items per pack
+                  adjustedUnitCostCents = (unitCostCents / conversionFactor)
+                      .round();
+                }
+              }
             }
-          }
-
-          // Validate that we are not creating an orphan lot/movement (target must exist)
-          // ... could add a check if needed, but DB foreign keys usually handle basic integrity.
-          // We assume linkedVariantId is valid.
-        }
+          },
+        );
       }
 
       // 2a. Create Inventory Lot (Using Adjusted Values)
@@ -172,22 +179,9 @@ class ReceivePurchaseUseCase {
 
       // 2e. Update Product Variant Cost
       if (targetVariantId != null) {
-        // Update cost of the TARGET variant
-        // Note: If we linked, 'variant' variable is the PURCHASE variant.
-        // We might need to fetch the TARGET (Sales) variant to calculate its cost correctly?
-        // Actually, we computed `adjustedUnitCostCents` above.
-        // So we can just update `targetVariantId` with `adjustedUnitCostCents`.
-
-        // Logic check:
-        // `variantUpdates` updates `cost_price_cents` on `product_variants` table.
-        // If I buying "Box", I calculated "Unit Cost".
-        // Should I update the "Box" cost or the "Unit" cost?
-        // Users usually want the "Unit" (Sales) variant to have the updated cost.
-        // So updating `targetVariantId` is correct.
-
         variantUpdates.add(
           ProductVariantUpdate(
-            variantId: targetVariantId,
+            variantId: targetVariantId!,
             newCostPriceCents: adjustedUnitCostCents,
           ),
         );

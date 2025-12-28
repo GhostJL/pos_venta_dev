@@ -87,7 +87,7 @@ final class ProductListProvider
   ProductList create() => ProductList();
 }
 
-String _$productListHash() => r'14098433c322fd6112c4c580db1e749cdff57377';
+String _$productListHash() => r'3fe227cd8e034c0ea6e61990864c2260cf93a9c5';
 
 abstract class _$ProductList extends $StreamNotifier<List<Product>> {
   Stream<List<Product>> build();

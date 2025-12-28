@@ -33,7 +33,7 @@ final class PurchaseNotifierProvider
   PurchaseNotifier create() => PurchaseNotifier();
 }
 
-String _$purchaseNotifierHash() => r'4143c8710e5128821f1741c69183bc81e077d701';
+String _$purchaseNotifierHash() => r'bf1da39c516a478e965ad1ced4493b37dca9b79c';
 
 abstract class _$PurchaseNotifier extends $AsyncNotifier<List<Purchase>> {
   FutureOr<List<Purchase>> build();

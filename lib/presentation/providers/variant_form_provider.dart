@@ -306,9 +306,20 @@ class VariantForm extends _$VariantForm {
 
     // Check database (server-side check)
     final productRepo = ref.read(productRepositoryProvider);
-    final isUnique = await productRepo.isBarcodeUnique(
+    final isUniqueResult = await productRepo.isBarcodeUnique(
       state.barcode,
       excludeVariantId: variant?.id,
+    );
+
+    bool isUnique = true;
+    isUniqueResult.fold(
+      (failure) {
+        // Treat DB error as failure to validate?
+        isUnique = false;
+      },
+      (unique) {
+        isUnique = unique;
+      },
     );
 
     if (!isUnique) {
@@ -409,12 +420,30 @@ class VariantForm extends _$VariantForm {
       if (productId > 0) {
         final productRepo = ref.read(productRepositoryProvider);
         if (newVariant.id != null) {
-          await productRepo.updateVariant(newVariant);
+          final result = await productRepo.updateVariant(newVariant);
+          bool proceed = false;
+          result.fold((l) => proceed = false, (r) => proceed = true);
+
+          if (!proceed) {
+            state = state.copyWithNullable(isSaving: false);
+            return null;
+          }
+
           state = state.copyWithNullable(isSaving: false);
           return newVariant;
         } else {
-          final newId = await productRepo.saveVariant(newVariant);
-          final savedVariant = newVariant.copyWith(id: newId);
+          final result = await productRepo.saveVariant(newVariant);
+          ProductVariant? savedVariant;
+          result.fold(
+            (l) => savedVariant = null,
+            (newId) => savedVariant = newVariant.copyWith(id: newId),
+          );
+
+          if (savedVariant == null) {
+            state = state.copyWithNullable(isSaving: false);
+            return null;
+          }
+
           state = state.copyWithNullable(isSaving: false);
           return savedVariant;
         }

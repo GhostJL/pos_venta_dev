@@ -1,0 +1,34 @@
+import 'package:posventa/data/models/product_model.dart';
+import 'package:posventa/data/models/product_tax_model.dart';
+import 'package:posventa/data/models/product_variant_model.dart';
+import 'package:posventa/data/models/tax_rate_model.dart';
+
+abstract class ProductLocalDataSource {
+  Future<List<ProductModel>> getAllProducts({int? limit, int? offset});
+  Future<List<ProductModel>> searchProducts(String query);
+  Future<ProductModel?> getProductById(int id);
+
+  // Creates returns the ID
+  Future<int> createProduct(ProductModel product);
+
+  Future<void> updateProduct(ProductModel product);
+  Future<void> deleteProduct(int id);
+
+  Future<void> addTaxToProduct(ProductTaxModel productTax);
+  Future<void> removeTaxFromProduct(int productId, int taxRateId);
+  Future<List<ProductTaxModel>> getTaxesForProduct(int productId);
+  Future<List<TaxRateModel>> getTaxRatesForProduct(int productId);
+
+  Future<int> saveVariant(ProductVariantModel variant);
+  Future<void> updateVariant(ProductVariantModel variant);
+
+  Future<bool> isCodeUnique(String code, {int? excludeId});
+  Future<bool> isNameUnique(String name, {int? excludeId});
+  Future<bool> isBarcodeUnique(
+    String barcode, {
+    int? excludeId,
+    int? excludeVariantId,
+  });
+
+  Stream<String> get tableUpdateStream;
+}

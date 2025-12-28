@@ -148,8 +148,15 @@ class POSNotifier extends _$POSNotifier {
       // Add new item
       // Fetch taxes
       final productRepository = ref.read(productRepositoryProvider);
-      final productTaxes = await productRepository.getTaxRatesForProduct(
+
+      // Handle Either return type
+      final taxesResult = await productRepository.getTaxRatesForProduct(
         product.id!,
+      );
+
+      final productTaxes = taxesResult.fold(
+        (failure) => <TaxRate>[], // Fallback to empty taxes on error
+        (rates) => rates,
       );
 
       final unitPriceCents = variant != null
@@ -305,9 +312,10 @@ class POSNotifier extends _$POSNotifier {
 
       // Fetch taxes
       final productRepository = ref.read(productRepositoryProvider);
-      final productTaxes = await productRepository.getTaxRatesForProduct(
+      final taxesResult = await productRepository.getTaxRatesForProduct(
         product.id!,
       );
+      final productTaxes = taxesResult.fold((l) => <TaxRate>[], (r) => r);
 
       final unitPriceCents = variant != null
           ? variant.priceCents
@@ -378,28 +386,65 @@ class POSNotifier extends _$POSNotifier {
 
         try {
           final productRepo = ref.read(productRepositoryProvider);
-          final product = await productRepo.getProductById(productId);
+          final productResult = await productRepo.getProductById(productId);
 
-          if (product != null) {
-            ProductVariant? variant;
-            if (variantId != null && product.variants != null) {
-              try {
-                variant = product.variants!.firstWhere(
-                  (v) => v.id == variantId,
-                );
-              } catch (_) {}
+          // Handle Either
+          await productResult.fold(
+            (failure) async {
+              debugPrint(
+                'Error validating stock inside updateQuantity: ${failure.message}',
+              );
+            },
+            (product) async {
+              if (product != null) {
+                ProductVariant? variant;
+                if (variantId != null && product.variants != null) {
+                  try {
+                    variant = product.variants!.firstWhere(
+                      (v) => v.id == variantId,
+                    );
+                  } catch (_) {}
+                }
+
+                final stockError = await ref
+                    .read(stockValidatorServiceProvider)
+                    .validateStock(
+                      product: product,
+                      quantityToAdd: additionalNeeded,
+                      variant: variant,
+                      currentCart: state.cart,
+                    );
+
+                if (stockError != null) {
+                  // ignore: curly_braces_in_flow_control_structures
+                  return stockError; // This return is technically void because of async closure
+                }
+              }
+            },
+          );
+
+          if (productResult.isRight()) {
+            final product = productResult.getRight().toNullable();
+            if (product != null) {
+              ProductVariant? variant;
+              if (variantId != null && product.variants != null) {
+                try {
+                  variant = product.variants!.firstWhere(
+                    (v) => v.id == variantId,
+                  );
+                } catch (_) {}
+              }
+
+              final stockError = await ref
+                  .read(stockValidatorServiceProvider)
+                  .validateStock(
+                    product: product,
+                    quantityToAdd: additionalNeeded,
+                    variant: variant,
+                    currentCart: state.cart,
+                  );
+              if (stockError != null) return stockError;
             }
-
-            final stockError = await ref
-                .read(stockValidatorServiceProvider)
-                .validateStock(
-                  product: product,
-                  quantityToAdd: additionalNeeded,
-                  variant: variant,
-                  currentCart: state.cart,
-                );
-
-            if (stockError != null) return stockError;
           }
         } catch (e) {
           debugPrint('Error validating stock in updateQuantity: $e');
@@ -556,26 +601,29 @@ class POSNotifier extends _$POSNotifier {
         for (final item in state.cart) {
           if (item.variantId != null) {
             // Fetch fresh product/variant data
-            final product = await productRepository.getProductById(
+            final productResult = await productRepository.getProductById(
               item.productId,
             );
-            if (product != null) {
-              final variant = product.variants?.firstWhere(
-                (v) => v.id == item.variantId,
-                orElse: () => throw Exception('Variant not found'),
-              );
 
-              if (variant != null) {
-                // Determine stock. If getProductById populates it, use it.
-                // Otherwise we might need to fetch it specifically.
-                // Assuming variant.stock is populated (as per implementation plan review).
-                await notificationService.checkStockLevel(
-                  variant: variant,
-                  productName: product.name,
-                  currentStock: variant.stock ?? 0,
+            productResult.fold((failure) => null, (product) async {
+              if (product != null) {
+                final variant = product.variants?.firstWhere(
+                  (v) => v.id == item.variantId,
+                  orElse: () => throw Exception('Variant not found'),
                 );
+
+                if (variant != null) {
+                  // Determine stock. If getProductById populates it, use it.
+                  // Otherwise we might need to fetch it specifically.
+                  // Assuming variant.stock is populated (as per implementation plan review).
+                  await notificationService.checkStockLevel(
+                    variant: variant,
+                    productName: product.name,
+                    currentStock: variant.stock ?? 0,
+                  );
+                }
               }
-            }
+            });
           }
         }
       } catch (e) {

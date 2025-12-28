@@ -1,3 +1,5 @@
+import 'package:fpdart/fpdart.dart';
+import 'package:posventa/core/error/failures.dart';
 import 'package:posventa/domain/repositories/product_repository.dart';
 
 class DeleteProduct {
@@ -5,7 +7,7 @@ class DeleteProduct {
 
   DeleteProduct(this.repository);
 
-  Future<void> call(int id) {
+  Future<Either<Failure, void>> call(int id) {
     return repository.deleteProduct(id);
   }
 }

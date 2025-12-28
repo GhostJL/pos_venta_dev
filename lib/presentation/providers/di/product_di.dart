@@ -29,14 +29,20 @@ import 'package:posventa/domain/use_cases/supplier/delete_supplier.dart';
 import 'package:posventa/domain/use_cases/supplier/get_all_suppliers.dart';
 import 'package:posventa/domain/use_cases/supplier/update_supplier.dart';
 import 'package:posventa/presentation/providers/di/core_di.dart';
+import 'package:posventa/data/datasources/product_local_datasource.dart';
+import 'package:posventa/data/datasources/product_local_datasource_impl.dart';
 
 part 'product_di.g.dart';
 
 // --- Product Providers ---
 
 @riverpod
+ProductLocalDataSource productLocalDataSource(ref) =>
+    ProductLocalDataSourceImpl(ref.watch(databaseHelperProvider));
+
+@riverpod
 ProductRepository productRepository(ref) =>
-    ProductRepositoryImpl(ref.watch(databaseHelperProvider));
+    ProductRepositoryImpl(ref.watch(productLocalDataSourceProvider));
 
 @riverpod
 GetAllProducts getAllProducts(ref) =>

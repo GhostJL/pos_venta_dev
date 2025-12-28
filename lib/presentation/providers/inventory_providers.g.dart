@@ -167,7 +167,7 @@ final class ProductsProvider
   }
 }
 
-String _$productsHash() => r'8b519285c4b15197119be5649e7befc9d9b2ecbe';
+String _$productsHash() => r'e24871b04034e66d333b99618cf6b12a833b9a33';
 
 @ProviderFor(warehouses)
 const warehousesProvider = WarehousesProvider._();

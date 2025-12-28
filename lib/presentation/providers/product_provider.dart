@@ -26,7 +26,13 @@ class ProductList extends _$ProductList {
     final query = ref.watch(productSearchQueryProvider);
     if (query.isEmpty) {
       final getAllProducts = ref.watch(getAllProductsProvider);
-      return getAllProducts.stream();
+      return getAllProducts.stream().map(
+        (either) => either.fold(
+          (failure) =>
+              throw failure.message, // Failures create AsyncError in UI
+          (products) => products,
+        ),
+      );
     } else {
       return Stream.fromFuture(_searchProducts(query));
     }
@@ -34,7 +40,11 @@ class ProductList extends _$ProductList {
 
   Future<List<Product>> _searchProducts(String query) async {
     final searchProducts = ref.read(searchProductsProvider);
-    return searchProducts(query);
+    final result = await searchProducts(query);
+    return result.fold(
+      (failure) => throw failure.message,
+      (products) => products,
+    );
   }
 
   void searchProducts(String query) {
@@ -42,17 +52,20 @@ class ProductList extends _$ProductList {
   }
 
   Future<void> addProduct(Product product) async {
-    await ref.read(createProductProvider).call(product);
+    final result = await ref.read(createProductProvider).call(product);
+    result.fold((failure) => throw failure.message, (success) => null);
     // Stream will auto-update
   }
 
   Future<void> updateProduct(Product product) async {
-    await ref.read(updateProductProvider).call(product);
+    final result = await ref.read(updateProductProvider).call(product);
+    result.fold((failure) => throw failure.message, (success) => null);
     // Stream will auto-update
   }
 
   Future<void> deleteProduct(int id) async {
-    await ref.read(deleteProductProvider).call(id);
+    final result = await ref.read(deleteProductProvider).call(id);
+    result.fold((failure) => throw failure.message, (success) => null);
     // Stream will auto-update
   }
 
@@ -109,6 +122,7 @@ extension ProductCopyWith on Product {
   }
 }
 
-final productProvider = FutureProvider.family<Product?, int>((ref, id) {
-  return ref.watch(productRepositoryProvider).getProductById(id);
+final productProvider = FutureProvider.family<Product?, int>((ref, id) async {
+  final result = await ref.watch(productRepositoryProvider).getProductById(id);
+  return result.fold((failure) => throw failure.message, (product) => product);
 });

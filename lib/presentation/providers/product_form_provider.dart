@@ -157,20 +157,24 @@ class ProductFormNotifier extends _$ProductFormNotifier {
     final id = state.initialProduct?.id;
     if (id == null) return;
 
-    try {
-      final productRepo = ref.read(productRepositoryProvider);
-      final freshProduct = await productRepo.getProductById(id);
-      if (freshProduct != null) {
-        state = state.copyWith(
-          initialProduct: freshProduct,
-          variants: List.from(freshProduct.variants ?? []),
-          photoUrl: freshProduct.photoUrl,
-          // Actualizamos otros campos si es necesario
-        );
-      }
-    } catch (e) {
-      // Ignorar errores en el refresh silencioso
-    }
+    final productRepo = ref.read(productRepositoryProvider);
+    final result = await productRepo.getProductById(id);
+
+    result.fold(
+      (failure) {
+        // Ignorar errores en el refresh silencioso
+      },
+      (freshProduct) {
+        if (freshProduct != null) {
+          state = state.copyWith(
+            initialProduct: freshProduct,
+            variants: List.from(freshProduct.variants ?? []),
+            photoUrl: freshProduct.photoUrl,
+            // Actualizamos otros campos si es necesario
+          );
+        }
+      },
+    );
   }
 
   void setName(String value) => state = state.copyWith(name: value);
@@ -235,203 +239,229 @@ class ProductFormNotifier extends _$ProductFormNotifier {
     final finalBarcode = barcode ?? state.barcode ?? '';
     final finalDescription = description ?? state.description;
 
-    try {
-      if (finalName == null || finalName.isEmpty) {
-        state = state.copyWith(
-          isLoading: false,
-          error: 'El nombre del producto es requerido.',
-        );
-        return false;
-      }
-      if (finalCode == null || finalCode.isEmpty) {
-        state = state.copyWith(
-          isLoading: false,
-          error: 'El código/SKU del producto es requerido.',
-        );
-        return false;
-      }
-
-      final productRepo = ref.read(productRepositoryProvider);
-
-      // Validation: If taxes are enabled, at least one must be selected
-      if (state.usesTaxes && state.selectedTaxes.isEmpty) {
-        state = state.copyWith(
-          isLoading: false,
-          error:
-              'Debe seleccionar al menos un impuesto si los impuestos están habilitados.',
-        );
-        return false;
-      }
-
-      if (state.departmentId == null) {
-        state = state.copyWith(
-          isLoading: false,
-          error: 'Debe seleccionar un Departamento.',
-        );
-        return false;
-      }
-
-      if (state.categoryId == null) {
-        state = state.copyWith(
-          isLoading: false,
-          error: 'Debe seleccionar una Categoría.',
-        );
-        return false;
-      }
-
-      if (state.unitId == null) {
-        state = state.copyWith(
-          isLoading: false,
-          error: 'Debe seleccionar una Unidad de medida.',
-        );
-        return false;
-      }
-
-      final isCodeUnique = await productRepo.isCodeUnique(
-        finalCode,
-        excludeId: state.initialProduct?.id,
-      );
-      if (!isCodeUnique) {
-        state = state.copyWith(
-          isLoading: false,
-          error: 'El Código/SKU ya existe. Debe ser único.',
-        );
-        return false;
-      }
-
-      // Barcode used to be on variants, but now it's on base product?
-      // User said: "el producto con la información básica del producto sin variante esto al agregar producto."
-      // User didn't explicitly say remove barcode from base.
-      // Re-reading: "Información básica: Nombre. Descripción. Tiene caducidad. Si aplica impuestos."
-      // Barcode is usually needed. ProductBasicInfoSection has it. I'll keep it.
-
-      if (finalBarcode.isNotEmpty) {
-        final isBarcodeUnique = await productRepo.isBarcodeUnique(
-          finalBarcode,
-          excludeId: state.initialProduct?.id,
-        );
-        // Warning: isBarcodeUnique checks variants too? It usually checks products table and variants table?
-        // I should assume base product barcode is stored in 'code' or need to check if 'barcode' column exists on products.
-        // Schema 'products' has 'code'. 'product_variants' has 'barcode'.
-        // Base product DOES NOT have 'barcode' column in schema!
-        // 'code' in products table is SKU.
-        // So Base Product strictly speaking doesn't have a barcode unless it's the SKU?
-        // The user said: "Información básica: Nombre. Descripción. Tiene caducidad...". No Barcode mentioned there.
-        // BUT ProductBasicInfoSection has "Código/SKU" and "Código de Barras Principal".
-        // If 'products' table doesn't have barcode, then it's not stored there.
-        // I will Assume "Código/SKU" maps to `code`.
-        // I will Remove specific Barcode field from Base Product if it's not in schema.
-        // Wait, `products` table has `code`. `product_variants` has `barcode`.
-        // If the user wants Barcode for the "Base Product", maybe they mean the SKU?
-        // I'll stick to SKU (`code`) for now.
-      }
-
-      List<ProductTax> finalProductTaxes = [];
-      if (state.usesTaxes) {
-        finalProductTaxes = state.selectedTaxes;
-      } else {
-        // Search for Exempt tax (Rate 0)
-        try {
-          final taxRates = await ref.read(taxRateListProvider.future);
-          TaxRate? exemptTax;
-
-          // Try to find by name "exento" and rate 0
-          try {
-            exemptTax = taxRates.firstWhere(
-              (t) => t.rate == 0 && t.name.toLowerCase().contains('exento'),
-            );
-          } catch (_) {
-            // Fallback to any rate 0
-            try {
-              exemptTax = taxRates.firstWhere((t) => t.rate == 0);
-            } catch (__) {
-              // No exempt tax found
-            }
-          }
-
-          if (exemptTax != null) {
-            finalProductTaxes = [
-              ProductTax(taxRateId: exemptTax.id!, applyOrder: 1),
-            ];
-          }
-        } catch (e) {
-          // Ignore error, just proceed without taxes
-        }
-      }
-
-      // Handle Image Saving
-      String? savedPhotoUrl = state.photoUrl;
-      if (state.imageFile != null) {
-        try {
-          final appDir = await getApplicationDocumentsDirectory();
-          final fileName =
-              '${DateTime.now().millisecondsSinceEpoch}_${path.basename(state.imageFile!.path)}';
-          final savedImage = await state.imageFile!.copy(
-            '${appDir.path}/$fileName',
-          );
-          savedPhotoUrl = savedImage.path;
-        } catch (e) {
-          // If image save fails, log it but don't stop product save?
-          // For now, allow it to fail silently or we could show error.
-          // Choosing to proceed.
-        }
-      }
-
-      final newProduct = Product(
-        id: state.initialProduct?.id,
-        name: finalName,
-        code: finalCode,
-        description: finalDescription,
-        departmentId: state.departmentId!,
-        categoryId: state.categoryId!,
-        brandId: state.brandId,
-        supplierId: state.supplierId,
-        unitId: state.unitId!,
-        isSoldByWeight: state.isSoldByWeight,
-        productTaxes: finalProductTaxes,
-        variants: state.variants,
-        isActive: state.isActive,
-        hasExpiration: state.hasExpiration,
-        photoUrl: savedPhotoUrl,
-      );
-
-      Product savedProduct;
-      // Use repo directly to ensure we get the ID for new products
-      // and can update the local state correctly
-      if (state.initialProduct == null) {
-        final newId = await productRepo.createProduct(newProduct);
-        savedProduct = newProduct.copyWith(id: newId);
-        // Trigger list refresh if needed, though stream should handle it
-        // ref.invalidate(productListProvider);
-      } else {
-        await productRepo.updateProduct(newProduct);
-        savedProduct = newProduct;
-      }
-
-      // Update initialProduct so dirty checks work correctly
+    if (finalName == null || finalName.isEmpty) {
       state = state.copyWith(
         isLoading: false,
-        isSuccess: !silent,
-        error: null,
-        initialProduct: savedProduct,
-        // Also update fields to match saved product if needed,
-        // essentially re-syncing to "clean" state
-        name: savedProduct.name,
-        code: savedProduct.code,
-        barcode: savedProduct.barcode,
-        description: savedProduct.description,
-        variants: savedProduct.variants ?? [],
-        photoUrl: savedProduct.photoUrl,
-        clearImageFile: true,
-      );
-
-      return true;
-    } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        error: 'Error al guardar el producto: $e',
+        error: 'El nombre del producto es requerido.',
       );
       return false;
     }
+    if (finalCode == null || finalCode.isEmpty) {
+      state = state.copyWith(
+        isLoading: false,
+        error: 'El código/SKU del producto es requerido.',
+      );
+      return false;
+    }
+
+    final productRepo = ref.read(productRepositoryProvider);
+
+    // Validation: If taxes are enabled, at least one must be selected
+    if (state.usesTaxes && state.selectedTaxes.isEmpty) {
+      state = state.copyWith(
+        isLoading: false,
+        error:
+            'Debe seleccionar al menos un impuesto si los impuestos están habilitados.',
+      );
+      return false;
+    }
+
+    if (state.departmentId == null) {
+      state = state.copyWith(
+        isLoading: false,
+        error: 'Debe seleccionar un Departamento.',
+      );
+      return false;
+    }
+
+    if (state.categoryId == null) {
+      state = state.copyWith(
+        isLoading: false,
+        error: 'Debe seleccionar una Categoría.',
+      );
+      return false;
+    }
+
+    if (state.unitId == null) {
+      state = state.copyWith(
+        isLoading: false,
+        error: 'Debe seleccionar una Unidad de medida.',
+      );
+      return false;
+    }
+
+    final isCodeUniqueResult = await productRepo.isCodeUnique(
+      finalCode,
+      excludeId: state.initialProduct?.id,
+    );
+
+    bool isCodeUnique = true;
+    String? dbError;
+
+    isCodeUniqueResult.fold(
+      (failure) {
+        isCodeUnique = false;
+        dbError = failure.message;
+      },
+      (unique) {
+        isCodeUnique = unique;
+      },
+    );
+
+    if (dbError != null) {
+      state = state.copyWith(
+        isLoading: false,
+        error: 'Error validando código: $dbError',
+      );
+      return false;
+    }
+
+    if (!isCodeUnique) {
+      state = state.copyWith(
+        isLoading: false,
+        error: 'El Código/SKU ya existe. Debe ser único.',
+      );
+      return false;
+    }
+
+    if (finalBarcode.isNotEmpty) {
+      final isBarcodeUniqueResult = await productRepo.isBarcodeUnique(
+        finalBarcode,
+        excludeId: state.initialProduct?.id,
+      );
+
+      bool isBarcodeUnique = true;
+
+      isBarcodeUniqueResult.fold(
+        (failure) {
+          isBarcodeUnique = false;
+          dbError = failure.message;
+        },
+        (unique) {
+          isBarcodeUnique = unique;
+        },
+      );
+
+      if (dbError != null) {
+        state = state.copyWith(
+          isLoading: false,
+          error: 'Error validando código de barras: $dbError',
+        );
+        return false;
+      }
+    }
+
+    List<ProductTax> finalProductTaxes = [];
+    if (state.usesTaxes) {
+      finalProductTaxes = state.selectedTaxes;
+    } else {
+      // Search for Exempt tax (Rate 0)
+      try {
+        final taxRates = await ref.read(taxRateListProvider.future);
+        TaxRate? exemptTax;
+
+        // Try to find by name "exento" and rate 0
+        try {
+          exemptTax = taxRates.firstWhere(
+            (t) => t.rate == 0 && t.name.toLowerCase().contains('exento'),
+          );
+        } catch (_) {
+          // Fallback to any rate 0
+          try {
+            exemptTax = taxRates.firstWhere((t) => t.rate == 0);
+          } catch (__) {
+            // No exempt tax found
+          }
+        }
+
+        if (exemptTax != null) {
+          finalProductTaxes = [
+            ProductTax(taxRateId: exemptTax.id!, applyOrder: 1),
+          ];
+        }
+      } catch (e) {
+        // Ignore error, just proceed without taxes
+      }
+    }
+
+    // Handle Image Saving
+    String? savedPhotoUrl = state.photoUrl;
+    if (state.imageFile != null) {
+      try {
+        final appDir = await getApplicationDocumentsDirectory();
+        final fileName =
+            '${DateTime.now().millisecondsSinceEpoch}_${path.basename(state.imageFile!.path)}';
+        final savedImage = await state.imageFile!.copy(
+          '${appDir.path}/$fileName',
+        );
+        savedPhotoUrl = savedImage.path;
+      } catch (e) {
+        // Continue
+      }
+    }
+
+    final newProduct = Product(
+      id: state.initialProduct?.id,
+      name: finalName,
+      code: finalCode,
+      description: finalDescription,
+      departmentId: state.departmentId!,
+      categoryId: state.categoryId!,
+      brandId: state.brandId,
+      supplierId: state.supplierId,
+      unitId: state.unitId!,
+      isSoldByWeight: state.isSoldByWeight,
+      productTaxes: finalProductTaxes,
+      variants: state.variants,
+      isActive: state.isActive,
+      hasExpiration: state.hasExpiration,
+      photoUrl: savedPhotoUrl,
+    );
+
+    Product savedProduct = newProduct; // Placeholder init
+    String? saveError;
+
+    // Use repo directly to ensure we get the ID for new products
+    // and can update the local state correctly
+    if (state.initialProduct == null) {
+      final createResult = await productRepo.createProduct(newProduct);
+      createResult.fold(
+        (failure) => saveError = failure.message,
+        (newId) => savedProduct = newProduct.copyWith(id: newId),
+      );
+    } else {
+      final updateResult = await productRepo.updateProduct(newProduct);
+      updateResult.fold(
+        (failure) => saveError = failure.message,
+        (_) => savedProduct = newProduct,
+      );
+    }
+
+    if (saveError != null) {
+      state = state.copyWith(
+        isLoading: false,
+        error: 'Error al guardar el producto: $saveError',
+      );
+      return false;
+    }
+
+    // Update initialProduct so dirty checks work correctly
+    state = state.copyWith(
+      isLoading: false,
+      isSuccess: !silent,
+      error: null,
+      initialProduct: savedProduct,
+      // Also update fields to match saved product if needed,
+      // essentially re-syncing to "clean" state
+      name: savedProduct.name,
+      code: savedProduct.code,
+      barcode: savedProduct.barcode,
+      description: savedProduct.description,
+      variants: savedProduct.variants ?? [],
+      photoUrl: savedProduct.photoUrl,
+      clearImageFile: true,
+    );
+
+    return true;
   }
 }
