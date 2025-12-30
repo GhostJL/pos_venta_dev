@@ -6,11 +6,13 @@ import 'package:posventa/domain/entities/product_variant.dart';
 
 class VariantBarcodeSection extends ConsumerWidget {
   final ProductVariant? variant;
+  final VariantType? initialType;
   final TextEditingController barcodeController;
 
   const VariantBarcodeSection({
     super.key,
     this.variant,
+    this.initialType,
     required this.barcodeController,
   });
 
@@ -29,7 +31,7 @@ class VariantBarcodeSection extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final provider = variantFormProvider(variant);
+    final provider = variantFormProvider(variant, initialType: initialType);
     final barcodeError = ref.watch(provider.select((s) => s.barcodeError));
 
     return Column(

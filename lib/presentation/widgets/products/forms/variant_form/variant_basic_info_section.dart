@@ -8,6 +8,7 @@ import 'package:posventa/presentation/widgets/shared/image_picker_widget.dart';
 
 class VariantBasicInfoSection extends ConsumerWidget {
   final ProductVariant? variant;
+  final VariantType? initialType;
   final List<ProductVariant>? availableVariants;
   final TextEditingController nameController;
   final TextEditingController quantityController;
@@ -22,6 +23,7 @@ class VariantBasicInfoSection extends ConsumerWidget {
   const VariantBasicInfoSection({
     super.key,
     this.variant,
+    this.initialType,
     this.availableVariants,
     required this.nameController,
     required this.quantityController,
@@ -35,10 +37,9 @@ class VariantBasicInfoSection extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final provider = variantFormProvider(variant);
+    final provider = variantFormProvider(variant, initialType: initialType);
 
     // Watch only necessary fields to avoid full rebuilds on typing
-    final isForSale = ref.watch(provider.select((s) => s.isForSale));
     final type = ref.watch(provider.select((s) => s.type));
     final linkedVariantId = ref.watch(
       provider.select((s) => s.linkedVariantId),
@@ -70,38 +71,6 @@ class VariantBasicInfoSection extends ConsumerWidget {
               ),
             ),
           ),
-        // --- SECCIÓN 1: VISIBILIDAD ---
-        _buildSectionHeader(
-          context,
-          'Visibilidad en Catálogo',
-          Icons.visibility_outlined,
-        ),
-        Container(
-          decoration: BoxDecoration(
-            color: theme.colorScheme.surfaceContainerHighest.withValues(
-              alpha: 0.2,
-            ),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: SwitchListTile(
-            title: const Text(
-              '¿Habilitar para la venta?',
-              style: TextStyle(fontWeight: FontWeight.bold),
-            ),
-            subtitle: const Text(
-              'Permite seleccionar este paquete directamente en el carrito',
-            ),
-            value: isForSale,
-            onChanged: notifier.updateIsForSale,
-            secondary: Icon(Icons.storefront, color: theme.colorScheme.primary),
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: 16,
-              vertical: 4,
-            ),
-          ),
-        ),
-
-        const SizedBox(height: 24),
 
         // --- SECCIÓN 2: DATOS BÁSICOS ---
         _buildSectionHeader(

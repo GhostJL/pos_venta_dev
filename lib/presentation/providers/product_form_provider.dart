@@ -36,6 +36,9 @@ class ProductFormState {
   final File? imageFile;
   final String? photoUrl;
 
+  final bool showValidationErrors;
+  final bool isModified;
+
   ProductFormState({
     this.initialProduct,
     this.name,
@@ -59,6 +62,8 @@ class ProductFormState {
     this.isSuccess = false,
     this.imageFile,
     this.photoUrl,
+    this.showValidationErrors = false,
+    this.isModified = false,
   });
 
   ProductFormState copyWith({
@@ -68,9 +73,13 @@ class ProductFormState {
     String? barcode,
     String? description,
     int? departmentId,
+    bool clearDepartmentId = false,
     int? categoryId,
+    bool clearCategoryId = false,
     int? brandId,
+    bool clearBrandId = false,
     int? supplierId,
+    bool clearSupplierId = false,
     int? unitId,
     bool? isSoldByWeight,
     bool? isActive,
@@ -86,6 +95,8 @@ class ProductFormState {
     bool clearImageFile = false,
     String? photoUrl,
     bool clearPhotoUrl = false,
+    bool? showValidationErrors,
+    bool? isModified,
   }) {
     return ProductFormState(
       initialProduct: initialProduct ?? this.initialProduct,
@@ -93,10 +104,12 @@ class ProductFormState {
       code: code ?? this.code,
       barcode: barcode ?? this.barcode,
       description: description ?? this.description,
-      departmentId: departmentId ?? this.departmentId,
-      categoryId: categoryId ?? this.categoryId,
-      brandId: brandId ?? this.brandId,
-      supplierId: supplierId ?? this.supplierId,
+      departmentId: clearDepartmentId
+          ? null
+          : (departmentId ?? this.departmentId),
+      categoryId: clearCategoryId ? null : (categoryId ?? this.categoryId),
+      brandId: clearBrandId ? null : (brandId ?? this.brandId),
+      supplierId: clearSupplierId ? null : (supplierId ?? this.supplierId),
       unitId: unitId ?? this.unitId,
       isSoldByWeight: isSoldByWeight ?? this.isSoldByWeight,
       isActive: isActive ?? this.isActive,
@@ -110,12 +123,16 @@ class ProductFormState {
       isSuccess: isSuccess ?? this.isSuccess,
       imageFile: clearImageFile ? null : (imageFile ?? this.imageFile),
       photoUrl: clearPhotoUrl ? null : (photoUrl ?? this.photoUrl),
+      showValidationErrors: showValidationErrors ?? this.showValidationErrors,
+      isModified: isModified ?? this.isModified,
     );
   }
 }
 
 @riverpod
 class ProductFormNotifier extends _$ProductFormNotifier {
+  late ProductFormState _initialState;
+
   @override
   ProductFormState build(Product? product) {
     if (product != null) {
@@ -143,14 +160,16 @@ class ProductFormNotifier extends _$ProductFormNotifier {
         photoUrl: product.photoUrl,
       );
 
-      // Si tenemos ID, intentamos cargar los datos más frescos en el siguiente frame
+      _initialState = state;
+
       if (product.id != null) {
         Future.microtask(() => refreshFromDb());
       }
 
       return state;
     }
-    return ProductFormState();
+    _initialState = ProductFormState();
+    return _initialState;
   }
 
   Future<void> refreshFromDb() async {
@@ -160,68 +179,138 @@ class ProductFormNotifier extends _$ProductFormNotifier {
     final productRepo = ref.read(productRepositoryProvider);
     final result = await productRepo.getProductById(id);
 
-    result.fold(
-      (failure) {
-        // Ignorar errores en el refresh silencioso
-      },
-      (freshProduct) {
-        if (freshProduct != null) {
-          state = state.copyWith(
-            initialProduct: freshProduct,
-            variants: List.from(freshProduct.variants ?? []),
-            photoUrl: freshProduct.photoUrl,
-            // Actualizamos otros campos si es necesario
-          );
-        }
-      },
-    );
+    result.fold((failure) {}, (freshProduct) {
+      if (freshProduct != null) {
+        final newState = state.copyWith(
+          initialProduct: freshProduct,
+          variants: List.from(freshProduct.variants ?? []),
+          photoUrl: freshProduct.photoUrl,
+          // We update initial state mostly to reset dirty check baseline if needed
+          // But usually we respect current edits if the user has changed things?
+          // For now, let's just update fields that shouldn't conflict heavily or are readonly-ish like variants which are saved separately
+        );
+        state = newState;
+        // Note: We might NOT want to override _initialState here if we want to track changes against what was loaded at START of session vs current DB.
+        // But typically "dirty" means diff from DB. So let's update _initialState too.
+        _initialState = newState.copyWith(isModified: false);
+        _updateModified(state);
+      }
+    });
   }
 
-  void setName(String value) => state = state.copyWith(name: value);
-  void setCode(String value) => state = state.copyWith(code: value);
-  void setBarcode(String value) => state = state.copyWith(barcode: value);
-  void setDescription(String value) =>
-      state = state.copyWith(description: value);
-  void setHasVariants(bool value) => state = state.copyWith(hasVariants: value);
-  void setUsesTaxes(bool value) => state = state.copyWith(usesTaxes: value);
+  void _updateModified(ProductFormState newState) {
+    final isModified = _checkModified(newState);
+    state = newState.copyWith(isModified: isModified);
+  }
 
-  void setDepartment(int? value) => state = state.copyWith(departmentId: value);
-  void setCategory(int? value) => state = state.copyWith(categoryId: value);
-  void setBrand(int? value) => state = state.copyWith(brandId: value);
-  void setSupplier(int? value) => state = state.copyWith(supplierId: value);
-  void setUnit(int? value) => state = state.copyWith(unitId: value);
+  bool _checkModified(ProductFormState s) {
+    final initial = _initialState;
+    if (s.initialProduct == null) {
+      // New Product
+      return (s.name?.isNotEmpty ?? false) ||
+          (s.code?.isNotEmpty ?? false) ||
+          (s.description?.isNotEmpty ?? false) ||
+          s.departmentId != null ||
+          s.categoryId != null ||
+          s.brandId != null ||
+          s.supplierId != null ||
+          s.unitId != null ||
+          s.imageFile != null ||
+          (s.variants.isNotEmpty &&
+              (s.variants.length > 1 ||
+                  s.variants.first.variantName != 'Estándar'));
+    }
+
+    // Existing Product - Compare with initial (loaded from DB)
+    if (s.name != initial.name) return true;
+    if (s.code != initial.code) return true;
+    if (s.barcode != initial.barcode) return true;
+    if (s.description != initial.description) return true;
+    if (s.departmentId != initial.departmentId) return true;
+    if (s.categoryId != initial.categoryId) return true;
+    if (s.brandId != initial.brandId) return true;
+    if (s.supplierId != initial.supplierId) return true;
+    if (s.unitId != initial.unitId) return true;
+    if (s.isSoldByWeight != initial.isSoldByWeight) return true;
+    if (s.isActive != initial.isActive) return true;
+    if (s.hasExpiration != initial.hasExpiration) return true;
+    if (s.imageFile != null) return true; // New image selected
+    if (s.usesTaxes != initial.usesTaxes) return true;
+
+    // Deep compare taxes
+    if (s.selectedTaxes.length != initial.selectedTaxes.length) return true;
+    final initialTaxIds = initial.selectedTaxes.map((t) => t.taxRateId).toSet();
+    final currentTaxIds = s.selectedTaxes.map((t) => t.taxRateId).toSet();
+    if (!initialTaxIds.containsAll(currentTaxIds)) return true;
+
+    // Compare lists roughly for variants (usually handled by explicit edit form)
+    if (s.variants.length != initial.variants.length) return true;
+
+    // Deep compare variants if needed, but usually length check + explicit save action on variant form covers it.
+    // However, if we added a variant in "waiting list", length will differ.
+
+    return false;
+  }
+
+  void setName(String value) => _updateModified(state.copyWith(name: value));
+  void setCode(String value) => _updateModified(state.copyWith(code: value));
+  void setBarcode(String value) =>
+      _updateModified(state.copyWith(barcode: value));
+  void setDescription(String value) =>
+      _updateModified(state.copyWith(description: value));
+  void setHasVariants(bool value) =>
+      _updateModified(state.copyWith(hasVariants: value));
+  void setUsesTaxes(bool value) =>
+      _updateModified(state.copyWith(usesTaxes: value));
+
+  void setDepartment(int? value) => _updateModified(
+    state.copyWith(departmentId: value, clearDepartmentId: value == null),
+  );
+  void setCategory(int? value) => _updateModified(
+    state.copyWith(categoryId: value, clearCategoryId: value == null),
+  );
+  void setBrand(int? value) => _updateModified(
+    state.copyWith(brandId: value, clearBrandId: value == null),
+  );
+  void setSupplier(int? value) => _updateModified(
+    state.copyWith(supplierId: value, clearSupplierId: value == null),
+  );
+  void setUnit(int? value) => _updateModified(state.copyWith(unitId: value));
   void setSoldByWeight(bool value) =>
-      state = state.copyWith(isSoldByWeight: value);
-  void setActive(bool value) => state = state.copyWith(isActive: value);
+      _updateModified(state.copyWith(isSoldByWeight: value));
+  void setActive(bool value) =>
+      _updateModified(state.copyWith(isActive: value));
   void setHasExpiration(bool value) =>
-      state = state.copyWith(hasExpiration: value);
+      _updateModified(state.copyWith(hasExpiration: value));
+
   void setTaxes(List<ProductTax> value) =>
-      state = state.copyWith(selectedTaxes: value);
+      _updateModified(state.copyWith(selectedTaxes: value));
+
   void setVariants(List<ProductVariant> value) =>
-      state = state.copyWith(variants: value);
+      _updateModified(state.copyWith(variants: value));
 
   void pickImage(File file) {
-    state = state.copyWith(imageFile: file, photoUrl: null);
+    _updateModified(state.copyWith(imageFile: file, photoUrl: null));
   }
 
   void removeImage() {
-    state = state.copyWith(clearImageFile: true, clearPhotoUrl: true);
+    _updateModified(state.copyWith(clearImageFile: true, clearPhotoUrl: true));
   }
 
   void addVariant(ProductVariant variant) {
-    state = state.copyWith(variants: [...state.variants, variant]);
+    _updateModified(state.copyWith(variants: [...state.variants, variant]));
   }
 
   void updateVariant(int index, ProductVariant variant) {
     final newVariants = [...state.variants];
     newVariants[index] = variant;
-    state = state.copyWith(variants: newVariants);
+    _updateModified(state.copyWith(variants: newVariants));
   }
 
   void removeVariant(int index) {
     final newVariants = [...state.variants];
     newVariants.removeAt(index);
-    state = state.copyWith(variants: newVariants);
+    _updateModified(state.copyWith(variants: newVariants));
   }
 
   Future<bool> validateAndSubmit({

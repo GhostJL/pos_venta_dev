@@ -76,21 +76,7 @@ class ProductActionsSheet extends ConsumerWidget {
                           );
                         },
                       ),
-                      _buildFlatAction(
-                        context,
-                        icon: Icons.copy_all_outlined,
-                        color: theme.colorScheme.secondary,
-                        label: 'Duplicar producto',
-                        subtitle: 'Crear una copia idéntica de este item',
-                        onTap: () {
-                          context.pop();
-                          final newProduct = product.copyWith(
-                            id: null,
-                            name: '${product.name} (Copia)',
-                          );
-                          context.push('/products/form', extra: newProduct);
-                        },
-                      ),
+
                       const SizedBox(height: 24),
                       _buildSectionLabel(theme, 'Estado del Producto'),
                       const SizedBox(height: 12),

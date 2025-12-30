@@ -63,6 +63,7 @@ import 'package:posventa/presentation/widgets/catalog/departments/department_for
 import 'package:posventa/presentation/widgets/catalog/suppliers/supplier_form.dart';
 
 import 'package:posventa/domain/entities/product.dart';
+import 'package:posventa/domain/entities/product_variant.dart';
 
 import 'package:posventa/domain/entities/cash_session.dart';
 import 'package:posventa/domain/entities/brand.dart';
@@ -305,6 +306,7 @@ final routerProvider = Provider<GoRouter>((ref) {
                   productId: extra?['productId'],
                   existingBarcodes: extra?['existingBarcodes'],
                   availableVariants: extra?['availableVariants'],
+                  initialType: extra?['initialType'] as VariantType?,
                 ),
               );
             },

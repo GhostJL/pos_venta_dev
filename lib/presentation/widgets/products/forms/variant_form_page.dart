@@ -42,12 +42,21 @@ class _VariantFormPageState extends ConsumerState<VariantFormPage> {
   late TextEditingController _conversionController;
   late TextEditingController _stockMinController;
   late TextEditingController _stockMaxController;
+  late TextEditingController _marginController;
+
+  final _priceFocus = FocusNode();
+  final _costFocus = FocusNode();
+  final _marginFocus = FocusNode();
 
   @override
   void initState() {
     super.initState();
     final state = ref.read(
       variantFormProvider(widget.variant, initialType: widget.initialType),
+    );
+    final provider = variantFormProvider(
+      widget.variant,
+      initialType: widget.initialType,
     );
     _nameController = TextEditingController(text: state.name);
     _quantityController = TextEditingController(text: state.quantity);
@@ -58,6 +67,43 @@ class _VariantFormPageState extends ConsumerState<VariantFormPage> {
     _conversionController = TextEditingController(text: state.conversionFactor);
     _stockMinController = TextEditingController(text: state.stockMin);
     _stockMaxController = TextEditingController(text: state.stockMax);
+    _marginController = TextEditingController(text: state.profitMargin);
+
+    // Add listeners to sync with provider
+    _nameController.addListener(() {
+      ref.read(provider.notifier).updateName(_nameController.text);
+    });
+    _quantityController.addListener(() {
+      ref.read(provider.notifier).updateQuantity(_quantityController.text);
+    });
+    _priceController.addListener(() {
+      ref.read(provider.notifier).updatePrice(_priceController.text);
+    });
+    _costController.addListener(() {
+      ref.read(provider.notifier).updateCost(_costController.text);
+    });
+    _wholesaleController.addListener(() {
+      ref
+          .read(provider.notifier)
+          .updateWholesalePrice(_wholesaleController.text);
+    });
+    _barcodeController.addListener(() {
+      ref.read(provider.notifier).updateBarcode(_barcodeController.text);
+    });
+    _conversionController.addListener(() {
+      ref
+          .read(provider.notifier)
+          .updateConversionFactor(_conversionController.text);
+    });
+    _stockMinController.addListener(() {
+      ref.read(provider.notifier).updateStockMin(_stockMinController.text);
+    });
+    _stockMaxController.addListener(() {
+      ref.read(provider.notifier).updateStockMax(_stockMaxController.text);
+    });
+    _marginController.addListener(() {
+      ref.read(provider.notifier).updateProfitMargin(_marginController.text);
+    });
   }
 
   @override
@@ -71,6 +117,10 @@ class _VariantFormPageState extends ConsumerState<VariantFormPage> {
     _conversionController.dispose();
     _stockMinController.dispose();
     _stockMaxController.dispose();
+    _marginController.dispose();
+    _priceFocus.dispose();
+    _costFocus.dispose();
+    _marginFocus.dispose();
     super.dispose();
   }
 
@@ -89,6 +139,9 @@ class _VariantFormPageState extends ConsumerState<VariantFormPage> {
       ).notifier,
     );
 
+    // Ensure we capture if this is a new product context
+    final isNewProductContext = widget.productId == 0;
+
     final newVariant = await notifier.save(
       widget.productId ?? 0,
       widget.existingBarcodes,
@@ -101,15 +154,19 @@ class _VariantFormPageState extends ConsumerState<VariantFormPage> {
       stockMin: _stockMinController.text,
       stockMax: _stockMaxController.text,
       barcode: _barcodeController.text,
+      // If passing 0, we expect the notifier to return the constructed variant without saving to DB
+      returnVariantOnly: isNewProductContext,
     );
 
     if (newVariant != null && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Variante guardada con éxito'),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
+      if (!isNewProductContext) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Variante guardada con éxito'),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
       context.pop(newVariant);
     }
   }
@@ -126,6 +183,30 @@ class _VariantFormPageState extends ConsumerState<VariantFormPage> {
     );
     final isSaving = ref.watch(provider.select((s) => s.isSaving));
     final type = ref.watch(provider.select((s) => s.type));
+    final isModified = ref.watch(provider.select((s) => s.isModified));
+
+    // Listen for calculated updates
+    ref.listen<VariantFormState>(provider, (prev, next) {
+      if (prev?.price != next.price && _priceController.text != next.price) {
+        if (!_priceFocus.hasFocus) {
+          _priceController.text = next.price;
+        }
+      }
+      if (prev?.profitMargin != next.profitMargin &&
+          _marginController.text != next.profitMargin) {
+        if (!_marginFocus.hasFocus) {
+          _marginController.text = next.profitMargin;
+        }
+      }
+      // Cost usually drives others, but if we had reverse logic:
+      if (prev?.cost != next.cost && _costController.text != next.cost) {
+        if (!_costFocus.hasFocus) {
+          _costController.text = next.cost;
+        }
+      }
+    });
+
+    final isNewProductContext = (widget.productId ?? 0) == 0;
 
     return Scaffold(
       appBar: AppBar(
@@ -135,7 +216,9 @@ class _VariantFormPageState extends ConsumerState<VariantFormPage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              isEditing ? 'Editar Variante' : 'Nueva Variante',
+              isEditing
+                  ? 'Editar Variante de ${type == VariantType.sales ? "Venta" : "Compra"}'
+                  : 'Nueva Variante de ${type == VariantType.sales ? "Venta" : "Compra"}',
               style: theme.textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.bold,
               ),
@@ -151,24 +234,24 @@ class _VariantFormPageState extends ConsumerState<VariantFormPage> {
           ],
         ),
         actions: [
-          if (!isSaving)
-            TextButton(
-              onPressed: _saveVariant,
-              child: Text(
-                'GUARDAR',
-                style: TextStyle(
-                  color: theme.colorScheme.primary,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            )
-          else
+          if (isSaving)
             const Padding(
               padding: EdgeInsets.symmetric(horizontal: 16.0),
               child: SizedBox(
                 width: 20,
                 height: 20,
                 child: CircularProgressIndicator(strokeWidth: 2),
+              ),
+            )
+          else if (isModified)
+            TextButton(
+              onPressed: _saveVariant,
+              child: Text(
+                isNewProductContext ? 'AGREGAR' : 'GUARDAR',
+                style: TextStyle(
+                  color: theme.colorScheme.primary,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
         ],
@@ -191,6 +274,7 @@ class _VariantFormPageState extends ConsumerState<VariantFormPage> {
                     icon: Icons.info_outline_rounded,
                     child: VariantBasicInfoSection(
                       variant: widget.variant,
+                      initialType: widget.initialType,
                       availableVariants: widget.availableVariants,
                       nameController: _nameController,
                       quantityController: _quantityController,
@@ -208,9 +292,14 @@ class _VariantFormPageState extends ConsumerState<VariantFormPage> {
                     icon: Icons.payments_outlined,
                     child: VariantPriceSection(
                       variant: widget.variant,
+                      initialType: widget.initialType,
                       priceController: _priceController,
                       costController: _costController,
                       wholesalePriceController: _wholesaleController,
+                      marginController: _marginController,
+                      priceFocus: _priceFocus,
+                      costFocus: _costFocus,
+                      marginFocus: _marginFocus,
                     ),
                   ),
 
@@ -220,6 +309,7 @@ class _VariantFormPageState extends ConsumerState<VariantFormPage> {
                     icon: Icons.qr_code_scanner_rounded,
                     child: VariantBarcodeSection(
                       variant: widget.variant,
+                      initialType: widget.initialType,
                       barcodeController: _barcodeController,
                     ),
                   ),
@@ -239,31 +329,34 @@ class _VariantFormPageState extends ConsumerState<VariantFormPage> {
 
                   const SizedBox(height: 24),
 
-                  SizedBox(
-                    width: double.infinity,
-                    height: 56,
-                    child: FilledButton(
-                      onPressed: isSaving ? null : _saveVariant,
-                      style: FilledButton.styleFrom(
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
+                  if (isModified)
+                    SizedBox(
+                      width: double.infinity,
+                      height: 56,
+                      child: FilledButton(
+                        onPressed: isSaving ? null : _saveVariant,
+                        style: FilledButton.styleFrom(
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
                         ),
-                      ),
-                      child: isSaving
-                          ? CircularProgressIndicator(
-                              color: theme.colorScheme.onPrimary,
-                            )
-                          : Text(
-                              isEditing
-                                  ? 'Actualizar Variante'
-                                  : 'Crear Variante',
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
+                        child: isSaving
+                            ? CircularProgressIndicator(
+                                color: theme.colorScheme.onPrimary,
+                              )
+                            : Text(
+                                isNewProductContext
+                                    ? 'Agregar a la Lista'
+                                    : (isEditing
+                                          ? 'Actualizar Variante'
+                                          : 'Crear Variante'),
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
-                            ),
+                      ),
                     ),
-                  ),
                   const SizedBox(height: 40),
                 ],
               ),

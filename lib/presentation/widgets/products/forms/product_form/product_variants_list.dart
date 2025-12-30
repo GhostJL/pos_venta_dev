@@ -5,18 +5,17 @@ import 'package:posventa/domain/entities/product.dart';
 import 'package:posventa/domain/entities/product_variant.dart';
 import 'package:posventa/presentation/providers/product_form_provider.dart';
 import 'package:posventa/presentation/providers/providers.dart';
-import 'package:posventa/presentation/widgets/products/actions/variant_actions_sheet.dart';
 
 class ProductVariantsList extends ConsumerWidget {
   final Product? product;
-  final void Function(VariantType type) onAddVariant;
+  final void Function(VariantType type)? onAddVariant;
   final void Function(ProductVariant variant, int index) onEditVariant;
   final VariantType? filterType;
 
   const ProductVariantsList({
     super.key,
     required this.product,
-    required this.onAddVariant,
+    this.onAddVariant,
     required this.onEditVariant,
     this.filterType,
   });
@@ -28,8 +27,8 @@ class ProductVariantsList extends ConsumerWidget {
 
     // Obtenemos y ordenamos variantes
     final allVariants = ref.watch(provider.select((s) => s.variants));
-    final variants = allVariants.toList()
-      ..sort((a, b) => (a.id ?? 0).compareTo(b.id ?? 0));
+    final variants = allVariants.toList();
+    // ..sort((a, b) => (a.id ?? 0).compareTo(b.id ?? 0)); // Don't sort by ID as new variants have null ID
 
     // Filtrado lógico coherente con la navegación previa
     final filteredVariants = variants.where((v) {
@@ -62,11 +61,16 @@ class ProductVariantsList extends ConsumerWidget {
 
   Widget _buildEmptyState(BuildContext context) {
     final theme = Theme.of(context);
+    final isFilteringSales = filterType == VariantType.sales;
+    final typeText = filterType == null
+        ? "presentaciones"
+        : (isFilteringSales ? "variantes de venta" : "variantes de compra");
+
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 20),
+      padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 20),
       decoration: BoxDecoration(
         color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.2),
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
         ),
@@ -75,21 +79,21 @@ class ProductVariantsList extends ConsumerWidget {
         children: [
           Icon(
             Icons.layers_clear_outlined,
-            size: 48,
+            size: 40,
             color: theme.colorScheme.outline,
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 12),
           Text(
-            'No hay variantes de ${filterType == VariantType.sales ? "venta" : "compra"}',
-            style: theme.textTheme.titleMedium?.copyWith(
+            'No hay $typeText',
+            style: theme.textTheme.titleSmall?.copyWith(
               fontWeight: FontWeight.bold,
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 4),
           Text(
-            'Comienza agregando una nueva presentación para este producto.',
+            'Agrega variantes para tener diferentes precios o presentaciones.',
             textAlign: TextAlign.center,
-            style: theme.textTheme.bodyMedium?.copyWith(
+            style: theme.textTheme.bodySmall?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
             ),
           ),
@@ -130,32 +134,32 @@ class _VariantCard extends ConsumerWidget {
 
     return Card(
       elevation: 0,
-      color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.4),
+      color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
       margin: EdgeInsets.zero,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(12),
         side: BorderSide(
-          color: theme.colorScheme.outlineVariant.withValues(alpha: 0.4),
+          color: theme.colorScheme.outlineVariant.withValues(alpha: 0.3),
         ),
       ),
       child: InkWell(
         onTap: () => onEdit(variant, index),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(12),
         child: Padding(
-          padding: const EdgeInsets.all(16.0),
+          padding: const EdgeInsets.all(12.0),
           child: Row(
             children: [
               // Identificador Visual (Círculo pequeño con inicial o imagen)
               Container(
-                width: 44,
-                height: 44,
+                width: 40,
+                height: 40,
                 decoration: BoxDecoration(
                   color:
                       (isSales
                               ? theme.colorScheme.primary
                               : theme.colorScheme.tertiary)
                           .withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(8),
                   image:
                       (variant.photoUrl != null && variant.photoUrl!.isNotEmpty)
                       ? DecorationImage(
@@ -173,7 +177,7 @@ class _VariantCard extends ConsumerWidget {
                           isSales
                               ? Icons.sell_outlined
                               : Icons.inventory_2_outlined,
-                          size: 20,
+                          size: 18,
                           color: isSales
                               ? theme.colorScheme.primary
                               : theme.colorScheme.tertiary,
@@ -193,19 +197,34 @@ class _VariantCard extends ConsumerWidget {
                           ? "Sin nombre"
                           : variant.variantName,
                       overflow: TextOverflow.ellipsis,
-                      maxLines: 2,
+                      maxLines: 1,
                       style: theme.textTheme.titleSmall?.copyWith(
                         fontWeight: FontWeight.bold,
                         color: theme.colorScheme.onSurface,
+                        fontSize: 14,
                       ),
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: 2),
                     Row(
                       children: [
                         _buildBadge(
                           theme,
-                          "${variant.quantity.toInt()} ${unitName ?? ''}",
-                          theme.colorScheme.onSurfaceVariant,
+                          isSales ? "Venta" : "Compra",
+                          isSales
+                              ? theme.colorScheme.primary
+                              : theme.colorScheme.tertiary,
+                        ),
+                        const SizedBox(width: 6),
+                        Flexible(
+                          child: Text(
+                            "${variant.quantity.toInt()} ${unitName ?? ''}",
+                            overflow: TextOverflow.ellipsis,
+                            maxLines: 1,
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant,
+                              fontSize: 12,
+                            ),
+                          ),
                         ),
                       ],
                     ),
@@ -220,8 +239,9 @@ class _VariantCard extends ConsumerWidget {
                   Text(
                     '\$${((isSales ? variant.priceCents : variant.costPriceCents) / 100).toStringAsFixed(2)}',
                     style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w900,
+                      fontWeight: FontWeight.w800,
                       color: theme.colorScheme.onSurface,
+                      fontSize: 15,
                     ),
                   ),
                   Text(
@@ -234,33 +254,28 @@ class _VariantCard extends ConsumerWidget {
                 ],
               ),
 
-              const SizedBox(width: 4),
-
               // Botón de más acciones
               IconButton(
                 icon: Icon(
-                  Icons.more_vert_rounded,
-                  color: theme.colorScheme.onSurface,
+                  Icons.edit_rounded,
+                  color: theme.colorScheme.primary,
                   size: 20,
                 ),
-                onPressed: () => _showActions(context),
+                onPressed: () => onEdit(variant, index),
+                tooltip: "Editar",
+              ),
+              IconButton(
+                icon: Icon(
+                  Icons.delete_outline_rounded,
+                  color: theme.colorScheme.error,
+                  size: 20,
+                ),
+                onPressed: () => _confirmDelete(context),
+                tooltip: "Eliminar",
               ),
             ],
           ),
         ),
-      ),
-    );
-  }
-
-  void _showActions(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      showDragHandle: true,
-      builder: (context) => VariantActionsSheet(
-        variant: variant,
-        onEdit: () => onEdit(variant, index),
-        onDelete: () => _confirmDelete(context),
       ),
     );
   }

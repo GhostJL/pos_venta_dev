@@ -25,6 +25,7 @@ class SupplierFormState extends ConsumerState<SupplierForm> {
   String? _email;
   String? _address;
   bool _isLoading = false;
+  bool _showContactInfo = false;
 
   @override
   void initState() {
@@ -35,6 +36,16 @@ class SupplierFormState extends ConsumerState<SupplierForm> {
     _phone = widget.supplier?.phone;
     _email = widget.supplier?.email;
     _address = widget.supplier?.address;
+
+    // Auto-show contact info if editing and fields exist
+    if (widget.supplier != null) {
+      if (_contactName != null ||
+          _phone != null ||
+          _email != null ||
+          _address != null) {
+        _showContactInfo = true;
+      }
+    }
   }
 
   Future<void> _submit() async {
@@ -128,7 +139,13 @@ class SupplierFormState extends ConsumerState<SupplierForm> {
           ),
         ]),
         const SizedBox(height: UIConstants.spacingLarge),
-        _buildSection(theme, 'Contacto', Icons.contact_phone_outlined, [
+        SwitchListTile(
+          title: const Text('Agregar información de contacto'),
+          value: _showContactInfo,
+          onChanged: (value) => setState(() => _showContactInfo = value),
+        ),
+        if (_showContactInfo) ...[
+          const SizedBox(height: UIConstants.spacingMedium),
           TextFormField(
             initialValue: _contactName,
             textInputAction: TextInputAction.next,
@@ -179,7 +196,7 @@ class SupplierFormState extends ConsumerState<SupplierForm> {
             maxLines: 2,
             onSaved: (value) => _address = value,
           ),
-        ]),
+        ],
         const SizedBox(height: UIConstants.spacingXLarge),
       ],
     );

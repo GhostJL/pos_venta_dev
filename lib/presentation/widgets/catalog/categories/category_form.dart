@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:posventa/domain/entities/category.dart';
+import 'package:posventa/presentation/widgets/common/selection_sheet.dart';
 import 'package:posventa/domain/entities/department.dart';
 import 'package:posventa/presentation/providers/category_providers.dart';
 import 'package:posventa/presentation/providers/department_providers.dart';
@@ -54,7 +55,8 @@ class CategoryFormState extends ConsumerState<CategoryForm> {
           id: widget.category?.id,
           name: _name,
           code: _code,
-          departmentId: _selectedDepartmentId!,
+          departmentId:
+              _selectedDepartmentId!, // Strict (! safe due to validator)
         );
         int? newId;
         if (widget.category == null) {
@@ -92,6 +94,39 @@ class CategoryFormState extends ConsumerState<CategoryForm> {
     }
   }
 
+  Future<void> _showSelectionSheet<T>({
+    required BuildContext context,
+    required String title,
+    required List<T> items,
+    required String Function(T) labelBuilder,
+    T? selectedItem,
+    required ValueChanged<T?> onSelected,
+  }) async {
+    final result = await showModalBottomSheet<SelectionSheetResult<T>>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (context) => SelectionSheet<T>(
+        title: title,
+        items: items,
+        itemLabelBuilder: labelBuilder,
+        selectedItem: selectedItem,
+        areEqual: (a, b) => labelBuilder(a) == labelBuilder(b),
+      ),
+    );
+
+    if (result != null) {
+      if (result.isCleared) {
+        onSelected(null);
+      } else if (result.value != null) {
+        onSelected(result.value);
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final departmentsAsync = ref.watch(departmentListProvider);
@@ -122,30 +157,34 @@ class CategoryFormState extends ConsumerState<CategoryForm> {
           onSaved: (value) => _name = value!,
         ),
         const SizedBox(height: UIConstants.spacingLarge),
+
         departmentsAsync.when(
           data: (departments) {
-            return DropdownButtonFormField<int>(
-              initialValue: _selectedDepartmentId,
-              decoration: const InputDecoration(
-                labelText: 'Departamento',
-                prefixIcon: Icon(Icons.business_rounded),
+            final selectedDept = departments.cast<Department?>().firstWhere(
+              (d) => d?.id == _selectedDepartmentId,
+              orElse: () => null,
+            );
+
+            return SelectionField(
+              label: 'Departamento',
+              placeholder: 'Seleccionar departamento', // Explicit placeholder
+              value: selectedDept?.name,
+              prefixIcon: Icons.business_rounded,
+              onTap: () => _showSelectionSheet<Department>(
+                context: context,
+                title: 'Seleccionar Departamento',
+                items: departments,
+                labelBuilder: (d) => d.name,
+                selectedItem: selectedDept,
+                onSelected: (d) =>
+                    setState(() => _selectedDepartmentId = d?.id),
               ),
-              items: departments
-                  .map(
-                    (Department department) => DropdownMenuItem<int>(
-                      value: department.id,
-                      child: Text(department.name),
-                    ),
-                  )
-                  .toList(),
-              onChanged: (int? newValue) {
-                setState(() {
-                  _selectedDepartmentId = newValue;
-                });
-              },
-              validator: (value) => value == null
+              onClear: () => setState(
+                () => _selectedDepartmentId = null,
+              ), // Allow clearing
+              validator: (value) => _selectedDepartmentId == null
                   ? 'Por favor, selecciona un departamento'
-                  : null,
+                  : null, // Restore validation
             );
           },
           loading: () => const Center(child: CircularProgressIndicator()),

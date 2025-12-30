@@ -7,15 +7,11 @@ import 'package:posventa/presentation/widgets/shared/image_picker_widget.dart';
 class ProductBasicInfoSection extends StatelessWidget {
   final TextEditingController nameController;
   final TextEditingController codeController;
-  final TextEditingController barcodeController;
   final TextEditingController descriptionController;
-  final VoidCallback onScanBarcode;
-  final bool showBarcode;
 
   // New callbacks
   final ValueChanged<String>? onNameChanged;
   final ValueChanged<String>? onCodeChanged;
-  final ValueChanged<String>? onBarcodeChanged;
   final ValueChanged<String>? onDescriptionChanged;
 
   // Image handling
@@ -28,13 +24,9 @@ class ProductBasicInfoSection extends StatelessWidget {
     super.key,
     required this.nameController,
     required this.codeController,
-    required this.barcodeController,
     required this.descriptionController,
-    required this.onScanBarcode,
-    this.showBarcode = true,
     this.onNameChanged,
     this.onCodeChanged,
-    this.onBarcodeChanged,
     this.onDescriptionChanged,
     this.imageFile,
     this.photoUrl,
@@ -82,34 +74,18 @@ class ProductBasicInfoSection extends StatelessWidget {
           validator: (value) =>
               value?.isEmpty ?? true ? 'Requerido para la base de datos' : null,
         ),
-        if (showBarcode) ...[
-          const SizedBox(height: 16),
-          TextFormField(
-            controller: barcodeController,
-            textInputAction: TextInputAction.next,
-            onChanged: onBarcodeChanged,
-            decoration: InputDecoration(
-              labelText: 'Código de Barras Principal',
-              helperText: 'Código de barras del producto base',
-              prefixIcon: const Icon(Icons.qr_code),
-              suffixIcon: IconButton(
-                icon: const Icon(Icons.qr_code_scanner),
-                onPressed: onScanBarcode,
-                tooltip: 'Escanear',
-              ),
-            ),
-            validator: (value) => value?.isEmpty ?? true ? 'Requerido' : null,
-          ),
-        ],
+        const SizedBox(height: 16),
         const SizedBox(height: 16),
         TextFormField(
           controller: descriptionController,
           onChanged: onDescriptionChanged,
+          maxLength: 255,
+          maxLines: 3,
+          textInputAction: TextInputAction.done,
           decoration: const InputDecoration(
             labelText: 'Descripción (Opcional)',
             prefixIcon: Icon(Icons.description),
           ),
-          maxLines: 3,
         ),
       ],
     );
