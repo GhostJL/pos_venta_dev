@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:math';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:posventa/core/services/bulk_import_service.dart';
@@ -85,43 +86,118 @@ class BulkImport extends _$BulkImport {
       final service = ref.read(bulkImportServiceProvider);
       final rawData = await service.parseCsv(file);
 
-      // Fetch dependencies
+      // Omit header if exists
+      int startIndex = 0;
+      if (rawData.isNotEmpty && rawData.length > 1) {
+        startIndex = 1;
+      }
+
+      // 1. Extract Unique Names from CSV
+      final Set<String> deptNames = {};
+      final Set<String> catNames = {};
+
+      for (int i = startIndex; i < rawData.length; i++) {
+        final row = rawData[i];
+        if (row.isEmpty || row[0].toString().trim().isEmpty) continue;
+
+        // Assuming fixed indices based on new template:
+        // 12: DeptName, 13: CatName
+        if (row.length > 12) {
+          final dName = row[12].toString().trim();
+          if (dName.isNotEmpty) deptNames.add(dName);
+        }
+        if (row.length > 13) {
+          final cName = row[13].toString().trim();
+          if (cName.isNotEmpty) catNames.add(cName);
+        }
+      }
+
+      // 2. Fetch existing Catalog
       var departments = await ref
           .read(departmentRepositoryProvider)
           .getAllDepartments();
       var categories = await ref
           .read(categoryRepositoryProvider)
           .getAllCategories();
-      final units = await ref
-          .read(unitOfMeasureRepositoryProvider)
-          .getAllUnits();
 
-      // Ensure at least one Department exists (General)
+      // 3. Auto-Create Missing Departments
+      bool deptChanged = false;
+      for (final name in deptNames) {
+        // Case-insensitive check
+        final exists = departments.any(
+          (d) => d.name.toLowerCase() == name.toLowerCase(),
+        );
+        if (!exists) {
+          // Create new
+          // Generate a simple code: DEPT-{RANDOM/TIMESTAMP} or just prefix
+          final code =
+              'DEP-${DateTime.now().millisecondsSinceEpoch % 10000}-${name.substring(0, min(3, name.length)).toUpperCase()}';
+          final newDept = Department(name: name, code: code);
+          await ref
+              .read(departmentRepositoryProvider)
+              .createDepartment(newDept);
+          deptChanged = true;
+        }
+      }
+      // Refresh if changed
+      if (deptChanged) {
+        departments = await ref
+            .read(departmentRepositoryProvider)
+            .getAllDepartments();
+      }
+
+      // Ensure default department (General)
       int defaultDeptId;
       if (departments.isEmpty) {
-        // Create default
         final newDept = Department(name: 'General', code: 'GEN');
         defaultDeptId = await ref
             .read(departmentRepositoryProvider)
             .createDepartment(newDept);
-        // Refresh list
         departments = await ref
             .read(departmentRepositoryProvider)
             .getAllDepartments();
       } else {
-        // Try finding one with ID 1, else use first
-        final found = departments.where((d) => d.id == 1);
+        // Try finding "General" or use first
+        final found = departments.where(
+          (d) => d.name.toLowerCase() == 'general',
+        );
         if (found.isNotEmpty) {
-          defaultDeptId = 1;
+          defaultDeptId = found.first.id!;
         } else {
           defaultDeptId = departments.first.id!;
         }
       }
 
-      // Ensure at least one Category exists (General)
+      // 4. Auto-Create Missing Categories
+      // Note: Categories need a parent Dept ID. For simplicity in bulk import generic creation,
+      // we assign them to the Default Dept unless we want complex logic.
+      // Let's assign new categories to the Default Dept ID to be safe and simple.
+      bool catChanged = false;
+      for (final name in catNames) {
+        final exists = categories.any(
+          (c) => c.name.toLowerCase() == name.toLowerCase(),
+        );
+        if (!exists) {
+          final code =
+              'CAT-${DateTime.now().millisecondsSinceEpoch % 10000}-${name.substring(0, min(3, name.length)).toUpperCase()}';
+          final newCat = Category(
+            name: name,
+            code: code,
+            departmentId: defaultDeptId, // Link to default dept
+          );
+          await ref.read(categoryRepositoryProvider).createCategory(newCat);
+          catChanged = true;
+        }
+      }
+      if (catChanged) {
+        categories = await ref
+            .read(categoryRepositoryProvider)
+            .getAllCategories();
+      }
+
+      // Ensure default category
       int defaultCatId;
       if (categories.isEmpty) {
-        // Create default
         final newCat = Category(
           name: 'General',
           code: 'GEN',
@@ -130,33 +206,48 @@ class BulkImport extends _$BulkImport {
         defaultCatId = await ref
             .read(categoryRepositoryProvider)
             .createCategory(newCat);
-        // Refresh list
         categories = await ref
             .read(categoryRepositoryProvider)
             .getAllCategories();
       } else {
-        final found = categories.where((c) => c.id == 1);
+        final found = categories.where(
+          (c) => c.name.toLowerCase() == 'general',
+        );
         if (found.isNotEmpty) {
-          defaultCatId = 1;
+          defaultCatId = found.first.id!;
         } else {
           defaultCatId = categories.first.id!;
         }
       }
 
-      // Ensure at least one Unit exists
+      // 5. Units
+      final units = await ref
+          .read(unitOfMeasureRepositoryProvider)
+          .getAllUnits();
       if (units.isEmpty) {
-        throw "No units of measure found in database. Please initialize the database with seeds.";
+        throw "No units of measure found in database.";
       }
-      int defaultUnitId;
-      final foundUnit = units.where((u) => u.id == 1);
-      if (foundUnit.isNotEmpty) {
-        defaultUnitId = 1;
-      } else {
-        defaultUnitId = units.first.id!;
-      }
+      int defaultUnitId = units.first.id!; // Fallback
 
-      final departmentMap = {for (var d in departments) d.code: d.id!};
-      final categoryMap = {for (var c in categories) c.code: c.id!};
+      // 6. Check for Duplicate Codes
+      final existingProducts = await ref
+          .read(productRepositoryProvider)
+          .getAllProducts();
+      final Set<String> existingCodes = {};
+
+      existingProducts.fold((failure) {}, (products) {
+        for (var p in products) {
+          existingCodes.add(p.code.toLowerCase());
+        }
+      });
+
+      // 7. Build Maps (Key = Lowercase Name for Dept/Cat, Code for Unit)
+      final departmentMap = {
+        for (var d in departments) d.name.toLowerCase(): d.id!,
+      };
+      final categoryMap = {
+        for (var c in categories) c.name.toLowerCase(): c.id!,
+      };
       final unitMap = {for (var u in units) u.code: u.id!};
 
       final (validProducts, errors) = service.validateAndMap(
@@ -167,6 +258,7 @@ class BulkImport extends _$BulkImport {
         defaultDepartmentId: defaultDeptId,
         defaultCategoryId: defaultCatId,
         defaultUnitId: defaultUnitId,
+        existingCodes: existingCodes,
       );
 
       state = state.copyWith(

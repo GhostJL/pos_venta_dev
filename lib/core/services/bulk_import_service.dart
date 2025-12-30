@@ -33,21 +33,21 @@ class BulkImportService {
     final List<List<dynamic>> rows = [];
     // Encabezados
     rows.add([
-      'Codigo',
-      'Nombre',
+      'Codigo (Requerido)',
+      'Nombre (Requerido)',
       'Descripcion',
-      'Costo',
-      'Precio Venta',
-      'Precio Mayorista (Opcional)',
-      'Stock (Opcional)',
-      'Stock Minimo (Opcional)',
-      'Stock Maximo (Opcional)',
-      'Se Vende Por Peso (Si/No)',
-      'Codigo Barras (Opcional)',
-      'Nombre Variante (Opcional)',
-      'DeptCodigo (Opcional)',
-      'CatCodigo (Opcional)',
-      'UnidadCodigo (Opcional)',
+      'Costo (Requerido)',
+      'Precio Venta (Requerido)',
+      'Precio Mayorista',
+      'Stock',
+      'Stock Minimo',
+      'Stock Maximo',
+      'Se Vende Por Peso (1=Si, 0=No)',
+      'Codigo Barras',
+      'Nombre Variante',
+      'Nombre Departamento',
+      'Nombre Categoria',
+      'Codigo Unidad (pz, kg, lt)',
     ]);
 
     // Fila de ejemplo
@@ -61,11 +61,11 @@ class BulkImportService {
       '10',
       '5',
       '20',
-      'No',
+      '0',
       '123456789',
       'Estándar',
-      'GEN',
-      'GEN',
+      'General',
+      'General',
       'pz',
     ]);
 
@@ -74,12 +74,13 @@ class BulkImportService {
 
   (List<Product>, List<String>) validateAndMap(
     List<List<dynamic>> rows,
-    Map<String, int> departmentMap,
-    Map<String, int> categoryMap,
-    Map<String, int> unitMap, {
+    Map<String, int> departmentMap, // Key: Name (Lowercased)
+    Map<String, int> categoryMap, // Key: Name (Lowercased)
+    Map<String, int> unitMap, { // Key: Code
     required int defaultDepartmentId,
     required int defaultCategoryId,
     required int defaultUnitId,
+    Set<String> existingCodes = const {},
   }) {
     final List<Product> validProducts = [];
     final List<String> errors = [];
@@ -109,7 +110,7 @@ class BulkImportService {
         final mainRow = pRows.first;
         final rowIndex = rows.indexOf(mainRow) + 1; // Para referencia visual
 
-        // Validar columnas mínimas (las primeras 5 son esenciales: Codigo, Nombre, Desc, Costo, Precio)
+        // Validar columnas mínimas (las primeras 5 son esenciales)
         if (mainRow.length < 5) {
           errors.add(
             "Fila $rowIndex (Producto '$code'): Faltan columnas requeridas.",
@@ -117,52 +118,50 @@ class BulkImportService {
           return;
         }
 
+        if (existingCodes.contains(code.toLowerCase())) {
+          errors.add(
+            "Producto '$code': Ya existe en el catálogo. Usa un código diferente.",
+          );
+          return;
+        }
+
         final name = mainRow[1].toString().trim();
         final description = mainRow[2].toString().trim();
-
-        // Parsing de precios (columnas 3 y 4)
-        final costStr = mainRow[3].toString().trim();
-        final priceStr = mainRow[4].toString().trim();
 
         // Opcionales con índice seguro
         String getValue(int index) =>
             mainRow.length > index ? mainRow[index].toString().trim() : '';
 
-        // Parsing de nuevos campos
         // Indices ajustados:
         // 0: Code, 1: Name, 2: Desc, 3: Cost, 4: Price
         // 5: WholesalePrice, 6: Stock, 7: StockMin, 8: StockMax, 9: IsSoldByWeight
-        // 10: Barcode, 11: VariantName, 12: Dept, 13: Cat, 14: Unit
+        // 10: Barcode, 11: VariantName, 12: DeptName, 13: CatName, 14: UnitCode
 
-        final wholesalePriceStr = getValue(5);
-        final stockStr = getValue(6);
-        final stockMinStr = getValue(7);
-        final stockMaxStr = getValue(8);
         final isWeightStr = getValue(9);
-        final barcodeStr = getValue(10);
-        final variantNameStr = getValue(11);
-        final deptCode = getValue(12);
-        final catCode = getValue(13);
+        final deptName = getValue(12);
+        final catName = getValue(13);
         final unitCode = getValue(14);
 
-        // IDs por defecto
+        // IDs
+        // Map keys are expected to be lowercased for case-insensitive matching
         final departmentId =
-            (deptCode.isNotEmpty && departmentMap.containsKey(deptCode))
-            ? departmentMap[deptCode]!
+            (deptName.isNotEmpty &&
+                departmentMap.containsKey(deptName.toLowerCase()))
+            ? departmentMap[deptName.toLowerCase()]!
             : defaultDepartmentId;
+
         final categoryId =
-            (catCode.isNotEmpty && categoryMap.containsKey(catCode))
-            ? categoryMap[catCode]!
+            (catName.isNotEmpty &&
+                categoryMap.containsKey(catName.toLowerCase()))
+            ? categoryMap[catName.toLowerCase()]!
             : defaultCategoryId;
+
         final unitId = (unitCode.isNotEmpty && unitMap.containsKey(unitCode))
             ? unitMap[unitCode]!
             : defaultUnitId;
 
-        final isSoldByWeight =
-            isWeightStr.toLowerCase() == 'si' ||
-            isWeightStr.toLowerCase() == 'yes' ||
-            isWeightStr.toLowerCase() == 'true' ||
-            isWeightStr == '1';
+        // Boolean 1/0
+        final isSoldByWeight = isWeightStr == '1';
 
         // Crear Variantes
         final List<ProductVariant> variants = [];
