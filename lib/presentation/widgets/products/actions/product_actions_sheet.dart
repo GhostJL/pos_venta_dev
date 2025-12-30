@@ -96,6 +96,17 @@ class ProductActionsSheet extends ConsumerWidget {
                             : 'Mostrar producto en la caja',
                         onTap: () => _handleToggleActive(context, ref),
                       ),
+                      const SizedBox(height: 12),
+                      const Divider(),
+                      const SizedBox(height: 12),
+                      _buildFlatAction(
+                        context,
+                        icon: Icons.delete_outline_rounded,
+                        color: theme.colorScheme.error,
+                        label: 'Eliminar producto',
+                        subtitle: 'Acción permanente si no tiene historial',
+                        onTap: () => _handleDelete(context, ref),
+                      ),
                     ],
                   );
                 },
@@ -240,6 +251,81 @@ class ProductActionsSheet extends ConsumerWidget {
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text('Error: $e')));
+      }
+    }
+  }
+
+  Future<void> _handleDelete(BuildContext context, WidgetRef ref) async {
+    // 1. Mostrar diálogo de confirmación
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('¿Eliminar producto?'),
+        content: const Text(
+          'Esta acción eliminará el producto permanentemente.\n\n'
+          'Solo se permite si el producto NO tiene historial de ventas, compras o movimientos de inventario.\n\n'
+          '¿Estás seguro?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false), // Cancelar
+            child: const Text('Cancelar'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true), // Confirmar
+            style: FilledButton.styleFrom(
+              backgroundColor: Theme.of(context).colorScheme.error,
+              foregroundColor: Theme.of(context).colorScheme.onError,
+            ),
+            child: const Text('Eliminar'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm != true) return;
+
+    // 2. Cerrar el sheet de acciones
+    if (context.mounted) {
+      Navigator.pop(context);
+    }
+
+    // 3. Intentar eliminar
+    try {
+      await ref
+          .read(productNotifierProvider.notifier)
+          .deleteProduct(product.id!);
+
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Producto eliminado correctamente'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        // Mejorar el mensaje de error si es una restricción de clave foránea
+        String errorMessage = e.toString();
+        if (errorMessage.contains('FOREIGN KEY constraint failed') ||
+            errorMessage.contains('constraint')) {
+          errorMessage =
+              'No se puede eliminar: El producto tiene historial (ventas o stock). Intenta desactivarlo en su lugar.';
+        }
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(errorMessage),
+            backgroundColor: Theme.of(context).colorScheme.error,
+            duration: const Duration(seconds: 4),
+            action: SnackBarAction(
+              label: 'Entendido',
+              textColor: Colors.white,
+              onPressed: () {},
+            ),
+          ),
+        );
       }
     }
   }
