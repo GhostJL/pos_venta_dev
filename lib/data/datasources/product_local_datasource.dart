@@ -12,7 +12,10 @@ abstract class ProductLocalDataSource {
   // Creates returns the ID
   Future<int> createProduct(ProductModel product);
 
-  Future<void> batchCreateProducts(List<ProductModel> products);
+  Future<void> batchCreateProducts(
+    List<ProductModel> products, {
+    required int defaultWarehouseId,
+  });
 
   Future<void> updateProduct(ProductModel product);
   Future<void> deleteProduct(int id);

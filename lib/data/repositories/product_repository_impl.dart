@@ -48,13 +48,17 @@ class ProductRepositoryImpl implements ProductRepository {
 
   @override
   Future<Either<Failure, void>> batchCreateProducts(
-    List<Product> products,
-  ) async {
+    List<Product> products, {
+    required int defaultWarehouseId,
+  }) async {
     try {
       final productModels = products
           .map((p) => ProductModel.fromEntity(p))
           .toList();
-      await dataSource.batchCreateProducts(productModels);
+      await dataSource.batchCreateProducts(
+        productModels,
+        defaultWarehouseId: defaultWarehouseId,
+      );
       return const Right(null);
     } on DatabaseException catch (e) {
       return Left(DatabaseFailure(e.message));

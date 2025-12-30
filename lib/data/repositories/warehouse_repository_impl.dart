@@ -16,7 +16,7 @@ class WarehouseRepositoryImpl implements WarehouseRepository {
   }
 
   @override
-  Future<void> createWarehouse(Warehouse warehouse) async {
+  Future<int> createWarehouse(Warehouse warehouse) async {
     final db = await _databaseHelper.database;
     final warehouseModel = WarehouseModel(
       name: warehouse.name,
@@ -26,7 +26,10 @@ class WarehouseRepositoryImpl implements WarehouseRepository {
       isMain: warehouse.isMain,
       isActive: warehouse.isActive,
     );
-    await db.insert(DatabaseHelper.tableWarehouses, warehouseModel.toMap());
+    return await db.insert(
+      DatabaseHelper.tableWarehouses,
+      warehouseModel.toMap(),
+    );
   }
 
   @override

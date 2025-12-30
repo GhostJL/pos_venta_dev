@@ -204,7 +204,10 @@ class ProductLocalDataSourceImpl implements ProductLocalDataSource {
   }
 
   @override
-  Future<void> batchCreateProducts(List<ProductModel> products) async {
+  Future<void> batchCreateProducts(
+    List<ProductModel> products, {
+    required int defaultWarehouseId,
+  }) async {
     try {
       final db = await databaseHelper.database;
       await db.transaction((txn) async {
@@ -254,12 +257,67 @@ class ProductLocalDataSourceImpl implements ProductLocalDataSource {
               variantMap['product_id'] = productId;
               // Remove id to let autoincrement work
               variantMap.remove('id');
-              await txn.insert(DatabaseHelper.tableProductVariants, variantMap);
+              final variantId = await txn.insert(
+                DatabaseHelper.tableProductVariants,
+                variantMap,
+              );
+
+              // --- INITIAL LOT CREATION ---
+              // If stock > 0, create an initial lot for this variant
+              if (variant.stock != null && variant.stock! > 0) {
+                // 1. Create Lot
+                await txn.insert(DatabaseHelper.tableInventoryLots, {
+                  'product_id': productId,
+                  'variant_id': variantId,
+                  'warehouse_id': defaultWarehouseId,
+                  'lot_number': 'Inicial',
+                  'quantity': variant.stock,
+                  'unit_cost_cents': variant.costPriceCents,
+                  'total_cost_cents': (variant.stock! * variant.costPriceCents)
+                      .round(),
+                  'received_at': DateTime.now().toIso8601String(),
+                });
+
+                // 2. Update/Insert Inventory Summary (for the dashboard/product list queries)
+                // Check if exists
+                final inventoryCheck = await txn.query(
+                  DatabaseHelper.tableInventory,
+                  where:
+                      'product_id = ? AND warehouse_id = ? AND variant_id = ?',
+                  whereArgs: [productId, defaultWarehouseId, variantId],
+                );
+
+                if (inventoryCheck.isNotEmpty) {
+                  // This shouldn't happen for new products but good for robustness
+                  final currentQty =
+                      inventoryCheck.first['quantity_on_hand'] as num;
+                  await txn.update(
+                    DatabaseHelper.tableInventory,
+                    {
+                      'quantity_on_hand':
+                          currentQty.toDouble() + variant.stock!,
+                    },
+                    where: 'id = ?',
+                    whereArgs: [inventoryCheck.first['id']],
+                  );
+                } else {
+                  await txn.insert(DatabaseHelper.tableInventory, {
+                    'product_id': productId,
+                    'warehouse_id': defaultWarehouseId,
+                    'variant_id': variantId,
+                    'quantity_on_hand': variant.stock,
+                    'quantity_reserved': 0,
+                    'updated_at': DateTime.now().toIso8601String(),
+                  });
+                }
+              }
             }
           }
         }
       });
       databaseHelper.notifyTableChanged(DatabaseHelper.tableProducts);
+      databaseHelper.notifyTableChanged(DatabaseHelper.tableInventoryLots);
+      databaseHelper.notifyTableChanged(DatabaseHelper.tableInventory);
     } catch (e) {
       throw DatabaseException(e.toString());
     }

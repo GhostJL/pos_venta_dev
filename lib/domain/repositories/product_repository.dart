@@ -8,7 +8,10 @@ import 'package:posventa/domain/entities/tax_rate.dart';
 abstract class ProductRepository {
   Future<Either<Failure, int>> createProduct(Product product);
 
-  Future<Either<Failure, void>> batchCreateProducts(List<Product> products);
+  Future<Either<Failure, void>> batchCreateProducts(
+    List<Product> products, {
+    required int defaultWarehouseId,
+  });
 
   Future<Either<Failure, Product?>> getProductById(int id);
 

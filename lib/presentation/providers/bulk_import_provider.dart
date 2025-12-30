@@ -6,8 +6,8 @@ import 'package:posventa/domain/entities/category.dart';
 import 'package:posventa/domain/entities/department.dart';
 import 'package:posventa/domain/entities/product.dart';
 import 'package:posventa/presentation/providers/category_providers.dart';
+import 'package:posventa/domain/entities/warehouse.dart';
 import 'package:posventa/presentation/providers/providers.dart';
-import 'package:posventa/presentation/providers/di/product_di.dart';
 
 part 'bulk_import_provider.g.dart';
 
@@ -189,7 +189,38 @@ class BulkImport extends _$BulkImport {
 
     try {
       final repository = ref.read(productRepositoryProvider);
-      final result = await repository.batchCreateProducts(state.validProducts);
+
+      // Fetch warehouse to use as default
+      final warehouses = await ref
+          .read(warehouseRepositoryProvider)
+          .getAllWarehouses();
+
+      int defaultWarehouseId;
+      if (warehouses.isEmpty) {
+        // Create default if none exists
+        final newWarehouse = Warehouse(
+          name: 'Almacén Principal',
+          code: 'MAIN',
+          isMain: true,
+          isActive: true,
+        );
+        defaultWarehouseId = await ref
+            .read(warehouseRepositoryProvider)
+            .createWarehouse(newWarehouse);
+      } else {
+        // Use main warehouse or first available
+        final mainWarehouse = warehouses.where((w) => w.isMain);
+        if (mainWarehouse.isNotEmpty) {
+          defaultWarehouseId = mainWarehouse.first.id!;
+        } else {
+          defaultWarehouseId = warehouses.first.id!;
+        }
+      }
+
+      final result = await repository.batchCreateProducts(
+        state.validProducts,
+        defaultWarehouseId: defaultWarehouseId,
+      );
 
       result.fold(
         (failure) {
