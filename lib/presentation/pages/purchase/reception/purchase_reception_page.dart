@@ -226,8 +226,8 @@ class _PurchaseReceptionPageState extends ConsumerState<PurchaseReceptionPage> {
                   loading: () =>
                       const Center(child: CircularProgressIndicator()),
                   error: (err, stack) => Center(child: Text('Error: $err')),
-                  data: (state) {
-                    final products = state.products;
+                  data: (products) {
+                    // final products = state.products; // Removed
                     final productMap = {for (var p in products) p.id!: p};
 
                     return ListView(

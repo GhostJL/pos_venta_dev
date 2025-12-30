@@ -82,7 +82,7 @@ class ProductFilters extends _$ProductFilters {
 }
 
 @riverpod
-AsyncValue<ProductPaginationState> filteredProducts(Ref ref) {
+AsyncValue<List<Product>> filteredProducts(Ref ref) {
   final productsState = ref.watch(productListProvider);
   final filters = ref.watch(productFiltersProvider);
   final searchQuery = ref.watch(productSearchQueryProvider);
@@ -108,40 +108,7 @@ AsyncValue<ProductPaginationState> filteredProducts(Ref ref) {
   }
 
   // Map the source state to the filtered state, preserving Loading/Error flags
-  if (productsState.hasValue) {
-    final originalState = productsState.value!;
-    final filteredList = processList(originalState.products);
-
-    // Create new state with filtered products but same metadata
-    final newState = originalState.copyWith(products: filteredList);
-
-    if (productsState.isLoading) {
-      // Loading with data
-      // ignore: invalid_use_of_internal_member
-      return AsyncLoading<ProductPaginationState>().copyWithPrevious(
-        AsyncData(newState),
-      );
-    }
-
-    if (productsState.hasError) {
-      // Error with data
-      // ignore: invalid_use_of_internal_member
-      return AsyncError<ProductPaginationState>(
-        productsState.error!,
-        productsState.stackTrace!,
-        // ignore: invalid_use_of_internal_member
-      ).copyWithPrevious(AsyncData(newState));
-    }
-
-    // Just data
-    return AsyncData(newState);
-  }
-
-  // No data available yet
-  if (productsState.isLoading) return const AsyncLoading();
-  if (productsState.hasError) {
-    return AsyncError(productsState.error!, productsState.stackTrace!);
-  }
-
-  return const AsyncLoading();
+  return productsState.whenData((products) {
+    return processList(products);
+  });
 }

@@ -21,8 +21,8 @@ class PurchaseItemTile extends ConsumerWidget {
     final productsAsync = ref.watch(productNotifierProvider);
 
     return productsAsync.when(
-      data: (state) {
-        final products = state.products;
+      data: (products) {
+        // final products = state.products; // Removed
         final product = products
             .where((p) => p.id == item.productId)
             .firstOrNull;

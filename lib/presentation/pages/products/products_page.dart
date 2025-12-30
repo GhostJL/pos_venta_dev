@@ -59,12 +59,6 @@ class ProductsPageState extends ConsumerState<ProductsPage>
           _showScrollToTop = show;
         });
       }
-
-      // Load more at bottom
-      if (_scrollController.position.pixels >=
-          _scrollController.position.maxScrollExtent - 200) {
-        ref.read(productNotifierProvider.notifier).loadMore();
-      }
     }
   }
 
@@ -97,12 +91,9 @@ class ProductsPageState extends ConsumerState<ProductsPage>
           builder: (context, ref, child) {
             final productsAsync = ref.watch(filteredProductsProvider);
             return productsAsync.when(
-              data: (state) {
-                final loaded = state.products.length;
-                final total = state.totalCount;
-                // If filtering, total might be confusing if it remains DB total.
-                // Assuming we show what we have.
-                return Text('Productos ($loaded/$total)');
+              data: (products) {
+                final count = products.length;
+                return Text('Productos ($count)');
               },
               loading: () => const Text('Productos'),
               error: (_, __) => const Text('Productos'),
@@ -213,9 +204,9 @@ class ProductsPageState extends ConsumerState<ProductsPage>
                   builder: (context, ref, child) {
                     final productsAsync = ref.watch(filteredProductsProvider);
                     // Cast/Handle the new state type
-                    return AsyncValueHandler<ProductPaginationState>(
+                    return AsyncValueHandler<List<Product>>(
                       value: productsAsync,
-                      data: (state) => _buildProductList(state),
+                      data: (products) => _buildProductList(products),
                       emptyState: const EmptyStateWidget(
                         icon: Icons.inventory_2_outlined,
                         message: 'No se encontraron productos',
@@ -238,42 +229,11 @@ class ProductsPageState extends ConsumerState<ProductsPage>
     );
   }
 
-  Widget _buildProductList(ProductPaginationState state) {
-    final productList = state.products;
-    final bool showLoader = state.isLoadingMore;
-    final bool showEndMessage = !state.hasMore && productList.isNotEmpty;
-
+  Widget _buildProductList(List<Product> productList) {
     return ListView.separated(
-      key: const PageStorageKey('products_list'),
-      controller: _scrollController,
-      padding: const EdgeInsets.only(
-        bottom: 80,
-      ), // Add padding for FAB or bottom sheet
-      itemCount: productList.length + (showLoader || showEndMessage ? 1 : 0),
+      itemCount: productList.length,
       separatorBuilder: (context, index) => const SizedBox(height: 12),
       itemBuilder: (context, index) {
-        if (index == productList.length) {
-          if (showLoader) {
-            return const Center(
-              child: Padding(
-                padding: EdgeInsets.all(16.0),
-                child: CircularProgressIndicator(),
-              ),
-            );
-          }
-          if (showEndMessage) {
-            return const Center(
-              child: Padding(
-                padding: EdgeInsets.all(24.0),
-                child: Text(
-                  'Todos los productos cargados',
-                  style: TextStyle(color: Colors.grey, fontSize: 12),
-                ),
-              ),
-            );
-          }
-          return const SizedBox.shrink();
-        }
         final product = productList[index];
         return RepaintBoundary(
           child: ProductCard(

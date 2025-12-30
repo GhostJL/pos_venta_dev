@@ -34,8 +34,8 @@ class ProductSelectionSection extends ConsumerWidget {
             prefixIcon: Icon(Icons.shopping_bag),
           ),
           items: productsAsync.when(
-            data: (state) {
-              final products = state.products;
+            data: (products) {
+              // final products = state.products; // Removed
               // Flatten products and variants into a single list
               final List<ProductVariantItem> items = [];
               for (final product in products) {
