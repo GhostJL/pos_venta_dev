@@ -82,7 +82,8 @@ class _InventoryPageState extends ConsumerState<InventoryPage> {
       body: productsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, s) => Center(child: Text('Error al cargar productos: $e')),
-        data: (products) {
+        data: (state) {
+          final products = state.products;
           return inventoryAsync.when(
             loading: () => const Center(child: CircularProgressIndicator()),
             error: (e, s) => const SizedBox(),

@@ -22,7 +22,6 @@ class ProductFormState {
   final int? categoryId;
   final int? brandId;
   final int? supplierId;
-  final int? unitId;
   final bool isSoldByWeight;
   final bool isActive;
   final bool hasExpiration;
@@ -49,7 +48,6 @@ class ProductFormState {
     this.categoryId,
     this.brandId,
     this.supplierId,
-    this.unitId,
     this.isSoldByWeight = false,
     this.isActive = true,
     this.hasExpiration = false,
@@ -110,7 +108,6 @@ class ProductFormState {
       categoryId: clearCategoryId ? null : (categoryId ?? this.categoryId),
       brandId: clearBrandId ? null : (brandId ?? this.brandId),
       supplierId: clearSupplierId ? null : (supplierId ?? this.supplierId),
-      unitId: unitId ?? this.unitId,
       isSoldByWeight: isSoldByWeight ?? this.isSoldByWeight,
       isActive: isActive ?? this.isActive,
       hasExpiration: hasExpiration ?? this.hasExpiration,
@@ -146,7 +143,6 @@ class ProductFormNotifier extends _$ProductFormNotifier {
         categoryId: product.categoryId,
         brandId: product.brandId,
         supplierId: product.supplierId,
-        unitId: product.unitId,
         isSoldByWeight: product.isSoldByWeight,
         isActive: product.isActive,
         hasExpiration: product.hasExpiration,
@@ -214,7 +210,6 @@ class ProductFormNotifier extends _$ProductFormNotifier {
           s.categoryId != null ||
           s.brandId != null ||
           s.supplierId != null ||
-          s.unitId != null ||
           s.imageFile != null ||
           (s.variants.isNotEmpty &&
               (s.variants.length > 1 ||
@@ -230,7 +225,6 @@ class ProductFormNotifier extends _$ProductFormNotifier {
     if (s.categoryId != initial.categoryId) return true;
     if (s.brandId != initial.brandId) return true;
     if (s.supplierId != initial.supplierId) return true;
-    if (s.unitId != initial.unitId) return true;
     if (s.isSoldByWeight != initial.isSoldByWeight) return true;
     if (s.isActive != initial.isActive) return true;
     if (s.hasExpiration != initial.hasExpiration) return true;
@@ -275,7 +269,6 @@ class ProductFormNotifier extends _$ProductFormNotifier {
   void setSupplier(int? value) => _updateModified(
     state.copyWith(supplierId: value, clearSupplierId: value == null),
   );
-  void setUnit(int? value) => _updateModified(state.copyWith(unitId: value));
   void setSoldByWeight(bool value) =>
       _updateModified(state.copyWith(isSoldByWeight: value));
   void setActive(bool value) =>
@@ -367,14 +360,6 @@ class ProductFormNotifier extends _$ProductFormNotifier {
       state = state.copyWith(
         isLoading: false,
         error: 'Debe seleccionar una Categoría.',
-      );
-      return false;
-    }
-
-    if (state.unitId == null) {
-      state = state.copyWith(
-        isLoading: false,
-        error: 'Debe seleccionar una Unidad de medida.',
       );
       return false;
     }
@@ -498,7 +483,6 @@ class ProductFormNotifier extends _$ProductFormNotifier {
       categoryId: state.categoryId!,
       brandId: state.brandId,
       supplierId: state.supplierId,
-      unitId: state.unitId!,
       isSoldByWeight: state.isSoldByWeight,
       productTaxes: finalProductTaxes,
       variants: state.variants,

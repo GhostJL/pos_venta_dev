@@ -49,7 +49,8 @@ class _PurchaseFormPageState extends ConsumerState<PurchaseFormPage> {
     final productsAsync = ref.read(productNotifierProvider);
 
     await productsAsync.when(
-      data: (products) async {
+      data: (state) async {
+        final products = state.products;
         final product = products
             .where((p) => p.id == item.productId)
             .firstOrNull;
@@ -145,7 +146,8 @@ class _PurchaseFormPageState extends ConsumerState<PurchaseFormPage> {
     }
 
     return productsAsync.when(
-      data: (products) {
+      data: (state) {
+        final products = state.products;
         final productMap = {for (var p in products) p.id!: p};
 
         if (isMobile) {

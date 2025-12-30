@@ -303,6 +303,7 @@ class _ProductFilterSheetState extends ConsumerState<ProductFilterSheet> {
         ),
       ),
       items: const [
+        DropdownMenuItem(value: '', child: Text('Por defecto')),
         DropdownMenuItem(value: 'name', child: Text('Nombre (A-Z)')),
         DropdownMenuItem(value: 'price', child: Text('Precio')),
         DropdownMenuItem(value: 'created_at', child: Text('Más recientes')),

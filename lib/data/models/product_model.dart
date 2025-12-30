@@ -11,8 +11,6 @@ class ProductModel extends Product {
     required super.categoryId,
     super.brandId,
     super.supplierId,
-    required super.unitId,
-    super.unitName,
     required super.isSoldByWeight,
     required super.isActive,
     required super.hasExpiration,
@@ -33,8 +31,6 @@ class ProductModel extends Product {
       categoryId: product.categoryId,
       brandId: product.brandId,
       supplierId: product.supplierId,
-      unitId: product.unitId,
-      unitName: product.unitName,
       isSoldByWeight: product.isSoldByWeight,
       isActive: product.isActive,
       hasExpiration: product.hasExpiration,
@@ -56,9 +52,6 @@ class ProductModel extends Product {
       categoryId: map['category_id'],
       brandId: map['brand_id'],
       supplierId: map['supplier_id'],
-      unitId:
-          map['unit_id'] ?? 1, // Default to 1 (Pieza) if null to prevent crash
-      unitName: map['unit_name'], // Mapped from join
       isSoldByWeight: map['is_sold_by_weight'] == 1,
       isActive: map['is_active'] == 1,
       hasExpiration: map['has_expiration'] == 1,
@@ -77,7 +70,6 @@ class ProductModel extends Product {
       'category_id': categoryId,
       'brand_id': brandId,
       'supplier_id': supplierId,
-      'unit_id': unitId,
       // unit_name is not stored in products table, so we don't include it here
       'is_sold_by_weight': isSoldByWeight ? 1 : 0,
       'is_active': isActive ? 1 : 0,

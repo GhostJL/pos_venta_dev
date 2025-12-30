@@ -47,6 +47,23 @@ class ProductRepositoryImpl implements ProductRepository {
   }
 
   @override
+  Future<Either<Failure, void>> batchCreateProducts(
+    List<Product> products,
+  ) async {
+    try {
+      final productModels = products
+          .map((p) => ProductModel.fromEntity(p))
+          .toList();
+      await dataSource.batchCreateProducts(productModels);
+      return const Right(null);
+    } on DatabaseException catch (e) {
+      return Left(DatabaseFailure(e.message));
+    } catch (e) {
+      return Left(UnexpectedFailure(e.toString()));
+    }
+  }
+
+  @override
   Future<Either<Failure, void>> deleteProduct(int id) async {
     try {
       await dataSource.deleteProduct(id);
@@ -238,6 +255,18 @@ class ProductRepositoryImpl implements ProductRepository {
       final model = ProductVariantModel.fromEntity(variant);
       await dataSource.updateVariant(model);
       return const Right(null);
+    } on DatabaseException catch (e) {
+      return Left(DatabaseFailure(e.message));
+    } catch (e) {
+      return Left(UnexpectedFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, int>> getProductsCount() async {
+    try {
+      final count = await dataSource.countProducts();
+      return Right(count);
     } on DatabaseException catch (e) {
       return Left(DatabaseFailure(e.message));
     } catch (e) {

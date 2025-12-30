@@ -67,7 +67,7 @@ abstract class _$ProductSearchQuery extends $Notifier<String> {
 const productListProvider = ProductListProvider._();
 
 final class ProductListProvider
-    extends $StreamNotifierProvider<ProductList, List<Product>> {
+    extends $AsyncNotifierProvider<ProductList, ProductPaginationState> {
   const ProductListProvider._()
     : super(
         from: null,
@@ -87,20 +87,25 @@ final class ProductListProvider
   ProductList create() => ProductList();
 }
 
-String _$productListHash() => r'3fe227cd8e034c0ea6e61990864c2260cf93a9c5';
+String _$productListHash() => r'6e92a22221f3d7e3289093d9672cf203ff143909';
 
-abstract class _$ProductList extends $StreamNotifier<List<Product>> {
-  Stream<List<Product>> build();
+abstract class _$ProductList extends $AsyncNotifier<ProductPaginationState> {
+  FutureOr<ProductPaginationState> build();
   @$mustCallSuper
   @override
   void runBuild() {
     final created = build();
-    final ref = this.ref as $Ref<AsyncValue<List<Product>>, List<Product>>;
+    final ref =
+        this.ref
+            as $Ref<AsyncValue<ProductPaginationState>, ProductPaginationState>;
     final element =
         ref.element
             as $ClassProviderElement<
-              AnyNotifier<AsyncValue<List<Product>>, List<Product>>,
-              AsyncValue<List<Product>>,
+              AnyNotifier<
+                AsyncValue<ProductPaginationState>,
+                ProductPaginationState
+              >,
+              AsyncValue<ProductPaginationState>,
               Object?,
               Object?
             >;

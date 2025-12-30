@@ -67,7 +67,8 @@ class _PurchaseProductGridState extends ConsumerState<PurchaseProductGrid> {
     final productsAsync = ref.read(productListProvider);
 
     return productsAsync.when(
-      data: (products) {
+      data: (state) {
+        final products = state.products;
         Product? product;
         ProductVariant? matchedVariant;
 
@@ -172,7 +173,8 @@ class _PurchaseProductGridState extends ConsumerState<PurchaseProductGrid> {
         // Product Grid
         Expanded(
           child: productsAsync.when(
-            data: (products) {
+            data: (state) {
+              final products = state.products;
               if (products.isEmpty) {
                 return const Center(
                   child: Text(

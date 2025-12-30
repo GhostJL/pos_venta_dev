@@ -65,6 +65,7 @@ class AsyncValueHandler<T> extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return value.when(
+      skipLoadingOnReload: true,
       data: (d) {
         // Check if data is empty
         final bool dataIsEmpty =

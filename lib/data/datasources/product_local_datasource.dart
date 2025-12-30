@@ -7,9 +7,12 @@ abstract class ProductLocalDataSource {
   Future<List<ProductModel>> getAllProducts({int? limit, int? offset});
   Future<List<ProductModel>> searchProducts(String query);
   Future<ProductModel?> getProductById(int id);
+  Future<int> countProducts();
 
   // Creates returns the ID
   Future<int> createProduct(ProductModel product);
+
+  Future<void> batchCreateProducts(List<ProductModel> products);
 
   Future<void> updateProduct(ProductModel product);
   Future<void> deleteProduct(int id);

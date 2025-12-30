@@ -22,7 +22,9 @@ class ProductFilterUtils {
     }).toList();
 
     // Apply sorting
-    filteredList.sort((a, b) => _compareProducts(a, b, sortOrder));
+    if (sortOrder.isNotEmpty) {
+      filteredList.sort((a, b) => _compareProducts(a, b, sortOrder));
+    }
 
     return filteredList;
   }

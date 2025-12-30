@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:sqflite/sqflite.dart' hide DatabaseException;
 import 'package:posventa/core/utils/database_validators.dart';
 import 'package:posventa/data/datasources/database_helper.dart';
 import 'package:posventa/data/datasources/product_local_datasource.dart';
@@ -25,11 +26,10 @@ class ProductLocalDataSourceImpl implements ProductLocalDataSource {
       final List<Map<String, dynamic>> productMaps = await db.rawQuery('''
         SELECT p.*, 
                (SELECT SUM(quantity_on_hand) FROM inventory WHERE product_id = p.id) as stock,
-               u.name as unit_name,
                d.name as department_name
         FROM ${DatabaseHelper.tableProducts} p
-        LEFT JOIN ${DatabaseHelper.tableUnitsOfMeasure} u ON p.unit_id = u.id
         LEFT JOIN ${DatabaseHelper.tableDepartments} d ON p.department_id = d.id
+        ORDER BY p.id DESC
         ${limit != null ? 'LIMIT $limit' : ''}
         ${offset != null ? 'OFFSET $offset' : ''}
       ''');
@@ -94,11 +94,9 @@ class ProductLocalDataSourceImpl implements ProductLocalDataSource {
         '''
         SELECT DISTINCT p.*, 
                (SELECT SUM(quantity_on_hand) FROM inventory WHERE product_id = p.id) as stock,
-               u.name as unit_name,
                d.name as department_name
         FROM ${DatabaseHelper.tableProducts} p
         LEFT JOIN ${DatabaseHelper.tableProductVariants} pv ON p.id = pv.product_id AND pv.is_active = 1
-        LEFT JOIN ${DatabaseHelper.tableUnitsOfMeasure} u ON p.unit_id = u.id
         LEFT JOIN ${DatabaseHelper.tableDepartments} d ON p.department_id = d.id
         WHERE (
           p.name LIKE ? OR 
@@ -106,6 +104,7 @@ class ProductLocalDataSourceImpl implements ProductLocalDataSource {
           pv.barcode LIKE ? OR
           pv.variant_name LIKE ?
         )
+        ORDER BY p.id DESC
       ''',
         ['%$query%', '%$query%', '%$query%', '%$query%'],
       );
@@ -167,10 +166,8 @@ class ProductLocalDataSourceImpl implements ProductLocalDataSource {
         '''
         SELECT p.*, 
                (SELECT SUM(quantity_on_hand) FROM inventory WHERE product_id = p.id) as stock,
-               u.name as unit_name,
                d.name as department_name
         FROM ${DatabaseHelper.tableProducts} p
-        LEFT JOIN ${DatabaseHelper.tableUnitsOfMeasure} u ON p.unit_id = u.id
         LEFT JOIN ${DatabaseHelper.tableDepartments} d ON p.department_id = d.id
         WHERE p.id = ?
       ''',
@@ -201,6 +198,68 @@ class ProductLocalDataSourceImpl implements ProductLocalDataSource {
         );
       }
       return null;
+    } catch (e) {
+      throw DatabaseException(e.toString());
+    }
+  }
+
+  @override
+  Future<void> batchCreateProducts(List<ProductModel> products) async {
+    try {
+      final db = await databaseHelper.database;
+      await db.transaction((txn) async {
+        // Fetch the default tax once to use if no taxes provided
+        final defaultTaxResult = await txn.query(
+          DatabaseHelper.tableTaxRates,
+          where: 'is_default = ? AND is_active = ?',
+          whereArgs: [1, 1],
+          limit: 1,
+        );
+
+        int? defaultTaxId;
+        if (defaultTaxResult.isNotEmpty) {
+          defaultTaxId = defaultTaxResult.first['id'] as int;
+        }
+
+        for (final product in products) {
+          // Insert product
+          final productId = await txn.insert(
+            DatabaseHelper.tableProducts,
+            product.toMap(),
+          );
+
+          // Save taxes
+          if (product.productTaxes != null &&
+              product.productTaxes!.isNotEmpty) {
+            for (final tax in product.productTaxes!) {
+              await txn.insert(DatabaseHelper.tableProductTaxes, {
+                'product_id': productId,
+                'tax_rate_id': tax.taxRateId,
+                'apply_order': tax.applyOrder,
+              });
+            }
+          } else if (defaultTaxId != null) {
+            await txn.insert(DatabaseHelper.tableProductTaxes, {
+              'product_id': productId,
+              'tax_rate_id': defaultTaxId,
+              'apply_order': 1,
+            });
+          }
+
+          // Save variants
+          if (product.variants != null && product.variants!.isNotEmpty) {
+            for (final variant in product.variants!) {
+              final variantModel = ProductVariantModel.fromEntity(variant);
+              final variantMap = variantModel.toMap();
+              variantMap['product_id'] = productId;
+              // Remove id to let autoincrement work
+              variantMap.remove('id');
+              await txn.insert(DatabaseHelper.tableProductVariants, variantMap);
+            }
+          }
+        }
+      });
+      databaseHelper.notifyTableChanged(DatabaseHelper.tableProducts);
     } catch (e) {
       throw DatabaseException(e.toString());
     }
@@ -537,6 +596,21 @@ class ProductLocalDataSourceImpl implements ProductLocalDataSource {
 
       // Barcode exists and we're not excluding anything
       return false;
+    } catch (e) {
+      throw DatabaseException(e.toString());
+    }
+  }
+
+  @override
+  Future<int> countProducts() async {
+    try {
+      final db = await databaseHelper.database;
+      return Sqflite.firstIntValue(
+            await db.rawQuery(
+              'SELECT COUNT(*) FROM ${DatabaseHelper.tableProducts}',
+            ),
+          ) ??
+          0;
     } catch (e) {
       throw DatabaseException(e.toString());
     }

@@ -18,7 +18,7 @@ class ProductFilterState {
     this.categoryId,
     this.brandId,
     this.supplierId,
-    this.sortOrder = 'name',
+    this.sortOrder = '',
     this.showInactive = false,
   });
 
@@ -82,25 +82,66 @@ class ProductFilters extends _$ProductFilters {
 }
 
 @riverpod
-Future<List<Product>> filteredProducts(Ref ref) async {
-  final products = await ref.watch(productListProvider.future);
+AsyncValue<ProductPaginationState> filteredProducts(Ref ref) {
+  final productsState = ref.watch(productListProvider);
   final filters = ref.watch(productFiltersProvider);
   final searchQuery = ref.watch(productSearchQueryProvider);
 
-  // 1. Filtrar por estado activo/inactivo
-  final baseList = products.where((p) {
-    if (filters.showInactive) return true;
-    return p.isActive;
-  }).toList();
+  // Helper to process list
+  List<Product> processList(List<Product> rawList) {
+    // 1. Filtrar por estado activo/inactivo
+    final baseList = rawList.where((p) {
+      if (filters.showInactive) return true;
+      return p.isActive;
+    }).toList();
 
-  // 2. Aplicar el resto de filtros y búsqueda usando la utilidad
-  return ProductFilterUtils.filterAndSort(
-    products: baseList,
-    searchQuery: searchQuery,
-    departmentFilter: filters.departmentId,
-    categoryFilter: filters.categoryId,
-    brandFilter: filters.brandId,
-    supplierFilter: filters.supplierId,
-    sortOrder: filters.sortOrder,
-  );
+    // 2. Aplicar el resto de filtros y búsqueda
+    return ProductFilterUtils.filterAndSort(
+      products: baseList,
+      searchQuery: searchQuery,
+      departmentFilter: filters.departmentId,
+      categoryFilter: filters.categoryId,
+      brandFilter: filters.brandId,
+      supplierFilter: filters.supplierId,
+      sortOrder: filters.sortOrder,
+    );
+  }
+
+  // Map the source state to the filtered state, preserving Loading/Error flags
+  if (productsState.hasValue) {
+    final originalState = productsState.value!;
+    final filteredList = processList(originalState.products);
+
+    // Create new state with filtered products but same metadata
+    final newState = originalState.copyWith(products: filteredList);
+
+    if (productsState.isLoading) {
+      // Loading with data
+      // ignore: invalid_use_of_internal_member
+      return AsyncLoading<ProductPaginationState>().copyWithPrevious(
+        AsyncData(newState),
+      );
+    }
+
+    if (productsState.hasError) {
+      // Error with data
+      // ignore: invalid_use_of_internal_member
+      return AsyncError<ProductPaginationState>(
+        productsState.error!,
+        productsState.stackTrace!,
+        // ignore: invalid_use_of_internal_member
+      ).copyWithPrevious(AsyncData(newState));
+    }
+
+    // Just data
+    return AsyncData(newState);
+  }
+
+  // No data available yet
+  if (productsState.isLoading) return const AsyncLoading();
+  if (productsState.hasError) {
+    return AsyncError(productsState.error!, productsState.stackTrace!);
+  }
+
+  return const AsyncLoading();
 }

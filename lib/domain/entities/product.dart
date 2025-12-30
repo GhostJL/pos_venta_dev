@@ -14,8 +14,6 @@ class Product extends Equatable {
   final int? categoryId;
   final int? brandId;
   final int? supplierId;
-  final int unitId;
-  final String? unitName; // Populated from join
   final bool isSoldByWeight;
   final bool isActive;
   final bool hasExpiration;
@@ -34,8 +32,6 @@ class Product extends Equatable {
     this.categoryId,
     this.brandId,
     this.supplierId,
-    required this.unitId,
-    this.unitName,
 
     this.isSoldByWeight = false,
     this.isActive = true,
@@ -72,7 +68,16 @@ class Product extends Equatable {
   }
 
   // Compatibility getters
-  String get unitOfMeasure => unitName ?? 'pieza';
+  String get unitOfMeasure {
+    if (variants != null && variants!.isNotEmpty) {
+      // Logic to get unit name from variant if we had it there?
+      // Variant currently maps unitId but doesn't have the NAME attached directly usually unless joined.
+      // For now, let's return a default or 'pieza' as placeholder if we can't resolve it easily
+      // without extra joins. Ideally, we should fetch unit name in variant query.
+      return 'pieza';
+    }
+    return 'pieza';
+  }
 
   int get salePriceCents {
     if (variants != null && variants!.isNotEmpty) {
@@ -105,8 +110,6 @@ class Product extends Equatable {
     int? categoryId,
     int? brandId,
     int? supplierId,
-    int? unitId,
-    String? unitName,
     bool? isSoldByWeight,
     bool? isActive,
     bool? hasExpiration,
@@ -125,8 +128,6 @@ class Product extends Equatable {
       categoryId: categoryId ?? this.categoryId,
       brandId: brandId ?? this.brandId,
       supplierId: supplierId ?? this.supplierId,
-      unitId: unitId ?? this.unitId,
-      unitName: unitName ?? this.unitName,
       isSoldByWeight: isSoldByWeight ?? this.isSoldByWeight,
       isActive: isActive ?? this.isActive,
       hasExpiration: hasExpiration ?? this.hasExpiration,

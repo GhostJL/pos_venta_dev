@@ -52,7 +52,8 @@ class _ProductGridSectionState extends ConsumerState<ProductGridSection>
     final productsAsync = ref.read(productListProvider);
 
     return productsAsync.when(
-      data: (products) async {
+      data: (state) async {
+        final products = state.products;
         // Find product by its barcode OR by one of its variants' barcode
         Product? product;
         ProductVariant? matchedVariant;
@@ -200,7 +201,8 @@ class _ProductGridSectionState extends ConsumerState<ProductGridSection>
         // Product Grid
         Expanded(
           child: productsAsync.when(
-            data: (products) {
+            data: (state) {
+              final products = state.products;
               final gridItems = _buildGridItems(products);
               return ProductGridView(
                 items: gridItems,

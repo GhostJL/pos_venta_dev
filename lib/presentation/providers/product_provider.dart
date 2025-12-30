@@ -19,28 +19,132 @@ class ProductSearchQuery extends _$ProductSearchQuery {
   }
 }
 
+class ProductPaginationState {
+  final List<Product> products;
+  final bool hasMore;
+  final bool isLoadingMore;
+  final int totalCount;
+
+  const ProductPaginationState({
+    required this.products,
+    this.hasMore = true,
+    this.isLoadingMore = false,
+    this.totalCount = 0,
+  });
+
+  ProductPaginationState copyWith({
+    List<Product>? products,
+    bool? hasMore,
+    bool? isLoadingMore,
+    int? totalCount,
+  }) {
+    return ProductPaginationState(
+      products: products ?? this.products,
+      hasMore: hasMore ?? this.hasMore,
+      isLoadingMore: isLoadingMore ?? this.isLoadingMore,
+      totalCount: totalCount ?? this.totalCount,
+    );
+  }
+}
+
 @riverpod
 class ProductList extends _$ProductList {
+  static const int _pageSize = 20;
+
   @override
-  Stream<List<Product>> build() {
+  FutureOr<ProductPaginationState> build() async {
     final query = ref.watch(productSearchQueryProvider);
+
+    // Fetch count
+    final countResult = await ref
+        .read(productRepositoryProvider)
+        .getProductsCount();
+    final totalCount = countResult.fold((l) => 0, (r) => r);
+
     if (query.isEmpty) {
-      final getAllProducts = ref.watch(getAllProductsProvider);
-      return getAllProducts.stream().map(
-        (either) => either.fold(
-          (failure) =>
-              throw failure.message, // Failures create AsyncError in UI
-          (products) => products,
-        ),
+      final products = await _fetchProducts(offset: 0);
+      return ProductPaginationState(
+        products: products,
+        hasMore: products.length >= _pageSize,
+        totalCount: totalCount,
       );
     } else {
-      return Stream.fromFuture(_searchProducts(query));
+      final products = await _searchProducts(query);
+      return ProductPaginationState(
+        products: products,
+        hasMore: false,
+        totalCount: products
+            .length, // For search, total is just what we found (assumed)
+      );
+    }
+  }
+
+  Future<List<Product>> _fetchProducts({required int offset}) async {
+    final getAllProducts = ref.read(getAllProductsProvider);
+    final result = await getAllProducts.call(limit: _pageSize, offset: offset);
+    return result.fold(
+      (failure) => throw failure.message,
+      (products) => products,
+    );
+  }
+
+  Future<void> loadMore() async {
+    final currentState = state.value;
+    if (currentState == null) return;
+
+    // Check Guard
+    if (state.isLoading || state.hasError || !currentState.hasMore) return;
+
+    // Search Mode Guard
+    if (ref.read(productSearchQueryProvider).isNotEmpty) return;
+
+    // Set loading state without losing data
+    // ignore: invalid_use_of_internal_member
+    state = AsyncData(currentState.copyWith(isLoadingMore: true));
+
+    // Using copyWithPrevious wrapper for the outer AsyncValue doesn't help much if we modify internal boolean
+    // But sticking to standard pattern:
+
+    try {
+      await Future.delayed(Duration.zero);
+
+      final currentProducts = currentState.products;
+      final newProducts = await _fetchProducts(offset: currentProducts.length);
+
+      // Deduplicate
+      final currentIds = currentProducts.map((p) => p.id).toSet();
+      final uniqueNewProducts = newProducts
+          .where((p) => !currentIds.contains(p.id))
+          .toList();
+
+      if (uniqueNewProducts.isEmpty) {
+        state = AsyncData(
+          currentState.copyWith(hasMore: false, isLoadingMore: false),
+        );
+        return;
+      }
+
+      state = AsyncData(
+        ProductPaginationState(
+          products: [...currentProducts, ...uniqueNewProducts],
+          hasMore: newProducts.length >= _pageSize,
+          isLoadingMore: false,
+          totalCount: currentState.totalCount,
+        ),
+      );
+    } catch (e, st) {
+      // Revert loading flag on error, keep data
+      state = AsyncData(currentState.copyWith(isLoadingMore: false));
+      // Or handle error explicitly? strict Riverpod would emit AsyncError but that clears data if not handled carefully.
+      // For pagination, usually we want to keep list and show snackbar.
+      // But to match previous behavior:
+      state = AsyncError(e, st);
     }
   }
 
   Future<List<Product>> _searchProducts(String query) async {
     final searchProducts = ref.read(searchProductsProvider);
-    final result = await searchProducts(query);
+    final result = await searchProducts.call(query);
     return result.fold(
       (failure) => throw failure.message,
       (products) => products,
@@ -53,20 +157,19 @@ class ProductList extends _$ProductList {
 
   Future<void> addProduct(Product product) async {
     final result = await ref.read(createProductProvider).call(product);
-    result.fold((failure) => throw failure.message, (success) => null);
-    // Stream will auto-update
+    result.fold((failure) => throw failure.message, (success) {
+      ref.invalidateSelf();
+    });
   }
 
   Future<void> updateProduct(Product product) async {
     final result = await ref.read(updateProductProvider).call(product);
     result.fold((failure) => throw failure.message, (success) => null);
-    // Stream will auto-update
   }
 
   Future<void> deleteProduct(int id) async {
     final result = await ref.read(deleteProductProvider).call(id);
     result.fold((failure) => throw failure.message, (success) => null);
-    // Stream will auto-update
   }
 
   Future<void> toggleProductActive(int productId) async {
@@ -74,11 +177,13 @@ class ProductList extends _$ProductList {
     if (currentState == null) return;
 
     try {
-      final product = currentState.firstWhere((p) => p.id == productId);
+      final product = currentState.products.firstWhere(
+        (p) => p.id == productId,
+      );
       final updatedProduct = product.copyWith(isActive: !product.isActive);
       await updateProduct(updatedProduct);
+      // Optimistic update could go here but invalidation is safer for sync
     } catch (e) {
-      // Handle error or rethrow
       rethrow;
     }
   }
@@ -98,7 +203,6 @@ extension ProductCopyWith on Product {
     int? categoryId,
     int? brandId,
     int? supplierId,
-    int? unitId,
     bool? isSoldByWeight,
     bool? isActive,
     List<ProductTax>? productTaxes,
@@ -113,7 +217,6 @@ extension ProductCopyWith on Product {
       categoryId: categoryId ?? this.categoryId,
       brandId: brandId ?? this.brandId,
       supplierId: supplierId ?? this.supplierId,
-      unitId: unitId ?? this.unitId,
       isSoldByWeight: isSoldByWeight ?? this.isSoldByWeight,
       isActive: isActive ?? this.isActive,
       productTaxes: productTaxes ?? this.productTaxes,

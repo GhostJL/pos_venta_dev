@@ -245,7 +245,6 @@ class DatabaseSchema {
         category_id INTEGER NOT NULL,
         brand_id INTEGER,
         supplier_id INTEGER,
-        unit_id INTEGER NOT NULL,
         is_sold_by_weight INTEGER NOT NULL DEFAULT 0 CHECK (is_sold_by_weight IN (0,1)),
         is_active INTEGER NOT NULL DEFAULT 1 CHECK (is_active IN (0,1)),
         has_expiration INTEGER NOT NULL DEFAULT 0 CHECK (has_expiration IN (0,1)),
@@ -255,8 +254,7 @@ class DatabaseSchema {
         FOREIGN KEY (department_id) REFERENCES ${DatabaseConstants.tableDepartments}(id) ON DELETE RESTRICT,
         FOREIGN KEY (category_id) REFERENCES ${DatabaseConstants.tableCategories}(id) ON DELETE RESTRICT,
         FOREIGN KEY (brand_id) REFERENCES ${DatabaseConstants.tableBrands}(id) ON DELETE SET NULL,
-        FOREIGN KEY (supplier_id) REFERENCES ${DatabaseConstants.tableSuppliers}(id) ON DELETE SET NULL,
-        FOREIGN KEY (unit_id) REFERENCES ${DatabaseConstants.tableUnitsOfMeasure}(id) ON DELETE RESTRICT
+        FOREIGN KEY (supplier_id) REFERENCES ${DatabaseConstants.tableSuppliers}(id) ON DELETE SET NULL
       )
     ''');
 

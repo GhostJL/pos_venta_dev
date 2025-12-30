@@ -65,6 +65,78 @@ class DatabaseMigrations {
     if (oldVersion < 34 && newVersion >= 34) {
       await _migrateToVersion34(db);
     }
+    // Migration from version 34 to 35: Remove unit_id from products table (Refactoring Unit of Measure)
+    if (oldVersion < 35 && newVersion >= 35) {
+      await _migrateToVersion35(db);
+    }
+  }
+
+  static Future<void> _migrateToVersion35(Database db) async {
+    // We need to recreate the products table to remove unit_id column and foreign key
+    // 1. Disable Foreign Keys to prevent cascading deletes or consistency errors during swap
+    await db.execute('PRAGMA foreign_keys = OFF');
+
+    try {
+      // 2. Create new table without unit_id
+      await db.execute('''
+        CREATE TABLE ${DatabaseConstants.tableProducts}_new (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          code TEXT NOT NULL UNIQUE,
+          name TEXT NOT NULL,
+          description TEXT,
+          department_id INTEGER NOT NULL,
+          category_id INTEGER NOT NULL,
+          brand_id INTEGER,
+          supplier_id INTEGER,
+          is_sold_by_weight INTEGER NOT NULL DEFAULT 0 CHECK (is_sold_by_weight IN (0,1)),
+          is_active INTEGER NOT NULL DEFAULT 1 CHECK (is_active IN (0,1)),
+          has_expiration INTEGER NOT NULL DEFAULT 0 CHECK (has_expiration IN (0,1)),
+          photo_url TEXT,
+          created_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
+          updated_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
+          FOREIGN KEY (department_id) REFERENCES ${DatabaseConstants.tableDepartments}(id) ON DELETE RESTRICT,
+          FOREIGN KEY (category_id) REFERENCES ${DatabaseConstants.tableCategories}(id) ON DELETE RESTRICT,
+          FOREIGN KEY (brand_id) REFERENCES ${DatabaseConstants.tableBrands}(id) ON DELETE SET NULL,
+          FOREIGN KEY (supplier_id) REFERENCES ${DatabaseConstants.tableSuppliers}(id) ON DELETE SET NULL
+        )
+      ''');
+
+      // 3. Copy data from old table to new table (excluding unit_id)
+      // Note: We explicitly select columns to match the new schema
+      // We assume unit_id is just dropped and data is preserved
+      await db.execute('''
+        INSERT INTO ${DatabaseConstants.tableProducts}_new 
+          (id, code, name, description, department_id, category_id, brand_id, supplier_id, is_sold_by_weight, is_active, has_expiration, photo_url, created_at, updated_at)
+        SELECT id, code, name, description, department_id, category_id, brand_id, supplier_id, is_sold_by_weight, is_active, has_expiration, photo_url, created_at, updated_at
+        FROM ${DatabaseConstants.tableProducts}
+      ''');
+
+      // 4. Drop old table
+      await db.execute('DROP TABLE ${DatabaseConstants.tableProducts}');
+
+      // 5. Rename new table to original name
+      await db.execute('''
+        ALTER TABLE ${DatabaseConstants.tableProducts}_new 
+        RENAME TO ${DatabaseConstants.tableProducts}
+      ''');
+
+      // 6. Recreate Indexes
+      await db.execute(
+        'CREATE INDEX IF NOT EXISTS idx_products_code ON ${DatabaseConstants.tableProducts}(code)',
+      );
+      await db.execute(
+        'CREATE INDEX IF NOT EXISTS idx_products_department ON ${DatabaseConstants.tableProducts}(department_id)',
+      );
+      await db.execute(
+        'CREATE INDEX IF NOT EXISTS idx_products_category ON ${DatabaseConstants.tableProducts}(category_id)',
+      );
+      await db.execute(
+        'CREATE INDEX IF NOT EXISTS idx_products_search ON ${DatabaseConstants.tableProducts}(name, code)',
+      );
+    } finally {
+      // 7. Re-enable Foreign Keys
+      await db.execute('PRAGMA foreign_keys = ON');
+    }
   }
 
   static Future<void> _migrateToVersion34(Database db) async {

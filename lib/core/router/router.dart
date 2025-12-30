@@ -29,6 +29,7 @@ import 'package:posventa/presentation/pages/pos_sale/pos_sales_page.dart';
 import 'package:posventa/presentation/pages/pos_sale/cart_page.dart';
 import 'package:posventa/presentation/pages/pos_sale/payment_page.dart';
 import 'package:posventa/presentation/pages/products/products_page.dart';
+import 'package:posventa/presentation/pages/products/bulk_import_page.dart';
 import 'package:posventa/presentation/pages/purchase/purchase_detail_page.dart';
 import 'package:posventa/presentation/pages/purchase/purchase_form_page.dart';
 import 'package:posventa/presentation/pages/purchase/purchase_header_page.dart';
@@ -295,6 +296,11 @@ final routerProvider = Provider<GoRouter>((ref) {
               final product = state.extra as Product?;
               return NoTransitionPage(child: ProductFormPage(product: product));
             },
+          ),
+          GoRoute(
+            path: '/products/import',
+            pageBuilder: (context, state) =>
+                const NoTransitionPage(child: BulkImportPage()),
           ),
           GoRoute(
             path: '/product-form/variant',

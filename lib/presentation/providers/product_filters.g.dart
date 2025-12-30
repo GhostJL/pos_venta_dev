@@ -68,11 +68,11 @@ const filteredProductsProvider = FilteredProductsProvider._();
 final class FilteredProductsProvider
     extends
         $FunctionalProvider<
-          AsyncValue<List<Product>>,
-          List<Product>,
-          FutureOr<List<Product>>
+          AsyncValue<ProductPaginationState>,
+          AsyncValue<ProductPaginationState>,
+          AsyncValue<ProductPaginationState>
         >
-    with $FutureModifier<List<Product>>, $FutureProvider<List<Product>> {
+    with $Provider<AsyncValue<ProductPaginationState>> {
   const FilteredProductsProvider._()
     : super(
         from: null,
@@ -89,14 +89,24 @@ final class FilteredProductsProvider
 
   @$internal
   @override
-  $FutureProviderElement<List<Product>> $createElement(
+  $ProviderElement<AsyncValue<ProductPaginationState>> $createElement(
     $ProviderPointer pointer,
-  ) => $FutureProviderElement(pointer);
+  ) => $ProviderElement(pointer);
 
   @override
-  FutureOr<List<Product>> create(Ref ref) {
+  AsyncValue<ProductPaginationState> create(Ref ref) {
     return filteredProducts(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(AsyncValue<ProductPaginationState> value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<AsyncValue<ProductPaginationState>>(
+        value,
+      ),
+    );
   }
 }
 
-String _$filteredProductsHash() => r'6a5d5ecd3e67361f227c137a87f1c46b409d1a02';
+String _$filteredProductsHash() => r'5f84321a7b41993e8615fe8607ff642169d636db';

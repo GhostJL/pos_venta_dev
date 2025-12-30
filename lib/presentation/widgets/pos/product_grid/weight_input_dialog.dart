@@ -103,15 +103,14 @@ class _WeightInputDialogState extends State<WeightInputDialog> {
               decoration: InputDecoration(
                 labelText: 'Cantidad en peso',
                 hintText: '0.0',
-                helperText:
-                    'Ingresar peso en ${widget.product.unitName ?? 'kg'}',
+                helperText: 'Ingresar peso en ${widget.product.unitOfMeasure}',
                 hintStyle: theme.textTheme.bodyMedium?.copyWith(
                   color: colorScheme.onSurface,
                 ),
                 suffixStyle: theme.textTheme.bodyMedium?.copyWith(
                   color: colorScheme.primary,
                 ),
-                suffixText: widget.product.unitName ?? 'kg',
+                suffixText: widget.product.unitOfMeasure,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
