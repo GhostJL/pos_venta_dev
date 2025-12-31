@@ -33,10 +33,36 @@ class ProductFilterUtils {
   static bool _matchesSearchQuery(Product product, String searchLower) {
     if (searchLower.isEmpty) return true;
 
-    return product.name.toLowerCase().contains(searchLower) ||
+    final mainMatch =
+        product.name.toLowerCase().contains(searchLower) ||
         product.code.toLowerCase().contains(searchLower) ||
         (product.barcode?.toLowerCase().contains(searchLower) ?? false) ||
         (product.description?.toLowerCase().contains(searchLower) ?? false);
+
+    bool variantMatch = false;
+    if (product.variants != null) {
+      for (final variant in product.variants!) {
+        if (variant.barcode?.toLowerCase().contains(searchLower) == true) {
+          variantMatch = true;
+          break;
+        }
+        if (variant.additionalBarcodes != null) {
+          if (variant.additionalBarcodes!.any(
+            (code) => code.toLowerCase().contains(searchLower),
+          )) {
+            variantMatch = true;
+            break;
+          }
+        }
+        // Also check variant name if you want deeper search
+        if (variant.variantName.toLowerCase().contains(searchLower)) {
+          variantMatch = true;
+          break;
+        }
+      }
+    }
+
+    return mainMatch || variantMatch;
   }
 
   /// Checks if a product matches the department filter

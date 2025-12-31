@@ -170,6 +170,10 @@ class _InventoryPageState extends ConsumerState<InventoryPage> {
                     return item.product.name.toLowerCase().contains(q) ||
                         item.variant.variantName.toLowerCase().contains(q) ||
                         (item.variant.barcode?.toLowerCase().contains(q) ??
+                            false) ||
+                        (item.variant.additionalBarcodes?.any(
+                              (code) => code.toLowerCase().contains(q),
+                            ) ??
                             false);
                   }).toList();
 

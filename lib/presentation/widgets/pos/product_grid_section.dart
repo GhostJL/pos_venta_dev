@@ -62,7 +62,12 @@ class _ProductGridSectionState extends ConsumerState<ProductGridSection>
           // Check variants first for more specific match
           if (p.variants != null) {
             final variant = p.variants!
-                .where((v) => v.barcode == barcode && v.isForSale)
+                .where(
+                  (v) =>
+                      (v.barcode == barcode ||
+                          (v.additionalBarcodes?.contains(barcode) ?? false)) &&
+                      v.isForSale,
+                )
                 .firstOrNull;
             if (variant != null) {
               product = p;

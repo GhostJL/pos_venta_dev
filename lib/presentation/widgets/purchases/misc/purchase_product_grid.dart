@@ -76,7 +76,11 @@ class _PurchaseProductGridState extends ConsumerState<PurchaseProductGrid> {
           // Check variants first
           if (p.variants != null) {
             final variant = p.variants!
-                .where((v) => v.barcode == barcode)
+                .where(
+                  (v) =>
+                      v.barcode == barcode ||
+                      (v.additionalBarcodes?.contains(barcode) ?? false),
+                )
                 .firstOrNull;
             if (variant != null) {
               product = p;
