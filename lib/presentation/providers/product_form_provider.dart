@@ -22,7 +22,7 @@ class ProductFormState {
   final int? categoryId;
   final int? brandId;
   final int? supplierId;
-  final int? unitId; // Added unitId
+  final int? unitId;
   final bool isSoldByWeight;
   final bool isActive;
   final bool hasExpiration;
@@ -35,6 +35,7 @@ class ProductFormState {
   final bool isSuccess;
   final File? imageFile;
   final String? photoUrl;
+  final List<String> additionalBarcodes;
 
   final bool showValidationErrors;
   final bool isModified;
@@ -57,6 +58,7 @@ class ProductFormState {
     this.hasExpiration = false,
     this.selectedTaxes = const [],
     this.variants = const [],
+    this.additionalBarcodes = const [],
     this.hasVariants = false,
     this.usesTaxes = false,
     this.isLoading = false,
@@ -98,6 +100,7 @@ class ProductFormState {
     bool clearImageFile = false,
     String? photoUrl,
     bool clearPhotoUrl = false,
+    List<String>? additionalBarcodes,
     bool? showValidationErrors,
     bool? isModified,
     bool? isVariableProduct,
@@ -127,6 +130,7 @@ class ProductFormState {
       isSuccess: isSuccess ?? this.isSuccess,
       imageFile: clearImageFile ? null : (imageFile ?? this.imageFile),
       photoUrl: clearPhotoUrl ? null : (photoUrl ?? this.photoUrl),
+      additionalBarcodes: additionalBarcodes ?? this.additionalBarcodes,
       showValidationErrors: showValidationErrors ?? this.showValidationErrors,
       isModified: isModified ?? this.isModified,
       isVariableProduct: isVariableProduct ?? this.isVariableProduct,
@@ -166,6 +170,9 @@ class ProductFormNotifier extends _$ProductFormNotifier {
                 product.variants!.first.variantName != 'Estándar'),
         usesTaxes: (product.productTaxes?.isNotEmpty ?? false),
         photoUrl: product.photoUrl,
+        additionalBarcodes: (product.variants?.isNotEmpty ?? false)
+            ? (product.variants!.first.additionalBarcodes ?? [])
+            : [],
       );
 
       _initialState = state;
@@ -193,13 +200,11 @@ class ProductFormNotifier extends _$ProductFormNotifier {
           initialProduct: freshProduct,
           variants: List.from(freshProduct.variants ?? []),
           photoUrl: freshProduct.photoUrl,
-          // We update initial state mostly to reset dirty check baseline if needed
-          // But usually we respect current edits if the user has changed things?
-          // For now, let's just update fields that shouldn't conflict heavily or are readonly-ish like variants which are saved separately
+          additionalBarcodes: (freshProduct.variants?.isNotEmpty ?? false)
+              ? (freshProduct.variants!.first.additionalBarcodes ?? [])
+              : [],
         );
         state = newState;
-        // Note: We might NOT want to override _initialState here if we want to track changes against what was loaded at START of session vs current DB.
-        // But typically "dirty" means diff from DB. So let's update _initialState too.
         _initialState = newState.copyWith(isModified: false);
         _updateModified(state);
       }
@@ -228,7 +233,7 @@ class ProductFormNotifier extends _$ProductFormNotifier {
                   s.variants.first.variantName != 'Estándar'));
     }
 
-    // Existing Product - Compare with initial (loaded from DB)
+    // Existing Product
     if (s.name != initial.name) return true;
     if (s.code != initial.code) return true;
     if (s.barcode != initial.barcode) return true;
@@ -240,20 +245,24 @@ class ProductFormNotifier extends _$ProductFormNotifier {
     if (s.isSoldByWeight != initial.isSoldByWeight) return true;
     if (s.isActive != initial.isActive) return true;
     if (s.hasExpiration != initial.hasExpiration) return true;
-    if (s.imageFile != null) return true; // New image selected
+    if (s.imageFile != null) return true;
     if (s.usesTaxes != initial.usesTaxes) return true;
 
-    // Deep compare taxes
     if (s.selectedTaxes.length != initial.selectedTaxes.length) return true;
     final initialTaxIds = initial.selectedTaxes.map((t) => t.taxRateId).toSet();
     final currentTaxIds = s.selectedTaxes.map((t) => t.taxRateId).toSet();
     if (!initialTaxIds.containsAll(currentTaxIds)) return true;
 
-    // Compare lists roughly for variants (usually handled by explicit edit form)
-    if (s.variants.length != initial.variants.length) return true;
+    if (s.additionalBarcodes.length != initial.additionalBarcodes.length) {
+      return true;
+    }
+    if (!s.additionalBarcodes.every(
+      (element) => initial.additionalBarcodes.contains(element),
+    )) {
+      return true;
+    }
 
-    // Deep compare variants if needed, but usually length check + explicit save action on variant form covers it.
-    // However, if we added a variant in "waiting list", length will differ.
+    if (s.variants.length != initial.variants.length) return true;
 
     return false;
   }
@@ -300,6 +309,20 @@ class ProductFormNotifier extends _$ProductFormNotifier {
 
   void pickImage(File file) {
     _updateModified(state.copyWith(imageFile: file, photoUrl: null));
+  }
+
+  void addAdditionalBarcode(String value) {
+    if (value.isEmpty) return;
+    if (state.additionalBarcodes.contains(value)) return;
+    if (state.barcode == value) return;
+
+    final newList = List<String>.from(state.additionalBarcodes)..add(value);
+    _updateModified(state.copyWith(additionalBarcodes: newList));
+  }
+
+  void removeAdditionalBarcode(String value) {
+    final newList = List<String>.from(state.additionalBarcodes)..remove(value);
+    _updateModified(state.copyWith(additionalBarcodes: newList));
   }
 
   void removeImage() {
@@ -476,9 +499,9 @@ class ProductFormNotifier extends _$ProductFormNotifier {
 
       // Default Variant Construction
       final defaultVariant = ProductVariant(
-        id: existingDefault?.id, // Keep ID if updating
-        productId: state.initialProduct?.id ?? 0, // Placeholder
-        variantName: 'Estándar', // Standard name for simple products
+        id: existingDefault?.id,
+        productId: state.initialProduct?.id ?? 0,
+        variantName: 'Estándar',
         barcode: finalBarcode.isNotEmpty ? finalBarcode : finalCode,
         priceCents: (price * 100).round(),
         costPriceCents: (cost * 100).round(),
@@ -492,6 +515,7 @@ class ProductFormNotifier extends _$ProductFormNotifier {
         isActive: state.isActive,
         unitId: state.unitId,
         isSoldByWeight: state.isSoldByWeight,
+        additionalBarcodes: state.additionalBarcodes,
       );
 
       finalVariants = [defaultVariant];
@@ -501,18 +525,15 @@ class ProductFormNotifier extends _$ProductFormNotifier {
     if (state.usesTaxes) {
       finalProductTaxes = state.selectedTaxes;
     } else {
-      // Search for Exempt tax (Rate 0)
       try {
         final taxRates = await ref.read(taxRateListProvider.future);
         TaxRate? exemptTax;
 
-        // Try to find by name "exento" and rate 0
         try {
           exemptTax = taxRates.firstWhere(
             (t) => t.rate == 0 && t.name.toLowerCase().contains('exento'),
           );
         } catch (_) {
-          // Fallback to any rate 0
           try {
             exemptTax = taxRates.firstWhere((t) => t.rate == 0);
           } catch (__) {
@@ -526,7 +547,7 @@ class ProductFormNotifier extends _$ProductFormNotifier {
           ];
         }
       } catch (e) {
-        // Ignore error, just proceed without taxes
+        // Ignore error
       }
     }
 
@@ -561,15 +582,11 @@ class ProductFormNotifier extends _$ProductFormNotifier {
       isActive: state.isActive,
       hasExpiration: state.hasExpiration,
       photoUrl: savedPhotoUrl,
-      // For simple products, we can also set the main stock field if we want denormalization
-      // but usually the backend calculates it from variants.
     );
 
-    Product savedProduct = newProduct; // Placeholder init
+    Product savedProduct = newProduct;
     String? saveError;
 
-    // Use repo directly to ensure we get the ID for new products
-    // and can update the local state correctly
     if (state.initialProduct == null) {
       final createResult = await productRepo.createProduct(newProduct);
       createResult.fold(
@@ -592,20 +609,20 @@ class ProductFormNotifier extends _$ProductFormNotifier {
       return false;
     }
 
-    // Update initialProduct so dirty checks work correctly
     state = state.copyWith(
       isLoading: false,
       isSuccess: !silent,
       error: null,
       initialProduct: savedProduct,
-      // Also update fields to match saved product if needed,
-      // essentially re-syncing to "clean" state
       name: savedProduct.name,
       code: savedProduct.code,
       barcode: savedProduct.barcode,
       description: savedProduct.description,
       variants: savedProduct.variants ?? [],
       photoUrl: savedProduct.photoUrl,
+      additionalBarcodes: (savedProduct.variants?.isNotEmpty ?? false)
+          ? (savedProduct.variants!.first.additionalBarcodes ?? [])
+          : [],
       clearImageFile: true,
     );
 

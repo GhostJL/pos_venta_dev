@@ -31,6 +31,7 @@ class VariantFormState extends Equatable {
   final File? imageFile;
   final String? photoUrl;
   final String profitMargin;
+  final List<String> additionalBarcodes;
 
   const VariantFormState({
     required this.name,
@@ -53,6 +54,7 @@ class VariantFormState extends Equatable {
     this.imageFile,
     this.photoUrl,
     this.profitMargin = '',
+    this.additionalBarcodes = const [],
   });
 
   factory VariantFormState.initial(
@@ -85,6 +87,7 @@ class VariantFormState extends Equatable {
       photoUrl: variant?.photoUrl,
       isModified: false,
       profitMargin: '',
+      additionalBarcodes: variant?.additionalBarcodes ?? const [],
     );
   }
 
@@ -109,6 +112,7 @@ class VariantFormState extends Equatable {
     File? imageFile,
     String? photoUrl,
     String? profitMargin,
+    List<String>? additionalBarcodes,
   }) {
     return VariantFormState(
       name: name ?? this.name,
@@ -131,6 +135,7 @@ class VariantFormState extends Equatable {
       imageFile: imageFile ?? this.imageFile,
       photoUrl: photoUrl ?? this.photoUrl,
       profitMargin: profitMargin ?? this.profitMargin,
+      additionalBarcodes: additionalBarcodes ?? this.additionalBarcodes,
     );
   }
 
@@ -161,6 +166,7 @@ class VariantFormState extends Equatable {
     String? photoUrl,
     bool clearPhotoUrl = false,
     String? profitMargin,
+    List<String>? additionalBarcodes,
   }) {
     return VariantFormState(
       name: name ?? this.name,
@@ -187,6 +193,7 @@ class VariantFormState extends Equatable {
       imageFile: clearImageFile ? null : (imageFile ?? this.imageFile),
       photoUrl: clearPhotoUrl ? null : (photoUrl ?? this.photoUrl),
       profitMargin: profitMargin ?? this.profitMargin,
+      additionalBarcodes: additionalBarcodes ?? this.additionalBarcodes,
     );
   }
 
@@ -207,7 +214,8 @@ class VariantFormState extends Equatable {
         isSoldByWeight != other.isSoldByWeight ||
         imageFile != other.imageFile ||
         photoUrl != other.photoUrl ||
-        profitMargin != other.profitMargin;
+        profitMargin != other.profitMargin ||
+        additionalBarcodes != other.additionalBarcodes;
   }
 
   @override
@@ -232,6 +240,7 @@ class VariantFormState extends Equatable {
     imageFile,
     photoUrl,
     profitMargin,
+    additionalBarcodes,
   ];
 }
 
@@ -320,6 +329,20 @@ class VariantForm extends _$VariantForm {
     _updateState(
       state.copyWithNullable(barcode: value, clearBarcodeError: true),
     );
+  }
+
+  void addAdditionalBarcode(String value) {
+    if (value.isEmpty) return;
+    if (state.additionalBarcodes.contains(value)) return;
+    if (state.barcode == value) return; // Prevent Main Barcode duplicate
+
+    final newList = List<String>.from(state.additionalBarcodes)..add(value);
+    _updateState(state.copyWithNullable(additionalBarcodes: newList));
+  }
+
+  void removeAdditionalBarcode(String value) {
+    final newList = List<String>.from(state.additionalBarcodes)..remove(value);
+    _updateState(state.copyWithNullable(additionalBarcodes: newList));
   }
 
   void updateIsForSale(bool value) {
@@ -498,6 +521,7 @@ class VariantForm extends _$VariantForm {
         unitId: state.unitId,
         isSoldByWeight: state.isSoldByWeight,
         photoUrl: savedPhotoUrl,
+        additionalBarcodes: state.additionalBarcodes,
       );
 
       // If requested to just return the variant (e.g., for new product creation)

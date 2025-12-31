@@ -52,6 +52,7 @@ class DatabaseHelper {
   static const tableInventoryLots = DatabaseConstants.tableInventoryLots;
   static const tableSaleItemLots = DatabaseConstants.tableSaleItemLots;
   static const tableNotifications = DatabaseConstants.tableNotifications;
+  static const tableProductBarcodes = DatabaseConstants.tableProductBarcodes;
 
   static Database? _database;
 

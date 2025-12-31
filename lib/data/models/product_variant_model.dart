@@ -6,6 +6,7 @@ class ProductVariantModel extends ProductVariant {
     required super.productId,
     required super.variantName,
     super.barcode,
+    super.additionalBarcodes,
     required super.quantity,
     required super.priceCents,
     required super.costPriceCents,
@@ -29,6 +30,7 @@ class ProductVariantModel extends ProductVariant {
       productId: variant.productId,
       variantName: variant.variantName,
       barcode: variant.barcode,
+      additionalBarcodes: variant.additionalBarcodes,
       quantity: variant.quantity,
       priceCents: variant.priceCents,
       costPriceCents: variant.costPriceCents,
@@ -54,6 +56,9 @@ class ProductVariantModel extends ProductVariant {
       variantName:
           map['variant_name'] ?? '', // Handle potential nulls during dev
       barcode: map['barcode'],
+      additionalBarcodes: map['additional_barcodes'] != null
+          ? (map['additional_barcodes'] as List).cast<String>()
+          : null,
       quantity: (map['quantity'] as num).toDouble(),
       priceCents: map['sale_price_cents'], // Mapped from sale_price_cents in DB
       costPriceCents: map['cost_price_cents'],
@@ -86,6 +91,8 @@ class ProductVariantModel extends ProductVariant {
       'product_id': productId,
       'variant_name': variantName,
       'barcode': barcode,
+      'additional_barcodes':
+          additionalBarcodes, // Will need to be removed before DB insert into product_variants table
       'quantity': quantity,
       'sale_price_cents': priceCents, // Mapped to sale_price_cents in DB
       'cost_price_cents': costPriceCents,

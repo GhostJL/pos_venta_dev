@@ -36,14 +36,13 @@ class ProductLocalDataSourceImpl implements ProductLocalDataSource {
 
       if (productMaps.isEmpty) return [];
 
-      // Query 2: Get all taxes for these products in one query
+      // Query 2: Get all taxes for these products
       final productIds = productMaps.map((m) => m['id'] as int).toList();
       final taxMaps = await db.query(
         DatabaseHelper.tableProductTaxes,
         where: 'product_id IN (${productIds.join(',')})',
       );
 
-      // Group taxes by product_id
       final taxesByProduct = <int, List<ProductTaxModel>>{};
       for (final taxMap in taxMaps) {
         final productId = taxMap['product_id'] as int;
@@ -51,30 +50,14 @@ class ProductLocalDataSourceImpl implements ProductLocalDataSource {
         taxesByProduct[productId]!.add(ProductTaxModel.fromMap(taxMap));
       }
 
-      // Query 3: Get all variants for these products
-      final variantMaps = await db.rawQuery('''
-        SELECT pv.*, 
-               (SELECT SUM(quantity) FROM ${DatabaseHelper.tableInventoryLots} WHERE variant_id = pv.id) as stock
-        FROM ${DatabaseHelper.tableProductVariants} pv
-        WHERE pv.product_id IN (${productIds.join(',')}) AND pv.is_active = 1
-      ''');
+      // Query 3: Get variants using helper
+      final variantsByProduct = await _getVariantsForProducts(db, productIds);
 
-      // Group variants by product_id
-      final variantsByProduct = <int, List<ProductVariantModel>>{};
-      for (final variantMap in variantMaps) {
-        final productId = variantMap['product_id'] as int;
-        variantsByProduct.putIfAbsent(productId, () => []);
-        variantsByProduct[productId]!.add(
-          ProductVariantModel.fromMap(variantMap),
-        );
-      }
-
-      // Build products with their taxes and variants
+      // Build products
       return productMaps.map((map) {
         final product = ProductModel.fromMap(map);
         final taxes = taxesByProduct[product.id!] ?? [];
         final variants = variantsByProduct[product.id!] ?? [];
-        // Fix cast error using fromEntity
         return ProductModel.fromEntity(
           product.copyWith(productTaxes: taxes, variants: variants),
         );
@@ -97,16 +80,18 @@ class ProductLocalDataSourceImpl implements ProductLocalDataSource {
                d.name as department_name
         FROM ${DatabaseHelper.tableProducts} p
         LEFT JOIN ${DatabaseHelper.tableProductVariants} pv ON p.id = pv.product_id AND pv.is_active = 1
+        LEFT JOIN ${DatabaseHelper.tableProductBarcodes} pb ON pv.id = pb.variant_id
         LEFT JOIN ${DatabaseHelper.tableDepartments} d ON p.department_id = d.id
         WHERE (
           p.name LIKE ? OR 
           p.code LIKE ? OR 
           pv.barcode LIKE ? OR
-          pv.variant_name LIKE ?
+          pv.variant_name LIKE ? OR
+          pb.barcode LIKE ?
         )
         ORDER BY p.id DESC
       ''',
-        ['%$query%', '%$query%', '%$query%', '%$query%'],
+        ['%$query%', '%$query%', '%$query%', '%$query%', '%$query%'],
       );
 
       if (productMaps.isEmpty) return [];
@@ -126,23 +111,8 @@ class ProductLocalDataSourceImpl implements ProductLocalDataSource {
         taxesByProduct[productId]!.add(ProductTaxModel.fromMap(taxMap));
       }
 
-      // Query 3: Get all variants for these products
-      final variantMaps = await db.rawQuery('''
-        SELECT pv.*, 
-               (SELECT SUM(quantity) FROM ${DatabaseHelper.tableInventoryLots} WHERE variant_id = pv.id) as stock
-        FROM ${DatabaseHelper.tableProductVariants} pv
-        WHERE pv.product_id IN (${productIds.join(',')}) AND pv.is_active = 1
-      ''');
-
-      // Group variants by product_id
-      final variantsByProduct = <int, List<ProductVariantModel>>{};
-      for (final variantMap in variantMaps) {
-        final productId = variantMap['product_id'] as int;
-        variantsByProduct.putIfAbsent(productId, () => []);
-        variantsByProduct[productId]!.add(
-          ProductVariantModel.fromMap(variantMap),
-        );
-      }
+      // Query 3: Get variants using helper
+      final variantsByProduct = await _getVariantsForProducts(db, productIds);
 
       return productMaps.map((map) {
         final product = ProductModel.fromMap(map);
@@ -178,19 +148,9 @@ class ProductLocalDataSourceImpl implements ProductLocalDataSource {
         final product = ProductModel.fromMap(maps.first);
         final taxes = await getTaxesForProduct(id);
 
-        // Get variants
-        final variantMaps = await db.rawQuery(
-          '''
-          SELECT pv.*, 
-                 (SELECT SUM(quantity) FROM ${DatabaseHelper.tableInventoryLots} WHERE variant_id = pv.id) as stock
-          FROM ${DatabaseHelper.tableProductVariants} pv
-          WHERE pv.product_id = ? AND pv.is_active = 1
-        ''',
-          [id],
-        );
-        final variants = variantMaps
-            .map((m) => ProductVariantModel.fromMap(m))
-            .toList();
+        // Get variants using helper
+        final variantsByProduct = await _getVariantsForProducts(db, [id]);
+        final variants = variantsByProduct[id] ?? [];
 
         // Fix cast error using fromEntity
         return ProductModel.fromEntity(
@@ -254,6 +214,11 @@ class ProductLocalDataSourceImpl implements ProductLocalDataSource {
             for (final variant in product.variants!) {
               final variantModel = ProductVariantModel.fromEntity(variant);
               final variantMap = variantModel.toMap();
+
+              // Extract additional barcodes to prevent error on insert into product_variants
+              final additionalBarcodes =
+                  variantMap.remove('additional_barcodes') as List<String>?;
+
               variantMap['product_id'] = productId;
               // Remove id to let autoincrement work
               variantMap.remove('id');
@@ -261,6 +226,16 @@ class ProductLocalDataSourceImpl implements ProductLocalDataSource {
                 DatabaseHelper.tableProductVariants,
                 variantMap,
               );
+
+              // Insert additional barcodes
+              if (additionalBarcodes != null) {
+                for (final code in additionalBarcodes) {
+                  await txn.insert(DatabaseHelper.tableProductBarcodes, {
+                    'variant_id': variantId,
+                    'barcode': code,
+                  });
+                }
+              }
 
               // --- INITIAL LOT CREATION ---
               // If stock > 0, create an initial lot for this variant
@@ -496,8 +471,13 @@ class ProductLocalDataSourceImpl implements ProductLocalDataSource {
         for (final variant in newVariants) {
           final variantModel = ProductVariantModel.fromEntity(variant);
           final variantMap = variantModel.toMap();
+
+          final additionalBarcodes =
+              variantMap.remove('additional_barcodes') as List<String>?;
+
           variantMap['product_id'] = product.id;
 
+          int effectiveVariantId;
           if (variant.id != null && existingIds.contains(variant.id)) {
             // Update existing
             await txn.update(
@@ -506,10 +486,32 @@ class ProductLocalDataSourceImpl implements ProductLocalDataSource {
               where: 'id = ?',
               whereArgs: [variant.id],
             );
+            effectiveVariantId = variant.id!;
           } else {
             // Insert new (remove id to ensure autoincrement works if it was somehow set to 0 or null placeholder)
             variantMap.remove('id');
-            await txn.insert(DatabaseHelper.tableProductVariants, variantMap);
+            effectiveVariantId = await txn.insert(
+              DatabaseHelper.tableProductVariants,
+              variantMap,
+            );
+          }
+
+          // Handle Barcodes
+          // Delete existing barcodes for this variant (smart update)
+          await txn.delete(
+            DatabaseHelper.tableProductBarcodes,
+            where: 'variant_id = ?',
+            whereArgs: [effectiveVariantId],
+          );
+
+          // Insert new barcodes
+          if (additionalBarcodes != null) {
+            for (final code in additionalBarcodes) {
+              await txn.insert(DatabaseHelper.tableProductBarcodes, {
+                'variant_id': effectiveVariantId,
+                'barcode': code,
+              });
+            }
           }
         }
       });
@@ -600,16 +602,42 @@ class ProductLocalDataSourceImpl implements ProductLocalDataSource {
     try {
       final db = await databaseHelper.database;
       final variantMap = variant.toMap();
+
+      final additionalBarcodes =
+          variantMap.remove('additional_barcodes') as List<String>?;
+
       variantMap.remove('id'); // Ensure ID is generated
 
-      final id = await db.insert(
-        DatabaseHelper.tableProductVariants,
-        variantMap,
-      );
-      databaseHelper.notifyTableChanged(DatabaseHelper.tableProductVariants);
-      return id;
+      return await db.transaction((txn) async {
+        final id = await txn.insert(
+          DatabaseHelper.tableProductVariants,
+          variantMap,
+        );
+
+        if (additionalBarcodes != null) {
+          for (final code in additionalBarcodes) {
+            await txn.insert(DatabaseHelper.tableProductBarcodes, {
+              'variant_id': id,
+              'barcode': code,
+            });
+          }
+        }
+        return id;
+      });
+
+      // Notify outside transaction or inside? notifyTableChanged isn't async on db operations usually
+      // But we need to await transaction.
+      // After transaction completes:
+      // databaseHelper.notifyTableChanged(DatabaseHelper.tableProductVariants);
+      // Wait, notifyTableChanged is on databaseHelper instance.
+      // I'll keep it simple and notify after.
     } catch (e) {
       throw DatabaseException(e.toString());
+    } finally {
+      // Notify anyway or only on success? Usually on success.
+      // Since I returned inside transaction, I should notify before return or execute transaction then notify.
+      // Refactoring to standard pattern:
+      databaseHelper.notifyTableChanged(DatabaseHelper.tableProductVariants);
     }
   }
 
@@ -617,12 +645,35 @@ class ProductLocalDataSourceImpl implements ProductLocalDataSource {
   Future<void> updateVariant(ProductVariantModel variant) async {
     try {
       final db = await databaseHelper.database;
-      await db.update(
-        DatabaseHelper.tableProductVariants,
-        variant.toMap(),
-        where: 'id = ?',
-        whereArgs: [variant.id],
-      );
+      final variantMap = variant.toMap();
+
+      final additionalBarcodes =
+          variantMap.remove('additional_barcodes') as List<String>?;
+
+      await db.transaction((txn) async {
+        await txn.update(
+          DatabaseHelper.tableProductVariants,
+          variantMap,
+          where: 'id = ?',
+          whereArgs: [variant.id],
+        );
+
+        // Update barcodes
+        await txn.delete(
+          DatabaseHelper.tableProductBarcodes,
+          where: 'variant_id = ?',
+          whereArgs: [variant.id],
+        );
+
+        if (additionalBarcodes != null) {
+          for (final code in additionalBarcodes) {
+            await txn.insert(DatabaseHelper.tableProductBarcodes, {
+              'variant_id': variant.id,
+              'barcode': code,
+            });
+          }
+        }
+      });
       databaseHelper.notifyTableChanged(DatabaseHelper.tableProductVariants);
     } catch (e) {
       throw DatabaseException(e.toString());
@@ -673,37 +724,62 @@ class ProductLocalDataSourceImpl implements ProductLocalDataSource {
       // Check if barcode exists in product_variants table
       final variantsResult = await db.query(
         DatabaseHelper.tableProductVariants,
+        columns: ['id', 'product_id'],
         where: 'barcode = ?',
         whereArgs: [barcode],
       );
 
-      if (variantsResult.isEmpty) {
-        return true; // Barcode doesn't exist, it's unique
+      // Check if barcode exists in product_barcodes table
+      final additionalResult = await db.query(
+        DatabaseHelper.tableProductBarcodes,
+        columns: ['variant_id'],
+        where: 'barcode = ?',
+        whereArgs: [barcode],
+      );
+
+      // Join results logic
+      // We need to check if ANY match conflicts with our exclude criteria.
+
+      // 1. Check Product Variants Matches
+      for (final match in variantsResult) {
+        final matchVariantId = match['id'] as int;
+        final matchProductId = match['product_id'] as int;
+
+        if (excludeVariantId != null) {
+          if (matchVariantId != excludeVariantId) return false;
+        } else if (excludeId != null) {
+          if (matchProductId != excludeId) return false;
+        } else {
+          return false; // Found match and no exclusions
+        }
       }
 
-      // If we're excluding a specific variant (editing), check if the found barcode belongs to it
-      if (excludeVariantId != null) {
-        // Filter out the variant we're editing
-        final otherVariants = variantsResult
-            .where((v) => v['id'] != excludeVariantId)
-            .toList();
+      // 2. Check Additional Barcodes Matches
+      for (final match in additionalResult) {
+        final matchVariantId = match['variant_id'] as int;
 
-        return otherVariants
-            .isEmpty; // Unique if no other variants have this barcode
+        // Use a lightweight query to get product_id for this variant if excluding by product
+        int? matchProductId;
+        if (excludeId != null) {
+          final pRes = await db.query(
+            DatabaseHelper.tableProductVariants,
+            columns: ['product_id'],
+            where: 'id = ?',
+            whereArgs: [matchVariantId],
+          );
+          if (pRes.isNotEmpty) matchProductId = pRes.first['product_id'] as int;
+        }
+
+        if (excludeVariantId != null) {
+          if (matchVariantId != excludeVariantId) return false;
+        } else if (excludeId != null && matchProductId != null) {
+          if (matchProductId != excludeId) return false;
+        } else {
+          return false;
+        }
       }
 
-      // If we're excluding a product (for backward compatibility)
-      if (excludeId != null) {
-        // Check if all found variants belong to the product we're editing
-        final otherProductVariants = variantsResult
-            .where((v) => v['product_id'] != excludeId)
-            .toList();
-
-        return otherProductVariants.isEmpty;
-      }
-
-      // Barcode exists and we're not excluding anything
-      return false;
+      return true; // No conflicts found
     } catch (e) {
       throw DatabaseException(e.toString());
     }
@@ -722,5 +798,59 @@ class ProductLocalDataSourceImpl implements ProductLocalDataSource {
     } catch (e) {
       throw DatabaseException(e.toString());
     }
+  }
+
+  Future<Map<int, List<ProductVariantModel>>> _getVariantsForProducts(
+    Database db,
+    List<int> productIds,
+  ) async {
+    if (productIds.isEmpty) return {};
+
+    // Get variants
+    final variantMaps = await db.rawQuery('''
+      SELECT pv.*, 
+             (SELECT SUM(quantity) FROM ${DatabaseHelper.tableInventoryLots} WHERE variant_id = pv.id) as stock
+      FROM ${DatabaseHelper.tableProductVariants} pv
+      WHERE pv.product_id IN (${productIds.join(',')}) AND pv.is_active = 1
+    ''');
+
+    // Get variant IDs
+    final variantIds = variantMaps.map((m) => m['id'] as int).toList();
+
+    // Get additional barcodes
+    Map<int, List<String>> barcodesByVariant = {};
+    if (variantIds.isNotEmpty) {
+      final barcodeMaps = await db.query(
+        DatabaseHelper.tableProductBarcodes,
+        columns: ['variant_id', 'barcode'],
+        where: 'variant_id IN (${variantIds.join(',')})',
+      );
+
+      for (final bMap in barcodeMaps) {
+        final vId = bMap['variant_id'] as int;
+        barcodesByVariant.putIfAbsent(vId, () => []);
+        barcodesByVariant[vId]!.add(bMap['barcode'] as String);
+      }
+    }
+
+    // Group variants by product
+    final variantsByProduct = <int, List<ProductVariantModel>>{};
+    for (final variantMap in variantMaps) {
+      final productId = variantMap['product_id'] as int;
+      final variantId = variantMap['id'] as int;
+
+      // Inject barcodes
+      final modifiableMap = Map<String, dynamic>.from(variantMap);
+      if (barcodesByVariant.containsKey(variantId)) {
+        modifiableMap['additional_barcodes'] = barcodesByVariant[variantId];
+      }
+
+      variantsByProduct.putIfAbsent(productId, () => []);
+      variantsByProduct[productId]!.add(
+        ProductVariantModel.fromMap(modifiableMap),
+      );
+    }
+
+    return variantsByProduct;
   }
 }

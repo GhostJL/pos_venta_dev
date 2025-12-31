@@ -317,6 +317,7 @@ class ProductFormPageState extends ConsumerState<ProductFormPage> {
                       const SizedBox(height: 24),
 
                       ProductBasicInfoSection(
+                        product: widget.product,
                         nameController: _controllers.nameController,
                         codeController: _controllers.codeController,
                         barcodeController: _controllers.barcodeController,

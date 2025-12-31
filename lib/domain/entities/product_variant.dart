@@ -9,6 +9,7 @@ class ProductVariant extends Equatable {
   final int productId;
   final String variantName;
   final String? barcode;
+  final List<String>? additionalBarcodes;
   final double quantity;
   final int priceCents; // sale_price_cents
   final int costPriceCents;
@@ -30,6 +31,7 @@ class ProductVariant extends Equatable {
     required this.productId,
     required this.variantName,
     this.barcode,
+    this.additionalBarcodes,
     this.quantity = 1.0,
     required this.priceCents,
     required this.costPriceCents,
@@ -58,6 +60,7 @@ class ProductVariant extends Equatable {
     int? productId,
     String? variantName,
     String? barcode,
+    List<String>? additionalBarcodes,
     double? quantity,
     int? priceCents,
     int? costPriceCents,
@@ -79,6 +82,7 @@ class ProductVariant extends Equatable {
       productId: productId ?? this.productId,
       variantName: variantName ?? this.variantName,
       barcode: barcode ?? this.barcode,
+      additionalBarcodes: additionalBarcodes ?? this.additionalBarcodes,
       quantity: quantity ?? this.quantity,
       priceCents: priceCents ?? this.priceCents,
       costPriceCents: costPriceCents ?? this.costPriceCents,
@@ -103,6 +107,7 @@ class ProductVariant extends Equatable {
     productId,
     variantName,
     barcode,
+    additionalBarcodes,
     quantity,
     priceCents,
     costPriceCents,
