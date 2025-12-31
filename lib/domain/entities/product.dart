@@ -100,6 +100,39 @@ class Product extends Equatable {
     return null;
   }
 
+  // Stock Logic
+  double get totalStock {
+    if (variants == null) return 0;
+    return variants!.fold(0.0, (sum, v) => sum + (v.stock ?? 0));
+  }
+
+  double get totalMinStock {
+    if (variants == null) return 0;
+    return variants!.fold(0.0, (sum, v) => sum + (v.stockMin ?? 0));
+  }
+
+  double get maxStockLimit {
+    if (variants == null) return 100; // Default
+    // Find the max stockMax defined among variants, or default to 100 if none or low
+    double max = 0;
+    for (var v in variants!) {
+      if ((v.stockMax ?? 0) > max) max = v.stockMax!;
+    }
+    return max > 0 ? max : 100;
+  }
+
+  bool get isLowStock {
+    if (variants == null) return false;
+    for (var v in variants!) {
+      if ((v.stock ?? 0) <= (v.stockMin ?? 5)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  bool get isOutOfStock => totalStock <= 0;
+
   Product copyWith({
     int? id,
     String? code,

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:posventa/presentation/pages/products/product_form/product_form_controllers.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:posventa/domain/entities/product.dart';
@@ -27,42 +28,30 @@ class ProductFormPage extends ConsumerStatefulWidget {
   ProductFormPageState createState() => ProductFormPageState();
 }
 
+// ... (existing imports, keep them)
+
 class ProductFormPageState extends ConsumerState<ProductFormPage> {
   final _formKey = GlobalKey<FormState>();
-
-  late TextEditingController _nameController;
-  late TextEditingController _codeController;
-  late TextEditingController _barcodeController;
-  late TextEditingController _descriptionController;
-
-  // Controllers required for ProductPricingSection (hidden in this view)
-  late TextEditingController _costController;
-  late TextEditingController _priceController;
-  late TextEditingController _wholesaleController;
-
-  // Controllers for Inventory (Simple Product)
-  late TextEditingController _stockController;
-  late TextEditingController _minStockController;
-  late TextEditingController _maxStockController;
+  late ProductFormControllers _controllers;
 
   @override
   void initState() {
     super.initState();
-    _initializeControllers();
+    _controllers = ProductFormControllers.fromProduct(widget.product);
 
     // Listeners to sync with provider
     final notifier = ref.read(productFormProvider(widget.product).notifier);
-    _nameController.addListener(() {
-      notifier.setName(_nameController.text);
+    _controllers.nameController.addListener(() {
+      notifier.setName(_controllers.nameController.text);
     });
-    _codeController.addListener(() {
-      notifier.setCode(_codeController.text);
+    _controllers.codeController.addListener(() {
+      notifier.setCode(_controllers.codeController.text);
     });
-    _barcodeController.addListener(() {
-      notifier.setBarcode(_barcodeController.text);
+    _controllers.barcodeController.addListener(() {
+      notifier.setBarcode(_controllers.barcodeController.text);
     });
-    _descriptionController.addListener(() {
-      notifier.setDescription(_descriptionController.text);
+    _controllers.descriptionController.addListener(() {
+      notifier.setDescription(_controllers.descriptionController.text);
     });
 
     if (widget.product == null) {
@@ -70,56 +59,6 @@ class ProductFormPageState extends ConsumerState<ProductFormPage> {
         _initializeDefaultTaxes();
       });
     }
-  }
-
-  void _initializeControllers() {
-    _nameController = TextEditingController(text: widget.product?.name);
-    _codeController = TextEditingController(text: widget.product?.code);
-    _barcodeController = TextEditingController(text: widget.product?.barcode);
-    _descriptionController = TextEditingController(
-      text: widget.product?.description,
-    );
-    // Initialize with empty or existing values if available (though prices not shown here)
-    ProductVariant? defaultVariant;
-    if (widget.product?.variants != null &&
-        widget.product!.variants!.isNotEmpty) {
-      defaultVariant = widget.product!.variants!.first;
-    }
-
-    _costController = TextEditingController(
-      text: defaultVariant != null
-          ? (defaultVariant.costPriceCents / 100).toStringAsFixed(2)
-          : '',
-    );
-    _priceController = TextEditingController(
-      text: defaultVariant != null
-          ? (defaultVariant.priceCents / 100).toStringAsFixed(2)
-          : '',
-    );
-    _wholesaleController = TextEditingController(
-      text: defaultVariant?.wholesalePriceCents != null
-          ? (defaultVariant!.wholesalePriceCents! / 100).toStringAsFixed(2)
-          : '',
-    );
-
-    _stockController = TextEditingController(
-      text: defaultVariant != null ? _formatDouble(defaultVariant.stock) : '',
-    );
-    _minStockController = TextEditingController(
-      text: defaultVariant != null
-          ? _formatDouble(defaultVariant.stockMin)
-          : '',
-    );
-    _maxStockController = TextEditingController(
-      text: defaultVariant != null
-          ? _formatDouble(defaultVariant.stockMax)
-          : '',
-    );
-  }
-
-  String _formatDouble(double? value) {
-    if (value == null) return '';
-    return value.toString().replaceAll(RegExp(r'\.0$'), ''); // Remove .0
   }
 
   void _initializeDefaultTaxes() {
@@ -145,16 +84,7 @@ class ProductFormPageState extends ConsumerState<ProductFormPage> {
 
   @override
   void dispose() {
-    _nameController.dispose();
-    _codeController.dispose();
-    _barcodeController.dispose();
-    _descriptionController.dispose();
-    _costController.dispose();
-    _priceController.dispose();
-    _wholesaleController.dispose();
-    _stockController.dispose();
-    _minStockController.dispose();
-    _maxStockController.dispose();
+    _controllers.dispose();
     super.dispose();
   }
 
@@ -214,12 +144,12 @@ class ProductFormPageState extends ConsumerState<ProductFormPage> {
 
     // State is already sync'd via listeners
     await notifier.validateAndSubmit(
-      price: double.tryParse(_priceController.text),
-      cost: double.tryParse(_costController.text),
-      wholesale: double.tryParse(_wholesaleController.text),
-      stock: double.tryParse(_stockController.text),
-      minStock: double.tryParse(_minStockController.text),
-      maxStock: double.tryParse(_maxStockController.text),
+      price: double.tryParse(_controllers.priceController.text),
+      cost: double.tryParse(_controllers.costController.text),
+      wholesale: double.tryParse(_controllers.wholesaleController.text),
+      stock: double.tryParse(_controllers.stockController.text),
+      minStock: double.tryParse(_controllers.minStockController.text),
+      maxStock: double.tryParse(_controllers.maxStockController.text),
     );
   }
 
@@ -229,7 +159,7 @@ class ProductFormPageState extends ConsumerState<ProductFormPage> {
       extra: {
         'variant': variant,
         'productId': widget.product?.id ?? 0,
-        'productName': _nameController.text,
+        'productName': _controllers.nameController.text,
         'availableVariants': ref
             .read(productFormProvider(widget.product))
             .variants,
@@ -254,7 +184,7 @@ class ProductFormPageState extends ConsumerState<ProductFormPage> {
       '/product-form/variant',
       extra: {
         'productId': widget.product?.id ?? 0,
-        'productName': _nameController.text,
+        'productName': _controllers.nameController.text,
         'initialType': type,
         'availableVariants': ref
             .read(productFormProvider(widget.product))
@@ -386,10 +316,11 @@ class ProductFormPageState extends ConsumerState<ProductFormPage> {
                       const SizedBox(height: 24),
 
                       ProductBasicInfoSection(
-                        nameController: _nameController,
-                        codeController: _codeController,
-                        barcodeController: _barcodeController,
-                        descriptionController: _descriptionController,
+                        nameController: _controllers.nameController,
+                        codeController: _controllers.codeController,
+                        barcodeController: _controllers.barcodeController,
+                        descriptionController:
+                            _controllers.descriptionController,
                         imageFile: ref.watch(
                           provider.select((s) => s.imageFile),
                         ),
@@ -428,9 +359,10 @@ class ProductFormPageState extends ConsumerState<ProductFormPage> {
                       if (!isVariable) ...[
                         ProductPricingSection(
                           product: widget.product,
-                          costPriceController: _costController,
-                          salePriceController: _priceController,
-                          wholesalePriceController: _wholesaleController,
+                          costPriceController: _controllers.costController,
+                          salePriceController: _controllers.priceController,
+                          wholesalePriceController:
+                              _controllers.wholesaleController,
                         ),
                         const SizedBox(height: 24),
                       ] else
@@ -567,9 +499,9 @@ class ProductFormPageState extends ConsumerState<ProductFormPage> {
                       if (!isVariable) ...[
                         ProductInventorySection(
                           product: widget.product,
-                          stockController: _stockController,
-                          minStockController: _minStockController,
-                          maxStockController: _maxStockController,
+                          stockController: _controllers.stockController,
+                          minStockController: _controllers.minStockController,
+                          maxStockController: _controllers.maxStockController,
                         ),
                       ] else ...[
                         ProductVariantsList(

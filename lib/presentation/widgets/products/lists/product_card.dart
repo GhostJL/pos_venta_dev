@@ -208,30 +208,13 @@ class ProductCard extends StatelessWidget {
   }
 
   Widget _buildStockIndicator(ThemeData theme, Product product) {
-    double totalStock = 0;
-    double minStock = 0;
-    double maxStock = 100; // Default max for progress bar visualization
-    bool isLowStock = false;
-
-    if (product.variants != null) {
-      for (var v in product.variants!) {
-        totalStock += (v.stock ?? 0);
-        minStock += (v.stockMin ?? 0);
-        if ((v.stockMax ?? 0) > maxStock) maxStock = v.stockMax!;
-
-        if ((v.stock ?? 0) <= (v.stockMin ?? 5)) {
-          isLowStock = true;
-        }
-      }
-    }
-
-    final isOutOfStock = totalStock <= 0;
+    final totalStock = product.totalStock;
+    final maxStock = product.maxStockLimit;
+    final isLowStock = product.isLowStock;
+    final isOutOfStock = product.isOutOfStock;
 
     // Progress calculation (clamped between 0 and 1)
-    final progress = (totalStock / (maxStock > 0 ? maxStock : 100)).clamp(
-      0.0,
-      1.0,
-    );
+    final progress = (totalStock / maxStock).clamp(0.0, 1.0);
 
     Color color;
     Color backgroundColor;
