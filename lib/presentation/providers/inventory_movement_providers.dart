@@ -37,8 +37,14 @@ class InventoryMovementNotifier extends _$InventoryMovementNotifier {
 }
 
 @riverpod
-Future<List<InventoryMovement>> movementsByProduct(Ref ref, int productId) {
-  return ref.watch(getInventoryMovementsByProductProvider).call(productId);
+Future<List<InventoryMovement>> movementsByProduct(
+  Ref ref, {
+  required int productId,
+  int? variantId,
+}) {
+  return ref
+      .watch(getInventoryMovementsByProductProvider)
+      .call(productId, variantId: variantId);
 }
 
 @riverpod

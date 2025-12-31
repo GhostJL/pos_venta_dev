@@ -6,7 +6,10 @@ class GetInventoryMovementsByProduct {
 
   GetInventoryMovementsByProduct(this.repository);
 
-  Future<List<InventoryMovement>> call(int productId) async {
-    return await repository.getMovementsByProduct(productId);
+  Future<List<InventoryMovement>> call(int productId, {int? variantId}) async {
+    return await repository.getMovementsByProduct(
+      productId,
+      variantId: variantId,
+    );
   }
 }

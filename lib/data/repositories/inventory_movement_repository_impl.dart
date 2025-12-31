@@ -48,12 +48,20 @@ class InventoryMovementRepositoryImpl implements InventoryMovementRepository {
   }
 
   @override
-  Future<List<InventoryMovement>> getMovementsByProduct(int productId) async {
+  Future<List<InventoryMovement>> getMovementsByProduct(
+    int productId, {
+    int? variantId,
+  }) async {
     final db = await _databaseHelper.database;
+    final whereClause = variantId != null
+        ? 'product_id = ? AND variant_id = ?'
+        : 'product_id = ?';
+    final whereArgs = variantId != null ? [productId, variantId] : [productId];
+
     final result = await db.query(
       DatabaseHelper.tableInventoryMovements,
-      where: 'product_id = ?',
-      whereArgs: [productId],
+      where: whereClause,
+      whereArgs: whereArgs,
       orderBy: 'movement_date DESC',
     );
     return result.map((e) => InventoryMovementModel.fromJson(e)).toList();

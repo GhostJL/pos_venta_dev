@@ -69,6 +69,83 @@ class DatabaseMigrations {
     if (oldVersion < 35 && newVersion >= 35) {
       await _migrateToVersion35(db);
     }
+    // Migration from version 35 to 36: Phase 4 Advanced Features (Barcodes, Kits, Price Lists)
+    if (oldVersion < 36 && newVersion >= 36) {
+      await _migrateToVersion36(db);
+    }
+  }
+
+  static Future<void> _migrateToVersion36(Database db) async {
+    // 1. Create product_barcodes table
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS ${DatabaseConstants.tableProductBarcodes} (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        variant_id INTEGER NOT NULL,
+        barcode TEXT NOT NULL UNIQUE,
+        description TEXT,
+        created_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
+        FOREIGN KEY (variant_id) REFERENCES ${DatabaseConstants.tableProductVariants}(id) ON DELETE CASCADE
+      )
+    ''');
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_product_barcodes_barcode ON ${DatabaseConstants.tableProductBarcodes}(barcode)',
+    );
+
+    // 2. Create product_kit_items table
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS ${DatabaseConstants.tableProductKitItems} (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        parent_product_id INTEGER NOT NULL,
+        child_product_id INTEGER NOT NULL,
+        child_variant_id INTEGER,
+        quantity REAL NOT NULL,
+        created_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
+        FOREIGN KEY (parent_product_id) REFERENCES ${DatabaseConstants.tableProducts}(id) ON DELETE CASCADE,
+        FOREIGN KEY (child_product_id) REFERENCES ${DatabaseConstants.tableProducts}(id) ON DELETE RESTRICT,
+        FOREIGN KEY (child_variant_id) REFERENCES ${DatabaseConstants.tableProductVariants}(id) ON DELETE SET NULL
+      )
+    ''');
+
+    // 3. Create price_lists table
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS ${DatabaseConstants.tablePriceLists} (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        start_date TEXT,
+        end_date TEXT,
+        is_active INTEGER NOT NULL DEFAULT 1 CHECK (is_active IN (0,1)),
+        priority INTEGER NOT NULL DEFAULT 0,
+        created_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
+        updated_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
+      )
+    ''');
+
+    // 4. Create product_prices table for Price Lists
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS ${DatabaseConstants.tableProductPrices} (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        price_list_id INTEGER NOT NULL,
+        product_id INTEGER NOT NULL,
+        variant_id INTEGER,
+        price_cents INTEGER NOT NULL,
+        created_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
+        updated_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
+        UNIQUE (price_list_id, variant_id),
+        FOREIGN KEY (price_list_id) REFERENCES ${DatabaseConstants.tablePriceLists}(id) ON DELETE CASCADE,
+        FOREIGN KEY (product_id) REFERENCES ${DatabaseConstants.tableProducts}(id) ON DELETE CASCADE,
+        FOREIGN KEY (variant_id) REFERENCES ${DatabaseConstants.tableProductVariants}(id) ON DELETE CASCADE
+      )
+    ''');
+
+    // 5. Add is_kit column to products table
+    try {
+      await db.execute('''
+        ALTER TABLE ${DatabaseConstants.tableProducts}
+        ADD COLUMN is_kit INTEGER NOT NULL DEFAULT 0 CHECK (is_kit IN (0,1));
+      ''');
+    } catch (e) {
+      // Column might already exist
+    }
   }
 
   static Future<void> _migrateToVersion35(Database db) async {

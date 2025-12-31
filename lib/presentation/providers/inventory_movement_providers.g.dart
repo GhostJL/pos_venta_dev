@@ -83,7 +83,7 @@ final class MovementsByProductProvider
         $FutureProvider<List<InventoryMovement>> {
   const MovementsByProductProvider._({
     required MovementsByProductFamily super.from,
-    required int super.argument,
+    required ({int productId, int? variantId}) super.argument,
   }) : super(
          retry: null,
          name: r'movementsByProductProvider',
@@ -99,7 +99,7 @@ final class MovementsByProductProvider
   String toString() {
     return r'movementsByProductProvider'
         ''
-        '($argument)';
+        '$argument';
   }
 
   @$internal
@@ -110,8 +110,12 @@ final class MovementsByProductProvider
 
   @override
   FutureOr<List<InventoryMovement>> create(Ref ref) {
-    final argument = this.argument as int;
-    return movementsByProduct(ref, argument);
+    final argument = this.argument as ({int productId, int? variantId});
+    return movementsByProduct(
+      ref,
+      productId: argument.productId,
+      variantId: argument.variantId,
+    );
   }
 
   @override
@@ -126,10 +130,14 @@ final class MovementsByProductProvider
 }
 
 String _$movementsByProductHash() =>
-    r'90a4fa7f1c78175a20b0da9feea4c8a9359320e9';
+    r'7d3cdfcaceda9db5da1624ef83b536017c743357';
 
 final class MovementsByProductFamily extends $Family
-    with $FunctionalFamilyOverride<FutureOr<List<InventoryMovement>>, int> {
+    with
+        $FunctionalFamilyOverride<
+          FutureOr<List<InventoryMovement>>,
+          ({int productId, int? variantId})
+        > {
   const MovementsByProductFamily._()
     : super(
         retry: null,
@@ -139,8 +147,11 @@ final class MovementsByProductFamily extends $Family
         isAutoDispose: true,
       );
 
-  MovementsByProductProvider call(int productId) =>
-      MovementsByProductProvider._(argument: productId, from: this);
+  MovementsByProductProvider call({required int productId, int? variantId}) =>
+      MovementsByProductProvider._(
+        argument: (productId: productId, variantId: variantId),
+        from: this,
+      );
 
   @override
   String toString() => r'movementsByProductProvider';

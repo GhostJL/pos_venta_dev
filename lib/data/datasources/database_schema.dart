@@ -18,6 +18,9 @@ class DatabaseSchema {
     // 3.1 Tabla de Notificaciones
     await _createNotificationsTable(db);
 
+    // 3.2 Tablas de Funcionalidades Avanzadas (Phase 4)
+    await _createAdvancedFeaturesTables(db);
+
     // 4. Tablas de Clientes y Proveedores
     await _createPartyTables(db);
 
@@ -1056,5 +1059,77 @@ class DatabaseSchema {
       'created_at': DateTime.now().toIso8601String(),
       'updated_at': DateTime.now().toIso8601String(),
     });
+  }
+
+  // =================================================================
+  // 10. GRUPO: FUNCIONALIDADES AVANZADAS (Phase 4)
+  // =================================================================
+  static Future<void> _createAdvancedFeaturesTables(Database db) async {
+    await _createProductBarcodesTable(db);
+    await _createProductKitItemsTable(db);
+    await _createPriceListsTables(db);
+  }
+
+  static Future<void> _createProductBarcodesTable(Database db) async {
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS ${DatabaseConstants.tableProductBarcodes} (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        variant_id INTEGER NOT NULL,
+        barcode TEXT NOT NULL UNIQUE,
+        description TEXT,
+        created_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
+        FOREIGN KEY (variant_id) REFERENCES ${DatabaseConstants.tableProductVariants}(id) ON DELETE CASCADE
+      )
+    ''');
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_product_barcodes_barcode ON ${DatabaseConstants.tableProductBarcodes}(barcode)',
+    );
+  }
+
+  static Future<void> _createProductKitItemsTable(Database db) async {
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS ${DatabaseConstants.tableProductKitItems} (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        parent_product_id INTEGER NOT NULL,
+        child_product_id INTEGER NOT NULL,
+        child_variant_id INTEGER,
+        quantity REAL NOT NULL,
+        created_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
+        FOREIGN KEY (parent_product_id) REFERENCES ${DatabaseConstants.tableProducts}(id) ON DELETE CASCADE,
+        FOREIGN KEY (child_product_id) REFERENCES ${DatabaseConstants.tableProducts}(id) ON DELETE RESTRICT,
+        FOREIGN KEY (child_variant_id) REFERENCES ${DatabaseConstants.tableProductVariants}(id) ON DELETE SET NULL
+      )
+    ''');
+  }
+
+  static Future<void> _createPriceListsTables(Database db) async {
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS ${DatabaseConstants.tablePriceLists} (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        start_date TEXT,
+        end_date TEXT,
+        is_active INTEGER NOT NULL DEFAULT 1 CHECK (is_active IN (0,1)),
+        priority INTEGER NOT NULL DEFAULT 0,
+        created_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
+        updated_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
+      )
+    ''');
+
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS ${DatabaseConstants.tableProductPrices} (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        price_list_id INTEGER NOT NULL,
+        product_id INTEGER NOT NULL,
+        variant_id INTEGER,
+        price_cents INTEGER NOT NULL,
+        created_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
+        updated_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
+        UNIQUE (price_list_id, variant_id),
+        FOREIGN KEY (price_list_id) REFERENCES ${DatabaseConstants.tablePriceLists}(id) ON DELETE CASCADE,
+        FOREIGN KEY (product_id) REFERENCES ${DatabaseConstants.tableProducts}(id) ON DELETE CASCADE,
+        FOREIGN KEY (variant_id) REFERENCES ${DatabaseConstants.tableProductVariants}(id) ON DELETE CASCADE
+      )
+    ''');
   }
 }

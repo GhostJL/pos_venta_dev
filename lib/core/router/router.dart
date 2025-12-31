@@ -65,6 +65,7 @@ import 'package:posventa/presentation/widgets/catalog/suppliers/supplier_form.da
 
 import 'package:posventa/domain/entities/product.dart';
 import 'package:posventa/domain/entities/product_variant.dart';
+import 'package:posventa/presentation/pages/products/product_history_page.dart';
 
 import 'package:posventa/domain/entities/cash_session.dart';
 import 'package:posventa/domain/entities/brand.dart';
@@ -459,6 +460,19 @@ final routerProvider = Provider<GoRouter>((ref) {
               final lotId = state.pathParameters['lotId']!;
               return NoTransitionPage(
                 child: InventoryLotDetailPage(lotId: int.parse(lotId)),
+              );
+            },
+          ),
+          GoRoute(
+            path: '/products/history/:productId',
+            pageBuilder: (context, state) {
+              final extra = state.extra as Map<String, dynamic>?;
+              final product = extra?['product'] as Product;
+              final variant = extra?['variant'] as ProductVariant?;
+              // Fallback to fetching product by ID if not in extra?
+              // For now assume extra is provided.
+              return NoTransitionPage(
+                child: ProductHistoryPage(product: product, variant: variant),
               );
             },
           ),
