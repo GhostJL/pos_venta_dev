@@ -260,17 +260,6 @@ class ProductFormPageState extends ConsumerState<ProductFormPage> {
             ],
           ),
           actions: [
-            if (!isNewProduct)
-              IconButton(
-                icon: const Icon(Icons.history),
-                tooltip: 'Historial de Inventario',
-                onPressed: () {
-                  context.push(
-                    '/products/history/${widget.product!.id}',
-                    extra: {'product': widget.product},
-                  );
-                },
-              ),
             if (isLoading)
               const Padding(
                 padding: EdgeInsets.symmetric(horizontal: 16.0),

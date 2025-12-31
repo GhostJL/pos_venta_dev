@@ -45,7 +45,10 @@ class ProductHistoryPage extends ConsumerWidget {
             separatorBuilder: (context, index) => const Divider(),
             itemBuilder: (context, index) {
               final movement = movements[index];
-              return _MovementTile(movement: movement);
+              return _MovementTile(
+                movement: movement,
+                variants: product.variants,
+              );
             },
           );
         },
@@ -58,8 +61,30 @@ class ProductHistoryPage extends ConsumerWidget {
 
 class _MovementTile extends StatelessWidget {
   final InventoryMovement movement;
+  final List<ProductVariant>? variants;
 
-  const _MovementTile({required this.movement});
+  const _MovementTile({required this.movement, this.variants});
+
+  String? _getVariantName() {
+    if (movement.variantId == null || variants == null) return null;
+    try {
+      final variant = variants!.firstWhere((v) => v.id == movement.variantId);
+      return variant.variantName;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  String _cleanReason(String? reason) {
+    if (reason == null) return '';
+    // Remove (Variant ID: X) pattern
+    final cleaned = reason
+        .replaceAll(RegExp(r'\(Variant ID: \d+\)'), '')
+        .trim();
+    // Use regex to optionally format "Lot: X" if needed, or just leave it.
+    // Let's just return the cleaned string for now.
+    return cleaned;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -86,18 +111,7 @@ class _MovementTile extends StatelessWidget {
       case MovementType.transferOut:
         typeLabel = 'Transferencia (Salida)';
         break;
-
-      case MovementType
-          .returnMovement: // Note: Enum has returnMovement, UI had returnIn/returnOut?
-        // Let's check the enum definition again.
-        // Enum has returnMovement. It does NOT have returnIn/returnOut.
-        // But in prev code I used returnIn/returnOut.
-        // Wait, database stores 'return_in'/'return_out'?
-        // The enum has: returnMovement('return', 'Devolución')
-        // Maybe I need to map strings if the DB has different values?
-        // InventoryMovement model uses this enum.
-        // If the DB has 'return_in', and Enum has 'return', froMString will return default adjustment if not found?
-        // Let's assume the Enum handles it or I should adhere to Enum.
+      case MovementType.returnMovement:
         typeLabel = 'Devolución';
         break;
       case MovementType.damage:
@@ -105,8 +119,18 @@ class _MovementTile extends StatelessWidget {
         break;
     }
 
+    final variantName = _getVariantName();
+    final cleanedReason = _cleanReason(movement.reason);
+
     return ListTile(
-      leading: Icon(icon, color: color),
+      leading: Container(
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.1),
+          shape: BoxShape.circle,
+        ),
+        child: Icon(icon, color: color, size: 24),
+      ),
       title: Text(
         typeLabel,
         style: const TextStyle(fontWeight: FontWeight.bold),
@@ -114,8 +138,24 @@ class _MovementTile extends StatelessWidget {
       subtitle: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (movement.reason != null && movement.reason!.isNotEmpty)
-            Text(movement.reason!),
+          if (variantName != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 2.0),
+              child: Text(
+                variantName,
+                style: const TextStyle(
+                  fontWeight: FontWeight.w600,
+                  color: Colors.black87,
+                  fontSize: 13,
+                ),
+              ),
+            ),
+          if (cleanedReason.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(top: 2.0),
+              child: Text(cleanedReason),
+            ),
+          const SizedBox(height: 4),
           Text(
             dateFormat.format(movement.movementDate),
             style: TextStyle(color: Colors.grey[600], fontSize: 12),
@@ -127,7 +167,7 @@ class _MovementTile extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
           Text(
-            '${isPositive ? '+' : ''}${movement.quantity}',
+            '${isPositive ? '+' : ''}${movement.quantity.toStringAsFixed(movement.quantity.truncateToDouble() == movement.quantity ? 0 : 2)}',
             style: TextStyle(
               color: color,
               fontWeight: FontWeight.bold,
@@ -135,11 +175,12 @@ class _MovementTile extends StatelessWidget {
             ),
           ),
           Text(
-            'Saldo: ${movement.quantityAfter}',
+            'Saldo: ${movement.quantityAfter.toStringAsFixed(movement.quantityAfter.truncateToDouble() == movement.quantityAfter ? 0 : 2)}',
             style: const TextStyle(fontSize: 12, color: Colors.grey),
           ),
         ],
       ),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
     );
   }
 }

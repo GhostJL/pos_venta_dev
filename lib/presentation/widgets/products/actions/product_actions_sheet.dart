@@ -45,75 +45,72 @@ class ProductActionsSheet extends ConsumerWidget {
                   }
 
                   return Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      _buildSectionLabel(theme, 'Gestión de Catálogo'),
-                      const SizedBox(height: 12),
-                      _buildFlatAction(
+                      _buildCompactAction(
                         context,
                         icon: Icons.edit_outlined,
-                        color: theme.colorScheme.primary,
                         label: 'Editar información',
-                        subtitle: 'Nombre, códigos y precios base',
                         onTap: () {
                           context.pop();
                           context.push('/products/form', extra: product);
                         },
                       ),
-                      _buildFlatAction(
+                      _buildCompactAction(
                         context,
-                        icon: Icons.inventory_2_outlined,
-                        color: Colors.blueGrey,
-                        label: 'Variantes y Stock',
-                        subtitle: 'Gestionar tallas, colores y existencias',
+                        icon: Icons.history,
+                        label: 'Historial de Inventario',
                         onTap: () {
                           context.pop();
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) =>
-                                  VariantTypeSelectionPage(product: product),
-                            ),
+                          context.push(
+                            '/products/history/${product.id}',
+                            extra: {'product': product},
                           );
                         },
                       ),
-                      _buildFlatAction(
+                      if (product.variants?.isNotEmpty ?? false)
+                        _buildCompactAction(
+                          context,
+                          icon: Icons.inventory_2_outlined,
+                          label: 'Variantes y Stock',
+                          onTap: () {
+                            context.pop();
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    VariantTypeSelectionPage(product: product),
+                              ),
+                            );
+                          },
+                        ),
+                      _buildCompactAction(
                         context,
                         icon: Icons.copy_rounded,
-                        color: Colors.indigo,
                         label: 'Duplicar producto',
-                        subtitle: 'Crear una copia como nuevo producto',
                         onTap: () => _handleDuplicate(context),
                       ),
-
-                      const SizedBox(height: 24),
-                      _buildSectionLabel(theme, 'Estado del Producto'),
-                      const SizedBox(height: 12),
-                      _buildFlatAction(
+                      const SizedBox(height: 8),
+                      const Divider(),
+                      const SizedBox(height: 8),
+                      _buildCompactAction(
                         context,
                         icon: product.isActive
                             ? Icons.visibility_off_outlined
                             : Icons.visibility_outlined,
+                        label: product.isActive
+                            ? 'Desactivar producto'
+                            : 'Activar producto',
                         color: product.isActive
                             ? theme.colorScheme.error
-                            : Colors.teal,
-                        label: product.isActive
-                            ? 'Desactivar para la venta'
-                            : 'Activar para la venta',
-                        subtitle: product.isActive
-                            ? 'Ocultar producto de la caja'
-                            : 'Mostrar producto en la caja',
+                            : theme.colorScheme.primary,
                         onTap: () => _handleToggleActive(context, ref),
                       ),
-                      const SizedBox(height: 12),
-                      const Divider(),
-                      const SizedBox(height: 12),
-                      _buildFlatAction(
+                      _buildCompactAction(
                         context,
                         icon: Icons.delete_outline_rounded,
-                        color: theme.colorScheme.error,
                         label: 'Eliminar producto',
-                        subtitle: 'Acción permanente si no tiene historial',
+                        color: theme.colorScheme.error,
                         onTap: () => _handleDelete(context, ref),
                       ),
                     ],
@@ -123,17 +120,6 @@ class ProductActionsSheet extends ConsumerWidget {
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildSectionLabel(ThemeData theme, String text) {
-    return Text(
-      text.toUpperCase(),
-      style: theme.textTheme.labelLarge?.copyWith(
-        fontWeight: FontWeight.w800,
-        letterSpacing: 1.1,
-        fontSize: 11,
       ),
     );
   }
@@ -200,42 +186,38 @@ class ProductActionsSheet extends ConsumerWidget {
     );
   }
 
-  Widget _buildFlatAction(
+  Widget _buildCompactAction(
     BuildContext context, {
     required IconData icon,
-    required Color color,
     required String label,
-    required String subtitle,
     required VoidCallback onTap,
+    Color? color,
   }) {
     final theme = Theme.of(context);
+    final actionColor = color ?? theme.colorScheme.onSurface;
+
     return ListTile(
       leading: Container(
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.1),
+          color: actionColor.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(8),
         ),
-        child: Icon(icon, color: color, size: 24),
+        child: Icon(icon, color: actionColor, size: 20),
       ),
       title: Text(
         label,
-        style: theme.textTheme.titleMedium?.copyWith(
-          fontWeight: FontWeight.w600,
+        style: theme.textTheme.bodyLarge?.copyWith(
+          fontWeight: FontWeight.w500,
           color: theme.colorScheme.onSurface,
         ),
       ),
-      subtitle: Text(
-        subtitle,
-        style: theme.textTheme.bodyMedium?.copyWith(
-          color: theme.colorScheme.onSurfaceVariant,
-        ),
-      ),
       onTap: onTap,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 0, vertical: 4),
+      dense: true,
+      contentPadding: EdgeInsets.zero,
       trailing: Icon(
         Icons.chevron_right_rounded,
-        size: 20,
+        size: 18,
         color: theme.colorScheme.outlineVariant,
       ),
     );
