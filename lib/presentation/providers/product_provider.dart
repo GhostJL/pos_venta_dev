@@ -35,21 +35,18 @@ class ProductList extends _$ProductList {
         ),
       );
     } else {
-      // For search, we can still use a Future converted to Stream,
-      // or if search supports streaming, use that.
-      // Usually search is a one-off query, so Future is fine.
-      return Stream.fromFuture(_searchProducts(query));
+      final searchProducts = ref.watch(searchProductsStreamProvider);
+      return searchProducts(query).map(
+        (either) => either.fold(
+          (failure) => throw failure.message,
+          (products) => products,
+        ),
+      );
     }
   }
 
-  Future<List<Product>> _searchProducts(String query) async {
-    final searchProducts = ref.read(searchProductsProvider);
-    final result = await searchProducts.call(query);
-    return result.fold(
-      (failure) => throw failure.message,
-      (products) => products,
-    );
-  }
+  // _searchProducts is no longer needed for internal logic if we use stream
+  // BUT we leaving it or removing it? remove it.
 
   void searchProducts(String query) {
     ref.read(productSearchQueryProvider.notifier).setQuery(query);

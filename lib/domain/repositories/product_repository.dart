@@ -29,6 +29,7 @@ abstract class ProductRepository {
   });
 
   Future<Either<Failure, List<Product>>> searchProducts(String query);
+  Stream<Either<Failure, List<Product>>> searchProductsStream(String query);
 
   Future<Either<Failure, void>> updateProduct(Product product);
 

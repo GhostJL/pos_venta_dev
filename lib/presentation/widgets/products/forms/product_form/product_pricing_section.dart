@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:posventa/domain/entities/product.dart';
 import 'package:posventa/presentation/providers/product_form_provider.dart';
@@ -40,6 +41,9 @@ class ProductPricingSection extends ConsumerWidget {
                     prefixIcon: Icon(Icons.attach_money_rounded),
                   ),
                   keyboardType: TextInputType.numberWithOptions(decimal: true),
+                  inputFormatters: [
+                    FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
+                  ],
                   validator: (value) =>
                       value?.isEmpty ?? true ? 'Requerido' : null,
                 ),
@@ -54,6 +58,9 @@ class ProductPricingSection extends ConsumerWidget {
                     prefixIcon: Icon(Icons.sell_rounded),
                   ),
                   keyboardType: TextInputType.numberWithOptions(decimal: true),
+                  inputFormatters: [
+                    FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
+                  ],
                   validator: (value) =>
                       value?.isEmpty ?? true ? 'Requerido' : null,
                 ),
@@ -69,6 +76,9 @@ class ProductPricingSection extends ConsumerWidget {
               prefixIcon: Icon(Icons.storefront_rounded),
             ),
             keyboardType: TextInputType.numberWithOptions(decimal: true),
+            inputFormatters: [
+              FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
+            ],
           ),
           const SizedBox(height: 12),
           ListenableBuilder(

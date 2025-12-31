@@ -110,6 +110,21 @@ class ProductRepositoryImpl implements ProductRepository {
   }
 
   @override
+  Stream<Either<Failure, List<Product>>> searchProductsStream(
+    String query,
+  ) async* {
+    yield await searchProducts(query);
+
+    await for (final table in dataSource.tableUpdateStream) {
+      if (table == 'products' ||
+          table == 'inventory' ||
+          table == 'product_variants') {
+        yield await searchProducts(query);
+      }
+    }
+  }
+
+  @override
   Future<Either<Failure, Product?>> getProductById(int id) async {
     try {
       final product = await dataSource.getProductById(id);

@@ -7,6 +7,7 @@ import 'package:posventa/domain/use_cases/product/create_product.dart';
 import 'package:posventa/domain/use_cases/product/update_product.dart';
 import 'package:posventa/domain/use_cases/product/delete_product.dart';
 import 'package:posventa/domain/use_cases/product/search_products.dart';
+import 'package:posventa/domain/use_cases/product/search_products_stream.dart';
 import 'package:posventa/domain/repositories/unit_of_measure_repository.dart';
 import 'package:posventa/data/repositories/unit_of_measure_repository_impl.dart';
 import 'package:posventa/domain/repositories/tax_rate_repository.dart';
@@ -63,6 +64,10 @@ DeleteProduct deleteProduct(ref) =>
 @riverpod
 SearchProducts searchProducts(ref) =>
     SearchProducts(ref.watch(productRepositoryProvider));
+
+@riverpod
+SearchProductsStream searchProductsStream(ref) =>
+    SearchProductsStream(ref.watch(productRepositoryProvider));
 
 // --- Unit of Measure Providers ---
 

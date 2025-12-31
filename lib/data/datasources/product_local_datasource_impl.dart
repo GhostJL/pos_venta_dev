@@ -327,55 +327,105 @@ class ProductLocalDataSourceImpl implements ProductLocalDataSource {
   Future<int> createProduct(ProductModel product) async {
     try {
       final db = await databaseHelper.database;
-
-      // Insert product and get its ID
-      final productId = await db.insert(
-        DatabaseHelper.tableProducts,
-        product.toMap(),
-      );
-
-      // Save selected taxes from the form
-      if (product.productTaxes != null && product.productTaxes!.isNotEmpty) {
-        for (final tax in product.productTaxes!) {
-          await db.insert(DatabaseHelper.tableProductTaxes, {
-            'product_id': productId,
-            'tax_rate_id': tax.taxRateId,
-            'apply_order': tax.applyOrder,
-          });
-        }
-      } else {
-        // If no taxes selected, assign default tax (IVA_16)
-        final defaultTaxResult = await db.query(
-          DatabaseHelper.tableTaxRates,
-          where: 'is_default = ? AND is_active = ?',
-          whereArgs: [1, 1],
+      return await db.transaction((txn) async {
+        // Fetch default warehouse ID
+        int defaultWarehouseId = 1; // Fallback
+        final warehouses = await txn.query(
+          DatabaseHelper.tableWarehouses,
           limit: 1,
         );
-
-        if (defaultTaxResult.isNotEmpty) {
-          final defaultTaxId = defaultTaxResult.first['id'] as int;
-          await db.insert(DatabaseHelper.tableProductTaxes, {
-            'product_id': productId,
-            'tax_rate_id': defaultTaxId,
-            'apply_order': 1,
-          });
+        if (warehouses.isNotEmpty) {
+          defaultWarehouseId = warehouses.first['id'] as int;
         }
-      }
 
-      // Save variants
-      if (product.variants != null && product.variants!.isNotEmpty) {
-        for (final variant in product.variants!) {
-          final variantModel = ProductVariantModel.fromEntity(variant);
-          final variantMap = variantModel.toMap();
-          variantMap['product_id'] = productId;
-          // Remove id to let autoincrement work
-          variantMap.remove('id');
-          await db.insert(DatabaseHelper.tableProductVariants, variantMap);
+        // Insert product
+        final productId = await txn.insert(
+          DatabaseHelper.tableProducts,
+          product.toMap(),
+        );
+
+        // Save selected taxes
+        if (product.productTaxes != null && product.productTaxes!.isNotEmpty) {
+          for (final tax in product.productTaxes!) {
+            await txn.insert(DatabaseHelper.tableProductTaxes, {
+              'product_id': productId,
+              'tax_rate_id': tax.taxRateId,
+              'apply_order': tax.applyOrder,
+            });
+          }
+        } else {
+          // If no taxes selected, assign default tax
+          final defaultTaxResult = await txn.query(
+            DatabaseHelper.tableTaxRates,
+            where: 'is_default = ? AND is_active = ?',
+            whereArgs: [1, 1],
+            limit: 1,
+          );
+
+          if (defaultTaxResult.isNotEmpty) {
+            final defaultTaxId = defaultTaxResult.first['id'] as int;
+            await txn.insert(DatabaseHelper.tableProductTaxes, {
+              'product_id': productId,
+              'tax_rate_id': defaultTaxId,
+              'apply_order': 1,
+            });
+          }
         }
-      }
 
-      databaseHelper.notifyTableChanged(DatabaseHelper.tableProducts);
-      return productId;
+        // Save variants and Inventory
+        if (product.variants != null && product.variants!.isNotEmpty) {
+          for (final variant in product.variants!) {
+            final variantModel = ProductVariantModel.fromEntity(variant);
+            final variantMap = variantModel.toMap();
+            variantMap['product_id'] = productId;
+            variantMap.remove('id');
+
+            final variantId = await txn.insert(
+              DatabaseHelper.tableProductVariants,
+              variantMap,
+            );
+
+            // --- INITIAL INVENTORY CREATION ---
+            if (variant.stock != null && variant.stock! > 0) {
+              // 1. Create Initial Lot
+              await txn.insert(DatabaseHelper.tableInventoryLots, {
+                'product_id': productId,
+                'variant_id': variantId,
+                'warehouse_id': defaultWarehouseId,
+                'lot_number': 'Inicial',
+                'quantity': variant.stock,
+                'unit_cost_cents': variant.costPriceCents,
+                'total_cost_cents': (variant.stock! * variant.costPriceCents)
+                    .round(),
+                'received_at': DateTime.now().toIso8601String(),
+              });
+
+              // 2. Create Inventory Summary
+              await txn.insert(DatabaseHelper.tableInventory, {
+                'product_id': productId,
+                'warehouse_id': defaultWarehouseId,
+                'variant_id': variantId,
+                'quantity_on_hand': variant.stock,
+                'quantity_reserved': 0,
+                'updated_at': DateTime.now().toIso8601String(),
+              });
+            } else {
+              // Verify if we should create empty inventory record?
+              // Often useful to have 0 stock record instead of null.
+              // But existing batch logic only does it if stock > 0.
+              // I'll stick to batch logic for consistency.
+              // Update: Actually, having a 0 record is good for "Out of Stock" vs "Not Carried".
+              // But let's stick to the requested logic "utilizar la funcion usada en la creacion".
+            }
+          }
+        }
+
+        databaseHelper.notifyTableChanged(DatabaseHelper.tableProducts);
+        databaseHelper.notifyTableChanged(
+          DatabaseHelper.tableInventory,
+        ); // Notify inventory too
+        return productId;
+      });
     } catch (e) {
       throw DatabaseException(e.toString());
     }

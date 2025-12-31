@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:posventa/domain/entities/product.dart';
 
@@ -21,28 +22,54 @@ class ProductInventorySection extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Column(
+        // Stock field (Initial Stock for new products or Current Stock adjustment)
+        TextFormField(
+          controller: stockController,
+          decoration: const InputDecoration(
+            labelText: 'Stock Inicial / Actual',
+            prefixIcon: Icon(Icons.inventory_2_rounded),
+            helperText: 'Cantidad disponible actualmente',
+          ),
+          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          inputFormatters: [
+            FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
+          ],
+        ),
+        const SizedBox(height: 16),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            TextFormField(
-              controller: minStockController,
-              decoration: const InputDecoration(
-                labelText: 'Stock Mínimo',
-                prefixIcon: Icon(Icons.warning_amber_rounded),
-                helperText: 'Nivel de alerta',
-              ),
-              keyboardType: const TextInputType.numberWithOptions(
-                decimal: true,
+            Expanded(
+              child: TextFormField(
+                controller: minStockController,
+                decoration: const InputDecoration(
+                  labelText: 'Stock Mínimo',
+                  prefixIcon: Icon(Icons.warning_amber_rounded),
+                  helperText: 'Nivel de alerta',
+                ),
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
+                inputFormatters: [
+                  FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
+                ],
               ),
             ),
             const SizedBox(width: 16),
-            TextFormField(
-              controller: maxStockController,
-              decoration: const InputDecoration(
-                labelText: 'Stock Máximo (Opcional)',
-                prefixIcon: Icon(Icons.vertical_align_top_rounded),
-              ),
-              keyboardType: const TextInputType.numberWithOptions(
-                decimal: true,
+            Expanded(
+              child: TextFormField(
+                controller: maxStockController,
+                decoration: const InputDecoration(
+                  labelText: 'Stock Máximo',
+                  prefixIcon: Icon(Icons.vertical_align_top_rounded),
+                  helperText: 'Opcional (Límite ideal)',
+                ),
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
+                inputFormatters: [
+                  FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
+                ],
               ),
             ),
           ],
