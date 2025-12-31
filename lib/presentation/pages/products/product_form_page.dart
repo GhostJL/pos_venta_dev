@@ -10,8 +10,13 @@ import 'package:posventa/presentation/widgets/products/forms/product_form/produc
 import 'package:posventa/presentation/widgets/products/forms/product_form/product_classification_section.dart';
 import 'package:posventa/presentation/widgets/products/forms/product_form/product_tax_selection.dart';
 import 'package:posventa/presentation/widgets/products/forms/product_form/product_variants_list.dart';
+import 'package:posventa/presentation/widgets/products/forms/product_form/product_pricing_section.dart';
+import 'package:posventa/presentation/widgets/products/forms/product_form/product_inventory_section.dart';
 
 import 'package:posventa/domain/entities/product_variant.dart';
+import 'package:posventa/domain/entities/unit_of_measure.dart';
+import 'package:posventa/presentation/providers/unit_providers.dart';
+import 'package:posventa/presentation/widgets/common/selection_sheet.dart';
 
 class ProductFormPage extends ConsumerStatefulWidget {
   final Product? product;
@@ -27,12 +32,18 @@ class ProductFormPageState extends ConsumerState<ProductFormPage> {
 
   late TextEditingController _nameController;
   late TextEditingController _codeController;
+  late TextEditingController _barcodeController;
   late TextEditingController _descriptionController;
 
   // Controllers required for ProductPricingSection (hidden in this view)
   late TextEditingController _costController;
   late TextEditingController _priceController;
   late TextEditingController _wholesaleController;
+
+  // Controllers for Inventory (Simple Product)
+  late TextEditingController _stockController;
+  late TextEditingController _minStockController;
+  late TextEditingController _maxStockController;
 
   @override
   void initState() {
@@ -46,6 +57,9 @@ class ProductFormPageState extends ConsumerState<ProductFormPage> {
     });
     _codeController.addListener(() {
       notifier.setCode(_codeController.text);
+    });
+    _barcodeController.addListener(() {
+      notifier.setBarcode(_barcodeController.text);
     });
     _descriptionController.addListener(() {
       notifier.setDescription(_descriptionController.text);
@@ -61,13 +75,51 @@ class ProductFormPageState extends ConsumerState<ProductFormPage> {
   void _initializeControllers() {
     _nameController = TextEditingController(text: widget.product?.name);
     _codeController = TextEditingController(text: widget.product?.code);
+    _barcodeController = TextEditingController(text: widget.product?.barcode);
     _descriptionController = TextEditingController(
       text: widget.product?.description,
     );
     // Initialize with empty or existing values if available (though prices not shown here)
-    _costController = TextEditingController();
-    _priceController = TextEditingController();
-    _wholesaleController = TextEditingController();
+    ProductVariant? defaultVariant;
+    if (widget.product?.variants != null &&
+        widget.product!.variants!.isNotEmpty) {
+      defaultVariant = widget.product!.variants!.first;
+    }
+
+    _costController = TextEditingController(
+      text: defaultVariant != null
+          ? (defaultVariant.costPriceCents / 100).toStringAsFixed(2)
+          : '',
+    );
+    _priceController = TextEditingController(
+      text: defaultVariant != null
+          ? (defaultVariant.priceCents / 100).toStringAsFixed(2)
+          : '',
+    );
+    _wholesaleController = TextEditingController(
+      text: defaultVariant?.wholesalePriceCents != null
+          ? (defaultVariant!.wholesalePriceCents! / 100).toStringAsFixed(2)
+          : '',
+    );
+
+    _stockController = TextEditingController(
+      text: defaultVariant != null ? _formatDouble(defaultVariant.stock) : '',
+    );
+    _minStockController = TextEditingController(
+      text: defaultVariant != null
+          ? _formatDouble(defaultVariant.stockMin)
+          : '',
+    );
+    _maxStockController = TextEditingController(
+      text: defaultVariant != null
+          ? _formatDouble(defaultVariant.stockMax)
+          : '',
+    );
+  }
+
+  String _formatDouble(double? value) {
+    if (value == null) return '';
+    return value.toString().replaceAll(RegExp(r'\.0$'), ''); // Remove .0
   }
 
   void _initializeDefaultTaxes() {
@@ -95,12 +147,54 @@ class ProductFormPageState extends ConsumerState<ProductFormPage> {
   void dispose() {
     _nameController.dispose();
     _codeController.dispose();
+    _barcodeController.dispose();
     _descriptionController.dispose();
     _costController.dispose();
     _priceController.dispose();
     _wholesaleController.dispose();
+    _stockController.dispose();
+    _minStockController.dispose();
+    _maxStockController.dispose();
     super.dispose();
   }
+
+  // Helper for Item Selection
+  Future<void> _showSelectionSheet<T>({
+    required BuildContext context,
+    required String title,
+    required List<T> items,
+    required String Function(T) labelBuilder,
+    T? selectedItem,
+    required ValueChanged<T?> onSelected,
+    VoidCallback? onAdd,
+  }) async {
+    final result = await showModalBottomSheet<SelectionSheetResult<T>>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (context) => SelectionSheet<T>(
+        title: title,
+        items: items,
+        itemLabelBuilder: labelBuilder,
+        selectedItem: selectedItem,
+        areEqual: (a, b) => labelBuilder(a) == labelBuilder(b),
+        onAdd: onAdd,
+      ),
+    );
+
+    if (result != null) {
+      if (result.isCleared) {
+        onSelected(null);
+      } else if (result.value != null) {
+        onSelected(result.value);
+      }
+    }
+  }
+
+  void _noOp() {}
 
   Future<void> _submit() async {
     if (!(_formKey.currentState?.validate() ?? false)) {
@@ -119,7 +213,14 @@ class ProductFormPageState extends ConsumerState<ProductFormPage> {
     final notifier = ref.read(productFormProvider(widget.product).notifier);
 
     // State is already sync'd via listeners
-    await notifier.validateAndSubmit();
+    await notifier.validateAndSubmit(
+      price: double.tryParse(_priceController.text),
+      cost: double.tryParse(_costController.text),
+      wholesale: double.tryParse(_wholesaleController.text),
+      stock: double.tryParse(_stockController.text),
+      minStock: double.tryParse(_minStockController.text),
+      maxStock: double.tryParse(_maxStockController.text),
+    );
   }
 
   void _onEditVariant(ProductVariant variant, int index) async {
@@ -256,6 +357,41 @@ class ProductFormPageState extends ConsumerState<ProductFormPage> {
                       padding: const EdgeInsets.all(24.0),
                       child: Column(
                         children: [
+                          // Mode Toggle - Outside Card
+                          Center(
+                            child: ToggleButtons(
+                              borderRadius: BorderRadius.circular(12),
+                              constraints: BoxConstraints(
+                                minWidth:
+                                    (MediaQuery.of(context).size.width -
+                                        48 -
+                                        48) /
+                                    2,
+                                minHeight: 48,
+                              ),
+                              isSelected: [
+                                !state.isVariableProduct,
+                                state.isVariableProduct,
+                              ],
+                              onPressed: (index) {
+                                ref
+                                    .read(provider.notifier)
+                                    .setVariableProduct(index == 1);
+                              },
+                              children: const [
+                                Padding(
+                                  padding: EdgeInsets.symmetric(horizontal: 16),
+                                  child: Text('Producto Simple'),
+                                ),
+                                Padding(
+                                  padding: EdgeInsets.symmetric(horizontal: 16),
+                                  child: Text('Con Variantes'),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 24),
+
                           // Basic Info Section
                           _buildSectionHeader(
                             context,
@@ -269,6 +405,7 @@ class ProductFormPageState extends ConsumerState<ProductFormPage> {
                                 ProductBasicInfoSection(
                                   nameController: _nameController,
                                   codeController: _codeController,
+                                  barcodeController: _barcodeController,
                                   descriptionController: _descriptionController,
                                   imageFile: ref.watch(
                                     provider.select((s) => s.imageFile),
@@ -375,70 +512,224 @@ class ProductFormPageState extends ConsumerState<ProductFormPage> {
                           ),
                           const SizedBox(height: 32),
 
-                          // Variants Section
+                          // Product Type & Logic
                           _buildSectionHeader(
                             context,
-                            'Variantes y Presentaciones',
-                            Icons.layers_outlined,
-                          ),
-                          const SizedBox(height: 16),
-                          ProductVariantsList(
-                            product: widget.product,
-                            onAddVariant: _onAddVariant,
-                            onEditVariant: _onEditVariant,
+                            'Detalles del Producto',
+                            Icons.dashboard_customize_outlined,
                           ),
                           const SizedBox(height: 16),
 
-                          // Quick Actions for adding variants (Simplified)
-                          if (isNewProduct || true) // Always show for now
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: OutlinedButton.icon(
-                                    onPressed: () =>
-                                        _onAddVariant(VariantType.sales),
-                                    icon: const Icon(Icons.add_rounded),
-                                    label: const Text('Presentación'),
-                                    style: OutlinedButton.styleFrom(
-                                      padding: const EdgeInsets.symmetric(
-                                        vertical: 16,
-                                      ),
-                                    ),
-                                  ),
+                          // Mode Toggle - Outside Card
+                          Center(
+                            child: ToggleButtons(
+                              borderRadius: BorderRadius.circular(12),
+                              constraints: BoxConstraints(
+                                minWidth:
+                                    (MediaQuery.of(context).size.width -
+                                        48 -
+                                        48) /
+                                    2,
+                                minHeight: 48,
+                              ),
+                              isSelected: [
+                                !state.isVariableProduct,
+                                state.isVariableProduct,
+                              ],
+                              onPressed: (index) {
+                                ref
+                                    .read(provider.notifier)
+                                    .setVariableProduct(index == 1);
+                              },
+                              children: const [
+                                Padding(
+                                  padding: EdgeInsets.symmetric(horizontal: 16),
+                                  child: Text('Producto Simple'),
                                 ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: OutlinedButton.icon(
-                                    onPressed: isNewProduct
-                                        ? () {
-                                            ScaffoldMessenger.of(
-                                              context,
-                                            ).showSnackBar(
-                                              const SnackBar(
-                                                content: Text(
-                                                  'Guarda el producto primero para agregar variantes de compra.',
-                                                ),
-                                                behavior:
-                                                    SnackBarBehavior.floating,
-                                              ),
-                                            );
-                                          }
-                                        : () => _onAddVariant(
-                                            VariantType.purchase,
-                                          ),
-                                    icon: const Icon(
-                                      Icons.add_shopping_cart_rounded,
-                                    ),
-                                    label: const Text('Var. de Compra'),
-                                    style: OutlinedButton.styleFrom(
-                                      padding: const EdgeInsets.symmetric(
-                                        vertical: 16,
-                                      ),
-                                    ),
-                                  ),
+                                Padding(
+                                  padding: EdgeInsets.symmetric(horizontal: 16),
+                                  child: Text('Con Variantes'),
                                 ),
                               ],
                             ),
+                          ),
+                          const SizedBox(height: 24),
+
+                          _buildCard(
+                            child: Column(
+                              children: [
+                                if (!state.isVariableProduct) ...[
+                                  // UNIT OF MEASURE
+                                  Consumer(
+                                    builder: (context, ref, _) {
+                                      final unitsAsync = ref.watch(
+                                        unitListProvider,
+                                      );
+                                      final provider = productFormProvider(
+                                        widget.product,
+                                      );
+                                      final selectedUnitId = ref.watch(
+                                        provider.select((s) => s.unitId),
+                                      );
+
+                                      return unitsAsync.when(
+                                        data: (units) {
+                                          final selectedUnit = units
+                                              .cast<UnitOfMeasure?>()
+                                              .firstWhere(
+                                                (u) => u?.id == selectedUnitId,
+                                                orElse: () => null,
+                                              );
+
+                                          return SelectionField(
+                                            label: 'Unidad de Medida',
+                                            placeholder: 'Seleccionar unidad',
+                                            value: selectedUnit?.name,
+                                            helperText:
+                                                'Unidad de venta (ej. Pieza, Kg)',
+                                            prefixIcon: Icons.scale_rounded,
+                                            onTap: () =>
+                                                _showSelectionSheet<
+                                                  UnitOfMeasure
+                                                >(
+                                                  context: context,
+                                                  title: 'Seleccionar Unidad',
+                                                  items: units,
+                                                  labelBuilder: (u) =>
+                                                      '${u.name} (${u.code})',
+                                                  selectedItem: selectedUnit,
+                                                  onSelected: (u) => ref
+                                                      .read(provider.notifier)
+                                                      .setUnitId(u?.id),
+                                                ),
+                                            onClear: () => ref
+                                                .read(provider.notifier)
+                                                .setUnitId(null),
+                                          );
+                                        },
+                                        loading: () => SelectionField(
+                                          label: 'Unidad de Medida',
+                                          onTap: _noOp, // NoOp/Disabled
+                                          isLoading: true,
+                                        ),
+                                        error: (e, s) => Text('Error: $e'),
+                                      );
+                                    },
+                                  ),
+                                  const SizedBox(height: 16),
+
+                                  // SOLD BY WEIGHT
+                                  Consumer(
+                                    builder: (context, ref, _) {
+                                      final provider = productFormProvider(
+                                        widget.product,
+                                      );
+                                      final isSoldByWeight = ref.watch(
+                                        provider.select(
+                                          (s) => s.isSoldByWeight,
+                                        ),
+                                      );
+                                      return SwitchListTile(
+                                        title: const Text(
+                                          'Venta a granel / Por peso',
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 14,
+                                          ),
+                                        ),
+                                        subtitle: const Text(
+                                          'Habilita la captura de peso/cantidad en el punto de venta',
+                                          style: TextStyle(fontSize: 12),
+                                        ),
+                                        value: isSoldByWeight,
+                                        onChanged: (val) => ref
+                                            .read(provider.notifier)
+                                            .setSoldByWeight(val),
+                                        contentPadding: EdgeInsets.zero,
+                                      );
+                                    },
+                                  ),
+                                  const SizedBox(height: 24),
+                                  ProductPricingSection(
+                                    product: widget.product,
+                                    costPriceController: _costController,
+                                    salePriceController: _priceController,
+                                    wholesalePriceController:
+                                        _wholesaleController,
+                                  ),
+                                  const SizedBox(height: 24),
+                                  ProductInventorySection(
+                                    product: widget.product,
+                                    stockController: _stockController,
+                                    minStockController: _minStockController,
+                                    maxStockController: _maxStockController,
+                                  ),
+                                ] else ...[
+                                  ProductVariantsList(
+                                    product: widget.product,
+                                    onAddVariant: _onAddVariant,
+                                    onEditVariant: _onEditVariant,
+                                  ),
+                                  const SizedBox(height: 16),
+
+                                  // Quick Actions for adding variants
+                                  if (isNewProduct || true)
+                                    Row(
+                                      children: [
+                                        Expanded(
+                                          child: OutlinedButton.icon(
+                                            onPressed: () => _onAddVariant(
+                                              VariantType.sales,
+                                            ),
+                                            icon: const Icon(Icons.add_rounded),
+                                            label: const Text('Venta'),
+                                            style: OutlinedButton.styleFrom(
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                    vertical: 16,
+                                                  ),
+                                            ),
+                                          ),
+                                        ),
+                                        const SizedBox(width: 12),
+                                        Expanded(
+                                          child: OutlinedButton.icon(
+                                            onPressed: isNewProduct
+                                                ? () {
+                                                    ScaffoldMessenger.of(
+                                                      context,
+                                                    ).showSnackBar(
+                                                      const SnackBar(
+                                                        content: Text(
+                                                          'Guarda el producto primero para agregar variantes de compra.',
+                                                        ),
+                                                        behavior:
+                                                            SnackBarBehavior
+                                                                .floating,
+                                                      ),
+                                                    );
+                                                  }
+                                                : () => _onAddVariant(
+                                                    VariantType.purchase,
+                                                  ),
+                                            icon: const Icon(
+                                              Icons.add_shopping_cart_rounded,
+                                            ),
+                                            label: const Text('Compra'),
+                                            style: OutlinedButton.styleFrom(
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                    vertical: 16,
+                                                  ),
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                ],
+                              ],
+                            ),
+                          ),
                         ],
                       ),
                     ),

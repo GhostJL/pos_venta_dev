@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:posventa/presentation/providers/variant_form_provider.dart';
 import 'package:posventa/domain/entities/product_variant.dart';
+import 'package:posventa/presentation/widgets/common/buttons/scanner_button.dart';
 
 class VariantBarcodeSection extends ConsumerWidget {
   final ProductVariant? variant;
@@ -45,32 +46,13 @@ class VariantBarcodeSection extends ConsumerWidget {
           decoration: InputDecoration(
             labelText: 'Código de Barras / SKU',
             hintText: 'Escanea o ingresa el código',
-            helperText:
-                'Este código identificará la variante en el punto de venta.',
+            helperText: 'EAN-13 id. de la variante',
             errorText: barcodeError,
-            prefixIcon: const Icon(Icons.qr_code_2_rounded),
-            suffixIcon: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                ValueListenableBuilder<TextEditingValue>(
-                  valueListenable: barcodeController,
-                  builder: (context, value, _) {
-                    if (value.text.isEmpty) return const SizedBox.shrink();
-                    return IconButton(
-                      icon: const Icon(Icons.clear_rounded, size: 20),
-                      onPressed: () => barcodeController.clear(),
-                    );
-                  },
-                ),
-                IconButton(
-                  icon: Icon(
-                    Icons.camera_alt_rounded,
-                    color: theme.colorScheme.primary,
-                  ),
-                  onPressed: () => _openBarcodeScanner(context),
-                  tooltip: 'Escanear con cámara',
-                ),
-              ],
+            prefixIcon: const Icon(Icons.qr_code_2),
+            suffixIcon: ScannerButton(
+              isCompact: true,
+
+              onPressed: () => _openBarcodeScanner(context),
             ),
           ),
           validator: (value) =>
@@ -78,18 +60,28 @@ class VariantBarcodeSection extends ConsumerWidget {
         ),
 
         const SizedBox(height: 12),
-
-        Align(
-          alignment: Alignment.centerRight,
-          child: TextButton.icon(
-            onPressed: _generateInternalCode,
-            icon: const Icon(Icons.auto_fix_high_rounded, size: 18),
-            label: const Text('Generar código interno'),
-            style: TextButton.styleFrom(
-              visualDensity: VisualDensity.compact,
-              textStyle: theme.textTheme.labelMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+        InkWell(
+          onTap: () => _generateInternalCode(),
+          borderRadius: BorderRadius.circular(4),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.qr_code_2,
+                  size: 16,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  'Generar código interno',
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.primary,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 12,
+                  ),
+                ),
+              ],
             ),
           ),
         ),

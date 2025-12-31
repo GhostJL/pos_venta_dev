@@ -22,6 +22,7 @@ class ProductFormState {
   final int? categoryId;
   final int? brandId;
   final int? supplierId;
+  final int? unitId; // Added unitId
   final bool isSoldByWeight;
   final bool isActive;
   final bool hasExpiration;
@@ -38,6 +39,8 @@ class ProductFormState {
   final bool showValidationErrors;
   final bool isModified;
 
+  final bool isVariableProduct;
+
   ProductFormState({
     this.initialProduct,
     this.name,
@@ -48,6 +51,7 @@ class ProductFormState {
     this.categoryId,
     this.brandId,
     this.supplierId,
+    this.unitId,
     this.isSoldByWeight = false,
     this.isActive = true,
     this.hasExpiration = false,
@@ -62,6 +66,7 @@ class ProductFormState {
     this.photoUrl,
     this.showValidationErrors = false,
     this.isModified = false,
+    this.isVariableProduct = false,
   });
 
   ProductFormState copyWith({
@@ -95,6 +100,7 @@ class ProductFormState {
     bool clearPhotoUrl = false,
     bool? showValidationErrors,
     bool? isModified,
+    bool? isVariableProduct,
   }) {
     return ProductFormState(
       initialProduct: initialProduct ?? this.initialProduct,
@@ -108,6 +114,7 @@ class ProductFormState {
       categoryId: clearCategoryId ? null : (categoryId ?? this.categoryId),
       brandId: clearBrandId ? null : (brandId ?? this.brandId),
       supplierId: clearSupplierId ? null : (supplierId ?? this.supplierId),
+      unitId: unitId ?? this.unitId,
       isSoldByWeight: isSoldByWeight ?? this.isSoldByWeight,
       isActive: isActive ?? this.isActive,
       hasExpiration: hasExpiration ?? this.hasExpiration,
@@ -122,6 +129,7 @@ class ProductFormState {
       photoUrl: clearPhotoUrl ? null : (photoUrl ?? this.photoUrl),
       showValidationErrors: showValidationErrors ?? this.showValidationErrors,
       isModified: isModified ?? this.isModified,
+      isVariableProduct: isVariableProduct ?? this.isVariableProduct,
     );
   }
 }
@@ -149,6 +157,10 @@ class ProductFormNotifier extends _$ProductFormNotifier {
         selectedTaxes: List.from(product.productTaxes ?? []),
         variants: List.from(product.variants ?? []),
         hasVariants:
+            (product.variants?.length ?? 0) > 1 ||
+            ((product.variants?.isNotEmpty ?? false) &&
+                product.variants!.first.variantName != 'Estándar'),
+        isVariableProduct:
             (product.variants?.length ?? 0) > 1 ||
             ((product.variants?.isNotEmpty ?? false) &&
                 product.variants!.first.variantName != 'Estándar'),
@@ -254,6 +266,9 @@ class ProductFormNotifier extends _$ProductFormNotifier {
       _updateModified(state.copyWith(description: value));
   void setHasVariants(bool value) =>
       _updateModified(state.copyWith(hasVariants: value));
+
+  void setVariableProduct(bool value) =>
+      _updateModified(state.copyWith(isVariableProduct: value));
   void setUsesTaxes(bool value) =>
       _updateModified(state.copyWith(usesTaxes: value));
 
@@ -275,6 +290,7 @@ class ProductFormNotifier extends _$ProductFormNotifier {
       _updateModified(state.copyWith(isActive: value));
   void setHasExpiration(bool value) =>
       _updateModified(state.copyWith(hasExpiration: value));
+  void setUnitId(int? value) => _updateModified(state.copyWith(unitId: value));
 
   void setTaxes(List<ProductTax> value) =>
       _updateModified(state.copyWith(selectedTaxes: value));
@@ -311,6 +327,12 @@ class ProductFormNotifier extends _$ProductFormNotifier {
     String? code,
     String? barcode,
     String? description,
+    double? price,
+    double? cost,
+    double? wholesale,
+    double? stock,
+    double? minStock,
+    double? maxStock,
     bool silent = false,
   }) async {
     state = state.copyWith(isLoading: true, error: null, isSuccess: false);
@@ -425,6 +447,56 @@ class ProductFormNotifier extends _$ProductFormNotifier {
       }
     }
 
+    // --- Handle Simple vs Variable Logic ---
+    List<ProductVariant> finalVariants = [];
+    if (state.isVariableProduct) {
+      // Use existing variants list
+      finalVariants = state.variants;
+      if (finalVariants.isEmpty) {
+        state = state.copyWith(
+          isLoading: false,
+          error: 'Debe agregar al menos una variante.',
+        );
+        return false;
+      }
+    } else {
+      // Simple Product: Create/Update Default Variant
+      if (price == null || cost == null) {
+        state = state.copyWith(
+          isLoading: false,
+          error: 'El precio y costo son requeridos para productos simples.',
+        );
+        return false;
+      }
+
+      ProductVariant? existingDefault;
+      if (state.variants.isNotEmpty) {
+        existingDefault = state.variants.first;
+      }
+
+      // Default Variant Construction
+      final defaultVariant = ProductVariant(
+        id: existingDefault?.id, // Keep ID if updating
+        productId: state.initialProduct?.id ?? 0, // Placeholder
+        variantName: 'Estándar', // Standard name for simple products
+        barcode: finalBarcode.isNotEmpty ? finalBarcode : finalCode,
+        priceCents: (price * 100).round(),
+        costPriceCents: (cost * 100).round(),
+        wholesalePriceCents: wholesale != null
+            ? (wholesale * 100).round()
+            : null,
+        stock: stock,
+        stockMin: minStock,
+        stockMax: maxStock,
+        isForSale: true,
+        isActive: state.isActive,
+        unitId: state.unitId,
+        isSoldByWeight: state.isSoldByWeight,
+      );
+
+      finalVariants = [defaultVariant];
+    }
+
     List<ProductTax> finalProductTaxes = [];
     if (state.usesTaxes) {
       finalProductTaxes = state.selectedTaxes;
@@ -485,10 +557,12 @@ class ProductFormNotifier extends _$ProductFormNotifier {
       supplierId: state.supplierId,
       isSoldByWeight: state.isSoldByWeight,
       productTaxes: finalProductTaxes,
-      variants: state.variants,
+      variants: finalVariants,
       isActive: state.isActive,
       hasExpiration: state.hasExpiration,
       photoUrl: savedPhotoUrl,
+      // For simple products, we can also set the main stock field if we want denormalization
+      // but usually the backend calculates it from variants.
     );
 
     Product savedProduct = newProduct; // Placeholder init

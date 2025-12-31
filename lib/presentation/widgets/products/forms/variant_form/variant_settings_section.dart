@@ -29,61 +29,57 @@ class VariantSettingsSection extends ConsumerWidget {
 
         const SizedBox(height: 8),
 
-        Row(
+        Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // CAMPO: STOCK MÍNIMO
-            Expanded(
-              child: TextFormField(
-                controller: stockMinController,
-                textInputAction: TextInputAction.next,
-                decoration: InputDecoration(
-                  labelText: 'Stock Mínimo',
-                  helperText: 'Alerta de resurtido',
-                  prefixIcon: Icon(
-                    Icons.notifications_active_outlined,
-                    color: theme.colorScheme.error.withValues(alpha: 0.7),
-                  ),
+            TextFormField(
+              controller: stockMinController,
+              textInputAction: TextInputAction.next,
+              decoration: InputDecoration(
+                labelText: 'Stock Mínimo',
+                helperText: 'Alerta de resurtido',
+                prefixIcon: Icon(
+                  Icons.notifications_active_outlined,
+                  color: theme.colorScheme.error.withValues(alpha: 0.7),
                 ),
-                keyboardType: const TextInputType.numberWithOptions(
-                  decimal: true,
-                ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) return null;
-                  final n = double.tryParse(value);
-                  if (n == null || n < 0) return 'Inválido';
-                  return null;
-                },
               ),
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
+              validator: (value) {
+                if (value == null || value.isEmpty) return null;
+                final n = double.tryParse(value);
+                if (n == null || n < 0) return 'Inválido';
+                return null;
+              },
             ),
 
-            const SizedBox(width: 16),
+            const SizedBox(height: 16),
 
             // CAMPO: STOCK MÁXIMO
-            Expanded(
-              child: TextFormField(
-                controller: stockMaxController,
-                textInputAction: TextInputAction.done,
-                decoration: const InputDecoration(
-                  labelText: 'Stock Máximo',
-                  helperText: 'Capacidad ideal',
-                  prefixIcon: Icon(Icons.inventory_2_outlined),
-                ),
-                keyboardType: const TextInputType.numberWithOptions(
-                  decimal: true,
-                ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) return null;
-                  final n = double.tryParse(value);
-                  if (n == null || n < 0) return 'Inválido';
-
-                  // Validación lógica cruzada
-                  final min = double.tryParse(stockMinController.text) ?? 0;
-                  if (n < min) return 'Debe ser > Mín';
-
-                  return null;
-                },
+            TextFormField(
+              controller: stockMaxController,
+              textInputAction: TextInputAction.done,
+              decoration: const InputDecoration(
+                labelText: 'Stock Máximo',
+                helperText: 'Capacidad ideal',
+                prefixIcon: Icon(Icons.inventory_2_outlined),
               ),
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
+              validator: (value) {
+                if (value == null || value.isEmpty) return null;
+                final n = double.tryParse(value);
+                if (n == null || n < 0) return 'Inválido';
+
+                // Validación lógica cruzada
+                final min = double.tryParse(stockMinController.text) ?? 0;
+                if (n < min) return 'Debe ser > Mín';
+
+                return null;
+              },
             ),
           ],
         ),

@@ -1,0 +1,53 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:posventa/domain/entities/product.dart';
+
+class ProductInventorySection extends ConsumerWidget {
+  final Product? product;
+  final TextEditingController stockController;
+  final TextEditingController minStockController;
+  final TextEditingController maxStockController;
+
+  const ProductInventorySection({
+    super.key,
+    required this.product,
+    required this.stockController,
+    required this.minStockController,
+    required this.maxStockController,
+  });
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Column(
+          children: [
+            TextFormField(
+              controller: minStockController,
+              decoration: const InputDecoration(
+                labelText: 'Stock Mínimo',
+                prefixIcon: Icon(Icons.warning_amber_rounded),
+                helperText: 'Nivel de alerta',
+              ),
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
+            ),
+            const SizedBox(width: 16),
+            TextFormField(
+              controller: maxStockController,
+              decoration: const InputDecoration(
+                labelText: 'Stock Máximo (Opcional)',
+                prefixIcon: Icon(Icons.vertical_align_top_rounded),
+              ),
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+}

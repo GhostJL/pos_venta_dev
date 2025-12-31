@@ -2,12 +2,15 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:posventa/presentation/widgets/shared/image_picker_widget.dart';
+import 'package:posventa/presentation/widgets/common/misc/barcode_scanner_widget.dart';
+import 'package:posventa/presentation/widgets/common/buttons/scanner_button.dart';
 
 /// Widget for basic product information section
 class ProductBasicInfoSection extends StatelessWidget {
   final TextEditingController nameController;
   final TextEditingController codeController;
   final TextEditingController descriptionController;
+  final TextEditingController? barcodeController;
 
   // New callbacks
   final ValueChanged<String>? onNameChanged;
@@ -25,6 +28,7 @@ class ProductBasicInfoSection extends StatelessWidget {
     required this.nameController,
     required this.codeController,
     required this.descriptionController,
+    this.barcodeController,
     this.onNameChanged,
     this.onCodeChanged,
     this.onDescriptionChanged,
@@ -75,6 +79,59 @@ class ProductBasicInfoSection extends StatelessWidget {
               value?.isEmpty ?? true ? 'Requerido para la base de datos' : null,
         ),
         const SizedBox(height: 16),
+        TextFormField(
+          controller: barcodeController,
+          textInputAction: TextInputAction.next,
+          decoration: InputDecoration(
+            labelText: 'Código de Barras',
+            helperText: 'EAN-13, UPC, o generado',
+            prefixIcon: const Icon(Icons.qr_code_2),
+            suffixIcon: ScannerButton(
+              isCompact: true,
+              onPressed: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => BarcodeScannerWidget(
+                      onBarcodeScanned: (context, code) {
+                        barcodeController?.text = code;
+                        Navigator.of(context).pop();
+                      },
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        ),
+        const SizedBox(height: 8),
+        InkWell(
+          onTap: () {
+            final timestamp = DateTime.now().millisecondsSinceEpoch.toString();
+            barcodeController?.text = 'INT$timestamp';
+          },
+          borderRadius: BorderRadius.circular(4),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.qr_code_2,
+                  size: 16,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  'Generar código interno',
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.primary,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
         const SizedBox(height: 16),
         TextFormField(
           controller: descriptionController,

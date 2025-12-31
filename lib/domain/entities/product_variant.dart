@@ -116,7 +116,6 @@ class ProductVariant extends Equatable {
     stockMax,
     conversionFactor,
     unitId,
-    unitId,
     isSoldByWeight,
     photoUrl,
   ];

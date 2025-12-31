@@ -167,6 +167,15 @@ class ProductCard extends StatelessWidget {
                 ),
               ),
 
+              // Stock Indicator
+              // Show only if there are variants (which imply stock logic is active)
+              // or if we decide to show it for all products.
+              // For now, let's show it if variants exist.
+              if (product.variants != null && product.variants!.isNotEmpty) ...[
+                const SizedBox(width: 8),
+                _buildStockIndicator(theme, product),
+              ],
+
               // Action Button (More)
               if (onMorePressed != null)
                 IconButton(
@@ -184,6 +193,66 @@ class ProductCard extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  Widget _buildStockIndicator(ThemeData theme, Product product) {
+    double totalStock = 0;
+    bool isLowStock = false;
+
+    if (product.variants != null) {
+      for (var v in product.variants!) {
+        totalStock += (v.stock ?? 0);
+        if ((v.stock ?? 0) <= (v.stockMin ?? 5)) {
+          isLowStock = true;
+        }
+      }
+    }
+
+    final isOutOfStock = totalStock <= 0;
+
+    Color color;
+    Color backgroundColor;
+    IconData icon;
+
+    if (isOutOfStock) {
+      color = theme.colorScheme.error;
+      backgroundColor = theme.colorScheme.errorContainer;
+      icon = Icons.error_outline_rounded;
+    } else if (isLowStock) {
+      color = theme.colorScheme.tertiary;
+      backgroundColor = theme.colorScheme.tertiaryContainer;
+      icon = Icons.warning_amber_rounded;
+    } else {
+      color = theme.colorScheme.primary;
+      backgroundColor = theme.colorScheme.primaryContainer;
+      icon = Icons.inventory_2_outlined;
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: backgroundColor.withValues(alpha: 0.5),
+        borderRadius: BorderRadius.circular(6),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 12, color: color),
+          const SizedBox(width: 4),
+          Text(
+            _formatDouble(totalStock),
+            style: theme.textTheme.labelSmall?.copyWith(
+              color: color,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _formatDouble(double value) {
+    return value.toString().replaceAll(RegExp(r'\.0$'), '');
   }
 
   Widget _buildLeading(ThemeData theme, bool isActive) {

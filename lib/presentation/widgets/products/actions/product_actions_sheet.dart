@@ -5,6 +5,7 @@ import 'package:posventa/core/constants/permission_constants.dart';
 import 'package:posventa/domain/entities/product.dart';
 import 'package:posventa/presentation/pages/products/variant_type_selection_page.dart';
 import 'package:posventa/presentation/providers/permission_provider.dart';
+import 'package:posventa/domain/entities/product_variant.dart';
 import 'package:posventa/presentation/providers/product_provider.dart';
 
 class ProductActionsSheet extends ConsumerWidget {
@@ -75,6 +76,14 @@ class ProductActionsSheet extends ConsumerWidget {
                             ),
                           );
                         },
+                      ),
+                      _buildFlatAction(
+                        context,
+                        icon: Icons.copy_rounded,
+                        color: Colors.indigo,
+                        label: 'Duplicar producto',
+                        subtitle: 'Crear una copia como nuevo producto',
+                        onTap: () => _handleDuplicate(context),
                       ),
 
                       const SizedBox(height: 24),
@@ -328,5 +337,57 @@ class ProductActionsSheet extends ConsumerWidget {
         );
       }
     }
+  }
+
+  void _handleDuplicate(BuildContext context) {
+    context.pop();
+
+    // Create copy with cleared IDs
+    final newVariants = product.variants
+        ?.map(
+          (v) => ProductVariant(
+            id: null,
+            productId: 0,
+            variantName: v.variantName,
+            barcode: null,
+            quantity: v.quantity,
+            priceCents: v.priceCents,
+            costPriceCents: v.costPriceCents,
+            wholesalePriceCents: v.wholesalePriceCents,
+            isActive: true,
+            isForSale: v.isForSale,
+            type: v.type,
+            linkedVariantId: null,
+            stock: 0,
+            stockMin: v.stockMin,
+            stockMax: v.stockMax,
+            conversionFactor: v.conversionFactor,
+            unitId: v.unitId,
+            isSoldByWeight: v.isSoldByWeight,
+            photoUrl: v.photoUrl,
+          ),
+        )
+        .toList();
+
+    final newProduct = Product(
+      id: null,
+      code: '${product.code}-COPY',
+      name: '${product.name} (Copia)',
+      description: product.description,
+      departmentId: product.departmentId,
+      departmentName: product.departmentName,
+      categoryId: product.categoryId,
+      brandId: product.brandId,
+      supplierId: product.supplierId,
+      isSoldByWeight: product.isSoldByWeight,
+      isActive: true,
+      hasExpiration: product.hasExpiration,
+      productTaxes: product.productTaxes,
+      variants: newVariants,
+      stock: 0,
+      photoUrl: product.photoUrl,
+    );
+
+    context.push('/products/form', extra: newProduct);
   }
 }
