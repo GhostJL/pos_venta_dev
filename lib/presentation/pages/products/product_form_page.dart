@@ -194,7 +194,7 @@ class ProductFormPageState extends ConsumerState<ProductFormPage> {
     }
   }
 
-  void _noOp() {}
+  // helpers removed
 
   Future<void> _submit() async {
     if (!(_formKey.currentState?.validate() ?? false)) {
@@ -283,6 +283,7 @@ class ProductFormPageState extends ConsumerState<ProductFormPage> {
     final isNewProduct = widget.product == null;
     final theme = Theme.of(context);
     final isModified = state.isModified;
+    final isVariable = state.isVariableProduct;
 
     // Listen for success or error
     ref.listen<ProductFormState>(provider, (previous, next) {
@@ -310,468 +311,322 @@ class ProductFormPageState extends ConsumerState<ProductFormPage> {
       }
     });
 
-    return Scaffold(
-      body: SafeArea(
-        child: Center(
-          child: Container(
-            constraints: const BoxConstraints(maxWidth: 600),
-            child: Form(
-              key: _formKey,
-              child: CustomScrollView(
-                slivers: [
-                  SliverAppBar(
-                    floating: true,
-                    pinned: true,
-                    scrolledUnderElevation: 0,
-                    title: Text(
-                      isNewProduct ? 'Nuevo Producto' : 'Editar Producto',
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    actions: [
-                      if (isLoading)
-                        const Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 16.0),
-                          child: SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2),
+    return DefaultTabController(
+      length: 3,
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text(
+            isNewProduct ? 'Nuevo Producto' : 'Editar Producto',
+            style: const TextStyle(fontWeight: FontWeight.bold),
+          ),
+          bottom: TabBar(
+            isScrollable: true,
+            tabAlignment: TabAlignment.start,
+            tabs: [
+              const Tab(text: 'General'),
+              const Tab(text: 'Precios e Impuestos'),
+              Tab(text: isVariable ? 'Variantes' : 'Inventario'),
+            ],
+          ),
+          actions: [
+            if (isLoading)
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16.0),
+                child: SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+              )
+            else if (isModified)
+              TextButton(
+                onPressed: _submit,
+                child: Text(
+                  'GUARDAR',
+                  style: TextStyle(
+                    color: theme.colorScheme.primary,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+          ],
+        ),
+        body: SafeArea(
+          child: Form(
+            key: _formKey,
+            child: TabBarView(
+              children: [
+                // TAB 1: GENERAL
+                SingleChildScrollView(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    children: [
+                      // Mode Toggle (Crucial Decision First)
+                      Center(
+                        child: ToggleButtons(
+                          borderRadius: BorderRadius.circular(12),
+                          constraints: BoxConstraints(
+                            minWidth:
+                                (MediaQuery.of(context).size.width - 48 - 6) /
+                                2,
+                            minHeight: 40,
                           ),
-                        )
-                      else if (isModified)
-                        TextButton(
-                          onPressed: _submit,
-                          child: Text(
-                            'GUARDAR',
-                            style: TextStyle(
-                              color: theme.colorScheme.primary,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
+                          isSelected: [!isVariable, isVariable],
+                          onPressed: (index) {
+                            ref
+                                .read(provider.notifier)
+                                .setVariableProduct(index == 1);
+                          },
+                          children: const [
+                            Text('Producto Simple'),
+                            Text('Con Variantes'),
+                          ],
                         ),
+                      ),
+                      const SizedBox(height: 24),
+
+                      ProductBasicInfoSection(
+                        nameController: _nameController,
+                        codeController: _codeController,
+                        barcodeController: _barcodeController,
+                        descriptionController: _descriptionController,
+                        imageFile: ref.watch(
+                          provider.select((s) => s.imageFile),
+                        ),
+                        photoUrl: ref.watch(provider.select((s) => s.photoUrl)),
+                        onImageSelected: ref.read(provider.notifier).pickImage,
+                        onRemoveImage: ref.read(provider.notifier).removeImage,
+                      ),
+                      const SizedBox(height: 16),
+                      Consumer(
+                        builder: (context, ref, _) {
+                          final isActive = ref.watch(
+                            provider.select((s) => s.isActive),
+                          );
+                          return SwitchListTile(
+                            title: const Text('Producto Activo'),
+                            subtitle: const Text(
+                              'Disponible para venta y operaciones',
+                            ),
+                            value: isActive,
+                            onChanged: ref.read(provider.notifier).setActive,
+                            contentPadding: EdgeInsets.zero,
+                          );
+                        },
+                      ),
+                      const SizedBox(height: 16),
+                      ProductClassificationSection(product: widget.product),
                     ],
                   ),
-                  SliverToBoxAdapter(
-                    child: Padding(
-                      padding: const EdgeInsets.all(24.0),
-                      child: Column(
-                        children: [
-                          // Mode Toggle - Outside Card
-                          Center(
-                            child: ToggleButtons(
-                              borderRadius: BorderRadius.circular(12),
-                              constraints: BoxConstraints(
-                                minWidth:
-                                    (MediaQuery.of(context).size.width -
-                                        48 -
-                                        48) /
-                                    2,
-                                minHeight: 48,
+                ),
+
+                // TAB 2: PRICES & TAXES
+                SingleChildScrollView(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    children: [
+                      if (!isVariable) ...[
+                        ProductPricingSection(
+                          product: widget.product,
+                          costPriceController: _costController,
+                          salePriceController: _priceController,
+                          wholesalePriceController: _wholesaleController,
+                        ),
+                        const SizedBox(height: 24),
+                      ] else
+                        Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: theme.colorScheme.secondaryContainer
+                                .withValues(alpha: 0.3),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.info_outline,
+                                color: theme.colorScheme.secondary,
                               ),
-                              isSelected: [
-                                !state.isVariableProduct,
-                                state.isVariableProduct,
-                              ],
-                              onPressed: (index) {
-                                ref
-                                    .read(provider.notifier)
-                                    .setVariableProduct(index == 1);
-                              },
-                              children: const [
-                                Padding(
-                                  padding: EdgeInsets.symmetric(horizontal: 16),
-                                  child: Text('Producto Simple'),
+                              const SizedBox(width: 12),
+                              const Expanded(
+                                child: Text(
+                                  'Los precios se gestionan individualmente en cada variante.',
+                                  style: TextStyle(fontSize: 13),
                                 ),
-                                Padding(
-                                  padding: EdgeInsets.symmetric(horizontal: 16),
-                                  child: Text('Con Variantes'),
-                                ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(height: 24),
-
-                          // Basic Info Section
-                          _buildSectionHeader(
-                            context,
-                            'Información General',
-                            Icons.info_outline_rounded,
-                          ),
-                          const SizedBox(height: 16),
-                          _buildCard(
-                            child: Column(
-                              children: [
-                                ProductBasicInfoSection(
-                                  nameController: _nameController,
-                                  codeController: _codeController,
-                                  barcodeController: _barcodeController,
-                                  descriptionController: _descriptionController,
-                                  imageFile: ref.watch(
-                                    provider.select((s) => s.imageFile),
-                                  ),
-                                  photoUrl: ref.watch(
-                                    provider.select((s) => s.photoUrl),
-                                  ),
-                                  onImageSelected: ref
-                                      .read(provider.notifier)
-                                      .pickImage,
-                                  onRemoveImage: ref
-                                      .read(provider.notifier)
-                                      .removeImage,
-                                ),
-                                const SizedBox(height: 16),
-                                Consumer(
-                                  builder: (context, ref, _) {
-                                    final isActive = ref.watch(
-                                      provider.select((s) => s.isActive),
-                                    );
-                                    return SwitchListTile(
-                                      title: const Text(
-                                        'Producto Activo',
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                      subtitle: const Text(
-                                        'Disponible para venta y operaciones',
-                                        style: TextStyle(fontSize: 12),
-                                      ),
-                                      value: isActive,
-                                      onChanged: ref
-                                          .read(provider.notifier)
-                                          .setActive,
-                                      contentPadding: EdgeInsets.zero,
-                                    );
-                                  },
-                                ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(height: 32),
-
-                          // Classification Section
-                          _buildSectionHeader(
-                            context,
-                            'Organización',
-                            Icons.category_outlined,
-                          ),
-                          const SizedBox(height: 16),
-                          _buildCard(
-                            child: ProductClassificationSection(
-                              product: widget.product,
-                            ),
-                          ),
-                          const SizedBox(height: 32),
-
-                          // Taxes Section
-                          _buildSectionHeader(
-                            context,
-                            'Impuestos',
-                            Icons.receipt_long_outlined,
-                          ),
-                          const SizedBox(height: 16),
-                          _buildCard(
-                            child: Consumer(
-                              builder: (context, ref, child) {
-                                final usesTaxes = ref.watch(
-                                  provider.select((s) => s.usesTaxes),
-                                );
-                                return Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    SwitchListTile(
-                                      title: const Text(
-                                        '¿Aplica Impuestos?',
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 14,
-                                        ),
-                                      ),
-                                      subtitle: const Text(
-                                        'Configura los impuestos aplicables a este producto',
-                                        style: TextStyle(fontSize: 12),
-                                      ),
-                                      value: usesTaxes,
-                                      onChanged: (value) => ref
-                                          .read(provider.notifier)
-                                          .setUsesTaxes(value),
-                                      contentPadding: EdgeInsets.zero,
-                                    ),
-                                    if (usesTaxes) ...[
-                                      const Divider(),
-                                      const SizedBox(height: 8),
-                                      ProductTaxSelection(
-                                        product: widget.product,
-                                      ),
-                                    ],
-                                  ],
-                                );
-                              },
-                            ),
-                          ),
-                          const SizedBox(height: 32),
-
-                          // Product Type & Logic
-                          _buildSectionHeader(
-                            context,
-                            'Detalles del Producto',
-                            Icons.dashboard_customize_outlined,
-                          ),
-                          const SizedBox(height: 16),
-
-                          // Mode Toggle - Outside Card
-                          Center(
-                            child: ToggleButtons(
-                              borderRadius: BorderRadius.circular(12),
-                              constraints: BoxConstraints(
-                                minWidth:
-                                    (MediaQuery.of(context).size.width -
-                                        48 -
-                                        48) /
-                                    2,
-                                minHeight: 48,
                               ),
-                              isSelected: [
-                                !state.isVariableProduct,
-                                state.isVariableProduct,
-                              ],
-                              onPressed: (index) {
-                                ref
+                            ],
+                          ),
+                        ),
+
+                      const SizedBox(height: 24),
+                      // UNIT & WEIGHT (Common config)
+                      Consumer(
+                        builder: (context, ref, _) {
+                          final unitsAsync = ref.watch(unitListProvider);
+                          final provider = productFormProvider(widget.product);
+                          final selectedUnitId = ref.watch(
+                            provider.select((s) => s.unitId),
+                          );
+
+                          return unitsAsync.when(
+                            data: (units) {
+                              final selectedUnit = units
+                                  .cast<UnitOfMeasure?>()
+                                  .firstWhere(
+                                    (u) => u?.id == selectedUnitId,
+                                    orElse: () => null,
+                                  );
+
+                              return SelectionField(
+                                label: 'Unidad de Medida',
+                                placeholder: 'Seleccionar unidad',
+                                value: selectedUnit?.name,
+                                helperText: 'Unidad de venta (ej. Pieza, Kg)',
+                                prefixIcon: Icons.scale_rounded,
+                                onTap: () => _showSelectionSheet<UnitOfMeasure>(
+                                  context: context,
+                                  title: 'Seleccionar Unidad',
+                                  items: units,
+                                  labelBuilder: (u) => '${u.name} (${u.code})',
+                                  selectedItem: selectedUnit,
+                                  onSelected: (u) => ref
+                                      .read(provider.notifier)
+                                      .setUnitId(u?.id),
+                                ),
+                                onClear: () =>
+                                    ref.read(provider.notifier).setUnitId(null),
+                              );
+                            },
+                            loading: () => SelectionField(
+                              label: 'Unidad de Medida',
+                              isLoading: true,
+                              onTap: () {},
+                            ),
+                            error: (e, s) => Text('Error: $e'),
+                          );
+                        },
+                      ),
+                      const SizedBox(height: 16),
+                      Consumer(
+                        builder: (context, ref, _) {
+                          final isSoldByWeight = ref.watch(
+                            provider.select((s) => s.isSoldByWeight),
+                          );
+                          return SwitchListTile(
+                            title: const Text('Venta a granel / Por peso'),
+                            subtitle: const Text(
+                              'Habilita la captura de peso/cantidad en POS',
+                            ),
+                            value: isSoldByWeight,
+                            onChanged: ref
+                                .read(provider.notifier)
+                                .setSoldByWeight,
+                            contentPadding: EdgeInsets.zero,
+                          );
+                        },
+                      ),
+
+                      const SizedBox(height: 24),
+                      const Divider(),
+                      const SizedBox(height: 24),
+
+                      // TAXES
+                      Consumer(
+                        builder: (context, ref, child) {
+                          final usesTaxes = ref.watch(
+                            provider.select((s) => s.usesTaxes),
+                          );
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              SwitchListTile(
+                                title: const Text('¿Aplica Impuestos?'),
+                                value: usesTaxes,
+                                onChanged: (value) => ref
                                     .read(provider.notifier)
-                                    .setVariableProduct(index == 1);
-                              },
-                              children: const [
-                                Padding(
-                                  padding: EdgeInsets.symmetric(horizontal: 16),
-                                  child: Text('Producto Simple'),
-                                ),
-                                Padding(
-                                  padding: EdgeInsets.symmetric(horizontal: 16),
-                                  child: Text('Con Variantes'),
-                                ),
+                                    .setUsesTaxes(value),
+                                contentPadding: EdgeInsets.zero,
+                              ),
+                              if (usesTaxes) ...[
+                                const SizedBox(height: 8),
+                                ProductTaxSelection(product: widget.product),
                               ],
-                            ),
-                          ),
-                          const SizedBox(height: 24),
-
-                          _buildCard(
-                            child: Column(
-                              children: [
-                                if (!state.isVariableProduct) ...[
-                                  // UNIT OF MEASURE
-                                  Consumer(
-                                    builder: (context, ref, _) {
-                                      final unitsAsync = ref.watch(
-                                        unitListProvider,
-                                      );
-                                      final provider = productFormProvider(
-                                        widget.product,
-                                      );
-                                      final selectedUnitId = ref.watch(
-                                        provider.select((s) => s.unitId),
-                                      );
-
-                                      return unitsAsync.when(
-                                        data: (units) {
-                                          final selectedUnit = units
-                                              .cast<UnitOfMeasure?>()
-                                              .firstWhere(
-                                                (u) => u?.id == selectedUnitId,
-                                                orElse: () => null,
-                                              );
-
-                                          return SelectionField(
-                                            label: 'Unidad de Medida',
-                                            placeholder: 'Seleccionar unidad',
-                                            value: selectedUnit?.name,
-                                            helperText:
-                                                'Unidad de venta (ej. Pieza, Kg)',
-                                            prefixIcon: Icons.scale_rounded,
-                                            onTap: () =>
-                                                _showSelectionSheet<
-                                                  UnitOfMeasure
-                                                >(
-                                                  context: context,
-                                                  title: 'Seleccionar Unidad',
-                                                  items: units,
-                                                  labelBuilder: (u) =>
-                                                      '${u.name} (${u.code})',
-                                                  selectedItem: selectedUnit,
-                                                  onSelected: (u) => ref
-                                                      .read(provider.notifier)
-                                                      .setUnitId(u?.id),
-                                                ),
-                                            onClear: () => ref
-                                                .read(provider.notifier)
-                                                .setUnitId(null),
-                                          );
-                                        },
-                                        loading: () => SelectionField(
-                                          label: 'Unidad de Medida',
-                                          onTap: _noOp, // NoOp/Disabled
-                                          isLoading: true,
-                                        ),
-                                        error: (e, s) => Text('Error: $e'),
-                                      );
-                                    },
-                                  ),
-                                  const SizedBox(height: 16),
-
-                                  // SOLD BY WEIGHT
-                                  Consumer(
-                                    builder: (context, ref, _) {
-                                      final provider = productFormProvider(
-                                        widget.product,
-                                      );
-                                      final isSoldByWeight = ref.watch(
-                                        provider.select(
-                                          (s) => s.isSoldByWeight,
-                                        ),
-                                      );
-                                      return SwitchListTile(
-                                        title: const Text(
-                                          'Venta a granel / Por peso',
-                                          style: TextStyle(
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 14,
-                                          ),
-                                        ),
-                                        subtitle: const Text(
-                                          'Habilita la captura de peso/cantidad en el punto de venta',
-                                          style: TextStyle(fontSize: 12),
-                                        ),
-                                        value: isSoldByWeight,
-                                        onChanged: (val) => ref
-                                            .read(provider.notifier)
-                                            .setSoldByWeight(val),
-                                        contentPadding: EdgeInsets.zero,
-                                      );
-                                    },
-                                  ),
-                                  const SizedBox(height: 24),
-                                  ProductPricingSection(
-                                    product: widget.product,
-                                    costPriceController: _costController,
-                                    salePriceController: _priceController,
-                                    wholesalePriceController:
-                                        _wholesaleController,
-                                  ),
-                                  const SizedBox(height: 24),
-                                  ProductInventorySection(
-                                    product: widget.product,
-                                    stockController: _stockController,
-                                    minStockController: _minStockController,
-                                    maxStockController: _maxStockController,
-                                  ),
-                                ] else ...[
-                                  ProductVariantsList(
-                                    product: widget.product,
-                                    onAddVariant: _onAddVariant,
-                                    onEditVariant: _onEditVariant,
-                                  ),
-                                  const SizedBox(height: 16),
-
-                                  // Quick Actions for adding variants
-                                  if (isNewProduct || true)
-                                    Row(
-                                      children: [
-                                        Expanded(
-                                          child: OutlinedButton.icon(
-                                            onPressed: () => _onAddVariant(
-                                              VariantType.sales,
-                                            ),
-                                            icon: const Icon(Icons.add_rounded),
-                                            label: const Text('Venta'),
-                                            style: OutlinedButton.styleFrom(
-                                              padding:
-                                                  const EdgeInsets.symmetric(
-                                                    vertical: 16,
-                                                  ),
-                                            ),
-                                          ),
-                                        ),
-                                        const SizedBox(width: 12),
-                                        Expanded(
-                                          child: OutlinedButton.icon(
-                                            onPressed: isNewProduct
-                                                ? () {
-                                                    ScaffoldMessenger.of(
-                                                      context,
-                                                    ).showSnackBar(
-                                                      const SnackBar(
-                                                        content: Text(
-                                                          'Guarda el producto primero para agregar variantes de compra.',
-                                                        ),
-                                                        behavior:
-                                                            SnackBarBehavior
-                                                                .floating,
-                                                      ),
-                                                    );
-                                                  }
-                                                : () => _onAddVariant(
-                                                    VariantType.purchase,
-                                                  ),
-                                            icon: const Icon(
-                                              Icons.add_shopping_cart_rounded,
-                                            ),
-                                            label: const Text('Compra'),
-                                            style: OutlinedButton.styleFrom(
-                                              padding:
-                                                  const EdgeInsets.symmetric(
-                                                    vertical: 16,
-                                                  ),
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                ],
-                              ],
-                            ),
-                          ),
-                        ],
+                            ],
+                          );
+                        },
                       ),
-                    ),
+                    ],
                   ),
-                  SliverFillRemaining(
-                    hasScrollBody: false,
-                    child: Align(
-                      alignment: Alignment.bottomCenter,
-                      child: Padding(
-                        padding: const EdgeInsets.all(20.0),
-                        child: isModified
-                            ? SizedBox(
-                                width: double.infinity,
-                                height: 56,
-                                child: FilledButton(
-                                  onPressed: isLoading ? null : _submit,
-                                  style: FilledButton.styleFrom(
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(16),
-                                    ),
+                ),
+
+                // TAB 3: INVENTORY OR VARIANTS
+                SingleChildScrollView(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    children: [
+                      if (!isVariable) ...[
+                        ProductInventorySection(
+                          product: widget.product,
+                          stockController: _stockController,
+                          minStockController: _minStockController,
+                          maxStockController: _maxStockController,
+                        ),
+                      ] else ...[
+                        ProductVariantsList(
+                          product: widget.product,
+                          onAddVariant: _onAddVariant,
+                          onEditVariant: _onEditVariant,
+                        ),
+                        const SizedBox(height: 24),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: OutlinedButton.icon(
+                                onPressed: () =>
+                                    _onAddVariant(VariantType.sales),
+                                icon: const Icon(Icons.add_rounded),
+                                label: const Text('Venta'),
+                                style: OutlinedButton.styleFrom(
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 16,
                                   ),
-                                  child: isLoading
-                                      ? CircularProgressIndicator(
-                                          color: theme.colorScheme.onPrimary,
-                                        )
-                                      : Text(
-                                          isNewProduct
-                                              ? 'Crear Producto'
-                                              : 'Guardar Cambios',
-                                          style: const TextStyle(
-                                            fontSize: 16,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
                                 ),
-                              )
-                            : const SizedBox.shrink(),
-                      ),
-                    ),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: OutlinedButton.icon(
+                                onPressed: isNewProduct
+                                    ? () {
+                                        ScaffoldMessenger.of(
+                                          context,
+                                        ).showSnackBar(
+                                          const SnackBar(
+                                            content: Text(
+                                              'Guarda el producto primero para agregar variantes de compra.',
+                                            ),
+                                          ),
+                                        );
+                                      }
+                                    : () => _onAddVariant(VariantType.purchase),
+                                icon: const Icon(
+                                  Icons.add_shopping_cart_rounded,
+                                ),
+                                label: const Text('Compra'),
+                                style: OutlinedButton.styleFrom(
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 16,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ],
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         ),
@@ -779,40 +634,5 @@ class ProductFormPageState extends ConsumerState<ProductFormPage> {
     );
   }
 
-  Widget _buildSectionHeader(
-    BuildContext context,
-    String title,
-    IconData icon,
-  ) {
-    final theme = Theme.of(context);
-    return Row(
-      children: [
-        Icon(icon, size: 20, color: theme.colorScheme.primary),
-        const SizedBox(width: 12),
-        Text(
-          title,
-          style: theme.textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.bold,
-            color: theme.colorScheme.onSurface,
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildCard({required Widget child}) {
-    return Card(
-      elevation: 0,
-      margin: EdgeInsets.zero,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(
-          color: Theme.of(
-            context,
-          ).colorScheme.outlineVariant.withValues(alpha: 0.4),
-        ),
-      ),
-      child: Padding(padding: const EdgeInsets.all(20), child: child),
-    );
-  }
+  // Methods removed
 }

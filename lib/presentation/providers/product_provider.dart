@@ -73,15 +73,20 @@ class ProductList extends _$ProductList {
     // Stream will auto-update if it's watching the DB
   }
 
-  Future<void> toggleProductActive(int productId) async {
+  Future<void> toggleActive(int productId, bool isActive) async {
     final currentState = state.value;
     if (currentState == null) return;
 
     try {
       final product = currentState.firstWhere((p) => p.id == productId);
-      final updatedProduct = product.copyWith(isActive: !product.isActive);
-      await updateProduct(updatedProduct);
+      // Only update if changed prevents unnecessary writes, but UI might be optimistic
+      if (product.isActive != isActive) {
+        final updatedProduct = product.copyWith(isActive: isActive);
+        await updateProduct(updatedProduct);
+      }
     } catch (e) {
+      // If product not found in current list (e.g. search filter), fetch it or ignore.
+      // Usually it should be in the list if we clicked it.
       rethrow;
     }
   }

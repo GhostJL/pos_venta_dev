@@ -51,11 +51,11 @@ class ProductCard extends StatelessWidget {
         child: Padding(
           padding: const EdgeInsets.all(12),
           child: Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.start, // Align top for image
             children: [
               // Leading Icon / Image Placeholder
               _buildLeading(theme, isActive),
-              const SizedBox(width: 16),
+              const SizedBox(width: 12),
 
               // Main Content
               Expanded(
@@ -63,37 +63,66 @@ class ProductCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    // Title and Status
+                    // ROW 1: Title + Menu Button
                     Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Expanded(
-                          child: Text(
-                            product.name,
-                            style: theme.textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.w600,
-                              color: titleColor,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                product.name,
+                                style: theme.textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                  color: titleColor,
+                                  height: 1.1,
+                                ),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              if (!isActive)
+                                Padding(
+                                  padding: const EdgeInsets.only(top: 4),
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 6,
+                                      vertical: 2,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: theme.colorScheme.errorContainer,
+                                      borderRadius: BorderRadius.circular(4),
+                                    ),
+                                    child: Text(
+                                      'Inactivo',
+                                      style: theme.textTheme.labelSmall
+                                          ?.copyWith(
+                                            color: theme
+                                                .colorScheme
+                                                .onErrorContainer,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 10,
+                                          ),
+                                    ),
+                                  ),
+                                ),
+                            ],
                           ),
                         ),
-                        if (!isActive)
-                          Container(
-                            margin: const EdgeInsets.only(left: 8),
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 6,
-                              vertical: 2,
-                            ),
-                            decoration: BoxDecoration(
-                              color: theme.colorScheme.errorContainer,
-                              borderRadius: BorderRadius.circular(4),
-                            ),
-                            child: Text(
-                              'Inactivo',
-                              style: theme.textTheme.labelSmall?.copyWith(
-                                color: theme.colorScheme.onErrorContainer,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 10,
+                        if (onMorePressed != null)
+                          SizedBox(
+                            width: 32,
+                            height: 32,
+                            child: IconButton(
+                              onPressed: onMorePressed,
+                              icon: Icon(
+                                Icons.more_vert_rounded,
+                                color: theme.colorScheme.onSurfaceVariant,
+                                size: 20,
+                              ),
+                              style: IconButton.styleFrom(
+                                padding: EdgeInsets.zero,
+                                visualDensity: VisualDensity.compact,
                               ),
                             ),
                           ),
@@ -101,8 +130,11 @@ class ProductCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
 
-                    // Code and Department
-                    Row(
+                    // ROW 2: Metadata (Code, Dept)
+                    Wrap(
+                      spacing: 6,
+                      runSpacing: 4,
+                      crossAxisAlignment: WrapCrossAlignment.center,
                       children: [
                         _buildTag(
                           theme,
@@ -110,84 +142,64 @@ class ProductCard extends StatelessWidget {
                           isActive: isActive,
                           isAccent: true,
                         ),
-                        if (product.departmentName != null) ...[
-                          const SizedBox(width: 6),
-                          Flexible(
-                            child: Text(
-                              product.departmentName!,
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                color: subtitleColor,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
+                        if (product.departmentName != null)
+                          Text(
+                            product.departmentName!,
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: subtitleColor,
+                              fontSize: 11,
                             ),
                           ),
-                        ],
                       ],
                     ),
-                    const SizedBox(height: 6),
+                    const SizedBox(height: 8),
 
-                    // Price and Variants
+                    // ROW 3: Price + Stats (Bottom Row)
                     Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
-                        Text(
-                          '\$${(product.salePriceCents / 100).toStringAsFixed(2)}',
-                          style: theme.textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.w800,
-                            color: isActive
-                                ? theme.colorScheme.primary
-                                : titleColor,
+                        // Price & Variants Group
+                        Flexible(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                '\$${(product.salePriceCents / 100).toStringAsFixed(2)}',
+                                style: theme.textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.w800,
+                                  color: isActive
+                                      ? theme.colorScheme.primary
+                                      : titleColor,
+                                ),
+                              ),
+                              if (product.variants != null &&
+                                  product.variants!.isNotEmpty)
+                                Padding(
+                                  padding: const EdgeInsets.only(top: 2),
+                                  child: Text(
+                                    '${product.variants!.length} variantes',
+                                    style: theme.textTheme.labelSmall?.copyWith(
+                                      color: subtitleColor,
+                                      fontSize: 10,
+                                    ),
+                                  ),
+                                ),
+                            ],
                           ),
                         ),
+
+                        // Stock Indicator (Right aligned)
                         if (product.variants != null &&
                             product.variants!.isNotEmpty) ...[
                           const SizedBox(width: 8),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 6,
-                              vertical: 2,
-                            ),
-                            decoration: BoxDecoration(
-                              color: theme.colorScheme.secondaryContainer
-                                  .withValues(alpha: 0.5),
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: Text(
-                              '${product.variants!.length} var.',
-                              style: theme.textTheme.labelSmall?.copyWith(
-                                color: theme.colorScheme.onSecondaryContainer,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ),
+                          Flexible(child: _buildStockIndicator(theme, product)),
                         ],
                       ],
                     ),
                   ],
                 ),
               ),
-
-              // Stock Indicator
-              // Show only if there are variants (which imply stock logic is active)
-              // or if we decide to show it for all products.
-              // For now, let's show it if variants exist.
-              if (product.variants != null && product.variants!.isNotEmpty) ...[
-                const SizedBox(width: 8),
-                _buildStockIndicator(theme, product),
-              ],
-
-              // Action Button (More)
-              if (onMorePressed != null)
-                IconButton(
-                  onPressed: onMorePressed,
-                  icon: Icon(
-                    Icons.more_vert_rounded,
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
-                  style: IconButton.styleFrom(
-                    visualDensity: VisualDensity.compact,
-                  ),
-                ),
             ],
           ),
         ),
@@ -197,11 +209,16 @@ class ProductCard extends StatelessWidget {
 
   Widget _buildStockIndicator(ThemeData theme, Product product) {
     double totalStock = 0;
+    double minStock = 0;
+    double maxStock = 100; // Default max for progress bar visualization
     bool isLowStock = false;
 
     if (product.variants != null) {
       for (var v in product.variants!) {
         totalStock += (v.stock ?? 0);
+        minStock += (v.stockMin ?? 0);
+        if ((v.stockMax ?? 0) > maxStock) maxStock = v.stockMax!;
+
         if ((v.stock ?? 0) <= (v.stockMin ?? 5)) {
           isLowStock = true;
         }
@@ -209,6 +226,12 @@ class ProductCard extends StatelessWidget {
     }
 
     final isOutOfStock = totalStock <= 0;
+
+    // Progress calculation (clamped between 0 and 1)
+    final progress = (totalStock / (maxStock > 0 ? maxStock : 100)).clamp(
+      0.0,
+      1.0,
+    );
 
     Color color;
     Color backgroundColor;
@@ -228,26 +251,43 @@ class ProductCard extends StatelessWidget {
       icon = Icons.inventory_2_outlined;
     }
 
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-      decoration: BoxDecoration(
-        color: backgroundColor.withValues(alpha: 0.5),
-        borderRadius: BorderRadius.circular(6),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 12, color: color),
-          const SizedBox(width: 4),
-          Text(
-            _formatDouble(totalStock),
-            style: theme.textTheme.labelSmall?.copyWith(
-              color: color,
-              fontWeight: FontWeight.bold,
-            ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.end,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+          decoration: BoxDecoration(
+            color: backgroundColor.withValues(alpha: 0.5),
+            borderRadius: BorderRadius.circular(6),
           ),
-        ],
-      ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, size: 12, color: color),
+              const SizedBox(width: 4),
+              Text(
+                '${_formatDouble(totalStock)} Unid.',
+                style: theme.textTheme.labelSmall?.copyWith(
+                  color: color,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 4),
+        SizedBox(
+          width: 60,
+          child: LinearProgressIndicator(
+            value: progress,
+            backgroundColor: theme.colorScheme.surfaceContainerHighest,
+            color: color,
+            minHeight: 3,
+            borderRadius: BorderRadius.circular(1.5),
+          ),
+        ),
+      ],
     );
   }
 

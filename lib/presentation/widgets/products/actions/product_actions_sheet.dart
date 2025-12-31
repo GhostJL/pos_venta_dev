@@ -254,7 +254,7 @@ class ProductActionsSheet extends ConsumerWidget {
     try {
       await ref
           .read(productNotifierProvider.notifier)
-          .toggleProductActive(product.id!);
+          .toggleActive(product.id!, !product.isActive);
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(

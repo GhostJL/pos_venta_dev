@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:go_router/go_router.dart';
 import 'package:posventa/domain/entities/product.dart';
 import 'package:posventa/presentation/providers/product_provider.dart';
@@ -235,11 +236,38 @@ class ProductsPageState extends ConsumerState<ProductsPage>
       separatorBuilder: (context, index) => const SizedBox(height: 12),
       itemBuilder: (context, index) {
         final product = productList[index];
+        final isDisabled = !product.isActive;
         return RepaintBoundary(
-          child: ProductCard(
-            product: product,
-            onTap: () => _showActions(context, product),
-            onMorePressed: () => _showActions(context, product),
+          child: Slidable(
+            key: ValueKey(product.id),
+            startActionPane: ActionPane(
+              motion: const ScrollMotion(),
+              children: [
+                SlidableAction(
+                  onPressed: (_) async {
+                    await ref
+                        .read(productNotifierProvider.notifier)
+                        .toggleActive(product.id!, !product.isActive);
+                  },
+                  backgroundColor: isDisabled
+                      ? Theme.of(context).colorScheme.primaryContainer
+                      : Theme.of(context).colorScheme.errorContainer,
+                  foregroundColor: isDisabled
+                      ? Theme.of(context).colorScheme.onPrimaryContainer
+                      : Theme.of(context).colorScheme.onErrorContainer,
+                  icon: isDisabled
+                      ? Icons.check_circle_outline_rounded
+                      : Icons.pause_circle_outline_rounded,
+                  label: isDisabled ? 'Activar' : 'Desactivar',
+                  borderRadius: BorderRadius.circular(16),
+                ),
+              ],
+            ),
+            child: ProductCard(
+              product: product,
+              onTap: () => _showActions(context, product),
+              onMorePressed: () => _showActions(context, product),
+            ),
           ),
         );
       },
