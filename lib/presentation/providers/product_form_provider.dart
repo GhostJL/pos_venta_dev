@@ -86,6 +86,7 @@ class ProductFormState {
     int? supplierId,
     bool clearSupplierId = false,
     int? unitId,
+    bool clearUnitId = false,
     bool? isSoldByWeight,
     bool? isActive,
     bool? hasExpiration,
@@ -117,7 +118,7 @@ class ProductFormState {
       categoryId: clearCategoryId ? null : (categoryId ?? this.categoryId),
       brandId: clearBrandId ? null : (brandId ?? this.brandId),
       supplierId: clearSupplierId ? null : (supplierId ?? this.supplierId),
-      unitId: unitId ?? this.unitId,
+      unitId: clearUnitId ? null : (unitId ?? this.unitId),
       isSoldByWeight: isSoldByWeight ?? this.isSoldByWeight,
       isActive: isActive ?? this.isActive,
       hasExpiration: hasExpiration ?? this.hasExpiration,
@@ -155,6 +156,9 @@ class ProductFormNotifier extends _$ProductFormNotifier {
         categoryId: product.categoryId,
         brandId: product.brandId,
         supplierId: product.supplierId,
+        unitId: (product.variants?.isNotEmpty ?? false)
+            ? product.variants!.first.unitId
+            : null,
         isSoldByWeight: product.isSoldByWeight,
         isActive: product.isActive,
         hasExpiration: product.hasExpiration,
@@ -198,6 +202,9 @@ class ProductFormNotifier extends _$ProductFormNotifier {
       if (freshProduct != null) {
         final newState = state.copyWith(
           initialProduct: freshProduct,
+          unitId: (freshProduct.variants?.isNotEmpty ?? false)
+              ? freshProduct.variants!.first.unitId
+              : null,
           variants: List.from(freshProduct.variants ?? []),
           photoUrl: freshProduct.photoUrl,
           additionalBarcodes: (freshProduct.variants?.isNotEmpty ?? false)
@@ -242,6 +249,7 @@ class ProductFormNotifier extends _$ProductFormNotifier {
     if (s.categoryId != initial.categoryId) return true;
     if (s.brandId != initial.brandId) return true;
     if (s.supplierId != initial.supplierId) return true;
+    if (s.unitId != initial.unitId) return true;
     if (s.isSoldByWeight != initial.isSoldByWeight) return true;
     if (s.isActive != initial.isActive) return true;
     if (s.hasExpiration != initial.hasExpiration) return true;
@@ -263,6 +271,38 @@ class ProductFormNotifier extends _$ProductFormNotifier {
     }
 
     if (s.variants.length != initial.variants.length) return true;
+
+    // Deep compare variants
+    for (int i = 0; i < s.variants.length; i++) {
+      final v1 = s.variants[i];
+      final v2 = initial.variants[i];
+
+      if (v1.id != v2.id) return true;
+      if (v1.productId != v2.productId) return true;
+      if (v1.variantName != v2.variantName) return true;
+      if (v1.barcode != v2.barcode) return true;
+      if (v1.quantity != v2.quantity) return true;
+      if (v1.priceCents != v2.priceCents) return true;
+      if (v1.costPriceCents != v2.costPriceCents) return true;
+      if (v1.wholesalePriceCents != v2.wholesalePriceCents) return true;
+      if (v1.isActive != v2.isActive) return true;
+      if (v1.isForSale != v2.isForSale) return true;
+      if (v1.type != v2.type) return true;
+      if (v1.linkedVariantId != v2.linkedVariantId) return true;
+      if (v1.stock != v2.stock) return true;
+      if (v1.stockMin != v2.stockMin) return true;
+      if (v1.stockMax != v2.stockMax) return true;
+      if (v1.conversionFactor != v2.conversionFactor) return true;
+      if (v1.unitId != v2.unitId) return true;
+      if (v1.isSoldByWeight != v2.isSoldByWeight) return true;
+      if (v1.photoUrl != v2.photoUrl) return true;
+
+      // Handle List<String>? equality for additionalBarcodes
+      final list1 = v1.additionalBarcodes ?? [];
+      final list2 = v2.additionalBarcodes ?? [];
+      if (list1.length != list2.length) return true;
+      if (!list1.every((item) => list2.contains(item))) return true;
+    }
 
     return false;
   }
@@ -299,7 +339,10 @@ class ProductFormNotifier extends _$ProductFormNotifier {
       _updateModified(state.copyWith(isActive: value));
   void setHasExpiration(bool value) =>
       _updateModified(state.copyWith(hasExpiration: value));
-  void setUnitId(int? value) => _updateModified(state.copyWith(unitId: value));
+
+  void setUnitId(int? value) => _updateModified(
+    state.copyWith(unitId: value, clearUnitId: value == null),
+  );
 
   void setTaxes(List<ProductTax> value) =>
       _updateModified(state.copyWith(selectedTaxes: value));
