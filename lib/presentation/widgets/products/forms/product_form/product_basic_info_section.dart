@@ -152,7 +152,7 @@ class _ProductBasicInfoSectionState
         InkWell(
           onTap: () {
             final timestamp = DateTime.now().millisecondsSinceEpoch.toString();
-            widget.barcodeController?.text = 'INT$timestamp';
+            widget.barcodeController?.text = 'I$timestamp';
           },
           borderRadius: BorderRadius.circular(4),
           child: Padding(

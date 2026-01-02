@@ -32,10 +32,14 @@ import 'package:posventa/domain/use_cases/supplier/update_supplier.dart';
 import 'package:posventa/presentation/providers/di/core_di.dart';
 import 'package:posventa/data/datasources/product_local_datasource.dart';
 import 'package:posventa/data/datasources/product_local_datasource_impl.dart';
+import 'package:posventa/domain/services/label_service.dart';
 
 part 'product_di.g.dart';
 
 // --- Product Providers ---
+
+@riverpod
+LabelService labelService(ref) => LabelService();
 
 @riverpod
 ProductLocalDataSource productLocalDataSource(ref) =>

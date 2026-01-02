@@ -52,7 +52,7 @@ class _VariantBarcodeSectionState extends ConsumerState<VariantBarcodeSection> {
 
   void _generateInternalCode() {
     final timestamp = DateTime.now().millisecondsSinceEpoch.toString();
-    widget.barcodeController.text = 'INT$timestamp';
+    widget.barcodeController.text = 'I$timestamp';
   }
 
   void _addAdditionalBarcode() {

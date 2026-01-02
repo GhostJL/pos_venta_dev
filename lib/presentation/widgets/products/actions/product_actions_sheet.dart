@@ -7,6 +7,9 @@ import 'package:posventa/presentation/pages/products/variant_type_selection_page
 import 'package:posventa/presentation/providers/permission_provider.dart';
 import 'package:posventa/domain/entities/product_variant.dart';
 import 'package:posventa/presentation/providers/product_provider.dart';
+import 'package:posventa/presentation/providers/di/product_di.dart';
+import 'package:posventa/presentation/widgets/products/actions/label_print_dialog.dart';
+import 'package:posventa/domain/services/label_service.dart';
 
 class ProductActionsSheet extends ConsumerWidget {
   final Product product;
@@ -89,6 +92,12 @@ class ProductActionsSheet extends ConsumerWidget {
                         icon: Icons.copy_rounded,
                         label: 'Duplicar producto',
                         onTap: () => _handleDuplicate(context),
+                      ),
+                      _buildCompactAction(
+                        context,
+                        icon: Icons.print_outlined,
+                        label: 'Imprimir Etiqueta',
+                        onTap: () => _handlePrintLabel(context, ref),
                       ),
                       const SizedBox(height: 8),
                       const Divider(),
@@ -371,5 +380,34 @@ class ProductActionsSheet extends ConsumerWidget {
     );
 
     context.push('/products/form', extra: newProduct);
+  }
+
+  Future<void> _handlePrintLabel(BuildContext context, WidgetRef ref) async {
+    final labelService = ref.read(labelServiceProvider);
+    final navigator = Navigator.of(context);
+
+    navigator.pop(); // Close sheet
+
+    // Use navigator.context which remains valid
+    if (navigator.context.mounted) {
+      final requests = await showDialog<List<LabelPrintRequest>>(
+        context: navigator.context,
+        builder: (context) => LabelPrintDialog(product: product),
+      );
+
+      if (requests != null && requests.isNotEmpty) {
+        try {
+          debugPrint('Starting print job for ${requests.length} requests');
+          await labelService.printLabels(requests);
+        } catch (e) {
+          debugPrint('Print error: $e');
+          if (navigator.context.mounted) {
+            ScaffoldMessenger.of(
+              context.mounted ? context : navigator.context,
+            ).showSnackBar(SnackBar(content: Text('Error al imprimir: $e')));
+          }
+        }
+      }
+    }
   }
 }

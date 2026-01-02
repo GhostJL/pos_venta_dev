@@ -43,6 +43,8 @@ class Product extends Equatable {
   });
 
   // Helper getters to maintain compatibility or ease of use
+  bool get isVariableProduct => variants != null && variants!.isNotEmpty;
+
   // Returns the price of the first variant (default) or 0
   double get price {
     if (variants != null && variants!.isNotEmpty) {

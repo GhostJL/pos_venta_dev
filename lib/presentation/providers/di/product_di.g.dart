@@ -9,6 +9,47 @@ part of 'product_di.dart';
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
 
+@ProviderFor(labelService)
+const labelServiceProvider = LabelServiceProvider._();
+
+final class LabelServiceProvider
+    extends $FunctionalProvider<LabelService, LabelService, LabelService>
+    with $Provider<LabelService> {
+  const LabelServiceProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'labelServiceProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$labelServiceHash();
+
+  @$internal
+  @override
+  $ProviderElement<LabelService> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  LabelService create(Ref ref) {
+    return labelService(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(LabelService value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<LabelService>(value),
+    );
+  }
+}
+
+String _$labelServiceHash() => r'0a8a7d696a0171744c0c0bd1b0b93598000f21b3';
+
 @ProviderFor(productLocalDataSource)
 const productLocalDataSourceProvider = ProductLocalDataSourceProvider._();
 
