@@ -210,7 +210,7 @@ class ProductFormPageState extends ConsumerState<ProductFormPage> {
     final provider = productFormProvider(widget.product);
     final state = ref.watch(provider);
     final isLoading = state.isLoading;
-    final isNewProduct = widget.product == null;
+    final isNewProduct = widget.product == null || widget.product?.id == null;
     final theme = Theme.of(context);
     final isModified = state.isModified;
     final isVariable = state.isVariableProduct;

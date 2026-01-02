@@ -352,6 +352,11 @@ class ProductLocalDataSourceImpl implements ProductLocalDataSource {
           for (final variant in product.variants!) {
             final variantModel = ProductVariantModel.fromEntity(variant);
             final variantMap = variantModel.toMap();
+
+            // Remove non-column fields
+            final additionalBarcodes =
+                variantMap.remove('additional_barcodes') as List<String>?;
+
             variantMap['product_id'] = productId;
             variantMap.remove('id');
 
@@ -359,6 +364,16 @@ class ProductLocalDataSourceImpl implements ProductLocalDataSource {
               DatabaseHelper.tableProductVariants,
               variantMap,
             );
+
+            // Insert additional barcodes
+            if (additionalBarcodes != null) {
+              for (final code in additionalBarcodes) {
+                await txn.insert(DatabaseHelper.tableProductBarcodes, {
+                  'variant_id': variantId,
+                  'barcode': code,
+                });
+              }
+            }
 
             // --- INITIAL INVENTORY CREATION ---
             if (variant.stock != null && variant.stock! > 0) {

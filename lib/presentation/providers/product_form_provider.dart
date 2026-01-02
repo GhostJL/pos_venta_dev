@@ -587,7 +587,7 @@ class ProductFormNotifier extends _$ProductFormNotifier {
     Product savedProduct = newProduct;
     String? saveError;
 
-    if (state.initialProduct == null) {
+    if (state.initialProduct == null || state.initialProduct?.id == null) {
       final createResult = await productRepo.createProduct(newProduct);
       createResult.fold(
         (failure) => saveError = failure.message,
