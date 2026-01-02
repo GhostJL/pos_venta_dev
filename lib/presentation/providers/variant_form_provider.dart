@@ -198,6 +198,12 @@ class VariantFormState extends Equatable {
   }
 
   bool hasContentChanged(VariantFormState other) {
+    // Helper for list equality
+    bool listEquals(List<String> a, List<String> b) {
+      if (a.length != b.length) return false;
+      return a.every((item) => b.contains(item));
+    }
+
     return name != other.name ||
         quantity != other.quantity ||
         price != other.price ||
@@ -215,7 +221,7 @@ class VariantFormState extends Equatable {
         imageFile != other.imageFile ||
         photoUrl != other.photoUrl ||
         profitMargin != other.profitMargin ||
-        additionalBarcodes != other.additionalBarcodes;
+        !listEquals(additionalBarcodes, other.additionalBarcodes);
   }
 
   @override

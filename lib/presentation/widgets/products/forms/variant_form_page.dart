@@ -287,7 +287,7 @@ class _VariantFormPageState extends ConsumerState<VariantFormPage> {
                       if (widget.productName != null)
                         Center(
                           child: Padding(
-                            padding: const EdgeInsets.only(right: 16.0),
+                            padding: const EdgeInsets.only(right: 8.0),
                             child: Text(
                               widget.productName!,
                               style: theme.textTheme.bodySmall?.copyWith(
@@ -297,6 +297,37 @@ class _VariantFormPageState extends ConsumerState<VariantFormPage> {
                             ),
                           ),
                         ),
+
+                      // Save Action
+                      Padding(
+                        padding: const EdgeInsets.only(right: 16.0),
+                        child: isSaving
+                            ? SizedBox(
+                                width: 24,
+                                height: 24,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: theme.colorScheme.primary,
+                                ),
+                              )
+                            : TextButton.icon(
+                                onPressed: isModified ? _saveVariant : null,
+                                icon: const Icon(Icons.check_circle_rounded),
+                                label: Text(
+                                  isEditing ? 'Actualizar' : 'Guardar',
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                style: TextButton.styleFrom(
+                                  foregroundColor: theme.colorScheme.primary,
+                                  disabledForegroundColor: theme
+                                      .colorScheme
+                                      .onSurface
+                                      .withValues(alpha: 0.38),
+                                ),
+                              ),
+                      ),
                     ],
                   ),
                   SliverToBoxAdapter(
@@ -480,45 +511,8 @@ class _VariantFormPageState extends ConsumerState<VariantFormPage> {
                               ),
                             ),
                           ],
+                          const SizedBox(height: 40), // Bottom padding
                         ],
-                      ),
-                    ),
-                  ),
-                  SliverFillRemaining(
-                    hasScrollBody: false,
-                    child: Align(
-                      alignment: Alignment.bottomCenter,
-                      child: Padding(
-                        padding: const EdgeInsets.all(20.0),
-                        child: isModified
-                            ? SizedBox(
-                                width: double.infinity,
-                                height: 56,
-                                child: FilledButton(
-                                  onPressed: isSaving ? null : _saveVariant,
-                                  style: FilledButton.styleFrom(
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(16),
-                                    ),
-                                  ),
-                                  child: isSaving
-                                      ? CircularProgressIndicator(
-                                          color: theme.colorScheme.onPrimary,
-                                        )
-                                      : Text(
-                                          isNewProductContext
-                                              ? 'Agregar a la Lista'
-                                              : (isEditing
-                                                    ? 'Actualizar Variante'
-                                                    : 'Crear Variante'),
-                                          style: const TextStyle(
-                                            fontSize: 16,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                ),
-                              )
-                            : const SizedBox.shrink(),
                       ),
                     ),
                   ),
