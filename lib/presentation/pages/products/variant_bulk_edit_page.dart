@@ -1,23 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:posventa/domain/entities/product.dart';
 import 'package:posventa/domain/entities/product_variant.dart';
-import 'package:posventa/presentation/pages/products/matrix_generator/matrix_generator_controller.dart';
+import 'package:posventa/presentation/providers/product_form_provider.dart';
 
-class VariantPreviewStep extends ConsumerStatefulWidget {
-  final int productId;
+class VariantBulkEditPage extends ConsumerStatefulWidget {
+  final Product product;
 
-  const VariantPreviewStep({super.key, required this.productId});
+  const VariantBulkEditPage({super.key, required this.product});
 
   @override
-  ConsumerState<VariantPreviewStep> createState() => _VariantPreviewStepState();
+  ConsumerState<VariantBulkEditPage> createState() =>
+      _VariantBulkEditPageState();
 }
 
-class _VariantPreviewStepState extends ConsumerState<VariantPreviewStep> {
+class _VariantBulkEditPageState extends ConsumerState<VariantBulkEditPage> {
   final TextEditingController _bulkPriceController = TextEditingController();
   final TextEditingController _bulkCostController = TextEditingController();
   final TextEditingController _bulkWholesaleController =
       TextEditingController();
-  final TextEditingController _bulkStockController = TextEditingController();
   final TextEditingController _bulkMinStockController = TextEditingController();
   final TextEditingController _bulkMaxStockController = TextEditingController();
 
@@ -26,7 +28,6 @@ class _VariantPreviewStepState extends ConsumerState<VariantPreviewStep> {
     _bulkPriceController.dispose();
     _bulkCostController.dispose();
     _bulkWholesaleController.dispose();
-    _bulkStockController.dispose();
     _bulkMinStockController.dispose();
     _bulkMaxStockController.dispose();
     super.dispose();
@@ -36,7 +37,7 @@ class _VariantPreviewStepState extends ConsumerState<VariantPreviewStep> {
     final val = double.tryParse(_bulkPriceController.text);
     if (val != null) {
       ref
-          .read(matrixGeneratorProvider(widget.productId).notifier)
+          .read(productFormProvider(widget.product).notifier)
           .updateAllPrices(val);
       _bulkPriceController.clear();
     }
@@ -46,7 +47,7 @@ class _VariantPreviewStepState extends ConsumerState<VariantPreviewStep> {
     final val = double.tryParse(_bulkCostController.text);
     if (val != null) {
       ref
-          .read(matrixGeneratorProvider(widget.productId).notifier)
+          .read(productFormProvider(widget.product).notifier)
           .updateAllCosts(val);
       _bulkCostController.clear();
     }
@@ -56,19 +57,9 @@ class _VariantPreviewStepState extends ConsumerState<VariantPreviewStep> {
     final val = double.tryParse(_bulkWholesaleController.text);
     if (val != null) {
       ref
-          .read(matrixGeneratorProvider(widget.productId).notifier)
+          .read(productFormProvider(widget.product).notifier)
           .updateAllWholesalePrices(val);
       _bulkWholesaleController.clear();
-    }
-  }
-
-  void _applyBulkStock() {
-    final val = double.tryParse(_bulkStockController.text);
-    if (val != null) {
-      ref
-          .read(matrixGeneratorProvider(widget.productId).notifier)
-          .updateAllStocks(val);
-      _bulkStockController.clear();
     }
   }
 
@@ -76,7 +67,7 @@ class _VariantPreviewStepState extends ConsumerState<VariantPreviewStep> {
     final val = double.tryParse(_bulkMinStockController.text);
     if (val != null) {
       ref
-          .read(matrixGeneratorProvider(widget.productId).notifier)
+          .read(productFormProvider(widget.product).notifier)
           .updateAllMinStocks(val);
       _bulkMinStockController.clear();
     }
@@ -86,146 +77,185 @@ class _VariantPreviewStepState extends ConsumerState<VariantPreviewStep> {
     final val = double.tryParse(_bulkMaxStockController.text);
     if (val != null) {
       ref
-          .read(matrixGeneratorProvider(widget.productId).notifier)
+          .read(productFormProvider(widget.product).notifier)
           .updateAllMaxStocks(val);
       _bulkMaxStockController.clear();
     }
   }
 
+  Future<void> _handleSave() async {
+    final success = await ref
+        .read(productFormProvider(widget.product).notifier)
+        .validateAndSubmit();
+
+    if (success && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Cambios guardados correctamente'),
+          backgroundColor: Colors.green,
+        ),
+      );
+      context.pop();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final state = ref.watch(matrixGeneratorProvider(widget.productId));
+    final provider = productFormProvider(widget.product);
+    final state = ref.watch(provider);
     final theme = Theme.of(context);
-    final variants = state.generatedVariants;
+    final variants = state.variants;
+    final isModified = state.isModified;
 
-    // Use LayoutBuilder for responsiveness
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final isDesktop = constraints.maxWidth > 900;
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Edición Masiva'),
+        actions: [
+          if (isModified && !state.isLoading)
+            IconButton(icon: const Icon(Icons.save), onPressed: _handleSave),
+        ],
+      ),
+      body: state.isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : LayoutBuilder(
+              builder: (context, constraints) {
+                final isDesktop = constraints.maxWidth > 900;
 
-        return SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Paso 2: Previsualización y Edición',
-                style: theme.textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Revisa las ${variants.length} variantes generadas. Puedes editar precios y inventario de forma masiva o individual.',
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
-              ),
-              const SizedBox(height: 24),
+                return SingleChildScrollView(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Editar Variantes',
+                        style: theme.textTheme.headlineSmall?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Edita precios y parámetros de las ${variants.length} variantes. Los cambios se aplicarán al guardar.',
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                      const SizedBox(height: 24),
 
-              // Bulk Edit Section
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.primaryContainer.withValues(
-                    alpha: 0.2,
-                  ),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: theme.colorScheme.primaryContainer),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Icon(Icons.edit_note, color: theme.colorScheme.primary),
-                        const SizedBox(width: 8),
-                        Text(
-                          'Edición Masiva',
-                          style: theme.textTheme.titleMedium?.copyWith(
-                            color: theme.colorScheme.primary,
-                            fontWeight: FontWeight.bold,
+                      // Bulk Edit Section
+                      Container(
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.primaryContainer.withValues(
+                            alpha: 0.1,
+                          ),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: theme.colorScheme.primaryContainer
+                                .withValues(alpha: 0.5),
                           ),
                         ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    if (isDesktop)
-                      _buildDesktopBulkInputs()
-                    else
-                      _buildMobileBulkInputs(),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 24),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.all(16.0),
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    Icons.edit_note,
+                                    color: theme.colorScheme.primary,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    'Aplicar a todos',
+                                    style: theme.textTheme.titleMedium
+                                        ?.copyWith(
+                                          color: theme.colorScheme.primary,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            if (isDesktop)
+                              _buildDesktopBulkInputs()
+                            else
+                              _buildMobileBulkInputs(),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 24),
 
-              // Variants List/Table
-              if (isDesktop)
-                _buildDesktopTable(variants, theme)
-              else
-                _buildMobileList(variants, theme),
-            ],
-          ),
-        );
-      },
+                      // Variants List/Table
+                      if (isDesktop)
+                        _buildDesktopTable(variants, theme)
+                      else
+                        _buildMobileList(variants, theme),
+                    ],
+                  ),
+                );
+              },
+            ),
     );
   }
 
   Widget _buildDesktopBulkInputs() {
     return Column(
       children: [
-        Row(
-          children: [
-            Expanded(
-              child: _buildBulkField(
-                _bulkPriceController,
-                'Precio Venta',
-                _applyBulkPrice,
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+          child: Row(
+            children: [
+              Expanded(
+                child: _buildBulkField(
+                  _bulkPriceController,
+                  'Precio Venta',
+                  _applyBulkPrice,
+                ),
               ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: _buildBulkField(
-                _bulkCostController,
-                'Costo',
-                _applyBulkCost,
+              const SizedBox(width: 16),
+              Expanded(
+                child: _buildBulkField(
+                  _bulkCostController,
+                  'Costo',
+                  _applyBulkCost,
+                ),
               ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: _buildBulkField(
-                _bulkWholesaleController,
-                'Mayoreo',
-                _applyBulkWholesale,
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
-        const SizedBox(height: 16),
-        Row(
+        const SizedBox(height: 8),
+        ExpansionTile(
+          title: const Text('Ediciones Adicionales'),
+          subtitle: const Text('Mayoreo y Límites de Stock'),
+          childrenPadding: const EdgeInsets.all(16),
+          initiallyExpanded: false,
           children: [
-            Expanded(
-              child: _buildBulkField(
-                _bulkStockController,
-                'Stock Inicial',
-                _applyBulkStock,
-              ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: _buildBulkField(
-                _bulkMinStockController,
-                'Stock Min',
-                _applyBulkMinStock,
-              ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: _buildBulkField(
-                _bulkMaxStockController,
-                'Stock Max',
-                _applyBulkMaxStock,
-              ),
+            Row(
+              children: [
+                Expanded(
+                  child: _buildBulkField(
+                    _bulkWholesaleController,
+                    'Mayoreo',
+                    _applyBulkWholesale,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: _buildBulkField(
+                    _bulkMinStockController,
+                    'Min',
+                    _applyBulkMinStock,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: _buildBulkField(
+                    _bulkMaxStockController,
+                    'Max',
+                    _applyBulkMaxStock,
+                  ),
+                ),
+              ],
             ),
           ],
         ),
@@ -236,28 +266,36 @@ class _VariantPreviewStepState extends ConsumerState<VariantPreviewStep> {
   Widget _buildMobileBulkInputs() {
     return Column(
       children: [
-        _buildBulkField(_bulkPriceController, 'Precio Venta', _applyBulkPrice),
-        const SizedBox(height: 12),
-        _buildBulkField(_bulkCostController, 'Costo', _applyBulkCost),
-        const SizedBox(height: 12),
-        _buildBulkField(
-          _bulkWholesaleController,
-          'Mayoreo',
-          _applyBulkWholesale,
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+          child: Column(
+            children: [
+              _buildBulkField(
+                _bulkPriceController,
+                'Precio Venta',
+                _applyBulkPrice,
+              ),
+              const SizedBox(height: 12),
+              _buildBulkField(_bulkCostController, 'Costo', _applyBulkCost),
+            ],
+          ),
         ),
-        const SizedBox(height: 12),
-        _buildBulkField(_bulkStockController, 'Stock Inicial', _applyBulkStock),
-        const SizedBox(height: 12),
-        _buildBulkField(
-          _bulkMinStockController,
-          'Stock Min',
-          _applyBulkMinStock,
-        ),
-        const SizedBox(height: 12),
-        _buildBulkField(
-          _bulkMaxStockController,
-          'Stock Max',
-          _applyBulkMaxStock,
+        const SizedBox(height: 8),
+        ExpansionTile(
+          title: const Text('Ediciones Adicionales'),
+          childrenPadding: const EdgeInsets.all(16),
+          initiallyExpanded: false,
+          children: [
+            _buildBulkField(
+              _bulkWholesaleController,
+              'Mayoreo',
+              _applyBulkWholesale,
+            ),
+            const SizedBox(height: 12),
+            _buildBulkField(_bulkMinStockController, 'Min', _applyBulkMinStock),
+            const SizedBox(height: 12),
+            _buildBulkField(_bulkMaxStockController, 'Max', _applyBulkMaxStock),
+          ],
         ),
       ],
     );
@@ -308,7 +346,6 @@ class _VariantPreviewStepState extends ConsumerState<VariantPreviewStep> {
               DataColumn(label: Text('Precio')),
               DataColumn(label: Text('Costo')),
               DataColumn(label: Text('Mayoreo')),
-              DataColumn(label: Text('Stock')),
               DataColumn(label: Text('Min')),
               DataColumn(label: Text('Max')),
             ],
@@ -333,11 +370,7 @@ class _VariantPreviewStepState extends ConsumerState<VariantPreviewStep> {
                           priceCents: (d * 100).round(),
                         );
                         ref
-                            .read(
-                              matrixGeneratorProvider(
-                                widget.productId,
-                              ).notifier,
-                            )
+                            .read(productFormProvider(widget.product).notifier)
                             .updateVariant(index, updated);
                       },
                     ),
@@ -352,11 +385,7 @@ class _VariantPreviewStepState extends ConsumerState<VariantPreviewStep> {
                           costPriceCents: (d * 100).round(),
                         );
                         ref
-                            .read(
-                              matrixGeneratorProvider(
-                                widget.productId,
-                              ).notifier,
-                            )
+                            .read(productFormProvider(widget.product).notifier)
                             .updateVariant(index, updated);
                       },
                     ),
@@ -377,28 +406,7 @@ class _VariantPreviewStepState extends ConsumerState<VariantPreviewStep> {
                           wholesalePriceCents: (d * 100).round(),
                         );
                         ref
-                            .read(
-                              matrixGeneratorProvider(
-                                widget.productId,
-                              ).notifier,
-                            )
-                            .updateVariant(index, updated);
-                      },
-                    ),
-                  ),
-                  DataCell(
-                    _EditableCell(
-                      key: ValueKey('stock_${index}_${variant.stock}'),
-                      value: (variant.stock ?? 0).toStringAsFixed(0),
-                      onChanged: (val) {
-                        final d = double.tryParse(val) ?? 0;
-                        final updated = variant.copyWith(stock: d);
-                        ref
-                            .read(
-                              matrixGeneratorProvider(
-                                widget.productId,
-                              ).notifier,
-                            )
+                            .read(productFormProvider(widget.product).notifier)
                             .updateVariant(index, updated);
                       },
                     ),
@@ -411,11 +419,7 @@ class _VariantPreviewStepState extends ConsumerState<VariantPreviewStep> {
                         final d = double.tryParse(val) ?? 0;
                         final updated = variant.copyWith(stockMin: d);
                         ref
-                            .read(
-                              matrixGeneratorProvider(
-                                widget.productId,
-                              ).notifier,
-                            )
+                            .read(productFormProvider(widget.product).notifier)
                             .updateVariant(index, updated);
                       },
                     ),
@@ -428,11 +432,7 @@ class _VariantPreviewStepState extends ConsumerState<VariantPreviewStep> {
                         final d = double.tryParse(val) ?? 0;
                         final updated = variant.copyWith(stockMax: d);
                         ref
-                            .read(
-                              matrixGeneratorProvider(
-                                widget.productId,
-                              ).notifier,
-                            )
+                            .read(productFormProvider(widget.product).notifier)
                             .updateVariant(index, updated);
                       },
                     ),
@@ -487,9 +487,7 @@ class _VariantPreviewStepState extends ConsumerState<VariantPreviewStep> {
                           );
                           ref
                               .read(
-                                matrixGeneratorProvider(
-                                  widget.productId,
-                                ).notifier,
+                                productFormProvider(widget.product).notifier,
                               )
                               .updateVariant(index, updated);
                         },
@@ -508,9 +506,7 @@ class _VariantPreviewStepState extends ConsumerState<VariantPreviewStep> {
                           );
                           ref
                               .read(
-                                matrixGeneratorProvider(
-                                  widget.productId,
-                                ).notifier,
+                                productFormProvider(widget.product).notifier,
                               )
                               .updateVariant(index, updated);
                         },
@@ -539,28 +535,7 @@ class _VariantPreviewStepState extends ConsumerState<VariantPreviewStep> {
                           );
                           ref
                               .read(
-                                matrixGeneratorProvider(
-                                  widget.productId,
-                                ).notifier,
-                              )
-                              .updateVariant(index, updated);
-                        },
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: _CompactInput(
-                        key: ValueKey('stock_${index}_${variant.stock}'),
-                        label: 'Stock',
-                        value: (variant.stock ?? 0).toStringAsFixed(0),
-                        onChanged: (val) {
-                          final d = double.tryParse(val) ?? 0;
-                          final updated = variant.copyWith(stock: d);
-                          ref
-                              .read(
-                                matrixGeneratorProvider(
-                                  widget.productId,
-                                ).notifier,
+                                productFormProvider(widget.product).notifier,
                               )
                               .updateVariant(index, updated);
                         },
@@ -581,9 +556,7 @@ class _VariantPreviewStepState extends ConsumerState<VariantPreviewStep> {
                           final updated = variant.copyWith(stockMin: d);
                           ref
                               .read(
-                                matrixGeneratorProvider(
-                                  widget.productId,
-                                ).notifier,
+                                productFormProvider(widget.product).notifier,
                               )
                               .updateVariant(index, updated);
                         },
@@ -600,9 +573,7 @@ class _VariantPreviewStepState extends ConsumerState<VariantPreviewStep> {
                           final updated = variant.copyWith(stockMax: d);
                           ref
                               .read(
-                                matrixGeneratorProvider(
-                                  widget.productId,
-                                ).notifier,
+                                productFormProvider(widget.product).notifier,
                               )
                               .updateVariant(index, updated);
                         },

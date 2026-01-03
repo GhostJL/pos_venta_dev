@@ -175,6 +175,28 @@ class MatrixGeneratorNotifier extends _$MatrixGeneratorNotifier {
     state = state.copyWith(generatedVariants: updated);
   }
 
+  void updateAllWholesalePrices(double price) {
+    final priceCents = (price * 100).round();
+    final updated = state.generatedVariants
+        .map((v) => v.copyWith(wholesalePriceCents: priceCents))
+        .toList();
+    state = state.copyWith(generatedVariants: updated);
+  }
+
+  void updateAllMinStocks(double stock) {
+    final updated = state.generatedVariants
+        .map((v) => v.copyWith(stockMin: stock))
+        .toList();
+    state = state.copyWith(generatedVariants: updated);
+  }
+
+  void updateAllMaxStocks(double stock) {
+    final updated = state.generatedVariants
+        .map((v) => v.copyWith(stockMax: stock))
+        .toList();
+    state = state.copyWith(generatedVariants: updated);
+  }
+
   // Individual Edit Logic
   void updateVariant(int index, ProductVariant variant) {
     if (index < 0 || index >= state.generatedVariants.length) return;

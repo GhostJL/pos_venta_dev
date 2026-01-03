@@ -23,19 +23,20 @@ class ProductInventorySection extends ConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // Stock field (Initial Stock for new products or Current Stock adjustment)
-        TextFormField(
-          controller: stockController,
-          decoration: const InputDecoration(
-            labelText: 'Stock Inicial / Actual',
-            prefixIcon: Icon(Icons.inventory_2_rounded),
-            helperText: 'Cantidad disponible actualmente',
+        if (product?.id == null)
+          TextFormField(
+            controller: stockController,
+            decoration: const InputDecoration(
+              labelText: 'Stock Inicial', // Changed for clarity
+              prefixIcon: Icon(Icons.inventory_2_rounded),
+              helperText: 'Cantidad disponible actualmente',
+            ),
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            inputFormatters: [
+              FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
+            ],
           ),
-          keyboardType: const TextInputType.numberWithOptions(decimal: true),
-          inputFormatters: [
-            FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
-          ],
-        ),
-        const SizedBox(height: 16),
+        if (product?.id == null) const SizedBox(height: 16),
         Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [

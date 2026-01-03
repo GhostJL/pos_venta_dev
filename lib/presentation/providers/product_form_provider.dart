@@ -388,6 +388,51 @@ class ProductFormNotifier extends _$ProductFormNotifier {
     _updateModified(state.copyWith(variants: newVariants));
   }
 
+  void updateAllPrices(double price) {
+    final priceCents = (price * 100).round();
+    final updated = state.variants
+        .map((v) => v.copyWith(priceCents: priceCents))
+        .toList();
+    _updateModified(state.copyWith(variants: updated));
+  }
+
+  void updateAllCosts(double cost) {
+    final costCents = (cost * 100).round();
+    final updated = state.variants
+        .map((v) => v.copyWith(costPriceCents: costCents))
+        .toList();
+    _updateModified(state.copyWith(variants: updated));
+  }
+
+  void updateAllWholesalePrices(double price) {
+    final priceCents = (price * 100).round();
+    final updated = state.variants
+        .map((v) => v.copyWith(wholesalePriceCents: priceCents))
+        .toList();
+    _updateModified(state.copyWith(variants: updated));
+  }
+
+  void updateAllStocks(double stock) {
+    final updated = state.variants
+        .map((v) => v.copyWith(stock: stock))
+        .toList();
+    _updateModified(state.copyWith(variants: updated));
+  }
+
+  void updateAllMinStocks(double stock) {
+    final updated = state.variants
+        .map((v) => v.copyWith(stockMin: stock))
+        .toList();
+    _updateModified(state.copyWith(variants: updated));
+  }
+
+  void updateAllMaxStocks(double stock) {
+    final updated = state.variants
+        .map((v) => v.copyWith(stockMax: stock))
+        .toList();
+    _updateModified(state.copyWith(variants: updated));
+  }
+
   Future<bool> validateAndSubmit({
     String? name,
     String? code,
