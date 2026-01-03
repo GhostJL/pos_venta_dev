@@ -66,6 +66,7 @@ import 'package:posventa/presentation/widgets/catalog/suppliers/supplier_form.da
 import 'package:posventa/domain/entities/product.dart';
 import 'package:posventa/domain/entities/product_variant.dart';
 import 'package:posventa/presentation/pages/products/product_history_page.dart';
+import 'package:posventa/presentation/pages/products/matrix_generator/matrix_generator_page.dart';
 
 import 'package:posventa/domain/entities/cash_session.dart';
 import 'package:posventa/domain/entities/brand.dart';
@@ -296,6 +297,15 @@ final routerProvider = Provider<GoRouter>((ref) {
             pageBuilder: (context, state) {
               final product = state.extra as Product?;
               return NoTransitionPage(child: ProductFormPage(product: product));
+            },
+          ),
+          GoRoute(
+            path: '/products/matrix-generator',
+            pageBuilder: (context, state) {
+              final productId = state.extra as int?;
+              return NoTransitionPage(
+                child: MatrixGeneratorPage(productId: productId ?? 0),
+              );
             },
           ),
           GoRoute(

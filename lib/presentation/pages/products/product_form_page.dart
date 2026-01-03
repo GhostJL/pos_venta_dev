@@ -28,8 +28,6 @@ class ProductFormPage extends ConsumerStatefulWidget {
   ProductFormPageState createState() => ProductFormPageState();
 }
 
-// ... (existing imports, keep them)
-
 class ProductFormPageState extends ConsumerState<ProductFormPage> {
   final _formKey = GlobalKey<FormState>();
   late ProductFormControllers _controllers;
@@ -124,8 +122,6 @@ class ProductFormPageState extends ConsumerState<ProductFormPage> {
     }
   }
 
-  // helpers removed
-
   Future<void> _submit() async {
     if (!(_formKey.currentState?.validate() ?? false)) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -202,6 +198,28 @@ class ProductFormPageState extends ConsumerState<ProductFormPage> {
             .read(productFormProvider(widget.product).notifier)
             .addVariant(result);
       }
+    }
+  }
+
+  void _onGenerateVariants() async {
+    final result = await context.push<List<ProductVariant>>(
+      '/products/matrix-generator',
+      extra: widget.product?.id ?? 0,
+    );
+
+    if (result != null && result.isNotEmpty) {
+      final notifier = ref.read(productFormProvider(widget.product).notifier);
+      for (var variant in result) {
+        // Ensure new variants are marked as sales type by default if not specified
+        notifier.addVariant(variant.copyWith(type: VariantType.sales));
+      }
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('${result.length} variantes generadas exitosamente.'),
+        ),
+      );
     }
   }
 
@@ -516,7 +534,19 @@ class ProductFormPageState extends ConsumerState<ProductFormPage> {
                           onAddVariant: _onAddVariant,
                           onEditVariant: _onEditVariant,
                         ),
-                        const SizedBox(height: 24),
+                        const SizedBox(height: 16),
+                        SizedBox(
+                          width: double.infinity,
+                          child: FilledButton.tonalIcon(
+                            onPressed: _onGenerateVariants,
+                            icon: const Icon(Icons.auto_awesome),
+                            label: const Text('Generar Combinaciones (Matriz)'),
+                            style: FilledButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
                         Row(
                           children: [
                             Expanded(
@@ -572,6 +602,4 @@ class ProductFormPageState extends ConsumerState<ProductFormPage> {
       ),
     );
   }
-
-  // Methods removed
 }
