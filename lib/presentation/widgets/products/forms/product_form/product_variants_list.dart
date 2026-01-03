@@ -10,6 +10,7 @@ class ProductVariantsList extends ConsumerWidget {
   final Product? product;
   final void Function(VariantType type)? onAddVariant;
   final void Function(ProductVariant variant, int index) onEditVariant;
+  final void Function(int index)? onDeleteVariant;
   final VariantType? filterType;
 
   const ProductVariantsList({
@@ -17,6 +18,7 @@ class ProductVariantsList extends ConsumerWidget {
     required this.product,
     this.onAddVariant,
     required this.onEditVariant,
+    this.onDeleteVariant,
     this.filterType,
   });
 
@@ -53,7 +55,13 @@ class ProductVariantsList extends ConsumerWidget {
           variant: variant,
           index: originalIndex,
           onEdit: onEditVariant,
-          onDelete: (idx) => ref.read(provider.notifier).removeVariant(idx),
+          onDelete: (idx) {
+            if (onDeleteVariant != null) {
+              onDeleteVariant!(idx);
+            } else {
+              ref.read(provider.notifier).removeVariant(idx);
+            }
+          },
         );
       },
     );

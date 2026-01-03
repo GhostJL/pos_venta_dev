@@ -1,14 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:posventa/domain/entities/product_variant.dart';
 import 'package:posventa/presentation/pages/products/matrix_generator/matrix_generator_controller.dart';
 import 'package:posventa/presentation/pages/products/matrix_generator/widgets/attribute_input_step.dart';
 import 'package:posventa/presentation/pages/products/matrix_generator/widgets/variant_preview_step.dart';
 
 class MatrixGeneratorPage extends ConsumerStatefulWidget {
   final int productId;
+  final VariantType targetType;
+  final List<ProductVariant> existingVariants;
 
-  const MatrixGeneratorPage({super.key, required this.productId});
+  const MatrixGeneratorPage({
+    super.key,
+    required this.productId,
+    this.targetType = VariantType.sales,
+    this.existingVariants = const [],
+  });
 
   @override
   ConsumerState<MatrixGeneratorPage> createState() =>
@@ -37,7 +45,6 @@ class _MatrixGeneratorPageState extends ConsumerState<MatrixGeneratorPage> {
           // Custom Stepper Header
           Container(
             padding: const EdgeInsets.symmetric(vertical: 16),
-            color: theme.colorScheme.surfaceContainer,
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -51,7 +58,11 @@ class _MatrixGeneratorPageState extends ConsumerState<MatrixGeneratorPage> {
           Expanded(
             child: _currentStep == 0
                 ? AttributeInputStep(productId: widget.productId)
-                : VariantPreviewStep(productId: widget.productId),
+                : VariantPreviewStep(
+                    productId: widget.productId,
+                    targetType: widget.targetType,
+                    existingVariants: widget.existingVariants,
+                  ),
           ),
         ],
       ),

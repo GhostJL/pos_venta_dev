@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:posventa/domain/entities/product.dart';
 import 'package:posventa/domain/entities/product_variant.dart';
+import 'package:posventa/presentation/pages/products/matrix_generator/matrix_generator_page.dart';
 import 'package:posventa/presentation/pages/products/variant_bulk_edit_page.dart';
 import '../../providers/product_form_provider.dart';
 import '../../widgets/products/forms/product_form/product_variants_list.dart';
@@ -28,6 +29,11 @@ class VariantListPage extends ConsumerWidget {
       appBar: AppBar(
         scrolledUnderElevation: 0,
         actions: [
+          IconButton(
+            icon: const Icon(Icons.grid_4x4_rounded),
+            tooltip: 'Generador de Matrices',
+            onPressed: () => _openMatrixGenerator(context, ref),
+          ),
           IconButton(
             icon: const Icon(Icons.edit_note),
             tooltip: 'Edición Masiva',
@@ -78,6 +84,41 @@ class VariantListPage extends ConsumerWidget {
                   variant: variant,
                   index: index,
                 ),
+                onDeleteVariant: (index) async {
+                  final notifier = ref.read(provider.notifier);
+                  notifier.removeVariant(index);
+
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Eliminando variante...'),
+                        duration: Duration(milliseconds: 500),
+                      ),
+                    );
+                  }
+
+                  final success = await notifier.validateAndSubmit(
+                    silent: true,
+                  );
+
+                  if (context.mounted) {
+                    if (success) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Variante eliminada correctamente'),
+                          backgroundColor: Colors.green,
+                        ),
+                      );
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Error al eliminar variante'),
+                          backgroundColor: Colors.red,
+                        ),
+                      );
+                    }
+                  }
+                },
               ),
             ),
           ),
@@ -125,6 +166,72 @@ class VariantListPage extends ConsumerWidget {
     );
   }
 
+  Future<void> _openMatrixGenerator(BuildContext context, WidgetRef ref) async {
+    // 1. Prepare Data
+    final existingVariants = ref.read(productFormProvider(product)).variants;
+
+    // 2. Open Matrix Generator
+    final generatedVariants = await Navigator.push<List<ProductVariant>>(
+      context,
+      MaterialPageRoute(
+        builder: (context) => MatrixGeneratorPage(
+          productId: product.id ?? 0,
+          targetType: filterType,
+          existingVariants: existingVariants,
+        ),
+      ),
+    );
+
+    if (generatedVariants != null && generatedVariants.isNotEmpty) {
+      final notifier = ref.read(productFormProvider(product).notifier);
+
+      // 2. Process Variants (Set correct type and sales flag)
+      for (final variant in generatedVariants) {
+        final processedVariant = variant.copyWith(
+          productId: product.id,
+          type: filterType,
+          isForSale: filterType == VariantType.sales,
+          // Ensure defaults if matrix returns nulls/zeros where unwanted
+          isActive: true,
+        );
+        notifier.addVariant(processedVariant);
+      }
+
+      // 3. Persist Immediately
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Guardando variantes generadas...'),
+            duration: Duration(seconds: 1),
+          ),
+        );
+      }
+
+      final success = await notifier.validateAndSubmit(silent: true);
+
+      if (context.mounted) {
+        if (success) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                '${generatedVariants.length} variantes agregadas correctamente.',
+              ),
+              backgroundColor: Colors.green,
+            ),
+          );
+        } else {
+          final error = ref.read(productFormProvider(product)).error;
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Error al guardar: ${error ?? "Desconocido"}'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    }
+  }
+
   // Mantenemos tu lógica de _openVariantForm pero podrías mejorar el estilo visual
   // de las tarjetas en ProductVariantsList para que coincidan con este look.
   Future<void> _openVariantForm(
@@ -167,6 +274,15 @@ class VariantListPage extends ConsumerWidget {
     );
 
     if (newVariant != null) {
+      // NOTE: For individual add/edit, typically we also want to persist?
+      // The current flow update state, but user might need to click "Save" on previous screen?
+      // VariantListPage is a standalone page. When "Back" is pressed, we return to ActionsSheet?
+      // Wait, VariantListPage takes a Product. If we modify notifier here, does it persist?
+      // Yes, if we call validateAndSubmit.
+      // But _openVariantForm currently just updates state.
+      // The original code didn't auto-save individual variants?
+      // Let's stick to the requested scope: Matrix Generator updates persist immediately.
+
       if (variant != null && index != null) {
         ref.read(provider.notifier).updateVariant(index, newVariant);
       } else {

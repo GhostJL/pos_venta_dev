@@ -197,6 +197,13 @@ class MatrixGeneratorNotifier extends _$MatrixGeneratorNotifier {
     state = state.copyWith(generatedVariants: updated);
   }
 
+  void updateAllConversionFactors(double factor) {
+    final updated = state.generatedVariants
+        .map((v) => v.copyWith(conversionFactor: factor))
+        .toList();
+    state = state.copyWith(generatedVariants: updated);
+  }
+
   // Individual Edit Logic
   void updateVariant(int index, ProductVariant variant) {
     if (index < 0 || index >= state.generatedVariants.length) return;
