@@ -367,6 +367,79 @@ class ProductFormPageState extends ConsumerState<ProductFormPage> {
                               _controllers.wholesaleController,
                         ),
                         const SizedBox(height: 24),
+
+                        // UNIT & WEIGHT (Only for Simple Products)
+                        Consumer(
+                          builder: (context, ref, _) {
+                            final unitsAsync = ref.watch(unitListProvider);
+                            final provider = productFormProvider(
+                              widget.product,
+                            );
+                            final selectedUnitId = ref.watch(
+                              provider.select((s) => s.unitId),
+                            );
+
+                            return unitsAsync.when(
+                              data: (units) {
+                                final selectedUnit = units
+                                    .cast<UnitOfMeasure?>()
+                                    .firstWhere(
+                                      (u) => u?.id == selectedUnitId,
+                                      orElse: () => null,
+                                    );
+
+                                return SelectionField(
+                                  label: 'Unidad de Medida',
+                                  placeholder: 'Seleccionar unidad',
+                                  value: selectedUnit?.name,
+                                  helperText: 'Unidad de venta (ej. Pieza, Kg)',
+                                  prefixIcon: Icons.scale_rounded,
+                                  onTap: () =>
+                                      _showSelectionSheet<UnitOfMeasure>(
+                                        context: context,
+                                        title: 'Seleccionar Unidad',
+                                        items: units,
+                                        labelBuilder: (u) =>
+                                            '${u.name} (${u.code})',
+                                        selectedItem: selectedUnit,
+                                        onSelected: (u) => ref
+                                            .read(provider.notifier)
+                                            .setUnitId(u?.id),
+                                      ),
+                                  onClear: () => ref
+                                      .read(provider.notifier)
+                                      .setUnitId(null),
+                                );
+                              },
+                              loading: () => SelectionField(
+                                label: 'Unidad de Medida',
+                                isLoading: true,
+                                onTap: () {},
+                              ),
+                              error: (e, s) => Text('Error: $e'),
+                            );
+                          },
+                        ),
+                        const SizedBox(height: 16),
+                        Consumer(
+                          builder: (context, ref, _) {
+                            final isSoldByWeight = ref.watch(
+                              provider.select((s) => s.isSoldByWeight),
+                            );
+                            return SwitchListTile(
+                              title: const Text('Venta a granel / Por peso'),
+                              subtitle: const Text(
+                                'Habilita la captura de peso/cantidad en POS',
+                              ),
+                              value: isSoldByWeight,
+                              onChanged: ref
+                                  .read(provider.notifier)
+                                  .setSoldByWeight,
+                              contentPadding: EdgeInsets.zero,
+                            );
+                          },
+                        ),
+                        const SizedBox(height: 24),
                       ] else
                         Container(
                           padding: const EdgeInsets.all(16),
@@ -384,81 +457,13 @@ class ProductFormPageState extends ConsumerState<ProductFormPage> {
                               const SizedBox(width: 12),
                               const Expanded(
                                 child: Text(
-                                  'Los precios se gestionan individualmente en cada variante.',
+                                  'Precios, costos, unidades y control de peso se gestionan individualmente en cada variante.',
                                   style: TextStyle(fontSize: 13),
                                 ),
                               ),
                             ],
                           ),
                         ),
-
-                      const SizedBox(height: 24),
-                      // UNIT & WEIGHT (Common config)
-                      Consumer(
-                        builder: (context, ref, _) {
-                          final unitsAsync = ref.watch(unitListProvider);
-                          final provider = productFormProvider(widget.product);
-                          final selectedUnitId = ref.watch(
-                            provider.select((s) => s.unitId),
-                          );
-
-                          return unitsAsync.when(
-                            data: (units) {
-                              final selectedUnit = units
-                                  .cast<UnitOfMeasure?>()
-                                  .firstWhere(
-                                    (u) => u?.id == selectedUnitId,
-                                    orElse: () => null,
-                                  );
-
-                              return SelectionField(
-                                label: 'Unidad de Medida',
-                                placeholder: 'Seleccionar unidad',
-                                value: selectedUnit?.name,
-                                helperText: 'Unidad de venta (ej. Pieza, Kg)',
-                                prefixIcon: Icons.scale_rounded,
-                                onTap: () => _showSelectionSheet<UnitOfMeasure>(
-                                  context: context,
-                                  title: 'Seleccionar Unidad',
-                                  items: units,
-                                  labelBuilder: (u) => '${u.name} (${u.code})',
-                                  selectedItem: selectedUnit,
-                                  onSelected: (u) => ref
-                                      .read(provider.notifier)
-                                      .setUnitId(u?.id),
-                                ),
-                                onClear: () =>
-                                    ref.read(provider.notifier).setUnitId(null),
-                              );
-                            },
-                            loading: () => SelectionField(
-                              label: 'Unidad de Medida',
-                              isLoading: true,
-                              onTap: () {},
-                            ),
-                            error: (e, s) => Text('Error: $e'),
-                          );
-                        },
-                      ),
-                      const SizedBox(height: 16),
-                      Consumer(
-                        builder: (context, ref, _) {
-                          final isSoldByWeight = ref.watch(
-                            provider.select((s) => s.isSoldByWeight),
-                          );
-                          return SwitchListTile(
-                            title: const Text('Venta a granel / Por peso'),
-                            subtitle: const Text(
-                              'Habilita la captura de peso/cantidad en POS',
-                            ),
-                            value: isSoldByWeight,
-                            onChanged: ref
-                                .read(provider.notifier)
-                                .setSoldByWeight,
-                            contentPadding: EdgeInsets.zero,
-                          );
-                        },
-                      ),
 
                       const SizedBox(height: 24),
                       const Divider(),

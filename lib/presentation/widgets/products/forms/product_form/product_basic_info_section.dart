@@ -134,67 +134,54 @@ class _ProductBasicInfoSectionState
               value?.isEmpty ?? true ? 'Requerido para la base de datos' : null,
         ),
         const SizedBox(height: 16),
-        TextFormField(
-          controller: widget.barcodeController,
-          textInputAction: TextInputAction.next,
-          decoration: InputDecoration(
-            labelText: 'Código de Barras Principal',
-            helperText: 'EAN-13, UPC, o generado',
-            prefixIcon: const Icon(Icons.qr_code_2),
-            suffixIcon: ScannerButton(
-              isCompact: true,
-              onPressed: () =>
-                  _openScanner(context, controller: widget.barcodeController),
-            ),
-          ),
-        ),
-        const SizedBox(height: 8),
-        InkWell(
-          onTap: () {
-            final timestamp = DateTime.now().millisecondsSinceEpoch.toString();
-            widget.barcodeController?.text = 'I$timestamp';
-          },
-          borderRadius: BorderRadius.circular(4),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  Icons.autorenew,
-                  size: 16,
-                  color: theme.colorScheme.primary,
-                ),
-                const SizedBox(width: 4),
-                Text(
-                  'Generar código interno',
-                  style: TextStyle(
-                    color: theme.colorScheme.primary,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 12,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-
-        // Multi-Barcode Section (Only shown if NOT variable product OR if we decide simple product needs it)
-        // Actually, strictly speaking if "Is Variable", this section might be irrelevant?
-        // But ProductBasicInfoSection is shown for BOTH.
-        // For Variable products, "Main Barcode" on product might be just a reference or empty?
-        // Usually, Variable Products have barcodes on Variants.
-        // But some systems allow a "Master Barcode" for the generic product?
-        // In our logic, 'barcode' field exists on Product entity.
-        // But `additionalBarcodes` are stored on VARIANT.
-        // If `isVariableProduct` is TRUE, then `ProductFormNotifier` logic for `additionalBarcodes` is... ambiguous?
-        // `ProductFormNotifier.additionalBarcodes` logic:
-        // `additionalBarcodes: (product.variants...isNotEmpty) ? first.additionalBarcodes : []`
-        // It binds to the FIRST variant (Default/Standard).
-        // If it's a Variable Product, we probably should HIDE the additional barcodes UI in BASIC info,
-        // because users should manage barcodes in the "Variants" tab for each variant.
-        // Let's hide it if `state.hasVariants` (or logic: isVariableProduct).
+        const SizedBox(height: 16),
         if (!state.isVariableProduct) ...[
+          TextFormField(
+            controller: widget.barcodeController,
+            textInputAction: TextInputAction.next,
+            decoration: InputDecoration(
+              labelText: 'Código de Barras Principal',
+              helperText: 'EAN-13, UPC, o generado',
+              prefixIcon: const Icon(Icons.qr_code_2),
+              suffixIcon: ScannerButton(
+                isCompact: true,
+                onPressed: () =>
+                    _openScanner(context, controller: widget.barcodeController),
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
+          InkWell(
+            onTap: () {
+              final timestamp = DateTime.now().millisecondsSinceEpoch
+                  .toString();
+              widget.barcodeController?.text = 'I$timestamp';
+            },
+            borderRadius: BorderRadius.circular(4),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.autorenew,
+                    size: 16,
+                    color: theme.colorScheme.primary,
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    'Generar código interno',
+                    style: TextStyle(
+                      color: theme.colorScheme.primary,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+
           const SizedBox(height: 24),
           const Divider(),
           const SizedBox(height: 16),
