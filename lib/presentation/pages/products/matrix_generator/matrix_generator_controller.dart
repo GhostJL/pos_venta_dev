@@ -212,4 +212,31 @@ class MatrixGeneratorNotifier extends _$MatrixGeneratorNotifier {
     updatedList[index] = variant;
     state = state.copyWith(generatedVariants: updatedList);
   }
+
+  // VALIDATION
+  String? validate(VariantType type) {
+    if (state.generatedVariants.isEmpty) {
+      return 'No hay variantes generadas';
+    }
+
+    for (var variant in state.generatedVariants) {
+      if (type == VariantType.sales) {
+        if (variant.price <= 0) {
+          return 'El precio de ${variant.variantName} debe ser mayor a 0';
+        }
+      } else {
+        // Purchase Variants
+        if (variant.costPrice <= 0) {
+          return 'El costo de ${variant.variantName} debe ser mayor a 0';
+        }
+        if (variant.conversionFactor <= 0) {
+          return 'El factor de conversión de ${variant.variantName} debe ser positivo';
+        }
+        if (variant.linkedVariantId == null) {
+          return 'La variante ${variant.variantName} debe estar vinculada a un producto de venta';
+        }
+      }
+    }
+    return null;
+  }
 }

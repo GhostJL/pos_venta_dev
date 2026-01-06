@@ -115,6 +115,26 @@ class _MatrixGeneratorPageState extends ConsumerState<MatrixGeneratorPage> {
                   onPressed: state.generatedVariants.isEmpty
                       ? null
                       : () {
+                          final error = ref
+                              .read(
+                                matrixGeneratorProvider(
+                                  widget.productId,
+                                ).notifier,
+                              )
+                              .validate(widget.targetType);
+
+                          if (error != null) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(error),
+                                backgroundColor: Theme.of(
+                                  context,
+                                ).colorScheme.error,
+                              ),
+                            );
+                            return;
+                          }
+
                           context.pop(state.generatedVariants);
                         },
                   icon: const Icon(Icons.check),
