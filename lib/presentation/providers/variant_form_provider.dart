@@ -396,10 +396,8 @@ class VariantForm extends _$VariantForm {
 
   Future<bool> validateBarcode(List<String>? existingBarcodes) async {
     if (state.barcode.isEmpty) {
-      state = state.copyWithNullable(
-        barcodeError: 'El código de barras es requerido',
-      );
-      return false;
+      // Barcode is now optional
+      return true;
     }
 
     // Check against existing barcodes in the product (client-side check)

@@ -102,8 +102,7 @@ class _VariantBarcodeSectionState extends ConsumerState<VariantBarcodeSection> {
             ),
           ),
           onChanged: (val) => ref.read(provider.notifier).updateBarcode(val),
-          validator: (value) =>
-              value?.isEmpty ?? true ? 'Campo requerido' : null,
+          validator: null,
         ),
 
         const SizedBox(height: 8),
