@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:posventa/domain/entities/product_variant.dart';
 import 'package:posventa/presentation/pages/products/matrix_generator/matrix_generator_controller.dart';
+import 'package:posventa/presentation/widgets/common/misc/barcode_scanner_widget.dart';
 
 class VariantPreviewStep extends ConsumerStatefulWidget {
   final int productId;
@@ -303,7 +304,11 @@ class _VariantPreviewStepState extends ConsumerState<VariantPreviewStep> {
                   _applyBulkWholesale,
                 ),
               ),
-              const SizedBox(width: 8),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
               Expanded(
                 child: _buildBulkField(
                   _bulkMinStockController,
@@ -557,9 +562,23 @@ class _VariantPreviewStepState extends ConsumerState<VariantPreviewStep> {
                         suffixIcon: IconButton(
                           icon: const Icon(Icons.qr_code_scanner, size: 18),
                           onPressed: () {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Scanner no disponible'),
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (context) => BarcodeScannerWidget(
+                                  onBarcodeScanned: (context, code) {
+                                    final updated = variant.copyWith(
+                                      barcode: code,
+                                    );
+                                    ref
+                                        .read(
+                                          matrixGeneratorProvider(
+                                            widget.productId,
+                                          ).notifier,
+                                        )
+                                        .updateVariant(index, updated);
+                                    Navigator.of(context).pop();
+                                  },
+                                ),
                               ),
                             );
                           },
@@ -835,8 +854,22 @@ class _VariantPreviewStepState extends ConsumerState<VariantPreviewStep> {
                 suffixIcon: IconButton(
                   icon: const Icon(Icons.qr_code_scanner),
                   onPressed: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Scanner no disponible')),
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => BarcodeScannerWidget(
+                          onBarcodeScanned: (context, code) {
+                            final updated = variant.copyWith(barcode: code);
+                            ref
+                                .read(
+                                  matrixGeneratorProvider(
+                                    widget.productId,
+                                  ).notifier,
+                                )
+                                .updateVariant(index, updated);
+                            Navigator.of(context).pop();
+                          },
+                        ),
+                      ),
                     );
                   },
                 ),

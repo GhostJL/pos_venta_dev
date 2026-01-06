@@ -347,8 +347,16 @@ class ProductFormNotifier extends _$ProductFormNotifier {
   void setTaxes(List<ProductTax> value) =>
       _updateModified(state.copyWith(selectedTaxes: value));
 
-  void setVariants(List<ProductVariant> value) =>
-      _updateModified(state.copyWith(variants: value));
+  void setVariants(List<ProductVariant> value) {
+    bool isVariable = state.isVariableProduct;
+    if (value.length > 1 ||
+        (value.isNotEmpty && value.first.variantName != 'Estándar')) {
+      isVariable = true;
+    }
+    _updateModified(
+      state.copyWith(variants: value, isVariableProduct: isVariable),
+    );
+  }
 
   void pickImage(File file) {
     _updateModified(state.copyWith(imageFile: file, photoUrl: null));
@@ -373,7 +381,16 @@ class ProductFormNotifier extends _$ProductFormNotifier {
   }
 
   void addVariant(ProductVariant variant) {
-    _updateModified(state.copyWith(variants: [...state.variants, variant]));
+    final newVariants = [...state.variants, variant];
+    bool isVariable = state.isVariableProduct;
+    if (newVariants.length > 1 ||
+        (newVariants.isNotEmpty &&
+            newVariants.first.variantName != 'Estándar')) {
+      isVariable = true;
+    }
+    _updateModified(
+      state.copyWith(variants: newVariants, isVariableProduct: isVariable),
+    );
   }
 
   void updateVariant(int index, ProductVariant variant) {
