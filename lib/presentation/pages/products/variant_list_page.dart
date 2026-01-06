@@ -252,22 +252,12 @@ class VariantListPage extends ConsumerWidget {
         .map((v) => v.barcode!)
         .toList();
 
-    final initialVariant =
-        variant ??
-        ProductVariant(
-          productId: product.id ?? 0,
-          variantName: '',
-          priceCents: 0,
-          costPriceCents: 0,
-          type: type,
-          isForSale: type == VariantType.sales,
-        );
-
     final newVariant = await Navigator.push<ProductVariant>(
       context,
       MaterialPageRoute(
         builder: (context) => VariantFormPage(
-          variant: initialVariant,
+          variant: variant,
+          initialType: type,
           productId: product.id,
           productName: product.name,
           existingBarcodes: existingBarcodes,

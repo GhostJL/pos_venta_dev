@@ -284,20 +284,6 @@ class _VariantFormPageState extends ConsumerState<VariantFormPage> {
                       ],
                     ),
                     actions: [
-                      if (widget.productName != null)
-                        Center(
-                          child: Padding(
-                            padding: const EdgeInsets.only(right: 8.0),
-                            child: Text(
-                              widget.productName!,
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                color: theme.colorScheme.primary,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ),
-                        ),
-
                       // Save Action
                       Padding(
                         padding: const EdgeInsets.only(right: 16.0),
@@ -309,6 +295,15 @@ class _VariantFormPageState extends ConsumerState<VariantFormPage> {
                                   strokeWidth: 2,
                                   color: theme.colorScheme.primary,
                                 ),
+                              )
+                            : MediaQuery.of(context).size.width < 600
+                            ? IconButton.filled(
+                                onPressed: isModified ? _saveVariant : null,
+                                icon: const Icon(
+                                  Icons.check_rounded,
+                                  color: Colors.white,
+                                ),
+                                tooltip: isEditing ? 'Actualizar' : 'Guardar',
                               )
                             : TextButton.icon(
                                 onPressed: isModified ? _saveVariant : null,
@@ -332,9 +327,58 @@ class _VariantFormPageState extends ConsumerState<VariantFormPage> {
                   ),
                   SliverToBoxAdapter(
                     child: Padding(
-                      padding: const EdgeInsets.all(24.0),
+                      padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
                       child: Column(
                         children: [
+                          if (widget.productName != null) ...[
+                            Container(
+                              width: double.infinity,
+                              padding: const EdgeInsets.all(12),
+                              margin: const EdgeInsets.only(bottom: 24),
+                              decoration: BoxDecoration(
+                                color: theme.colorScheme.primaryContainer
+                                    .withValues(alpha: 0.3),
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(
+                                  color: theme.colorScheme.primaryContainer,
+                                ),
+                              ),
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    Icons.inventory_2_outlined,
+                                    size: 20,
+                                    color: theme.colorScheme.primary,
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          'Producto Principal',
+                                          style: theme.textTheme.labelSmall
+                                              ?.copyWith(
+                                                color:
+                                                    theme.colorScheme.primary,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                        ),
+                                        Text(
+                                          widget.productName!,
+                                          style: theme.textTheme.titleSmall
+                                              ?.copyWith(
+                                                fontWeight: FontWeight.w600,
+                                              ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
                           // General Info Section
                           _buildSectionHeader(
                             context,
