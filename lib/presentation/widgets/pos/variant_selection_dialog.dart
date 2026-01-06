@@ -29,7 +29,7 @@ class VariantSelectionDialog extends StatelessWidget {
                 style: const TextStyle(fontWeight: FontWeight.w500),
               ),
               subtitle: Text(
-                'Factor: ${variant.quantity} | Código: ${variant.barcode ?? "N/A"}',
+                'Conversión: ${variant.quantity} | Código: ${variant.barcode ?? "N/A"}',
               ),
               trailing: Text(
                 '\$${variant.price.toStringAsFixed(2)}',

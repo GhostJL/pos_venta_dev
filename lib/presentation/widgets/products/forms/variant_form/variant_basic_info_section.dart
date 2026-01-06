@@ -102,7 +102,7 @@ class VariantBasicInfoSection extends ConsumerWidget {
           )
         else
           _buildNumberField(
-            label: 'Factor de Conversión',
+            label: 'Conversión',
             helper: 'Cuántas unidades del producto base representa',
             controller: conversionController,
             icon: Icons.calculate_outlined,

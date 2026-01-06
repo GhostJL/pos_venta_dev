@@ -261,7 +261,7 @@ class _VariantPreviewStepState extends ConsumerState<VariantPreviewStep> {
           Expanded(
             child: _buildBulkField(
               _bulkConversionController,
-              'Factor Conversión',
+              'Conversión',
               _applyBulkConversion,
             ),
           ),
@@ -343,7 +343,7 @@ class _VariantPreviewStepState extends ConsumerState<VariantPreviewStep> {
           Expanded(
             child: _buildBulkField(
               _bulkConversionController,
-              'Factor',
+              'Conversión',
               _applyBulkConversion,
             ),
           ),
@@ -401,7 +401,7 @@ class _VariantPreviewStepState extends ConsumerState<VariantPreviewStep> {
                 DataColumn(label: Text('Max')),
               ] else ...const [
                 DataColumn(label: Text('Costo Compra')),
-                DataColumn(label: Text('Factor')),
+                DataColumn(label: Text('Conversión')),
                 DataColumn(label: Text('Código Barras')),
                 DataColumn(label: Text('Vinculado a')),
               ],
@@ -820,7 +820,7 @@ class _VariantPreviewStepState extends ConsumerState<VariantPreviewStep> {
                       key: ValueKey(
                         'factor_${index}_${variant.conversionFactor}',
                       ),
-                      label: 'Factor',
+                      label: 'Conversión',
                       value: variant.conversionFactor.toStringAsFixed(2),
                       onChanged: (val) {
                         final d = double.tryParse(val) ?? 1.0;

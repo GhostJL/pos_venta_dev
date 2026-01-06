@@ -41,7 +41,10 @@ class VariantListPage extends ConsumerWidget {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => VariantBulkEditPage(product: product),
+                  builder: (context) => VariantBulkEditPage(
+                    product: product,
+                    filterType: filterType,
+                  ),
                 ),
               );
             },
