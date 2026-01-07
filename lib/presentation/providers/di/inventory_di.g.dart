@@ -637,6 +637,54 @@ final class DeleteInventoryByVariantProvider
 String _$deleteInventoryByVariantHash() =>
     r'457687b928dbc525201211e56ee104dc0f04ac20';
 
+@ProviderFor(resetInventoryUseCase)
+const resetInventoryUseCaseProvider = ResetInventoryUseCaseProvider._();
+
+final class ResetInventoryUseCaseProvider
+    extends
+        $FunctionalProvider<
+          ResetInventoryUseCase,
+          ResetInventoryUseCase,
+          ResetInventoryUseCase
+        >
+    with $Provider<ResetInventoryUseCase> {
+  const ResetInventoryUseCaseProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'resetInventoryUseCaseProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$resetInventoryUseCaseHash();
+
+  @$internal
+  @override
+  $ProviderElement<ResetInventoryUseCase> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  ResetInventoryUseCase create(Ref ref) {
+    return resetInventoryUseCase(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(ResetInventoryUseCase value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<ResetInventoryUseCase>(value),
+    );
+  }
+}
+
+String _$resetInventoryUseCaseHash() =>
+    r'c9903507d68755dd5f8cf9d98c26578784b2a8d4';
+
 @ProviderFor(inventoryMovementRepository)
 const inventoryMovementRepositoryProvider =
     InventoryMovementRepositoryProvider._();

@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:posventa/domain/entities/user.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:posventa/presentation/providers/auth_provider.dart';
+import 'package:posventa/presentation/providers/settings_provider.dart';
 
 class SettingsPage extends ConsumerWidget {
   const SettingsPage({super.key});
@@ -13,6 +14,7 @@ class SettingsPage extends ConsumerWidget {
     final authState = ref.watch(authProvider);
     final user = authState.user;
     final isAdmin = user?.role == UserRole.administrador;
+    final settingsAsync = ref.watch(settingsProvider);
 
     // Build the sections dynamically based on permissions/role if needed
     // For now, we follow the plan which focuses on Admin configuration mainly
@@ -53,6 +55,107 @@ class SettingsPage extends ConsumerWidget {
                             onTap: () => context.push('/warehouses'),
                           ),
                         ],
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 24),
+                  _SettingsSection(
+                    title: 'Preferencias del Sistema',
+                    children: [
+                      settingsAsync.when(
+                        data: (settings) => Card(
+                          elevation: 0,
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.surfaceContainerLowest,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            side: BorderSide(
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .outlineVariant
+                                  .withValues(alpha: 0.6),
+                            ),
+                          ),
+                          child: Column(
+                            children: [
+                              SwitchListTile(
+                                title: const Text('Gestionar Inventario'),
+                                subtitle: const Text(
+                                  'Activa o desactiva el control de stock',
+                                ),
+                                value: settings.useInventory,
+                                onChanged: (val) {
+                                  if (!val) {
+                                    _showConfirmationDialog(
+                                      context,
+                                      title: '¿Desactivar Inventario?',
+                                      content:
+                                          'Al desactivar el inventario, todo el stock actual se eliminará y pasará a 0. Esta acción no se puede deshacer.',
+                                      confirmText:
+                                          'Desactivar y Eliminar Stock',
+                                      onConfirm: () {
+                                        ref
+                                            .read(settingsProvider.notifier)
+                                            .toggleInventory(false);
+                                      },
+                                    );
+                                  } else {
+                                    ref
+                                        .read(settingsProvider.notifier)
+                                        .toggleInventory(true);
+                                  }
+                                },
+                              ),
+                              Divider(
+                                height: 1,
+                                indent: 16,
+                                endIndent: 16,
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .outlineVariant
+                                    .withValues(alpha: 0.5),
+                              ),
+                              SwitchListTile(
+                                title: const Text('Gestionar Impuestos (IVA)'),
+                                subtitle: const Text(
+                                  'Habilita el cálculo y gestión de impuestos',
+                                ),
+                                value: settings.useTax,
+                                onChanged: (val) {
+                                  if (!val) {
+                                    _showConfirmationDialog(
+                                      context,
+                                      title: '¿Desactivar Impuestos?',
+                                      content:
+                                          'Al desactivar los impuestos, todas las ventas futuras se procesarán como exentas (sin impuestos).',
+                                      confirmText: 'Desactivar',
+                                      onConfirm: () {
+                                        ref
+                                            .read(settingsProvider.notifier)
+                                            .toggleTax(false);
+                                      },
+                                    );
+                                  } else {
+                                    ref
+                                        .read(settingsProvider.notifier)
+                                        .toggleTax(true);
+                                  }
+                                },
+                              ),
+                            ],
+                          ),
+                        ),
+                        loading: () => const Center(
+                          child: Padding(
+                            padding: EdgeInsets.all(16.0),
+                            child: CircularProgressIndicator(),
+                          ),
+                        ),
+                        error: (err, _) => Padding(
+                          padding: const EdgeInsets.all(16.0),
+                          child: Text('Error: $err'),
+                        ),
                       ),
                     ],
                   ),
@@ -114,6 +217,39 @@ class SettingsPage extends ConsumerWidget {
             ),
           );
         },
+      ),
+    );
+  }
+
+  Future<void> _showConfirmationDialog(
+    BuildContext context, {
+    required String title,
+    required String content,
+    required String confirmText,
+    required VoidCallback onConfirm,
+  }) async {
+    return showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(title),
+        content: Text(content),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancelar'),
+          ),
+          FilledButton(
+            onPressed: () {
+              Navigator.pop(context);
+              onConfirm();
+            },
+            style: FilledButton.styleFrom(
+              backgroundColor: Theme.of(context).colorScheme.error,
+              foregroundColor: Theme.of(context).colorScheme.onError,
+            ),
+            child: Text(confirmText),
+          ),
+        ],
       ),
     );
   }

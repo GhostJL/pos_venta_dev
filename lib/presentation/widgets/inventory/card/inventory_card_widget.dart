@@ -8,6 +8,7 @@ import 'package:posventa/domain/entities/product_variant.dart';
 import 'package:posventa/domain/entities/warehouse.dart';
 import 'package:posventa/presentation/providers/inventory_providers.dart';
 import 'package:posventa/presentation/providers/inventory_lot_providers.dart';
+import 'package:posventa/presentation/providers/settings_provider.dart';
 
 class InventoryCardWidget extends ConsumerWidget {
   final Inventory inventory;
@@ -25,6 +26,10 @@ class InventoryCardWidget extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // Global Settings
+    final settingsAsync = ref.watch(settingsProvider);
+    final useInventory = settingsAsync.value?.useInventory ?? true;
+
     // Stock Logic
     final double stock = inventory.quantityOnHand;
     // Prefer inventory-specific minStock, fallback to variant global minStock
@@ -167,7 +172,8 @@ class InventoryCardWidget extends ConsumerWidget {
                       ),
 
                       // 4. Badges (Moved here)
-                      if (isZeroStock || isLowStock || isNearLowStock) ...[
+                      if (useInventory &&
+                          (isZeroStock || isLowStock || isNearLowStock)) ...[
                         const SizedBox(height: 8),
                         if (isZeroStock)
                           _StatusBadge(
@@ -242,56 +248,59 @@ class InventoryCardWidget extends ConsumerWidget {
                       ],
                     ),
 
-                    Text(
-                      stock % 1 == 0
-                          ? stock.toInt().toString()
-                          : stock.toStringAsFixed(2),
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                        color: isZeroStock || isLowStock
-                            ? Theme.of(context).colorScheme.error
-                            : Theme.of(context).colorScheme.onSurface,
+                    if (useInventory) ...[
+                      Text(
+                        stock % 1 == 0
+                            ? stock.toInt().toString()
+                            : stock.toStringAsFixed(2),
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          color: isZeroStock || isLowStock
+                              ? Theme.of(context).colorScheme.error
+                              : Theme.of(context).colorScheme.onSurface,
+                        ),
                       ),
-                    ),
-
-                    // Lots Count
-                    lotsAsync.when(
-                      data: (lots) {
-                        // Filter lots for this VARIANT
-                        final variantLots = lots
-                            .where((l) => l.variantId == variant.id)
-                            .toList();
-                        final count = variantLots.length;
-                        return Text(
-                          'pzas | $count lotes',
+                      // Lots Count
+                      lotsAsync.when(
+                        data: (lots) {
+                          // Filter lots for this VARIANT
+                          final variantLots = lots
+                              .where((l) => l.variantId == variant.id)
+                              .toList();
+                          final count = variantLots.length;
+                          return Text(
+                            'pzas | $count lotes',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onSurfaceVariant,
+                            ),
+                          );
+                        },
+                        loading: () => Text(
+                          'pzas | - lotes',
                           style: TextStyle(
                             fontSize: 12,
-                            color: Theme.of(
-                              context,
-                            ).colorScheme.onSurfaceVariant,
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onSurfaceVariant
+                                .withValues(alpha: 0.5),
                           ),
-                        );
-                      },
-                      loading: () => Text(
-                        'pzas | - lotes',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Theme.of(
-                            context,
-                          ).colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
+                        ),
+                        error: (_, __) => Text(
+                          'pzas | ? lotes',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onSurfaceVariant
+                                .withValues(alpha: 0.5),
+                          ),
                         ),
                       ),
-                      error: (_, __) => Text(
-                        'pzas | ? lotes',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Theme.of(
-                            context,
-                          ).colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
-                        ),
-                      ),
-                    ),
+                    ],
                   ],
                 ),
               ],

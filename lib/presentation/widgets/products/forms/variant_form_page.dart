@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:posventa/domain/entities/product_variant.dart';
 import 'package:posventa/presentation/providers/variant_form_provider.dart';
+import 'package:posventa/presentation/providers/settings_provider.dart';
 import 'package:posventa/presentation/widgets/products/forms/variant_form/variant_basic_info_section.dart';
 import 'package:posventa/presentation/widgets/products/forms/variant_form/variant_price_section.dart';
 import 'package:posventa/presentation/widgets/products/forms/variant_form/variant_barcode_section.dart';
@@ -228,6 +229,9 @@ class _VariantFormPageState extends ConsumerState<VariantFormPage> {
     final type = state.type;
     final isModified = state.isModified;
     final isNewProductContext = (widget.productId ?? 0) == 0;
+
+    final settingsAsync = ref.watch(settingsProvider);
+    final useInventory = settingsAsync.value?.useInventory ?? true;
 
     // Listen for calculated updates
     ref.listen<VariantFormState>(provider, (prev, next) {
@@ -537,7 +541,7 @@ class _VariantFormPageState extends ConsumerState<VariantFormPage> {
                             ),
                           ),
 
-                          if (type == VariantType.sales) ...[
+                          if (type == VariantType.sales && useInventory) ...[
                             const SizedBox(height: 32),
                             // Settings Section
                             _buildSectionHeader(

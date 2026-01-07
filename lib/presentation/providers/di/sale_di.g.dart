@@ -104,11 +104,13 @@ const createSaleUseCaseProvider = CreateSaleUseCaseProvider._();
 final class CreateSaleUseCaseProvider
     extends
         $FunctionalProvider<
+          AsyncValue<CreateSaleUseCase>,
           CreateSaleUseCase,
-          CreateSaleUseCase,
-          CreateSaleUseCase
+          FutureOr<CreateSaleUseCase>
         >
-    with $Provider<CreateSaleUseCase> {
+    with
+        $FutureModifier<CreateSaleUseCase>,
+        $FutureProvider<CreateSaleUseCase> {
   const CreateSaleUseCaseProvider._()
     : super(
         from: null,
@@ -125,25 +127,17 @@ final class CreateSaleUseCaseProvider
 
   @$internal
   @override
-  $ProviderElement<CreateSaleUseCase> $createElement(
+  $FutureProviderElement<CreateSaleUseCase> $createElement(
     $ProviderPointer pointer,
-  ) => $ProviderElement(pointer);
+  ) => $FutureProviderElement(pointer);
 
   @override
-  CreateSaleUseCase create(Ref ref) {
+  FutureOr<CreateSaleUseCase> create(Ref ref) {
     return createSaleUseCase(ref);
-  }
-
-  /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(CreateSaleUseCase value) {
-    return $ProviderOverride(
-      origin: this,
-      providerOverride: $SyncValueProvider<CreateSaleUseCase>(value),
-    );
   }
 }
 
-String _$createSaleUseCaseHash() => r'4cb2dcd092b33487133d66da9a8a02c49ac53b2e';
+String _$createSaleUseCaseHash() => r'febbf6f6aba3b756c5f2ed133e9a524c3571411d';
 
 @ProviderFor(getSalesUseCase)
 const getSalesUseCaseProvider = GetSalesUseCaseProvider._();
@@ -292,11 +286,13 @@ const cancelSaleUseCaseProvider = CancelSaleUseCaseProvider._();
 final class CancelSaleUseCaseProvider
     extends
         $FunctionalProvider<
+          AsyncValue<CancelSaleUseCase>,
           CancelSaleUseCase,
-          CancelSaleUseCase,
-          CancelSaleUseCase
+          FutureOr<CancelSaleUseCase>
         >
-    with $Provider<CancelSaleUseCase> {
+    with
+        $FutureModifier<CancelSaleUseCase>,
+        $FutureProvider<CancelSaleUseCase> {
   const CancelSaleUseCaseProvider._()
     : super(
         from: null,
@@ -313,25 +309,17 @@ final class CancelSaleUseCaseProvider
 
   @$internal
   @override
-  $ProviderElement<CancelSaleUseCase> $createElement(
+  $FutureProviderElement<CancelSaleUseCase> $createElement(
     $ProviderPointer pointer,
-  ) => $ProviderElement(pointer);
+  ) => $FutureProviderElement(pointer);
 
   @override
-  CancelSaleUseCase create(Ref ref) {
+  FutureOr<CancelSaleUseCase> create(Ref ref) {
     return cancelSaleUseCase(ref);
-  }
-
-  /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(CancelSaleUseCase value) {
-    return $ProviderOverride(
-      origin: this,
-      providerOverride: $SyncValueProvider<CancelSaleUseCase>(value),
-    );
   }
 }
 
-String _$cancelSaleUseCaseHash() => r'45be2e60f7ce08c88bdfb3d77a2d21635bab5e23';
+String _$cancelSaleUseCaseHash() => r'3a677759e55b972bc2f476cf27ec8e08641412f1';
 
 @ProviderFor(todaysRevenue)
 const todaysRevenueProvider = TodaysRevenueProvider._();

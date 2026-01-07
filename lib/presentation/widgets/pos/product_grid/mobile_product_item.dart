@@ -6,6 +6,7 @@ import 'package:posventa/domain/entities/product_tax.dart';
 import 'package:posventa/domain/entities/product_variant.dart';
 import 'package:posventa/domain/entities/tax_rate.dart';
 import 'package:posventa/presentation/providers/pos_providers.dart';
+import 'package:posventa/presentation/providers/settings_provider.dart';
 
 class MobileProductItem extends ConsumerWidget {
   final Product product;
@@ -45,6 +46,10 @@ class MobileProductItem extends ConsumerWidget {
 
     final String displayName = product.name;
     final String? variantName = variant?.description;
+
+    // Global Settings
+    final settingsAsync = ref.watch(settingsProvider);
+    final useInventory = settingsAsync.value?.useInventory ?? true;
 
     // Cart State Logic
     final isSelected = quantityInCart > 0;
@@ -154,19 +159,20 @@ class MobileProductItem extends ConsumerWidget {
                             fontSize: 15,
                           ),
                         ),
-                        if (stock <= 10 || variantName != null) ...[
+                        if ((useInventory && stock <= 10) ||
+                            variantName != null) ...[
                           const SizedBox(width: 8),
                           Flexible(
                             child: Text(
                               [
                                 if (variantName != null) variantName,
-                                if (stock <= 0)
+                                if (useInventory && stock <= 0)
                                   'Agotado'
-                                else if (stock <= 10)
+                                else if (useInventory && stock <= 10)
                                   '$stock disp.',
                               ].join(' • '),
                               style: theme.textTheme.bodySmall?.copyWith(
-                                color: stock <= 0
+                                color: (useInventory && stock <= 0)
                                     ? colorScheme.error
                                     : colorScheme.onSurfaceVariant,
                                 fontSize: 13,

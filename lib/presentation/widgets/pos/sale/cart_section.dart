@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:posventa/presentation/providers/pos_providers.dart';
+import 'package:posventa/presentation/providers/settings_provider.dart';
 import 'package:posventa/presentation/pages/pos_sale/widgets/cart_item_card.dart';
 import 'package:posventa/presentation/widgets/pos/consumer_selection_dialog_widget.dart';
 import 'package:posventa/presentation/widgets/pos/sale/cart_quantity_dialog.dart';
@@ -22,6 +23,10 @@ class CartSection extends ConsumerWidget {
     final taxBreakdown = ref.watch(posTaxBreakdownProvider);
 
     final posNotifier = ref.read(pOSProvider.notifier);
+
+    // Global Settings
+    final settingsAsync = ref.watch(settingsProvider);
+    final useTax = settingsAsync.value?.useTax ?? true;
 
     // Determine selected customer for display
     final selectedCustomer = ref.watch(
@@ -298,9 +303,11 @@ class CartSection extends ConsumerWidget {
                 children: [
                   // Discount Mock removed as per request
                   _buildTotalRow(context, 'Subtotal', subtotal),
-                  ...taxBreakdown.entries.map(
-                    (entry) => _buildTotalRow(context, entry.key, entry.value),
-                  ),
+                  if (useTax)
+                    ...taxBreakdown.entries.map(
+                      (entry) =>
+                          _buildTotalRow(context, entry.key, entry.value),
+                    ),
                   if (discount > 0)
                     _buildTotalRow(
                       context,

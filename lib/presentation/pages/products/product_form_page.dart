@@ -6,6 +6,7 @@ import 'package:posventa/domain/entities/product.dart';
 import 'package:posventa/domain/entities/product_tax.dart' as pt;
 
 import 'package:posventa/presentation/providers/product_form_provider.dart';
+import 'package:posventa/presentation/providers/settings_provider.dart';
 import 'package:posventa/presentation/providers/tax_rate_provider.dart';
 import 'package:posventa/presentation/widgets/products/forms/product_form/product_basic_info_section.dart';
 import 'package:posventa/presentation/widgets/products/forms/product_form/product_classification_section.dart';
@@ -233,6 +234,13 @@ class ProductFormPageState extends ConsumerState<ProductFormPage> {
     final isModified = state.isModified;
     final isVariable = state.isVariableProduct;
 
+    final settingsAsync = ref.watch(settingsProvider);
+    final useInventory = settingsAsync.value?.useInventory ?? true;
+    final useTax = settingsAsync.value?.useTax ?? true;
+
+    // Determine if we show the inventory tab
+    final showInventoryTab = isVariable || useInventory;
+
     // Listen for success or error
     ref.listen<ProductFormState>(provider, (previous, next) {
       if (next.error != null && (previous?.error != next.error)) {
@@ -260,7 +268,7 @@ class ProductFormPageState extends ConsumerState<ProductFormPage> {
     });
 
     return DefaultTabController(
-      length: 3,
+      length: 2 + (showInventoryTab ? 1 : 0),
       child: Scaffold(
         appBar: AppBar(
           title: Text(
@@ -274,7 +282,8 @@ class ProductFormPageState extends ConsumerState<ProductFormPage> {
             tabs: [
               const Tab(text: 'General'),
               const Tab(text: 'Precios e Impuestos'),
-              Tab(text: isVariable ? 'Variantes' : 'Inventario'),
+              if (showInventoryTab)
+                Tab(text: isVariable ? 'Variantes' : 'Inventario'),
             ],
           ),
           actions: [
@@ -483,118 +492,126 @@ class ProductFormPageState extends ConsumerState<ProductFormPage> {
                           ),
                         ),
 
-                      const SizedBox(height: 24),
-                      const Divider(),
-                      const SizedBox(height: 24),
+                      if (useTax) ...[
+                        const SizedBox(height: 24),
+                        const Divider(),
+                        const SizedBox(height: 24),
 
-                      // TAXES
-                      Consumer(
-                        builder: (context, ref, child) {
-                          final usesTaxes = ref.watch(
-                            provider.select((s) => s.usesTaxes),
-                          );
-                          return Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              SwitchListTile(
-                                title: const Text('¿Aplica Impuestos?'),
-                                value: usesTaxes,
-                                onChanged: (value) => ref
-                                    .read(provider.notifier)
-                                    .setUsesTaxes(value),
-                                contentPadding: EdgeInsets.zero,
-                              ),
-                              if (usesTaxes) ...[
-                                const SizedBox(height: 8),
-                                ProductTaxSelection(product: widget.product),
+                        // TAXES
+                        Consumer(
+                          builder: (context, ref, child) {
+                            final usesTaxes = ref.watch(
+                              provider.select((s) => s.usesTaxes),
+                            );
+                            return Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                SwitchListTile(
+                                  title: const Text('¿Aplica Impuestos?'),
+                                  value: usesTaxes,
+                                  onChanged: (value) => ref
+                                      .read(provider.notifier)
+                                      .setUsesTaxes(value),
+                                  contentPadding: EdgeInsets.zero,
+                                ),
+                                if (usesTaxes) ...[
+                                  const SizedBox(height: 8),
+                                  ProductTaxSelection(product: widget.product),
+                                ],
                               ],
-                            ],
-                          );
-                        },
-                      ),
-                    ],
-                  ),
-                ),
-
-                // TAB 3: INVENTORY OR VARIANTS
-                SingleChildScrollView(
-                  padding: const EdgeInsets.all(24),
-                  child: Column(
-                    children: [
-                      if (!isVariable) ...[
-                        ProductInventorySection(
-                          product: widget.product,
-                          stockController: _controllers.stockController,
-                          minStockController: _controllers.minStockController,
-                          maxStockController: _controllers.maxStockController,
-                        ),
-                      ] else ...[
-                        ProductVariantsList(
-                          product: widget.product,
-                          onAddVariant: _onAddVariant,
-                          onEditVariant: _onEditVariant,
-                        ),
-                        const SizedBox(height: 16),
-                        SizedBox(
-                          width: double.infinity,
-                          child: FilledButton.tonalIcon(
-                            onPressed: _onGenerateVariants,
-                            icon: const Icon(Icons.auto_awesome),
-                            label: const Text('Generar Combinaciones (Matriz)'),
-                            style: FilledButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(vertical: 16),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: OutlinedButton.icon(
-                                onPressed: () =>
-                                    _onAddVariant(VariantType.sales),
-                                icon: const Icon(Icons.add_rounded),
-                                label: const Text('Venta'),
-                                style: OutlinedButton.styleFrom(
-                                  padding: const EdgeInsets.symmetric(
-                                    vertical: 16,
-                                  ),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: OutlinedButton.icon(
-                                onPressed: isNewProduct
-                                    ? () {
-                                        ScaffoldMessenger.of(
-                                          context,
-                                        ).showSnackBar(
-                                          const SnackBar(
-                                            content: Text(
-                                              'Guarda el producto primero para agregar variantes de compra.',
-                                            ),
-                                          ),
-                                        );
-                                      }
-                                    : () => _onAddVariant(VariantType.purchase),
-                                icon: const Icon(
-                                  Icons.add_shopping_cart_rounded,
-                                ),
-                                label: const Text('Compra'),
-                                style: OutlinedButton.styleFrom(
-                                  padding: const EdgeInsets.symmetric(
-                                    vertical: 16,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
+                            );
+                          },
                         ),
                       ],
                     ],
                   ),
                 ),
+
+                // TAB 3: INVENTORY OR VARIANTS
+                if (showInventoryTab)
+                  SingleChildScrollView(
+                    padding: const EdgeInsets.all(24),
+                    child: Column(
+                      children: [
+                        if (!isVariable) ...[
+                          ProductInventorySection(
+                            product: widget.product,
+                            stockController: _controllers.stockController,
+                            minStockController: _controllers.minStockController,
+                            maxStockController: _controllers.maxStockController,
+                          ),
+                        ] else ...[
+                          ProductVariantsList(
+                            product: widget.product,
+                            onAddVariant: _onAddVariant,
+                            onEditVariant: _onEditVariant,
+                          ),
+                          const SizedBox(height: 16),
+                          SizedBox(
+                            width: double.infinity,
+                            child: FilledButton.tonalIcon(
+                              onPressed: _onGenerateVariants,
+                              icon: const Icon(Icons.auto_awesome),
+                              label: const Text(
+                                'Generar Combinaciones (Matriz)',
+                              ),
+                              style: FilledButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 16,
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: OutlinedButton.icon(
+                                  onPressed: () =>
+                                      _onAddVariant(VariantType.sales),
+                                  icon: const Icon(Icons.add_rounded),
+                                  label: const Text('Venta'),
+                                  style: OutlinedButton.styleFrom(
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 16,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: OutlinedButton.icon(
+                                  onPressed: isNewProduct
+                                      ? () {
+                                          ScaffoldMessenger.of(
+                                            context,
+                                          ).showSnackBar(
+                                            const SnackBar(
+                                              content: Text(
+                                                'Guarda el producto primero para agregar variantes de compra.',
+                                              ),
+                                            ),
+                                          );
+                                        }
+                                      : () =>
+                                            _onAddVariant(VariantType.purchase),
+                                  icon: const Icon(
+                                    Icons.add_shopping_cart_rounded,
+                                  ),
+                                  label: const Text('Compra'),
+                                  style: OutlinedButton.styleFrom(
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 16,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
               ],
             ),
           ),

@@ -99,9 +99,8 @@ class SaleActionButtons extends ConsumerWidget {
       final user = ref.read(authProvider).user;
       if (user == null) throw Exception('Usuario no autenticado');
 
-      await ref
-          .read(cancelSaleUseCaseProvider)
-          .call(sale.id!, user.id!, reason);
+      final cancelSale = await ref.read(cancelSaleUseCaseProvider.future);
+      await cancelSale.call(sale.id!, user.id!, reason);
 
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

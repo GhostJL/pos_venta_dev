@@ -13,6 +13,7 @@ import 'package:posventa/presentation/providers/product_provider.dart';
 import 'package:posventa/presentation/providers/di/sale_di.dart';
 import 'package:posventa/presentation/providers/di/product_di.dart';
 import 'package:posventa/presentation/providers/di/inventory_di.dart';
+import 'package:posventa/presentation/providers/settings_provider.dart';
 
 import 'package:posventa/presentation/providers/notification_providers.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -79,6 +80,13 @@ class POSNotifier extends _$POSNotifier {
   }) async {
     // Validate stock availability using domain service
     // We need the current cart to calculate total stock needed
+    // Check settings
+    final settingsAsync = ref.read(settingsProvider);
+    final useInventory = settingsAsync.value?.useInventory ?? true;
+    final useTax = settingsAsync.value?.useTax ?? true;
+
+    // Validate stock availability using domain service
+    // We need the current cart to calculate total stock needed
     final stockError = await ref
         .read(stockValidatorServiceProvider)
         .validateStock(
@@ -86,6 +94,7 @@ class POSNotifier extends _$POSNotifier {
           quantityToAdd: quantity,
           variant: variant,
           currentCart: state.cart,
+          useInventory: useInventory,
         );
 
     if (stockError != null) {
@@ -110,17 +119,20 @@ class POSNotifier extends _$POSNotifier {
 
       int taxCents = 0;
       final taxes = <SaleItemTax>[];
-      for (final tax in existingItem.taxes) {
-        final taxAmount = (subtotalCents * tax.taxRate).round();
-        taxCents += taxAmount;
-        taxes.add(
-          SaleItemTax(
-            taxRateId: tax.taxRateId,
-            taxName: tax.taxName,
-            taxRate: tax.taxRate,
-            taxAmountCents: taxAmount,
-          ),
-        );
+
+      if (useTax) {
+        for (final tax in existingItem.taxes) {
+          final taxAmount = (subtotalCents * tax.taxRate).round();
+          taxCents += taxAmount;
+          taxes.add(
+            SaleItemTax(
+              taxRateId: tax.taxRateId,
+              taxName: tax.taxName,
+              taxRate: tax.taxRate,
+              taxAmountCents: taxAmount,
+            ),
+          );
+        }
       }
 
       final totalCents = subtotalCents + taxCents;
@@ -172,17 +184,20 @@ class POSNotifier extends _$POSNotifier {
 
       int taxCents = 0;
       final taxes = <SaleItemTax>[];
-      for (final tax in productTaxes) {
-        final taxAmount = (subtotalCents * tax.rate).round();
-        taxCents += taxAmount;
-        taxes.add(
-          SaleItemTax(
-            taxRateId: tax.id!,
-            taxName: tax.name,
-            taxRate: tax.rate,
-            taxAmountCents: taxAmount,
-          ),
-        );
+
+      if (useTax) {
+        for (final tax in productTaxes) {
+          final taxAmount = (subtotalCents * tax.rate).round();
+          taxCents += taxAmount;
+          taxes.add(
+            SaleItemTax(
+              taxRateId: tax.id!,
+              taxName: tax.name,
+              taxRate: tax.rate,
+              taxAmountCents: taxAmount,
+            ),
+          );
+        }
       }
 
       final totalCents = subtotalCents + taxCents;
@@ -229,6 +244,11 @@ class POSNotifier extends _$POSNotifier {
       return null;
     }
 
+    // Check settings
+    final settingsAsync = ref.read(settingsProvider);
+    final useInventory = settingsAsync.value?.useInventory ?? true;
+    final useTax = settingsAsync.value?.useTax ?? true;
+
     final index = state.cart.indexWhere(
       (item) => item.productId == product.id && item.variantId == variant?.id,
     );
@@ -247,6 +267,7 @@ class POSNotifier extends _$POSNotifier {
               quantityToAdd: additionalNeeded,
               variant: variant,
               currentCart: state.cart,
+              useInventory: useInventory,
             );
 
         if (stockError != null) {
@@ -259,17 +280,19 @@ class POSNotifier extends _$POSNotifier {
 
       int taxCents = 0;
       final taxes = <SaleItemTax>[];
-      for (final tax in existingItem.taxes) {
-        final taxAmount = (subtotalCents * tax.taxRate).round();
-        taxCents += taxAmount;
-        taxes.add(
-          SaleItemTax(
-            taxRateId: tax.taxRateId,
-            taxName: tax.taxName,
-            taxRate: tax.taxRate,
-            taxAmountCents: taxAmount,
-          ),
-        );
+      if (useTax) {
+        for (final tax in existingItem.taxes) {
+          final taxAmount = (subtotalCents * tax.taxRate).round();
+          taxCents += taxAmount;
+          taxes.add(
+            SaleItemTax(
+              taxRateId: tax.taxRateId,
+              taxName: tax.taxName,
+              taxRate: tax.taxRate,
+              taxAmountCents: taxAmount,
+            ),
+          );
+        }
       }
 
       final totalCents = subtotalCents + taxCents;
@@ -304,6 +327,7 @@ class POSNotifier extends _$POSNotifier {
             quantityToAdd: quantity,
             variant: variant,
             currentCart: state.cart,
+            useInventory: useInventory,
           );
 
       if (stockError != null) {
@@ -328,17 +352,19 @@ class POSNotifier extends _$POSNotifier {
 
       int taxCents = 0;
       final taxes = <SaleItemTax>[];
-      for (final tax in productTaxes) {
-        final taxAmount = (subtotalCents * tax.rate).round();
-        taxCents += taxAmount;
-        taxes.add(
-          SaleItemTax(
-            taxRateId: tax.id!,
-            taxName: tax.name,
-            taxRate: tax.rate,
-            taxAmountCents: taxAmount,
-          ),
-        );
+      if (useTax) {
+        for (final tax in productTaxes) {
+          final taxAmount = (subtotalCents * tax.rate).round();
+          taxCents += taxAmount;
+          taxes.add(
+            SaleItemTax(
+              taxRateId: tax.id!,
+              taxName: tax.name,
+              taxRate: tax.rate,
+              taxAmountCents: taxAmount,
+            ),
+          );
+        }
       }
 
       final totalCents = subtotalCents + taxCents;
@@ -373,6 +399,11 @@ class POSNotifier extends _$POSNotifier {
       removeFromCart(productId, variantId: variantId);
       return null;
     }
+
+    // Check settings
+    final settingsAsync = ref.read(settingsProvider);
+    final useInventory = settingsAsync.value?.useInventory ?? true;
+    final useTax = settingsAsync.value?.useTax ?? true;
 
     final index = state.cart.indexWhere(
       (item) => item.productId == productId && item.variantId == variantId,
@@ -413,6 +444,7 @@ class POSNotifier extends _$POSNotifier {
                       quantityToAdd: additionalNeeded,
                       variant: variant,
                       currentCart: state.cart,
+                      useInventory: useInventory,
                     );
 
                 if (stockError != null) {
@@ -442,6 +474,7 @@ class POSNotifier extends _$POSNotifier {
                     quantityToAdd: additionalNeeded,
                     variant: variant,
                     currentCart: state.cart,
+                    useInventory: useInventory,
                   );
               if (stockError != null) return stockError;
             }
@@ -456,17 +489,19 @@ class POSNotifier extends _$POSNotifier {
 
       int taxCents = 0;
       final taxes = <SaleItemTax>[];
-      for (final tax in existingItem.taxes) {
-        final taxAmount = (subtotalCents * tax.taxRate).round();
-        taxCents += taxAmount;
-        taxes.add(
-          SaleItemTax(
-            taxRateId: tax.taxRateId,
-            taxName: tax.taxName,
-            taxRate: tax.taxRate,
-            taxAmountCents: taxAmount,
-          ),
-        );
+      if (useTax) {
+        for (final tax in existingItem.taxes) {
+          final taxAmount = (subtotalCents * tax.taxRate).round();
+          taxCents += taxAmount;
+          taxes.add(
+            SaleItemTax(
+              taxRateId: tax.taxRateId,
+              taxName: tax.taxName,
+              taxRate: tax.taxRate,
+              taxAmountCents: taxAmount,
+            ),
+          );
+        }
       }
 
       final totalCents = subtotalCents + taxCents;
@@ -562,7 +597,8 @@ class POSNotifier extends _$POSNotifier {
         ],
       );
 
-      await ref.read(createSaleUseCaseProvider).call(sale);
+      final createSale = await ref.read(createSaleUseCaseProvider.future);
+      await createSale.call(sale);
 
       // Record change as a cash movement if applicable
       final change = amountPaid - (totalCents / 100.0);

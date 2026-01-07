@@ -8,7 +8,10 @@ class StockValidatorService {
     required double quantityToAdd,
     ProductVariant? variant,
     required List<SaleItem> currentCart,
+    bool useInventory = true,
   }) async {
+    if (!useInventory) return null; // Bypass check
+
     try {
       double availableStock = 0.0;
       String stockLabel = '';

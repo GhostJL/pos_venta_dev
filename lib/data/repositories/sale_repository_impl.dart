@@ -349,106 +349,110 @@ class SaleRepositoryImpl implements SaleRepository {
       );
 
       // 2. Restore Lots
-      final lotDeductions = await txn.query(
-        DatabaseHelper.tableSaleItemLots,
-        where:
-            'sale_item_id IN (SELECT id FROM ${DatabaseHelper.tableSaleItems} WHERE sale_id = ?)',
-        whereArgs: [transaction.saleId],
-      );
-
-      for (final deduction in lotDeductions) {
-        final lotId = deduction['lot_id'] as int;
-        final quantityDeducted = (deduction['quantity_deducted'] as num)
-            .toDouble();
-
-        await txn.rawUpdate(
-          '''
-          UPDATE ${DatabaseHelper.tableInventoryLots}
-          SET quantity = quantity + ?
-          WHERE id = ?
-          ''',
-          [quantityDeducted, lotId],
+      if (transaction.restoreInventory) {
+        final lotDeductions = await txn.query(
+          DatabaseHelper.tableSaleItemLots,
+          where:
+              'sale_item_id IN (SELECT id FROM ${DatabaseHelper.tableSaleItems} WHERE sale_id = ?)',
+          whereArgs: [transaction.saleId],
         );
+
+        for (final deduction in lotDeductions) {
+          final lotId = deduction['lot_id'] as int;
+          final quantityDeducted = (deduction['quantity_deducted'] as num)
+              .toDouble();
+
+          await txn.rawUpdate(
+            '''
+            UPDATE ${DatabaseHelper.tableInventoryLots}
+            SET quantity = quantity + ?
+            WHERE id = ?
+            ''',
+            [quantityDeducted, lotId],
+          );
+        }
       }
 
       // 3. Restore Inventory
-      final items = await txn.query(
-        DatabaseHelper.tableSaleItems,
-        where: 'sale_id = ?',
-        whereArgs: [transaction.saleId],
-      );
-
-      final saleResult = await txn.query(
-        DatabaseHelper.tableSales,
-        columns: ['warehouse_id'],
-        where: 'id = ?',
-        whereArgs: [transaction.saleId],
-      );
-
-      if (saleResult.isEmpty) return;
-
-      final warehouseId = saleResult.first['warehouse_id'] as int;
-
-      for (final item in items) {
-        final productId = item['product_id'] as int;
-        final variantId = item['variant_id'] as int?;
-        final quantity = (item['quantity'] as num).toDouble();
-
-        double quantityToRestore = quantity;
-        if (variantId != null) {
-          final variantResult = await txn.query(
-            DatabaseHelper.tableProductVariants,
-            columns: ['quantity'],
-            where: 'id = ?',
-            whereArgs: [variantId],
-          );
-          if (variantResult.isNotEmpty) {
-            final variantQuantity = (variantResult.first['quantity'] as num)
-                .toDouble();
-            quantityToRestore = quantity * variantQuantity;
-          }
-        }
-
-        final inventoryResult = await txn.query(
-          DatabaseHelper.tableInventory,
-          where: 'product_id = ? AND warehouse_id = ?',
-          whereArgs: [productId, warehouseId],
+      if (transaction.restoreInventory) {
+        final items = await txn.query(
+          DatabaseHelper.tableSaleItems,
+          where: 'sale_id = ?',
+          whereArgs: [transaction.saleId],
         );
 
-        double quantityBefore = 0;
-        if (inventoryResult.isNotEmpty) {
-          quantityBefore = (inventoryResult.first['quantity_on_hand'] as num)
-              .toDouble();
-        }
+        final saleResult = await txn.query(
+          DatabaseHelper.tableSales,
+          columns: ['warehouse_id'],
+          where: 'id = ?',
+          whereArgs: [transaction.saleId],
+        );
 
-        await txn.rawUpdate(
-          '''
+        if (saleResult.isEmpty) return;
+
+        final warehouseId = saleResult.first['warehouse_id'] as int;
+
+        for (final item in items) {
+          final productId = item['product_id'] as int;
+          final variantId = item['variant_id'] as int?;
+          final quantity = (item['quantity'] as num).toDouble();
+
+          double quantityToRestore = quantity;
+          if (variantId != null) {
+            final variantResult = await txn.query(
+              DatabaseHelper.tableProductVariants,
+              columns: ['quantity'],
+              where: 'id = ?',
+              whereArgs: [variantId],
+            );
+            if (variantResult.isNotEmpty) {
+              final variantQuantity = (variantResult.first['quantity'] as num)
+                  .toDouble();
+              quantityToRestore = quantity * variantQuantity;
+            }
+          }
+
+          final inventoryResult = await txn.query(
+            DatabaseHelper.tableInventory,
+            where: 'product_id = ? AND warehouse_id = ?',
+            whereArgs: [productId, warehouseId],
+          );
+
+          double quantityBefore = 0;
+          if (inventoryResult.isNotEmpty) {
+            quantityBefore = (inventoryResult.first['quantity_on_hand'] as num)
+                .toDouble();
+          }
+
+          await txn.rawUpdate(
+            '''
           UPDATE ${DatabaseHelper.tableInventory}
           SET quantity_on_hand = quantity_on_hand + ?,
               updated_at = ?
           WHERE product_id = ? AND warehouse_id = ?
           ''',
-          [
-            quantityToRestore,
-            DateTime.now().toIso8601String(),
-            productId,
-            warehouseId,
-          ],
-        );
+            [
+              quantityToRestore,
+              DateTime.now().toIso8601String(),
+              productId,
+              warehouseId,
+            ],
+          );
 
-        await txn.insert(DatabaseHelper.tableInventoryMovements, {
-          'product_id': productId,
-          'warehouse_id': warehouseId,
-          'movement_type': 'return',
-          'quantity': quantityToRestore,
-          'quantity_before': quantityBefore,
-          'quantity_after': quantityBefore + quantityToRestore,
-          'reference_type': 'sale_cancellation',
-          'reference_id': transaction.saleId,
-          'reason': 'Sale cancelled: ${transaction.reason}',
-          'performed_by': transaction.userId,
-          'movement_date': transaction.cancelledAt.toIso8601String(),
-        });
+          await txn.insert(DatabaseHelper.tableInventoryMovements, {
+            'product_id': productId,
+            'warehouse_id': warehouseId,
+            'movement_type': 'return',
+            'quantity': quantityToRestore,
+            'quantity_before': quantityBefore,
+            'quantity_after': quantityBefore + quantityToRestore,
+            'reference_type': 'sale_cancellation',
+            'reference_id': transaction.saleId,
+            'reason': 'Sale cancelled: ${transaction.reason}',
+            'performed_by': transaction.userId,
+            'movement_date': transaction.cancelledAt.toIso8601String(),
+          });
+        }
       }
     });
 

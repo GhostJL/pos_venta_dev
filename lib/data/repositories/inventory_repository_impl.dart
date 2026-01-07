@@ -415,4 +415,20 @@ class InventoryRepositoryImpl implements InventoryRepository {
     });
     _databaseHelper.notifyTableChanged(DatabaseHelper.tableInventory);
   }
+
+  @override
+  Future<void> resetAllInventory() async {
+    final db = await _databaseHelper.database;
+    await db.transaction((txn) async {
+      // 1. Delete ALL Inventory Lots
+      await txn.delete(DatabaseHelper.tableInventoryLots);
+
+      // 2. Delete ALL Inventory Records
+      await txn.delete(DatabaseHelper.tableInventory);
+
+      // Optional: We could log a massive 'reset' movement here,
+      // but 'DELETE' is sufficient for a hard reset as requested.
+    });
+    _databaseHelper.notifyTableChanged(DatabaseHelper.tableInventory);
+  }
 }

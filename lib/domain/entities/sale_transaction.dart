@@ -70,6 +70,9 @@ class SaleCancellationTransaction {
   /// Movements to record
   final List<InventoryMovement> movements;
 
+  /// Whether to restore inventory counts
+  final bool restoreInventory;
+
   SaleCancellationTransaction({
     required this.saleId,
     required this.userId,
@@ -78,6 +81,7 @@ class SaleCancellationTransaction {
     required this.lotRestorations,
     required this.inventoryAdjustments,
     required this.movements,
+    this.restoreInventory = true,
   });
 }
 

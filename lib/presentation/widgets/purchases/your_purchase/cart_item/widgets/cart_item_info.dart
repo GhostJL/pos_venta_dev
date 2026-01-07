@@ -2,18 +2,26 @@ import 'package:flutter/material.dart';
 import 'package:posventa/domain/entities/purchase_item.dart';
 import 'package:posventa/core/utils/cart_item_helper.dart';
 
-class CartItemInfo extends StatelessWidget {
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:posventa/presentation/providers/settings_provider.dart';
+
+class CartItemInfo extends ConsumerWidget {
   final PurchaseItem item;
   final CartItemHelper helper;
 
   const CartItemInfo({super.key, required this.item, required this.helper});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final variant = helper.variant;
     final stock = variant?.stock ?? 0;
     final colorScheme = Theme.of(context).colorScheme;
+
     final textTheme = Theme.of(context).textTheme;
+
+    // Global Settings
+    final settingsAsync = ref.watch(settingsProvider);
+    final useInventory = settingsAsync.value?.useInventory ?? true;
 
     // Data for margin calculation
     final currentCost = variant?.costPrice ?? 0.0;
@@ -82,10 +90,11 @@ class CartItemInfo extends StatelessWidget {
           crossAxisAlignment: WrapCrossAlignment.center,
           children: [
             // Stock Chip
-            _InfoChip(
-              icon: Icons.inventory_2_outlined,
-              label: 'Stock: ${stock.toStringAsFixed(0)}',
-            ),
+            if (useInventory)
+              _InfoChip(
+                icon: Icons.inventory_2_outlined,
+                label: 'Stock: ${stock.toStringAsFixed(0)}',
+              ),
 
             // Margin Chip
             if (hasValidPrice) _MarginChip(margin: margin),

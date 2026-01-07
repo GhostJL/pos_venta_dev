@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:posventa/presentation/providers/settings_provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:posventa/core/constants/permission_constants.dart';
 import 'package:posventa/domain/entities/inventory.dart';
@@ -187,6 +188,46 @@ class _InventoryPageState extends ConsumerState<InventoryPage> {
                         item.inventory.minStock ?? item.variant.stockMin ?? 0.0;
                     if (stock <= min && min > 0) lowStockCount++;
                     totalInfo += stock * item.variant.costPrice;
+                  }
+
+                  // Global Settings
+                  final settingsAsync = ref.watch(settingsProvider);
+                  final useInventory =
+                      settingsAsync.value?.useInventory ?? true;
+
+                  if (!useInventory) {
+                    return Center(
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.inventory_2_outlined,
+                              size: 64,
+                              color: Theme.of(context).colorScheme.outline,
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              'Gestión de Inventario Desactivada',
+                              textAlign: TextAlign.center,
+                              style: Theme.of(context).textTheme.titleLarge,
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              textAlign: TextAlign.center,
+                              'Activa "Control de Inventario" en Configuración para ver esta sección.',
+                              style: Theme.of(context).textTheme.bodyMedium
+                                  ?.copyWith(
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.onSurfaceVariant,
+                                  ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
                   }
 
                   return Column(

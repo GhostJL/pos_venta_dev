@@ -47,9 +47,10 @@ SaleRepository saleRepository(ref) =>
     SaleRepositoryImpl(ref.watch(databaseHelperProvider));
 
 @riverpod
-CreateSaleUseCase createSaleUseCase(ref) => CreateSaleUseCase(
+Future<CreateSaleUseCase> createSaleUseCase(ref) async => CreateSaleUseCase(
   ref.watch(saleRepositoryProvider),
   ref.watch(inventoryLotRepositoryProvider),
+  await ref.watch(settingsRepositoryProvider.future),
 );
 
 @riverpod
@@ -65,10 +66,11 @@ GenerateNextSaleNumberUseCase generateNextSaleNumberUseCase(ref) =>
     GenerateNextSaleNumberUseCase(ref.watch(saleRepositoryProvider));
 
 @riverpod
-CancelSaleUseCase cancelSaleUseCase(ref) => CancelSaleUseCase(
+Future<CancelSaleUseCase> cancelSaleUseCase(ref) async => CancelSaleUseCase(
   ref.watch(saleRepositoryProvider),
   ref.watch(createCashMovementUseCaseProvider),
   ref.watch(getCurrentSessionProvider),
+  await ref.watch(settingsRepositoryProvider.future),
 );
 
 final salesListStreamProvider = StreamProvider.autoDispose

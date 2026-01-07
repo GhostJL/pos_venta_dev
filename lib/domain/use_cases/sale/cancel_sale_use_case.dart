@@ -5,16 +5,19 @@ import 'package:posventa/domain/use_cases/cash_movement/get_current_session.dart
 import 'package:posventa/domain/use_cases/cash_movement/create_cash_movement.dart';
 import 'package:posventa/domain/entities/sale.dart';
 import 'package:posventa/domain/repositories/sale_repository.dart';
+import 'package:posventa/domain/repositories/settings_repository.dart';
 
 class CancelSaleUseCase {
   final SaleRepository _repository;
   final CreateCashMovement _createCashMovement;
   final GetCurrentSession _getCurrentSession;
+  final SettingsRepository _settingsRepository;
 
   CancelSaleUseCase(
     this._repository,
     this._createCashMovement,
     this._getCurrentSession,
+    this._settingsRepository,
   );
 
   Future<void> call(int saleId, int userId, String reason) async {
@@ -48,6 +51,10 @@ class CancelSaleUseCase {
     // from the sale_item_lots table during transaction execution.
     // We're just preparing the transaction metadata here.
 
+    // Check inventory settings
+    final settings = await _settingsRepository.getSettings();
+    final useInventory = settings.useInventory;
+
     final transaction = SaleCancellationTransaction(
       saleId: saleId,
       userId: userId,
@@ -57,6 +64,7 @@ class CancelSaleUseCase {
       inventoryAdjustments:
           inventoryAdjustments, // Will be populated by Repository
       movements: movements, // Will be populated by Repository
+      restoreInventory: useInventory,
     );
 
     await _repository.executeSaleCancellation(transaction);

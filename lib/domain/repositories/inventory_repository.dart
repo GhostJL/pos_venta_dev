@@ -25,4 +25,5 @@ abstract class InventoryRepository {
     required int userId,
     String? reason,
   });
+  Future<void> resetAllInventory();
 }

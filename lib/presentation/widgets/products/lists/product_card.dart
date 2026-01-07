@@ -2,7 +2,10 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:posventa/domain/entities/product.dart';
 
-class ProductCard extends StatelessWidget {
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:posventa/presentation/providers/settings_provider.dart';
+
+class ProductCard extends ConsumerWidget {
   final Product product;
   final VoidCallback? onTap;
   final VoidCallback? onMorePressed;
@@ -15,7 +18,11 @@ class ProductCard extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    // Global Settings
+    final settingsAsync = ref.watch(settingsProvider);
+    final useInventory = settingsAsync.value?.useInventory ?? true;
+
     final theme = Theme.of(context);
     final isActive = product.isActive;
 
@@ -190,7 +197,8 @@ class ProductCard extends StatelessWidget {
                         ),
 
                         // Stock Indicator (Right aligned)
-                        if (product.variants != null &&
+                        if (useInventory &&
+                            product.variants != null &&
                             product.variants!.isNotEmpty) ...[
                           const SizedBox(width: 8),
                           Flexible(child: _buildStockIndicator(theme, product)),

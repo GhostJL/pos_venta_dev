@@ -50,6 +50,89 @@ final class DatabaseHelperProvider
 
 String _$databaseHelperHash() => r'4d8f44f034cca2afca8cfb05114be3ccb645e0ef';
 
+@ProviderFor(sharedPreferences)
+const sharedPreferencesProvider = SharedPreferencesProvider._();
+
+final class SharedPreferencesProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<SharedPreferences>,
+          SharedPreferences,
+          FutureOr<SharedPreferences>
+        >
+    with
+        $FutureModifier<SharedPreferences>,
+        $FutureProvider<SharedPreferences> {
+  const SharedPreferencesProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'sharedPreferencesProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$sharedPreferencesHash();
+
+  @$internal
+  @override
+  $FutureProviderElement<SharedPreferences> $createElement(
+    $ProviderPointer pointer,
+  ) => $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<SharedPreferences> create(Ref ref) {
+    return sharedPreferences(ref);
+  }
+}
+
+String _$sharedPreferencesHash() => r'1cb46d6bb5f6c7badabd3ab1dcb5d1552aa4aa09';
+
+@ProviderFor(settingsRepository)
+const settingsRepositoryProvider = SettingsRepositoryProvider._();
+
+final class SettingsRepositoryProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<SettingsRepository>,
+          SettingsRepository,
+          FutureOr<SettingsRepository>
+        >
+    with
+        $FutureModifier<SettingsRepository>,
+        $FutureProvider<SettingsRepository> {
+  const SettingsRepositoryProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'settingsRepositoryProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$settingsRepositoryHash();
+
+  @$internal
+  @override
+  $FutureProviderElement<SettingsRepository> $createElement(
+    $ProviderPointer pointer,
+  ) => $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<SettingsRepository> create(Ref ref) {
+    return settingsRepository(ref);
+  }
+}
+
+String _$settingsRepositoryHash() =>
+    r'26f2e22b821804ccdc5d4e56857e27c1d6040c2f';
+
 @ProviderFor(userRepository)
 const userRepositoryProvider = UserRepositoryProvider._();
 

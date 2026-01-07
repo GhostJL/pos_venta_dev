@@ -6,6 +6,7 @@ import 'package:posventa/domain/entities/product_tax.dart';
 import 'package:posventa/domain/entities/product_variant.dart';
 import 'package:posventa/domain/entities/tax_rate.dart';
 import 'package:posventa/presentation/providers/pos_providers.dart';
+import 'package:posventa/presentation/providers/settings_provider.dart';
 
 class PosProductItem extends ConsumerWidget {
   final Product product;
@@ -45,6 +46,10 @@ class PosProductItem extends ConsumerWidget {
 
     final String displayName = product.name;
     final String? variantName = variant?.description;
+
+    // Global Settings
+    final settingsAsync = ref.watch(settingsProvider);
+    final useInventory = settingsAsync.value?.useInventory ?? true;
 
     // Stock Color Logic
     Color stockColor;
@@ -130,28 +135,29 @@ class PosProductItem extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // Stock Badge (Small & Top)
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 6,
-                        vertical: 2,
-                      ),
-                      decoration: BoxDecoration(
-                        color: stockColor.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: Text(
-                        stock <= 0 ? 'Agotado' : '$stock Disp.',
-                        style: theme.textTheme.labelSmall?.copyWith(
-                          color: stockColor,
-                          fontSize: 10,
-                          fontWeight: FontWeight.bold,
+                    if (useInventory) ...[
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 2,
                         ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
+                        decoration: BoxDecoration(
+                          color: stockColor.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Text(
+                          stock <= 0 ? 'Agotado' : '$stock Disp.',
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            color: stockColor,
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
-                    ),
-
-                    const SizedBox(height: 8),
+                      const SizedBox(height: 8),
+                    ],
 
                     // Product Name
                     Text(

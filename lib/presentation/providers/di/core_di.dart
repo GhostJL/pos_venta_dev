@@ -14,11 +14,24 @@ import 'package:posventa/domain/repositories/user_permission_repository.dart';
 import 'package:posventa/data/repositories/user_permission_repository_impl.dart';
 import 'package:posventa/domain/repositories/i_store_repository.dart';
 import 'package:posventa/data/repositories/store_repository_impl.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:posventa/domain/repositories/settings_repository.dart';
+import 'package:posventa/data/repositories/settings_repository_impl.dart';
 
 part 'core_di.g.dart';
 
 @riverpod
 DatabaseHelper databaseHelper(ref) => DatabaseHelper.instance;
+
+@riverpod
+Future<SharedPreferences> sharedPreferences(ref) =>
+    SharedPreferences.getInstance();
+
+@riverpod
+Future<SettingsRepository> settingsRepository(ref) async {
+  final prefs = await ref.watch(sharedPreferencesProvider.future);
+  return SettingsRepositoryImpl(prefs);
+}
 
 // --- User / Auth Providers ---
 
