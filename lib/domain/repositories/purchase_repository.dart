@@ -2,7 +2,14 @@ import 'package:posventa/domain/entities/purchase.dart';
 import 'package:posventa/domain/entities/purchase_reception_transaction.dart';
 
 abstract class PurchaseRepository {
-  Future<List<Purchase>> getPurchases();
+  Future<List<Purchase>> getPurchases({
+    String? query,
+    PurchaseStatus? status,
+    int? limit,
+    int? offset,
+  });
+
+  Future<int> countPurchases({String? query, PurchaseStatus? status});
   Future<Purchase?> getPurchaseById(int id);
   Future<int> createPurchase(Purchase purchase);
   Future<void> updatePurchase(Purchase purchase);

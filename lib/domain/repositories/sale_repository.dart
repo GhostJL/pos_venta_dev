@@ -9,6 +9,8 @@ abstract class SaleRepository {
     int? offset,
   });
 
+  Future<int> countSales({DateTime? startDate, DateTime? endDate});
+
   Stream<List<Sale>> getSalesStream({
     DateTime? startDate,
     DateTime? endDate,

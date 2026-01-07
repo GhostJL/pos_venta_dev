@@ -1,4 +1,5 @@
 import 'package:posventa/data/datasources/database_helper.dart';
+import 'package:sqflite/sqflite.dart';
 import 'package:posventa/data/models/purchase_item_model.dart';
 import 'package:posventa/data/models/purchase_model.dart';
 import 'package:posventa/domain/entities/inventory_lot.dart';
@@ -13,14 +14,40 @@ class PurchaseRepositoryImpl implements PurchaseRepository {
   PurchaseRepositoryImpl(this._databaseHelper);
 
   @override
-  Future<List<Purchase>> getPurchases() async {
+  Future<List<Purchase>> getPurchases({
+    String? query,
+    PurchaseStatus? status,
+    int? limit,
+    int? offset,
+  }) async {
     final db = await _databaseHelper.database;
+
+    String whereClause = '';
+    List<dynamic> whereArgs = [];
+
+    if (query != null && query.isNotEmpty) {
+      whereClause =
+          '(p.purchase_number LIKE ? OR s.name LIKE ? OR p.status LIKE ?)';
+      whereArgs.addAll(['%$query%', '%$query%', '%$query%']);
+    }
+
+    if (status != null) {
+      if (whereClause.isNotEmpty) whereClause += ' AND ';
+      whereClause += 'p.status = ?';
+      whereArgs.add(
+        status.name,
+      ); // Assuming PurchaseStatus is enum and stored as string
+    }
+
     final result = await db.rawQuery('''
       SELECT p.*, s.name as supplier_name
       FROM ${DatabaseHelper.tablePurchases} p
       LEFT JOIN ${DatabaseHelper.tableSuppliers} s ON p.supplier_id = s.id
+      ${whereClause.isNotEmpty ? 'WHERE $whereClause' : ''}
       ORDER BY p.created_at DESC
-    ''');
+      ${limit != null ? 'LIMIT $limit' : ''}
+      ${offset != null ? 'OFFSET $offset' : ''}
+    ''', whereArgs);
 
     final List<Purchase> purchases = [];
     for (final row in result) {
@@ -37,6 +64,35 @@ class PurchaseRepositoryImpl implements PurchaseRepository {
     }
 
     return purchases;
+  }
+
+  @override
+  Future<int> countPurchases({String? query, PurchaseStatus? status}) async {
+    final db = await _databaseHelper.database;
+
+    String whereClause = '';
+    List<dynamic> whereArgs = [];
+
+    if (query != null && query.isNotEmpty) {
+      whereClause =
+          '(p.purchase_number LIKE ? OR s.name LIKE ? OR p.status LIKE ?)';
+      whereArgs.addAll(['%$query%', '%$query%', '%$query%']);
+    }
+
+    if (status != null) {
+      if (whereClause.isNotEmpty) whereClause += ' AND ';
+      whereClause += 'p.status = ?';
+      whereArgs.add(status.name);
+    }
+
+    final result = await db.rawQuery('''
+      SELECT COUNT(*) as count
+      FROM ${DatabaseHelper.tablePurchases} p
+      LEFT JOIN ${DatabaseHelper.tableSuppliers} s ON p.supplier_id = s.id
+      ${whereClause.isNotEmpty ? 'WHERE $whereClause' : ''}
+    ''', whereArgs);
+
+    return Sqflite.firstIntValue(result) ?? 0;
   }
 
   @override

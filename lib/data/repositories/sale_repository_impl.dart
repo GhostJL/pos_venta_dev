@@ -1,4 +1,5 @@
 import 'package:posventa/data/datasources/database_helper.dart';
+import 'package:sqflite/sqflite.dart';
 import 'package:posventa/data/models/sale_item_model.dart';
 import 'package:posventa/data/models/sale_model.dart';
 import 'package:posventa/data/models/sale_item_tax_model.dart';
@@ -80,6 +81,33 @@ class SaleRepositoryImpl implements SaleRepository {
     }
 
     return sales;
+  }
+
+  @override
+  Future<int> countSales({DateTime? startDate, DateTime? endDate}) async {
+    final db = await _databaseHelper.database;
+
+    String whereClause = '';
+    List<dynamic> whereArgs = [];
+
+    if (startDate != null) {
+      whereClause += 'sale_date >= ?';
+      whereArgs.add(startDate.toIso8601String());
+    }
+
+    if (endDate != null) {
+      if (whereClause.isNotEmpty) whereClause += ' AND ';
+      whereClause += 'sale_date <= ?';
+      whereArgs.add(endDate.toIso8601String());
+    }
+
+    final result = await db.rawQuery('''
+      SELECT COUNT(*) as count
+      FROM ${DatabaseHelper.tableSales}
+      ${whereClause.isNotEmpty ? 'WHERE $whereClause' : ''}
+    ''', whereArgs);
+
+    return Sqflite.firstIntValue(result) ?? 0;
   }
 
   @override
