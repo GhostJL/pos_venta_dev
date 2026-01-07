@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:posventa/domain/entities/notification.dart';
 import 'package:posventa/presentation/providers/notification_providers.dart';
+import 'package:posventa/presentation/providers/settings_provider.dart';
 import 'package:intl/intl.dart';
 
 class InventoryNotificationsPage extends ConsumerWidget {
@@ -10,6 +11,40 @@ class InventoryNotificationsPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final notificationsAsync = ref.watch(notificationsStreamProvider);
+
+    // Global Settings logic
+    final settingsAsync = ref.watch(settingsProvider);
+    final useInventory = settingsAsync.value?.useInventory ?? true;
+
+    if (!useInventory) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Notificaciones')),
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.notifications_off_outlined,
+                size: 64,
+                color: Theme.of(context).colorScheme.outline,
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                'Alertas de inventario desactivadas',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Activa "Control de Inventario" para recibirlas.',
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
 
     return Scaffold(
       appBar: AppBar(

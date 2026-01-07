@@ -630,41 +630,47 @@ class POSNotifier extends _$POSNotifier {
       ref.invalidate(todaysTransactionsProvider);
 
       // Check stock levels and trigger notifications
-      try {
-        final notificationService = ref.read(notificationServiceProvider);
-        final productRepository = ref.read(productRepositoryProvider);
+      // Only runs if Inventory Management is enabled
+      final settingsAsync = ref.read(settingsProvider);
+      final useInventory = settingsAsync.value?.useInventory ?? true;
 
-        for (final item in state.cart) {
-          if (item.variantId != null) {
-            // Fetch fresh product/variant data
-            final productResult = await productRepository.getProductById(
-              item.productId,
-            );
+      if (useInventory) {
+        try {
+          final notificationService = ref.read(notificationServiceProvider);
+          final productRepository = ref.read(productRepositoryProvider);
 
-            productResult.fold((failure) => null, (product) async {
-              if (product != null) {
-                final variant = product.variants?.firstWhere(
-                  (v) => v.id == item.variantId,
-                  orElse: () => throw Exception('Variant not found'),
-                );
+          for (final item in state.cart) {
+            if (item.variantId != null) {
+              // Fetch fresh product/variant data
+              final productResult = await productRepository.getProductById(
+                item.productId,
+              );
 
-                if (variant != null) {
-                  // Determine stock. If getProductById populates it, use it.
-                  // Otherwise we might need to fetch it specifically.
-                  // Assuming variant.stock is populated (as per implementation plan review).
-                  await notificationService.checkStockLevel(
-                    variant: variant,
-                    productName: product.name,
-                    currentStock: variant.stock ?? 0,
+              productResult.fold((failure) => null, (product) async {
+                if (product != null) {
+                  final variant = product.variants?.firstWhere(
+                    (v) => v.id == item.variantId,
+                    orElse: () => throw Exception('Variant not found'),
                   );
+
+                  if (variant != null) {
+                    // Determine stock. If getProductById populates it, use it.
+                    // Otherwise we might need to fetch it specifically.
+                    // Assuming variant.stock is populated (as per implementation plan review).
+                    await notificationService.checkStockLevel(
+                      variant: variant,
+                      productName: product.name,
+                      currentStock: variant.stock ?? 0,
+                    );
+                  }
                 }
-              }
-            });
+              });
+            }
           }
+        } catch (e) {
+          // Silently fail notification checks to not disrupt sale completion
+          debugPrint('Error checking stock levels: $e');
         }
-      } catch (e) {
-        // Silently fail notification checks to not disrupt sale completion
-        debugPrint('Error checking stock levels: $e');
       }
 
       state = state.copyWith(
