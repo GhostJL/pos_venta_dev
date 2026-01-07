@@ -1,7 +1,13 @@
 import 'package:posventa/domain/entities/customer.dart';
 
 abstract class CustomerRepository {
-  Future<List<Customer>> getCustomers();
+  Future<List<Customer>> getCustomers({
+    String? query,
+    int? limit,
+    int? offset,
+    bool showInactive = false,
+  });
+  Future<int> countCustomers({String? query, bool showInactive = false});
   Future<Customer?> getCustomerById(int id);
   Future<Customer?> getCustomerByCode(String code);
   Future<int> createCustomer(Customer customer);

@@ -3,6 +3,7 @@ import 'package:posventa/data/datasources/database_helper.dart';
 import 'package:posventa/data/models/customer_model.dart';
 import 'package:posventa/domain/entities/customer.dart';
 import 'package:posventa/domain/repositories/customer_repository.dart';
+import 'package:sqflite/sqflite.dart';
 
 class CustomerRepositoryImpl implements CustomerRepository {
   final DatabaseHelper _databaseHelper;
@@ -10,15 +11,74 @@ class CustomerRepositoryImpl implements CustomerRepository {
   CustomerRepositoryImpl(this._databaseHelper);
 
   @override
-  Future<List<Customer>> getCustomers() async {
+  Future<List<Customer>> getCustomers({
+    String? query,
+    int? limit,
+    int? offset,
+    bool showInactive = false,
+  }) async {
     final db = await _databaseHelper.database;
+    final whereClauses = <String>[];
+    final whereArgs = <dynamic>[];
+
+    // Filter: Active Status
+    if (showInactive) {
+      whereClauses.add('is_active = 0');
+    } else {
+      whereClauses.add('is_active = 1');
+    }
+
+    if (query != null && query.isNotEmpty) {
+      whereClauses.add(
+        '(first_name LIKE ? OR last_name LIKE ? OR business_name LIKE ? OR code LIKE ?)',
+      );
+      final q = '%$query%';
+      whereArgs.addAll([q, q, q, q]);
+    }
+
+    final whereString = whereClauses.isNotEmpty
+        ? whereClauses.join(' AND ')
+        : null;
+
     final result = await db.query(
       DatabaseHelper.tableCustomers,
-      where: 'is_active = ?',
-      whereArgs: [1],
+      where: whereString,
+      whereArgs: whereArgs.isNotEmpty ? whereArgs : null,
       orderBy: 'last_name ASC',
+      limit: limit,
+      offset: offset,
     );
     return result.map((e) => CustomerModel.fromJson(e)).toList();
+  }
+
+  @override
+  Future<int> countCustomers({String? query, bool showInactive = false}) async {
+    final db = await _databaseHelper.database;
+    final whereClauses = <String>[];
+    final whereArgs = <dynamic>[];
+
+    if (showInactive) {
+      whereClauses.add('is_active = 0');
+    } else {
+      whereClauses.add('is_active = 1');
+    }
+
+    if (query != null && query.isNotEmpty) {
+      whereClauses.add(
+        '(first_name LIKE ? OR last_name LIKE ? OR business_name LIKE ? OR code LIKE ?)',
+      );
+      final q = '%$query%';
+      whereArgs.addAll([q, q, q, q]);
+    }
+
+    final whereString = whereClauses.isNotEmpty
+        ? 'WHERE ${whereClauses.join(' AND ')}'
+        : '';
+
+    final sql =
+        'SELECT COUNT(*) as count FROM ${DatabaseHelper.tableCustomers} $whereString';
+    final result = await db.rawQuery(sql, whereArgs);
+    return Sqflite.firstIntValue(result) ?? 0;
   }
 
   @override

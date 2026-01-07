@@ -11,12 +11,74 @@ class SupplierRepositoryImpl implements SupplierRepository {
   SupplierRepositoryImpl(this._dbHelper);
 
   @override
-  Future<List<Supplier>> getAllSuppliers() async {
+  Future<List<Supplier>> getAllSuppliers({
+    String? query,
+    int? limit,
+    int? offset,
+    bool showInactive = false,
+  }) async {
     final db = await _dbHelper.database;
+    final whereClauses = <String>[];
+    final whereArgs = <dynamic>[];
+
+    // Filter: Active Status
+    if (showInactive) {
+      whereClauses.add('is_active = 0');
+    } else {
+      whereClauses.add('is_active = 1');
+    }
+
+    if (query != null && query.isNotEmpty) {
+      whereClauses.add(
+        '(name LIKE ? OR code LIKE ? OR contact_person LIKE ? OR email LIKE ?)',
+      );
+      final q = '%$query%';
+      whereArgs.addAll([q, q, q, q]);
+    }
+
+    final whereString = whereClauses.isNotEmpty
+        ? whereClauses.join(' AND ')
+        : null;
+
     final List<Map<String, dynamic>> maps = await db.query(
       DatabaseHelper.tableSuppliers,
+      where: whereString,
+      whereArgs: whereArgs.isNotEmpty ? whereArgs : null,
+      orderBy: 'name ASC',
+      limit: limit,
+      offset: offset,
     );
     return List.generate(maps.length, (i) => SupplierModel.fromMap(maps[i]));
+  }
+
+  @override
+  Future<int> countSuppliers({String? query, bool showInactive = false}) async {
+    final db = await _dbHelper.database;
+    final whereClauses = <String>[];
+    final whereArgs = <dynamic>[];
+
+    if (showInactive) {
+      whereClauses.add('is_active = 0');
+    } else {
+      whereClauses.add('is_active = 1');
+    }
+
+    if (query != null && query.isNotEmpty) {
+      whereClauses.add(
+        '(name LIKE ? OR code LIKE ? OR contact_person LIKE ? OR email LIKE ?)',
+      );
+      final q = '%$query%';
+      whereArgs.addAll([q, q, q, q]);
+    }
+
+    final whereString = whereClauses.isNotEmpty
+        ? 'WHERE ${whereClauses.join(' AND ')}'
+        : '';
+
+    final sql =
+        'SELECT COUNT(*) as count FROM ${DatabaseHelper.tableSuppliers} $whereString';
+    final result = await db.rawQuery(sql, whereArgs);
+    return Sqflite.firstIntValue(result) ?? 0;
   }
 
   @override
