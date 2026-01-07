@@ -17,19 +17,60 @@ class ProductRepositoryImpl implements ProductRepository {
   ProductRepositoryImpl(this.dataSource);
 
   @override
-  Stream<Either<Failure, List<Product>>> getAllProductsStream({
+  Future<Either<Failure, List<Product>>> getProducts({
+    String? query,
+    int? departmentId,
+    int? categoryId,
+    int? brandId,
+    int? supplierId,
+    bool showInactive = false,
+    String? sortOrder,
     int? limit,
     int? offset,
-  }) async* {
-    final result = await getAllProducts(limit: limit, offset: offset);
-    yield result;
+  }) async {
+    try {
+      final products = await dataSource.getProducts(
+        query: query,
+        departmentId: departmentId,
+        categoryId: categoryId,
+        brandId: brandId,
+        supplierId: supplierId,
+        showInactive: showInactive,
+        sortOrder: sortOrder,
+        limit: limit,
+        offset: offset,
+      );
+      return Right(products);
+    } on DatabaseException catch (e) {
+      return Left(DatabaseFailure(e.message));
+    } catch (e) {
+      return Left(UnexpectedFailure(e.toString()));
+    }
+  }
 
-    await for (final table in dataSource.tableUpdateStream) {
-      if (table == 'products' ||
-          table == 'inventory' ||
-          table == 'product_variants') {
-        yield await getAllProducts(limit: limit, offset: offset);
-      }
+  @override
+  Future<Either<Failure, int>> countProducts({
+    String? query,
+    int? departmentId,
+    int? categoryId,
+    int? brandId,
+    int? supplierId,
+    bool showInactive = false,
+  }) async {
+    try {
+      final count = await dataSource.countProducts(
+        query: query,
+        departmentId: departmentId,
+        categoryId: categoryId,
+        brandId: brandId,
+        supplierId: supplierId,
+        showInactive: showInactive,
+      );
+      return Right(count);
+    } on DatabaseException catch (e) {
+      return Left(DatabaseFailure(e.message));
+    } catch (e) {
+      return Left(UnexpectedFailure(e.toString()));
     }
   }
 
@@ -76,51 +117,6 @@ class ProductRepositoryImpl implements ProductRepository {
       return Left(DatabaseFailure(e.message));
     } catch (e) {
       return Left(UnexpectedFailure(e.toString()));
-    }
-  }
-
-  @override
-  Future<Either<Failure, List<Product>>> getAllProducts({
-    int? limit,
-    int? offset,
-  }) async {
-    try {
-      final products = await dataSource.getAllProducts(
-        limit: limit,
-        offset: offset,
-      );
-      return Right(products);
-    } on DatabaseException catch (e) {
-      return Left(DatabaseFailure(e.message));
-    } catch (e) {
-      return Left(UnexpectedFailure(e.toString()));
-    }
-  }
-
-  @override
-  Future<Either<Failure, List<Product>>> searchProducts(String query) async {
-    try {
-      final products = await dataSource.searchProducts(query);
-      return Right(products);
-    } on DatabaseException catch (e) {
-      return Left(DatabaseFailure(e.message));
-    } catch (e) {
-      return Left(UnexpectedFailure(e.toString()));
-    }
-  }
-
-  @override
-  Stream<Either<Failure, List<Product>>> searchProductsStream(
-    String query,
-  ) async* {
-    yield await searchProducts(query);
-
-    await for (final table in dataSource.tableUpdateStream) {
-      if (table == 'products' ||
-          table == 'inventory' ||
-          table == 'product_variants') {
-        yield await searchProducts(query);
-      }
     }
   }
 
@@ -274,18 +270,6 @@ class ProductRepositoryImpl implements ProductRepository {
       final model = ProductVariantModel.fromEntity(variant);
       await dataSource.updateVariant(model);
       return const Right(null);
-    } on DatabaseException catch (e) {
-      return Left(DatabaseFailure(e.message));
-    } catch (e) {
-      return Left(UnexpectedFailure(e.toString()));
-    }
-  }
-
-  @override
-  Future<Either<Failure, int>> getProductsCount() async {
-    try {
-      final count = await dataSource.countProducts();
-      return Right(count);
     } on DatabaseException catch (e) {
       return Left(DatabaseFailure(e.message));
     } catch (e) {

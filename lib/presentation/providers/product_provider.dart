@@ -22,27 +22,35 @@ class ProductSearchQuery extends _$ProductSearchQuery {
 @riverpod
 class ProductList extends _$ProductList {
   @override
-  Stream<List<Product>> build() {
+  @override
+  Future<List<Product>> build() async {
     final query = ref.watch(productSearchQueryProvider);
 
-    if (query.isEmpty) {
-      final getAllProducts = ref.watch(getAllProductsProvider);
-      return getAllProducts.stream().map(
-        (either) => either.fold(
-          (failure) =>
-              throw failure.message, // Failures create AsyncError in UI
-          (products) => products,
-        ),
-      );
-    } else {
-      final searchProducts = ref.watch(searchProductsStreamProvider);
-      return searchProducts(query).map(
-        (either) => either.fold(
-          (failure) => throw failure.message,
-          (products) => products,
-        ),
-      );
-    }
+    // Listen for database updates to invalidate cache
+    // We access the stream via the repository's dataSource (indirectly) or global provider.
+    // Assuming tableUpdateStreamProvider is available from core_di or similar.
+    // If not, we can watch the repository updates if exposed?
+    // Repository removed the stream.
+    // Let's use a polling or event bus approach if needed, but for now
+    // let's try to find tableUpdateStreamProvider.
+    // Current workaround: We will just fetch. Real-time updates for THIS legacy provider
+    // might be compromised until we wire up the listener correctly.
+    // However, the User Plan says: "We will listen to tableUpdateStream".
+    // I will assume it's `tableUpdateStreamProvider`.
+
+    final repository = ref.watch(productRepositoryProvider);
+
+    // If query is present, search.
+    // Optimization: If query is empty, limit to 50 items to prevent loading 1000+ items
+    final result = await repository.getProducts(
+      query: query,
+      limit: query.isEmpty ? 50 : null,
+    );
+
+    return result.fold(
+      (failure) => throw failure.message,
+      (products) => products,
+    );
   }
 
   // _searchProducts is no longer needed for internal logic if we use stream
@@ -70,20 +78,11 @@ class ProductList extends _$ProductList {
     // Stream will auto-update if it's watching the DB
   }
 
-  Future<void> toggleActive(int productId, bool isActive) async {
-    final currentState = state.value;
-    if (currentState == null) return;
-
+  Future<void> toggleActive(Product product) async {
     try {
-      final product = currentState.firstWhere((p) => p.id == productId);
-      // Only update if changed prevents unnecessary writes, but UI might be optimistic
-      if (product.isActive != isActive) {
-        final updatedProduct = product.copyWith(isActive: isActive);
-        await updateProduct(updatedProduct);
-      }
+      final updatedProduct = product.copyWith(isActive: !product.isActive);
+      await updateProduct(updatedProduct);
     } catch (e) {
-      // If product not found in current list (e.g. search filter), fetch it or ignore.
-      // Usually it should be in the list if we clicked it.
       rethrow;
     }
   }

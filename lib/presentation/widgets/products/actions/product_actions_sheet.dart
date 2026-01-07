@@ -10,6 +10,7 @@ import 'package:posventa/presentation/providers/product_provider.dart';
 import 'package:posventa/presentation/providers/di/product_di.dart';
 import 'package:posventa/presentation/widgets/products/actions/label_print_dialog.dart';
 import 'package:posventa/domain/services/label_service.dart';
+import 'package:posventa/presentation/providers/paginated_products_provider.dart';
 
 class ProductActionsSheet extends ConsumerWidget {
   final Product product;
@@ -243,9 +244,9 @@ class ProductActionsSheet extends ConsumerWidget {
   Future<void> _handleToggleActive(BuildContext context, WidgetRef ref) async {
     context.pop();
     try {
-      await ref
-          .read(productNotifierProvider.notifier)
-          .toggleActive(product.id!, !product.isActive);
+      await ref.read(productNotifierProvider.notifier).toggleActive(product);
+      // Invalidate cache of pages to force refresh of current view
+      ref.invalidate(paginatedProductsPageProvider);
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(

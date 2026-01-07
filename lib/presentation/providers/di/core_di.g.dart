@@ -50,6 +50,39 @@ final class DatabaseHelperProvider
 
 String _$databaseHelperHash() => r'4d8f44f034cca2afca8cfb05114be3ccb645e0ef';
 
+@ProviderFor(tableUpdateStream)
+const tableUpdateStreamProvider = TableUpdateStreamProvider._();
+
+final class TableUpdateStreamProvider
+    extends $FunctionalProvider<AsyncValue<String>, String, Stream<String>>
+    with $FutureModifier<String>, $StreamProvider<String> {
+  const TableUpdateStreamProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'tableUpdateStreamProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$tableUpdateStreamHash();
+
+  @$internal
+  @override
+  $StreamProviderElement<String> $createElement($ProviderPointer pointer) =>
+      $StreamProviderElement(pointer);
+
+  @override
+  Stream<String> create(Ref ref) {
+    return tableUpdateStream(ref);
+  }
+}
+
+String _$tableUpdateStreamHash() => r'1b19a04ba0914e8857f527fb7fdcf723a0ca5973';
+
 @ProviderFor(sharedPreferences)
 const sharedPreferencesProvider = SharedPreferencesProvider._();
 

@@ -232,7 +232,7 @@ class BulkImport extends _$BulkImport {
       // 6. Check for Duplicate Codes
       final existingProducts = await ref
           .read(productRepositoryProvider)
-          .getAllProducts();
+          .getProducts();
       final Set<String> existingCodes = {};
 
       existingProducts.fold((failure) {}, (products) {

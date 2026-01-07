@@ -4,6 +4,7 @@ import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:go_router/go_router.dart';
 import 'package:posventa/domain/entities/product.dart';
 import 'package:posventa/presentation/providers/product_provider.dart';
+import 'package:posventa/presentation/providers/paginated_products_provider.dart';
 import 'package:posventa/core/constants/permission_constants.dart';
 import 'package:posventa/presentation/providers/permission_provider.dart';
 import 'package:posventa/presentation/widgets/products/filters/product_filter_sheet.dart';
@@ -34,7 +35,7 @@ class ProductsPageState extends ConsumerState<ProductsPage>
   final ScrollController _scrollController = ScrollController();
 
   @override
-  List<dynamic> get providersToInvalidate => [productNotifierProvider];
+  List<dynamic> get providersToInvalidate => [paginatedProductsCountProvider];
 
   @override
   void initState() {
@@ -71,6 +72,12 @@ class ProductsPageState extends ConsumerState<ProductsPage>
     );
   }
 
+  void _onSearchChanged(String value) {
+    debounceSearch(
+      () => ref.read(productSearchQueryProvider.notifier).setQuery(value),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -81,25 +88,18 @@ class ProductsPageState extends ConsumerState<ProductsPage>
     ref.watch(brandListProvider);
     ref.watch(supplierListProvider);
 
-    final products = ref.watch(productNotifierProvider);
     final hasManagePermission = ref.watch(
       hasPermissionProvider(PermissionConstants.catalogManage),
     );
 
+    final countAsync = ref.watch(paginatedProductsCountProvider);
+
     return Scaffold(
       appBar: AppBar(
-        title: Consumer(
-          builder: (context, ref, child) {
-            final productsAsync = ref.watch(filteredProductsProvider);
-            return productsAsync.when(
-              data: (products) {
-                final count = products.length;
-                return Text('Productos ($count)');
-              },
-              loading: () => const Text('Productos'),
-              error: (_, __) => const Text('Productos'),
-            );
-          },
+        title: countAsync.when(
+          data: (count) => Text('Productos ($count)'),
+          loading: () => const Text('Productos'),
+          error: (_, __) => const Text('Productos'),
         ),
         centerTitle: true,
         scrolledUnderElevation: 0,
@@ -125,13 +125,7 @@ class ProductsPageState extends ConsumerState<ProductsPage>
               const SizedBox(height: 12),
               ProductSearchBar(
                 controller: _searchController,
-                onChanged: (value) {
-                  debounceSearch(
-                    () => ref
-                        .read(productSearchQueryProvider.notifier)
-                        .setQuery(value),
-                  );
-                },
+                onChanged: _onSearchChanged,
                 onScannerPressed: _openScanner,
               ),
               const SizedBox(height: 4),
@@ -181,7 +175,6 @@ class ProductsPageState extends ConsumerState<ProductsPage>
                           vertical: 0,
                         ),
                       ),
-
                       // Total Count Indicator
                       ChipFilterWidget(
                         label: 'Filtros ($activeFilterCount)',
@@ -201,19 +194,18 @@ class ProductsPageState extends ConsumerState<ProductsPage>
               const SizedBox(height: 4),
 
               Expanded(
-                child: Consumer(
-                  builder: (context, ref, child) {
-                    final productsAsync = ref.watch(filteredProductsProvider);
-                    // Cast/Handle the new state type
-                    return AsyncValueHandler<List<Product>>(
-                      value: productsAsync,
-                      data: (products) => _buildProductList(products),
-                      emptyState: const EmptyStateWidget(
-                        icon: Icons.inventory_2_outlined,
-                        message: 'No se encontraron productos',
-                      ),
-                    );
-                  },
+                child: AsyncValueHandler<int>(
+                  value: countAsync,
+                  data: (count) => count == 0
+                      ? const EmptyStateWidget(
+                          icon: Icons.inventory_2_outlined,
+                          message: 'No se encontraron productos',
+                        )
+                      : _buildPaginatedList(count),
+                  emptyState: const EmptyStateWidget(
+                    icon: Icons.inventory_2_outlined,
+                    message: 'No se encontraron productos',
+                  ),
                 ),
               ),
             ],
@@ -230,47 +222,97 @@ class ProductsPageState extends ConsumerState<ProductsPage>
     );
   }
 
-  Widget _buildProductList(List<Product> productList) {
-    return ListView.separated(
-      itemCount: productList.length,
-      separatorBuilder: (context, index) => const SizedBox(height: 12),
+  Widget _buildPaginatedList(int count) {
+    return ListView.builder(
+      controller: _scrollController,
+      itemCount: count,
       itemBuilder: (context, index) {
-        final product = productList[index];
-        final isDisabled = !product.isActive;
-        return RepaintBoundary(
-          child: Slidable(
-            key: ValueKey(product.id),
-            startActionPane: ActionPane(
-              motion: const ScrollMotion(),
+        final pageIndex = index ~/ kProductPageSize;
+        final indexInPage = index % kProductPageSize;
+
+        final pageAsync = ref.watch(
+          paginatedProductsPageProvider(pageIndex: pageIndex),
+        );
+
+        return pageAsync.when(
+          data: (products) {
+            if (indexInPage >= products.length) return const SizedBox.shrink();
+            final product = products[indexInPage];
+
+            // Prefetch next page
+            if (indexInPage == kProductPageSize - 5) {
+              // Trigger explicit read/watch in background?
+              // Just watching it in a ProviderContainer or causing a read is enough.
+              // But we can't 'ref.watch' inside a callback or conditional easily without re-render.
+              // However, this is part of the build phase of THIS item.
+              // Using Future.microtask to avoid build side-effects?
+              // Or just rely on natural scrolling.
+            }
+            return Column(
               children: [
-                SlidableAction(
-                  onPressed: (_) async {
-                    await ref
-                        .read(productNotifierProvider.notifier)
-                        .toggleActive(product.id!, !product.isActive);
-                  },
-                  backgroundColor: isDisabled
-                      ? Theme.of(context).colorScheme.primaryContainer
-                      : Theme.of(context).colorScheme.errorContainer,
-                  foregroundColor: isDisabled
-                      ? Theme.of(context).colorScheme.onPrimaryContainer
-                      : Theme.of(context).colorScheme.onErrorContainer,
-                  icon: isDisabled
-                      ? Icons.check_circle_outline_rounded
-                      : Icons.pause_circle_outline_rounded,
-                  label: isDisabled ? 'Activar' : 'Desactivar',
-                  borderRadius: BorderRadius.circular(16),
-                ),
+                _buildProductItem(context, product),
+                if (index < count - 1) const SizedBox(height: 12),
               ],
-            ),
-            child: ProductCard(
-              product: product,
-              onTap: () => _showActions(context, product),
-              onMorePressed: () => _showActions(context, product),
-            ),
+            );
+          },
+          loading: () => Column(
+            children: [
+              _buildSkeletonItem(),
+              if (index < count - 1) const SizedBox(height: 12),
+            ],
           ),
+          error: (_, __) => const SizedBox.shrink(),
         );
       },
+    );
+  }
+
+  Widget _buildSkeletonItem() {
+    return Container(
+      height: 80,
+      decoration: BoxDecoration(
+        color: Colors.grey.withAlpha(20),
+        borderRadius: BorderRadius.circular(12),
+      ),
+    );
+  }
+
+  Widget _buildProductItem(BuildContext context, Product product) {
+    final isDisabled = !product.isActive;
+    return RepaintBoundary(
+      child: Slidable(
+        key: ValueKey(product.id),
+        startActionPane: ActionPane(
+          motion: const ScrollMotion(),
+          children: [
+            SlidableAction(
+              onPressed: (_) async {
+                await ref
+                    .read(productNotifierProvider.notifier)
+                    .toggleActive(product);
+                // Invalidate cache of pages to force refresh of current view
+                ref.invalidate(paginatedProductsPageProvider);
+              },
+              backgroundColor: isDisabled
+                  ? Theme.of(context).colorScheme.primaryContainer
+                  : Theme.of(context).colorScheme.errorContainer,
+              foregroundColor: isDisabled
+                  ? Theme.of(context).colorScheme.onPrimaryContainer
+                  : Theme.of(context).colorScheme.onErrorContainer,
+              icon: isDisabled
+                  ? Icons.check_circle_outline_rounded
+                  : Icons.pause_circle_outline_rounded,
+              label: isDisabled ? 'Activar' : 'Desactivar',
+              borderRadius: BorderRadius.circular(16),
+            ),
+          ],
+        ),
+        child: ProductCard(
+          product: product,
+          onTap: () => _showActions(context, product),
+          onMorePressed: () => _showActions(context, product),
+        ),
+      ),
     );
   }
 
@@ -298,7 +340,7 @@ class ProductsPageState extends ConsumerState<ProductsPage>
             borderRadius: BorderRadius.circular(20),
           ),
           child: SizedBox(
-            width: 400, // Ancho fijo para que no se estire
+            width: 400,
             child: ProductFilterSheet(
               onDepartmentChanged: (val) =>
                   ref.read(productFiltersProvider.notifier).setDepartment(val),
@@ -311,8 +353,8 @@ class ProductsPageState extends ConsumerState<ProductsPage>
               onSortOrderChanged: (val) =>
                   ref.read(productFiltersProvider.notifier).setSortOrder(val),
               onClearFilters: _clearFilters,
-              onApplyFilters: () {}, // Handled by Riverpod automatically
-            ), // Reutilizamos el widget
+              onApplyFilters: () {},
+            ),
           ),
         ),
       );
@@ -333,7 +375,7 @@ class ProductsPageState extends ConsumerState<ProductsPage>
           onSortOrderChanged: (val) =>
               ref.read(productFiltersProvider.notifier).setSortOrder(val),
           onClearFilters: _clearFilters,
-          onApplyFilters: () {}, // Handled by Riverpod automatically
+          onApplyFilters: () {},
         ),
       );
     }
@@ -343,7 +385,6 @@ class ProductsPageState extends ConsumerState<ProductsPage>
     final isTablet = MediaQuery.of(context).size.width > 600;
 
     if (isTablet) {
-      // Diseño para Tablet: Un diálogo compacto y centrado (o lateral)
       showDialog(
         context: context,
         builder: (context) => Dialog(
@@ -351,15 +392,12 @@ class ProductsPageState extends ConsumerState<ProductsPage>
             borderRadius: BorderRadius.circular(20),
           ),
           child: SizedBox(
-            width: 400, // Ancho fijo para que no se estire
-            child: ProductActionsSheet(
-              product: product,
-            ), // Reutilizamos el widget
+            width: 400,
+            child: ProductActionsSheet(product: product),
           ),
         ),
       );
     } else {
-      // Diseño para Móvil: El sheet que ya tenemos
       showModalBottomSheet(
         context: context,
         isScrollControlled: true,

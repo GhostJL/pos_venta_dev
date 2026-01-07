@@ -138,9 +138,9 @@ final class ProductsProvider
         $FunctionalProvider<
           AsyncValue<List<Product>>,
           List<Product>,
-          Stream<List<Product>>
+          FutureOr<List<Product>>
         >
-    with $FutureModifier<List<Product>>, $StreamProvider<List<Product>> {
+    with $FutureModifier<List<Product>>, $FutureProvider<List<Product>> {
   const ProductsProvider._()
     : super(
         from: null,
@@ -157,17 +157,17 @@ final class ProductsProvider
 
   @$internal
   @override
-  $StreamProviderElement<List<Product>> $createElement(
+  $FutureProviderElement<List<Product>> $createElement(
     $ProviderPointer pointer,
-  ) => $StreamProviderElement(pointer);
+  ) => $FutureProviderElement(pointer);
 
   @override
-  Stream<List<Product>> create(Ref ref) {
+  FutureOr<List<Product>> create(Ref ref) {
     return products(ref);
   }
 }
 
-String _$productsHash() => r'e24871b04034e66d333b99618cf6b12a833b9a33';
+String _$productsHash() => r'4f8082162ab8c6db6ea40458f807b38355d3bf44';
 
 @ProviderFor(warehouses)
 const warehousesProvider = WarehousesProvider._();

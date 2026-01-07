@@ -24,6 +24,10 @@ part 'core_di.g.dart';
 DatabaseHelper databaseHelper(ref) => DatabaseHelper.instance;
 
 @riverpod
+Stream<String> tableUpdateStream(Ref ref) =>
+    ref.watch(databaseHelperProvider).tableUpdateStream;
+
+@riverpod
 Future<SharedPreferences> sharedPreferences(ref) =>
     SharedPreferences.getInstance();
 

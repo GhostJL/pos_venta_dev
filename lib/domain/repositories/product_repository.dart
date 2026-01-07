@@ -15,21 +15,26 @@ abstract class ProductRepository {
 
   Future<Either<Failure, Product?>> getProductById(int id);
 
-  Future<Either<Failure, int>> getProductsCount();
-
-  /// Get all products with optional pagination
-  Future<Either<Failure, List<Product>>> getAllProducts({
+  Future<Either<Failure, List<Product>>> getProducts({
+    String? query,
+    int? departmentId,
+    int? categoryId,
+    int? brandId,
+    int? supplierId,
+    bool showInactive = false,
+    String? sortOrder,
     int? limit,
     int? offset,
   });
 
-  Stream<Either<Failure, List<Product>>> getAllProductsStream({
-    int? limit,
-    int? offset,
+  Future<Either<Failure, int>> countProducts({
+    String? query,
+    int? departmentId,
+    int? categoryId,
+    int? brandId,
+    int? supplierId,
+    bool showInactive = false,
   });
-
-  Future<Either<Failure, List<Product>>> searchProducts(String query);
-  Stream<Either<Failure, List<Product>>> searchProductsStream(String query);
 
   Future<Either<Failure, void>> updateProduct(Product product);
 

@@ -350,54 +350,6 @@ final class SearchProductsProvider
 
 String _$searchProductsHash() => r'e7a0bddb97037d8060018ebe2cf71717022599bf';
 
-@ProviderFor(searchProductsStream)
-const searchProductsStreamProvider = SearchProductsStreamProvider._();
-
-final class SearchProductsStreamProvider
-    extends
-        $FunctionalProvider<
-          SearchProductsStream,
-          SearchProductsStream,
-          SearchProductsStream
-        >
-    with $Provider<SearchProductsStream> {
-  const SearchProductsStreamProvider._()
-    : super(
-        from: null,
-        argument: null,
-        retry: null,
-        name: r'searchProductsStreamProvider',
-        isAutoDispose: true,
-        dependencies: null,
-        $allTransitiveDependencies: null,
-      );
-
-  @override
-  String debugGetCreateSourceHash() => _$searchProductsStreamHash();
-
-  @$internal
-  @override
-  $ProviderElement<SearchProductsStream> $createElement(
-    $ProviderPointer pointer,
-  ) => $ProviderElement(pointer);
-
-  @override
-  SearchProductsStream create(Ref ref) {
-    return searchProductsStream(ref);
-  }
-
-  /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(SearchProductsStream value) {
-    return $ProviderOverride(
-      origin: this,
-      providerOverride: $SyncValueProvider<SearchProductsStream>(value),
-    );
-  }
-}
-
-String _$searchProductsStreamHash() =>
-    r'1c8f02b377bb860559870de7afcc07b44e0a4ebd';
-
 @ProviderFor(unitOfMeasureRepository)
 const unitOfMeasureRepositoryProvider = UnitOfMeasureRepositoryProvider._();
 

@@ -8,7 +8,11 @@ class SearchProducts {
 
   SearchProducts(this.repository);
 
-  Future<Either<Failure, List<Product>>> call(String query) {
-    return repository.searchProducts(query);
+  Future<Either<Failure, List<Product>>> call(
+    String query, {
+    int? limit,
+    int? offset,
+  }) {
+    return repository.getProducts(query: query, limit: limit, offset: offset);
   }
 }

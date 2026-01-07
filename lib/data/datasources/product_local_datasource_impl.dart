@@ -18,92 +18,108 @@ class ProductLocalDataSourceImpl implements ProductLocalDataSource {
   Stream<String> get tableUpdateStream => databaseHelper.tableUpdateStream;
 
   @override
-  Future<List<ProductModel>> getAllProducts({int? limit, int? offset}) async {
+  Future<List<ProductModel>> getProducts({
+    String? query,
+    int? departmentId,
+    int? categoryId,
+    int? brandId,
+    int? supplierId,
+    bool showInactive = false,
+    String? sortOrder,
+    int? limit,
+    int? offset,
+  }) async {
     try {
       final db = await databaseHelper.database;
 
-      // Query 1: Get all products with stock
-      final List<Map<String, dynamic>> productMaps = await db.rawQuery('''
-        SELECT p.*, 
-               (SELECT SUM(quantity_on_hand) FROM inventory WHERE product_id = p.id) as stock,
-               d.name as department_name
-        FROM ${DatabaseHelper.tableProducts} p
-        LEFT JOIN ${DatabaseHelper.tableDepartments} d ON p.department_id = d.id
-        ORDER BY p.id DESC
-        ${limit != null ? 'LIMIT $limit' : ''}
-        ${offset != null ? 'OFFSET $offset' : ''}
-      ''');
+      final whereClauses = <String>[];
+      final whereArgs = <dynamic>[];
 
-      if (productMaps.isEmpty) return [];
-
-      // Query 2: Get all taxes for these products
-      final productIds = productMaps.map((m) => m['id'] as int).toList();
-      final taxMaps = await db.query(
-        DatabaseHelper.tableProductTaxes,
-        where: 'product_id IN (${productIds.join(',')})',
-      );
-
-      final taxesByProduct = <int, List<ProductTaxModel>>{};
-      for (final taxMap in taxMaps) {
-        final productId = taxMap['product_id'] as int;
-        taxesByProduct.putIfAbsent(productId, () => []);
-        taxesByProduct[productId]!.add(ProductTaxModel.fromMap(taxMap));
+      // Filter: Active Status
+      if (showInactive) {
+        whereClauses.add('p.is_active = 0');
+      } else {
+        whereClauses.add('p.is_active = 1');
       }
 
-      // Query 3: Get variants using helper
-      final variantsByProduct = await _getVariantsForProducts(db, productIds);
+      // Filter: Direct Columns
+      if (departmentId != null) {
+        whereClauses.add('p.department_id = ?');
+        whereArgs.add(departmentId);
+      }
+      if (categoryId != null) {
+        whereClauses.add('p.category_id = ?');
+        whereArgs.add(categoryId);
+      }
+      if (brandId != null) {
+        whereClauses.add('p.brand_id = ?');
+        whereArgs.add(brandId);
+      }
+      if (supplierId != null) {
+        whereClauses.add('p.supplier_id = ?');
+        whereArgs.add(supplierId);
+      }
 
-      // Build products
-      return productMaps.map((map) {
-        final product = ProductModel.fromMap(map);
-        final taxes = taxesByProduct[product.id!] ?? [];
-        final variants = variantsByProduct[product.id!] ?? [];
-        return ProductModel.fromEntity(
-          product.copyWith(productTaxes: taxes, variants: variants),
+      // Filter: Search Query
+      if (query != null && query.isNotEmpty) {
+        whereClauses.add(
+          '(p.name LIKE ? OR p.code LIKE ? OR p.description LIKE ? OR pv.barcode LIKE ? OR pv.variant_name LIKE ? OR pb.barcode LIKE ?)',
         );
-      }).toList();
-    } catch (e) {
-      throw DatabaseException(e.toString());
-    }
-  }
+        final q = '%$query%';
+        whereArgs.addAll([q, q, q, q, q, q]);
+      }
 
-  @override
-  Future<List<ProductModel>> searchProducts(String query) async {
-    try {
-      final db = await databaseHelper.database;
+      final whereString = whereClauses.isNotEmpty
+          ? 'WHERE ${whereClauses.join(' AND ')}'
+          : '';
 
-      // Query 1: Search products with stock
-      final List<Map<String, dynamic>> productMaps = await db.rawQuery(
-        '''
+      // Sort Order
+      String orderBy = 'p.id DESC';
+      if (sortOrder != null && sortOrder.isNotEmpty) {
+        if (sortOrder == 'name_asc') {
+          orderBy = 'p.name ASC';
+        } else if (sortOrder == 'name_desc') {
+          orderBy = 'p.name DESC';
+        } else if (sortOrder == 'price_asc') {
+          orderBy = 'p.base_price_cents ASC';
+        } else if (sortOrder == 'price_desc') {
+          orderBy = 'p.base_price_cents DESC';
+        } else if (sortOrder == 'stock_asc') {
+          orderBy = 'stock ASC'; // Computed column?
+          // Note: 'stock' is a subquery column. SQLite allows ordering by alias in newer versions or wrapped queries.
+          // But for safety locally we can keep basic sorting or use subquery.
+          // Let's stick to standard cols for now.
+        }
+      }
+
+      final sql =
+          '''
         SELECT DISTINCT p.*, 
                (SELECT SUM(quantity_on_hand) FROM inventory WHERE product_id = p.id) as stock,
                d.name as department_name
         FROM ${DatabaseHelper.tableProducts} p
-        LEFT JOIN ${DatabaseHelper.tableProductVariants} pv ON p.id = pv.product_id AND pv.is_active = 1
-        LEFT JOIN ${DatabaseHelper.tableProductBarcodes} pb ON pv.id = pb.variant_id
         LEFT JOIN ${DatabaseHelper.tableDepartments} d ON p.department_id = d.id
-        WHERE (
-          p.name LIKE ? OR 
-          p.code LIKE ? OR 
-          pv.barcode LIKE ? OR
-          pv.variant_name LIKE ? OR
-          pb.barcode LIKE ?
-        )
-        ORDER BY p.id DESC
-      ''',
-        ['%$query%', '%$query%', '%$query%', '%$query%', '%$query%'],
+        LEFT JOIN ${DatabaseHelper.tableProductVariants} pv ON p.id = pv.product_id
+        LEFT JOIN ${DatabaseHelper.tableProductBarcodes} pb ON pv.id = pb.variant_id
+        $whereString
+        ORDER BY $orderBy
+        ${limit != null ? 'LIMIT $limit' : ''}
+        ${offset != null ? 'OFFSET $offset' : ''}
+      ''';
+
+      final List<Map<String, dynamic>> productMaps = await db.rawQuery(
+        sql,
+        whereArgs,
       );
 
       if (productMaps.isEmpty) return [];
 
-      // Query 2: Get all taxes for these products in one query
       final productIds = productMaps.map((m) => m['id'] as int).toList();
       final taxMaps = await db.query(
         DatabaseHelper.tableProductTaxes,
         where: 'product_id IN (${productIds.join(',')})',
       );
 
-      // Group taxes by product_id
       final taxesByProduct = <int, List<ProductTaxModel>>{};
       for (final taxMap in taxMaps) {
         final productId = taxMap['product_id'] as int;
@@ -111,14 +127,12 @@ class ProductLocalDataSourceImpl implements ProductLocalDataSource {
         taxesByProduct[productId]!.add(ProductTaxModel.fromMap(taxMap));
       }
 
-      // Query 3: Get variants using helper
       final variantsByProduct = await _getVariantsForProducts(db, productIds);
 
       return productMaps.map((map) {
         final product = ProductModel.fromMap(map);
         final taxes = taxesByProduct[product.id!] ?? [];
         final variants = variantsByProduct[product.id!] ?? [];
-        // Fix cast error using fromEntity
         return ProductModel.fromEntity(
           product.copyWith(productTaxes: taxes, variants: variants),
         );
@@ -801,15 +815,67 @@ class ProductLocalDataSourceImpl implements ProductLocalDataSource {
   }
 
   @override
-  Future<int> countProducts() async {
+  Future<int> countProducts({
+    String? query,
+    int? departmentId,
+    int? categoryId,
+    int? brandId,
+    int? supplierId,
+    bool showInactive = false,
+  }) async {
     try {
       final db = await databaseHelper.database;
-      return Sqflite.firstIntValue(
-            await db.rawQuery(
-              'SELECT COUNT(*) FROM ${DatabaseHelper.tableProducts}',
-            ),
-          ) ??
-          0;
+
+      final whereClauses = <String>[];
+      final whereArgs = <dynamic>[];
+
+      if (showInactive) {
+        whereClauses.add('p.is_active = 0');
+      } else {
+        whereClauses.add('p.is_active = 1');
+      }
+
+      if (departmentId != null) {
+        whereClauses.add('p.department_id = ?');
+        whereArgs.add(departmentId);
+      }
+      if (categoryId != null) {
+        whereClauses.add('p.category_id = ?');
+        whereArgs.add(categoryId);
+      }
+      if (brandId != null) {
+        whereClauses.add('p.brand_id = ?');
+        whereArgs.add(brandId);
+      }
+      if (supplierId != null) {
+        whereClauses.add('p.supplier_id = ?');
+        whereArgs.add(supplierId);
+      }
+
+      if (query != null && query.isNotEmpty) {
+        whereClauses.add(
+          '(p.name LIKE ? OR p.code LIKE ? OR p.description LIKE ? OR pv.barcode LIKE ? OR pv.variant_name LIKE ? OR pb.barcode LIKE ?)',
+        );
+        final q = '%$query%';
+        whereArgs.addAll([q, q, q, q, q, q]);
+      }
+
+      final whereString = whereClauses.isNotEmpty
+          ? 'WHERE ${whereClauses.join(' AND ')}'
+          : '';
+
+      final sql =
+          '''
+        SELECT COUNT(DISTINCT p.id) as count
+        FROM ${DatabaseHelper.tableProducts} p
+        LEFT JOIN ${DatabaseHelper.tableDepartments} d ON p.department_id = d.id
+        LEFT JOIN ${DatabaseHelper.tableProductVariants} pv ON p.id = pv.product_id
+        LEFT JOIN ${DatabaseHelper.tableProductBarcodes} pb ON pv.id = pb.variant_id
+        $whereString
+      ''';
+
+      final result = await db.rawQuery(sql, whereArgs);
+      return Sqflite.firstIntValue(result) ?? 0;
     } catch (e) {
       throw DatabaseException(e.toString());
     }

@@ -42,13 +42,12 @@ Future<List<Inventory>> inventoryByProduct(Ref ref, int productId) {
 }
 
 @riverpod
-Stream<List<Product>> products(Ref ref) {
-  return ref.watch(getAllProductsProvider).stream().map((result) {
-    return result.fold(
-      (failure) => <Product>[], // Or throw failure.message;
-      (products) => products,
-    );
-  });
+Future<List<Product>> products(Ref ref) async {
+  final result = await ref.watch(getAllProductsProvider).call();
+  return result.fold(
+    (failure) => throw failure.message,
+    (products) => products,
+  );
 }
 
 @riverpod
