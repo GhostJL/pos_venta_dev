@@ -8,6 +8,7 @@ import 'package:posventa/core/config/menu_config.dart';
 import 'package:posventa/presentation/widgets/menu/menu_group_widget.dart';
 import 'package:posventa/presentation/widgets/menu/menu_item_widget.dart';
 import 'package:posventa/presentation/widgets/menu/side_menu/side_menu_logout.dart';
+import 'package:posventa/presentation/providers/settings_provider.dart';
 
 /// Main side menu adaptable a tema claro/oscuro
 class SideMenu extends ConsumerStatefulWidget {
@@ -30,6 +31,9 @@ class _SideMenuState extends ConsumerState<SideMenu> {
     final permissionsAsync = ref.watch(currentUserPermissionsProvider);
     final permissions = permissionsAsync.asData?.value ?? [];
 
+    final settings = ref.watch(settingsProvider);
+    final useInventory = settings.value?.useInventory ?? true;
+
     return NavigationDrawer(
       elevation: 0,
       children: [
@@ -37,7 +41,13 @@ class _SideMenuState extends ConsumerState<SideMenu> {
         _MinimalHeader(user: user),
 
         // Contenido del menú
-        ..._buildMenuContent(context, user, permissions, currentPath),
+        ..._buildMenuContent(
+          context,
+          user,
+          permissions,
+          currentPath,
+          useInventory,
+        ),
 
         const SizedBox(height: 16),
         // Logout button
@@ -52,6 +62,7 @@ class _SideMenuState extends ConsumerState<SideMenu> {
     User? user,
     List<String> permissions,
     String currentPath,
+    bool useInventory,
   ) {
     if (user == null) {
       return [
@@ -62,7 +73,10 @@ class _SideMenuState extends ConsumerState<SideMenu> {
       ];
     }
 
-    final menuData = MenuConfig.getMenuForUser(user);
+    final menuData = MenuConfig.getMenuForUser(
+      user,
+      useInventory: useInventory,
+    );
     final useGroups = MenuConfig.shouldUseGroups(user);
 
     if (useGroups) {

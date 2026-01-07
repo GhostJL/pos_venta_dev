@@ -74,7 +74,7 @@ class MenuGroup {
 /// Centralized menu configuration for the application
 class MenuConfig {
   /// Get the complete administrator menu
-  static List<MenuGroup> getAdministratorMenu() {
+  static List<MenuGroup> getAdministratorMenu({bool useInventory = true}) {
     return [
       // ═══════════════════════════════════════════════════════════
       // SECCIÓN 1: OPERACIONES DIARIAS (Más usado)
@@ -114,33 +114,56 @@ class MenuConfig {
       // ═══════════════════════════════════════════════════════════
       // SECCIÓN 2: INVENTARIO Y PRODUCTOS (Segunda más usada)
       // ═══════════════════════════════════════════════════════════
-      MenuGroup(
-        id: 'inventory_management',
-        title: 'Inventario y Productos',
-        groupIcon: Icons.inventory_2_rounded,
-        defaultExpanded: false,
-        items: [
-          const MenuItem(
-            title: 'Catálogo de Productos',
-            icon: Icons.shopping_bag_rounded,
-            route: '/products',
-            requiredPermissions: [PermissionConstants.catalogManage],
-          ),
-          const MenuItem(
-            title: 'Inventario',
-            icon: Icons.inventory_rounded,
-            route: '/inventory',
-            requiredPermissions: [PermissionConstants.inventoryView],
-          ),
+      if (useInventory)
+        MenuGroup(
+          id: 'inventory_management',
+          title: 'Inventario y Productos',
+          groupIcon: Icons.inventory_2_rounded,
+          defaultExpanded: false,
+          items: [
+            const MenuItem(
+              title: 'Catálogo de Productos',
+              icon: Icons.shopping_bag_rounded,
+              route: '/products',
+              requiredPermissions: [PermissionConstants.catalogManage],
+            ),
+            const MenuItem(
+              title: 'Inventario',
+              icon: Icons.inventory_rounded,
+              route: '/inventory',
+              requiredPermissions: [PermissionConstants.inventoryView],
+            ),
 
-          const MenuItem(
-            title: 'Órdenes de Compra',
-            icon: Icons.shopping_cart_rounded,
-            route: '/purchases',
-            requiredPermissions: [PermissionConstants.catalogManage],
-          ),
-        ],
-      ),
+            const MenuItem(
+              title: 'Órdenes de Compra',
+              icon: Icons.shopping_cart_rounded,
+              route: '/purchases',
+              requiredPermissions: [PermissionConstants.catalogManage],
+            ),
+          ],
+        )
+      else
+        // Simplified product management for non-inventory users
+        MenuGroup(
+          id: 'product_management',
+          title: 'Productos',
+          groupIcon: Icons.shopping_bag_rounded,
+          defaultExpanded: false,
+          items: [
+            const MenuItem(
+              title: 'Catálogo de Productos',
+              icon: Icons.shopping_bag_rounded,
+              route: '/products',
+              requiredPermissions: [PermissionConstants.catalogManage],
+            ),
+            const MenuItem(
+              title: 'Órdenes de Compra',
+              icon: Icons.shopping_cart_rounded,
+              route: '/purchases',
+              requiredPermissions: [PermissionConstants.catalogManage],
+            ),
+          ],
+        ),
 
       // ═══════════════════════════════════════════════════════════
       // SECCIÓN 3: RELACIONES COMERCIALES
@@ -203,7 +226,7 @@ class MenuConfig {
   }
 
   /// Get menu configuration based on user role
-  static dynamic getMenuForUser(User? user) {
+  static dynamic getMenuForUser(User? user, {bool useInventory = true}) {
     if (user == null) return <MenuGroup>[];
 
     // Cashiers get a flat list of menu items (no groups)
@@ -212,7 +235,7 @@ class MenuConfig {
     }
 
     // Administrators and other roles get grouped menu
-    return getAdministratorMenu();
+    return getAdministratorMenu(useInventory: useInventory);
   }
 
   /// Check if the menu should use groups (true) or flat list (false)
