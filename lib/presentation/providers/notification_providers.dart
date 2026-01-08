@@ -5,13 +5,14 @@ import 'package:posventa/data/repositories/notification_repository_impl.dart';
 import 'package:posventa/domain/entities/notification.dart';
 import 'package:posventa/domain/repositories/notification_repository.dart';
 import 'package:posventa/presentation/providers/providers.dart';
+import 'package:posventa/presentation/providers/di/core_di.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'notification_providers.g.dart';
 
 @riverpod
 NotificationRepository notificationRepository(Ref ref) {
-  return NotificationRepositoryImpl(ref.watch(databaseHelperProvider));
+  return NotificationRepositoryImpl(ref.watch(appDatabaseProvider));
 }
 
 @riverpod

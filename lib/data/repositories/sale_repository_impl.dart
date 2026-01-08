@@ -1,5 +1,6 @@
-import 'package:posventa/data/datasources/database_helper.dart';
-import 'package:sqflite/sqflite.dart';
+import 'package:drift/drift.dart';
+import 'package:posventa/data/datasources/local/database/app_database.dart'
+    as drift_db;
 import 'package:posventa/data/models/sale_item_model.dart';
 import 'package:posventa/data/models/sale_model.dart';
 import 'package:posventa/data/models/sale_item_tax_model.dart';
@@ -9,9 +10,9 @@ import 'package:posventa/domain/entities/sale_transaction.dart';
 import 'package:posventa/domain/repositories/sale_repository.dart';
 
 class SaleRepositoryImpl implements SaleRepository {
-  final DatabaseHelper _databaseHelper;
+  final drift_db.AppDatabase db;
 
-  SaleRepositoryImpl(this._databaseHelper);
+  SaleRepositoryImpl(this.db);
 
   @override
   Future<List<Sale>> getSales({
@@ -20,167 +21,208 @@ class SaleRepositoryImpl implements SaleRepository {
     int? limit,
     int? offset,
   }) async {
-    final db = await _databaseHelper.database;
-
-    String whereClause = '';
-    List<dynamic> whereArgs = [];
+    final q = db.select(db.sales).join([
+      leftOuterJoin(
+        db.customers,
+        db.customers.id.equalsExp(db.sales.customerId),
+      ),
+    ]);
 
     if (startDate != null) {
-      whereClause += 'sale_date >= ?';
-      whereArgs.add(startDate.toIso8601String());
+      q.where(db.sales.saleDate.isBiggerOrEqualValue(startDate));
     }
-
     if (endDate != null) {
-      if (whereClause.isNotEmpty) whereClause += ' AND ';
-      whereClause += 'sale_date <= ?';
-      whereArgs.add(endDate.toIso8601String());
+      q.where(db.sales.saleDate.isSmallerOrEqualValue(endDate));
     }
 
-    final result = await db.rawQuery('''
-      SELECT s.*, c.first_name || ' ' || c.last_name as customer_name
-      FROM ${DatabaseHelper.tableSales} s
-      LEFT JOIN ${DatabaseHelper.tableCustomers} c ON s.customer_id = c.id
-      ${whereClause.isNotEmpty ? 'WHERE $whereClause' : ''}
-      ORDER BY s.sale_date DESC
-      ${limit != null ? 'LIMIT $limit' : ''}
-      ${offset != null ? 'OFFSET $offset' : ''}
-    ''', whereArgs);
+    q.orderBy([OrderingTerm.desc(db.sales.saleDate)]);
 
-    // Load items for each sale
+    if (limit != null) {
+      q.limit(limit, offset: offset);
+    }
+
+    final rows = await q.get();
     final sales = <Sale>[];
-    for (final saleData in result) {
-      final saleId = saleData['id'] as int;
 
-      // Get items
-      final itemsResult = await db.rawQuery(
-        '''
-        SELECT si.*, p.name as product_name
-        FROM ${DatabaseHelper.tableSaleItems} si
-        LEFT JOIN ${DatabaseHelper.tableProducts} p ON si.product_id = p.id
-        WHERE si.sale_id = ?
-      ''',
-        [saleId],
+    for (final row in rows) {
+      final saleRow = row.readTable(db.sales);
+      final customerRow = row.readTableOrNull(db.customers);
+
+      // Load items for each sale
+      final items = await _getSaleItems(saleRow.id);
+      final payments = await _getSalePayments(saleRow.id);
+
+      sales.add(
+        SaleModel(
+          id: saleRow.id,
+          saleNumber: saleRow.saleNumber,
+          warehouseId: saleRow.warehouseId,
+          customerId: saleRow.customerId,
+          cashierId: saleRow.cashierId,
+          subtotalCents: saleRow.subtotalCents,
+          discountCents: saleRow.discountCents,
+          taxCents: saleRow.taxCents,
+          totalCents: saleRow.totalCents,
+          status: SaleStatus.values.firstWhere(
+            (e) => e.name == saleRow.status,
+            orElse: () => SaleStatus.completed,
+          ),
+          saleDate: saleRow.saleDate,
+          createdAt: saleRow.createdAt,
+          cancelledBy: saleRow.cancelledBy,
+          cancelledAt: saleRow.cancelledAt,
+          cancellationReason: saleRow.cancellationReason,
+          items: items,
+          payments: payments,
+          customerName: customerRow != null
+              ? '${customerRow.firstName} ${customerRow.lastName}'
+              : null,
+        ),
       );
-
-      final items = <SaleItemModel>[];
-      for (final itemData in itemsResult) {
-        final itemId = itemData['id'] as int;
-        final taxesResult = await db.query(
-          DatabaseHelper.tableSaleItemTaxes,
-          where: 'sale_item_id = ?',
-          whereArgs: [itemId],
-        );
-        final taxes = taxesResult
-            .map((e) => SaleItemTaxModel.fromJson(e))
-            .toList();
-        items.add(SaleItemModel.fromJson(itemData).copyWith(taxes: taxes));
-      }
-
-      final sale = SaleModel.fromJson(saleData).copyWith(items: items);
-      sales.add(sale);
     }
-
     return sales;
+  }
+
+  Future<List<SaleItemModel>> _getSaleItems(int saleId) async {
+    final query = db.select(db.saleItems).join([
+      leftOuterJoin(
+        db.products,
+        db.products.id.equalsExp(db.saleItems.productId),
+      ),
+    ])..where(db.saleItems.saleId.equals(saleId));
+
+    final rows = await query.get();
+    final items = <SaleItemModel>[];
+
+    for (final row in rows) {
+      final itemRow = row.readTable(db.saleItems);
+      final productRow = row.readTableOrNull(db.products);
+
+      // Get taxes for item
+      final taxesRows = await (db.select(
+        db.saleItemTaxes,
+      )..where((t) => t.saleItemId.equals(itemRow.id))).get();
+      final taxes = taxesRows
+          .map(
+            (t) => SaleItemTaxModel(
+              id: t.id,
+              saleItemId: t.saleItemId,
+              taxRateId: t.taxRateId,
+              taxName: t.taxName,
+              taxRate: t.taxRate,
+              taxAmountCents: t.taxAmountCents,
+            ),
+          )
+          .toList();
+
+      items.add(
+        SaleItemModel(
+          id: itemRow.id,
+          saleId: itemRow.saleId,
+          productId: itemRow.productId,
+          variantId: itemRow.variantId,
+          quantity: itemRow.quantity,
+          unitOfMeasure: itemRow.unitOfMeasure,
+          unitPriceCents: itemRow.unitPriceCents,
+          discountCents: itemRow.discountCents,
+          subtotalCents: itemRow.subtotalCents,
+          taxCents: itemRow.taxCents,
+          totalCents: itemRow.totalCents,
+          costPriceCents: itemRow.costPriceCents,
+          lotId: itemRow.lotId,
+          productName: productRow?.name,
+          taxes: taxes,
+        ),
+      );
+    }
+    return items;
+  }
+
+  Future<List<SalePaymentModel>> _getSalePayments(int saleId) async {
+    final rows = await (db.select(
+      db.salePayments,
+    )..where((t) => t.saleId.equals(saleId))).get();
+    return rows
+        .map(
+          (row) => SalePaymentModel(
+            id: row.id,
+            saleId: row.saleId,
+            paymentMethod: row.paymentMethod,
+            amountCents: row.amountCents,
+            referenceNumber: row.referenceNumber,
+            paymentDate: row.paymentDate,
+            receivedBy: row.receivedBy,
+          ),
+        )
+        .toList();
   }
 
   @override
   Future<int> countSales({DateTime? startDate, DateTime? endDate}) async {
-    final db = await _databaseHelper.database;
-
-    String whereClause = '';
-    List<dynamic> whereArgs = [];
+    final q = db.selectOnly(db.sales)..addColumns([db.sales.id.count()]);
 
     if (startDate != null) {
-      whereClause += 'sale_date >= ?';
-      whereArgs.add(startDate.toIso8601String());
+      q.where(db.sales.saleDate.isBiggerOrEqualValue(startDate));
     }
-
     if (endDate != null) {
-      if (whereClause.isNotEmpty) whereClause += ' AND ';
-      whereClause += 'sale_date <= ?';
-      whereArgs.add(endDate.toIso8601String());
+      q.where(db.sales.saleDate.isSmallerOrEqualValue(endDate));
     }
 
-    final result = await db.rawQuery('''
-      SELECT COUNT(*) as count
-      FROM ${DatabaseHelper.tableSales}
-      ${whereClause.isNotEmpty ? 'WHERE $whereClause' : ''}
-    ''', whereArgs);
-
-    return Sqflite.firstIntValue(result) ?? 0;
+    final result = await q.getSingle();
+    return result.read(db.sales.id.count()) ?? 0;
   }
 
   @override
   Future<Sale?> getSaleById(int id) async {
-    final db = await _databaseHelper.database;
+    final row = await (db.select(db.sales).join([
+      leftOuterJoin(
+        db.customers,
+        db.customers.id.equalsExp(db.sales.customerId),
+      ),
+    ])..where(db.sales.id.equals(id))).getSingleOrNull();
 
-    // Get Sale
-    final saleResult = await db.rawQuery(
-      '''
-      SELECT s.*, c.first_name || ' ' || c.last_name as customer_name
-      FROM ${DatabaseHelper.tableSales} s
-      LEFT JOIN ${DatabaseHelper.tableCustomers} c ON s.customer_id = c.id
-      WHERE s.id = ?
-    ''',
-      [id],
+    if (row == null) return null;
+
+    final saleRow = row.readTable(db.sales);
+    final customerRow = row.readTableOrNull(db.customers);
+
+    final items = await _getSaleItems(saleRow.id);
+    final payments = await _getSalePayments(saleRow.id);
+
+    return SaleModel(
+      id: saleRow.id,
+      saleNumber: saleRow.saleNumber,
+      warehouseId: saleRow.warehouseId,
+      customerId: saleRow.customerId,
+      cashierId: saleRow.cashierId,
+      subtotalCents: saleRow.subtotalCents,
+      discountCents: saleRow.discountCents,
+      taxCents: saleRow.taxCents,
+      totalCents: saleRow.totalCents,
+      status: SaleStatus.values.firstWhere(
+        (e) => e.name == saleRow.status,
+        orElse: () => SaleStatus.completed,
+      ),
+      saleDate: saleRow.saleDate,
+      createdAt: saleRow.createdAt,
+      cancelledBy: saleRow.cancelledBy,
+      cancelledAt: saleRow.cancelledAt,
+      cancellationReason: saleRow.cancellationReason,
+      items: items,
+      payments: payments,
+      customerName: customerRow != null
+          ? '${customerRow.firstName} ${customerRow.lastName}'
+          : null,
     );
-
-    if (saleResult.isEmpty) return null;
-
-    final saleData = saleResult.first;
-
-    // Get Items
-    final itemsResult = await db.rawQuery(
-      '''
-      SELECT si.*, p.name as product_name
-      FROM ${DatabaseHelper.tableSaleItems} si
-      LEFT JOIN ${DatabaseHelper.tableProducts} p ON si.product_id = p.id
-      WHERE si.sale_id = ?
-    ''',
-      [id],
-    );
-
-    final items = <SaleItemModel>[];
-    for (final itemData in itemsResult) {
-      final itemId = itemData['id'] as int;
-      final taxesResult = await db.query(
-        DatabaseHelper.tableSaleItemTaxes,
-        where: 'sale_item_id = ?',
-        whereArgs: [itemId],
-      );
-      final taxes = taxesResult
-          .map((e) => SaleItemTaxModel.fromJson(e))
-          .toList();
-      items.add(SaleItemModel.fromJson(itemData).copyWith(taxes: taxes));
-    }
-
-    // Get Payments
-    final paymentsResult = await db.query(
-      DatabaseHelper.tableSalePayments,
-      where: 'sale_id = ?',
-      whereArgs: [id],
-    );
-
-    final payments = paymentsResult
-        .map((e) => SalePaymentModel.fromJson(e))
-        .toList();
-
-    return SaleModel.fromJson(
-      saleData,
-    ).copyWith(items: items, payments: payments);
   }
 
   @override
   Future<Sale?> getSaleByNumber(String saleNumber) async {
-    final db = await _databaseHelper.database;
-    final result = await db.query(
-      DatabaseHelper.tableSales,
-      where: 'sale_number = ?',
-      whereArgs: [saleNumber],
-    );
-
-    if (result.isNotEmpty) {
-      return getSaleById(result.first['id'] as int);
+    final row = await (db.select(
+      db.sales,
+    )..where((t) => t.saleNumber.equals(saleNumber))).getSingleOrNull();
+    if (row != null) {
+      return getSaleById(row.id);
     }
     return null;
   }
@@ -191,68 +233,98 @@ class SaleRepositoryImpl implements SaleRepository {
     DateTime? endDate,
     int? limit,
     int? offset,
-  }) async* {
-    // Yield initial data
-    yield await getSales(
-      startDate: startDate,
-      endDate: endDate,
-      limit: limit,
-      offset: offset,
-    );
+  }) {
+    // Basic stream implementation watching the sales table
+    // For more complex querying relative to filters, we might need to re-query
+    final query = db.select(db.sales);
+    // Note: Join streams in Drift are more complex.
+    // To simplify, we'll just yield the results of getSales whenever tables change.
 
-    // Listen for updates
-    await for (final table in _databaseHelper.tableUpdateStream) {
-      if (table == DatabaseHelper.tableSales ||
-          table == DatabaseHelper.tableSaleItems) {
-        yield await getSales(
-          startDate: startDate,
-          endDate: endDate,
-          limit: limit,
-          offset: offset,
-        );
-      }
-    }
+    return db.sales.all().watch().asyncMap(
+      (_) => getSales(
+        startDate: startDate,
+        endDate: endDate,
+        limit: limit,
+        offset: offset,
+      ),
+    );
+  }
+
+  @override
+  Stream<Sale?> getSaleByIdStream(int id) {
+    return (db.select(
+      db.sales,
+    )..where((t) => t.id.equals(id))).watchSingleOrNull().asyncMap((row) async {
+      if (row == null) return null;
+      return await getSaleById(id);
+    });
   }
 
   @override
   Future<int> executeSaleTransaction(SaleTransaction transaction) async {
-    final db = await _databaseHelper.database;
-
-    final saleId = await db.transaction((txn) async {
+    return db.transaction(() async {
       // 1. Insert Sale
-      final saleModel = SaleModel.fromEntity(transaction.sale);
-      final saleId = await txn.insert(
-        DatabaseHelper.tableSales,
-        saleModel.toMap(),
-      );
+      final saleId = await db
+          .into(db.sales)
+          .insert(
+            drift_db.SalesCompanion.insert(
+              saleNumber: transaction.sale.saleNumber,
+              warehouseId: transaction.sale.warehouseId,
+              customerId: Value(transaction.sale.customerId),
+              cashierId: transaction.sale.cashierId,
+              subtotalCents: transaction.sale.subtotalCents,
+              discountCents: Value(transaction.sale.discountCents),
+              taxCents: Value(transaction.sale.taxCents),
+              totalCents: transaction.sale.totalCents,
+              status: Value(transaction.sale.status.name),
+              saleDate: transaction.sale.saleDate,
+              createdAt: Value(transaction.sale.createdAt),
+            ),
+          );
+
+      final Map<int, int> saleItemIdMap = {};
 
       // 2. Insert Items and Taxes
-      final Map<int, int> saleItemIdMap =
-          {}; // Map original item index to DB ID
-
       for (int i = 0; i < transaction.sale.items.length; i++) {
         final item = transaction.sale.items[i];
-        final itemModel = SaleItemModel.fromEntity(item);
-        final itemMap = itemModel.toMap();
-        itemMap['sale_id'] = saleId;
-
-        final saleItemId = await txn.insert(
-          DatabaseHelper.tableSaleItems,
-          itemMap,
-        );
+        final saleItemId = await db
+            .into(db.saleItems)
+            .insert(
+              drift_db.SaleItemsCompanion.insert(
+                saleId: saleId,
+                productId: item.productId,
+                variantId: Value(item.variantId),
+                quantity: item.quantity,
+                unitOfMeasure: item.unitOfMeasure,
+                unitPriceCents: item.unitPriceCents,
+                discountCents: Value(item.discountCents),
+                subtotalCents: item.subtotalCents,
+                taxCents: Value(item.taxCents),
+                totalCents: item.totalCents,
+                costPriceCents: item.costPriceCents,
+                lotId: Value(item.lotId),
+                createdAt: Value(DateTime.now()),
+              ),
+            );
 
         saleItemIdMap[i] = saleItemId;
 
-        // Insert Item Taxes
         for (final tax in item.taxes) {
-          final taxModel = SaleItemTaxModel.fromEntity(tax);
-          final taxMap = taxModel.toMap();
-          taxMap['sale_item_id'] = saleItemId;
-          await txn.insert(DatabaseHelper.tableSaleItemTaxes, taxMap);
+          await db
+              .into(db.saleItemTaxes)
+              .insert(
+                drift_db.SaleItemTaxesCompanion.insert(
+                  saleItemId: saleItemId,
+                  taxRateId: tax.taxRateId,
+                  taxName: tax.taxName,
+                  taxRate: tax.taxRate,
+                  taxAmountCents: tax.taxAmountCents,
+                ),
+              );
         }
       }
 
-      // 3. Process Lot Deductions (prepared by Use Case)
+      // 3. Process Lot Deductions
       for (int i = 0; i < transaction.lotDeductions.length; i++) {
         final itemDeduction = transaction.lotDeductions[i];
         final saleItemId = saleItemIdMap[i]!;
@@ -260,264 +332,229 @@ class SaleRepositoryImpl implements SaleRepository {
 
         for (final deduction in itemDeduction.deductions) {
           // Update lot quantity
-          await txn.rawUpdate(
-            '''
-            UPDATE ${DatabaseHelper.tableInventoryLots}
-            SET quantity = quantity - ?
-            WHERE id = ?
-            ''',
-            [deduction.quantityToDeduct, deduction.lotId],
+          // Use custom query for atomic update or just read-modify-write if transaction lock is active
+          // Drift transaction block works as a transaction, so we can read-modify-write safely-ish,
+          // but SQL is better for concurrency.
+          await db.customUpdate(
+            'UPDATE inventory_lots SET quantity = quantity - ? WHERE id = ?',
+            variables: [
+              Variable.withReal(deduction.quantityToDeduct),
+              Variable.withInt(deduction.lotId),
+            ],
+            updates: {db.inventoryLots},
           );
 
-          // Track lot deduction for restoration
-          await txn.insert(DatabaseHelper.tableSaleItemLots, {
-            'sale_item_id': saleItemId,
-            'lot_id': deduction.lotId,
-            'quantity_deducted': deduction.quantityToDeduct,
-            'created_at': DateTime.now().toIso8601String(),
-          });
+          await db
+              .into(db.saleItemLots)
+              .insert(
+                drift_db.SaleItemLotsCompanion.insert(
+                  saleItemId: saleItemId,
+                  lotId: deduction.lotId,
+                  quantityDeducted: deduction.quantityToDeduct,
+                  createdAt: Value(DateTime.now()),
+                ),
+              );
 
-          // Store first lot as primary
           primaryLotId ??= deduction.lotId;
         }
 
-        // Update sale_item with primary lot_id
         if (primaryLotId != null) {
-          await txn.update(
-            DatabaseHelper.tableSaleItems,
-            {'lot_id': primaryLotId},
-            where: 'id = ?',
-            whereArgs: [saleItemId],
-          );
+          await (db.update(db.saleItems)..where((t) => t.id.equals(saleItemId)))
+              .write(drift_db.SaleItemsCompanion(lotId: Value(primaryLotId)));
         }
       }
 
-      // 4. Update Inventory (prepared by Use Case)
+      // 4. Update Inventory
       for (final adj in transaction.inventoryAdjustments) {
-        await txn.rawUpdate(
-          '''
-          UPDATE ${DatabaseHelper.tableInventory}
-          SET quantity_on_hand = quantity_on_hand - ?,
-              updated_at = ?
-          WHERE product_id = ? AND warehouse_id = ?
-          ''',
-          [
-            adj.quantityToDeduct,
-            DateTime.now().toIso8601String(),
-            adj.productId,
-            adj.warehouseId,
+        await db.customUpdate(
+          'UPDATE inventory SET quantity_on_hand = quantity_on_hand - ?, updated_at = ? WHERE product_id = ? AND warehouse_id = ?',
+          variables: [
+            Variable.withReal(adj.quantityToDeduct),
+            Variable.withString(
+              DateTime.now().toIso8601String(),
+            ), // using string for consistency if Drift doesn't auto-convert in custom update
+            Variable.withInt(adj.productId),
+            Variable.withInt(adj.warehouseId),
           ],
+          updates: {db.inventory},
         );
       }
 
-      // 5. Record Movements (prepared by Use Case)
+      // 5. Record Movements
       for (final mov in transaction.movements) {
-        // Get current stock for accurate before/after
-        final invResult = await txn.query(
-          DatabaseHelper.tableInventory,
-          columns: ['quantity_on_hand'],
-          where: 'product_id = ? AND warehouse_id = ?',
-          whereArgs: [mov.productId, mov.warehouseId],
-        );
+        final invRow =
+            await (db.select(db.inventory)..where(
+                  (t) =>
+                      t.productId.equals(mov.productId) &
+                      t.warehouseId.equals(mov.warehouseId),
+                ))
+                .getSingleOrNull();
 
-        double currentQty = 0;
-        if (invResult.isNotEmpty) {
-          currentQty = (invResult.first['quantity_on_hand'] as num).toDouble();
-        }
+        double currentQty = invRow?.quantityOnHand ?? 0.0;
 
-        await txn.insert(DatabaseHelper.tableInventoryMovements, {
-          'product_id': mov.productId,
-          'warehouse_id': mov.warehouseId,
-          'movement_type': mov.movementType.value,
-          'quantity': mov.quantity,
-          'quantity_before': currentQty - mov.quantity, // Before deduction
-          'quantity_after': currentQty,
-          'reference_type': mov.referenceType,
-          'reference_id': saleId,
-          'reason': mov.reason,
-          'performed_by': mov.performedBy,
-          'movement_date': mov.movementDate.toIso8601String(),
-        });
+        await db
+            .into(db.inventoryMovements)
+            .insert(
+              drift_db.InventoryMovementsCompanion.insert(
+                productId: mov.productId,
+                warehouseId: mov.warehouseId,
+                movementType: mov.movementType.value,
+                quantity: mov.quantity,
+                quantityBefore:
+                    currentQty +
+                    mov.quantity, // Corrected: Before was Current (Already Deducted) + Sold
+                quantityAfter: currentQty,
+                referenceType: Value(mov.referenceType),
+                referenceId: Value(saleId),
+                reason: Value(mov.reason),
+                performedBy: mov.performedBy,
+                movementDate: Value(mov.movementDate),
+              ),
+            );
       }
 
       // 6. Insert Payments
       for (final payment in transaction.sale.payments) {
-        final paymentModel = SalePaymentModel.fromEntity(payment);
-        final paymentMap = paymentModel.toMap();
-        paymentMap['sale_id'] = saleId;
-        await txn.insert(DatabaseHelper.tableSalePayments, paymentMap);
+        await db
+            .into(db.salePayments)
+            .insert(
+              drift_db.SalePaymentsCompanion.insert(
+                saleId: saleId,
+                paymentMethod: payment.paymentMethod,
+                amountCents: payment.amountCents,
+                receivedBy: payment.receivedBy,
+                referenceNumber: Value(payment.referenceNumber),
+                paymentDate: Value(payment.paymentDate),
+              ),
+            );
       }
 
       return saleId;
     });
-
-    _databaseHelper.notifyTableChanged(DatabaseHelper.tableSales);
-    _databaseHelper.notifyTableChanged(DatabaseHelper.tableInventory);
-    return saleId;
   }
 
   @override
   Future<void> executeSaleCancellation(
     SaleCancellationTransaction transaction,
   ) async {
-    final db = await _databaseHelper.database;
-
-    await db.transaction((txn) async {
+    return db.transaction(() async {
       // 1. Update Sale Status
-      await txn.update(
-        DatabaseHelper.tableSales,
-        {
-          'status': SaleStatus.cancelled.name,
-          'cancelled_by': transaction.userId,
-          'cancelled_at': transaction.cancelledAt.toIso8601String(),
-          'cancellation_reason': transaction.reason,
-        },
-        where: 'id = ?',
-        whereArgs: [transaction.saleId],
+      await (db.update(
+        db.sales,
+      )..where((t) => t.id.equals(transaction.saleId))).write(
+        drift_db.SalesCompanion(
+          status: Value(SaleStatus.cancelled.name),
+          cancelledBy: Value(transaction.userId),
+          cancelledAt: Value(transaction.cancelledAt),
+          cancellationReason: Value(transaction.reason),
+        ),
       );
 
       // 2. Restore Lots
       if (transaction.restoreInventory) {
-        final lotDeductions = await txn.query(
-          DatabaseHelper.tableSaleItemLots,
-          where:
-              'sale_item_id IN (SELECT id FROM ${DatabaseHelper.tableSaleItems} WHERE sale_id = ?)',
-          whereArgs: [transaction.saleId],
-        );
+        final lotDeductions = await (db.select(db.saleItemLots).join([
+          innerJoin(
+            db.saleItems,
+            db.saleItems.id.equalsExp(db.saleItemLots.saleItemId),
+          ),
+        ])..where(db.saleItems.saleId.equals(transaction.saleId))).get();
 
-        for (final deduction in lotDeductions) {
-          final lotId = deduction['lot_id'] as int;
-          final quantityDeducted = (deduction['quantity_deducted'] as num)
-              .toDouble();
-
-          await txn.rawUpdate(
-            '''
-            UPDATE ${DatabaseHelper.tableInventoryLots}
-            SET quantity = quantity + ?
-            WHERE id = ?
-            ''',
-            [quantityDeducted, lotId],
+        for (final row in lotDeductions) {
+          final deduction = row.readTable(db.saleItemLots);
+          await db.customUpdate(
+            'UPDATE inventory_lots SET quantity = quantity + ? WHERE id = ?',
+            variables: [
+              Variable.withReal(deduction.quantityDeducted),
+              Variable.withInt(deduction.lotId),
+            ],
+            updates: {db.inventoryLots},
           );
         }
       }
 
       // 3. Restore Inventory
       if (transaction.restoreInventory) {
-        final items = await txn.query(
-          DatabaseHelper.tableSaleItems,
-          where: 'sale_id = ?',
-          whereArgs: [transaction.saleId],
-        );
-
-        final saleResult = await txn.query(
-          DatabaseHelper.tableSales,
-          columns: ['warehouse_id'],
-          where: 'id = ?',
-          whereArgs: [transaction.saleId],
-        );
-
-        if (saleResult.isEmpty) return;
-
-        final warehouseId = saleResult.first['warehouse_id'] as int;
+        final sale = await (db.select(
+          db.sales,
+        )..where((t) => t.id.equals(transaction.saleId))).getSingle();
+        final items = await (db.select(
+          db.saleItems,
+        )..where((t) => t.saleId.equals(transaction.saleId))).get();
 
         for (final item in items) {
-          final productId = item['product_id'] as int;
-          final variantId = item['variant_id'] as int?;
-          final quantity = (item['quantity'] as num).toDouble();
+          double quantityToRestore = item.quantity;
 
-          double quantityToRestore = quantity;
-          if (variantId != null) {
-            final variantResult = await txn.query(
-              DatabaseHelper.tableProductVariants,
-              columns: ['quantity'],
-              where: 'id = ?',
-              whereArgs: [variantId],
-            );
-            if (variantResult.isNotEmpty) {
-              final variantQuantity = (variantResult.first['quantity'] as num)
-                  .toDouble();
-              quantityToRestore = quantity * variantQuantity;
+          if (item.variantId != null) {
+            final variant = await (db.select(
+              db.productVariants,
+            )..where((t) => t.id.equals(item.variantId!))).getSingleOrNull();
+            if (variant != null) {
+              quantityToRestore = item.quantity * variant.quantity;
             }
           }
 
-          final inventoryResult = await txn.query(
-            DatabaseHelper.tableInventory,
-            where: 'product_id = ? AND warehouse_id = ?',
-            whereArgs: [productId, warehouseId],
-          );
-
-          double quantityBefore = 0;
-          if (inventoryResult.isNotEmpty) {
-            quantityBefore = (inventoryResult.first['quantity_on_hand'] as num)
-                .toDouble();
-          }
-
-          await txn.rawUpdate(
-            '''
-          UPDATE ${DatabaseHelper.tableInventory}
-          SET quantity_on_hand = quantity_on_hand + ?,
-              updated_at = ?
-          WHERE product_id = ? AND warehouse_id = ?
-          ''',
-            [
-              quantityToRestore,
-              DateTime.now().toIso8601String(),
-              productId,
-              warehouseId,
+          // Update Inventory
+          await db.customUpdate(
+            'UPDATE inventory SET quantity_on_hand = quantity_on_hand + ?, updated_at = ? WHERE product_id = ? AND warehouse_id = ?',
+            variables: [
+              Variable.withReal(quantityToRestore),
+              Variable.withString(DateTime.now().toIso8601String()),
+              Variable.withInt(item.productId),
+              Variable.withInt(sale.warehouseId),
             ],
+            updates: {db.inventory},
           );
 
-          await txn.insert(DatabaseHelper.tableInventoryMovements, {
-            'product_id': productId,
-            'warehouse_id': warehouseId,
-            'movement_type': 'return',
-            'quantity': quantityToRestore,
-            'quantity_before': quantityBefore,
-            'quantity_after': quantityBefore + quantityToRestore,
-            'reference_type': 'sale_cancellation',
-            'reference_id': transaction.saleId,
-            'reason': 'Sale cancelled: ${transaction.reason}',
-            'performed_by': transaction.userId,
-            'movement_date': transaction.cancelledAt.toIso8601String(),
-          });
+          // Get current qty for movement record
+          final invRow =
+              await (db.select(db.inventory)..where(
+                    (t) =>
+                        t.productId.equals(item.productId) &
+                        t.warehouseId.equals(sale.warehouseId),
+                  ))
+                  .getSingle();
+
+          await db
+              .into(db.inventoryMovements)
+              .insert(
+                drift_db.InventoryMovementsCompanion.insert(
+                  productId: item.productId,
+                  warehouseId: sale.warehouseId,
+                  movementType: 'return',
+                  quantity: quantityToRestore,
+                  quantityBefore: invRow.quantityOnHand - quantityToRestore,
+                  quantityAfter: invRow.quantityOnHand,
+                  referenceType: Value('sale_cancellation'),
+                  referenceId: Value(sale.id),
+                  reason: Value('Sale cancelled: ${transaction.reason}'),
+                  performedBy: transaction.userId,
+                  movementDate: Value(transaction.cancelledAt),
+                ),
+              );
         }
       }
     });
-
-    _databaseHelper.notifyTableChanged(DatabaseHelper.tableSales);
-    _databaseHelper.notifyTableChanged(DatabaseHelper.tableInventory);
   }
 
   @override
   Future<String> generateNextSaleNumber() async {
-    final db = await _databaseHelper.database;
-    final result = await db.rawQuery('''
-      SELECT sale_number FROM ${DatabaseHelper.tableSales}
-      ORDER BY id DESC
-      LIMIT 1
-    ''');
+    final query = db.select(db.sales)
+      ..orderBy([(t) => OrderingTerm.desc(t.id)])
+      ..limit(1);
+    final row = await query.getSingleOrNull();
 
-    if (result.isEmpty) {
+    if (row == null) {
       return 'SALE-00001';
     }
 
-    final lastNumber = result.first['sale_number'] as String;
-    final numberPart = int.parse(lastNumber.split('-').last);
-    final nextNumber = numberPart + 1;
-
-    return 'SALE-${nextNumber.toString().padLeft(5, '0')}';
-  }
-
-  @override
-  Stream<Sale?> getSaleByIdStream(int id) async* {
-    yield await getSaleById(id);
-
-    await for (final table in _databaseHelper.tableUpdateStream) {
-      if (table == DatabaseHelper.tableSales ||
-          table == DatabaseHelper.tableSaleItems ||
-          table == DatabaseHelper.tableSaleReturns) {
-        yield await getSaleById(id);
-      }
+    final lastNumber = row.saleNumber;
+    try {
+      final numberPart = int.parse(lastNumber.split('-').last);
+      final nextNumber = numberPart + 1;
+      return 'SALE-${nextNumber.toString().padLeft(5, '0')}';
+    } catch (_) {
+      // Fallback if format is weird
+      return 'SALE-${(row.id + 1).toString().padLeft(5, '0')}';
     }
   }
 }

@@ -12,8 +12,8 @@ part 'brand_providers.g.dart';
 
 @riverpod
 BrandRepository brandRepository(ref) {
-  final dbHelper = ref.watch(databaseHelperProvider);
-  return BrandRepositoryImpl(dbHelper);
+  final db = ref.watch(appDatabaseProvider);
+  return BrandRepositoryImpl(db);
 }
 
 @Riverpod(keepAlive: true)

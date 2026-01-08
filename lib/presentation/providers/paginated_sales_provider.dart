@@ -25,8 +25,8 @@ Future<int> paginatedSalesCount(Ref ref) async {
 
   // Listen for database updates
   ref.listen(tableUpdateStreamProvider, (previous, next) {
-    next.whenData((table) {
-      if (table == 'sales') {
+    next.whenData((updates) {
+      if (updates.any((u) => u.table == 'sales')) {
         ref.invalidateSelf();
       }
     });
@@ -48,8 +48,8 @@ Future<List<Sale>> paginatedSalesPage(Ref ref, {required int pageIndex}) async {
 
   // Listen for database updates
   ref.listen(tableUpdateStreamProvider, (previous, next) {
-    next.whenData((table) {
-      if (table == 'sales') {
+    next.whenData((updates) {
+      if (updates.any((u) => u.table == 'sales')) {
         ref.invalidateSelf();
       }
     });

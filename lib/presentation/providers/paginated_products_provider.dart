@@ -16,10 +16,13 @@ Future<int> paginatedProductsCount(Ref ref) async {
 
   // Listen for database updates
   ref.listen(tableUpdateStreamProvider, (previous, next) {
-    next.whenData((table) {
-      if (table == 'products' ||
-          table == 'inventory' ||
-          table == 'product_variants') {
+    next.whenData((updates) {
+      if (updates.any(
+        (u) =>
+            u.table == 'products' ||
+            u.table == 'inventory' ||
+            u.table == 'product_variants',
+      )) {
         ref.invalidateSelf();
       }
     });
@@ -50,10 +53,13 @@ Future<List<Product>> paginatedProductsPage(
 
   // Listen for database updates
   ref.listen(tableUpdateStreamProvider, (previous, next) {
-    next.whenData((table) {
-      if (table == 'products' ||
-          table == 'inventory' ||
-          table == 'product_variants') {
+    next.whenData((updates) {
+      if (updates.any(
+        (u) =>
+            u.table == 'products' ||
+            u.table == 'inventory' ||
+            u.table == 'product_variants',
+      )) {
         ref.invalidateSelf();
       }
     });

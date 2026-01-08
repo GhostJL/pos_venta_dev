@@ -1,14 +1,14 @@
-import 'package:posventa/core/utils/database_validators.dart';
-import 'package:posventa/data/datasources/database_helper.dart';
+import 'package:drift/drift.dart';
+import 'package:posventa/data/datasources/local/database/app_database.dart'
+    as drift_db;
 import 'package:posventa/data/models/supplier_model.dart';
 import 'package:posventa/domain/entities/supplier.dart';
 import 'package:posventa/domain/repositories/supplier_repository.dart';
-import 'package:sqflite/sqflite.dart';
 
 class SupplierRepositoryImpl implements SupplierRepository {
-  final DatabaseHelper _dbHelper;
+  final drift_db.AppDatabase db;
 
-  SupplierRepositoryImpl(this._dbHelper);
+  SupplierRepositoryImpl(this.db);
 
   @override
   Future<List<Supplier>> getAllSuppliers({
@@ -17,137 +17,147 @@ class SupplierRepositoryImpl implements SupplierRepository {
     int? offset,
     bool showInactive = false,
   }) async {
-    final db = await _dbHelper.database;
-    final whereClauses = <String>[];
-    final whereArgs = <dynamic>[];
+    final q = db.select(db.suppliers);
 
-    // Filter: Active Status
-    if (showInactive) {
-      whereClauses.add('is_active = 0');
+    if (!showInactive) {
+      q.where((t) => t.isActive.equals(true));
     } else {
-      whereClauses.add('is_active = 1');
+      if (showInactive) {
+        q.where((t) => t.isActive.equals(false));
+      } else {
+        q.where((t) => t.isActive.equals(true));
+      }
     }
 
     if (query != null && query.isNotEmpty) {
-      whereClauses.add(
-        '(name LIKE ? OR code LIKE ? OR contact_person LIKE ? OR email LIKE ?)',
+      final search = '%$query%';
+      q.where(
+        (t) =>
+            t.name.like(search) |
+            t.code.like(search) |
+            t.contactPerson.like(search) |
+            t.email.like(search),
       );
-      final q = '%$query%';
-      whereArgs.addAll([q, q, q, q]);
     }
 
-    final whereString = whereClauses.isNotEmpty
-        ? whereClauses.join(' AND ')
-        : null;
+    q.orderBy([(t) => OrderingTerm.asc(t.name)]);
 
-    final List<Map<String, dynamic>> maps = await db.query(
-      DatabaseHelper.tableSuppliers,
-      where: whereString,
-      whereArgs: whereArgs.isNotEmpty ? whereArgs : null,
-      orderBy: 'name ASC',
-      limit: limit,
-      offset: offset,
-    );
-    return List.generate(maps.length, (i) => SupplierModel.fromMap(maps[i]));
+    if (limit != null) {
+      q.limit(limit, offset: offset);
+    }
+
+    final rows = await q.get();
+    return rows
+        .map(
+          (row) => SupplierModel(
+            id: row.id,
+            name: row.name,
+            code: row.code,
+            contactPerson: row.contactPerson,
+            phone: row.phone,
+            email: row.email,
+            address: row.address,
+            taxId: row.taxId,
+            creditDays: row.creditDays,
+            isActive: row.isActive,
+          ),
+        )
+        .toList();
   }
 
   @override
   Future<int> countSuppliers({String? query, bool showInactive = false}) async {
-    final db = await _dbHelper.database;
-    final whereClauses = <String>[];
-    final whereArgs = <dynamic>[];
+    final q = db.selectOnly(db.suppliers)
+      ..addColumns([db.suppliers.id.count()]);
 
-    if (showInactive) {
-      whereClauses.add('is_active = 0');
+    if (!showInactive) {
+      q.where(db.suppliers.isActive.equals(true));
     } else {
-      whereClauses.add('is_active = 1');
+      if (showInactive) {
+        q.where(db.suppliers.isActive.equals(false));
+      } else {
+        q.where(db.suppliers.isActive.equals(true));
+      }
     }
 
     if (query != null && query.isNotEmpty) {
-      whereClauses.add(
-        '(name LIKE ? OR code LIKE ? OR contact_person LIKE ? OR email LIKE ?)',
+      final search = '%$query%';
+      q.where(
+        db.suppliers.name.like(search) |
+            db.suppliers.code.like(search) |
+            db.suppliers.contactPerson.like(search) |
+            db.suppliers.email.like(search),
       );
-      final q = '%$query%';
-      whereArgs.addAll([q, q, q, q]);
     }
 
-    final whereString = whereClauses.isNotEmpty
-        ? 'WHERE ${whereClauses.join(' AND ')}'
-        : '';
-
-    final sql =
-        'SELECT COUNT(*) as count FROM ${DatabaseHelper.tableSuppliers} $whereString';
-    final result = await db.rawQuery(sql, whereArgs);
-    return Sqflite.firstIntValue(result) ?? 0;
+    final result = await q.getSingle();
+    return result.read(db.suppliers.id.count()) ?? 0;
   }
 
   @override
   Future<Supplier> createSupplier(Supplier supplier) async {
-    final db = await _dbHelper.database;
-    final model = SupplierModel(
-      name: supplier.name,
-      code: supplier.code,
-      contactPerson: supplier.contactPerson,
-      phone: supplier.phone,
-      email: supplier.email,
-      address: supplier.address,
-      taxId: supplier.taxId,
-      creditDays: supplier.creditDays,
-      isActive: supplier.isActive,
-    );
-    final id = await db.insert(
-      DatabaseHelper.tableSuppliers,
-      model.toMap(),
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
-    final createdSupplier = await _getSupplierById(id);
-    return createdSupplier;
+    final id = await db
+        .into(db.suppliers)
+        .insert(
+          drift_db.SuppliersCompanion.insert(
+            name: supplier.name,
+            code: supplier.code,
+            contactPerson: Value(supplier.contactPerson),
+            phone: Value(supplier.phone),
+            email: Value(supplier.email),
+            address: Value(supplier.address),
+            taxId: Value(supplier.taxId),
+            creditDays: Value(supplier.creditDays),
+            isActive: Value(supplier.isActive),
+          ),
+          mode: InsertMode.replace,
+        );
+    final created = await _getSupplierById(id);
+    return created;
   }
 
   @override
   Future<Supplier> updateSupplier(Supplier supplier) async {
-    final db = await _dbHelper.database;
-    final model = SupplierModel(
-      id: supplier.id,
-      name: supplier.name,
-      code: supplier.code,
-      contactPerson: supplier.contactPerson,
-      phone: supplier.phone,
-      email: supplier.email,
-      address: supplier.address,
-      taxId: supplier.taxId,
-      creditDays: supplier.creditDays,
-      isActive: supplier.isActive,
+    await (db.update(
+      db.suppliers,
+    )..where((t) => t.id.equals(supplier.id!))).write(
+      drift_db.SuppliersCompanion(
+        name: Value(supplier.name),
+        code: Value(supplier.code),
+        contactPerson: Value(supplier.contactPerson),
+        phone: Value(supplier.phone),
+        email: Value(supplier.email),
+        address: Value(supplier.address),
+        taxId: Value(supplier.taxId),
+        creditDays: Value(supplier.creditDays),
+        isActive: Value(supplier.isActive),
+      ),
     );
-    await db.update(
-      DatabaseHelper.tableSuppliers,
-      model.toMap(),
-      where: 'id = ?',
-      whereArgs: [supplier.id],
-    );
-    final updatedSupplier = await _getSupplierById(supplier.id!);
-    return updatedSupplier;
+    return await _getSupplierById(supplier.id!);
   }
 
   @override
   Future<void> deleteSupplier(int supplierId) async {
-    final db = await _dbHelper.database;
-    await db.delete(
-      DatabaseHelper.tableSuppliers,
-      where: 'id = ?',
-      whereArgs: [supplierId],
-    );
+    await (db.delete(db.suppliers)..where((t) => t.id.equals(supplierId))).go();
   }
 
   Future<Supplier> _getSupplierById(int id) async {
-    final db = await _dbHelper.database;
-    final List<Map<String, dynamic>> maps = await db.query(
-      DatabaseHelper.tableSuppliers,
-      where: 'id = ?',
-      whereArgs: [id],
-    );
-    if (maps.isNotEmpty) {
-      return SupplierModel.fromMap(maps.first);
+    final row = await (db.select(
+      db.suppliers,
+    )..where((t) => t.id.equals(id))).getSingleOrNull();
+    if (row != null) {
+      return SupplierModel(
+        id: row.id,
+        name: row.name,
+        code: row.code,
+        contactPerson: row.contactPerson,
+        phone: row.phone,
+        email: row.email,
+        address: row.address,
+        taxId: row.taxId,
+        creditDays: row.creditDays,
+        isActive: row.isActive,
+      );
     } else {
       throw Exception('ID $id no encontrado');
     }
@@ -155,13 +165,11 @@ class SupplierRepositoryImpl implements SupplierRepository {
 
   @override
   Future<bool> isCodeUnique(String code, {int? excludeId}) async {
-    final db = await _dbHelper.database;
-    return DatabaseValidators.isFieldUnique(
-      db: db,
-      tableName: DatabaseHelper.tableSuppliers,
-      fieldName: 'code',
-      value: code,
-      excludeId: excludeId,
-    );
+    final q = db.select(db.suppliers)..where((t) => t.code.equals(code));
+    if (excludeId != null) {
+      q.where((t) => t.id.equals(excludeId).not());
+    }
+    final res = await q.get();
+    return res.isEmpty;
   }
 }

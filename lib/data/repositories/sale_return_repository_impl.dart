@@ -1,14 +1,15 @@
-import 'package:posventa/data/datasources/database_helper.dart';
+import 'package:drift/drift.dart';
+import 'package:posventa/data/datasources/local/database/app_database.dart'
+    as drift_db;
 import 'package:posventa/domain/entities/sale_return.dart';
 import 'package:posventa/domain/entities/sale_return_item.dart';
 import 'package:posventa/domain/entities/inventory_movement.dart';
 import 'package:posventa/domain/repositories/sale_return_repository.dart';
-import 'package:sqflite/sqflite.dart';
 
 class SaleReturnRepositoryImpl implements SaleReturnRepository {
-  final DatabaseHelper _dbHelper;
+  final drift_db.AppDatabase db;
 
-  SaleReturnRepositoryImpl(this._dbHelper);
+  SaleReturnRepositoryImpl(this.db);
 
   @override
   Future<List<SaleReturn>> getSaleReturns({
@@ -17,72 +18,108 @@ class SaleReturnRepositoryImpl implements SaleReturnRepository {
     int? limit,
     int? offset,
   }) async {
-    final db = await _dbHelper.database;
-
-    String whereClause = '';
-    List<dynamic> whereArgs = [];
+    final q = db.select(db.saleReturns).join([
+      leftOuterJoin(db.sales, db.sales.id.equalsExp(db.saleReturns.saleId)),
+      leftOuterJoin(
+        db.customers,
+        db.customers.id.equalsExp(db.saleReturns.customerId),
+      ),
+      leftOuterJoin(
+        db.users,
+        db.users.id.equalsExp(db.saleReturns.processedBy),
+      ),
+    ]);
 
     if (startDate != null) {
-      whereClause += 'sr.return_date >= ?';
-      whereArgs.add(startDate.toIso8601String());
+      q.where(db.saleReturns.returnDate.isBiggerOrEqualValue(startDate));
     }
-
     if (endDate != null) {
-      if (whereClause.isNotEmpty) whereClause += ' AND ';
-      whereClause += 'sr.return_date <= ?';
-      whereArgs.add(endDate.toIso8601String());
+      q.where(db.saleReturns.returnDate.isSmallerOrEqualValue(endDate));
     }
 
-    final query =
-        '''
-      SELECT 
-        sr.*,
-        s.sale_number,
-        c.first_name || ' ' || c.last_name as customer_name,
-        u.first_name || ' ' || u.last_name as processed_by_name
-      FROM ${DatabaseHelper.tableSaleReturns} sr
-      LEFT JOIN ${DatabaseHelper.tableSales} s ON sr.sale_id = s.id
-      LEFT JOIN ${DatabaseHelper.tableCustomers} c ON sr.customer_id = c.id
-      LEFT JOIN ${DatabaseHelper.tableUsers} u ON sr.processed_by = u.id
-      ${whereClause.isNotEmpty ? 'WHERE $whereClause' : ''}
-      ORDER BY sr.return_date DESC, sr.id DESC
-      ${limit != null ? 'LIMIT $limit' : ''}
-      ${offset != null ? 'OFFSET $offset' : ''}
-    ''';
+    q.orderBy([
+      OrderingTerm.desc(db.saleReturns.returnDate),
+      OrderingTerm.desc(db.saleReturns.id),
+    ]);
 
-    final results = await db.rawQuery(query, whereArgs);
+    if (limit != null) {
+      q.limit(limit, offset: offset);
+    }
 
+    final rows = await q.get();
     final returns = <SaleReturn>[];
-    for (final row in results) {
-      final saleReturn = _mapToSaleReturn(row);
-      // Load items for each return
-      final items = await _getSaleReturnItems(db, saleReturn.id!);
+
+    for (final row in rows) {
+      final returnRow = row.readTable(db.saleReturns);
+      final saleRow = row.readTableOrNull(db.sales);
+      final customerRow = row.readTableOrNull(db.customers);
+      final userRow = row.readTableOrNull(db.users);
+
+      final items = await _getSaleReturnItems(returnRow.id);
+
       returns.add(
         SaleReturn(
-          id: saleReturn.id,
-          returnNumber: saleReturn.returnNumber,
-          saleId: saleReturn.saleId,
-          warehouseId: saleReturn.warehouseId,
-          customerId: saleReturn.customerId,
-          processedBy: saleReturn.processedBy,
-          subtotalCents: saleReturn.subtotalCents,
-          taxCents: saleReturn.taxCents,
-          totalCents: saleReturn.totalCents,
-          refundMethod: saleReturn.refundMethod,
-          reason: saleReturn.reason,
-          notes: saleReturn.notes,
-          status: saleReturn.status,
-          returnDate: saleReturn.returnDate,
-          createdAt: saleReturn.createdAt,
+          id: returnRow.id,
+          returnNumber: returnRow.returnNumber,
+          saleId: returnRow.saleId,
+          warehouseId: returnRow.warehouseId,
+          customerId: returnRow.customerId,
+          processedBy: returnRow.processedBy,
+          subtotalCents: returnRow.subtotalCents,
+          taxCents: returnRow.taxCents,
+          totalCents: returnRow.totalCents,
+          refundMethod: RefundMethod.fromCode(returnRow.refundMethod),
+          reason: returnRow.reason,
+          notes: returnRow.notes,
+          status: returnRow.status == 'completed'
+              ? SaleReturnStatus.completed
+              : SaleReturnStatus.cancelled,
+          returnDate: returnRow.returnDate,
+          createdAt: returnRow.createdAt,
           items: items,
-          saleNumber: row['sale_number'] as String?,
-          customerName: row['customer_name'] as String?,
-          processedByName: row['processed_by_name'] as String?,
+          saleNumber: saleRow?.saleNumber,
+          customerName: customerRow != null
+              ? '${customerRow.firstName} ${customerRow.lastName}'
+              : null,
+          processedByName: userRow != null
+              ? '${userRow.firstName} ${userRow.lastName}'
+              : null,
         ),
       );
     }
-
     return returns;
+  }
+
+  Future<List<SaleReturnItem>> _getSaleReturnItems(int returnId) async {
+    final q = db.select(db.saleReturnItems).join([
+      leftOuterJoin(
+        db.products,
+        db.products.id.equalsExp(db.saleReturnItems.productId),
+      ),
+    ])..where(db.saleReturnItems.saleReturnId.equals(returnId));
+
+    final rows = await q.get();
+
+    return rows.map((row) {
+      final itemRow = row.readTable(db.saleReturnItems);
+      final productRow = row.readTableOrNull(db.products);
+
+      return SaleReturnItem(
+        id: itemRow.id,
+        saleReturnId: itemRow.saleReturnId,
+        saleItemId: itemRow.saleItemId,
+        productId: itemRow.productId,
+        quantity: itemRow.quantity,
+        unitPriceCents: itemRow.unitPriceCents,
+        subtotalCents: itemRow.subtotalCents,
+        taxCents: itemRow.taxCents,
+        totalCents: itemRow.totalCents,
+        reason: itemRow.reason,
+        createdAt: itemRow.createdAt,
+        productName: productRow?.name,
+        productCode: productRow?.code,
+      );
+    }).toList();
   }
 
   @override
@@ -91,152 +128,128 @@ class SaleReturnRepositoryImpl implements SaleReturnRepository {
     DateTime? endDate,
     int? limit,
     int? offset,
-  }) async* {
-    yield await getSaleReturns(
-      startDate: startDate,
-      endDate: endDate,
-      limit: limit,
-      offset: offset,
+  }) {
+    return db.saleReturns.all().watch().asyncMap(
+      (_) => getSaleReturns(
+        startDate: startDate,
+        endDate: endDate,
+        limit: limit,
+        offset: offset,
+      ),
     );
-
-    await for (final table in _dbHelper.tableUpdateStream) {
-      if (table == DatabaseHelper.tableSaleReturns ||
-          table == DatabaseHelper.tableSaleReturnItems) {
-        yield await getSaleReturns(
-          startDate: startDate,
-          endDate: endDate,
-          limit: limit,
-          offset: offset,
-        );
-      }
-    }
   }
 
   @override
   Future<SaleReturn?> getSaleReturnById(int id) async {
-    final db = await _dbHelper.database;
+    final q = db.select(db.saleReturns).join([
+      leftOuterJoin(db.sales, db.sales.id.equalsExp(db.saleReturns.saleId)),
+      leftOuterJoin(
+        db.customers,
+        db.customers.id.equalsExp(db.saleReturns.customerId),
+      ),
+      leftOuterJoin(
+        db.users,
+        db.users.id.equalsExp(db.saleReturns.processedBy),
+      ),
+    ])..where(db.saleReturns.id.equals(id));
 
-    final results = await db.rawQuery(
-      '''
-      SELECT 
-        sr.*,
-        s.sale_number,
-        c.first_name || ' ' || c.last_name as customer_name,
-        u.first_name || ' ' || u.last_name as processed_by_name
-      FROM ${DatabaseHelper.tableSaleReturns} sr
-      LEFT JOIN ${DatabaseHelper.tableSales} s ON sr.sale_id = s.id
-      LEFT JOIN ${DatabaseHelper.tableCustomers} c ON sr.customer_id = c.id
-      LEFT JOIN ${DatabaseHelper.tableUsers} u ON sr.processed_by = u.id
-      WHERE sr.id = ?
-    ''',
-      [id],
-    );
+    final row = await q.getSingleOrNull();
 
-    if (results.isEmpty) return null;
+    if (row == null) return null;
 
-    final row = results.first;
-    final saleReturn = _mapToSaleReturn(row);
-    final items = await _getSaleReturnItems(db, id);
+    final returnRow = row.readTable(db.saleReturns);
+    final saleRow = row.readTableOrNull(db.sales);
+    final customerRow = row.readTableOrNull(db.customers);
+    final userRow = row.readTableOrNull(db.users);
+
+    final items = await _getSaleReturnItems(returnRow.id);
 
     return SaleReturn(
-      id: saleReturn.id,
-      returnNumber: saleReturn.returnNumber,
-      saleId: saleReturn.saleId,
-      warehouseId: saleReturn.warehouseId,
-      customerId: saleReturn.customerId,
-      processedBy: saleReturn.processedBy,
-      subtotalCents: saleReturn.subtotalCents,
-      taxCents: saleReturn.taxCents,
-      totalCents: saleReturn.totalCents,
-      refundMethod: saleReturn.refundMethod,
-      reason: saleReturn.reason,
-      notes: saleReturn.notes,
-      status: saleReturn.status,
-      returnDate: saleReturn.returnDate,
-      createdAt: saleReturn.createdAt,
+      id: returnRow.id,
+      returnNumber: returnRow.returnNumber,
+      saleId: returnRow.saleId,
+      warehouseId: returnRow.warehouseId,
+      customerId: returnRow.customerId,
+      processedBy: returnRow.processedBy,
+      subtotalCents: returnRow.subtotalCents,
+      taxCents: returnRow.taxCents,
+      totalCents: returnRow.totalCents,
+      refundMethod: RefundMethod.fromCode(returnRow.refundMethod),
+      reason: returnRow.reason,
+      notes: returnRow.notes,
+      status: returnRow.status == 'completed'
+          ? SaleReturnStatus.completed
+          : SaleReturnStatus.cancelled,
+      returnDate: returnRow.returnDate,
+      createdAt: returnRow.createdAt,
       items: items,
-      saleNumber: row['sale_number'] as String?,
-      customerName: row['customer_name'] as String?,
-      processedByName: row['processed_by_name'] as String?,
+      saleNumber: saleRow?.saleNumber,
+      customerName: customerRow != null
+          ? '${customerRow.firstName} ${customerRow.lastName}'
+          : null,
+      processedByName: userRow != null
+          ? '${userRow.firstName} ${userRow.lastName}'
+          : null,
     );
   }
 
   @override
   Future<SaleReturn?> getSaleReturnByNumber(String returnNumber) async {
-    final db = await _dbHelper.database;
-
-    final results = await db.query(
-      DatabaseHelper.tableSaleReturns,
-      where: 'return_number = ?',
-      whereArgs: [returnNumber],
-    );
-
-    if (results.isEmpty) return null;
-
-    final saleReturn = _mapToSaleReturn(results.first);
-    final items = await _getSaleReturnItems(db, saleReturn.id!);
-
-    return SaleReturn(
-      id: saleReturn.id,
-      returnNumber: saleReturn.returnNumber,
-      saleId: saleReturn.saleId,
-      warehouseId: saleReturn.warehouseId,
-      customerId: saleReturn.customerId,
-      processedBy: saleReturn.processedBy,
-      subtotalCents: saleReturn.subtotalCents,
-      taxCents: saleReturn.taxCents,
-      totalCents: saleReturn.totalCents,
-      refundMethod: saleReturn.refundMethod,
-      reason: saleReturn.reason,
-      notes: saleReturn.notes,
-      status: saleReturn.status,
-      returnDate: saleReturn.returnDate,
-      createdAt: saleReturn.createdAt,
-      items: items,
-    );
+    final row = await (db.select(
+      db.saleReturns,
+    )..where((t) => t.returnNumber.equals(returnNumber))).getSingleOrNull();
+    if (row != null) {
+      return getSaleReturnById(row.id);
+    }
+    return null;
   }
 
   @override
   Future<int> createSaleReturn(SaleReturn saleReturn) async {
-    final db = await _dbHelper.database;
+    return db.transaction(() async {
+      // 1. Insert Return
+      final returnId = await db
+          .into(db.saleReturns)
+          .insert(
+            drift_db.SaleReturnsCompanion.insert(
+              returnNumber: saleReturn.returnNumber,
+              saleId: saleReturn.saleId,
+              warehouseId: saleReturn.warehouseId,
+              customerId: Value(saleReturn.customerId),
+              processedBy: saleReturn.processedBy,
+              subtotalCents: saleReturn.subtotalCents,
+              taxCents: Value(saleReturn.taxCents),
+              totalCents: saleReturn.totalCents,
+              refundMethod: saleReturn.refundMethod.code,
+              reason: saleReturn.reason,
+              notes: Value(saleReturn.notes),
+              status: Value(saleReturn.status.name),
+              returnDate: saleReturn.returnDate,
+              createdAt: Value(saleReturn.createdAt),
+            ),
+          );
 
-    final returnId = await db.transaction((txn) async {
-      // 1. Insert sale return
-      final returnId = await txn.insert(DatabaseHelper.tableSaleReturns, {
-        'return_number': saleReturn.returnNumber,
-        'sale_id': saleReturn.saleId,
-        'warehouse_id': saleReturn.warehouseId,
-        'customer_id': saleReturn.customerId,
-        'processed_by': saleReturn.processedBy,
-        'subtotal_cents': saleReturn.subtotalCents,
-        'tax_cents': saleReturn.taxCents,
-        'total_cents': saleReturn.totalCents,
-        'refund_method': saleReturn.refundMethod.code,
-        'reason': saleReturn.reason,
-        'notes': saleReturn.notes,
-        'status': saleReturn.status.name,
-        'return_date': saleReturn.returnDate.toIso8601String(),
-        'created_at': saleReturn.createdAt.toIso8601String(),
-      });
-
-      // 2. Insert sale return items
+      // 2. Insert Items
       for (final item in saleReturn.items) {
-        await txn.insert(DatabaseHelper.tableSaleReturnItems, {
-          'sale_return_id': returnId,
-          'sale_item_id': item.saleItemId,
-          'product_id': item.productId,
-          'quantity': item.quantity,
-          'unit_price_cents': item.unitPriceCents,
-          'subtotal_cents': item.subtotalCents,
-          'tax_cents': item.taxCents,
-          'total_cents': item.totalCents,
-          'reason': item.reason,
-          'created_at': item.createdAt.toIso8601String(),
-        });
+        await db
+            .into(db.saleReturnItems)
+            .insert(
+              drift_db.SaleReturnItemsCompanion.insert(
+                saleReturnId: returnId,
+                saleItemId: item.saleItemId,
+                productId: item.productId,
+                quantity: item.quantity,
+                unitPriceCents: item.unitPriceCents,
+                subtotalCents: item.subtotalCents,
+                taxCents: Value(item.taxCents),
+                totalCents: item.totalCents,
+                reason: Value(item.reason),
+                createdAt: Value(item.createdAt),
+              ),
+            );
 
-        // 3. Create inventory movement for each item
+        // 3. Create Inventory Movement
         await _createInventoryMovement(
-          txn,
           item,
           saleReturn.warehouseId,
           saleReturn.processedBy,
@@ -245,379 +258,294 @@ class SaleReturnRepositoryImpl implements SaleReturnRepository {
         );
       }
 
-      // 4. Create cash movement if refund method is cash
+      // 4. Create Cash Movement if needed
       if (saleReturn.refundMethod == RefundMethod.cash) {
-        await _createCashMovement(txn, saleReturn, returnId);
+        await _createCashMovement(saleReturn, returnId);
       }
 
-      // 5. Check if sale is now fully returned and update status
-      final saleItemsResults = await txn.query(
-        DatabaseHelper.tableSaleItems,
-        columns: ['id', 'quantity'],
-        where: 'sale_id = ?',
-        whereArgs: [saleReturn.saleId],
-      );
+      // 5. Check if fully returned
+      final saleItems = await (db.select(
+        db.saleItems,
+      )..where((t) => t.saleId.equals(saleReturn.saleId))).get();
 
-      // Get all returned quantities for this sale (including current return)
-      final returnedQtyResults = await txn.rawQuery(
-        '''
-        SELECT 
-          sri.sale_item_id,
-          SUM(sri.quantity) as total_returned
-        FROM ${DatabaseHelper.tableSaleReturnItems} sri
-        INNER JOIN ${DatabaseHelper.tableSaleReturns} sr ON sri.sale_return_id = sr.id
-        WHERE sr.sale_id = ? AND sr.status = 'completed'
-        GROUP BY sri.sale_item_id
-      ''',
-        [saleReturn.saleId],
-      );
+      final returnedRows =
+          await (db.select(db.saleReturnItems).join([
+                innerJoin(
+                  db.saleReturns,
+                  db.saleReturns.id.equalsExp(db.saleReturnItems.saleReturnId),
+                ),
+              ])..where(
+                db.saleReturns.saleId.equals(saleReturn.saleId) &
+                    db.saleReturns.status.equals('completed'),
+              ))
+              .get();
 
+      // Calculate total returned per sale Item
       final returnedQty = <int, double>{};
-      for (final row in returnedQtyResults) {
-        final saleItemId = row['sale_item_id'] as int;
-        final totalReturned = row['total_returned'] as double;
-        returnedQty[saleItemId] = totalReturned;
+      for (final row in returnedRows) {
+        final returnItem = row.readTable(db.saleReturnItems);
+        returnedQty[returnItem.saleItemId] =
+            (returnedQty[returnItem.saleItemId] ?? 0.0) + returnItem.quantity;
       }
 
-      // Check if all items are fully returned
       bool isFullyReturned = true;
-      for (final saleItem in saleItemsResults) {
-        final saleItemId = saleItem['id'] as int;
-        final originalQty = saleItem['quantity'] as double;
-        final returnedQuantity = returnedQty[saleItemId] ?? 0.0;
-
-        if (returnedQuantity < originalQty) {
+      for (final saleItem in saleItems) {
+        final returned = returnedQty[saleItem.id] ?? 0.0;
+        if (returned < saleItem.quantity) {
           isFullyReturned = false;
           break;
         }
       }
 
-      // Update sale status if fully returned
       if (isFullyReturned) {
-        await txn.update(
-          DatabaseHelper.tableSales,
-          {'status': 'returned'},
-          where: 'id = ?',
-          whereArgs: [saleReturn.saleId],
-        );
+        await (db.update(db.sales)
+              ..where((t) => t.id.equals(saleReturn.saleId)))
+            .write(drift_db.SalesCompanion(status: Value('returned')));
       }
 
       return returnId;
     });
-
-    _dbHelper.notifyTableChanged(DatabaseHelper.tableSaleReturns);
-    _dbHelper.notifyTableChanged(DatabaseHelper.tableInventory);
-    _dbHelper.notifyTableChanged(DatabaseHelper.tableCashSessions);
-    _dbHelper.notifyTableChanged(DatabaseHelper.tableSales);
-
-    return returnId;
   }
 
   Future<void> _createInventoryMovement(
-    Transaction txn,
     SaleReturnItem item,
     int warehouseId,
     int performedBy,
     int returnId,
     String reason,
   ) async {
-    // Get the original sale item to check for variant_id
-    final saleItemResults = await txn.query(
-      DatabaseHelper.tableSaleItems,
-      columns: ['variant_id'],
-      where: 'id = ?',
-      whereArgs: [item.saleItemId],
-    );
-
-    // Calculate quantity to restore (handle variants)
+    // Check variant multiplier
+    final saleItem = await (db.select(
+      db.saleItems,
+    )..where((t) => t.id.equals(item.saleItemId))).getSingle();
     double quantityToRestore = item.quantity;
-    if (saleItemResults.isNotEmpty) {
-      final variantId = saleItemResults.first['variant_id'] as int?;
-      if (variantId != null) {
-        final variantResult = await txn.query(
-          DatabaseHelper.tableProductVariants,
-          columns: ['quantity'],
-          where: 'id = ?',
-          whereArgs: [variantId],
-        );
-        if (variantResult.isNotEmpty) {
-          final variantQuantity = (variantResult.first['quantity'] as num)
-              .toDouble();
-          quantityToRestore = item.quantity * variantQuantity;
-        }
+
+    if (saleItem.variantId != null) {
+      final variant = await (db.select(
+        db.productVariants,
+      )..where((t) => t.id.equals(saleItem.variantId!))).getSingleOrNull();
+      if (variant != null) {
+        quantityToRestore = item.quantity * variant.quantity;
       }
     }
 
-    // Get current inventory
-    final inventoryResults = await txn.query(
-      DatabaseHelper.tableInventory,
-      where: 'product_id = ? AND warehouse_id = ?',
-      whereArgs: [item.productId, warehouseId],
-    );
+    // Update Inventory
+    final inventory =
+        await (db.select(db.inventory)..where(
+              (t) =>
+                  t.productId.equals(item.productId) &
+                  t.warehouseId.equals(warehouseId),
+            ))
+            .getSingleOrNull();
 
-    double quantityBefore = 0;
-    if (inventoryResults.isNotEmpty) {
-      quantityBefore = inventoryResults.first['quantity_on_hand'] as double;
-    }
+    double quantityBefore = inventory?.quantityOnHand ?? 0.0;
 
-    final quantityAfter = quantityBefore + quantityToRestore;
-
-    // Insert inventory movement
-    await txn.insert(DatabaseHelper.tableInventoryMovements, {
-      'product_id': item.productId,
-      'warehouse_id': warehouseId,
-      'movement_type': MovementType.returnMovement.value,
-      'quantity': quantityToRestore,
-      'quantity_before': quantityBefore,
-      'quantity_after': quantityAfter,
-      'reference_type': 'sale_return',
-      'reference_id': returnId,
-      'reason': reason,
-      'performed_by': performedBy,
-      'movement_date': DateTime.now().toIso8601String(),
-    });
-
-    // Update inventory
-    if (inventoryResults.isEmpty) {
-      // Create new inventory record
-      await txn.insert(DatabaseHelper.tableInventory, {
-        'product_id': item.productId,
-        'warehouse_id': warehouseId,
-        'quantity_on_hand': quantityToRestore,
-        'quantity_reserved': 0,
-        'updated_at': DateTime.now().toIso8601String(),
-      });
+    if (inventory == null) {
+      await db
+          .into(db.inventory)
+          .insert(
+            drift_db.InventoryCompanion.insert(
+              productId: item.productId,
+              warehouseId: warehouseId,
+              quantityOnHand: Value(quantityToRestore),
+              updatedAt: Value(DateTime.now()),
+              quantityReserved: Value(0.0), // Provide default
+            ),
+          );
     } else {
-      // Update existing inventory
-      await txn.update(
-        DatabaseHelper.tableInventory,
-        {
-          'quantity_on_hand': quantityAfter,
-          'updated_at': DateTime.now().toIso8601String(),
-        },
-        where: 'product_id = ? AND warehouse_id = ?',
-        whereArgs: [item.productId, warehouseId],
+      await db.customUpdate(
+        'UPDATE inventory SET quantity_on_hand = quantity_on_hand + ?, updated_at = ? WHERE product_id = ? AND warehouse_id = ?',
+        variables: [
+          Variable.withReal(quantityToRestore),
+          Variable.withString(DateTime.now().toIso8601String()),
+          Variable.withInt(item.productId),
+          Variable.withInt(warehouseId),
+        ],
+        updates: {db.inventory},
       );
     }
 
-    // Restore inventory to lots that were deducted (Fix for partial returns)
-    // We only restore the quantity associated with this SPECIFIC return item.
+    await db
+        .into(db.inventoryMovements)
+        .insert(
+          drift_db.InventoryMovementsCompanion.insert(
+            productId: item.productId,
+            warehouseId: warehouseId,
+            movementType: MovementType.returnMovement.value,
+            quantity: quantityToRestore,
+            quantityBefore: quantityBefore,
+            quantityAfter: quantityBefore + quantityToRestore,
+            referenceType: Value('sale_return'),
+            referenceId: Value(returnId),
+            reason: Value(reason),
+            performedBy: performedBy,
+            movementDate: Value(DateTime.now()),
+          ),
+        );
 
-    double remainingToRestore =
-        item.quantity; // This is in sales units (not base units)
+    // Restore Lots logic (LIFO-ish restoration to sale_item_lots)
+    double remainingToRestore = item.quantity;
 
-    // Query sale_item_lots to get all lot deductions for this sale item
-    final lotDeductionsResult = await txn.query(
-      DatabaseHelper.tableSaleItemLots,
-      where: 'sale_item_id = ?',
-      whereArgs: [item.saleItemId],
-      orderBy: 'id DESC', // LIFO-ish restoration
-    );
+    final lotDeductions =
+        await (db.select(db.saleItemLots)
+              ..where((t) => t.saleItemId.equals(item.saleItemId))
+              ..orderBy([(t) => OrderingTerm.desc(t.id)]))
+            .get();
 
-    // Iterate through deductions and restore
-    for (final deduction in lotDeductionsResult) {
+    for (final deduction in lotDeductions) {
       if (remainingToRestore <= 0) break;
 
-      final deductionId = deduction['id'] as int;
-      final deductionLotId = deduction['lot_id'] as int;
-      final quantityOriginallyDeducted = (deduction['quantity_deducted'] as num)
-          .toDouble();
-
-      // We can only restore up to what was deducted from this specific lot linkage
-      // AND up to what we actually need to return.
+      final quantityOriginallyDeducted = deduction.quantityDeducted;
       final amountToRestoreToThisLot =
           remainingToRestore < quantityOriginallyDeducted
           ? remainingToRestore
           : quantityOriginallyDeducted;
 
       if (amountToRestoreToThisLot > 0) {
-        // 1. Restore quantity to the actual Inventory Lot
-        await txn.rawUpdate(
-          '''
-          UPDATE ${DatabaseHelper.tableInventoryLots}
-          SET quantity = quantity + ?
-          WHERE id = ?
-          ''',
-          [amountToRestoreToThisLot, deductionLotId],
+        // Restore to Lot
+        await db.customUpdate(
+          'UPDATE inventory_lots SET quantity = quantity + ? WHERE id = ?',
+          variables: [
+            Variable.withReal(amountToRestoreToThisLot),
+            Variable.withInt(deduction.lotId),
+          ],
+          updates: {db.inventoryLots},
         );
 
-        // 2. Update tracking in sale_item_lots
+        // Update tracking
         if (amountToRestoreToThisLot >= quantityOriginallyDeducted) {
-          // Fully reversed this deduction
-          await txn.delete(
-            DatabaseHelper.tableSaleItemLots,
-            where: 'id = ?',
-            whereArgs: [deductionId],
-          );
+          await (db.delete(
+            db.saleItemLots,
+          )..where((t) => t.id.equals(deduction.id))).go();
         } else {
-          // Partially reversed
-          await txn.update(
-            DatabaseHelper.tableSaleItemLots,
-            {
-              'quantity_deducted':
-                  quantityOriginallyDeducted - amountToRestoreToThisLot,
-            },
-            where: 'id = ?',
-            whereArgs: [deductionId],
+          await (db.update(
+            db.saleItemLots,
+          )..where((t) => t.id.equals(deduction.id))).write(
+            drift_db.SaleItemLotsCompanion(
+              quantityDeducted: Value(
+                quantityOriginallyDeducted - amountToRestoreToThisLot,
+              ),
+            ),
           );
         }
-
         remainingToRestore -= amountToRestoreToThisLot;
       }
     }
   }
 
-  Future<void> _createCashMovement(
-    Transaction txn,
-    SaleReturn saleReturn,
-    int returnId,
-  ) async {
-    // Get active cash session for the warehouse
-    final sessionResults = await txn.query(
-      DatabaseHelper.tableCashSessions,
-      where: 'warehouse_id = ? AND status = ?',
-      whereArgs: [saleReturn.warehouseId, 'open'],
-    );
+  Future<void> _createCashMovement(SaleReturn saleReturn, int returnId) async {
+    final session =
+        await (db.select(db.cashSessions)..where(
+              (t) =>
+                  t.warehouseId.equals(saleReturn.warehouseId) &
+                  t.status.equals('open'),
+            ))
+            .getSingleOrNull();
 
-    if (sessionResults.isEmpty) {
+    if (session == null) {
       throw Exception(
         'No hay sesión de caja abierta en esta sucursal. '
         'Abre una sesión de caja antes de procesar devoluciones.',
       );
     }
 
-    final session = sessionResults.first;
-    final sessionId = session['id'] as int;
-    final currentBalance =
-        (session['expected_balance_cents'] as int?) ??
-        (session['opening_balance_cents'] as int);
+    // Create Movement
+    await db
+        .into(db.cashMovements)
+        .insert(
+          drift_db.CashMovementsCompanion.insert(
+            cashSessionId: session.id,
+            movementType: 'egreso',
+            amountCents: saleReturn.totalCents,
+            reason: 'Devolución',
+            description: Value(
+              'Devolución ${saleReturn.returnNumber} - ${saleReturn.reason}',
+            ),
+            performedBy: saleReturn.processedBy,
+            movementDate: Value(DateTime.now()),
+          ),
+        );
 
-    // Insert cash movement (egreso/outflow)
-    await txn.insert(DatabaseHelper.tableCashMovements, {
-      'cash_session_id': sessionId,
-      'movement_type': 'egreso',
-      'amount_cents': saleReturn.totalCents,
-      'reason': 'Devolución',
-      'description':
-          'Devolución ${saleReturn.returnNumber} - ${saleReturn.reason}',
-      'performed_by': saleReturn.processedBy,
-      'movement_date': DateTime.now().toIso8601String(),
-    });
-
-    // Update expected balance of cash session
-    await txn.update(
-      DatabaseHelper.tableCashSessions,
-      {'expected_balance_cents': currentBalance - saleReturn.totalCents},
-      where: 'id = ?',
-      whereArgs: [sessionId],
+    // Update Session Balance
+    final currentExpected =
+        session.expectedBalanceCents ?? session.openingBalanceCents;
+    await (db.update(
+      db.cashSessions,
+    )..where((t) => t.id.equals(session.id))).write(
+      drift_db.CashSessionsCompanion(
+        expectedBalanceCents: Value(currentExpected - saleReturn.totalCents),
+      ),
     );
   }
 
   @override
   Future<String> generateNextReturnNumber() async {
-    final db = await _dbHelper.database;
     final now = DateTime.now();
     final datePrefix =
         '${now.year}${now.month.toString().padLeft(2, '0')}${now.day.toString().padLeft(2, '0')}';
 
-    final results = await db.rawQuery('''
-      SELECT return_number 
-      FROM ${DatabaseHelper.tableSaleReturns}
-      WHERE return_number LIKE 'DEV-$datePrefix-%'
-      ORDER BY return_number DESC
-      LIMIT 1
-    ''');
+    final query = db.select(db.saleReturns)
+      ..where((t) => t.returnNumber.like('DEV-$datePrefix-%'))
+      ..orderBy([(t) => OrderingTerm.desc(t.returnNumber)])
+      ..limit(1);
 
+    final row = await query.getSingleOrNull();
     int nextSequence = 1;
-    if (results.isNotEmpty) {
-      final lastNumber = results.first['return_number'] as String;
-      final parts = lastNumber.split('-');
+    if (row != null) {
+      final parts = row.returnNumber.split('-');
       if (parts.length == 3) {
         nextSequence = (int.tryParse(parts[2]) ?? 0) + 1;
       }
     }
-
     return 'DEV-$datePrefix-${nextSequence.toString().padLeft(4, '0')}';
   }
 
   @override
   Future<bool> canReturnSale(int saleId) async {
-    final db = await _dbHelper.database;
-
-    final results = await db.query(
-      DatabaseHelper.tableSales,
-      where: 'id = ?',
-      whereArgs: [saleId],
-    );
-
-    if (results.isEmpty) return false;
-
-    final sale = results.first;
-    final status = sale['status'] as String;
-
-    // Can only return completed sales
-    return status == 'completed';
+    final sale = await (db.select(
+      db.sales,
+    )..where((t) => t.id.equals(saleId))).getSingleOrNull();
+    return sale?.status == 'completed';
   }
 
   @override
   Future<Map<int, double>> getReturnedQuantities(int saleId) async {
-    final db = await _dbHelper.database;
-
-    final results = await db.rawQuery(
-      '''
-      SELECT 
-        sri.sale_item_id,
-        SUM(sri.quantity) as total_returned
-      FROM ${DatabaseHelper.tableSaleReturnItems} sri
-      INNER JOIN ${DatabaseHelper.tableSaleReturns} sr ON sri.sale_return_id = sr.id
-      WHERE sr.sale_id = ? AND sr.status = 'completed'
-      GROUP BY sri.sale_item_id
-    ''',
-      [saleId],
-    );
+    final returnedRows =
+        await (db.select(db.saleReturnItems).join([
+              innerJoin(
+                db.saleReturns,
+                db.saleReturns.id.equalsExp(db.saleReturnItems.saleReturnId),
+              ),
+            ])..where(
+              db.saleReturns.saleId.equals(saleId) &
+                  db.saleReturns.status.equals('completed'),
+            ))
+            .get();
 
     final returnedQty = <int, double>{};
-    for (final row in results) {
-      final saleItemId = row['sale_item_id'] as int;
-      final totalReturned = row['total_returned'] as double;
-      returnedQty[saleItemId] = totalReturned;
+    for (final row in returnedRows) {
+      final returnItem = row.readTable(db.saleReturnItems);
+      returnedQty[returnItem.saleItemId] =
+          (returnedQty[returnItem.saleItemId] ?? 0.0) + returnItem.quantity;
     }
-
     return returnedQty;
   }
 
   @override
   Future<bool> isSaleFullyReturned(int saleId) async {
-    final db = await _dbHelper.database;
+    final saleItems = await (db.select(
+      db.saleItems,
+    )..where((t) => t.saleId.equals(saleId))).get();
+    if (saleItems.isEmpty) return false;
 
-    // Get all sale items with their quantities
-    final saleItemsResults = await db.query(
-      DatabaseHelper.tableSaleItems,
-      columns: ['id', 'quantity'],
-      where: 'sale_id = ?',
-      whereArgs: [saleId],
-    );
-
-    if (saleItemsResults.isEmpty) {
-      return false; // No items means not fully returned
-    }
-
-    // Get returned quantities
     final returnedQty = await getReturnedQuantities(saleId);
 
-    // Check if all items have been fully returned
-    for (final saleItem in saleItemsResults) {
-      final saleItemId = saleItem['id'] as int;
-      final originalQty = saleItem['quantity'] as double;
-      final returnedQuantity = returnedQty[saleItemId] ?? 0.0;
-
-      // If any item has not been fully returned, return false
-      if (returnedQuantity < originalQty) {
-        return false;
-      }
+    for (final item in saleItems) {
+      final returned = returnedQty[item.id] ?? 0.0;
+      if (returned < item.quantity) return false;
     }
 
-    return true; // All items have been fully returned
+    return true;
   }
 
   @override
@@ -625,124 +553,85 @@ class SaleReturnRepositoryImpl implements SaleReturnRepository {
     required DateTime startDate,
     required DateTime endDate,
   }) async {
-    final db = await _dbHelper.database;
-    final startStr = startDate.toIso8601String();
-    final endStr = endDate.toIso8601String();
+    // 1. Total Count and Amount
+    final totalQuery = db.selectOnly(db.saleReturns)
+      ..addColumns([db.saleReturns.id.count(), db.saleReturns.totalCents.sum()])
+      ..where(
+        db.saleReturns.returnDate.isBetweenValues(startDate, endDate) &
+            db.saleReturns.status.equals('completed'),
+      );
 
-    // 1. Total Returns and Amount
-    final totalResults = await db.rawQuery(
-      '''
-      SELECT 
-        COUNT(*) as count,
-        SUM(total_cents) as total_amount
-      FROM ${DatabaseHelper.tableSaleReturns}
-      WHERE return_date BETWEEN ? AND ? AND status = 'completed'
-    ''',
-      [startStr, endStr],
-    );
+    final totalResult = await totalQuery.getSingle();
+    final totalCount = totalResult.read(db.saleReturns.id.count()) ?? 0;
+    final totalAmount = totalResult.read(db.saleReturns.totalCents.sum()) ?? 0;
 
-    final totalCount = (totalResults.first['count'] as int?) ?? 0;
-    final totalAmount = (totalResults.first['total_amount'] as int?) ?? 0;
+    // 2. Returns by Reason (Group By)
+    final reasonQuery = db.selectOnly(db.saleReturns)
+      ..addColumns([
+        db.saleReturns.reason,
+        db.saleReturns.id.count(),
+        db.saleReturns.totalCents.sum(),
+      ])
+      ..where(
+        db.saleReturns.returnDate.isBetweenValues(startDate, endDate) &
+            db.saleReturns.status.equals('completed'),
+      )
+      ..groupBy([db.saleReturns.reason])
+      ..orderBy([OrderingTerm.desc(db.saleReturns.totalCents.sum())]);
 
-    // 2. Returns by Reason
-    final reasonResults = await db.rawQuery(
-      '''
-      SELECT 
-        reason,
-        COUNT(*) as count,
-        SUM(total_cents) as total_amount
-      FROM ${DatabaseHelper.tableSaleReturns}
-      WHERE return_date BETWEEN ? AND ? AND status = 'completed'
-      GROUP BY reason
-      ORDER BY total_amount DESC
-    ''',
-      [startStr, endStr],
-    );
+    final reasonResults = await reasonQuery.get();
+    final reasons = reasonResults
+        .map(
+          (row) => {
+            'reason': row.read(db.saleReturns.reason),
+            'count': row.read(db.saleReturns.id.count()),
+            'total_amount': row.read(db.saleReturns.totalCents.sum()),
+          },
+        )
+        .toList();
 
-    // 3. Top Returned Products
-    final productResults = await db.rawQuery(
-      '''
-      SELECT 
-        p.name as product_name,
-        SUM(sri.quantity) as total_quantity,
-        SUM(sri.total_cents) as total_amount
-      FROM ${DatabaseHelper.tableSaleReturnItems} sri
-      JOIN ${DatabaseHelper.tableSaleReturns} sr ON sri.sale_return_id = sr.id
-      LEFT JOIN ${DatabaseHelper.tableProducts} p ON sri.product_id = p.id
-      WHERE sr.return_date BETWEEN ? AND ? AND sr.status = 'completed'
-      GROUP BY sri.product_id
-      ORDER BY total_amount DESC
-      LIMIT 5
-    ''',
-      [startStr, endStr],
-    );
+    // 3. Top Products
+    // Complex join + aggregate
+    final productQuery =
+        db.selectOnly(db.saleReturnItems).join([
+            innerJoin(
+              db.saleReturns,
+              db.saleReturns.id.equalsExp(db.saleReturnItems.saleReturnId),
+            ),
+            leftOuterJoin(
+              db.products,
+              db.products.id.equalsExp(db.saleReturnItems.productId),
+            ),
+          ])
+          ..addColumns([
+            db.products.name,
+            db.saleReturnItems.quantity.sum(),
+            db.saleReturnItems.totalCents.sum(),
+          ])
+          ..where(
+            db.saleReturns.returnDate.isBetweenValues(startDate, endDate) &
+                db.saleReturns.status.equals('completed'),
+          )
+          ..groupBy([db.saleReturnItems.productId])
+          ..orderBy([OrderingTerm.desc(db.saleReturnItems.totalCents.sum())])
+          ..limit(5);
+
+    final productRows = await productQuery.get();
+    final topProducts = productRows
+        .map(
+          (row) => {
+            'product_name': row.read(db.products.name),
+            'total_quantity': row.read(db.saleReturnItems.quantity.sum()),
+            'total_amount': row.read(db.saleReturnItems.totalCents.sum()),
+          },
+        )
+        .toList();
 
     return {
       'totalCount': totalCount,
       'totalAmount': totalAmount,
-      'byReason': reasonResults,
-      'topProducts': productResults,
+      'byReason': reasons,
+      'topProducts': topProducts,
     };
-  }
-
-  Future<List<SaleReturnItem>> _getSaleReturnItems(
-    Database db,
-    int returnId,
-  ) async {
-    final results = await db.rawQuery(
-      '''
-      SELECT 
-        sri.*,
-        p.name as product_name,
-        p.code as product_code
-      FROM ${DatabaseHelper.tableSaleReturnItems} sri
-      LEFT JOIN ${DatabaseHelper.tableProducts} p ON sri.product_id = p.id
-      WHERE sri.sale_return_id = ?
-      ORDER BY sri.id
-    ''',
-      [returnId],
-    );
-
-    return results.map((row) => _mapToSaleReturnItem(row)).toList();
-  }
-
-  SaleReturn _mapToSaleReturn(Map<String, dynamic> row) {
-    return SaleReturn(
-      id: row['id'] as int,
-      returnNumber: row['return_number'] as String,
-      saleId: row['sale_id'] as int,
-      warehouseId: row['warehouse_id'] as int,
-      customerId: row['customer_id'] as int?,
-      processedBy: row['processed_by'] as int,
-      subtotalCents: row['subtotal_cents'] as int,
-      taxCents: row['tax_cents'] as int,
-      totalCents: row['total_cents'] as int,
-      refundMethod: RefundMethod.fromCode(row['refund_method'] as String),
-      reason: row['reason'] as String,
-      notes: row['notes'] as String?,
-      status: row['status'] == 'completed'
-          ? SaleReturnStatus.completed
-          : SaleReturnStatus.cancelled,
-      returnDate: DateTime.parse(row['return_date'] as String),
-      createdAt: DateTime.parse(row['created_at'] as String),
-    );
-  }
-
-  SaleReturnItem _mapToSaleReturnItem(Map<String, dynamic> row) {
-    return SaleReturnItem(
-      id: row['id'] as int,
-      saleReturnId: row['sale_return_id'] as int,
-      saleItemId: row['sale_item_id'] as int,
-      productId: row['product_id'] as int,
-      quantity: row['quantity'] as double,
-      unitPriceCents: row['unit_price_cents'] as int,
-      subtotalCents: row['subtotal_cents'] as int,
-      taxCents: row['tax_cents'] as int,
-      totalCents: row['total_cents'] as int,
-      reason: row['reason'] as String?,
-      createdAt: DateTime.parse(row['created_at'] as String),
-      productName: row['product_name'] as String?,
-      productCode: row['product_code'] as String?,
-    );
   }
 }

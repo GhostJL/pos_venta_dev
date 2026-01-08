@@ -12,8 +12,8 @@ part 'category_providers.g.dart';
 
 @riverpod
 CategoryRepository categoryRepository(ref) {
-  final dbHelper = ref.watch(databaseHelperProvider);
-  return CategoryRepositoryImpl(dbHelper);
+  final db = ref.watch(appDatabaseProvider);
+  return CategoryRepositoryImpl(db);
 }
 
 @Riverpod(keepAlive: true)

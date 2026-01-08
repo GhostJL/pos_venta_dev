@@ -1,15 +1,17 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:posventa/data/datasources/database_helper.dart';
+
 import 'package:posventa/data/repositories/inventory_lot_repository_impl.dart';
 import 'package:posventa/domain/entities/inventory_lot.dart';
 import 'package:posventa/domain/repositories/inventory_lot_repository.dart';
+
+import 'package:posventa/presentation/providers/di/core_di.dart';
 
 part 'inventory_lot_providers.g.dart';
 
 // Repository Provider
 @riverpod
 InventoryLotRepository inventoryLotRepository(Ref ref) {
-  return InventoryLotRepositoryImpl(DatabaseHelper.instance);
+  return InventoryLotRepositoryImpl(ref.watch(appDatabaseProvider));
 }
 
 // Get lots by product and warehouse

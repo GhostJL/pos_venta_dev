@@ -4,6 +4,7 @@ class InventoryMovementModel extends InventoryMovement {
   InventoryMovementModel({
     super.id,
     required super.productId,
+    super.variantId,
     required super.warehouseId,
     required super.movementType,
     required super.quantity,
@@ -21,6 +22,7 @@ class InventoryMovementModel extends InventoryMovement {
     return InventoryMovementModel(
       id: json['id'],
       productId: json['product_id'],
+      variantId: json['variant_id'],
       warehouseId: json['warehouse_id'],
       movementType: MovementType.fromString(json['movement_type']),
       quantity: (json['quantity'] as num).toDouble(),
@@ -39,6 +41,7 @@ class InventoryMovementModel extends InventoryMovement {
     return {
       'id': id,
       'product_id': productId,
+      'variant_id': variantId,
       'warehouse_id': warehouseId,
       'movement_type': movementType.value,
       'quantity': quantity,
@@ -57,6 +60,7 @@ class InventoryMovementModel extends InventoryMovement {
     return InventoryMovementModel(
       id: movement.id,
       productId: movement.productId,
+      variantId: movement.variantId,
       warehouseId: movement.warehouseId,
       movementType: movement.movementType,
       quantity: movement.quantity,

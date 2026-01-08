@@ -1,21 +1,31 @@
-import '../models/tax_rate_model.dart';
-import '../../domain/entities/tax_rate.dart';
-import '../../domain/repositories/tax_rate_repository.dart';
-import '../datasources/database_helper.dart';
+import 'package:drift/drift.dart';
+import 'package:posventa/data/datasources/local/database/app_database.dart'
+    as drift_db;
+import 'package:posventa/data/models/tax_rate_model.dart';
+import 'package:posventa/domain/entities/tax_rate.dart';
+import 'package:posventa/domain/repositories/tax_rate_repository.dart';
 
 class TaxRateRepositoryImpl implements TaxRateRepository {
-  final DatabaseHelper databaseHelper;
+  final drift_db.AppDatabase db;
 
-  TaxRateRepositoryImpl(this.databaseHelper);
+  TaxRateRepositoryImpl(this.db);
 
   @override
   Future<TaxRate> createTaxRate(TaxRate taxRate) async {
     try {
-      final taxRateModel = TaxRateModel.fromEntity(taxRate);
-      final id = await databaseHelper.insert(
-        'tax_rates',
-        taxRateModel.toJson(),
-      );
+      final id = await db
+          .into(db.taxRates)
+          .insert(
+            drift_db.TaxRatesCompanion.insert(
+              name: taxRate.name,
+              code: taxRate.code,
+              rate: taxRate.rate,
+              isDefault: Value(taxRate.isDefault),
+              isActive: Value(taxRate.isActive),
+              isEditable: Value(taxRate.isEditable),
+              isOptional: Value(taxRate.isOptional),
+            ),
+          );
       return taxRate.copyWith(id: id);
     } catch (e) {
       throw Exception('Failed to create tax rate: $e');
@@ -25,7 +35,7 @@ class TaxRateRepositoryImpl implements TaxRateRepository {
   @override
   Future<void> deleteTaxRate(int id) async {
     try {
-      await databaseHelper.delete('tax_rates', id);
+      await (db.delete(db.taxRates)..where((t) => t.id.equals(id))).go();
     } catch (e) {
       throw Exception('Failed to delete tax rate: $e');
     }
@@ -34,11 +44,21 @@ class TaxRateRepositoryImpl implements TaxRateRepository {
   @override
   Future<List<TaxRate>> getAllTaxRates() async {
     try {
-      final maps = await databaseHelper.queryAll('tax_rates');
-      final taxRates = maps
-          .map((map) => TaxRateModel.fromJson(map).toEntity())
+      final rows = await db.select(db.taxRates).get();
+      return rows
+          .map(
+            (row) => TaxRateModel(
+              id: row.id,
+              name: row.name,
+              code: row.code,
+              rate: row.rate,
+              isDefault: row.isDefault,
+              isActive: row.isActive,
+              isEditable: row.isEditable,
+              isOptional: row.isOptional,
+            ),
+          )
           .toList();
-      return taxRates;
     } catch (e) {
       throw Exception('Failed to get all tax rates: $e');
     }
@@ -47,10 +67,20 @@ class TaxRateRepositoryImpl implements TaxRateRepository {
   @override
   Future<TaxRate> getTaxRateById(int id) async {
     try {
-      final map = await databaseHelper.queryById('tax_rates', id);
-      if (map != null) {
-        final taxRate = TaxRateModel.fromJson(map).toEntity();
-        return taxRate;
+      final row = await (db.select(
+        db.taxRates,
+      )..where((t) => t.id.equals(id))).getSingleOrNull();
+      if (row != null) {
+        return TaxRateModel(
+          id: row.id,
+          name: row.name,
+          code: row.code,
+          rate: row.rate,
+          isDefault: row.isDefault,
+          isActive: row.isActive,
+          isEditable: row.isEditable,
+          isOptional: row.isOptional,
+        );
       } else {
         throw Exception('Tax rate not found');
       }
@@ -62,14 +92,12 @@ class TaxRateRepositoryImpl implements TaxRateRepository {
   @override
   Future<void> setDefaultTaxRate(int id) async {
     try {
-      final db = await databaseHelper.database;
-      await db.transaction((txn) async {
-        await txn.update('tax_rates', {'is_default': 0});
-        await txn.update(
-          'tax_rates',
-          {'is_default': 1},
-          where: 'id = ?',
-          whereArgs: [id],
+      await db.transaction(() async {
+        await db
+            .update(db.taxRates)
+            .write(const drift_db.TaxRatesCompanion(isDefault: Value(false)));
+        await (db.update(db.taxRates)..where((t) => t.id.equals(id))).write(
+          const drift_db.TaxRatesCompanion(isDefault: Value(true)),
         );
       });
     } catch (e) {
@@ -80,8 +108,19 @@ class TaxRateRepositoryImpl implements TaxRateRepository {
   @override
   Future<TaxRate> updateTaxRate(TaxRate taxRate) async {
     try {
-      final taxRateModel = TaxRateModel.fromEntity(taxRate);
-      await databaseHelper.update('tax_rates', taxRateModel.toJson());
+      await (db.update(
+        db.taxRates,
+      )..where((t) => t.id.equals(taxRate.id!))).write(
+        drift_db.TaxRatesCompanion(
+          name: Value(taxRate.name),
+          code: Value(taxRate.code),
+          rate: Value(taxRate.rate),
+          isDefault: Value(taxRate.isDefault),
+          isActive: Value(taxRate.isActive),
+          isEditable: Value(taxRate.isEditable),
+          isOptional: Value(taxRate.isOptional),
+        ),
+      );
       return taxRate;
     } catch (e) {
       throw Exception('Failed to update tax rate: $e');

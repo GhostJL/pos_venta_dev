@@ -28,7 +28,7 @@ part 'purchase_di.g.dart';
 
 @riverpod
 PurchaseRepository purchaseRepository(ref) =>
-    PurchaseRepositoryImpl(ref.watch(databaseHelperProvider));
+    PurchaseRepositoryImpl(ref.watch(appDatabaseProvider));
 
 @riverpod
 GetPurchasesUseCase getPurchasesUseCase(ref) =>
@@ -64,7 +64,7 @@ CancelPurchaseUseCase cancelPurchaseUseCase(ref) =>
 
 @riverpod
 PurchaseItemRepository purchaseItemRepository(ref) =>
-    PurchaseItemRepositoryImpl(ref.watch(databaseHelperProvider));
+    PurchaseItemRepositoryImpl(ref.watch(appDatabaseProvider));
 
 @riverpod
 GetPurchaseItemsUseCase getPurchaseItemsUseCase(ref) =>

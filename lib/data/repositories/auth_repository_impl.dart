@@ -1,16 +1,17 @@
 import 'dart:convert';
 
 import 'package:crypto/crypto.dart';
-import 'package:posventa/data/datasources/database_helper.dart';
+import 'package:drift/drift.dart';
+import 'package:posventa/data/datasources/local/database/app_database.dart'
+    as drift_db;
 import 'package:posventa/domain/entities/user.dart';
 import 'package:posventa/domain/repositories/auth_repository.dart';
 import 'package:posventa/domain/repositories/user_repository.dart';
-import 'package:sqflite/sqflite.dart';
 
 class AuthRepositoryImpl implements AuthRepository, UserRepository {
-  final DatabaseHelper _databaseHelper;
+  final drift_db.AppDatabase db;
 
-  AuthRepositoryImpl(this._databaseHelper);
+  AuthRepositoryImpl(this.db);
 
   String _hashPassword(String password) {
     final bytes = utf8.encode(password);
@@ -20,16 +21,17 @@ class AuthRepositoryImpl implements AuthRepository, UserRepository {
 
   @override
   Future<User?> login(String username, String password) async {
-    final db = await _databaseHelper.database;
-    final List<Map<String, dynamic>> maps = await db.query(
-      'users',
-      // Corrected column name from 'password' to 'password_hash'
-      where: 'username = ? AND password_hash = ?',
-      whereArgs: [username, _hashPassword(password)],
-    );
+    final hashedPassword = _hashPassword(password);
+    final query = db.select(db.users)
+      ..where(
+        (u) =>
+            u.username.equals(username) & u.passwordHash.equals(hashedPassword),
+      );
 
-    if (maps.isNotEmpty) {
-      return User.fromMap(maps.first);
+    final userRow = await query.getSingleOrNull();
+
+    if (userRow != null) {
+      return _mapToUser(userRow);
     }
     return null;
   }
@@ -41,17 +43,9 @@ class AuthRepositoryImpl implements AuthRepository, UserRepository {
 
   @override
   Future<User?> getUserById(int id) async {
-    final db = await _databaseHelper.database;
-    final List<Map<String, dynamic>> maps = await db.query(
-      'users',
-      where: 'id = ?',
-      whereArgs: [id],
-    );
-
-    if (maps.isNotEmpty) {
-      return User.fromMap(maps.first);
-    }
-    return null;
+    final query = db.select(db.users)..where((u) => u.id.equals(id));
+    final userRow = await query.getSingleOrNull();
+    return userRow != null ? _mapToUser(userRow) : null;
   }
 
   @override
@@ -61,19 +55,30 @@ class AuthRepositoryImpl implements AuthRepository, UserRepository {
         'La contraseña no puede ser nula ni estar vacía para un usuario nuevo.',
       );
     }
-    final db = await _databaseHelper.database;
     final hashedPassword = _hashPassword(password);
 
-    final userMap = user.toMap();
-    userMap['password_hash'] = hashedPassword;
-
-    await db.insert('users', userMap);
+    await db
+        .into(db.users)
+        .insert(
+          drift_db.UsersCompanion.insert(
+            username: user.username,
+            passwordHash: hashedPassword,
+            firstName: Value(user.firstName),
+            lastName: Value(user.lastName),
+            email: Value(user.email),
+            role: user.role.name,
+            isActive: Value(user.isActive),
+            onboardingCompleted: Value(user.onboardingCompleted),
+            lastLoginAt: Value(user.lastLoginAt),
+            createdAt: user.createdAt,
+            updatedAt: user.updatedAt,
+          ),
+        );
   }
 
   @override
   Future<void> deleteUser(int id) async {
-    final db = await _databaseHelper.database;
-    await db.delete('users', where: 'id = ?', whereArgs: [id]);
+    await (db.delete(db.users)..where((u) => u.id.equals(id))).go();
   }
 
   @override
@@ -83,41 +88,59 @@ class AuthRepositoryImpl implements AuthRepository, UserRepository {
 
   @override
   Future<List<User>> getUsers() async {
-    final db = await _databaseHelper.database;
-    final List<Map<String, dynamic>> maps = await db.query('users');
-    return List.generate(maps.length, (i) => User.fromMap(maps[i]));
+    final userRows = await db.select(db.users).get();
+    return userRows.map(_mapToUser).toList();
   }
 
   Future<List<User>> getCashiers() async {
-    final db = await _databaseHelper.database;
-    final List<Map<String, dynamic>> maps = await db.query(
-      'users',
-      where: 'role = ?',
-      whereArgs: [UserRole.cajero.name],
-    );
-
-    return List.generate(maps.length, (i) {
-      return User.fromMap(maps[i]);
-    });
+    final query = db.select(db.users)
+      ..where((u) => u.role.equals(UserRole.cajero.name));
+    final userRows = await query.get();
+    return userRows.map(_mapToUser).toList();
   }
 
   @override
   Future<void> updateUser(User user) async {
-    final db = await _databaseHelper.database;
-    await db.update(
-      'users',
-      user.toMap(),
-      where: 'id = ?',
-      whereArgs: [user.id],
+    await (db.update(db.users)..where((u) => u.id.equals(user.id!))).write(
+      drift_db.UsersCompanion(
+        username: Value(user.username),
+        firstName: Value(user.firstName),
+        lastName: Value(user.lastName),
+        email: Value(user.email),
+        role: Value(user.role.name),
+        isActive: Value(user.isActive),
+        onboardingCompleted: Value(user.onboardingCompleted),
+        lastLoginAt: Value(user.lastLoginAt),
+        updatedAt: Value(DateTime.now()),
+      ),
     );
   }
 
   @override
   Future<bool> hasUsers() async {
-    final db = await _databaseHelper.database;
-    final count = Sqflite.firstIntValue(
-      await db.rawQuery('SELECT COUNT(*) FROM users'),
-    );
+    final countFunc = db.users.id.count();
+    final query = db.selectOnly(db.users)..addColumns([countFunc]);
+    final result = await query.getSingle();
+    final count = result.read(countFunc);
     return (count ?? 0) > 0;
+  }
+
+  User _mapToUser(drift_db.User row) {
+    return User(
+      id: row.id,
+      username: row.username,
+      firstName: row.firstName ?? '',
+      lastName: row.lastName ?? '',
+      email: row.email,
+      role: UserRole.values.firstWhere(
+        (e) => e.name == row.role,
+        orElse: () => UserRole.administrador,
+      ),
+      isActive: row.isActive,
+      onboardingCompleted: row.onboardingCompleted,
+      lastLoginAt: row.lastLoginAt,
+      createdAt: row.createdAt,
+      updatedAt: row.updatedAt,
+    );
   }
 }

@@ -96,7 +96,7 @@ final class ProductLocalDataSourceProvider
 }
 
 String _$productLocalDataSourceHash() =>
-    r'a89ea13d04dc82d73bab5a171bfdc9c6448807d1';
+    r'97ac3be0c1f29f5b7c8c220f329262552ee7766e';
 
 @ProviderFor(productRepository)
 const productRepositoryProvider = ProductRepositoryProvider._();
@@ -396,7 +396,7 @@ final class UnitOfMeasureRepositoryProvider
 }
 
 String _$unitOfMeasureRepositoryHash() =>
-    r'8d195a40e2442b5efb5dbf42bf47b14c38161d7f';
+    r'2b166cb70141ae8861d5cf7b38a9537bd13421c8';
 
 @ProviderFor(unitList)
 const unitListProvider = UnitListProvider._();
@@ -484,7 +484,7 @@ final class TaxRateRepositoryProvider
   }
 }
 
-String _$taxRateRepositoryHash() => r'5168ef2317efca985e0628b3526af992605e6cb0';
+String _$taxRateRepositoryHash() => r'ef32f8f14569cda7649860d88c9b91a5159db009';
 
 @ProviderFor(getAllTaxRatesUseCase)
 const getAllTaxRatesUseCaseProvider = GetAllTaxRatesUseCaseProvider._();
@@ -744,7 +744,7 @@ final class DepartmentRepositoryProvider
 }
 
 String _$departmentRepositoryHash() =>
-    r'f770c91bd938e92da8e4e84bd40f1db9f22985f8';
+    r'848c65d7f1983fe421333aaee8d30f0ccf6717b7';
 
 @ProviderFor(getAllDepartmentsUseCase)
 const getAllDepartmentsUseCaseProvider = GetAllDepartmentsUseCaseProvider._();
@@ -981,7 +981,7 @@ final class SupplierRepositoryProvider
 }
 
 String _$supplierRepositoryHash() =>
-    r'b2065688bd8e11bb019232598eedc826d4f2aed6';
+    r'335c8e354d84345de98fd71471c7504de8483b53';
 
 @ProviderFor(getAllSuppliersUseCase)
 const getAllSuppliersUseCaseProvider = GetAllSuppliersUseCaseProvider._();

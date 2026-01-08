@@ -8,8 +8,8 @@ part 'unit_providers.g.dart';
 
 @riverpod
 UnitOfMeasureRepository unitOfMeasureRepository(ref) {
-  final dbHelper = ref.watch(databaseHelperProvider);
-  return UnitOfMeasureRepositoryImpl(dbHelper);
+  final db = ref.watch(appDatabaseProvider);
+  return UnitOfMeasureRepositoryImpl(db);
 }
 
 @Riverpod(keepAlive: true)

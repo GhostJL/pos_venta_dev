@@ -106,7 +106,7 @@ final class PaginatedSalesCountProvider
 }
 
 String _$paginatedSalesCountHash() =>
-    r'f3ad99435e8f7561e146b2d6e5da48818239ce39';
+    r'd538409a29adb1fd6333f40cbdb304cd24036626';
 
 @ProviderFor(paginatedSalesPage)
 const paginatedSalesPageProvider = PaginatedSalesPageFamily._();
@@ -163,7 +163,7 @@ final class PaginatedSalesPageProvider
 }
 
 String _$paginatedSalesPageHash() =>
-    r'1cc35bd9246b57e188e175c8d4c6ff51494fe787';
+    r'48b1dd9713e7fc065bc72264b61cf539f1846f44';
 
 final class PaginatedSalesPageFamily extends $Family
     with $FunctionalFamilyOverride<FutureOr<List<Sale>>, int> {

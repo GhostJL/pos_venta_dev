@@ -55,7 +55,7 @@ final class UnitOfMeasureRepositoryProvider
 }
 
 String _$unitOfMeasureRepositoryHash() =>
-    r'461e52deb788864ae51fbcc85e1a322e470a3052';
+    r'7765779aae3bb19ada292f747132e6093292ed09';
 
 @ProviderFor(UnitList)
 const unitListProvider = UnitListProvider._();

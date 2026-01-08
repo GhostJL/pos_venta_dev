@@ -103,7 +103,7 @@ final class WarehouseRepositoryProvider
 }
 
 String _$warehouseRepositoryHash() =>
-    r'0445df20c5f82dc07c45291169519f5bf3f49924';
+    r'64d65fc969360064788d108f3aab777156dda6de';
 
 @ProviderFor(getAllWarehouses)
 const getAllWarehousesProvider = GetAllWarehousesProvider._();
@@ -323,7 +323,7 @@ final class InventoryLotRepositoryProvider
 }
 
 String _$inventoryLotRepositoryHash() =>
-    r'10df6387d3eeeb5945e6990d9bd4945b84b5f8d0';
+    r'f0bc1b77d5986107696ab94f5f154d1001a7e9c3';
 
 @ProviderFor(inventoryRepository)
 const inventoryRepositoryProvider = InventoryRepositoryProvider._();
@@ -371,7 +371,7 @@ final class InventoryRepositoryProvider
 }
 
 String _$inventoryRepositoryHash() =>
-    r'c3863d46bed234cab2dc5b4f269d6df1b7c0a757';
+    r'823779cedf2900cf873dd39b794e3259bb499e39';
 
 @ProviderFor(getAllInventory)
 const getAllInventoryProvider = GetAllInventoryProvider._();
@@ -732,7 +732,7 @@ final class InventoryMovementRepositoryProvider
 }
 
 String _$inventoryMovementRepositoryHash() =>
-    r'460bf1060744dfeccb272e2a0cd53d62b9119b3d';
+    r'47745e2a5c6e558ae7e6f1799515294da4488f88';
 
 @ProviderFor(getAllInventoryMovements)
 const getAllInventoryMovementsProvider = GetAllInventoryMovementsProvider._();

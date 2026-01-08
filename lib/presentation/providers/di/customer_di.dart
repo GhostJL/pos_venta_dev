@@ -15,7 +15,7 @@ part 'customer_di.g.dart';
 
 @riverpod
 CustomerRepository customerRepository(ref) =>
-    CustomerRepositoryImpl(ref.watch(databaseHelperProvider));
+    CustomerRepositoryImpl(ref.watch(appDatabaseProvider));
 
 @riverpod
 GetCustomersUseCase getCustomersUseCase(ref) =>

@@ -1,99 +1,115 @@
-import 'package:posventa/data/datasources/database_helper.dart';
+import 'package:drift/drift.dart';
+import 'package:posventa/data/datasources/local/database/app_database.dart'
+    as drift_db;
 import 'package:posventa/domain/entities/transaction.dart';
 import 'package:posventa/domain/repositories/transaction_repository.dart';
 
 class TransactionRepositoryImpl implements TransactionRepository {
-  final DatabaseHelper _databaseHelper;
+  final drift_db.AppDatabase db;
 
-  TransactionRepositoryImpl(this._databaseHelper);
+  TransactionRepositoryImpl(this.db);
 
   @override
   Future<void> addTransaction(Transaction transaction) async {
-    final db = await _databaseHelper.database;
-    await db.insert('transactions', transaction.toMap());
+    await db
+        .into(db.transactions)
+        .insert(
+          drift_db.TransactionsCompanion.insert(
+            userId: Value(transaction.userId),
+            amount: transaction.amount,
+            type: transaction.type.name,
+            description: Value(transaction.description),
+            date: transaction.timestamp,
+          ),
+        );
   }
 
   @override
   Future<List<Transaction>> getTransactions() async {
-    final db = await _databaseHelper.database;
-    final maps = await db.query('transactions', orderBy: 'timestamp DESC');
-    return maps.map((map) => Transaction.fromMap(map)).toList();
+    final rows = await (db.select(
+      db.transactions,
+    )..orderBy([(t) => OrderingTerm.desc(t.date)])).get();
+
+    return rows
+        .map(
+          (row) => Transaction(
+            id: row.id,
+            userId: row.userId!,
+            amount: row.amount,
+            type: TransactionType.values.firstWhere((e) => e.name == row.type),
+            description: row.description ?? '',
+            timestamp: row.date,
+          ),
+        )
+        .toList();
   }
 
   @override
   Future<List<Transaction>> getTransactionsByUserId(int userId) async {
-    final db = await _databaseHelper.database;
-    final maps = await db.query(
-      'transactions',
-      where: 'user_id = ?',
-      whereArgs: [userId],
-      orderBy: 'timestamp DESC',
-    );
-    return maps.map((map) => Transaction.fromMap(map)).toList();
+    final rows =
+        await (db.select(db.transactions)
+              ..where((t) => t.userId.equals(userId))
+              ..orderBy([(t) => OrderingTerm.desc(t.date)]))
+            .get();
+
+    return rows
+        .map(
+          (row) => Transaction(
+            id: row.id,
+            userId: row.userId!,
+            amount: row.amount,
+            type: TransactionType.values.firstWhere((e) => e.name == row.type),
+            description: row.description ?? '',
+            timestamp: row.date,
+          ),
+        )
+        .toList();
   }
 
   @override
   Future<double> getTodaysRevenue() async {
-    final db = await _databaseHelper.database;
     final today = DateTime.now();
-    final startOfDay = DateTime(
-      today.year,
-      today.month,
-      today.day,
-    ).toIso8601String();
-    final endOfDay = DateTime(
-      today.year,
-      today.month,
-      today.day,
-      23,
-      59,
-      59,
-    ).toIso8601String();
+    final startOfDay = DateTime(today.year, today.month, today.day);
+    final endOfDay = DateTime(today.year, today.month, today.day, 23, 59, 59);
 
-    // Query sales table instead of transactions
-    final result = await db.rawQuery(
-      'SELECT SUM(total_cents) as total FROM sales WHERE status != ? AND sale_date BETWEEN ? AND ?',
-      ['cancelled', startOfDay, endOfDay],
-    );
+    final salesQuery = db.selectOnly(db.sales)
+      ..addColumns([db.sales.totalCents.sum()])
+      ..where(
+        db.sales.saleDate.isBetweenValues(startOfDay, endOfDay) &
+            db.sales.status.equals('completed'),
+      );
 
-    final totalSalesCents = (result.first['total'] as int?) ?? 0;
+    final salesResult = await salesQuery.getSingle();
+    final totalSalesCents = salesResult.read(db.sales.totalCents.sum()) ?? 0;
 
-    // Subtract Sale Returns (only completed ones)
-    final returnsResult = await db.rawQuery(
-      'SELECT SUM(total_cents) as total FROM sale_returns WHERE status = ? AND return_date BETWEEN ? AND ?',
-      ['completed', startOfDay, endOfDay],
-    );
+    final returnsQuery = db.selectOnly(db.saleReturns)
+      ..addColumns([db.saleReturns.totalCents.sum()])
+      ..where(
+        db.saleReturns.returnDate.isBetweenValues(startOfDay, endOfDay) &
+            db.saleReturns.status.equals('completed'),
+      );
 
-    final totalReturnsCents = (returnsResult.first['total'] as int?) ?? 0;
+    final returnsResult = await returnsQuery.getSingle();
+    final totalReturnsCents =
+        returnsResult.read(db.saleReturns.totalCents.sum()) ?? 0;
 
     return (totalSalesCents - totalReturnsCents) / 100.0;
   }
 
   @override
   Future<int> getTodaysMovements() async {
-    final db = await _databaseHelper.database;
     final today = DateTime.now();
-    final startOfDay = DateTime(
-      today.year,
-      today.month,
-      today.day,
-    ).toIso8601String();
-    final endOfDay = DateTime(
-      today.year,
-      today.month,
-      today.day,
-      23,
-      59,
-      59,
-    ).toIso8601String();
+    final startOfDay = DateTime(today.year, today.month, today.day);
+    final endOfDay = DateTime(today.year, today.month, today.day, 23, 59, 59);
 
-    // Query sales table count
-    final result = await db.rawQuery(
-      'SELECT COUNT(*) as count FROM sales WHERE status != ? AND sale_date BETWEEN ? AND ?',
-      ['cancelled', startOfDay, endOfDay],
-    );
+    final countQuery = db.selectOnly(db.sales)
+      ..addColumns([db.sales.id.count()])
+      ..where(
+        db.sales.saleDate.isBetweenValues(startOfDay, endOfDay) &
+            db.sales.status.isNotValue('cancelled'),
+      );
 
-    final count = result.first['count'];
-    return (count as int?) ?? 0;
+    final result = await countQuery.getSingle();
+    return result.read(db.sales.id.count()) ?? 0;
   }
 }

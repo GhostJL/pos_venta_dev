@@ -1,64 +1,67 @@
-import 'package:posventa/data/datasources/database_helper.dart';
+import 'package:drift/drift.dart';
+import 'package:posventa/data/datasources/local/database/app_database.dart'
+    as drift_db;
 import 'package:posventa/data/models/warehouse_model.dart';
 import 'package:posventa/domain/entities/warehouse.dart';
 import 'package:posventa/domain/repositories/warehouse_repository.dart';
 
 class WarehouseRepositoryImpl implements WarehouseRepository {
-  final DatabaseHelper _databaseHelper;
+  final drift_db.AppDatabase db;
 
-  WarehouseRepositoryImpl(this._databaseHelper);
+  WarehouseRepositoryImpl(this.db);
 
   @override
   Future<List<Warehouse>> getAllWarehouses() async {
-    final db = await _databaseHelper.database;
-    final maps = await db.query(DatabaseHelper.tableWarehouses);
-    return maps.map((map) => WarehouseModel.fromMap(map)).toList();
+    final rows = await db.select(db.warehouses).get();
+    return rows
+        .map(
+          (row) => WarehouseModel(
+            id: row.id,
+            name: row.name,
+            code: row.code,
+            address: row.address,
+            phone: row.phone,
+            isMain: row.isMain,
+            isActive: row.isActive,
+          ),
+        )
+        .toList();
   }
 
   @override
   Future<int> createWarehouse(Warehouse warehouse) async {
-    final db = await _databaseHelper.database;
-    final warehouseModel = WarehouseModel(
-      name: warehouse.name,
-      code: warehouse.code,
-      address: warehouse.address,
-      phone: warehouse.phone,
-      isMain: warehouse.isMain,
-      isActive: warehouse.isActive,
-    );
-    return await db.insert(
-      DatabaseHelper.tableWarehouses,
-      warehouseModel.toMap(),
-    );
+    return await db
+        .into(db.warehouses)
+        .insert(
+          drift_db.WarehousesCompanion.insert(
+            name: warehouse.name,
+            code: warehouse.code,
+            address: Value(warehouse.address),
+            phone: Value(warehouse.phone),
+            isMain: Value(warehouse.isMain),
+            isActive: Value(warehouse.isActive),
+          ),
+        );
   }
 
   @override
   Future<void> updateWarehouse(Warehouse warehouse) async {
-    final db = await _databaseHelper.database;
-    final warehouseModel = WarehouseModel(
-      id: warehouse.id,
-      name: warehouse.name,
-      code: warehouse.code,
-      address: warehouse.address,
-      phone: warehouse.phone,
-      isMain: warehouse.isMain,
-      isActive: warehouse.isActive,
-    );
-    await db.update(
-      DatabaseHelper.tableWarehouses,
-      warehouseModel.toMap(),
-      where: 'id = ?',
-      whereArgs: [warehouse.id],
+    await (db.update(
+      db.warehouses,
+    )..where((t) => t.id.equals(warehouse.id!))).write(
+      drift_db.WarehousesCompanion(
+        name: Value(warehouse.name),
+        code: Value(warehouse.code),
+        address: Value(warehouse.address),
+        phone: Value(warehouse.phone),
+        isMain: Value(warehouse.isMain),
+        isActive: Value(warehouse.isActive),
+      ),
     );
   }
 
   @override
   Future<void> deleteWarehouse(int id) async {
-    final db = await _databaseHelper.database;
-    await db.delete(
-      DatabaseHelper.tableWarehouses,
-      where: 'id = ?',
-      whereArgs: [id],
-    );
+    await (db.delete(db.warehouses)..where((t) => t.id.equals(id))).go();
   }
 }

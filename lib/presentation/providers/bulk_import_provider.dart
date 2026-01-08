@@ -9,6 +9,7 @@ import 'package:posventa/domain/entities/product.dart';
 import 'package:posventa/presentation/providers/category_providers.dart';
 import 'package:posventa/domain/entities/warehouse.dart';
 import 'package:posventa/presentation/providers/providers.dart';
+import 'package:posventa/presentation/providers/product_provider.dart';
 
 part 'bulk_import_provider.g.dart';
 
@@ -271,6 +272,7 @@ class BulkImport extends _$BulkImport {
         isLoading: false,
         errorMessage: "Error validating file: $e",
       );
+      print(e);
     }
   }
 
@@ -329,6 +331,8 @@ class BulkImport extends _$BulkImport {
             selectedFile: null,
             errors: [],
           );
+          // Invalidate product list to refresh UI
+          ref.invalidate(productListProvider);
         },
       );
     } catch (e) {

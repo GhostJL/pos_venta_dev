@@ -1,122 +1,96 @@
-import 'package:posventa/data/datasources/database_constants.dart';
-import 'package:posventa/data/datasources/database_helper.dart';
+import 'package:drift/drift.dart';
+import 'package:posventa/data/datasources/local/database/app_database.dart'
+    as drift_db;
 import 'package:posventa/domain/entities/notification.dart';
 import 'package:posventa/domain/repositories/notification_repository.dart';
-import 'package:sqflite/sqflite.dart';
 
 class NotificationRepositoryImpl implements NotificationRepository {
-  final DatabaseHelper _dbHelper;
+  final drift_db.AppDatabase db;
 
-  NotificationRepositoryImpl(this._dbHelper);
+  NotificationRepositoryImpl(this.db);
 
   @override
   Future<List<AppNotification>> getNotifications() async {
-    final db = await _dbHelper.database;
-    final maps = await db.query(
-      DatabaseConstants.tableNotifications,
-      orderBy: 'timestamp DESC',
-    );
-    return maps.map((map) => _fromMap(map)).toList();
+    final query = db.select(db.notifications)
+      ..orderBy([
+        (t) => OrderingTerm(expression: t.timestamp, mode: OrderingMode.desc),
+      ]);
+    final rows = await query.get();
+    return rows.map(_mapToNotification).toList();
   }
 
   @override
   Future<List<AppNotification>> getUnreadNotifications() async {
-    final db = await _dbHelper.database;
-    final maps = await db.query(
-      DatabaseConstants.tableNotifications,
-      where: 'is_read = 0',
-      orderBy: 'timestamp DESC',
-    );
-    return maps.map((map) => _fromMap(map)).toList();
+    final query = db.select(db.notifications)
+      ..where((t) => t.isRead.equals(false))
+      ..orderBy([
+        (t) => OrderingTerm(expression: t.timestamp, mode: OrderingMode.desc),
+      ]);
+    final rows = await query.get();
+    return rows.map(_mapToNotification).toList();
   }
 
   @override
   Future<void> createNotification(AppNotification notification) async {
-    final db = await _dbHelper.database;
-    await db.insert(
-      DatabaseConstants.tableNotifications,
-      _toMap(notification),
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
-    _notifyChanges();
+    await db
+        .into(db.notifications)
+        .insert(
+          drift_db.NotificationsCompanion.insert(
+            title: notification.title,
+            body: notification.body,
+            timestamp: notification.timestamp,
+            isRead: Value(notification.isRead),
+            type: notification.type,
+            relatedProductId: Value(notification.relatedProductId),
+            relatedVariantId: Value(notification.relatedVariantId),
+          ),
+        );
   }
 
   @override
   Future<void> markAsRead(int notificationId) async {
-    final db = await _dbHelper.database;
-    await db.update(
-      DatabaseConstants.tableNotifications,
-      {'is_read': 1},
-      where: 'id = ?',
-      whereArgs: [notificationId],
-    );
-    _notifyChanges();
+    await (db.update(db.notifications)
+          ..where((t) => t.id.equals(notificationId)))
+        .write(const drift_db.NotificationsCompanion(isRead: Value(true)));
   }
 
   @override
   Future<void> markAllAsRead() async {
-    final db = await _dbHelper.database;
-    await db.update(DatabaseConstants.tableNotifications, {
-      'is_read': 1,
-    }, where: 'is_read = 0');
-    _notifyChanges();
+    await (db.update(db.notifications)..where((t) => t.isRead.equals(false)))
+        .write(const drift_db.NotificationsCompanion(isRead: Value(true)));
   }
 
   @override
   Future<void> deleteNotification(int notificationId) async {
-    final db = await _dbHelper.database;
-    await db.delete(
-      DatabaseConstants.tableNotifications,
-      where: 'id = ?',
-      whereArgs: [notificationId],
-    );
-    _notifyChanges();
+    await (db.delete(
+      db.notifications,
+    )..where((t) => t.id.equals(notificationId))).go();
   }
 
   @override
   Future<void> clearAllNotifications() async {
-    final db = await _dbHelper.database;
-    await db.delete(DatabaseConstants.tableNotifications);
-    _notifyChanges();
+    await db.delete(db.notifications).go();
   }
 
   @override
-  Stream<List<AppNotification>> getNotificationsStream() async* {
-    yield await getNotifications();
-    await for (final table in _dbHelper.tableUpdateStream) {
-      if (table == DatabaseConstants.tableNotifications) {
-        yield await getNotifications();
-      }
-    }
+  Stream<List<AppNotification>> getNotificationsStream() {
+    final query = db.select(db.notifications)
+      ..orderBy([
+        (t) => OrderingTerm(expression: t.timestamp, mode: OrderingMode.desc),
+      ]);
+    return query.watch().map((rows) => rows.map(_mapToNotification).toList());
   }
 
-  void _notifyChanges() {
-    _dbHelper.notifyTableChanged(DatabaseConstants.tableNotifications);
-  }
-
-  AppNotification _fromMap(Map<String, dynamic> map) {
+  AppNotification _mapToNotification(drift_db.Notification row) {
     return AppNotification(
-      id: map['id'] as int?,
-      title: map['title'] as String,
-      body: map['body'] as String,
-      timestamp: DateTime.parse(map['timestamp'] as String),
-      isRead: (map['is_read'] as int) == 1,
-      type: map['type'] as String,
-      relatedProductId: map['related_product_id'] as int?,
-      relatedVariantId: map['related_variant_id'] as int?,
+      id: row.id,
+      title: row.title,
+      body: row.body,
+      timestamp: row.timestamp,
+      isRead: row.isRead,
+      type: row.type,
+      relatedProductId: row.relatedProductId,
+      relatedVariantId: row.relatedVariantId,
     );
-  }
-
-  Map<String, dynamic> _toMap(AppNotification notification) {
-    return {
-      if (notification.id != null) 'id': notification.id,
-      'title': notification.title,
-      'body': notification.body,
-      'timestamp': notification.timestamp.toIso8601String(),
-      'is_read': notification.isRead ? 1 : 0,
-      'type': notification.type,
-      'related_product_id': notification.relatedProductId,
-      'related_variant_id': notification.relatedVariantId,
-    };
   }
 }

@@ -55,7 +55,7 @@ final class InventoryLotRepositoryProvider
 }
 
 String _$inventoryLotRepositoryHash() =>
-    r'34533f51f2ae234796cb9ebeb857b05b26a9b615';
+    r'513087d7f14088744820b698b35599e0c01439e6';
 
 @ProviderFor(productLots)
 const productLotsProvider = ProductLotsFamily._();

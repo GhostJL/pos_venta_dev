@@ -16,6 +16,7 @@ class Purchase {
   final String? supplierInvoiceNumber;
   final int requestedBy;
   final int? receivedBy;
+  final int? cancelledBy;
   final DateTime createdAt;
   final List<PurchaseItem> items;
   final String? supplierName; // For display
@@ -35,6 +36,7 @@ class Purchase {
     this.supplierInvoiceNumber,
     required this.requestedBy,
     this.receivedBy,
+    this.cancelledBy,
     required this.createdAt,
     this.items = const [],
     this.supplierName,

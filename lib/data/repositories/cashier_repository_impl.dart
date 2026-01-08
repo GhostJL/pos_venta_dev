@@ -1,16 +1,16 @@
 import 'dart:convert';
 import 'package:crypto/crypto.dart';
-import 'package:posventa/data/datasources/database_helper.dart';
-import 'package:posventa/data/models/user_model.dart';
-import 'package:posventa/data/models/permission_model.dart';
+import 'package:drift/drift.dart';
+import 'package:posventa/data/datasources/local/database/app_database.dart'
+    as drift_db;
 import 'package:posventa/domain/entities/user.dart';
 import 'package:posventa/domain/entities/permission.dart';
 import 'package:posventa/domain/repositories/cashier_repository.dart';
 
 class CashierRepositoryImpl implements CashierRepository {
-  final DatabaseHelper _databaseHelper;
+  final drift_db.AppDatabase db;
 
-  CashierRepositoryImpl(this._databaseHelper);
+  CashierRepositoryImpl(this.db);
 
   String _hashPassword(String password) {
     final bytes = utf8.encode(password);
@@ -18,82 +18,118 @@ class CashierRepositoryImpl implements CashierRepository {
     return digest.toString();
   }
 
+  User _mapRowToEntity(drift_db.User row) {
+    return User(
+      id: row.id,
+      username: row.username,
+      firstName: row.firstName ?? '',
+      lastName: row.lastName ?? '',
+      email: row.email,
+      role: UserRole.values.firstWhere(
+        (e) => e.name == row.role,
+        orElse: () => UserRole.cajero,
+      ),
+      isActive: row.isActive,
+      onboardingCompleted: row.onboardingCompleted,
+      lastLoginAt: row.lastLoginAt,
+      createdAt: row.createdAt,
+      updatedAt: row.updatedAt,
+    );
+  }
+
+  Permission _mapPermissionRowToEntity(drift_db.Permission row) {
+    return Permission(
+      id: row.id,
+      name: row.name,
+      code: row.code,
+      description: row.description,
+      module: row.module,
+      isActive: row.isActive,
+    );
+  }
+
   @override
   Future<List<User>> getCashiers() async {
-    final db = await _databaseHelper.database;
-    final maps = await db.query(
-      DatabaseHelper.tableUsers,
-      where: 'role = ?',
-      whereArgs: [UserRole.cajero.name],
-    );
-    return maps.map((map) => UserModel.fromMap(map).toEntity()).toList();
+    final query = db.select(db.users)
+      ..where((u) => u.role.equals(UserRole.cajero.name));
+    final rows = await query.get();
+    return rows.map(_mapRowToEntity).toList();
   }
 
   @override
   Future<User?> getCashierById(int id) async {
-    final db = await _databaseHelper.database;
-    final maps = await db.query(
-      DatabaseHelper.tableUsers,
-      where: 'id = ? AND role = ?',
-      whereArgs: [id, UserRole.cajero.name],
-    );
-    if (maps.isNotEmpty) {
-      return UserModel.fromMap(maps.first).toEntity();
-    }
-    return null;
+    final query = db.select(db.users)
+      ..where((u) => u.id.equals(id) & u.role.equals(UserRole.cajero.name));
+    final row = await query.getSingleOrNull();
+    return row != null ? _mapRowToEntity(row) : null;
   }
 
   @override
   Future<void> createCashier(User cashier, String password) async {
-    final db = await _databaseHelper.database;
-    final userModel = UserModel.fromEntity(cashier);
-    final map = userModel.toMap();
-    map['password_hash'] = _hashPassword(password);
-    // Ensure role is cashier
-    map['role'] = UserRole.cajero.name;
+    final hashedPassword = _hashPassword(password);
 
-    await db.insert(DatabaseHelper.tableUsers, map);
+    await db
+        .into(db.users)
+        .insert(
+          drift_db.UsersCompanion.insert(
+            username: cashier.username,
+            passwordHash: hashedPassword,
+            firstName: Value(cashier.firstName),
+            lastName: Value(cashier.lastName),
+            email: Value(cashier.email),
+            role: UserRole.cajero.name, // Ensure role is cashier
+            isActive: Value(cashier.isActive),
+            onboardingCompleted: Value(cashier.onboardingCompleted),
+            lastLoginAt: Value(cashier.lastLoginAt),
+            createdAt: cashier.createdAt,
+            updatedAt: cashier.updatedAt,
+          ),
+        );
   }
 
   @override
   Future<void> updateCashier(User cashier) async {
-    final db = await _databaseHelper.database;
-    final userModel = UserModel.fromEntity(cashier);
-    final map = userModel.toMap();
-    // Don't update password here
-    map.remove('password_hash');
+    if (cashier.id == null) return;
 
-    await db.update(
-      DatabaseHelper.tableUsers,
-      map,
-      where: 'id = ?',
-      whereArgs: [cashier.id],
+    // Don't update password here
+    // Create companion but exclude passwordHash unless you want to update it (AuthRepository might handle password change separately)
+    // The original implementation didn't update password here.
+
+    await (db.update(db.users)..where((u) => u.id.equals(cashier.id!))).write(
+      drift_db.UsersCompanion(
+        username: Value(cashier.username),
+        firstName: Value(cashier.firstName),
+        lastName: Value(cashier.lastName),
+        email: Value(cashier.email),
+        role: Value(UserRole.cajero.name),
+        isActive: Value(cashier.isActive),
+        onboardingCompleted: Value(cashier.onboardingCompleted),
+        lastLoginAt: Value(cashier.lastLoginAt),
+        updatedAt: Value(DateTime.now()),
+      ),
     );
   }
 
   @override
   Future<void> deleteCashier(int id) async {
-    final db = await _databaseHelper.database;
-    await db.delete(
-      DatabaseHelper.tableUsers,
-      where: 'id = ?',
-      whereArgs: [id],
-    );
+    await (db.delete(db.users)..where((u) => u.id.equals(id))).go();
   }
 
   @override
   Future<List<Permission>> getCashierPermissions(int cashierId) async {
-    final db = await _databaseHelper.database;
-    final result = await db.rawQuery(
-      '''
-      SELECT p.* FROM ${DatabaseHelper.tablePermissions} p
-      INNER JOIN ${DatabaseHelper.tableUserPermissions} up ON p.id = up.permission_id
-      WHERE up.user_id = ?
-    ''',
-      [cashierId],
-    );
+    final query = db.select(db.permissions).join([
+      innerJoin(
+        db.userPermissions,
+        db.userPermissions.permissionId.equalsExp(db.permissions.id),
+      ),
+    ])..where(db.userPermissions.userId.equals(cashierId));
 
-    return result.map((map) => PermissionModel.fromMap(map)).toList();
+    final rows = await query.get();
+
+    return rows.map((row) {
+      final permission = row.readTable(db.permissions);
+      return _mapPermissionRowToEntity(permission);
+    }).toList();
   }
 
   @override
@@ -102,23 +138,24 @@ class CashierRepositoryImpl implements CashierRepository {
     List<int> permissionIds,
     int? grantedBy,
   ) async {
-    final db = await _databaseHelper.database;
-    await db.transaction((txn) async {
+    await db.transaction(() async {
       // Remove existing permissions
-      await txn.delete(
-        DatabaseHelper.tableUserPermissions,
-        where: 'user_id = ?',
-        whereArgs: [cashierId],
-      );
+      await (db.delete(
+        db.userPermissions,
+      )..where((t) => t.userId.equals(cashierId))).go();
 
       // Add new permissions
       for (final permId in permissionIds) {
-        await txn.insert(DatabaseHelper.tableUserPermissions, {
-          'user_id': cashierId,
-          'permission_id': permId,
-          'granted_at': DateTime.now().toIso8601String(),
-          'granted_by': grantedBy,
-        });
+        await db
+            .into(db.userPermissions)
+            .insert(
+              drift_db.UserPermissionsCompanion.insert(
+                userId: cashierId,
+                permissionId: permId,
+                grantedAt: DateTime.now(),
+                grantedBy: Value(grantedBy),
+              ),
+            );
       }
     });
   }

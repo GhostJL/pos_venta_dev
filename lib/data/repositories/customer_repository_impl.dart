@@ -1,14 +1,14 @@
-import 'package:posventa/core/utils/database_validators.dart';
-import 'package:posventa/data/datasources/database_helper.dart';
+import 'package:drift/drift.dart';
+import 'package:posventa/data/datasources/local/database/app_database.dart'
+    as drift_db;
 import 'package:posventa/data/models/customer_model.dart';
 import 'package:posventa/domain/entities/customer.dart';
 import 'package:posventa/domain/repositories/customer_repository.dart';
-import 'package:sqflite/sqflite.dart';
 
 class CustomerRepositoryImpl implements CustomerRepository {
-  final DatabaseHelper _databaseHelper;
+  final drift_db.AppDatabase db;
 
-  CustomerRepositoryImpl(this._databaseHelper);
+  CustomerRepositoryImpl(this.db);
 
   @override
   Future<List<Customer>> getCustomers({
@@ -17,189 +17,224 @@ class CustomerRepositoryImpl implements CustomerRepository {
     int? offset,
     bool showInactive = false,
   }) async {
-    final db = await _databaseHelper.database;
-    final whereClauses = <String>[];
-    final whereArgs = <dynamic>[];
+    final q = db.select(db.customers);
 
-    // Filter: Active Status
-    if (showInactive) {
-      whereClauses.add('is_active = 0');
+    if (!showInactive) {
+      q.where((t) => t.isActive.equals(true));
     } else {
-      whereClauses.add('is_active = 1');
+      if (showInactive) {
+        q.where((t) => t.isActive.equals(false));
+      } else {
+        q.where((t) => t.isActive.equals(true));
+      }
     }
 
     if (query != null && query.isNotEmpty) {
-      whereClauses.add(
-        '(first_name LIKE ? OR last_name LIKE ? OR business_name LIKE ? OR code LIKE ?)',
+      final search = '%$query%';
+      q.where(
+        (t) =>
+            t.firstName.like(search) |
+            t.lastName.like(search) |
+            t.businessName.like(search) |
+            t.code.like(search),
       );
-      final q = '%$query%';
-      whereArgs.addAll([q, q, q, q]);
     }
 
-    final whereString = whereClauses.isNotEmpty
-        ? whereClauses.join(' AND ')
-        : null;
+    q.orderBy([(t) => OrderingTerm.asc(t.lastName)]);
 
-    final result = await db.query(
-      DatabaseHelper.tableCustomers,
-      where: whereString,
-      whereArgs: whereArgs.isNotEmpty ? whereArgs : null,
-      orderBy: 'last_name ASC',
-      limit: limit,
-      offset: offset,
-    );
-    return result.map((e) => CustomerModel.fromJson(e)).toList();
+    if (limit != null) {
+      q.limit(limit, offset: offset);
+    }
+
+    final rows = await q.get();
+    return rows
+        .map(
+          (row) => CustomerModel(
+            id: row.id,
+            code: row.code,
+            firstName: row.firstName,
+            lastName: row.lastName,
+            businessName: row.businessName,
+            taxId: row.taxId,
+            phone: row.phone,
+            email: row.email,
+            address: row.address,
+            isActive: row.isActive,
+            createdAt: row.createdAt,
+            updatedAt: row.updatedAt,
+          ),
+        )
+        .toList();
   }
 
   @override
   Future<int> countCustomers({String? query, bool showInactive = false}) async {
-    final db = await _databaseHelper.database;
-    final whereClauses = <String>[];
-    final whereArgs = <dynamic>[];
+    final q = db.selectOnly(db.customers)
+      ..addColumns([db.customers.id.count()]);
 
-    if (showInactive) {
-      whereClauses.add('is_active = 0');
+    if (!showInactive) {
+      q.where(db.customers.isActive.equals(true));
     } else {
-      whereClauses.add('is_active = 1');
+      if (showInactive) {
+        q.where(db.customers.isActive.equals(false));
+      } else {
+        q.where(db.customers.isActive.equals(true));
+      }
     }
 
     if (query != null && query.isNotEmpty) {
-      whereClauses.add(
-        '(first_name LIKE ? OR last_name LIKE ? OR business_name LIKE ? OR code LIKE ?)',
+      final search = '%$query%';
+      q.where(
+        db.customers.firstName.like(search) |
+            db.customers.lastName.like(search) |
+            db.customers.businessName.like(search) |
+            db.customers.code.like(search),
       );
-      final q = '%$query%';
-      whereArgs.addAll([q, q, q, q]);
     }
 
-    final whereString = whereClauses.isNotEmpty
-        ? 'WHERE ${whereClauses.join(' AND ')}'
-        : '';
-
-    final sql =
-        'SELECT COUNT(*) as count FROM ${DatabaseHelper.tableCustomers} $whereString';
-    final result = await db.rawQuery(sql, whereArgs);
-    return Sqflite.firstIntValue(result) ?? 0;
+    final result = await q.getSingle();
+    return result.read(db.customers.id.count()) ?? 0;
   }
 
   @override
   Future<Customer?> getCustomerById(int id) async {
-    final result = await _databaseHelper.queryById(
-      DatabaseHelper.tableCustomers,
-      id,
-    );
-    if (result != null) {
-      return CustomerModel.fromJson(result);
+    final row = await (db.select(
+      db.customers,
+    )..where((t) => t.id.equals(id))).getSingleOrNull();
+    if (row != null) {
+      return CustomerModel(
+        id: row.id,
+        code: row.code,
+        firstName: row.firstName,
+        lastName: row.lastName,
+        businessName: row.businessName,
+        taxId: row.taxId,
+        phone: row.phone,
+        email: row.email,
+        address: row.address,
+        isActive: row.isActive,
+        createdAt: row.createdAt,
+        updatedAt: row.updatedAt,
+      );
     }
     return null;
   }
 
   @override
   Future<Customer?> getCustomerByCode(String code) async {
-    final db = await _databaseHelper.database;
-    final result = await db.query(
-      DatabaseHelper.tableCustomers,
-      where: 'code = ?',
-      whereArgs: [code],
-    );
-    if (result.isNotEmpty) {
-      return CustomerModel.fromJson(result.first);
+    final row = await (db.select(
+      db.customers,
+    )..where((t) => t.code.equals(code))).getSingleOrNull();
+    if (row != null) {
+      return CustomerModel(
+        id: row.id,
+        code: row.code,
+        firstName: row.firstName,
+        lastName: row.lastName,
+        businessName: row.businessName,
+        taxId: row.taxId,
+        phone: row.phone,
+        email: row.email,
+        address: row.address,
+        isActive: row.isActive,
+        createdAt: row.createdAt,
+        updatedAt: row.updatedAt,
+      );
     }
     return null;
   }
 
   @override
   Future<int> createCustomer(Customer customer) async {
-    final customerModel = CustomerModel.fromEntity(customer);
-    return await _databaseHelper.insert(
-      DatabaseHelper.tableCustomers,
-      customerModel.toMap(),
-    );
+    return await db
+        .into(db.customers)
+        .insert(
+          drift_db.CustomersCompanion.insert(
+            code: customer.code,
+            firstName: customer.firstName,
+            lastName: customer.lastName,
+            businessName: Value(customer.businessName),
+            taxId: Value(customer.taxId),
+            phone: Value(customer.phone),
+            email: Value(customer.email),
+            address: Value(customer.address),
+            isActive: Value(customer.isActive),
+            createdAt: Value(customer.createdAt),
+            updatedAt: Value(DateTime.now()),
+          ),
+        );
   }
 
   @override
   Future<int> updateCustomer(Customer customer) async {
-    final customerModel = CustomerModel.fromEntity(customer);
-    return await _databaseHelper.update(
-      DatabaseHelper.tableCustomers,
-      customerModel.toMap(),
+    await (db.update(
+      db.customers,
+    )..where((t) => t.id.equals(customer.id!))).write(
+      drift_db.CustomersCompanion(
+        code: Value(customer.code),
+        firstName: Value(customer.firstName),
+        lastName: Value(customer.lastName),
+        businessName: Value(customer.businessName),
+        taxId: Value(customer.taxId),
+        phone: Value(customer.phone),
+        email: Value(customer.email),
+        address: Value(customer.address),
+        isActive: Value(customer.isActive),
+        updatedAt: Value(DateTime.now()),
+      ),
     );
+    return customer.id!;
   }
 
   @override
   Future<int> deleteCustomer(int id) async {
     final customer = await getCustomerById(id);
     if (customer != null) {
-      final updatedCustomer = Customer(
-        id: customer.id,
-        code: customer.code,
-        firstName: customer.firstName,
-        lastName: customer.lastName,
-        phone: customer.phone,
-        email: customer.email,
-        address: customer.address,
-        taxId: customer.taxId,
-        businessName: customer.businessName,
-        isActive: false,
-        createdAt: customer.createdAt,
-        updatedAt: DateTime.now(),
+      // Soft delete
+      await (db.update(db.customers)..where((t) => t.id.equals(id))).write(
+        drift_db.CustomersCompanion(
+          isActive: Value(false),
+          updatedAt: Value(DateTime.now()),
+        ),
       );
-      return await updateCustomer(updatedCustomer);
+      return 1;
     }
     return 0;
   }
 
   @override
   Future<List<Customer>> searchCustomers(String query) async {
-    final db = await _databaseHelper.database;
-    final result = await db.query(
-      DatabaseHelper.tableCustomers,
-      where:
-          '(first_name LIKE ? OR last_name LIKE ? OR business_name LIKE ? OR code LIKE ?) AND is_active = ?',
-      whereArgs: ['%$query%', '%$query%', '%$query%', '%$query%', 1],
-    );
-    return result.map((e) => CustomerModel.fromJson(e)).toList();
+    return getCustomers(query: query, limit: 50);
   }
 
   @override
   Future<String> generateNextCustomerCode() async {
-    final db = await _databaseHelper.database;
+    final query = db.selectOnly(db.customers)
+      ..addColumns([db.customers.id.max()]);
+    final result = await query.getSingle();
+    final maxId = result.read(db.customers.id.max());
 
-    // Get the last ID to guess the next one
-    final result = await db.rawQuery(
-      'SELECT MAX(id) as max_id FROM ${DatabaseHelper.tableCustomers}',
-    );
-    int nextId = 1;
-    if (result.isNotEmpty && result.first['max_id'] != null) {
-      nextId = (result.first['max_id'] as int) + 1;
-    }
-
-    // Ensure uniqueness
+    int nextId = (maxId ?? 0) + 1;
     String code = 'C$nextId';
+
     while (true) {
-      final exists = await db.query(
-        DatabaseHelper.tableCustomers,
-        where: 'code = ?',
-        whereArgs: [code],
-      );
-      if (exists.isEmpty) {
-        break;
-      }
+      final exists = await (db.select(
+        db.customers,
+      )..where((t) => t.code.equals(code))).getSingleOrNull();
+      if (exists == null) break;
       nextId++;
       code = 'C$nextId';
     }
-
     return code;
   }
 
   @override
   Future<bool> isCodeUnique(String code, {int? excludeId}) async {
-    final db = await _databaseHelper.database;
-    return DatabaseValidators.isFieldUnique(
-      db: db,
-      tableName: DatabaseHelper.tableCustomers,
-      fieldName: 'code',
-      value: code,
-      excludeId: excludeId,
-    );
+    final q = db.select(db.customers)..where((t) => t.code.equals(code));
+    if (excludeId != null) {
+      q.where((t) => t.id.equals(excludeId).not());
+    }
+    final res = await q.get();
+    return res.isEmpty;
   }
 }

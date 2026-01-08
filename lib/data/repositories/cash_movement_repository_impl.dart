@@ -1,13 +1,15 @@
-import 'package:posventa/data/datasources/database_helper.dart';
+import 'package:drift/drift.dart';
+import 'package:posventa/data/datasources/local/database/app_database.dart'
+    as drift_db;
 import 'package:posventa/data/models/cash_movement_model.dart';
 import 'package:posventa/domain/entities/cash_movement.dart';
 import 'package:posventa/domain/repositories/cash_movement_repository.dart';
 
 class CashMovementRepositoryImpl implements CashMovementRepository {
-  final DatabaseHelper _databaseHelper;
-  final int userId; // Assuming the user id is available here
+  final drift_db.AppDatabase db;
+  final int userId;
 
-  CashMovementRepositoryImpl(this._databaseHelper, this.userId);
+  CashMovementRepositoryImpl(this.db, this.userId);
 
   @override
   Future<CashMovement> createMovement(
@@ -17,18 +19,19 @@ class CashMovementRepositoryImpl implements CashMovementRepository {
     String reason, {
     String? description,
   }) async {
-    final db = await _databaseHelper.database;
     final now = DateTime.now();
-    final data = {
-      'cash_session_id': cashSessionId,
-      'movement_type': movementType,
-      'amount_cents': amountCents,
-      'reason': reason,
-      'description': description,
-      'performed_by': userId,
-      'movement_date': now.toIso8601String(),
-    };
-    final id = await db.insert('cash_movements', data);
+    final companion = drift_db.CashMovementsCompanion.insert(
+      cashSessionId: cashSessionId,
+      movementType: movementType,
+      amountCents: amountCents,
+      reason: reason,
+      description: Value(description),
+      performedBy: userId,
+      movementDate: Value(now),
+    );
+
+    final id = await db.into(db.cashMovements).insert(companion);
+
     return CashMovement(
       id: id,
       cashSessionId: cashSessionId,
@@ -43,12 +46,22 @@ class CashMovementRepositoryImpl implements CashMovementRepository {
 
   @override
   Future<List<CashMovement>> getMovementsBySession(int sessionId) async {
-    final db = await _databaseHelper.database;
-    final result = await db.query(
-      'cash_movements',
-      where: 'cash_session_id = ?',
-      whereArgs: [sessionId],
-    );
-    return result.map((map) => CashMovementModel.fromMap(map)).toList();
+    final rows = await (db.select(
+      db.cashMovements,
+    )..where((t) => t.cashSessionId.equals(sessionId))).get();
+    return rows
+        .map(
+          (row) => CashMovementModel(
+            id: row.id,
+            cashSessionId: row.cashSessionId,
+            movementType: row.movementType,
+            amountCents: row.amountCents,
+            reason: row.reason,
+            description: row.description,
+            performedBy: row.performedBy,
+            movementDate: row.movementDate,
+          ),
+        )
+        .toList();
   }
 }

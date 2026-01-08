@@ -54,7 +54,7 @@ final class CashierRepositoryProvider
   }
 }
 
-String _$cashierRepositoryHash() => r'c7f056b14c61e81769d7ddfb9096577d53881394';
+String _$cashierRepositoryHash() => r'8bfa47beeb8c4f5c162c15b30cae407686c9910f';
 
 @ProviderFor(permissionRepository)
 const permissionRepositoryProvider = PermissionRepositoryProvider._();
@@ -102,7 +102,7 @@ final class PermissionRepositoryProvider
 }
 
 String _$permissionRepositoryHash() =>
-    r'8970df064ff1116bf55d3ace600fa4c9e7bed68e';
+    r'd7934378bfdc27076ab683575793422942e89fff';
 
 @ProviderFor(getCashiersUseCase)
 const getCashiersUseCaseProvider = GetCashiersUseCaseProvider._();

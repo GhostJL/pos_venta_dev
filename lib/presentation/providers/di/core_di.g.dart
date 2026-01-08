@@ -9,53 +9,58 @@ part of 'core_di.dart';
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
 
-@ProviderFor(databaseHelper)
-const databaseHelperProvider = DatabaseHelperProvider._();
+@ProviderFor(appDatabase)
+const appDatabaseProvider = AppDatabaseProvider._();
 
-final class DatabaseHelperProvider
-    extends $FunctionalProvider<DatabaseHelper, DatabaseHelper, DatabaseHelper>
-    with $Provider<DatabaseHelper> {
-  const DatabaseHelperProvider._()
+final class AppDatabaseProvider
+    extends $FunctionalProvider<AppDatabase, AppDatabase, AppDatabase>
+    with $Provider<AppDatabase> {
+  const AppDatabaseProvider._()
     : super(
         from: null,
         argument: null,
         retry: null,
-        name: r'databaseHelperProvider',
+        name: r'appDatabaseProvider',
         isAutoDispose: true,
         dependencies: null,
         $allTransitiveDependencies: null,
       );
 
   @override
-  String debugGetCreateSourceHash() => _$databaseHelperHash();
+  String debugGetCreateSourceHash() => _$appDatabaseHash();
 
   @$internal
   @override
-  $ProviderElement<DatabaseHelper> $createElement($ProviderPointer pointer) =>
+  $ProviderElement<AppDatabase> $createElement($ProviderPointer pointer) =>
       $ProviderElement(pointer);
 
   @override
-  DatabaseHelper create(Ref ref) {
-    return databaseHelper(ref);
+  AppDatabase create(Ref ref) {
+    return appDatabase(ref);
   }
 
   /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(DatabaseHelper value) {
+  Override overrideWithValue(AppDatabase value) {
     return $ProviderOverride(
       origin: this,
-      providerOverride: $SyncValueProvider<DatabaseHelper>(value),
+      providerOverride: $SyncValueProvider<AppDatabase>(value),
     );
   }
 }
 
-String _$databaseHelperHash() => r'4d8f44f034cca2afca8cfb05114be3ccb645e0ef';
+String _$appDatabaseHash() => r'e6789280bc57fbfb4c21a7ebba6656b05b9acb06';
 
 @ProviderFor(tableUpdateStream)
 const tableUpdateStreamProvider = TableUpdateStreamProvider._();
 
 final class TableUpdateStreamProvider
-    extends $FunctionalProvider<AsyncValue<String>, String, Stream<String>>
-    with $FutureModifier<String>, $StreamProvider<String> {
+    extends
+        $FunctionalProvider<
+          AsyncValue<Set<TableUpdate>>,
+          Set<TableUpdate>,
+          Stream<Set<TableUpdate>>
+        >
+    with $FutureModifier<Set<TableUpdate>>, $StreamProvider<Set<TableUpdate>> {
   const TableUpdateStreamProvider._()
     : super(
         from: null,
@@ -72,16 +77,17 @@ final class TableUpdateStreamProvider
 
   @$internal
   @override
-  $StreamProviderElement<String> $createElement($ProviderPointer pointer) =>
-      $StreamProviderElement(pointer);
+  $StreamProviderElement<Set<TableUpdate>> $createElement(
+    $ProviderPointer pointer,
+  ) => $StreamProviderElement(pointer);
 
   @override
-  Stream<String> create(Ref ref) {
+  Stream<Set<TableUpdate>> create(Ref ref) {
     return tableUpdateStream(ref);
   }
 }
 
-String _$tableUpdateStreamHash() => r'1b19a04ba0914e8857f527fb7fdcf723a0ca5973';
+String _$tableUpdateStreamHash() => r'9767c1f9cfea0e50fa322b91308d170f5ae90d0c';
 
 @ProviderFor(sharedPreferences)
 const sharedPreferencesProvider = SharedPreferencesProvider._();
@@ -205,7 +211,7 @@ final class UserRepositoryProvider
   }
 }
 
-String _$userRepositoryHash() => r'300cb71d0b47bbe8549c1eaae7751c31efb7cc1f';
+String _$userRepositoryHash() => r'42d18dc5b411d6ce17a1806e6a99bfdd3dae7dff';
 
 @ProviderFor(authRepository)
 const authRepositoryProvider = AuthRepositoryProvider._();
@@ -246,7 +252,7 @@ final class AuthRepositoryProvider
   }
 }
 
-String _$authRepositoryHash() => r'71fcdf330ae94b7e0264e75585d5f61e4ea05c7b';
+String _$authRepositoryHash() => r'6584ecec932bdef193ff8ba96a4dbaa3b77d5fc2';
 
 @ProviderFor(getAllUsers)
 const getAllUsersProvider = GetAllUsersProvider._();
@@ -500,7 +506,7 @@ final class PermissionRepositoryProvider
 }
 
 String _$permissionRepositoryHash() =>
-    r'ba1c758a97fb68c62d3fb8cb39a419ba963207b6';
+    r'8ab7d4c1aa4a515ad299818c191abe314830c2bd';
 
 @ProviderFor(userPermissionRepository)
 const userPermissionRepositoryProvider = UserPermissionRepositoryProvider._();
@@ -548,7 +554,7 @@ final class UserPermissionRepositoryProvider
 }
 
 String _$userPermissionRepositoryHash() =>
-    r'3b50fb2bb73cd2a79830430308a50f30b42a767f';
+    r'0aa9a84a7499d4fb9232fa295c46a3d698cac70a';
 
 @ProviderFor(storeRepository)
 const storeRepositoryProvider = StoreRepositoryProvider._();
@@ -594,4 +600,4 @@ final class StoreRepositoryProvider
   }
 }
 
-String _$storeRepositoryHash() => r'30fe53669b14c6b541751e4cc63370597b98bc92';
+String _$storeRepositoryHash() => r'50df64263cafa4dc858f1d86730544d6fd7f0551';

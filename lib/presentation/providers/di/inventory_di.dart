@@ -39,7 +39,7 @@ StockValidatorService stockValidatorService(ref) => StockValidatorService();
 
 @riverpod
 WarehouseRepository warehouseRepository(ref) =>
-    WarehouseRepositoryImpl(ref.watch(databaseHelperProvider));
+    WarehouseRepositoryImpl(ref.watch(appDatabaseProvider));
 
 @riverpod
 GetAllWarehouses getAllWarehouses(ref) =>
@@ -61,13 +61,13 @@ DeleteWarehouse deleteWarehouse(ref) =>
 
 @riverpod
 InventoryLotRepository inventoryLotRepository(ref) =>
-    InventoryLotRepositoryImpl(ref.watch(databaseHelperProvider));
+    InventoryLotRepositoryImpl(ref.watch(appDatabaseProvider));
 
 // --- Inventory Providers ---
 
 @riverpod
 InventoryRepository inventoryRepository(ref) =>
-    InventoryRepositoryImpl(ref.watch(databaseHelperProvider));
+    InventoryRepositoryImpl(ref.watch(appDatabaseProvider));
 
 @riverpod
 GetAllInventory getAllInventory(ref) =>
@@ -101,7 +101,7 @@ ResetInventoryUseCase resetInventoryUseCase(ref) =>
 
 @riverpod
 InventoryMovementRepository inventoryMovementRepository(ref) =>
-    InventoryMovementRepositoryImpl(ref.watch(databaseHelperProvider));
+    InventoryMovementRepositoryImpl(ref.watch(appDatabaseProvider));
 
 @riverpod
 GetAllInventoryMovements getAllInventoryMovements(ref) =>

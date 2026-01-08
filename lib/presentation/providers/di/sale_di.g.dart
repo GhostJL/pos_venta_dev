@@ -55,7 +55,7 @@ final class TransactionRepositoryProvider
 }
 
 String _$transactionRepositoryHash() =>
-    r'61cfd232e82782b11a43310c4b4de119181d0b76';
+    r'4a8b58c01058ceb12bdab25ca3acad8c8301ccb6';
 
 @ProviderFor(saleRepository)
 const saleRepositoryProvider = SaleRepositoryProvider._();
@@ -96,7 +96,7 @@ final class SaleRepositoryProvider
   }
 }
 
-String _$saleRepositoryHash() => r'42e3886b205d2aaea015479432c0768b0d5147f4';
+String _$saleRepositoryHash() => r'90327e2841aa357b9f7fb89983d9d4e28a16cd42';
 
 @ProviderFor(createSaleUseCase)
 const createSaleUseCaseProvider = CreateSaleUseCaseProvider._();
@@ -434,7 +434,7 @@ final class CashSessionRepositoryProvider
 }
 
 String _$cashSessionRepositoryHash() =>
-    r'27facafcaf569de253a084f81d5eea17d1b4be3d';
+    r'0b0afad28e28d66ae8b680f6fc6a6fb3826a5492';
 
 @ProviderFor(getCurrentSession)
 const getCurrentSessionProvider = GetCurrentSessionProvider._();
@@ -708,7 +708,7 @@ final class SaleReturnRepositoryProvider
 }
 
 String _$saleReturnRepositoryHash() =>
-    r'ccc4684c6fa3842a7b503d55f2004f07ed41a912';
+    r'8cbf15afde25a852236c4f741238feb142ea808a';
 
 @ProviderFor(createSaleReturnUseCase)
 const createSaleReturnUseCaseProvider = CreateSaleReturnUseCaseProvider._();
@@ -1050,7 +1050,7 @@ final class CashMovementRepositoryProvider
 }
 
 String _$cashMovementRepositoryHash() =>
-    r'7b5a6ec498dacab61cb0a16578910020e459ab6a';
+    r'e8f78aa21326d824ededc610f5f2be3924cecf14';
 
 @ProviderFor(createCashMovementUseCase)
 const createCashMovementUseCaseProvider = CreateCashMovementUseCaseProvider._();

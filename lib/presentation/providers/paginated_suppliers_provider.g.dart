@@ -149,7 +149,7 @@ final class PaginatedSuppliersCountProvider
 }
 
 String _$paginatedSuppliersCountHash() =>
-    r'a68ad0e0d17a36e18fcac704f76b6387730acc79';
+    r'45ea2e7db8efb8acae818ff4d61f4bfd424a8a10';
 
 @ProviderFor(paginatedSuppliersPage)
 const paginatedSuppliersPageProvider = PaginatedSuppliersPageFamily._();
@@ -208,7 +208,7 @@ final class PaginatedSuppliersPageProvider
 }
 
 String _$paginatedSuppliersPageHash() =>
-    r'1f06b84d97e54cc71cc81994020606d0f2348e3f';
+    r'9b820c11bc6ddc904d93886292de4d4fb8b4a3ef';
 
 final class PaginatedSuppliersPageFamily extends $Family
     with $FunctionalFamilyOverride<FutureOr<List<Supplier>>, int> {

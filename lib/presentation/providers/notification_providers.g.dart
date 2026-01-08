@@ -55,7 +55,7 @@ final class NotificationRepositoryProvider
 }
 
 String _$notificationRepositoryHash() =>
-    r'1e59ccd2f75f3a7b300a93afefa9603cd9e05284';
+    r'582b1469265a8b2b72f6274584e30bffaf5daa78';
 
 @ProviderFor(flutterLocalNotificationsPlugin)
 const flutterLocalNotificationsPluginProvider =

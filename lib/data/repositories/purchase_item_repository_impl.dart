@@ -1,143 +1,166 @@
-import 'package:posventa/data/datasources/database_helper.dart';
+import 'package:drift/drift.dart';
+import 'package:posventa/data/datasources/local/database/app_database.dart'
+    as drift_db;
 import 'package:posventa/data/models/purchase_item_model.dart';
 import 'package:posventa/domain/entities/purchase_item.dart';
 import 'package:posventa/domain/repositories/purchase_item_repository.dart';
 
-/// Implementation of PurchaseItemRepository
-/// Handles all database operations for purchase items
 class PurchaseItemRepositoryImpl implements PurchaseItemRepository {
-  final DatabaseHelper _databaseHelper;
+  final drift_db.AppDatabase db;
 
-  PurchaseItemRepositoryImpl(this._databaseHelper);
+  PurchaseItemRepositoryImpl(this.db);
 
   @override
   Future<List<PurchaseItem>> getPurchaseItems() async {
-    final db = await _databaseHelper.database;
-    final result = await db.rawQuery('''
-      SELECT pi.*, 
-             pr.name || COALESCE(' (' || pv.description || ')', '') as product_name,
-             p.purchase_number,
-             p.purchase_date,
-             s.name as supplier_name
-      FROM ${DatabaseHelper.tablePurchaseItems} pi
-      LEFT JOIN ${DatabaseHelper.tableProducts} pr ON pi.product_id = pr.id
-      LEFT JOIN ${DatabaseHelper.tableProductVariants} pv ON pi.variant_id = pv.id
-      LEFT JOIN ${DatabaseHelper.tablePurchases} p ON pi.purchase_id = p.id
-      LEFT JOIN ${DatabaseHelper.tableSuppliers} s ON p.supplier_id = s.id
-      ORDER BY pi.created_at DESC
-    ''');
+    final q = db.select(db.purchaseItems).join([
+      leftOuterJoin(
+        db.products,
+        db.products.id.equalsExp(db.purchaseItems.productId),
+      ),
+      leftOuterJoin(
+        db.productVariants,
+        db.productVariants.id.equalsExp(db.purchaseItems.variantId),
+      ),
+      leftOuterJoin(
+        db.purchases,
+        db.purchases.id.equalsExp(db.purchaseItems.purchaseId),
+      ),
+      leftOuterJoin(
+        db.suppliers,
+        db.suppliers.id.equalsExp(db.purchases.supplierId),
+      ),
+    ])..orderBy([OrderingTerm.desc(db.purchaseItems.createdAt)]);
 
-    return result.map((json) => PurchaseItemModel.fromJson(json)).toList();
+    final rows = await q.get();
+    return rows.map((row) => _mapRow(row)).toList();
   }
 
   @override
   Future<List<PurchaseItem>> getPurchaseItemsByPurchaseId(
     int purchaseId,
   ) async {
-    final db = await _databaseHelper.database;
-    final result = await db.rawQuery(
-      '''
-      SELECT pi.*, 
-             pr.name || COALESCE(' (' || pv.description || ')', '') as product_name,
-             p.purchase_number,
-             p.purchase_date,
-             s.name as supplier_name
-      FROM ${DatabaseHelper.tablePurchaseItems} pi
-      LEFT JOIN ${DatabaseHelper.tableProducts} pr ON pi.product_id = pr.id
-      LEFT JOIN ${DatabaseHelper.tableProductVariants} pv ON pi.variant_id = pv.id
-      LEFT JOIN ${DatabaseHelper.tablePurchases} p ON pi.purchase_id = p.id
-      LEFT JOIN ${DatabaseHelper.tableSuppliers} s ON p.supplier_id = s.id
-      WHERE pi.purchase_id = ?
-      ORDER BY pi.created_at DESC
-    ''',
-      [purchaseId],
-    );
+    final q =
+        db.select(db.purchaseItems).join([
+            leftOuterJoin(
+              db.products,
+              db.products.id.equalsExp(db.purchaseItems.productId),
+            ),
+            leftOuterJoin(
+              db.productVariants,
+              db.productVariants.id.equalsExp(db.purchaseItems.variantId),
+            ),
+            leftOuterJoin(
+              db.purchases,
+              db.purchases.id.equalsExp(db.purchaseItems.purchaseId),
+            ),
+            leftOuterJoin(
+              db.suppliers,
+              db.suppliers.id.equalsExp(db.purchases.supplierId),
+            ),
+          ])
+          ..where(db.purchaseItems.purchaseId.equals(purchaseId))
+          ..orderBy([OrderingTerm.desc(db.purchaseItems.createdAt)]);
 
-    return result.map((json) => PurchaseItemModel.fromJson(json)).toList();
+    final rows = await q.get();
+    return rows.map((row) => _mapRow(row)).toList();
   }
 
   @override
   Future<PurchaseItem?> getPurchaseItemById(int id) async {
-    final db = await _databaseHelper.database;
-    final result = await db.rawQuery(
-      '''
-      SELECT pi.*, 
-             pr.name || COALESCE(' (' || pv.description || ')', '') as product_name,
-             pr.code as product_code,
-             pr.barcode as product_barcode,
-             p.purchase_number,
-             p.purchase_date,
-             s.name as supplier_name,
-             w.name as warehouse_name
-      FROM ${DatabaseHelper.tablePurchaseItems} pi
-      LEFT JOIN ${DatabaseHelper.tableProducts} pr ON pi.product_id = pr.id
-      LEFT JOIN ${DatabaseHelper.tableProductVariants} pv ON pi.variant_id = pv.id
-      LEFT JOIN ${DatabaseHelper.tablePurchases} p ON pi.purchase_id = p.id
-      LEFT JOIN ${DatabaseHelper.tableSuppliers} s ON p.supplier_id = s.id
-      LEFT JOIN ${DatabaseHelper.tableWarehouses} w ON p.warehouse_id = w.id
-      WHERE pi.id = ?
-    ''',
-      [id],
-    );
+    final q = db.select(db.purchaseItems).join([
+      leftOuterJoin(
+        db.products,
+        db.products.id.equalsExp(db.purchaseItems.productId),
+      ),
+      leftOuterJoin(
+        db.productVariants,
+        db.productVariants.id.equalsExp(db.purchaseItems.variantId),
+      ),
+      leftOuterJoin(
+        db.purchases,
+        db.purchases.id.equalsExp(db.purchaseItems.purchaseId),
+      ),
+      leftOuterJoin(
+        db.suppliers,
+        db.suppliers.id.equalsExp(db.purchases.supplierId),
+      ),
+    ])..where(db.purchaseItems.id.equals(id));
 
-    if (result.isEmpty) return null;
-    return PurchaseItemModel.fromJson(result.first);
+    final row = await q.getSingleOrNull();
+    if (row == null) return null;
+    return _mapRow(row);
   }
 
   @override
   Future<List<PurchaseItem>> getPurchaseItemsByProductId(int productId) async {
-    final db = await _databaseHelper.database;
-    final result = await db.rawQuery(
-      '''
-      SELECT pi.*, 
-             pr.name || COALESCE(' (' || pv.description || ')', '') as product_name,
-             p.purchase_number,
-             p.purchase_date,
-             s.name as supplier_name
-      FROM ${DatabaseHelper.tablePurchaseItems} pi
-      LEFT JOIN ${DatabaseHelper.tableProducts} pr ON pi.product_id = pr.id
-      LEFT JOIN ${DatabaseHelper.tableProductVariants} pv ON pi.variant_id = pv.id
-      LEFT JOIN ${DatabaseHelper.tablePurchases} p ON pi.purchase_id = p.id
-      LEFT JOIN ${DatabaseHelper.tableSuppliers} s ON p.supplier_id = s.id
-      WHERE pi.product_id = ?
-      ORDER BY pi.created_at DESC
-    ''',
-      [productId],
-    );
+    final q =
+        db.select(db.purchaseItems).join([
+            leftOuterJoin(
+              db.products,
+              db.products.id.equalsExp(db.purchaseItems.productId),
+            ),
+            leftOuterJoin(
+              db.productVariants,
+              db.productVariants.id.equalsExp(db.purchaseItems.variantId),
+            ),
+            leftOuterJoin(
+              db.purchases,
+              db.purchases.id.equalsExp(db.purchaseItems.purchaseId),
+            ),
+            leftOuterJoin(
+              db.suppliers,
+              db.suppliers.id.equalsExp(db.purchases.supplierId),
+            ),
+          ])
+          ..where(db.purchaseItems.productId.equals(productId))
+          ..orderBy([OrderingTerm.desc(db.purchaseItems.createdAt)]);
 
-    return result.map((json) => PurchaseItemModel.fromJson(json)).toList();
+    final rows = await q.get();
+    return rows.map((row) => _mapRow(row)).toList();
   }
 
   @override
   Future<int> createPurchaseItem(PurchaseItem item) async {
-    final db = await _databaseHelper.database;
-    final model = PurchaseItemModel.fromEntity(item);
-    return await db.insert(
-      DatabaseHelper.tablePurchaseItems,
-      model.toMap()..remove('id'),
-    );
+    return await db
+        .into(db.purchaseItems)
+        .insert(
+          drift_db.PurchaseItemsCompanion.insert(
+            purchaseId: item.purchaseId!,
+            productId: item.productId,
+            variantId: Value(item.variantId),
+            quantity: item.quantity,
+            unitOfMeasure: item.unitOfMeasure,
+            unitCostCents: item.unitCostCents,
+            subtotalCents: item.subtotalCents,
+            taxCents: Value(item.taxCents),
+            totalCents: item.totalCents,
+            lotId: Value(item.lotId),
+            expirationDate: Value(item.expirationDate),
+            createdAt: Value(item.createdAt),
+          ),
+        );
   }
 
   @override
   Future<void> updatePurchaseItem(PurchaseItem item) async {
-    final db = await _databaseHelper.database;
-    final model = PurchaseItemModel.fromEntity(item);
-    await db.update(
-      DatabaseHelper.tablePurchaseItems,
-      model.toMap(),
-      where: 'id = ?',
-      whereArgs: [item.id],
+    await (db.update(
+      db.purchaseItems,
+    )..where((t) => t.id.equals(item.id!))).write(
+      drift_db.PurchaseItemsCompanion(
+        quantity: Value(item.quantity),
+        unitCostCents: Value(item.unitCostCents),
+        subtotalCents: Value(item.subtotalCents),
+        taxCents: Value(item.taxCents),
+        totalCents: Value(item.totalCents),
+        lotId: Value(item.lotId),
+        expirationDate: Value(item.expirationDate),
+      ),
     );
   }
 
   @override
   Future<void> deletePurchaseItem(int id) async {
-    final db = await _databaseHelper.database;
-    await db.delete(
-      DatabaseHelper.tablePurchaseItems,
-      where: 'id = ?',
-      whereArgs: [id],
-    );
+    await (db.delete(db.purchaseItems)..where((t) => t.id.equals(id))).go();
   }
 
   @override
@@ -145,49 +168,89 @@ class PurchaseItemRepositoryImpl implements PurchaseItemRepository {
     DateTime startDate,
     DateTime endDate,
   ) async {
-    final db = await _databaseHelper.database;
-    final result = await db.rawQuery(
-      '''
-      SELECT pi.*, 
-             pr.name || COALESCE(' (' || pv.description || ')', '') as product_name,
-             p.purchase_number,
-             p.purchase_date,
-             s.name as supplier_name
-      FROM ${DatabaseHelper.tablePurchaseItems} pi
-      LEFT JOIN ${DatabaseHelper.tableProducts} pr ON pi.product_id = pr.id
-      LEFT JOIN ${DatabaseHelper.tableProductVariants} pv ON pi.variant_id = pv.id
-      LEFT JOIN ${DatabaseHelper.tablePurchases} p ON pi.purchase_id = p.id
-      LEFT JOIN ${DatabaseHelper.tableSuppliers} s ON p.supplier_id = s.id
-      WHERE pi.created_at BETWEEN ? AND ?
-      ORDER BY pi.created_at DESC
-    ''',
-      [startDate.toIso8601String(), endDate.toIso8601String()],
-    );
+    final q =
+        db.select(db.purchaseItems).join([
+            leftOuterJoin(
+              db.products,
+              db.products.id.equalsExp(db.purchaseItems.productId),
+            ),
+            leftOuterJoin(
+              db.productVariants,
+              db.productVariants.id.equalsExp(db.purchaseItems.variantId),
+            ),
+            leftOuterJoin(
+              db.purchases,
+              db.purchases.id.equalsExp(db.purchaseItems.purchaseId),
+            ),
+            leftOuterJoin(
+              db.suppliers,
+              db.suppliers.id.equalsExp(db.purchases.supplierId),
+            ),
+          ])
+          ..where(
+            db.purchaseItems.createdAt.isBetweenValues(startDate, endDate),
+          )
+          ..orderBy([OrderingTerm.desc(db.purchaseItems.createdAt)]);
 
-    return result.map((json) => PurchaseItemModel.fromJson(json)).toList();
+    final rows = await q.get();
+    return rows.map((row) => _mapRow(row)).toList();
   }
 
   @override
   Future<List<PurchaseItem>> getRecentPurchaseItems({int limit = 50}) async {
-    final db = await _databaseHelper.database;
-    final result = await db.rawQuery(
-      '''
-      SELECT pi.*, 
-             pr.name || COALESCE(' (' || pv.description || ')', '') as product_name,
-             p.purchase_number,
-             p.purchase_date,
-             s.name as supplier_name
-      FROM ${DatabaseHelper.tablePurchaseItems} pi
-      LEFT JOIN ${DatabaseHelper.tableProducts} pr ON pi.product_id = pr.id
-      LEFT JOIN ${DatabaseHelper.tableProductVariants} pv ON pi.variant_id = pv.id
-      LEFT JOIN ${DatabaseHelper.tablePurchases} p ON pi.purchase_id = p.id
-      LEFT JOIN ${DatabaseHelper.tableSuppliers} s ON p.supplier_id = s.id
-      ORDER BY pi.created_at DESC
-      LIMIT ?
-    ''',
-      [limit],
-    );
+    final q =
+        db.select(db.purchaseItems).join([
+            leftOuterJoin(
+              db.products,
+              db.products.id.equalsExp(db.purchaseItems.productId),
+            ),
+            leftOuterJoin(
+              db.productVariants,
+              db.productVariants.id.equalsExp(db.purchaseItems.variantId),
+            ),
+            leftOuterJoin(
+              db.purchases,
+              db.purchases.id.equalsExp(db.purchaseItems.purchaseId),
+            ),
+            leftOuterJoin(
+              db.suppliers,
+              db.suppliers.id.equalsExp(db.purchases.supplierId),
+            ),
+          ])
+          ..orderBy([OrderingTerm.desc(db.purchaseItems.createdAt)])
+          ..limit(limit);
 
-    return result.map((json) => PurchaseItemModel.fromJson(json)).toList();
+    final rows = await q.get();
+    return rows.map((row) => _mapRow(row)).toList();
+  }
+
+  PurchaseItemModel _mapRow(TypedResult row) {
+    final item = row.readTable(db.purchaseItems);
+    final product = row.readTableOrNull(db.products);
+    final variant = row.readTableOrNull(db.productVariants);
+
+    // Construct ProductName
+    String? productName = product?.name;
+    if (productName != null && variant != null) {
+      productName = '$productName (${variant.variantName})';
+    }
+
+    return PurchaseItemModel(
+      id: item.id,
+      purchaseId: item.purchaseId,
+      productId: item.productId,
+      variantId: item.variantId,
+      quantity: item.quantity,
+      quantityReceived: item.quantityReceived,
+      unitOfMeasure: item.unitOfMeasure,
+      unitCostCents: item.unitCostCents,
+      subtotalCents: item.subtotalCents,
+      taxCents: item.taxCents,
+      totalCents: item.totalCents,
+      lotId: item.lotId,
+      expirationDate: item.expirationDate,
+      createdAt: item.createdAt,
+      productName: productName,
+    );
   }
 }

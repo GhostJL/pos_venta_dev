@@ -16,6 +16,7 @@ class PurchaseModel extends Purchase {
     super.supplierInvoiceNumber,
     required super.requestedBy,
     super.receivedBy,
+    super.cancelledBy,
     required super.createdAt,
     super.items,
     super.supplierName,
@@ -41,6 +42,7 @@ class PurchaseModel extends Purchase {
       supplierInvoiceNumber: json['supplier_invoice_number'],
       requestedBy: json['requested_by'],
       receivedBy: json['received_by'],
+      cancelledBy: json['cancelled_by'],
       createdAt: DateTime.parse(json['created_at']),
       supplierName: json['supplier_name'], // Joined field
     );
@@ -61,6 +63,7 @@ class PurchaseModel extends Purchase {
       'supplier_invoice_number': supplierInvoiceNumber,
       'requested_by': requestedBy,
       'received_by': receivedBy,
+      'cancelled_by': cancelledBy,
       'created_at': createdAt.toIso8601String(),
     };
   }
@@ -80,6 +83,7 @@ class PurchaseModel extends Purchase {
       supplierInvoiceNumber: purchase.supplierInvoiceNumber,
       requestedBy: purchase.requestedBy,
       receivedBy: purchase.receivedBy,
+      cancelledBy: purchase.cancelledBy,
       createdAt: purchase.createdAt,
       items: purchase.items,
       supplierName: purchase.supplierName,
@@ -101,6 +105,7 @@ class PurchaseModel extends Purchase {
       supplierInvoiceNumber: supplierInvoiceNumber,
       requestedBy: requestedBy,
       receivedBy: receivedBy,
+      cancelledBy: cancelledBy ?? cancelledBy,
       createdAt: createdAt,
       items: items ?? this.items,
       supplierName: supplierName,

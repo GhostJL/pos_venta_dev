@@ -10,6 +10,7 @@ class User {
   final UserRole role;
   final bool isActive;
   final bool onboardingCompleted;
+  final DateTime? lastLoginAt;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -23,6 +24,7 @@ class User {
     this.role = UserRole.cajero,
     this.isActive = true,
     this.onboardingCompleted = false,
+    this.lastLoginAt,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -40,6 +42,7 @@ class User {
       'role': role.name,
       'is_active': isActive ? 1 : 0,
       'onboarding_completed': onboardingCompleted ? 1 : 0,
+      'last_login_at': lastLoginAt?.toIso8601String(),
       'created_at': createdAt.toIso8601String(),
       'updated_at': updatedAt.toIso8601String(),
     };
@@ -56,6 +59,9 @@ class User {
       role: UserRole.values.firstWhere((e) => e.name == map['role']),
       isActive: map['is_active'] == 1,
       onboardingCompleted: map['onboarding_completed'] == 1,
+      lastLoginAt: map['last_login_at'] != null
+          ? DateTime.parse(map['last_login_at'])
+          : null,
       createdAt: DateTime.parse(map['created_at']),
       updatedAt: DateTime.parse(map['updated_at']),
     );

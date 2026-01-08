@@ -42,7 +42,7 @@ LabelService labelService(ref) => LabelService();
 
 @riverpod
 ProductLocalDataSource productLocalDataSource(ref) =>
-    ProductLocalDataSourceImpl(ref.watch(databaseHelperProvider));
+    ProductLocalDataSourceImpl(ref.watch(appDatabaseProvider));
 
 @riverpod
 ProductRepository productRepository(ref) =>
@@ -72,7 +72,7 @@ SearchProducts searchProducts(ref) =>
 
 @riverpod
 UnitOfMeasureRepository unitOfMeasureRepository(ref) =>
-    UnitOfMeasureRepositoryImpl(ref.watch(databaseHelperProvider));
+    UnitOfMeasureRepositoryImpl(ref.watch(appDatabaseProvider));
 
 @riverpod
 Future<List<UnitOfMeasure>> unitList(ref) async {
@@ -83,7 +83,7 @@ Future<List<UnitOfMeasure>> unitList(ref) async {
 
 @riverpod
 TaxRateRepository taxRateRepository(ref) =>
-    TaxRateRepositoryImpl(ref.watch(databaseHelperProvider));
+    TaxRateRepositoryImpl(ref.watch(appDatabaseProvider));
 
 @riverpod
 GetAllTaxRates getAllTaxRatesUseCase(ref) =>
@@ -109,7 +109,7 @@ SetDefaultTaxRate setDefaultTaxRate(ref) =>
 
 @riverpod
 DepartmentRepository departmentRepository(ref) =>
-    DepartmentRepositoryImpl(ref.watch(databaseHelperProvider));
+    DepartmentRepositoryImpl(ref.watch(appDatabaseProvider));
 
 @riverpod
 GetAllDepartments getAllDepartmentsUseCase(ref) =>
@@ -131,7 +131,7 @@ DeleteDepartment deleteDepartmentUseCase(ref) =>
 
 @riverpod
 SupplierRepository supplierRepository(ref) =>
-    SupplierRepositoryImpl(ref.watch(databaseHelperProvider));
+    SupplierRepositoryImpl(ref.watch(appDatabaseProvider));
 
 @riverpod
 GetAllSuppliers getAllSuppliersUseCase(ref) =>

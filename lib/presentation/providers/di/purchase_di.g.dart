@@ -55,7 +55,7 @@ final class PurchaseRepositoryProvider
 }
 
 String _$purchaseRepositoryHash() =>
-    r'5de5f138cbc4d1e4d32947336eefb8a9119181e0';
+    r'8ae914ee965ab1068b332fac1dbcbbdbf899dc63';
 
 @ProviderFor(getPurchasesUseCase)
 const getPurchasesUseCaseProvider = GetPurchasesUseCaseProvider._();
@@ -439,7 +439,7 @@ final class PurchaseItemRepositoryProvider
 }
 
 String _$purchaseItemRepositoryHash() =>
-    r'0afd4ec57ad8578c286e50eb493d6fb7e1a9fc82';
+    r'a76c92277546b723eefd5a9f49171b997454db04';
 
 @ProviderFor(getPurchaseItemsUseCase)
 const getPurchaseItemsUseCaseProvider = GetPurchaseItemsUseCaseProvider._();

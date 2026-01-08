@@ -1,11 +1,13 @@
-import 'package:posventa/data/datasources/database_helper.dart';
+import 'package:drift/drift.dart';
+import 'package:posventa/data/datasources/local/database/app_database.dart'
+    as drift_db;
 import 'package:posventa/domain/services/audit_service.dart';
 import 'package:posventa/core/utils/logger.dart';
 
 class AuditServiceImpl implements AuditService {
-  final DatabaseHelper databaseHelper;
+  final drift_db.AppDatabase db;
 
-  AuditServiceImpl(this.databaseHelper);
+  AuditServiceImpl(this.db);
 
   @override
   Future<void> logAction({
@@ -15,15 +17,17 @@ class AuditServiceImpl implements AuditService {
     int? userId,
   }) async {
     try {
-      final db = await databaseHelper.database;
-
-      await db.insert(DatabaseHelper.tableAuditLogs, {
-        'user_id': userId,
-        'action': action,
-        'module': module,
-        'details': details,
-        'created_at': DateTime.now().toIso8601String(),
-      });
+      await db
+          .into(db.auditLogs)
+          .insert(
+            drift_db.AuditLogsCompanion.insert(
+              action: action,
+              module: module,
+              details: Value(details),
+              userId: Value(userId),
+              createdAt: Value(DateTime.now()),
+            ),
+          );
 
       appLogger.info('AUDIT: [$module] $action - $details (User: $userId)');
     } catch (e) {

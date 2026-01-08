@@ -55,7 +55,7 @@ final class CategoryRepositoryProvider
 }
 
 String _$categoryRepositoryHash() =>
-    r'bc939ee7e3bf3705e86fd5613543606bcd1247ec';
+    r'9cfd48a44885ea6b743f2daa0d44c6b1fdadd0e0';
 
 @ProviderFor(getAllCategoriesUseCase)
 const getAllCategoriesUseCaseProvider = GetAllCategoriesUseCaseProvider._();

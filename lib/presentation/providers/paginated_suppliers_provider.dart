@@ -38,8 +38,8 @@ Future<int> paginatedSuppliersCount(Ref ref) async {
 
   // Listen for database updates
   ref.listen(tableUpdateStreamProvider, (previous, next) {
-    next.whenData((table) {
-      if (table == 'suppliers') {
+    next.whenData((updates) {
+      if (updates.any((u) => u.table == 'suppliers')) {
         ref.invalidateSelf();
       }
     });
@@ -65,8 +65,8 @@ Future<List<Supplier>> paginatedSuppliersPage(
 
   // Listen for database updates
   ref.listen(tableUpdateStreamProvider, (previous, next) {
-    next.whenData((table) {
-      if (table == 'suppliers') {
+    next.whenData((updates) {
+      if (updates.any((u) => u.table == 'suppliers')) {
         ref.invalidateSelf();
       }
     });

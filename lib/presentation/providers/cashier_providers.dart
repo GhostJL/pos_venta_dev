@@ -1,7 +1,7 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:posventa/data/datasources/database_helper.dart';
 import 'package:posventa/data/repositories/cashier_repository_impl.dart';
 import 'package:posventa/data/repositories/permission_repository_impl.dart';
+import 'package:posventa/presentation/providers/di/core_di.dart';
 import 'package:posventa/domain/entities/permission.dart';
 import 'package:posventa/domain/entities/user.dart';
 import 'package:posventa/domain/repositories/cashier_repository.dart';
@@ -14,12 +14,12 @@ part 'cashier_providers.g.dart';
 // Repositories
 @riverpod
 CashierRepository cashierRepository(Ref ref) {
-  return CashierRepositoryImpl(DatabaseHelper.instance);
+  return CashierRepositoryImpl(ref.watch(appDatabaseProvider));
 }
 
 @riverpod
 PermissionRepository permissionRepository(Ref ref) {
-  return PermissionRepositoryImpl(DatabaseHelper.instance);
+  return PermissionRepositoryImpl(ref.watch(appDatabaseProvider));
 }
 
 // Use Cases

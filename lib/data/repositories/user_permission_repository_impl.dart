@@ -1,43 +1,51 @@
-import 'package:posventa/data/datasources/database_helper.dart';
-import 'package:posventa/data/models/user_permission_model.dart';
+import 'package:drift/drift.dart';
+import 'package:posventa/data/datasources/local/database/app_database.dart'
+    as drift_db;
 import 'package:posventa/domain/entities/user_permission.dart';
 import 'package:posventa/domain/repositories/user_permission_repository.dart';
 
 class UserPermissionRepositoryImpl implements UserPermissionRepository {
-  final DatabaseHelper _databaseHelper;
+  final drift_db.AppDatabase db;
 
-  UserPermissionRepositoryImpl(this._databaseHelper);
+  UserPermissionRepositoryImpl(this.db);
 
   @override
   Future<void> addUserPermission(UserPermission userPermission) async {
-    final db = await _databaseHelper.database;
-    final userPermissionModel = UserPermissionModel(
-      userId: userPermission.userId,
-      permissionId: userPermission.permissionId,
-      grantedAt: userPermission.grantedAt,
-      grantedBy: userPermission.grantedBy,
-    );
-    await db.insert('user_permissions', userPermissionModel.toMap());
+    await db
+        .into(db.userPermissions)
+        .insert(
+          drift_db.UserPermissionsCompanion.insert(
+            userId: userPermission.userId,
+            permissionId: userPermission.permissionId,
+            grantedAt: userPermission.grantedAt,
+            grantedBy: Value(userPermission.grantedBy),
+          ),
+        );
   }
 
   @override
   Future<void> deleteUserPermission(int userId, int permissionId) async {
-    final db = await _databaseHelper.database;
-    await db.delete(
-      'user_permissions',
-      where: 'user_id = ? AND permission_id = ?',
-      whereArgs: [userId, permissionId],
-    );
+    await (db.delete(db.userPermissions)..where(
+          (t) => t.userId.equals(userId) & t.permissionId.equals(permissionId),
+        ))
+        .go();
   }
 
   @override
   Future<List<UserPermission>> getUserPermissions(int userId) async {
-    final db = await _databaseHelper.database;
-    final maps = await db.query(
-      'user_permissions',
-      where: 'user_id = ?',
-      whereArgs: [userId],
+    final query = db.select(db.userPermissions)
+      ..where((t) => t.userId.equals(userId));
+    final rows = await query.get();
+    return rows.map(_mapToUserPermission).toList();
+  }
+
+  UserPermission _mapToUserPermission(drift_db.UserPermission row) {
+    return UserPermission(
+      id: row.id,
+      userId: row.userId,
+      permissionId: row.permissionId,
+      grantedAt: row.grantedAt,
+      grantedBy: row.grantedBy,
     );
-    return maps.map((map) => UserPermissionModel.fromMap(map)).toList();
   }
 }

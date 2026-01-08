@@ -1,5 +1,8 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:posventa/data/datasources/database_helper.dart';
+import 'package:drift/drift.dart';
+import 'package:posventa/data/datasources/local/database/app_database.dart';
+// DatabaseHelper provider removed
+
 import 'package:posventa/domain/repositories/user_repository.dart';
 import 'package:posventa/domain/repositories/auth_repository.dart';
 import 'package:posventa/data/repositories/auth_repository_impl.dart';
@@ -21,11 +24,13 @@ import 'package:posventa/data/repositories/settings_repository_impl.dart';
 part 'core_di.g.dart';
 
 @riverpod
-DatabaseHelper databaseHelper(ref) => DatabaseHelper.instance;
+AppDatabase appDatabase(ref) => AppDatabase();
 
 @riverpod
-Stream<String> tableUpdateStream(Ref ref) =>
-    ref.watch(databaseHelperProvider).tableUpdateStream;
+Stream<Set<TableUpdate>> tableUpdateStream(Ref ref) {
+  final db = ref.watch(appDatabaseProvider);
+  return db.tableUpdates();
+}
 
 @riverpod
 Future<SharedPreferences> sharedPreferences(ref) =>
@@ -41,11 +46,11 @@ Future<SettingsRepository> settingsRepository(ref) async {
 
 @riverpod
 UserRepository userRepository(ref) =>
-    AuthRepositoryImpl(ref.watch(databaseHelperProvider));
+    AuthRepositoryImpl(ref.watch(appDatabaseProvider));
 
 @riverpod
 AuthRepository authRepository(ref) =>
-    AuthRepositoryImpl(ref.watch(databaseHelperProvider));
+    AuthRepositoryImpl(ref.watch(appDatabaseProvider));
 
 @riverpod
 GetAllUsers getAllUsers(ref) => GetAllUsers(ref.watch(userRepositoryProvider));
@@ -67,14 +72,14 @@ HasUsersUseCase hasUsersUseCase(ref) =>
 
 @riverpod
 PermissionRepository permissionRepository(ref) =>
-    PermissionRepositoryImpl(ref.watch(databaseHelperProvider));
+    PermissionRepositoryImpl(ref.watch(appDatabaseProvider));
 
 @riverpod
 UserPermissionRepository userPermissionRepository(ref) =>
-    UserPermissionRepositoryImpl(ref.watch(databaseHelperProvider));
+    UserPermissionRepositoryImpl(ref.watch(appDatabaseProvider));
 
 // --- Store Providers ---
 
 @riverpod
 IStoreRepository storeRepository(ref) =>
-    StoreRepositoryImpl(databaseHelper: ref.watch(databaseHelperProvider));
+    StoreRepositoryImpl(db: ref.watch(appDatabaseProvider));

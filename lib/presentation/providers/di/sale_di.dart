@@ -38,13 +38,13 @@ part 'sale_di.g.dart';
 
 @riverpod
 TransactionRepository transactionRepository(ref) =>
-    TransactionRepositoryImpl(ref.watch(databaseHelperProvider));
+    TransactionRepositoryImpl(ref.watch(appDatabaseProvider));
 
 // --- Sale Providers ---
 
 @riverpod
 SaleRepository saleRepository(ref) =>
-    SaleRepositoryImpl(ref.watch(databaseHelperProvider));
+    SaleRepositoryImpl(ref.watch(appDatabaseProvider));
 
 @riverpod
 Future<CreateSaleUseCase> createSaleUseCase(ref) async => CreateSaleUseCase(
@@ -124,7 +124,7 @@ CashSessionRepository cashSessionRepository(ref) {
   if (user == null) {
     throw Exception('User not authenticated');
   }
-  return CashSessionRepositoryImpl(ref.watch(databaseHelperProvider), user.id!);
+  return CashSessionRepositoryImpl(ref.watch(appDatabaseProvider), user.id!);
 }
 
 @riverpod
@@ -152,7 +152,7 @@ Future<dynamic> currentCashSession(ref) async {
 
 @riverpod
 SaleReturnRepository saleReturnRepository(ref) =>
-    SaleReturnRepositoryImpl(ref.watch(databaseHelperProvider));
+    SaleReturnRepositoryImpl(ref.watch(appDatabaseProvider));
 
 @riverpod
 CreateSaleReturnUseCase createSaleReturnUseCase(ref) =>
@@ -187,10 +187,7 @@ CashMovementRepository cashMovementRepository(Ref ref) {
   if (user == null) {
     throw Exception('User not authenticated');
   }
-  return CashMovementRepositoryImpl(
-    ref.watch(databaseHelperProvider),
-    user.id!,
-  );
+  return CashMovementRepositoryImpl(ref.watch(appDatabaseProvider), user.id!);
 }
 
 @riverpod

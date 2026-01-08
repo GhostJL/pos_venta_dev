@@ -49,7 +49,7 @@ final class BrandRepositoryProvider
   }
 }
 
-String _$brandRepositoryHash() => r'31f4a9882f91995c5029e22617a2836803fd6e04';
+String _$brandRepositoryHash() => r'e1575f5f8d3a6ea059083d14dccf6b477a8b051d';
 
 @ProviderFor(getAllBrandsUseCase)
 const getAllBrandsUseCaseProvider = GetAllBrandsUseCaseProvider._();
