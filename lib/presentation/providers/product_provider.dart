@@ -38,12 +38,12 @@ class ProductList extends _$ProductList {
     // However, the User Plan says: "We will listen to tableUpdateStream".
     // I will assume it's `tableUpdateStreamProvider`.
 
-    final repository = ref.watch(productRepositoryProvider);
+    final searchProducts = ref.watch(searchProductsProvider);
 
     // If query is present, search.
     // Optimization: If query is empty, limit to 50 items to prevent loading 1000+ items
-    final result = await repository.getProducts(
-      query: query,
+    final result = await searchProducts.call(
+      query,
       limit: query.isEmpty ? 50 : null,
     );
 
