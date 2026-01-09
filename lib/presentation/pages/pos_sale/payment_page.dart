@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:posventa/core/theme/theme.dart';
@@ -172,443 +173,489 @@ class _PaymentPageState extends ConsumerState<PaymentPage> {
       }
     });
 
-    return Scaffold(
-      backgroundColor: theme.colorScheme.surface,
-      appBar: AppBar(
-        title: Text(
-          'Procesar Pago',
-          style: theme.textTheme.titleLarge?.copyWith(
-            fontWeight: FontWeight.bold,
+    return CallbackShortcuts(
+      bindings: <ShortcutActivator, VoidCallback>{
+        const SingleActivator(LogicalKeyboardKey.escape): () => context.pop(),
+        const SingleActivator(LogicalKeyboardKey.enter): () {
+          if (!posState.isLoading && _change >= 0) {
+            _handleConfirmPayment(posState.total);
+          }
+        },
+        const SingleActivator(LogicalKeyboardKey.numpadEnter): () {
+          if (!posState.isLoading && _change >= 0) {
+            _handleConfirmPayment(posState.total);
+          }
+        },
+        const SingleActivator(LogicalKeyboardKey.backspace): _onDelete,
+      },
+      child: Focus(
+        autofocus: true,
+        onKeyEvent: (node, event) {
+          if (event is KeyDownEvent) {
+            final char = event.character;
+            if (char != null && RegExp(r'[0-9.]').hasMatch(char)) {
+              _onKeyPress(char);
+              return KeyEventResult.handled;
+            }
+          }
+          return KeyEventResult.ignored;
+        },
+        child: Scaffold(
+          backgroundColor: theme.colorScheme.surface,
+          appBar: AppBar(
+            title: Text(
+              'Procesar Pago',
+              style: theme.textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            centerTitle: true,
+            backgroundColor: theme.colorScheme.surface,
+            leading: IconButton(
+              icon: const Icon(Icons.close),
+              onPressed: () => context.pop(),
+            ),
           ),
-        ),
-        centerTitle: true,
-        backgroundColor: theme.colorScheme.surface,
-        leading: IconButton(
-          icon: const Icon(Icons.close),
-          onPressed: () => context.pop(),
-        ),
-      ),
-      body: LayoutBuilder(
-        builder: (context, constraints) {
-          final isMobile = constraints.maxWidth < 800;
-          final screenHeight = MediaQuery.of(context).size.height;
-          // Dynamically adjust keypad height based on screen height for small devices
-          final keypadHeight = screenHeight < 700 ? 240.0 : 280.0;
+          body: LayoutBuilder(
+            builder: (context, constraints) {
+              final isMobile = constraints.maxWidth < 800;
+              final screenHeight = MediaQuery.of(context).size.height;
+              // Dynamically adjust keypad height based on screen height for small devices
+              final keypadHeight = screenHeight < 700 ? 240.0 : 280.0;
 
-          if (isMobile) {
-            return Column(
-              children: [
-                Expanded(
-                  child: SingleChildScrollView(
-                    physics: const ClampingScrollPhysics(),
-                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        const SizedBox(height: 12),
-                        // Total Display (Compact)
-                        Center(
-                          child: Column(
+              if (isMobile) {
+                return Column(
+                  children: [
+                    Expanded(
+                      child: SingleChildScrollView(
+                        physics: const ClampingScrollPhysics(),
+                        padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            const SizedBox(height: 12),
+                            // Total Display (Compact)
+                            Center(
+                              child: Column(
+                                children: [
+                                  Text(
+                                    'Total a Pagar',
+                                    style: theme.textTheme.bodyMedium?.copyWith(
+                                      color: colorScheme.onSurfaceVariant,
+                                    ),
+                                  ),
+                                  Text(
+                                    '\$${total.toStringAsFixed(2)}',
+                                    style: theme.textTheme.displaySmall
+                                        ?.copyWith(
+                                          fontWeight: FontWeight.w800,
+                                          color: colorScheme.primary,
+                                          fontSize: 32,
+                                        ),
+                                  ),
+                                ],
+                              ),
+                            ),
+
+                            const SizedBox(height: 16),
+
+                            // Payment Methods (Compact Row)
+                            SingleChildScrollView(
+                              scrollDirection: Axis.horizontal,
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  _PaymentMethodChip(
+                                    label: 'Efectivo',
+                                    icon: Icons.payments_outlined,
+                                    isSelected:
+                                        _selectedPaymentMethod == 'Efectivo',
+                                    onTap: () => setState(
+                                      () => _selectedPaymentMethod = 'Efectivo',
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  _PaymentMethodChip(
+                                    label: 'Tarjeta',
+                                    icon: Icons.credit_card_outlined,
+                                    isSelected:
+                                        _selectedPaymentMethod == 'Tarjeta',
+                                    onTap: () => setState(
+                                      () => _selectedPaymentMethod = 'Tarjeta',
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  _PaymentMethodChip(
+                                    label: 'Transf.',
+                                    icon: Icons.account_balance_wallet_outlined,
+                                    isSelected:
+                                        _selectedPaymentMethod ==
+                                        'Transferencia',
+                                    onTap: () => setState(
+                                      () => _selectedPaymentMethod =
+                                          'Transferencia',
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+
+                            const SizedBox(height: 24),
+
+                            // Input Field
+                            TextField(
+                              controller: _mobileAmountController,
+                              focusNode: _mobileFocusNode,
+                              keyboardType:
+                                  const TextInputType.numberWithOptions(
+                                    decimal: true,
+                                  ),
+                              onChanged: _onMobileInputChanged,
+                              style: theme.textTheme.headlineSmall?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: colorScheme.onSurface,
+                              ),
+                              decoration: InputDecoration(
+                                labelText: 'Monto Recibido',
+                                prefixText: '\$ ',
+                                prefixStyle: theme.textTheme.headlineSmall
+                                    ?.copyWith(
+                                      fontWeight: FontWeight.bold,
+                                      color: colorScheme.onSurface,
+                                    ),
+                                filled: true,
+                                fillColor: colorScheme.surfaceContainerHighest
+                                    .withValues(alpha: 0.5),
+                                contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 12,
+                                ),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: BorderSide.none,
+                                ),
+                                suffixIcon: _amountInput != '0'
+                                    ? IconButton(
+                                        icon: const Icon(Icons.cancel),
+                                        onPressed: _onClear,
+                                      )
+                                    : null,
+                              ),
+                            ),
+
+                            const SizedBox(height: 16),
+
+                            // Quick Actions (Wrap - No Scroll)
+                            Wrap(
+                              spacing: 8,
+                              runSpacing: 8,
+                              alignment: WrapAlignment.center,
+                              children: [
+                                _QuickAmountChip(
+                                  label: 'Exacto',
+                                  amount: total,
+                                  currentInput: _amountInput,
+                                  onSelected: () => _setAmount(total),
+                                  isExactOption: true,
+                                ),
+                                ..._frequentValues.map(
+                                  (value) => _QuickAmountChip(
+                                    label: '\$${value.toInt()}',
+                                    amount: value,
+                                    currentInput: _amountInput,
+                                    onSelected: () => _setAmount(value),
+                                  ),
+                                ),
+                              ],
+                            ),
+
+                            const SizedBox(height: 16),
+
+                            // Change Display (Compact Row)
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 12,
+                              ),
+                              decoration: BoxDecoration(
+                                color: _change < 0
+                                    ? colorScheme.errorContainer
+                                    : colorScheme.surface,
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: _change < 0
+                                      ? Colors.transparent
+                                      : colorScheme.outlineVariant,
+                                ),
+                              ),
+                              child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    'Cambio',
+                                    style: theme.textTheme.titleMedium
+                                        ?.copyWith(
+                                          color: _change < 0
+                                              ? colorScheme.onErrorContainer
+                                              : colorScheme.onSurfaceVariant,
+                                        ),
+                                  ),
+                                  Text(
+                                    '\$${_change.abs().toStringAsFixed(2)}',
+                                    style: theme.textTheme.headlineSmall
+                                        ?.copyWith(
+                                          fontWeight: FontWeight.bold,
+                                          color: _change < 0
+                                              ? colorScheme.onErrorContainer
+                                              : colorScheme.onSurface,
+                                        ),
+                                  ),
+                                ],
+                              ),
+                            ),
+
+                            const SizedBox(height: 24),
+
+                            // Pay Button
+                            SizedBox(
+                              height: 56,
+                              width: double.infinity,
+                              child: PaymentActionButtons(
+                                onCancel: () => context.pop(),
+                                onConfirm: posState.isLoading || _change < 0
+                                    ? null
+                                    : () =>
+                                          _handleConfirmPayment(posState.total),
+                                isLoading: posState.isLoading,
+                                showCancel: false,
+                              ),
+                            ),
+                            const SizedBox(height: 24),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                );
+              }
+
+              // TABLET LAYOUT (Existing Split View)
+              return Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // LEFT COLUMN: Summary & Input Display
+                  Expanded(
+                    flex: 5,
+                    child: Container(
+                      color: colorScheme.surfaceContainerLow.withValues(
+                        alpha: 0.5,
+                      ),
+                      padding: const EdgeInsets.all(24),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          // TOTAL DISPLAY
+                          Column(
                             children: [
                               Text(
                                 'Total a Pagar',
-                                style: theme.textTheme.bodyMedium?.copyWith(
+                                style: theme.textTheme.titleMedium?.copyWith(
                                   color: colorScheme.onSurfaceVariant,
                                 ),
                               ),
+                              const SizedBox(height: 8),
                               Text(
                                 '\$${total.toStringAsFixed(2)}',
-                                style: theme.textTheme.displaySmall?.copyWith(
+                                style: theme.textTheme.displayLarge?.copyWith(
                                   fontWeight: FontWeight.w800,
                                   color: colorScheme.primary,
-                                  fontSize: 32,
+                                  fontSize: 48,
                                 ),
                               ),
                             ],
                           ),
-                        ),
 
-                        const SizedBox(height: 16),
+                          const SizedBox(height: 48),
 
-                        // Payment Methods (Compact Row)
-                        SingleChildScrollView(
-                          scrollDirection: Axis.horizontal,
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              _PaymentMethodChip(
-                                label: 'Efectivo',
-                                icon: Icons.payments_outlined,
-                                isSelected:
-                                    _selectedPaymentMethod == 'Efectivo',
-                                onTap: () => setState(
-                                  () => _selectedPaymentMethod = 'Efectivo',
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              _PaymentMethodChip(
-                                label: 'Tarjeta',
-                                icon: Icons.credit_card_outlined,
-                                isSelected: _selectedPaymentMethod == 'Tarjeta',
-                                onTap: () => setState(
-                                  () => _selectedPaymentMethod = 'Tarjeta',
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              _PaymentMethodChip(
-                                label: 'Transf.',
-                                icon: Icons.account_balance_wallet_outlined,
-                                isSelected:
-                                    _selectedPaymentMethod == 'Transferencia',
-                                onTap: () => setState(
-                                  () =>
-                                      _selectedPaymentMethod = 'Transferencia',
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-
-                        const SizedBox(height: 24),
-
-                        // Input Field
-                        TextField(
-                          controller: _mobileAmountController,
-                          focusNode: _mobileFocusNode,
-                          keyboardType: const TextInputType.numberWithOptions(
-                            decimal: true,
-                          ),
-                          onChanged: _onMobileInputChanged,
-                          style: theme.textTheme.headlineSmall?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: colorScheme.onSurface,
-                          ),
-                          decoration: InputDecoration(
-                            labelText: 'Monto Recibido',
-                            prefixText: '\$ ',
-                            prefixStyle: theme.textTheme.headlineSmall
-                                ?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                  color: colorScheme.onSurface,
-                                ),
-                            filled: true,
-                            fillColor: colorScheme.surfaceContainerHighest
-                                .withValues(alpha: 0.5),
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 12,
+                          // RECEIVED AMOUNT DISPLAY
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 24,
+                              vertical: 16,
                             ),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide.none,
-                            ),
-                            suffixIcon: _amountInput != '0'
-                                ? IconButton(
-                                    icon: const Icon(Icons.cancel),
-                                    onPressed: _onClear,
-                                  )
-                                : null,
-                          ),
-                        ),
-
-                        const SizedBox(height: 16),
-
-                        // Quick Actions (Wrap - No Scroll)
-                        Wrap(
-                          spacing: 8,
-                          runSpacing: 8,
-                          alignment: WrapAlignment.center,
-                          children: [
-                            _QuickAmountChip(
-                              label: 'Exacto',
-                              amount: total,
-                              currentInput: _amountInput,
-                              onSelected: () => _setAmount(total),
-                              isExactOption: true,
-                            ),
-                            ..._frequentValues.map(
-                              (value) => _QuickAmountChip(
-                                label: '\$${value.toInt()}',
-                                amount: value,
-                                currentInput: _amountInput,
-                                onSelected: () => _setAmount(value),
+                            decoration: BoxDecoration(
+                              color: colorScheme.surface,
+                              borderRadius: BorderRadius.circular(24),
+                              border: Border.all(
+                                color: colorScheme.outlineVariant,
                               ),
                             ),
-                          ],
-                        ),
-
-                        const SizedBox(height: 16),
-
-                        // Change Display (Compact Row)
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 12,
-                          ),
-                          decoration: BoxDecoration(
-                            color: _change < 0
-                                ? colorScheme.errorContainer
-                                : colorScheme.surface,
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(
-                              color: _change < 0
-                                  ? Colors.transparent
-                                  : colorScheme.outlineVariant,
-                            ),
-                          ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                'Cambio',
-                                style: theme.textTheme.titleMedium?.copyWith(
-                                  color: _change < 0
-                                      ? colorScheme.onErrorContainer
-                                      : colorScheme.onSurfaceVariant,
-                                ),
-                              ),
-                              Text(
-                                '\$${_change.abs().toStringAsFixed(2)}',
-                                style: theme.textTheme.headlineSmall?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                  color: _change < 0
-                                      ? colorScheme.onErrorContainer
-                                      : colorScheme.onSurface,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-
-                        const SizedBox(height: 24),
-
-                        // Pay Button
-                        SizedBox(
-                          height: 56,
-                          width: double.infinity,
-                          child: PaymentActionButtons(
-                            onCancel: () => context.pop(),
-                            onConfirm: posState.isLoading || _change < 0
-                                ? null
-                                : () => _handleConfirmPayment(posState.total),
-                            isLoading: posState.isLoading,
-                            showCancel: false,
-                          ),
-                        ),
-                        const SizedBox(height: 24),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            );
-          }
-
-          // TABLET LAYOUT (Existing Split View)
-          return Row(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // LEFT COLUMN: Summary & Input Display
-              Expanded(
-                flex: 5,
-                child: Container(
-                  color: colorScheme.surfaceContainerLow.withValues(alpha: 0.5),
-                  padding: const EdgeInsets.all(24),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      // TOTAL DISPLAY
-                      Column(
-                        children: [
-                          Text(
-                            'Total a Pagar',
-                            style: theme.textTheme.titleMedium?.copyWith(
-                              color: colorScheme.onSurfaceVariant,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            '\$${total.toStringAsFixed(2)}',
-                            style: theme.textTheme.displayLarge?.copyWith(
-                              fontWeight: FontWeight.w800,
-                              color: colorScheme.primary,
-                              fontSize: 48,
-                            ),
-                          ),
-                        ],
-                      ),
-
-                      const SizedBox(height: 48),
-
-                      // RECEIVED AMOUNT DISPLAY
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 24,
-                          vertical: 16,
-                        ),
-                        decoration: BoxDecoration(
-                          color: colorScheme.surface,
-                          borderRadius: BorderRadius.circular(24),
-                          border: Border.all(color: colorScheme.outlineVariant),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Monto Recibido',
-                              style: theme.textTheme.labelMedium?.copyWith(
-                                color: colorScheme.onSurfaceVariant,
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  '\$ $_amountInput',
-                                  style: theme.textTheme.headlineMedium
-                                      ?.copyWith(
-                                        fontWeight: FontWeight.bold,
-                                        color: colorScheme.onSurface,
-                                      ),
-                                ),
-                                if (_amountInput != '0')
-                                  IconButton(
-                                    onPressed: _onClear,
-                                    icon: const Icon(Icons.clear),
+                                  'Monto Recibido',
+                                  style: theme.textTheme.labelMedium?.copyWith(
                                     color: colorScheme.onSurfaceVariant,
                                   ),
+                                ),
+                                const SizedBox(height: 8),
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(
+                                      '\$ $_amountInput',
+                                      style: theme.textTheme.headlineMedium
+                                          ?.copyWith(
+                                            fontWeight: FontWeight.bold,
+                                            color: colorScheme.onSurface,
+                                          ),
+                                    ),
+                                    if (_amountInput != '0')
+                                      IconButton(
+                                        onPressed: _onClear,
+                                        icon: const Icon(Icons.clear),
+                                        color: colorScheme.onSurfaceVariant,
+                                      ),
+                                  ],
+                                ),
                               ],
                             ),
-                          ],
-                        ),
-                      ),
-
-                      const SizedBox(height: 24),
-
-                      // CHANGE DISPLAY
-                      PaymentChangeDisplay(change: _change),
-
-                      const Spacer(),
-
-                      // PAYMENT METHODS
-                      SingleChildScrollView(
-                        scrollDirection: Axis.horizontal,
-                        child: Row(
-                          children: [
-                            _PaymentMethodChip(
-                              label: 'Efectivo',
-                              icon: Icons.payments_outlined,
-                              isSelected: _selectedPaymentMethod == 'Efectivo',
-                              onTap: () => setState(
-                                () => _selectedPaymentMethod = 'Efectivo',
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            _PaymentMethodChip(
-                              label: 'Tarjeta',
-                              icon: Icons.credit_card_outlined,
-                              isSelected: _selectedPaymentMethod == 'Tarjeta',
-                              onTap: () => setState(
-                                () => _selectedPaymentMethod = 'Tarjeta',
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            _PaymentMethodChip(
-                              label: 'Transf.',
-                              icon: Icons.account_balance_wallet_outlined,
-                              isSelected:
-                                  _selectedPaymentMethod == 'Transferencia',
-                              onTap: () => setState(
-                                () => _selectedPaymentMethod = 'Transferencia',
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-
-              // RIGHT COLUMN: Keypad & Quick Actions
-              Expanded(
-                flex: 4,
-                child: Container(
-                  padding: const EdgeInsets.all(24),
-                  decoration: BoxDecoration(
-                    color: colorScheme.surface,
-                    border: Border(
-                      left: BorderSide(
-                        color: colorScheme.outlineVariant.withValues(
-                          alpha: 0.5,
-                        ),
-                      ),
-                    ),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      // QUICK ACTIONS (Grid for Tablet)
-                      GridView.count(
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        crossAxisCount: 3,
-                        mainAxisSpacing: 12,
-                        crossAxisSpacing: 12,
-                        childAspectRatio: 2.5,
-                        children: [
-                          _QuickAmountChip(
-                            label: 'Exacto',
-                            amount: total,
-                            currentInput: _amountInput,
-                            onSelected: () => _setAmount(total),
-                            isExactOption: true,
-                            isLarge: true,
                           ),
-                          ..._frequentValues.map(
-                            (value) => _QuickAmountChip(
-                              label: '\$${value.toInt()}',
-                              amount: value,
-                              currentInput: _amountInput,
-                              onSelected: () => _setAmount(value),
-                              isLarge: true,
+
+                          const SizedBox(height: 24),
+
+                          // CHANGE DISPLAY
+                          PaymentChangeDisplay(change: _change),
+
+                          const Spacer(),
+
+                          // PAYMENT METHODS
+                          SingleChildScrollView(
+                            scrollDirection: Axis.horizontal,
+                            child: Row(
+                              children: [
+                                _PaymentMethodChip(
+                                  label: 'Efectivo',
+                                  icon: Icons.payments_outlined,
+                                  isSelected:
+                                      _selectedPaymentMethod == 'Efectivo',
+                                  onTap: () => setState(
+                                    () => _selectedPaymentMethod = 'Efectivo',
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                _PaymentMethodChip(
+                                  label: 'Tarjeta',
+                                  icon: Icons.credit_card_outlined,
+                                  isSelected:
+                                      _selectedPaymentMethod == 'Tarjeta',
+                                  onTap: () => setState(
+                                    () => _selectedPaymentMethod = 'Tarjeta',
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                _PaymentMethodChip(
+                                  label: 'Transf.',
+                                  icon: Icons.account_balance_wallet_outlined,
+                                  isSelected:
+                                      _selectedPaymentMethod == 'Transferencia',
+                                  onTap: () => setState(
+                                    () => _selectedPaymentMethod =
+                                        'Transferencia',
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         ],
                       ),
+                    ),
+                  ),
 
-                      const Spacer(),
-
-                      // KEYPAD
-                      NumericKeypad(
-                        onKeyPress: _onKeyPress,
-                        onDelete: _onDelete,
-                        onClear: _onClear,
-                      ),
-
-                      const SizedBox(height: 24),
-
-                      // PAY BUTTON
-                      SizedBox(
-                        height: 56,
-                        child: PaymentActionButtons(
-                          onCancel: () => context.pop(),
-                          onConfirm: posState.isLoading || _change < 0
-                              ? null
-                              : () => _handleConfirmPayment(posState.total),
-                          isLoading: posState.isLoading,
-                          showCancel: false, // Only show Payment button here
+                  // RIGHT COLUMN: Keypad & Quick Actions
+                  Expanded(
+                    flex: 4,
+                    child: Container(
+                      padding: const EdgeInsets.all(24),
+                      decoration: BoxDecoration(
+                        color: colorScheme.surface,
+                        border: Border(
+                          left: BorderSide(
+                            color: colorScheme.outlineVariant.withValues(
+                              alpha: 0.5,
+                            ),
+                          ),
                         ),
                       ),
-                    ],
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          // QUICK ACTIONS (Grid for Tablet)
+                          GridView.count(
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            crossAxisCount: 3,
+                            mainAxisSpacing: 12,
+                            crossAxisSpacing: 12,
+                            childAspectRatio: 2.5,
+                            children: [
+                              _QuickAmountChip(
+                                label: 'Exacto',
+                                amount: total,
+                                currentInput: _amountInput,
+                                onSelected: () => _setAmount(total),
+                                isExactOption: true,
+                                isLarge: true,
+                              ),
+                              ..._frequentValues.map(
+                                (value) => _QuickAmountChip(
+                                  label: '\$${value.toInt()}',
+                                  amount: value,
+                                  currentInput: _amountInput,
+                                  onSelected: () => _setAmount(value),
+                                  isLarge: true,
+                                ),
+                              ),
+                            ],
+                          ),
+
+                          const Spacer(),
+
+                          // KEYPAD
+                          NumericKeypad(
+                            onKeyPress: _onKeyPress,
+                            onDelete: _onDelete,
+                            onClear: _onClear,
+                          ),
+
+                          const SizedBox(height: 24),
+
+                          // PAY BUTTON
+                          SizedBox(
+                            height: 56,
+                            child: PaymentActionButtons(
+                              onCancel: () => context.pop(),
+                              onConfirm: posState.isLoading || _change < 0
+                                  ? null
+                                  : () => _handleConfirmPayment(posState.total),
+                              isLoading: posState.isLoading,
+                              showCancel:
+                                  false, // Only show Payment button here
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
-                ),
-              ),
-            ],
-          );
-        },
+                ],
+              );
+            },
+          ),
+        ),
       ),
     );
   }
