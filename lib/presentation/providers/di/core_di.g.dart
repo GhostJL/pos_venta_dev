@@ -89,6 +89,47 @@ final class TableUpdateStreamProvider
 
 String _$tableUpdateStreamHash() => r'9767c1f9cfea0e50fa322b91308d170f5ae90d0c';
 
+@ProviderFor(debouncedTableUpdateStream)
+const debouncedTableUpdateStreamProvider =
+    DebouncedTableUpdateStreamProvider._();
+
+final class DebouncedTableUpdateStreamProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<Set<TableUpdate>>,
+          Set<TableUpdate>,
+          Stream<Set<TableUpdate>>
+        >
+    with $FutureModifier<Set<TableUpdate>>, $StreamProvider<Set<TableUpdate>> {
+  const DebouncedTableUpdateStreamProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'debouncedTableUpdateStreamProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$debouncedTableUpdateStreamHash();
+
+  @$internal
+  @override
+  $StreamProviderElement<Set<TableUpdate>> $createElement(
+    $ProviderPointer pointer,
+  ) => $StreamProviderElement(pointer);
+
+  @override
+  Stream<Set<TableUpdate>> create(Ref ref) {
+    return debouncedTableUpdateStream(ref);
+  }
+}
+
+String _$debouncedTableUpdateStreamHash() =>
+    r'af833ef8b8f70a5ad3fe5cd6ef6e871b40dda813';
+
 @ProviderFor(sharedPreferences)
 const sharedPreferencesProvider = SharedPreferencesProvider._();
 

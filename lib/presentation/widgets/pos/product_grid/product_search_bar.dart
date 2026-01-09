@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
 
+import 'package:posventa/presentation/pages/shared/main_layout.dart';
+
 class ProductSearchBar extends StatelessWidget {
   final TextEditingController controller;
   final ValueChanged<String> onChanged;
   final VoidCallback onClear;
   final VoidCallback onScan;
+  final FocusNode? focusNode;
+  final bool showMenu;
 
   const ProductSearchBar({
     super.key,
@@ -12,6 +16,8 @@ class ProductSearchBar extends StatelessWidget {
     required this.onChanged,
     required this.onClear,
     required this.onScan,
+    this.focusNode,
+    this.showMenu = false,
   });
 
   @override
@@ -20,8 +26,17 @@ class ProductSearchBar extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
       child: Row(
         children: [
+          if (showMenu) ...[
+            IconButton(
+              icon: const Icon(Icons.menu),
+              onPressed: () =>
+                  MainLayout.scaffoldKey.currentState?.openDrawer(),
+            ),
+            const SizedBox(width: 8),
+          ],
           Expanded(
             child: TextField(
+              focusNode: focusNode,
               controller: controller,
               decoration: InputDecoration(
                 hintText: 'Buscar productos...',

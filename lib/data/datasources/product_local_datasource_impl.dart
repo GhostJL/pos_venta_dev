@@ -224,6 +224,35 @@ class ProductLocalDataSourceImpl implements ProductLocalDataSource {
     bool showInactive = false,
   }) async {
     final q = db.selectOnly(db.products)..addColumns([db.products.id.count()]);
+
+    if (!showInactive) {
+      q.where(db.products.isActive.equals(true));
+    } else {
+      q.where(db.products.isActive.equals(false));
+    }
+
+    if (departmentId != null) {
+      q.where(db.products.departmentId.equals(departmentId));
+    }
+    if (categoryId != null) {
+      q.where(db.products.categoryId.equals(categoryId));
+    }
+    if (brandId != null) {
+      q.where(db.products.brandId.equals(brandId));
+    }
+    if (supplierId != null) {
+      q.where(db.products.supplierId.equals(supplierId));
+    }
+
+    if (query != null && query.isNotEmpty) {
+      final searchParams = '%$query%';
+      q.where(
+        db.products.name.like(searchParams) |
+            db.products.code.like(searchParams) |
+            db.products.description.like(searchParams),
+      );
+    }
+
     final result = await q.getSingle();
     return result.read(db.products.id.count()) ?? 0;
   }

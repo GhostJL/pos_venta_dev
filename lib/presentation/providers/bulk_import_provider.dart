@@ -272,7 +272,6 @@ class BulkImport extends _$BulkImport {
         isLoading: false,
         errorMessage: "Error validating file: $e",
       );
-      print(e);
     }
   }
 

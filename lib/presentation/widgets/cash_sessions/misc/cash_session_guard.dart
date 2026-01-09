@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:posventa/presentation/pages/cash/cash_session_open_page.dart';
-import 'package:posventa/presentation/pages/shared/main_layout.dart';
+
 import 'package:posventa/presentation/providers/auth_provider.dart';
 import 'package:posventa/presentation/providers/providers.dart';
 import 'package:posventa/domain/entities/user.dart';
@@ -21,7 +21,7 @@ class CashSessionGuard extends ConsumerWidget {
     // Solo validar sesión para cajeros y administradores
     if (user == null ||
         (user.role != UserRole.cajero && user.role != UserRole.administrador)) {
-      return MainLayout(child: child);
+      return child;
     }
 
     final sessionAsync = ref.watch(currentCashSessionProvider);
@@ -34,7 +34,7 @@ class CashSessionGuard extends ConsumerWidget {
         }
 
         // Si hay sesión abierta, permitir acceso al contenido
-        return MainLayout(child: child);
+        return child;
       },
       loading: () =>
           const Scaffold(body: Center(child: CircularProgressIndicator())),

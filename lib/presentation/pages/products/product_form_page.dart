@@ -321,24 +321,27 @@ class ProductFormPageState extends ConsumerState<ProductFormPage> {
                     children: [
                       // Mode Toggle (Crucial Decision First)
                       Center(
-                        child: ToggleButtons(
-                          borderRadius: BorderRadius.circular(12),
-                          constraints: BoxConstraints(
-                            minWidth:
-                                (MediaQuery.of(context).size.width - 48 - 6) /
-                                2,
-                            minHeight: 40,
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: ToggleButtons(
+                            borderRadius: BorderRadius.circular(12),
+                            constraints: BoxConstraints(
+                              minWidth:
+                                  (MediaQuery.of(context).size.width - 48 - 6) /
+                                  2,
+                              minHeight: 40,
+                            ),
+                            isSelected: [!isVariable, isVariable],
+                            onPressed: (index) {
+                              ref
+                                  .read(provider.notifier)
+                                  .setVariableProduct(index == 1);
+                            },
+                            children: const [
+                              Text('Producto Simple'),
+                              Text('Con Variantes'),
+                            ],
                           ),
-                          isSelected: [!isVariable, isVariable],
-                          onPressed: (index) {
-                            ref
-                                .read(provider.notifier)
-                                .setVariableProduct(index == 1);
-                          },
-                          children: const [
-                            Text('Producto Simple'),
-                            Text('Con Variantes'),
-                          ],
                         ),
                       ),
                       const SizedBox(height: 24),

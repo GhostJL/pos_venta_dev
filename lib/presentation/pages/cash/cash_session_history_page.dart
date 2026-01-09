@@ -1,3 +1,4 @@
+import 'package:posventa/presentation/pages/shared/main_layout.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -43,9 +44,17 @@ class _CashSessionHistoryPageState
     final sessionsAsync = ref.watch(cashSessionListProvider(filter));
     final cashiersAsync = ref.watch(cashierListProvider);
     final warehousesAsync = ref.watch(warehouseListProvider);
+    final isSmallScreen = MediaQuery.of(context).size.width < 1200;
 
     return Scaffold(
       appBar: AppBar(
+        leading: isSmallScreen
+            ? IconButton(
+                icon: const Icon(Icons.menu),
+                onPressed: () =>
+                    MainLayout.scaffoldKey.currentState?.openDrawer(),
+              )
+            : null,
         title: const Text('Sesiones de Caja'),
         actions: [
           IconButton(

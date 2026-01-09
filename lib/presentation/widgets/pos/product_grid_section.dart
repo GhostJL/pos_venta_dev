@@ -16,8 +16,13 @@ import 'package:posventa/presentation/widgets/common/misc/scanner_arguments.dart
 
 class ProductGridSection extends ConsumerStatefulWidget {
   final bool isMobile;
+  final FocusNode? searchFocusNode;
 
-  const ProductGridSection({super.key, required this.isMobile});
+  const ProductGridSection({
+    super.key,
+    required this.isMobile,
+    this.searchFocusNode,
+  });
 
   @override
   ConsumerState<ProductGridSection> createState() => _ProductGridSectionState();
@@ -189,7 +194,9 @@ class _ProductGridSectionState extends ConsumerState<ProductGridSection>
       children: [
         // Search Bar with Scanner
         ProductSearchBar(
+          focusNode: widget.searchFocusNode,
           controller: _searchController,
+          showMenu: widget.isMobile,
           onChanged: (value) {
             debounceSearch(() {
               ref.read(productListProvider.notifier).searchProducts(value);

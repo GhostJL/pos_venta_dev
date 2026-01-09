@@ -5,6 +5,8 @@ import 'package:posventa/domain/entities/user.dart';
 import 'package:posventa/presentation/pages/inventory/inventory_lot_detail_page.dart';
 import 'package:posventa/presentation/pages/inventory/inventory_lots_page.dart';
 
+import 'package:posventa/presentation/pages/shared/main_layout.dart';
+
 import 'package:posventa/presentation/pages/adjustments/return_processing_page.dart';
 import 'package:posventa/presentation/pages/adjustments/returns_management_page.dart';
 import 'package:posventa/presentation/pages/adjustments/shift_close_page.dart';
@@ -121,7 +123,8 @@ final routerProvider = Provider<GoRouter>((ref) {
 
       // Main App Routes with Cash Session Guard
       ShellRoute(
-        builder: (context, state, child) => CashSessionGuard(child: child),
+        builder: (context, state, child) =>
+            MainLayout(child: CashSessionGuard(child: child)),
         routes: [
           GoRoute(
             path: '/', // Admin dashboard
@@ -300,6 +303,11 @@ final routerProvider = Provider<GoRouter>((ref) {
             },
           ),
           GoRoute(
+            path: '/products/new',
+            pageBuilder: (context, state) =>
+                const NoTransitionPage(child: ProductFormPage(product: null)),
+          ),
+          GoRoute(
             path: '/products/matrix-generator',
             pageBuilder: (context, state) {
               final productId = state.extra as int?;
@@ -309,7 +317,7 @@ final routerProvider = Provider<GoRouter>((ref) {
             },
           ),
           GoRoute(
-            path: '/products/import',
+            path: '/products/import_csv',
             pageBuilder: (context, state) =>
                 const NoTransitionPage(child: BulkImportPage()),
           ),

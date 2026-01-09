@@ -93,19 +93,22 @@ class PosProductItem extends ConsumerWidget {
                       (variant?.photoUrl ?? product.photoUrl) != null &&
                           (variant?.photoUrl ?? product.photoUrl)!.isNotEmpty
                       ? DecorationImage(
-                          image:
-                              (variant?.photoUrl ?? product.photoUrl)!
-                                  .startsWith('http')
-                              ? NetworkImage(
-                                  (variant?.photoUrl ?? product.photoUrl)!,
+                          image: ResizeImage(
+                            (variant?.photoUrl ?? product.photoUrl)!.startsWith(
+                                  'http',
                                 )
-                              : FileImage(
-                                      File(
-                                        (variant?.photoUrl ??
-                                            product.photoUrl)!,
-                                      ),
-                                    )
-                                    as ImageProvider,
+                                ? NetworkImage(
+                                    (variant?.photoUrl ?? product.photoUrl)!,
+                                  )
+                                : FileImage(
+                                        File(
+                                          (variant?.photoUrl ??
+                                              product.photoUrl)!,
+                                        ),
+                                      )
+                                      as ImageProvider,
+                            width: 300, // Optimize memory usage
+                          ),
                           fit: BoxFit.cover,
                         )
                       : null,

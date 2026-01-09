@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:posventa/presentation/pages/shared/main_layout.dart';
 import 'package:posventa/presentation/providers/paginated_purchases_provider.dart';
 import 'package:posventa/presentation/providers/purchase_filter_chip_provider.dart';
 import 'package:posventa/core/constants/permission_constants.dart';
@@ -9,6 +10,8 @@ import 'package:posventa/presentation/widgets/purchases/filters/chips/purchase_f
 import 'package:posventa/presentation/widgets/purchases/misc/empty_purchases_view.dart';
 import 'package:posventa/presentation/widgets/purchases/lists/purchase_card_widget.dart';
 import 'package:posventa/presentation/widgets/common/async_value_handler.dart';
+import 'package:flutter/services.dart';
+import 'package:posventa/presentation/widgets/purchases/lists/purchase_table_row.dart';
 
 class PurchasesPage extends ConsumerStatefulWidget {
   const PurchasesPage({super.key});
@@ -61,96 +64,125 @@ class _PurchasesPageState extends ConsumerState<PurchasesPage> {
       hasPermissionProvider(PermissionConstants.catalogManage),
     );
     final selectedFilter = ref.watch(purchaseFilterProvider);
+    final isSmallScreen = MediaQuery.of(context).size.width < 1200;
 
-    return Scaffold(
-      appBar: AppBar(
-        title: countAsync.when(
-          data: (count) => Text('Compras ($count)'),
-          loading: () => const Text('Compras'),
-          error: (_, __) => const Text('Compras'),
+    return CallbackShortcuts(
+      bindings: {
+        const SingleActivator(LogicalKeyboardKey.keyN, control: true): () {
+          if (hasManagePermission) context.push('/purchases/new');
+        },
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          leading: isSmallScreen
+              ? IconButton(
+                  icon: const Icon(Icons.menu),
+                  onPressed: () =>
+                      MainLayout.scaffoldKey.currentState?.openDrawer(),
+                )
+              : null,
+          title: countAsync.when(
+            data: (count) => Text('Compras ($count)'),
+            loading: () => const Text('Compras'),
+            error: (_, __) => const Text('Compras'),
+          ),
+          forceMaterialTransparency: true,
         ),
-        forceMaterialTransparency: true,
-      ),
-      floatingActionButton: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (_showScrollToTop)
-            FloatingActionButton(
-              heroTag: 'scrollToTop',
-              onPressed: _scrollToTop,
-              mini: true,
-              child: const Icon(Icons.arrow_upward),
-            ),
-          if (_showScrollToTop) const SizedBox(height: 16),
-          if (hasManagePermission)
-            FloatingActionButton.extended(
-              heroTag: 'newPurchase',
-              onPressed: () => context.push('/purchases/new'),
-              icon: const Icon(Icons.add_shopping_cart),
-              label: const Text('Nueva Compra'),
-              tooltip: 'Crear Nueva Compra',
-            ),
-        ],
-      ),
-      body: SafeArea(
-        child: Column(
+        floatingActionButton: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            PurchaseFilterChips(selectedFilter: selectedFilter),
-            Expanded(
-              child: AsyncValueHandler<int>(
-                value: countAsync,
-                data: (count) {
-                  if (count == 0) {
-                    return const EmptyPurchasesView();
-                  }
+            if (_showScrollToTop)
+              FloatingActionButton(
+                heroTag: 'scrollToTop',
+                onPressed: _scrollToTop,
+                mini: true,
+                child: const Icon(Icons.arrow_upward),
+              ),
+            if (_showScrollToTop) const SizedBox(height: 16),
+            if (hasManagePermission)
+              FloatingActionButton.extended(
+                heroTag: 'newPurchase',
+                onPressed: () => context.push('/purchases/new'),
+                icon: const Icon(Icons.add_shopping_cart),
+                label: const Text('Nueva Compra'),
+                tooltip: 'Crear Nueva Compra',
+              ),
+          ],
+        ),
+        body: SafeArea(
+          child: Column(
+            children: [
+              PurchaseFilterChips(selectedFilter: selectedFilter),
+              Expanded(
+                child: AsyncValueHandler<int>(
+                  value: countAsync,
+                  data: (count) {
+                    if (count == 0) {
+                      return const EmptyPurchasesView();
+                    }
 
-                  return RefreshIndicator(
-                    onRefresh: () async {
-                      ref.invalidate(paginatedPurchasesCountProvider);
-                      // Invalidate all page providers if possible, or reliance on tableUpdateStream
-                      // is better. For manual refresh:
-                      // We can ref.invalidate(paginatedPurchasesPageProvider) but it's a family using pageIndex.
-                      // Since we can't easily iterate all used families, we rely on the implementation of the provider
-                      // or just invalidate the repository or count which triggers updates?
-                      // Actually, invalidating count provider won't refresh pages unless pages listen to count or similar.
-                      // But our providers listen to table stream. Repository doesn't expose stream for list.
-                      // Best way ensures data is fresh.
-                      // For now, let's assume table stream is robust. Or user can pull to refresh count.
-                      return Future.delayed(const Duration(milliseconds: 500));
-                    },
-                    child: ListView.builder(
-                      controller: _scrollController,
-                      physics: const AlwaysScrollableScrollPhysics(),
-                      padding: const EdgeInsets.fromLTRB(16, 16, 16, 80),
-                      itemCount: count,
-                      itemBuilder: (context, index) {
-                        final pageIndex = index ~/ kPurchasePageSize;
-                        final indexInPage = index % kPurchasePageSize;
+                    return LayoutBuilder(
+                      builder: (context, constraints) {
+                        final isDesktop = constraints.maxWidth > 800;
 
-                        final pageAsync = ref.watch(
-                          paginatedPurchasesPageProvider(pageIndex: pageIndex),
-                        );
-
-                        return pageAsync.when(
-                          data: (purchases) {
-                            if (indexInPage >= purchases.length) {
-                              return const SizedBox.shrink();
-                            }
-                            final purchase = purchases[indexInPage];
-                            return PurchaseCard(purchase: purchase);
+                        return RefreshIndicator(
+                          onRefresh: () async {
+                            ref.invalidate(paginatedPurchasesCountProvider);
+                            return Future.delayed(
+                              const Duration(milliseconds: 500),
+                            );
                           },
-                          loading: () => _buildSkeletonItem(),
-                          error: (_, __) => const SizedBox.shrink(),
+                          child: ListView.builder(
+                            controller: _scrollController,
+                            physics: const AlwaysScrollableScrollPhysics(),
+                            padding: const EdgeInsets.fromLTRB(16, 16, 16, 80),
+                            itemCount:
+                                count + (isDesktop ? 1 : 0), // Header space
+                            itemBuilder: (context, index) {
+                              if (isDesktop && index == 0) {
+                                return const PurchaseHeader();
+                              }
+
+                              final actualIndex = isDesktop ? index - 1 : index;
+
+                              final pageIndex =
+                                  actualIndex ~/ kPurchasePageSize;
+                              final indexInPage =
+                                  actualIndex % kPurchasePageSize;
+
+                              final pageAsync = ref.watch(
+                                paginatedPurchasesPageProvider(
+                                  pageIndex: pageIndex,
+                                ),
+                              );
+
+                              return pageAsync.when(
+                                data: (purchases) {
+                                  if (indexInPage >= purchases.length) {
+                                    return const SizedBox.shrink();
+                                  }
+                                  final purchase = purchases[indexInPage];
+                                  if (isDesktop) {
+                                    return PurchaseTableRow(purchase: purchase);
+                                  }
+                                  return PurchaseCard(purchase: purchase);
+                                },
+                                loading: () => _buildSkeletonItem(),
+                                error: (_, __) => const SizedBox.shrink(),
+                              );
+                            },
+                          ),
                         );
                       },
-                    ),
-                  );
-                },
-                emptyState: const EmptyPurchasesView(),
-                onRetry: () => ref.invalidate(paginatedPurchasesCountProvider),
+                    );
+                  },
+                  emptyState: const EmptyPurchasesView(),
+                  onRetry: () =>
+                      ref.invalidate(paginatedPurchasesCountProvider),
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

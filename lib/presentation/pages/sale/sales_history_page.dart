@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:posventa/presentation/pages/shared/main_layout.dart';
 import 'package:posventa/presentation/providers/paginated_sales_provider.dart';
 import 'package:posventa/core/constants/permission_constants.dart';
 import 'package:posventa/presentation/providers/permission_provider.dart';
@@ -67,6 +68,7 @@ class _SalesHistoryPageState extends ConsumerState<SalesHistoryPage> {
     // Only watch count
     final countAsync = ref.watch(paginatedSalesCountProvider);
     final dateRange = ref.watch(saleDateRangeProvider);
+    final isSmallScreen = MediaQuery.of(context).size.width < 1200;
 
     if (!hasViewPermission) {
       return PermissionDeniedWidget(
@@ -79,6 +81,13 @@ class _SalesHistoryPageState extends ConsumerState<SalesHistoryPage> {
 
     return Scaffold(
       appBar: AppBar(
+        leading: isSmallScreen
+            ? IconButton(
+                icon: const Icon(Icons.menu),
+                onPressed: () =>
+                    MainLayout.scaffoldKey.currentState?.openDrawer(),
+              )
+            : null,
         title: countAsync.when(
           data: (count) => Text('Historial de Ventas ($count)'),
           loading: () => const Text('Historial de Ventas'),

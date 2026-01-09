@@ -14,8 +14,8 @@ Future<int> paginatedProductsCount(Ref ref) async {
   final filters = ref.watch(productFiltersProvider);
   final repository = ref.watch(productRepositoryProvider);
 
-  // Listen for database updates
-  ref.listen(tableUpdateStreamProvider, (previous, next) {
+  // Listen for database updates (Debounced)
+  ref.listen(debouncedTableUpdateStreamProvider, (previous, next) {
     next.whenData((updates) {
       if (updates.any(
         (u) =>
@@ -51,8 +51,8 @@ Future<List<Product>> paginatedProductsPage(
   final filters = ref.watch(productFiltersProvider);
   final repository = ref.watch(productRepositoryProvider);
 
-  // Listen for database updates
-  ref.listen(tableUpdateStreamProvider, (previous, next) {
+  // Listen for database updates (Debounced)
+  ref.listen(debouncedTableUpdateStreamProvider, (previous, next) {
     next.whenData((updates) {
       if (updates.any(
         (u) =>

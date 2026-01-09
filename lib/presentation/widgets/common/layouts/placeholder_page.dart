@@ -1,3 +1,4 @@
+import 'package:posventa/presentation/pages/shared/main_layout.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:posventa/core/theme/theme.dart';
@@ -9,6 +10,7 @@ class PlaceholderPage extends StatelessWidget {
   final IconData icon;
   final List<String> plannedFeatures;
   final Color? accentColor;
+  final bool showMenuButton;
 
   const PlaceholderPage({
     super.key,
@@ -17,19 +19,27 @@ class PlaceholderPage extends StatelessWidget {
     required this.icon,
     this.plannedFeatures = const [],
     this.accentColor,
+    this.showMenuButton = false,
   });
 
   @override
   Widget build(BuildContext context) {
     final color = accentColor ?? Theme.of(context).colorScheme.primary;
+    final isSmallScreen = MediaQuery.of(context).size.width < 1200;
 
     return Scaffold(
       appBar: AppBar(
         title: Text(moduleName),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.go('/'),
-        ),
+        leading: (showMenuButton && isSmallScreen)
+            ? IconButton(
+                icon: const Icon(Icons.menu),
+                onPressed: () =>
+                    MainLayout.scaffoldKey.currentState?.openDrawer(),
+              )
+            : IconButton(
+                icon: const Icon(Icons.arrow_back),
+                onPressed: () => context.go('/'),
+              ),
       ),
       body: Center(
         child: SingleChildScrollView(
@@ -68,7 +78,9 @@ class PlaceholderPage extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: AppTheme.transactionPending.withAlpha(20),
                   borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: AppTheme.transactionPending.withAlpha(100)),
+                  border: Border.all(
+                    color: AppTheme.transactionPending.withAlpha(100),
+                  ),
                 ),
                 child: const Text(
                   'PRÓXIMAMENTE',

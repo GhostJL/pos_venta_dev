@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:go_router/go_router.dart';
@@ -9,7 +10,11 @@ import 'package:posventa/core/constants/permission_constants.dart';
 import 'package:posventa/presentation/providers/permission_provider.dart';
 import 'package:posventa/presentation/widgets/products/filters/product_filter_sheet.dart';
 import 'package:posventa/presentation/widgets/products/lists/product_card.dart';
+import 'package:posventa/presentation/widgets/products/lists/product_list_tile.dart'; // Import Tile
+import 'package:posventa/presentation/widgets/products/lists/product_list_skeleton.dart'; // Import Skeleton
 import 'package:posventa/presentation/widgets/products/search/product_search_bar.dart';
+import 'package:posventa/presentation/pages/shared/main_layout.dart';
+
 import 'package:posventa/presentation/widgets/products/actions/product_actions_sheet.dart';
 import 'package:posventa/presentation/providers/department_providers.dart';
 import 'package:posventa/presentation/providers/category_providers.dart';
@@ -94,190 +99,268 @@ class ProductsPageState extends ConsumerState<ProductsPage>
 
     final countAsync = ref.watch(paginatedProductsCountProvider);
 
-    return Scaffold(
-      appBar: AppBar(
-        title: countAsync.when(
-          data: (count) => Text('Productos ($count)'),
-          loading: () => const Text('Productos'),
-          error: (_, __) => const Text('Productos'),
-        ),
-        centerTitle: true,
-        scrolledUnderElevation: 0,
-        actions: [
-          if (hasManagePermission)
-            IconButton(
-              icon: const Icon(Icons.upload_file),
-              onPressed: () => context.push('/products/import'),
-              tooltip: 'Import Products',
-            ),
-          IconButton(
-            icon: const Icon(Icons.add_rounded),
-            onPressed: () => context.push('/products/form'),
+    final isSmallScreen = MediaQuery.of(context).size.width < 1200;
+    final isDesktop = !isSmallScreen;
+
+    return CallbackShortcuts(
+      bindings: {
+        const SingleActivator(LogicalKeyboardKey.keyN, control: true): () {
+          if (hasManagePermission) context.push('/products/new');
+        },
+        const SingleActivator(LogicalKeyboardKey.keyF, control: true): () {
+          // Future implementation
+        },
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          leading: isSmallScreen
+              ? IconButton(
+                  icon: const Icon(Icons.menu),
+                  onPressed: () {
+                    MainLayout.scaffoldKey.currentState?.openDrawer();
+                  },
+                )
+              : null,
+          title: countAsync.when(
+            data: (count) => Text('Productos ($count)'),
+            loading: () => const Text('Productos'),
+            error: (_, __) => const Text('Productos'),
           ),
-        ],
-      ),
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(height: 12),
-              ProductSearchBar(
-                controller: _searchController,
-                onChanged: _onSearchChanged,
-                onScannerPressed: _openScanner,
-              ),
-              const SizedBox(height: 4),
-
-              Consumer(
-                builder: (context, ref, child) {
-                  final filters = ref.watch(productFiltersProvider);
-                  final filterNotifier = ref.read(
-                    productFiltersProvider.notifier,
-                  );
-                  final activeFilterCount = filters.activeFilterCount;
-
-                  return Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      FilterChip(
-                        label: Text(
-                          'Ver Inactivos',
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: filters.showInactive
-                                ? FontWeight.bold
-                                : FontWeight.normal,
-                            color: filters.showInactive
-                                ? theme.colorScheme.primary
-                                : theme.colorScheme.onSurfaceVariant,
-                          ),
-                        ),
-                        selected: filters.showInactive,
-                        onSelected: filterNotifier.setShowInactive,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          side: BorderSide(
-                            color: filters.showInactive
-                                ? theme.colorScheme.primary
-                                : theme.colorScheme.outline,
-                            width: 1,
-                          ),
-                        ),
-                        checkmarkColor: theme.colorScheme.primary,
-                        selectedColor: theme.colorScheme.primary.withValues(
-                          alpha: 0.1,
-                        ),
-                        backgroundColor: theme.colorScheme.surface,
-                        labelPadding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 0,
-                        ),
-                      ),
-                      // Total Count Indicator
-                      ChipFilterWidget(
-                        label: 'Filtros ($activeFilterCount)',
-                        activeFilterCount: activeFilterCount,
-                        onSelected: () {
-                          if (activeFilterCount > 0) {
-                            filterNotifier.clearAll();
-                          } else {
-                            _showFilterSheet();
-                          }
-                        },
-                      ),
-                    ],
-                  );
+          centerTitle: true,
+          scrolledUnderElevation: 0,
+          actions: [
+            if (isDesktop) ...[
+              FilledButton.icon(
+                onPressed: () {
+                  context.push('/products/new');
                 },
+                icon: const Icon(Icons.add),
+                label: const Text('Nuevo Producto'),
               ),
-              const SizedBox(height: 4),
+              const SizedBox(width: 8),
+              OutlinedButton.icon(
+                onPressed: () => context.push('/products/import_csv'),
+                icon: const Icon(Icons.upload_file),
+                label: const Text('Importar'),
+              ),
+            ] else ...[
+              IconButton(
+                onPressed: () => context.push('/products/import_csv'),
+                icon: const Icon(Icons.upload_file),
+                tooltip: 'Importar CSV',
+              ),
+              IconButton(
+                onPressed: () => context.push('/products/new'),
+                icon: const Icon(Icons.add),
+                tooltip: 'Nuevo Producto',
+              ),
+            ],
+            const SizedBox(width: 8),
+          ],
+        ),
+        body: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SizedBox(height: 12),
+                ProductSearchBar(
+                  controller: _searchController,
+                  onChanged: _onSearchChanged,
+                  onScannerPressed: _openScanner,
+                ),
+                const SizedBox(height: 4),
 
-              Expanded(
-                child: AsyncValueHandler<int>(
-                  value: countAsync,
-                  data: (count) => count == 0
-                      ? const EmptyStateWidget(
-                          icon: Icons.inventory_2_outlined,
-                          message: 'No se encontraron productos',
-                        )
-                      : _buildPaginatedList(count),
-                  emptyState: const EmptyStateWidget(
-                    icon: Icons.inventory_2_outlined,
-                    message: 'No se encontraron productos',
+                Consumer(
+                  builder: (context, ref, child) {
+                    final filters = ref.watch(productFiltersProvider);
+                    final filterNotifier = ref.read(
+                      productFiltersProvider.notifier,
+                    );
+                    final activeFilterCount = filters.activeFilterCount;
+
+                    return Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        FilterChip(
+                          label: Text(
+                            'Ver Inactivos',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: filters.showInactive
+                                  ? FontWeight.bold
+                                  : FontWeight.normal,
+                              color: filters.showInactive
+                                  ? theme.colorScheme.primary
+                                  : theme.colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                          selected: filters.showInactive,
+                          onSelected: filterNotifier.setShowInactive,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            side: BorderSide(
+                              color: filters.showInactive
+                                  ? theme.colorScheme.primary
+                                  : theme.colorScheme.outline,
+                              width: 1,
+                            ),
+                          ),
+                          checkmarkColor: theme.colorScheme.primary,
+                          selectedColor: theme.colorScheme.primary.withValues(
+                            alpha: 0.1,
+                          ),
+                          backgroundColor: theme.colorScheme.surface,
+                          labelPadding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 0,
+                          ),
+                        ),
+                        // Total Count Indicator
+                        ChipFilterWidget(
+                          label: 'Filtros ($activeFilterCount)',
+                          activeFilterCount: activeFilterCount,
+                          onSelected: () {
+                            if (activeFilterCount > 0) {
+                              filterNotifier.clearAll();
+                            } else {
+                              _showFilterSheet();
+                            }
+                          },
+                        ),
+                      ],
+                    );
+                  },
+                ),
+                const SizedBox(height: 4),
+
+                Expanded(
+                  child: AsyncValueHandler<int>(
+                    value: countAsync,
+                    data: (count) => count == 0
+                        ? const EmptyStateWidget(
+                            icon: Icons.inventory_2_outlined,
+                            message: 'No se encontraron productos',
+                          )
+                        : LayoutBuilder(
+                            builder: (context, constraints) {
+                              final width = constraints.maxWidth;
+                              // Use 600 as breakpoint for Table vs Card List
+                              final isDesktop = width > 700;
+
+                              return Column(
+                                children: [
+                                  if (isDesktop) _buildDesktopHeader(context),
+                                  Expanded(
+                                    child: ListView.builder(
+                                      controller: _scrollController,
+                                      // itemExtent improves scroll performance by skipping layout for off-screen items
+                                      itemExtent: isDesktop ? 64.0 : null,
+                                      itemCount: count,
+                                      itemBuilder: (context, index) =>
+                                          _buildItemAtIndex(
+                                            index,
+                                            count,
+                                            isDesktop,
+                                          ),
+                                    ),
+                                  ),
+                                ],
+                              );
+                            },
+                          ),
+                    emptyState: const EmptyStateWidget(
+                      icon: Icons.inventory_2_outlined,
+                      message: 'No se encontraron productos',
+                    ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
+        floatingActionButton: _showScrollToTop
+            ? FloatingActionButton(
+                onPressed: _scrollToTop,
+                mini: true,
+                child: const Icon(Icons.arrow_upward),
+              )
+            : null,
       ),
-      floatingActionButton: _showScrollToTop
-          ? FloatingActionButton(
-              onPressed: _scrollToTop,
-              mini: true,
-              child: const Icon(Icons.arrow_upward),
-            )
-          : null,
     );
   }
 
-  Widget _buildPaginatedList(int count) {
-    return ListView.builder(
-      controller: _scrollController,
-      itemCount: count,
-      itemBuilder: (context, index) {
-        final pageIndex = index ~/ kProductPageSize;
-        final indexInPage = index % kProductPageSize;
+  Widget _buildDesktopHeader(BuildContext context) {
+    final theme = Theme.of(context);
+    final textStyle = theme.textTheme.labelMedium?.copyWith(
+      color: theme.colorScheme.onSurfaceVariant,
+      fontWeight: FontWeight.bold,
+    );
 
-        final pageAsync = ref.watch(
-          paginatedProductsPageProvider(pageIndex: pageIndex),
-        );
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      margin: const EdgeInsets.only(bottom: 8),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainer,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        children: [
+          const SizedBox(width: 48 + 16), // Image + Gap
+          Expanded(flex: 3, child: Text('NOMBRE / CÓDIGO', style: textStyle)),
+          if (MediaQuery.of(context).size.width > 1100)
+            Expanded(flex: 2, child: Text('DEPARTAMENTO', style: textStyle)),
+          Expanded(flex: 2, child: Text('PRECIO', style: textStyle)),
+          // Make Stock header check for config?
+          // Technically providers decide this, but for layout we assume space is reserved if needed.
+          // Tile uses `if (useInventory)`, but we don't have access to settings here easily without ref reading again.
+          // However, if we preserve alignment, it's safer to show header or empty.
+          // Let's assume most use inventory or better to just show 'STOCK'
+          Expanded(flex: 2, child: Text('STOCK', style: textStyle)),
+          const SizedBox(width: 48), // Actions
+        ],
+      ),
+    );
+  }
 
-        return pageAsync.when(
-          data: (products) {
-            if (indexInPage >= products.length) return const SizedBox.shrink();
-            final product = products[indexInPage];
+  Widget _buildItemAtIndex(int index, int count, bool isDesktop) {
+    final pageIndex = index ~/ kProductPageSize;
+    final indexInPage = index % kProductPageSize;
 
-            // Prefetch next page
-            if (indexInPage == kProductPageSize - 5) {
-              // Trigger explicit read/watch in background?
-              // Just watching it in a ProviderContainer or causing a read is enough.
-              // But we can't 'ref.watch' inside a callback or conditional easily without re-render.
-              // However, this is part of the build phase of THIS item.
-              // Using Future.microtask to avoid build side-effects?
-              // Or just rely on natural scrolling.
-            }
-            return Column(
-              children: [
-                _buildProductItem(context, product),
-                if (index < count - 1) const SizedBox(height: 12),
-              ],
-            );
-          },
-          loading: () => Column(
-            children: [
-              _buildSkeletonItem(),
-              if (index < count - 1) const SizedBox(height: 12),
-            ],
-          ),
-          error: (_, __) => const SizedBox.shrink(),
+    final pageAsync = ref.watch(
+      paginatedProductsPageProvider(pageIndex: pageIndex),
+    );
+
+    return pageAsync.when(
+      data: (products) {
+        if (indexInPage >= products.length) return const SizedBox.shrink();
+        final product = products[indexInPage];
+
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 8.0), // Smaller gap for list
+          child: isDesktop
+              ? _buildDesktopItem(context, product)
+              : _buildMobileItem(context, product),
         );
       },
-    );
-  }
-
-  Widget _buildSkeletonItem() {
-    return Container(
-      height: 80,
-      decoration: BoxDecoration(
-        color: Colors.grey.withAlpha(20),
-        borderRadius: BorderRadius.circular(12),
+      loading: () => Padding(
+        padding: const EdgeInsets.only(bottom: 8.0),
+        child: ProductListSkeleton(isDesktop: isDesktop),
       ),
+      error: (_, __) => const SizedBox.shrink(),
     );
   }
 
-  Widget _buildProductItem(BuildContext context, Product product) {
+  Widget _buildDesktopItem(BuildContext context, Product product) {
+    return ProductListTile(
+      product: product,
+      onTap: () => _showActions(context, product),
+      onMorePressed: () => _showActions(context, product),
+    );
+  }
+
+  Widget _buildMobileItem(BuildContext context, Product product) {
     final isDisabled = !product.isActive;
     return RepaintBoundary(
       child: Slidable(
@@ -290,7 +373,6 @@ class ProductsPageState extends ConsumerState<ProductsPage>
                 await ref
                     .read(productNotifierProvider.notifier)
                     .toggleActive(product);
-                // Invalidate cache of pages to force refresh of current view
                 ref.invalidate(paginatedProductsPageProvider);
               },
               backgroundColor: isDisabled

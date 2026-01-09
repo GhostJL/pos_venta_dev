@@ -94,19 +94,22 @@ class MobileProductItem extends ConsumerWidget {
                       (variant?.photoUrl ?? product.photoUrl) != null &&
                           (variant?.photoUrl ?? product.photoUrl)!.isNotEmpty
                       ? DecorationImage(
-                          image:
-                              (variant?.photoUrl ?? product.photoUrl)!
-                                  .startsWith('http')
-                              ? NetworkImage(
-                                  (variant?.photoUrl ?? product.photoUrl)!,
+                          image: ResizeImage(
+                            (variant?.photoUrl ?? product.photoUrl)!.startsWith(
+                                  'http',
                                 )
-                              : FileImage(
-                                      File(
-                                        (variant?.photoUrl ??
-                                            product.photoUrl)!,
-                                      ),
-                                    )
-                                    as ImageProvider,
+                                ? NetworkImage(
+                                    (variant?.photoUrl ?? product.photoUrl)!,
+                                  )
+                                : FileImage(
+                                        File(
+                                          (variant?.photoUrl ??
+                                              product.photoUrl)!,
+                                        ),
+                                      )
+                                      as ImageProvider,
+                            width: 200, // Smaller cache for mobile/list
+                          ),
                           fit: BoxFit.cover,
                         )
                       : null,

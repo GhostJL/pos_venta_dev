@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:drift/drift.dart';
 import 'package:posventa/data/datasources/local/database/app_database.dart';
@@ -30,6 +31,28 @@ AppDatabase appDatabase(ref) => AppDatabase();
 Stream<Set<TableUpdate>> tableUpdateStream(Ref ref) {
   final db = ref.watch(appDatabaseProvider);
   return db.tableUpdates();
+}
+
+@riverpod
+Stream<Set<TableUpdate>> debouncedTableUpdateStream(Ref ref) {
+  final controller = StreamController<Set<TableUpdate>>();
+  Timer? timer;
+
+  ref.listen(tableUpdateStreamProvider, (previous, next) {
+    next.whenData((events) {
+      timer?.cancel();
+      timer = Timer(const Duration(milliseconds: 800), () {
+        if (!controller.isClosed) controller.add(events);
+      });
+    });
+  });
+
+  ref.onDispose(() {
+    timer?.cancel();
+    controller.close();
+  });
+
+  return controller.stream;
 }
 
 @riverpod

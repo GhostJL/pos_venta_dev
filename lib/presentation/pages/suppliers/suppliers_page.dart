@@ -10,7 +10,10 @@ import 'package:posventa/presentation/widgets/common/confirm_delete_dialog.dart'
 import 'package:posventa/presentation/widgets/common/async_value_handler.dart';
 import 'package:posventa/presentation/mixins/page_lifecycle_mixin.dart';
 import 'package:posventa/presentation/mixins/search_debounce_mixin.dart';
+import 'package:flutter/services.dart';
+import 'package:posventa/presentation/pages/shared/main_layout.dart';
 import 'package:posventa/presentation/widgets/suppliers/supplier_card.dart';
+import 'package:posventa/presentation/widgets/suppliers/supplier_table_row.dart';
 import 'package:posventa/presentation/widgets/common/empty_state_widget.dart';
 
 class SuppliersPage extends ConsumerStatefulWidget {
@@ -80,141 +83,190 @@ class SuppliersPageState extends ConsumerState<SuppliersPage>
     final countAsync = ref.watch(paginatedSuppliersCountProvider);
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final isSmallScreen = MediaQuery.of(context).size.width < 1200;
 
-    return Scaffold(
-      backgroundColor: colorScheme.surface,
-      appBar: AppBar(
-        title: countAsync.when(
-          data: (count) => Text(
-            'Proveedores ($count)',
-            style: theme.textTheme.titleLarge?.copyWith(
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          loading: () => const Text('Proveedores'),
-          error: (_, __) => const Text('Proveedores'),
-        ),
-        scrolledUnderElevation: 2,
+    return CallbackShortcuts(
+      bindings: {
+        const SingleActivator(LogicalKeyboardKey.keyN, control: true): () {
+          if (hasManagePermission) _navigateToForm();
+        },
+        const SingleActivator(LogicalKeyboardKey.keyF, control: true): () {
+          // Focus search
+        },
+      },
+      child: Scaffold(
         backgroundColor: colorScheme.surface,
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(70),
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-            child: TextField(
-              controller: _searchController,
-              onChanged: _onSearchChanged,
-              decoration: InputDecoration(
-                hintText: 'Buscar proveedores...',
-                prefixIcon: Icon(
-                  Icons.search_rounded,
-                  color: colorScheme.primary,
+        appBar: AppBar(
+          leading: isSmallScreen
+              ? IconButton(
+                  icon: const Icon(Icons.menu),
+                  onPressed: () =>
+                      MainLayout.scaffoldKey.currentState?.openDrawer(),
+                )
+              : null,
+          title: countAsync.when(
+            data: (count) => Text(
+              'Proveedores ($count)',
+              style: theme.textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            loading: () => const Text('Proveedores'),
+            error: (_, __) => const Text('Proveedores'),
+          ),
+          scrolledUnderElevation: 2,
+          backgroundColor: colorScheme.surface,
+          bottom: PreferredSize(
+            preferredSize: const Size.fromHeight(70),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+              child: TextField(
+                controller: _searchController,
+                onChanged: _onSearchChanged,
+                decoration: InputDecoration(
+                  hintText: 'Buscar proveedores...',
+                  prefixIcon: Icon(
+                    Icons.search_rounded,
+                    color: colorScheme.primary,
+                  ),
+                  filled: true,
+                  fillColor: colorScheme.surfaceContainerHighest.withAlpha(100),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(28),
+                    borderSide: BorderSide.none,
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 0,
+                  ),
+                  suffixIcon: _searchController.text.isNotEmpty
+                      ? IconButton(
+                          icon: const Icon(Icons.clear),
+                          onPressed: () {
+                            _searchController.clear();
+                            _onSearchChanged('');
+                          },
+                        )
+                      : null,
                 ),
-                filled: true,
-                fillColor: colorScheme.surfaceContainerHighest.withAlpha(100),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(28),
-                  borderSide: BorderSide.none,
-                ),
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 20,
-                  vertical: 0,
-                ),
-                suffixIcon: _searchController.text.isNotEmpty
-                    ? IconButton(
-                        icon: const Icon(Icons.clear),
-                        onPressed: () {
-                          _searchController.clear();
-                          _onSearchChanged('');
-                        },
-                      )
-                    : null,
               ),
             ),
           ),
+          actions: [
+            Consumer(
+              builder: (context, ref, _) {
+                final showInactive = ref.watch(supplierShowInactiveProvider);
+                return IconButton(
+                  icon: Icon(
+                    showInactive
+                        ? Icons.visibility_off_outlined
+                        : Icons.visibility_outlined,
+                  ),
+                  tooltip: showInactive ? 'Ocultar Inactivos' : 'Ver Inactivos',
+                  onPressed: () {
+                    ref.read(supplierShowInactiveProvider.notifier).toggle();
+                  },
+                );
+              },
+            ),
+          ],
         ),
-        actions: [
-          Consumer(
-            builder: (context, ref, _) {
-              final showInactive = ref.watch(supplierShowInactiveProvider);
-              return IconButton(
-                icon: Icon(
-                  showInactive
-                      ? Icons.visibility_off_outlined
-                      : Icons.visibility_outlined,
-                ),
-                tooltip: showInactive ? 'Ocultar Inactivos' : 'Ver Inactivos',
-                onPressed: () {
-                  ref.read(supplierShowInactiveProvider.notifier).toggle();
-                },
+        body: AsyncValueHandler<int>(
+          value: countAsync,
+          data: (count) {
+            if (count == 0) {
+              return const EmptyStateWidget(
+                icon: Icons.business_rounded,
+                message: 'No se encontraron proveedores',
               );
-            },
-          ),
-        ],
-      ),
-      body: AsyncValueHandler<int>(
-        value: countAsync,
-        data: (count) {
-          if (count == 0) {
-            return const EmptyStateWidget(
-              icon: Icons.business_rounded,
-              message: 'No se encontraron proveedores',
-            );
-          }
+            }
 
-          return ListView.builder(
-            controller: _scrollController,
-            padding: const EdgeInsets.all(16),
-            itemCount: count,
-            itemBuilder: (context, index) {
-              final pageIndex = index ~/ kSupplierPageSize;
-              final indexInPage = index % kSupplierPageSize;
+            return LayoutBuilder(
+              builder: (context, constraints) {
+                final isDesktop = constraints.maxWidth > 800;
 
-              final pageAsync = ref.watch(
-                paginatedSuppliersPageProvider(pageIndex: pageIndex),
-              );
+                return Column(
+                  children: [
+                    if (isDesktop) const SupplierHeader(),
+                    Expanded(
+                      child: ListView.builder(
+                        controller: _scrollController,
+                        padding: const EdgeInsets.all(16),
+                        itemCount: count,
+                        itemBuilder: (context, index) {
+                          final pageIndex = index ~/ kSupplierPageSize;
+                          final indexInPage = index % kSupplierPageSize;
 
-              return pageAsync.when(
-                data: (suppliers) {
-                  if (indexInPage >= suppliers.length) {
-                    return const SizedBox.shrink();
-                  }
-                  final supplier = suppliers[indexInPage];
-                  return Column(
-                    children: [
-                      SupplierCard(
-                        supplier: supplier,
-                        hasManagePermission: hasManagePermission,
-                        onEdit: () => _navigateToForm(supplier),
-                        onDelete: () => _confirmDelete(context, ref, supplier),
+                          final pageAsync = ref.watch(
+                            paginatedSuppliersPageProvider(
+                              pageIndex: pageIndex,
+                            ),
+                          );
+
+                          return pageAsync.when(
+                            data: (suppliers) {
+                              if (indexInPage >= suppliers.length) {
+                                return const SizedBox.shrink();
+                              }
+                              final supplier = suppliers[indexInPage];
+
+                              if (isDesktop) {
+                                return SupplierTableRow(
+                                  supplier: supplier,
+                                  hasManagePermission: hasManagePermission,
+                                  onEdit: () => _navigateToForm(supplier),
+                                  onDelete: () =>
+                                      _confirmDelete(context, ref, supplier),
+                                );
+                              } else {
+                                return Column(
+                                  children: [
+                                    SupplierCard(
+                                      supplier: supplier,
+                                      hasManagePermission: hasManagePermission,
+                                      onEdit: () => _navigateToForm(supplier),
+                                      onDelete: () => _confirmDelete(
+                                        context,
+                                        ref,
+                                        supplier,
+                                      ),
+                                    ),
+                                    if (index < count - 1)
+                                      const SizedBox(height: 12),
+                                  ],
+                                );
+                              }
+                            },
+                            loading: () => _buildSkeletonItem(),
+                            error: (_, __) => const SizedBox.shrink(),
+                          );
+                        },
                       ),
-                      if (index < count - 1) const SizedBox(height: 12),
-                    ],
-                  );
-                },
-                loading: () => _buildSkeletonItem(),
-                error: (_, __) => const SizedBox.shrink(),
-              );
-            },
-          );
-        },
-        emptyState: const EmptyStateWidget(
-          icon: Icons.business_rounded,
-          message: 'No se encontraron proveedores',
+                    ),
+                  ],
+                );
+              },
+            );
+          },
+          emptyState: const EmptyStateWidget(
+            icon: Icons.business_rounded,
+            message: 'No se encontraron proveedores',
+          ),
         ),
+        floatingActionButton: _showScrollToTop
+            ? FloatingActionButton(
+                onPressed: _scrollToTop,
+                mini: true,
+                child: const Icon(Icons.arrow_upward),
+              )
+            : (hasManagePermission
+                  ? FloatingActionButton.extended(
+                      onPressed: () => _navigateToForm(),
+                      icon: const Icon(Icons.add_rounded),
+                      label: const Text('Nuevo Proveedor'),
+                    )
+                  : null),
       ),
-      floatingActionButton: _showScrollToTop
-          ? FloatingActionButton(
-              onPressed: _scrollToTop,
-              mini: true,
-              child: const Icon(Icons.arrow_upward),
-            )
-          : (hasManagePermission
-                ? FloatingActionButton.extended(
-                    onPressed: () => _navigateToForm(),
-                    icon: const Icon(Icons.add_rounded),
-                    label: const Text('Nuevo Proveedor'),
-                  )
-                : null),
     );
   }
 

@@ -291,8 +291,11 @@ class ProductCard extends ConsumerWidget {
       if (product.photoUrl!.startsWith('http')) {
         return ClipRRect(
           borderRadius: BorderRadius.circular(12),
-          child: Image.network(
-            product.photoUrl!,
+          child: Image(
+            image: ResizeImage(
+              NetworkImage(product.photoUrl!),
+              width: 100, // Optimize thumbnail size
+            ),
             width: 48,
             height: 48,
             fit: BoxFit.cover,
@@ -302,8 +305,11 @@ class ProductCard extends ConsumerWidget {
       } else {
         return ClipRRect(
           borderRadius: BorderRadius.circular(12),
-          child: Image.file(
-            File(product.photoUrl!),
+          child: Image(
+            image: ResizeImage(
+              FileImage(File(product.photoUrl!)),
+              width: 100, // Optimize thumbnail size
+            ),
             width: 48,
             height: 48,
             fit: BoxFit.cover,

@@ -150,10 +150,12 @@ class CartSection extends ConsumerWidget {
                                 style: Theme.of(context).textTheme.titleSmall
                                     ?.copyWith(fontWeight: FontWeight.bold),
                                 overflow: TextOverflow.ellipsis,
+                                maxLines: 1,
                               ),
                             ],
                           ),
                         ),
+                        const SizedBox(width: 8),
                         Icon(
                           Icons.expand_more_rounded,
                           color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -403,13 +405,17 @@ class CartSection extends ConsumerWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(
-            label,
-            style: TextStyle(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-              fontSize: 14,
+          Expanded(
+            child: Text(
+              label,
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                fontSize: 14,
+              ),
+              overflow: TextOverflow.ellipsis,
             ),
           ),
+          const SizedBox(width: 8),
           Text(
             '\$${amount.toStringAsFixed(2)}',
             style: TextStyle(

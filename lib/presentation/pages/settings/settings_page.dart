@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:posventa/presentation/pages/shared/main_layout.dart';
 import 'package:posventa/domain/entities/user.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:posventa/presentation/providers/auth_provider.dart';
@@ -15,6 +16,7 @@ class SettingsPage extends ConsumerWidget {
     final user = authState.user;
     final isAdmin = user?.role == UserRole.administrador;
     final settingsAsync = ref.watch(settingsProvider);
+    final isSmallScreen = MediaQuery.of(context).size.width < 1200;
 
     // Build the sections dynamically based on permissions/role if needed
     // For now, we follow the plan which focuses on Admin configuration mainly
@@ -23,7 +25,17 @@ class SettingsPage extends ConsumerWidget {
     // but good to have safety checks or show limited options if needed.
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Configuración'), centerTitle: false),
+      appBar: AppBar(
+        leading: isSmallScreen
+            ? IconButton(
+                icon: const Icon(Icons.menu),
+                onPressed: () =>
+                    MainLayout.scaffoldKey.currentState?.openDrawer(),
+              )
+            : null,
+        title: const Text('Configuración'),
+        centerTitle: false,
+      ),
       body: LayoutBuilder(
         builder: (context, constraints) {
           // Responsive layout determination

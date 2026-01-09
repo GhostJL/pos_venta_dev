@@ -9,6 +9,7 @@ class ShiftClosePage extends StatelessWidget {
   Widget build(BuildContext context) {
     return const PlaceholderPage(
       moduleName: 'Cierre de Turno',
+      showMenuButton: true,
       icon: Icons.lock_clock_rounded,
       description:
           'Acceso rápido para que los cajeros cierren su turno de manera '

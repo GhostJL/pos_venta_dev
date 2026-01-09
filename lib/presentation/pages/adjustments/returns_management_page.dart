@@ -10,6 +10,7 @@ class ReturnsManagementPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return const PlaceholderPage(
       moduleName: 'Gestión de Devoluciones',
+      showMenuButton: true,
       icon: Icons.keyboard_return_rounded,
       description:
           'Este módulo permitirá gestionar las devoluciones de productos, '

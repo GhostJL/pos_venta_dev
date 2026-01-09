@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:posventa/presentation/providers/auth_provider.dart';
 import 'package:posventa/presentation/providers/providers.dart';
 import 'package:posventa/core/theme/theme.dart';
+import 'package:posventa/presentation/pages/shared/main_layout.dart';
 
 class DashboardAppBar extends ConsumerWidget implements PreferredSizeWidget {
   const DashboardAppBar({super.key});
@@ -18,6 +19,14 @@ class DashboardAppBar extends ConsumerWidget implements PreferredSizeWidget {
       toolbarHeight: 80,
       backgroundColor: Theme.of(context).colorScheme.surface,
       surfaceTintColor: Theme.of(context).colorScheme.surface,
+      leading: MediaQuery.of(context).size.width < 1200
+          ? IconButton(
+              icon: const Icon(Icons.menu),
+              onPressed: () {
+                MainLayout.scaffoldKey.currentState?.openDrawer();
+              },
+            )
+          : null,
       title: Text(
         'Panel de Control',
         style: Theme.of(context).textTheme.titleLarge?.copyWith(
