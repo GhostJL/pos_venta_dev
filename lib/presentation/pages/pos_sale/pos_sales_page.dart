@@ -135,18 +135,16 @@ class _DesktopLayout extends StatelessWidget {
             child: Card(
               elevation: 0,
               color: Theme.of(context).colorScheme.surface,
+              clipBehavior: Clip.antiAlias,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16),
                 side: BorderSide(
                   color: Theme.of(context).colorScheme.outlineVariant,
                 ),
               ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(16),
-                child: ProductGridSection(
-                  isMobile: false,
-                  searchFocusNode: searchFocusNode,
-                ),
+              child: ProductGridSection(
+                isMobile: false,
+                searchFocusNode: searchFocusNode,
               ),
             ),
           ),
@@ -161,13 +159,11 @@ class _DesktopLayout extends StatelessWidget {
               elevation: 4,
               shadowColor: Colors.black12,
               color: Theme.of(context).colorScheme.surface,
+              clipBehavior: Clip.antiAlias,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16),
               ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(16),
-                child: const CartSection(isMobile: false),
-              ),
+              child: const CartSection(isMobile: false),
             ),
           ),
         ),

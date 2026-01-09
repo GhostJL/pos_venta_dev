@@ -13,6 +13,7 @@ import 'package:posventa/presentation/widgets/pos/sale/charge_bottom_bar.dart';
 import 'package:posventa/presentation/mixins/search_debounce_mixin.dart';
 import 'package:posventa/presentation/widgets/pos/product_grid/weight_input_dialog.dart';
 import 'package:posventa/presentation/widgets/common/misc/scanner_arguments.dart';
+import 'package:posventa/presentation/providers/pos_grid_provider.dart';
 
 class ProductGridSection extends ConsumerStatefulWidget {
   final bool isMobile;
@@ -121,28 +122,6 @@ class _ProductGridSectionState extends ConsumerState<ProductGridSection>
     );
   }
 
-  List<ProductGridItem> _buildGridItems(List<Product> products) {
-    final List<ProductGridItem> gridItems = [];
-    for (final product in products) {
-      // Omitir productos inactivos en el POS
-      if (!product.isActive) continue;
-
-      final sellableVariants =
-          product.variants?.where((v) => v.isForSale).toList() ?? [];
-
-      if (sellableVariants.isNotEmpty) {
-        // Add each sellable variant as a separate grid item
-        for (final variant in sellableVariants) {
-          gridItems.add(ProductGridItem(product: product, variant: variant));
-        }
-      } else {
-        // Add product without variant
-        gridItems.add(ProductGridItem(product: product));
-      }
-    }
-    return gridItems;
-  }
-
   Future<void> _onProductTap(ProductGridItem item) async {
     // Check if product is sold by weight
     double quantity = 1.0;
@@ -178,7 +157,7 @@ class _ProductGridSectionState extends ConsumerState<ProductGridSection>
 
   @override
   Widget build(BuildContext context) {
-    final productsAsync = ref.watch(productListProvider);
+    final gridItemsAsync = ref.watch(posGridItemsProvider);
     final cart = ref.watch(pOSProvider.select((s) => s.cart));
 
     // Efficiently map cart quantities
@@ -199,23 +178,23 @@ class _ProductGridSectionState extends ConsumerState<ProductGridSection>
           showMenu: widget.isMobile,
           onChanged: (value) {
             debounceSearch(() {
-              ref.read(productListProvider.notifier).searchProducts(value);
+              ref
+                  .read(productSearchQueryProvider.notifier)
+                  .setQuery(value); // Fixed: update query directly
               setState(() {});
             });
           },
           onClear: () {
             _searchController.clear();
-            ref.read(productListProvider.notifier).searchProducts('');
+            ref.read(productSearchQueryProvider.notifier).setQuery(''); // Fixed
             setState(() {});
           },
           onScan: _openScanner,
         ),
         // Product Grid
         Expanded(
-          child: productsAsync.when(
-            data: (products) {
-              // final products = state.products; // Removed
-              final gridItems = _buildGridItems(products);
+          child: gridItemsAsync.when(
+            data: (gridItems) {
               return ProductGridView(
                 items: gridItems,
                 isMobile: widget.isMobile,

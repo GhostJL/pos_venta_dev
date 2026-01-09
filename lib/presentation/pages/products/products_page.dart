@@ -16,10 +16,6 @@ import 'package:posventa/presentation/widgets/products/search/product_search_bar
 import 'package:posventa/presentation/pages/shared/main_layout.dart';
 
 import 'package:posventa/presentation/widgets/products/actions/product_actions_sheet.dart';
-import 'package:posventa/presentation/providers/department_providers.dart';
-import 'package:posventa/presentation/providers/category_providers.dart';
-import 'package:posventa/presentation/providers/brand_providers.dart';
-import 'package:posventa/presentation/providers/supplier_providers.dart';
 import 'package:posventa/presentation/providers/product_filters.dart';
 import 'package:posventa/presentation/widgets/products/filters/chip_filter_widget.dart';
 import 'package:posventa/presentation/widgets/common/async_value_handler.dart';
@@ -87,11 +83,7 @@ class ProductsPageState extends ConsumerState<ProductsPage>
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    // Warm up filter data in background
-    ref.watch(departmentListProvider);
-    ref.watch(categoryListProvider);
-    ref.watch(brandListProvider);
-    ref.watch(supplierListProvider);
+    // Filter data will be loaded lazily when needed
 
     final hasManagePermission = ref.watch(
       hasPermissionProvider(PermissionConstants.catalogManage),
@@ -353,10 +345,12 @@ class ProductsPageState extends ConsumerState<ProductsPage>
   }
 
   Widget _buildDesktopItem(BuildContext context, Product product) {
-    return ProductListTile(
-      product: product,
-      onTap: () => _showActions(context, product),
-      onMorePressed: () => _showActions(context, product),
+    return RepaintBoundary(
+      child: ProductListTile(
+        product: product,
+        onTap: () => _showActions(context, product),
+        onMorePressed: () => _showActions(context, product),
+      ),
     );
   }
 
