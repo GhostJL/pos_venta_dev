@@ -4,12 +4,14 @@ class ProductSearchBar extends StatelessWidget {
   final TextEditingController controller;
   final ValueChanged<String> onChanged;
   final VoidCallback onScannerPressed;
+  final FocusNode? focusNode;
 
   const ProductSearchBar({
     super.key,
     required this.controller,
     required this.onChanged,
     required this.onScannerPressed,
+    this.focusNode,
   });
 
   @override
@@ -18,6 +20,7 @@ class ProductSearchBar extends StatelessWidget {
       children: [
         Expanded(
           child: TextField(
+            focusNode: focusNode,
             controller: controller,
             decoration: const InputDecoration(
               hintText: 'Buscar por nombre, código o código de barras',

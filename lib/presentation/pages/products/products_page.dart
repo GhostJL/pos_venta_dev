@@ -34,6 +34,7 @@ class ProductsPageState extends ConsumerState<ProductsPage>
     with PageLifecycleMixin, SearchDebounceMixin {
   final TextEditingController _searchController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
+  final FocusNode _searchFocusNode = FocusNode();
 
   @override
   List<dynamic> get providersToInvalidate => [paginatedProductsCountProvider];
@@ -50,6 +51,7 @@ class ProductsPageState extends ConsumerState<ProductsPage>
   void dispose() {
     _searchController.dispose();
     _scrollController.dispose();
+    _searchFocusNode.dispose();
     super.dispose();
   }
 
@@ -100,7 +102,7 @@ class ProductsPageState extends ConsumerState<ProductsPage>
           if (hasManagePermission) context.push('/products/new');
         },
         const SingleActivator(LogicalKeyboardKey.keyF, control: true): () {
-          // Future implementation
+          _searchFocusNode.requestFocus();
         },
       },
       child: Scaffold(
@@ -158,6 +160,7 @@ class ProductsPageState extends ConsumerState<ProductsPage>
               children: [
                 const SizedBox(height: 12),
                 ProductSearchBar(
+                  focusNode: _searchFocusNode,
                   controller: _searchController,
                   onChanged: _onSearchChanged,
                   onScannerPressed: _openScanner,

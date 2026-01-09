@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:posventa/presentation/widgets/pos/sale/cart_section.dart';
 import 'package:posventa/presentation/widgets/pos/product_grid_section.dart';
+import 'package:posventa/presentation/widgets/pos/consumer_selection_dialog_widget.dart';
 import 'package:posventa/core/constants/permission_constants.dart';
 import 'package:posventa/presentation/providers/permission_provider.dart';
 import 'package:posventa/presentation/providers/pos_providers.dart';
@@ -35,6 +36,45 @@ class _PosSalesPageState extends ConsumerState<PosSalesPage> {
 
   void _handleFocusSearch() {
     _searchFocusNode.requestFocus();
+  }
+
+  void _handleCustomerShortcut() {
+    showDialog(
+      context: context,
+      builder: (context) => const CustomerSelectionDialogWidget(),
+    );
+  }
+
+  void _handleClearCartShortcut() {
+    final cart = ref.read(pOSProvider).cart;
+    if (cart.isEmpty) return;
+
+    final posNotifier = ref.read(pOSProvider.notifier);
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Limpiar Carrito'),
+        content: const Text(
+          '¿Estás seguro de que deseas eliminar todos los productos del carrito?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('CANCELAR'),
+          ),
+          TextButton(
+            onPressed: () {
+              posNotifier.clearCart();
+              Navigator.pop(context);
+            },
+            style: TextButton.styleFrom(
+              foregroundColor: Theme.of(context).colorScheme.error,
+            ),
+            child: const Text('LIMPIAR'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -70,11 +110,17 @@ class _PosSalesPageState extends ConsumerState<PosSalesPage> {
 
     return CallbackShortcuts(
       bindings: <ShortcutActivator, VoidCallback>{
-        // F1: Focus Search
-        const SingleActivator(LogicalKeyboardKey.f1): _handleFocusSearch,
-        // F5: Pay
+        // F2: Focus Search
+        const SingleActivator(LogicalKeyboardKey.f2): _handleFocusSearch,
+        // F6: Select Customer
+        const SingleActivator(LogicalKeyboardKey.f6): _handleCustomerShortcut,
+        // F9: Pay
+        const SingleActivator(LogicalKeyboardKey.f9): _handlePayShortcut,
+        // F10: Clear Cart
+        const SingleActivator(LogicalKeyboardKey.f10): _handleClearCartShortcut,
+        // F5 (Legacy/Alternative): Pay
         const SingleActivator(LogicalKeyboardKey.f5): _handlePayShortcut,
-        // Esc: Clear Search / Unfocus (Handled inside widgets usually, but we can add global here)
+        // Esc: Clear Search / Unfocus
         const SingleActivator(LogicalKeyboardKey.escape): () {
           FocusScope.of(context).unfocus();
         },
@@ -89,8 +135,6 @@ class _PosSalesPageState extends ConsumerState<PosSalesPage> {
                 // Breakpoints
                 final width = constraints.maxWidth;
                 final isMobile = width < 700;
-                // final isTablet = width >= 700 && width < 1200;
-                // final isDesktop = width >= 1200;
 
                 if (isMobile) {
                   return _MobileLayout(searchFocusNode: _searchFocusNode);
