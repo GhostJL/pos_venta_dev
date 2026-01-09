@@ -47,6 +47,7 @@ import 'package:posventa/presentation/pages/suppliers/suppliers_page.dart';
 import 'package:posventa/presentation/pages/store/store_page.dart';
 import 'package:posventa/presentation/pages/tax/tax_rate_page.dart';
 import 'package:posventa/presentation/pages/settings/settings_page.dart';
+import 'package:posventa/presentation/pages/settings/help/app_shortcuts_page.dart';
 
 import 'package:posventa/presentation/pages/users/users_permissions_page.dart';
 import 'package:posventa/presentation/pages/warehouses/warehouses_page.dart';
@@ -441,6 +442,11 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: '/settings',
             pageBuilder: (context, state) =>
                 const NoTransitionPage(child: SettingsPage()),
+          ),
+          GoRoute(
+            path: '/settings/shortcuts',
+            pageBuilder: (context, state) =>
+                const NoTransitionPage(child: AppShortcutsPage()),
           ),
 
           GoRoute(

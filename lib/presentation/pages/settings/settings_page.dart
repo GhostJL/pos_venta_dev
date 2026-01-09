@@ -166,6 +166,18 @@ class SettingsPage extends ConsumerWidget {
                   ),
                 ],
               ),
+
+              const SettingsHeader(title: 'Ayuda'),
+              SettingsSectionContainer(
+                children: [
+                  SettingsCategoryTile(
+                    icon: Icons.keyboard_alt_outlined,
+                    title: 'Atajos de Teclado',
+                    subtitle: 'Lista de accesos directos del sistema',
+                    onTap: () => context.push('/settings/shortcuts'),
+                  ),
+                ],
+              ),
             ],
           ],
         ),
