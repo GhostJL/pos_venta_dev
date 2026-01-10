@@ -6,6 +6,7 @@ import 'package:posventa/data/datasources/local/database/app_database.dart'
 import 'package:posventa/domain/entities/user.dart';
 import 'package:posventa/domain/entities/permission.dart';
 import 'package:posventa/domain/repositories/cashier_repository.dart';
+import 'package:posventa/core/constants/permission_constants.dart';
 
 class CashierRepositoryImpl implements CashierRepository {
   final drift_db.AppDatabase db;
@@ -68,23 +69,48 @@ class CashierRepositoryImpl implements CashierRepository {
   Future<void> createCashier(User cashier, String password) async {
     final hashedPassword = _hashPassword(password);
 
-    await db
-        .into(db.users)
-        .insert(
-          drift_db.UsersCompanion.insert(
-            username: cashier.username,
-            passwordHash: hashedPassword,
-            firstName: Value(cashier.firstName),
-            lastName: Value(cashier.lastName),
-            email: Value(cashier.email),
-            role: UserRole.cajero.name, // Ensure role is cashier
-            isActive: Value(cashier.isActive),
-            onboardingCompleted: Value(cashier.onboardingCompleted),
-            lastLoginAt: Value(cashier.lastLoginAt),
-            createdAt: cashier.createdAt,
-            updatedAt: cashier.updatedAt,
-          ),
+    await db.transaction(() async {
+      // 1. Insert User
+      final userId = await db
+          .into(db.users)
+          .insert(
+            drift_db.UsersCompanion.insert(
+              username: cashier.username,
+              passwordHash: hashedPassword,
+              firstName: Value(cashier.firstName),
+              lastName: Value(cashier.lastName),
+              email: Value(cashier.email),
+              role: UserRole.cajero.name, // Ensure role is cashier
+              isActive: Value(cashier.isActive),
+              onboardingCompleted: Value(cashier.onboardingCompleted),
+              lastLoginAt: Value(cashier.lastLoginAt),
+              createdAt: cashier.createdAt,
+              updatedAt: cashier.updatedAt,
+            ),
+          );
+
+      // 2. Assign Default Permissions
+      // Get IDs for default permissions
+      final permissionQuery = db.select(db.permissions)
+        ..where(
+          (p) => p.code.isIn(PermissionConstants.defaultCashierPermissions),
         );
+      final defaultPermissions = await permissionQuery.get();
+
+      // Insert UserPermissions
+      for (final perm in defaultPermissions) {
+        await db
+            .into(db.userPermissions)
+            .insert(
+              drift_db.UserPermissionsCompanion.insert(
+                userId: userId,
+                permissionId: perm.id,
+                grantedAt: DateTime.now(),
+                // grantedBy is null as it's system assigned
+              ),
+            );
+      }
+    });
   }
 
   @override

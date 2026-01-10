@@ -199,6 +199,11 @@ class MenuConfig {
   static List<MenuItem> getCashierMenu() {
     return [
       const MenuItem(
+        title: 'Inicio',
+        icon: Icons.dashboard_rounded,
+        route: '/home',
+      ),
+      const MenuItem(
         title: 'Punto de Venta (POS)',
         icon: Icons.point_of_sale_rounded,
         route: '/sales',
@@ -209,18 +214,6 @@ class MenuConfig {
         icon: Icons.receipt_long_rounded,
         route: '/sales-history',
         requiredPermissions: [PermissionConstants.reportsView],
-      ),
-      const MenuItem(
-        title: 'Gestión de Devoluciones',
-        icon: Icons.keyboard_return_rounded,
-        route: '/returns',
-        requiredPermissions: [PermissionConstants.posAccess],
-      ),
-      const MenuItem(
-        title: 'Cierre de Turno',
-        icon: Icons.lock_clock_rounded,
-        route: '/shift-close',
-        requiredPermissions: [PermissionConstants.posAccess],
       ),
     ];
   }

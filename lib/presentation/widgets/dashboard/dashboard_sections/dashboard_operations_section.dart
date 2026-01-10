@@ -25,14 +25,6 @@ class DashboardOperationsSection extends StatelessWidget {
         onTap: () => context.go('/sales-history'),
         isTablet: isTablet,
       ),
-      DashboardActionCard(
-        title: 'Cortes de Caja',
-        description: 'Sesiones y movimientos',
-        icon: Icons.history_edu_rounded,
-        color: Theme.of(context).colorScheme.secondary,
-        onTap: () => context.go('/cash-sessions-history'),
-        isTablet: isTablet,
-      ),
     ];
 
     return Column(

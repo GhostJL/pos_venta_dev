@@ -9,46 +9,52 @@ part of 'paginated_sales_provider.dart';
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
 
-@ProviderFor(SaleDateRange)
-const saleDateRangeProvider = SaleDateRangeProvider._();
+@ProviderFor(SaleFilter)
+const saleFilterProvider = SaleFilterProvider._();
 
-final class SaleDateRangeProvider
+final class SaleFilterProvider
     extends
-        $NotifierProvider<SaleDateRange, ({DateTime? end, DateTime? start})> {
-  const SaleDateRangeProvider._()
+        $NotifierProvider<
+          SaleFilter,
+          ({int? cashierId, DateTime? end, DateTime? start})
+        > {
+  const SaleFilterProvider._()
     : super(
         from: null,
         argument: null,
         retry: null,
-        name: r'saleDateRangeProvider',
+        name: r'saleFilterProvider',
         isAutoDispose: true,
         dependencies: null,
         $allTransitiveDependencies: null,
       );
 
   @override
-  String debugGetCreateSourceHash() => _$saleDateRangeHash();
+  String debugGetCreateSourceHash() => _$saleFilterHash();
 
   @$internal
   @override
-  SaleDateRange create() => SaleDateRange();
+  SaleFilter create() => SaleFilter();
 
   /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(({DateTime? end, DateTime? start}) value) {
+  Override overrideWithValue(
+    ({int? cashierId, DateTime? end, DateTime? start}) value,
+  ) {
     return $ProviderOverride(
       origin: this,
-      providerOverride: $SyncValueProvider<({DateTime? end, DateTime? start})>(
-        value,
-      ),
+      providerOverride:
+          $SyncValueProvider<
+            ({int? cashierId, DateTime? end, DateTime? start})
+          >(value),
     );
   }
 }
 
-String _$saleDateRangeHash() => r'8e817be72c4a61b8592eb5355539536d455ea03c';
+String _$saleFilterHash() => r'bd23fba6d9e5ff05853ddb38a6fef58171e479fb';
 
-abstract class _$SaleDateRange
-    extends $Notifier<({DateTime? end, DateTime? start})> {
-  ({DateTime? end, DateTime? start}) build();
+abstract class _$SaleFilter
+    extends $Notifier<({int? cashierId, DateTime? end, DateTime? start})> {
+  ({int? cashierId, DateTime? end, DateTime? start}) build();
   @$mustCallSuper
   @override
   void runBuild() {
@@ -56,17 +62,17 @@ abstract class _$SaleDateRange
     final ref =
         this.ref
             as $Ref<
-              ({DateTime? end, DateTime? start}),
-              ({DateTime? end, DateTime? start})
+              ({int? cashierId, DateTime? end, DateTime? start}),
+              ({int? cashierId, DateTime? end, DateTime? start})
             >;
     final element =
         ref.element
             as $ClassProviderElement<
               AnyNotifier<
-                ({DateTime? end, DateTime? start}),
-                ({DateTime? end, DateTime? start})
+                ({int? cashierId, DateTime? end, DateTime? start}),
+                ({int? cashierId, DateTime? end, DateTime? start})
               >,
-              ({DateTime? end, DateTime? start}),
+              ({int? cashierId, DateTime? end, DateTime? start}),
               Object?,
               Object?
             >;
@@ -106,7 +112,7 @@ final class PaginatedSalesCountProvider
 }
 
 String _$paginatedSalesCountHash() =>
-    r'd538409a29adb1fd6333f40cbdb304cd24036626';
+    r'bc2dd871e1f44d65285304ab5e3e70bc804f236e';
 
 @ProviderFor(paginatedSalesPage)
 const paginatedSalesPageProvider = PaginatedSalesPageFamily._();
@@ -163,7 +169,7 @@ final class PaginatedSalesPageProvider
 }
 
 String _$paginatedSalesPageHash() =>
-    r'48b1dd9713e7fc065bc72264b61cf539f1846f44';
+    r'79381e2714a5cb87227b0350069109a348deaf5e';
 
 final class PaginatedSalesPageFamily extends $Family
     with $FunctionalFamilyOverride<FutureOr<List<Sale>>, int> {

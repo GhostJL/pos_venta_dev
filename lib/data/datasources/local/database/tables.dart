@@ -644,10 +644,13 @@ class Purchases extends Table {
       dateTime().nullable().named('received_date')();
   TextColumn get supplierInvoiceNumber =>
       text().nullable().named('supplier_invoice_number')();
+  @ReferenceName('requestedPurchases')
   IntColumn get requestedBy =>
       integer().named('requested_by').references(Users, #id)();
+  @ReferenceName('receivedPurchases')
   IntColumn get receivedBy =>
       integer().nullable().named('received_by').references(Users, #id)();
+  @ReferenceName('cancelledPurchases')
   IntColumn get cancelledBy =>
       integer().nullable().named('cancelled_by').references(Users, #id)();
   DateTimeColumn get createdAt =>

@@ -632,8 +632,13 @@ String _$closeCashSessionUseCaseHash() =>
 const currentCashSessionProvider = CurrentCashSessionProvider._();
 
 final class CurrentCashSessionProvider
-    extends $FunctionalProvider<AsyncValue<dynamic>, dynamic, FutureOr<dynamic>>
-    with $FutureModifier<dynamic>, $FutureProvider<dynamic> {
+    extends
+        $FunctionalProvider<
+          AsyncValue<CashSession?>,
+          CashSession?,
+          FutureOr<CashSession?>
+        >
+    with $FutureModifier<CashSession?>, $FutureProvider<CashSession?> {
   const CurrentCashSessionProvider._()
     : super(
         from: null,
@@ -650,17 +655,18 @@ final class CurrentCashSessionProvider
 
   @$internal
   @override
-  $FutureProviderElement<dynamic> $createElement($ProviderPointer pointer) =>
-      $FutureProviderElement(pointer);
+  $FutureProviderElement<CashSession?> $createElement(
+    $ProviderPointer pointer,
+  ) => $FutureProviderElement(pointer);
 
   @override
-  FutureOr<dynamic> create(Ref ref) {
+  FutureOr<CashSession?> create(Ref ref) {
     return currentCashSession(ref);
   }
 }
 
 String _$currentCashSessionHash() =>
-    r'020890236b6c4f78961a49c79e957ea5124a4128';
+    r'5f3b829041469d67d2c6c80c2bde19f178e99a7d';
 
 @ProviderFor(saleReturnRepository)
 const saleReturnRepositoryProvider = SaleReturnRepositoryProvider._();

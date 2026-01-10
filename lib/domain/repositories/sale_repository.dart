@@ -7,15 +7,21 @@ abstract class SaleRepository {
     DateTime? endDate,
     int? limit,
     int? offset,
+    int? cashierId,
   });
 
-  Future<int> countSales({DateTime? startDate, DateTime? endDate});
+  Future<int> countSales({
+    DateTime? startDate,
+    DateTime? endDate,
+    int? cashierId,
+  });
 
   Stream<List<Sale>> getSalesStream({
     DateTime? startDate,
     DateTime? endDate,
     int? limit,
     int? offset,
+    int? cashierId,
   });
 
   Future<Sale?> getSaleById(int id);

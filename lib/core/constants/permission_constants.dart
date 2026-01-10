@@ -22,4 +22,14 @@ class PermissionConstants {
 
   // Customer Module
   static const String customerManage = 'CUSTOMER_MANAGE';
+
+  // Default Cashier Permissions
+  static const List<String> defaultCashierPermissions = [
+    posAccess,
+    cashOpen,
+    cashClose,
+    cashMovement,
+    reportsView,
+    posRefund,
+  ];
 }

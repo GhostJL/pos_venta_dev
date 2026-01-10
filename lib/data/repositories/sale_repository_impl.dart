@@ -20,6 +20,7 @@ class SaleRepositoryImpl implements SaleRepository {
     DateTime? endDate,
     int? limit,
     int? offset,
+    int? cashierId,
   }) async {
     final q = db.select(db.sales).join([
       leftOuterJoin(
@@ -33,6 +34,9 @@ class SaleRepositoryImpl implements SaleRepository {
     }
     if (endDate != null) {
       q.where(db.sales.saleDate.isSmallerOrEqualValue(endDate));
+    }
+    if (cashierId != null) {
+      q.where(db.sales.cashierId.equals(cashierId));
     }
 
     q.orderBy([OrderingTerm.desc(db.sales.saleDate)]);
@@ -158,7 +162,11 @@ class SaleRepositoryImpl implements SaleRepository {
   }
 
   @override
-  Future<int> countSales({DateTime? startDate, DateTime? endDate}) async {
+  Future<int> countSales({
+    DateTime? startDate,
+    DateTime? endDate,
+    int? cashierId,
+  }) async {
     final q = db.selectOnly(db.sales)..addColumns([db.sales.id.count()]);
 
     if (startDate != null) {
@@ -166,6 +174,9 @@ class SaleRepositoryImpl implements SaleRepository {
     }
     if (endDate != null) {
       q.where(db.sales.saleDate.isSmallerOrEqualValue(endDate));
+    }
+    if (cashierId != null) {
+      q.where(db.sales.cashierId.equals(cashierId));
     }
 
     final result = await q.getSingle();
@@ -233,6 +244,7 @@ class SaleRepositoryImpl implements SaleRepository {
     DateTime? endDate,
     int? limit,
     int? offset,
+    int? cashierId,
   }) {
     // Basic stream implementation watching the sales table
     // For more complex querying relative to filters, we might need to re-query
@@ -246,6 +258,7 @@ class SaleRepositoryImpl implements SaleRepository {
         endDate: endDate,
         limit: limit,
         offset: offset,
+        cashierId: cashierId,
       ),
     );
   }

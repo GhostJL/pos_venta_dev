@@ -19974,6 +19974,60 @@ final class $$UsersTableReferences
     );
   }
 
+  static MultiTypedResultKey<$PurchasesTable, List<Purchase>>
+  _requestedPurchasesTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
+    db.purchases,
+    aliasName: $_aliasNameGenerator(db.users.id, db.purchases.requestedBy),
+  );
+
+  $$PurchasesTableProcessedTableManager get requestedPurchases {
+    final manager = $$PurchasesTableTableManager(
+      $_db,
+      $_db.purchases,
+    ).filter((f) => f.requestedBy.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_requestedPurchasesTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+
+  static MultiTypedResultKey<$PurchasesTable, List<Purchase>>
+  _receivedPurchasesTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
+    db.purchases,
+    aliasName: $_aliasNameGenerator(db.users.id, db.purchases.receivedBy),
+  );
+
+  $$PurchasesTableProcessedTableManager get receivedPurchases {
+    final manager = $$PurchasesTableTableManager(
+      $_db,
+      $_db.purchases,
+    ).filter((f) => f.receivedBy.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_receivedPurchasesTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+
+  static MultiTypedResultKey<$PurchasesTable, List<Purchase>>
+  _cancelledPurchasesTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
+    db.purchases,
+    aliasName: $_aliasNameGenerator(db.users.id, db.purchases.cancelledBy),
+  );
+
+  $$PurchasesTableProcessedTableManager get cancelledPurchases {
+    final manager = $$PurchasesTableTableManager(
+      $_db,
+      $_db.purchases,
+    ).filter((f) => f.cancelledBy.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_cancelledPurchasesTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+
   static MultiTypedResultKey<$CashSessionsTable, List<CashSession>>
   _cashSessionsRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
     db.cashSessions,
@@ -20170,6 +20224,81 @@ class $$UsersTableFilterComposer extends Composer<_$AppDatabase, $UsersTable> {
           }) => $$SaleReturnsTableFilterComposer(
             $db: $db,
             $table: $db.saleReturns,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<bool> requestedPurchases(
+    Expression<bool> Function($$PurchasesTableFilterComposer f) f,
+  ) {
+    final $$PurchasesTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.purchases,
+      getReferencedColumn: (t) => t.requestedBy,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$PurchasesTableFilterComposer(
+            $db: $db,
+            $table: $db.purchases,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<bool> receivedPurchases(
+    Expression<bool> Function($$PurchasesTableFilterComposer f) f,
+  ) {
+    final $$PurchasesTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.purchases,
+      getReferencedColumn: (t) => t.receivedBy,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$PurchasesTableFilterComposer(
+            $db: $db,
+            $table: $db.purchases,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<bool> cancelledPurchases(
+    Expression<bool> Function($$PurchasesTableFilterComposer f) f,
+  ) {
+    final $$PurchasesTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.purchases,
+      getReferencedColumn: (t) => t.cancelledBy,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$PurchasesTableFilterComposer(
+            $db: $db,
+            $table: $db.purchases,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -20452,6 +20581,81 @@ class $$UsersTableAnnotationComposer
     return f(composer);
   }
 
+  Expression<T> requestedPurchases<T extends Object>(
+    Expression<T> Function($$PurchasesTableAnnotationComposer a) f,
+  ) {
+    final $$PurchasesTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.purchases,
+      getReferencedColumn: (t) => t.requestedBy,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$PurchasesTableAnnotationComposer(
+            $db: $db,
+            $table: $db.purchases,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<T> receivedPurchases<T extends Object>(
+    Expression<T> Function($$PurchasesTableAnnotationComposer a) f,
+  ) {
+    final $$PurchasesTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.purchases,
+      getReferencedColumn: (t) => t.receivedBy,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$PurchasesTableAnnotationComposer(
+            $db: $db,
+            $table: $db.purchases,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<T> cancelledPurchases<T extends Object>(
+    Expression<T> Function($$PurchasesTableAnnotationComposer a) f,
+  ) {
+    final $$PurchasesTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.purchases,
+      getReferencedColumn: (t) => t.cancelledBy,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$PurchasesTableAnnotationComposer(
+            $db: $db,
+            $table: $db.purchases,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
   Expression<T> cashSessionsRefs<T extends Object>(
     Expression<T> Function($$CashSessionsTableAnnotationComposer a) f,
   ) {
@@ -20521,6 +20725,9 @@ class $$UsersTableTableManager
             bool inventoryMovementsRefs,
             bool salePaymentsRefs,
             bool saleReturnsRefs,
+            bool requestedPurchases,
+            bool receivedPurchases,
+            bool cancelledPurchases,
             bool cashSessionsRefs,
             bool cashMovementsRefs,
           })
@@ -20604,6 +20811,9 @@ class $$UsersTableTableManager
                 inventoryMovementsRefs = false,
                 salePaymentsRefs = false,
                 saleReturnsRefs = false,
+                requestedPurchases = false,
+                receivedPurchases = false,
+                cancelledPurchases = false,
                 cashSessionsRefs = false,
                 cashMovementsRefs = false,
               }) {
@@ -20614,6 +20824,9 @@ class $$UsersTableTableManager
                     if (inventoryMovementsRefs) db.inventoryMovements,
                     if (salePaymentsRefs) db.salePayments,
                     if (saleReturnsRefs) db.saleReturns,
+                    if (requestedPurchases) db.purchases,
+                    if (receivedPurchases) db.purchases,
+                    if (cancelledPurchases) db.purchases,
                     if (cashSessionsRefs) db.cashSessions,
                     if (cashMovementsRefs) db.cashMovements,
                   ],
@@ -20704,6 +20917,57 @@ class $$UsersTableTableManager
                               ),
                           typedResults: items,
                         ),
+                      if (requestedPurchases)
+                        await $_getPrefetchedData<User, $UsersTable, Purchase>(
+                          currentTable: table,
+                          referencedTable: $$UsersTableReferences
+                              ._requestedPurchasesTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$UsersTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).requestedPurchases,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.requestedBy == item.id,
+                              ),
+                          typedResults: items,
+                        ),
+                      if (receivedPurchases)
+                        await $_getPrefetchedData<User, $UsersTable, Purchase>(
+                          currentTable: table,
+                          referencedTable: $$UsersTableReferences
+                              ._receivedPurchasesTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$UsersTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).receivedPurchases,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.receivedBy == item.id,
+                              ),
+                          typedResults: items,
+                        ),
+                      if (cancelledPurchases)
+                        await $_getPrefetchedData<User, $UsersTable, Purchase>(
+                          currentTable: table,
+                          referencedTable: $$UsersTableReferences
+                              ._cancelledPurchasesTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$UsersTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).cancelledPurchases,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.cancelledBy == item.id,
+                              ),
+                          typedResults: items,
+                        ),
                       if (cashSessionsRefs)
                         await $_getPrefetchedData<
                           User,
@@ -20771,6 +21035,9 @@ typedef $$UsersTableProcessedTableManager =
         bool inventoryMovementsRefs,
         bool salePaymentsRefs,
         bool saleReturnsRefs,
+        bool requestedPurchases,
+        bool receivedPurchases,
+        bool cancelledPurchases,
         bool cashSessionsRefs,
         bool cashMovementsRefs,
       })

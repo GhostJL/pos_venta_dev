@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:posventa/domain/entities/user.dart';
 import 'package:posventa/presentation/pages/shared/main_layout.dart';
 import 'package:posventa/presentation/providers/paginated_sales_provider.dart';
 import 'package:posventa/core/constants/permission_constants.dart';
@@ -9,6 +10,7 @@ import 'package:posventa/presentation/widgets/common/layouts/permission_denied_w
 import 'package:posventa/presentation/widgets/sales/history/sales_card_history_widget.dart';
 import 'package:posventa/presentation/widgets/common/filters/date_range_filter.dart';
 import 'package:posventa/presentation/widgets/common/async_value_handler.dart';
+import 'package:posventa/presentation/providers/auth_provider.dart';
 import 'package:posventa/presentation/widgets/common/empty_state_widget.dart';
 
 class SalesHistoryPage extends ConsumerStatefulWidget {
@@ -26,8 +28,17 @@ class _SalesHistoryPageState extends ConsumerState<SalesHistoryPage> {
   void initState() {
     super.initState();
     _scrollController.addListener(_onScroll);
-    // Optionally reset date range on enter?
-    // ref.read(saleDateRangeProvider.notifier).setRange(null, null);
+    // Set initial filter based on role
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final user = ref.read(authProvider).user;
+      if (user != null) {
+        if (user.role == UserRole.cajero) {
+          ref.read(saleFilterProvider.notifier).setCashierId(user.id);
+        } else {
+          ref.read(saleFilterProvider.notifier).setCashierId(null);
+        }
+      }
+    });
   }
 
   @override
@@ -56,7 +67,7 @@ class _SalesHistoryPageState extends ConsumerState<SalesHistoryPage> {
   }
 
   void _onDateRangeChanged(DateTime? start, DateTime? end) {
-    ref.read(saleDateRangeProvider.notifier).setRange(start, end);
+    ref.read(saleFilterProvider.notifier).setRange(start, end);
   }
 
   @override
@@ -67,8 +78,37 @@ class _SalesHistoryPageState extends ConsumerState<SalesHistoryPage> {
 
     // Only watch count
     final countAsync = ref.watch(paginatedSalesCountProvider);
-    final dateRange = ref.watch(saleDateRangeProvider);
+    final filter = ref.watch(saleFilterProvider);
     final isSmallScreen = MediaQuery.of(context).size.width < 1200;
+
+    // Apply role-based filtering on build (or useEffect)
+    // Using listen to auth state changes to update filter
+    ref.listen(authProvider, (previous, next) {
+      final user = next.user;
+      if (user != null) {
+        if (user.role == UserRole.cajero) {
+          // If user is cashier, force filter by their ID
+          // Use Future.microtask to avoid build-phase state updates
+          Future.microtask(() {
+            ref.read(saleFilterProvider.notifier).setCashierId(user.id);
+          });
+        } else {
+          // Admin sees all
+          Future.microtask(() {
+            ref.read(saleFilterProvider.notifier).setCashierId(null);
+          });
+        }
+      }
+    });
+
+    // Initial check (use a simple effect pattern)
+    // We cant easily use useEffect without flutter_hooks, so we do a pragmatic check
+    // or rely on the initState.
+    // However, since we are in build, let's just ensure it's set if not already matched?
+    // Doing strict "set on build" is risky for infinite loops.
+    // Better strategy: Set it once in initState or rely on the listener above.
+    // Let's rely on listener + one-time init.
+    // But we need to act on the *current* auth state too.
 
     if (!hasViewPermission) {
       return PermissionDeniedWidget(
@@ -96,8 +136,8 @@ class _SalesHistoryPageState extends ConsumerState<SalesHistoryPage> {
         forceMaterialTransparency: true,
         actions: [
           DateRangeFilter(
-            startDate: dateRange.start,
-            endDate: dateRange.end,
+            startDate: filter.start,
+            endDate: filter.end,
             onDateRangeChanged: _onDateRangeChanged,
           ),
           const SizedBox(width: 8),
@@ -116,7 +156,7 @@ class _SalesHistoryPageState extends ConsumerState<SalesHistoryPage> {
           if (count == 0) {
             return EmptyStateWidget(
               icon: Icons.receipt_long_outlined,
-              message: dateRange.start != null && dateRange.end != null
+              message: filter.start != null && filter.end != null
                   ? 'No hay ventas en este rango de fechas'
                   : 'No hay ventas registradas',
             );

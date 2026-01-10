@@ -1,5 +1,6 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:posventa/domain/entities/cash_session.dart';
 import 'package:posventa/domain/entities/sale.dart';
 import 'package:posventa/domain/entities/sale_return.dart';
 import 'package:posventa/domain/repositories/sale_repository.dart';
@@ -144,7 +145,7 @@ CloseCashSessionUseCase closeCashSessionUseCase(ref) =>
     CloseCashSessionUseCase(ref.watch(cashSessionRepositoryProvider));
 
 @riverpod
-Future<dynamic> currentCashSession(ref) async {
+Future<CashSession?> currentCashSession(ref) async {
   return await ref.watch(getCurrentCashSessionUseCaseProvider).call();
 }
 

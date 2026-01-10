@@ -158,18 +158,8 @@ class CashSessionDetail {
 
   // 5. Sales Total (Revenue) - Sum of payments linked to valid sales?
   // User wants "Ventas Totales: Valor real de los productos".
-  // This is best derived from the payments or passed separately.
-  // Assuming payments.amountCents is 'Tendered', we need 'Sale Total'.
-  // Currently SalePayment has 'amountCents'. If partial payment, it's the amount paid.
-  // If overpayment (change), it's the tendered amount.
-  // To get "Sale Value", we ideally need the Sale entity.
-  // BUT, 'totalSales' (the old getter) was sum of payments.
-  // Let's use 'totalCashTendered' for the Cash Block.
-  // For the Sales Block, we'll calculate 'Net Sales' as:
-  // Tendered - Change - Cancellations
-  // This ensures that:
-  // 1. Valid Sales: Tendered - Change = Sale Total
-  // 2. Cancelled Sales: Tendered - Change - CancellationRefund = 0 (Net impact 0 on sales)
+  int get totalGlobalSales => payments.fold(0, (sum, p) => sum + p.amountCents);
+
   int get totalNetSales =>
       totalCashTendered - totalChangeGiven - totalCancellations;
 

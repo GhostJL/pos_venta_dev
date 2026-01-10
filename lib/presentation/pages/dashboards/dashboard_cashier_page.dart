@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:posventa/presentation/providers/auth_provider.dart';
+import 'package:posventa/presentation/widgets/dashboard/dashboard_sections/cashier_session_metrics.dart';
 import 'package:posventa/presentation/widgets/dashboard/dashboard_sections/dashboard_app_bar.dart';
 import 'package:posventa/presentation/widgets/dashboard/dashboard_sections/dashboard_operations_section.dart';
-import 'package:posventa/presentation/widgets/dashboard/dashboard_sections/dashboard_status_section.dart';
 import 'package:posventa/presentation/widgets/dashboard/dashboard_sections/dashboard_welcome_section.dart';
 
 class DashboardCashierPage extends ConsumerWidget {
@@ -28,8 +28,8 @@ class DashboardCashierPage extends ConsumerWidget {
 
               const SizedBox(height: 24),
 
-              // 2. Status
-              const DashboardStatusSection(),
+              // 2. Session Metrics (Replacing generic status)
+              const CashierSessionMetrics(),
 
               const SizedBox(height: 32),
 

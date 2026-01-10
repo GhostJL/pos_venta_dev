@@ -7,20 +7,24 @@ part 'paginated_sales_provider.g.dart';
 const int kSalePageSize = 20;
 
 @riverpod
-class SaleDateRange extends _$SaleDateRange {
+class SaleFilter extends _$SaleFilter {
   @override
-  ({DateTime? start, DateTime? end}) build() {
-    return (start: null, end: null);
+  ({DateTime? start, DateTime? end, int? cashierId}) build() {
+    return (start: null, end: null, cashierId: null);
   }
 
   void setRange(DateTime? start, DateTime? end) {
-    state = (start: start, end: end);
+    state = (start: start, end: end, cashierId: state.cashierId);
+  }
+
+  void setCashierId(int? cashierId) {
+    state = (start: state.start, end: state.end, cashierId: cashierId);
   }
 }
 
 @riverpod
 Future<int> paginatedSalesCount(Ref ref) async {
-  final dateRange = ref.watch(saleDateRangeProvider);
+  final filter = ref.watch(saleFilterProvider);
   final repository = ref.watch(saleRepositoryProvider);
 
   // Listen for database updates
@@ -33,8 +37,9 @@ Future<int> paginatedSalesCount(Ref ref) async {
   });
 
   return await repository.countSales(
-    startDate: dateRange.start,
-    endDate: dateRange.end,
+    startDate: filter.start,
+    endDate: filter.end,
+    cashierId: filter.cashierId,
   );
 }
 
@@ -43,7 +48,7 @@ Future<List<Sale>> paginatedSalesPage(Ref ref, {required int pageIndex}) async {
   // Keep the provider alive
   ref.keepAlive();
 
-  final dateRange = ref.watch(saleDateRangeProvider);
+  final filter = ref.watch(saleFilterProvider);
   final repository = ref.watch(saleRepositoryProvider);
 
   // Listen for database updates
@@ -58,8 +63,9 @@ Future<List<Sale>> paginatedSalesPage(Ref ref, {required int pageIndex}) async {
   final offset = pageIndex * kSalePageSize;
 
   return await repository.getSales(
-    startDate: dateRange.start,
-    endDate: dateRange.end,
+    startDate: filter.start,
+    endDate: filter.end,
+    cashierId: filter.cashierId,
     limit: kSalePageSize,
     offset: offset,
   );
