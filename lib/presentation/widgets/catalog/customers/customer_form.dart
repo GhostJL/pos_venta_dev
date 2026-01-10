@@ -26,6 +26,7 @@ class CustomerFormState extends ConsumerState<CustomerForm> {
   String? _address;
   String? _taxId;
   String? _businessName;
+  double? _creditLimit; // New field
   bool _isLoading = false;
 
   @override
@@ -43,6 +44,7 @@ class CustomerFormState extends ConsumerState<CustomerForm> {
     _address = widget.customer?.address;
     _taxId = widget.customer?.taxId;
     _businessName = widget.customer?.businessName;
+    _creditLimit = widget.customer?.creditLimit; // Init credit limit
   }
 
   Future<void> _loadNextCode() async {
@@ -72,6 +74,9 @@ class CustomerFormState extends ConsumerState<CustomerForm> {
           address: _address,
           taxId: _taxId,
           businessName: _businessName,
+          creditLimit: _creditLimit, // Save credit limit
+          // Keep existing credit usage if editing, else 0
+          creditUsed: widget.customer?.creditUsed ?? 0.0,
           isActive: widget.customer?.isActive ?? true,
           createdAt: widget.customer?.createdAt ?? DateTime.now(),
           updatedAt: DateTime.now(),
@@ -274,6 +279,28 @@ class CustomerFormState extends ConsumerState<CustomerForm> {
                   ),
                 ],
               ),
+              const SizedBox(height: UIConstants.spacingLarge),
+              _buildSection(theme, 'Crédito', Icons.credit_score, [
+                TextFormField(
+                  initialValue: _creditLimit?.toString() ?? '',
+                  textInputAction: TextInputAction.done,
+                  decoration: const InputDecoration(
+                    labelText: 'Límite de Crédito (Opcional)',
+                    prefixIcon: Icon(Icons.attach_money),
+                    helperText: 'Dejar vacío para sin límite o 0',
+                  ),
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
+                  onSaved: (value) {
+                    if (value != null && value.isNotEmpty) {
+                      _creditLimit = double.tryParse(value);
+                    } else {
+                      _creditLimit = null;
+                    }
+                  },
+                ),
+              ]),
               const SizedBox(height: UIConstants.spacingXLarge),
             ],
           );

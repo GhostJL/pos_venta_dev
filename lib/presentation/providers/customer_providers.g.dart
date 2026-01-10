@@ -20,7 +20,7 @@ final class CustomerNotifierProvider
         argument: null,
         retry: null,
         name: r'customerProvider',
-        isAutoDispose: true,
+        isAutoDispose: false,
         dependencies: null,
         $allTransitiveDependencies: null,
       );
@@ -33,7 +33,7 @@ final class CustomerNotifierProvider
   CustomerNotifier create() => CustomerNotifier();
 }
 
-String _$customerNotifierHash() => r'85d771e35c4a04d7bc6fef2ffc6de7a84f160807';
+String _$customerNotifierHash() => r'3c91c04cc59d52f89d96d3602a6b8d9bffefb2f4';
 
 abstract class _$CustomerNotifier extends $AsyncNotifier<List<Customer>> {
   FutureOr<List<Customer>> build();
@@ -52,4 +52,78 @@ abstract class _$CustomerNotifier extends $AsyncNotifier<List<Customer>> {
             >;
     element.handleValue(ref, created);
   }
+}
+
+@ProviderFor(customerById)
+const customerByIdProvider = CustomerByIdFamily._();
+
+final class CustomerByIdProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<Customer?>,
+          Customer?,
+          FutureOr<Customer?>
+        >
+    with $FutureModifier<Customer?>, $FutureProvider<Customer?> {
+  const CustomerByIdProvider._({
+    required CustomerByIdFamily super.from,
+    required int super.argument,
+  }) : super(
+         retry: null,
+         name: r'customerByIdProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
+
+  @override
+  String debugGetCreateSourceHash() => _$customerByIdHash();
+
+  @override
+  String toString() {
+    return r'customerByIdProvider'
+        ''
+        '($argument)';
+  }
+
+  @$internal
+  @override
+  $FutureProviderElement<Customer?> $createElement($ProviderPointer pointer) =>
+      $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<Customer?> create(Ref ref) {
+    final argument = this.argument as int;
+    return customerById(ref, argument);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return other is CustomerByIdProvider && other.argument == argument;
+  }
+
+  @override
+  int get hashCode {
+    return argument.hashCode;
+  }
+}
+
+String _$customerByIdHash() => r'b731c06a177e2906624a41749aaed71ea215bc56';
+
+final class CustomerByIdFamily extends $Family
+    with $FunctionalFamilyOverride<FutureOr<Customer?>, int> {
+  const CustomerByIdFamily._()
+    : super(
+        retry: null,
+        name: r'customerByIdProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: true,
+      );
+
+  CustomerByIdProvider call(int id) =>
+      CustomerByIdProvider._(argument: id, from: this);
+
+  @override
+  String toString() => r'customerByIdProvider';
 }

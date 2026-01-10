@@ -218,6 +218,8 @@ class CustomersPageState extends ConsumerState<CustomersPage>
                                   onEdit: () => _navigateToForm(customer),
                                   onDelete: () =>
                                       _confirmDelete(context, ref, customer),
+                                  onTap: () =>
+                                      context.push('/customers/${customer.id}'),
                                 );
                               } else {
                                 return Column(
@@ -230,6 +232,9 @@ class CustomersPageState extends ConsumerState<CustomersPage>
                                         context,
                                         ref,
                                         customer,
+                                      ),
+                                      onTap: () => context.push(
+                                        '/customers/${customer.id}',
                                       ),
                                     ),
                                     if (index < count - 1)

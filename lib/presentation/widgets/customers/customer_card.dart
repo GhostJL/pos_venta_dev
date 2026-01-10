@@ -6,6 +6,7 @@ class CustomerCard extends StatelessWidget {
   final Customer customer;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
+  final VoidCallback? onTap;
   final bool hasManagePermission;
 
   const CustomerCard({
@@ -13,6 +14,7 @@ class CustomerCard extends StatelessWidget {
     required this.customer,
     required this.onEdit,
     required this.onDelete,
+    this.onTap,
     this.hasManagePermission = true,
   });
 
@@ -31,22 +33,24 @@ class CustomerCard extends StatelessWidget {
         side: BorderSide.none,
       ),
       child: InkWell(
-        onTap: hasManagePermission
-            ? () {
-                showModalBottomSheet(
-                  context: context,
-                  isScrollControlled: true,
-                  backgroundColor: Colors.transparent,
-                  builder: (ctx) => CatalogModuleActionsSheet(
-                    title: customer.fullName,
-                    subtitle: 'Código: ${customer.code}',
-                    icon: Icons.person_rounded,
-                    onEdit: onEdit,
-                    onDelete: onDelete,
-                  ),
-                );
-              }
-            : null,
+        onTap:
+            onTap ??
+            (hasManagePermission
+                ? () {
+                    showModalBottomSheet(
+                      context: context,
+                      isScrollControlled: true,
+                      backgroundColor: Colors.transparent,
+                      builder: (ctx) => CatalogModuleActionsSheet(
+                        title: customer.fullName,
+                        subtitle: 'Código: ${customer.code}',
+                        icon: Icons.person_rounded,
+                        onEdit: onEdit,
+                        onDelete: onDelete,
+                      ),
+                    );
+                  }
+                : null),
         child: Padding(
           padding: const EdgeInsets.all(16.0),
           child: Column(

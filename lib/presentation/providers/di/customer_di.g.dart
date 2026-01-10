@@ -347,3 +347,148 @@ final class GenerateNextCustomerCodeUseCaseProvider
 
 String _$generateNextCustomerCodeUseCaseHash() =>
     r'551db1bc5936022131f56675aa29316bb8ce10f2';
+
+@ProviderFor(updateCustomerCreditUseCase)
+const updateCustomerCreditUseCaseProvider =
+    UpdateCustomerCreditUseCaseProvider._();
+
+final class UpdateCustomerCreditUseCaseProvider
+    extends
+        $FunctionalProvider<
+          UpdateCustomerCreditUseCase,
+          UpdateCustomerCreditUseCase,
+          UpdateCustomerCreditUseCase
+        >
+    with $Provider<UpdateCustomerCreditUseCase> {
+  const UpdateCustomerCreditUseCaseProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'updateCustomerCreditUseCaseProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$updateCustomerCreditUseCaseHash();
+
+  @$internal
+  @override
+  $ProviderElement<UpdateCustomerCreditUseCase> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  UpdateCustomerCreditUseCase create(Ref ref) {
+    return updateCustomerCreditUseCase(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(UpdateCustomerCreditUseCase value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<UpdateCustomerCreditUseCase>(value),
+    );
+  }
+}
+
+String _$updateCustomerCreditUseCaseHash() =>
+    r'9fdaf9467ef44639a3f79999919c7ad58db015b6';
+
+@ProviderFor(getCustomerBalanceUseCase)
+const getCustomerBalanceUseCaseProvider = GetCustomerBalanceUseCaseProvider._();
+
+final class GetCustomerBalanceUseCaseProvider
+    extends
+        $FunctionalProvider<
+          GetCustomerBalanceUseCase,
+          GetCustomerBalanceUseCase,
+          GetCustomerBalanceUseCase
+        >
+    with $Provider<GetCustomerBalanceUseCase> {
+  const GetCustomerBalanceUseCaseProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'getCustomerBalanceUseCaseProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$getCustomerBalanceUseCaseHash();
+
+  @$internal
+  @override
+  $ProviderElement<GetCustomerBalanceUseCase> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  GetCustomerBalanceUseCase create(Ref ref) {
+    return getCustomerBalanceUseCase(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(GetCustomerBalanceUseCase value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<GetCustomerBalanceUseCase>(value),
+    );
+  }
+}
+
+String _$getCustomerBalanceUseCaseHash() =>
+    r'16f9861a4ae5e944ac6115a3f593a2c183fff86e';
+
+@ProviderFor(getCustomerByIdUseCase)
+const getCustomerByIdUseCaseProvider = GetCustomerByIdUseCaseProvider._();
+
+final class GetCustomerByIdUseCaseProvider
+    extends
+        $FunctionalProvider<
+          GetCustomerByIdUseCase,
+          GetCustomerByIdUseCase,
+          GetCustomerByIdUseCase
+        >
+    with $Provider<GetCustomerByIdUseCase> {
+  const GetCustomerByIdUseCaseProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'getCustomerByIdUseCaseProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$getCustomerByIdUseCaseHash();
+
+  @$internal
+  @override
+  $ProviderElement<GetCustomerByIdUseCase> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  GetCustomerByIdUseCase create(Ref ref) {
+    return getCustomerByIdUseCase(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(GetCustomerByIdUseCase value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<GetCustomerByIdUseCase>(value),
+    );
+  }
+}
+
+String _$getCustomerByIdUseCaseHash() =>
+    r'90c5ed05636f91d0e5de35cf95631ec97947fecf';

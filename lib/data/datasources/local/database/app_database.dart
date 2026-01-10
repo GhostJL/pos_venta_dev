@@ -47,7 +47,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 36; // Matching current version
+  int get schemaVersion => 37; // Bumped to 37
 
   static QueryExecutor _openConnection() {
     return driftDatabase(
@@ -62,19 +62,10 @@ class AppDatabase extends _$AppDatabase {
       await m.createAll();
     },
     onUpgrade: (Migrator m, int from, int to) async {
-      // NOTE: Ideally we would migrate data here.
-      // For this task, we assume we might need to recreate or handle migration dynamically.
-      // Since we are replacing the engine, existing data might be lost unless we specifically handle
-      // the transition from sqflite to drift.
-      // However, since we use the same filename 'pos.db',
-      // Drift might be able to open it IF the schema matches EXACTLY what was there.
-      // If the schema differs slightly, it might crash or require migration steps.
-      // Given the scope, we will implement createAll which is standard for new installs.
-      // For existing, we might need a more complex strategy,
-      // but the user plan "Recrearé todas las tablas" implies we care about structure primarily.
-
-      if (from < to) {
-        // Placeholder for migrations
+      if (from < 37) {
+        // Migration to version 37: Add credit columns to customers table
+        await m.addColumn(customers, customers.creditLimitCents);
+        await m.addColumn(customers, customers.creditUsedCents);
       }
     },
     beforeOpen: (details) async {

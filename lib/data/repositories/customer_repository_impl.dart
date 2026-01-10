@@ -56,6 +56,10 @@ class CustomerRepositoryImpl implements CustomerRepository {
             lastName: row.lastName,
             businessName: row.businessName,
             taxId: row.taxId,
+            creditLimit: row.creditLimitCents != null
+                ? row.creditLimitCents! / 100.0
+                : null,
+            creditUsed: row.creditUsedCents / 100.0,
             phone: row.phone,
             email: row.email,
             address: row.address,
@@ -109,6 +113,10 @@ class CustomerRepositoryImpl implements CustomerRepository {
         lastName: row.lastName,
         businessName: row.businessName,
         taxId: row.taxId,
+        creditLimit: row.creditLimitCents != null
+            ? row.creditLimitCents! / 100.0
+            : null,
+        creditUsed: row.creditUsedCents / 100.0,
         phone: row.phone,
         email: row.email,
         address: row.address,
@@ -133,6 +141,10 @@ class CustomerRepositoryImpl implements CustomerRepository {
         lastName: row.lastName,
         businessName: row.businessName,
         taxId: row.taxId,
+        creditLimit: row.creditLimitCents != null
+            ? row.creditLimitCents! / 100.0
+            : null,
+        creditUsed: row.creditUsedCents / 100.0,
         phone: row.phone,
         email: row.email,
         address: row.address,
@@ -154,6 +166,12 @@ class CustomerRepositoryImpl implements CustomerRepository {
             firstName: customer.firstName,
             lastName: customer.lastName,
             businessName: Value(customer.businessName),
+            creditLimitCents: Value(
+              customer.creditLimit != null
+                  ? (customer.creditLimit! * 100).round()
+                  : null,
+            ),
+            creditUsedCents: Value((customer.creditUsed * 100).round()),
             taxId: Value(customer.taxId),
             phone: Value(customer.phone),
             email: Value(customer.email),
@@ -175,6 +193,11 @@ class CustomerRepositoryImpl implements CustomerRepository {
         firstName: Value(customer.firstName),
         lastName: Value(customer.lastName),
         businessName: Value(customer.businessName),
+        creditLimitCents: Value(
+          customer.creditLimit != null
+              ? (customer.creditLimit! * 100).round()
+              : null,
+        ),
         taxId: Value(customer.taxId),
         phone: Value(customer.phone),
         email: Value(customer.email),
@@ -236,5 +259,44 @@ class CustomerRepositoryImpl implements CustomerRepository {
     }
     final res = await q.get();
     return res.isEmpty;
+  }
+
+  @override
+  Future<void> updateCustomerCredit(
+    int customerId,
+    double amount, {
+    bool isIncrement = true,
+  }) async {
+    final amountCents = (amount * 100).round();
+
+    // Get current usage
+    final customer = await (db.select(
+      db.customers,
+    )..where((t) => t.id.equals(customerId))).getSingle();
+    final currentUsed = customer.creditUsedCents;
+
+    int newUsed;
+    if (isIncrement) {
+      newUsed = currentUsed + amountCents;
+    } else {
+      newUsed = currentUsed - amountCents;
+    }
+
+    await (db.update(
+      db.customers,
+    )..where((t) => t.id.equals(customerId))).write(
+      drift_db.CustomersCompanion(
+        creditUsedCents: Value(newUsed),
+        updatedAt: Value(DateTime.now()),
+      ),
+    );
+  }
+
+  @override
+  Future<double> getCustomerBalance(int customerId) async {
+    final customer = await (db.select(
+      db.customers,
+    )..where((t) => t.id.equals(customerId))).getSingle();
+    return customer.creditUsedCents / 100.0;
   }
 }

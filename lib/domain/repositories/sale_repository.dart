@@ -8,12 +8,14 @@ abstract class SaleRepository {
     int? limit,
     int? offset,
     int? cashierId,
+    int? customerId,
   });
 
   Future<int> countSales({
     DateTime? startDate,
     DateTime? endDate,
     int? cashierId,
+    int? customerId,
   });
 
   Stream<List<Sale>> getSalesStream({
@@ -22,6 +24,7 @@ abstract class SaleRepository {
     int? limit,
     int? offset,
     int? cashierId,
+    int? customerId,
   });
 
   Future<Sale?> getSaleById(int id);

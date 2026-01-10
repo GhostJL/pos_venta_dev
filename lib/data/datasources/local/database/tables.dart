@@ -423,6 +423,10 @@ class Customers extends Table {
   TextColumn get address => text().nullable()();
   TextColumn get taxId => text().nullable().named('tax_id')();
   TextColumn get businessName => text().nullable().named('business_name')();
+  IntColumn get creditLimitCents =>
+      integer().nullable().named('credit_limit_cents')();
+  IntColumn get creditUsedCents =>
+      integer().withDefault(const Constant(0)).named('credit_used_cents')();
   BoolColumn get isActive =>
       boolean().withDefault(const Constant(true)).named('is_active')();
   DateTimeColumn get createdAt =>

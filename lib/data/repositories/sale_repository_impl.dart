@@ -21,6 +21,7 @@ class SaleRepositoryImpl implements SaleRepository {
     int? limit,
     int? offset,
     int? cashierId,
+    int? customerId,
   }) async {
     final q = db.select(db.sales).join([
       leftOuterJoin(
@@ -37,6 +38,9 @@ class SaleRepositoryImpl implements SaleRepository {
     }
     if (cashierId != null) {
       q.where(db.sales.cashierId.equals(cashierId));
+    }
+    if (customerId != null) {
+      q.where(db.sales.customerId.equals(customerId));
     }
 
     q.orderBy([OrderingTerm.desc(db.sales.saleDate)]);
@@ -166,6 +170,7 @@ class SaleRepositoryImpl implements SaleRepository {
     DateTime? startDate,
     DateTime? endDate,
     int? cashierId,
+    int? customerId,
   }) async {
     final q = db.selectOnly(db.sales)..addColumns([db.sales.id.count()]);
 
@@ -245,6 +250,7 @@ class SaleRepositoryImpl implements SaleRepository {
     int? limit,
     int? offset,
     int? cashierId,
+    int? customerId,
   }) {
     // Basic stream implementation watching the sales table
     // For more complex querying relative to filters, we might need to re-query
@@ -259,6 +265,7 @@ class SaleRepositoryImpl implements SaleRepository {
         limit: limit,
         offset: offset,
         cashierId: cashierId,
+        customerId: customerId,
       ),
     );
   }

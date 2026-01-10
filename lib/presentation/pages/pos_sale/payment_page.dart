@@ -296,6 +296,16 @@ class _PaymentPageState extends ConsumerState<PaymentPage> {
                                           'Transferencia',
                                     ),
                                   ),
+                                  const SizedBox(width: 8),
+                                  _PaymentMethodChip(
+                                    label: 'Crédito',
+                                    icon: Icons.credit_score_outlined,
+                                    isSelected:
+                                        _selectedPaymentMethod == 'Crédito',
+                                    onTap: () => setState(
+                                      () => _selectedPaymentMethod = 'Crédito',
+                                    ),
+                                  ),
                                 ],
                               ),
                             ),
@@ -566,6 +576,16 @@ class _PaymentPageState extends ConsumerState<PaymentPage> {
                                   onTap: () => setState(
                                     () => _selectedPaymentMethod =
                                         'Transferencia',
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                _PaymentMethodChip(
+                                  label: 'Crédito',
+                                  icon: Icons.credit_score_outlined,
+                                  isSelected:
+                                      _selectedPaymentMethod == 'Crédito',
+                                  onTap: () => setState(
+                                    () => _selectedPaymentMethod = 'Crédito',
                                   ),
                                 ),
                               ],

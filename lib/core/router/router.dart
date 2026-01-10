@@ -21,6 +21,7 @@ import 'package:posventa/presentation/pages/cashier/cashier_list_page.dart';
 import 'package:posventa/presentation/pages/cashier/cashier_permissions_page.dart';
 import 'package:posventa/presentation/pages/categories/categories_page.dart';
 import 'package:posventa/presentation/pages/customers/customers_page.dart';
+import 'package:posventa/presentation/pages/customers/customer_details_page.dart';
 import 'package:posventa/presentation/pages/dashboards/dashboard_admin_page.dart';
 import 'package:posventa/presentation/pages/dashboards/dashboard_cashier_page.dart';
 import 'package:posventa/presentation/pages/departaments/departments_page.dart';
@@ -192,6 +193,26 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: '/customers',
             pageBuilder: (context, state) =>
                 const NoTransitionPage(child: CustomersPage()),
+            routes: [
+              GoRoute(
+                path: 'form',
+                pageBuilder: (context, state) {
+                  final customer = state.extra as Customer?;
+                  return NoTransitionPage(
+                    child: CustomerForm(customer: customer),
+                  );
+                },
+              ),
+              GoRoute(
+                path: ':id',
+                pageBuilder: (context, state) {
+                  final id = int.parse(state.pathParameters['id']!);
+                  return NoTransitionPage(
+                    child: CustomerDetailsPage(customerId: id),
+                  );
+                },
+              ),
+            ],
           ),
           GoRoute(
             path: '/sales',
@@ -354,13 +375,7 @@ final routerProvider = Provider<GoRouter>((ref) {
               );
             },
           ),
-          GoRoute(
-            path: '/customers/form',
-            pageBuilder: (context, state) {
-              final customer = state.extra as Customer?;
-              return NoTransitionPage(child: CustomerForm(customer: customer));
-            },
-          ),
+
           GoRoute(
             path: '/categories/form',
             pageBuilder: (context, state) {

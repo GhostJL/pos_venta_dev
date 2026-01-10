@@ -11272,6 +11272,29 @@ class $CustomersTable extends Customers
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _creditLimitCentsMeta = const VerificationMeta(
+    'creditLimitCents',
+  );
+  @override
+  late final GeneratedColumn<int> creditLimitCents = GeneratedColumn<int>(
+    'credit_limit_cents',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _creditUsedCentsMeta = const VerificationMeta(
+    'creditUsedCents',
+  );
+  @override
+  late final GeneratedColumn<int> creditUsedCents = GeneratedColumn<int>(
+    'credit_used_cents',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
   static const VerificationMeta _isActiveMeta = const VerificationMeta(
     'isActive',
   );
@@ -11322,6 +11345,8 @@ class $CustomersTable extends Customers
     address,
     taxId,
     businessName,
+    creditLimitCents,
+    creditUsedCents,
     isActive,
     createdAt,
     updatedAt,
@@ -11398,6 +11423,24 @@ class $CustomersTable extends Customers
         ),
       );
     }
+    if (data.containsKey('credit_limit_cents')) {
+      context.handle(
+        _creditLimitCentsMeta,
+        creditLimitCents.isAcceptableOrUnknown(
+          data['credit_limit_cents']!,
+          _creditLimitCentsMeta,
+        ),
+      );
+    }
+    if (data.containsKey('credit_used_cents')) {
+      context.handle(
+        _creditUsedCentsMeta,
+        creditUsedCents.isAcceptableOrUnknown(
+          data['credit_used_cents']!,
+          _creditUsedCentsMeta,
+        ),
+      );
+    }
     if (data.containsKey('is_active')) {
       context.handle(
         _isActiveMeta,
@@ -11461,6 +11504,14 @@ class $CustomersTable extends Customers
         DriftSqlType.string,
         data['${effectivePrefix}business_name'],
       ),
+      creditLimitCents: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}credit_limit_cents'],
+      ),
+      creditUsedCents: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}credit_used_cents'],
+      )!,
       isActive: attachedDatabase.typeMapping.read(
         DriftSqlType.bool,
         data['${effectivePrefix}is_active'],
@@ -11492,6 +11543,8 @@ class Customer extends DataClass implements Insertable<Customer> {
   final String? address;
   final String? taxId;
   final String? businessName;
+  final int? creditLimitCents;
+  final int creditUsedCents;
   final bool isActive;
   final DateTime createdAt;
   final DateTime updatedAt;
@@ -11505,6 +11558,8 @@ class Customer extends DataClass implements Insertable<Customer> {
     this.address,
     this.taxId,
     this.businessName,
+    this.creditLimitCents,
+    required this.creditUsedCents,
     required this.isActive,
     required this.createdAt,
     required this.updatedAt,
@@ -11531,6 +11586,10 @@ class Customer extends DataClass implements Insertable<Customer> {
     if (!nullToAbsent || businessName != null) {
       map['business_name'] = Variable<String>(businessName);
     }
+    if (!nullToAbsent || creditLimitCents != null) {
+      map['credit_limit_cents'] = Variable<int>(creditLimitCents);
+    }
+    map['credit_used_cents'] = Variable<int>(creditUsedCents);
     map['is_active'] = Variable<bool>(isActive);
     map['created_at'] = Variable<DateTime>(createdAt);
     map['updated_at'] = Variable<DateTime>(updatedAt);
@@ -11558,6 +11617,10 @@ class Customer extends DataClass implements Insertable<Customer> {
       businessName: businessName == null && nullToAbsent
           ? const Value.absent()
           : Value(businessName),
+      creditLimitCents: creditLimitCents == null && nullToAbsent
+          ? const Value.absent()
+          : Value(creditLimitCents),
+      creditUsedCents: Value(creditUsedCents),
       isActive: Value(isActive),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
@@ -11579,6 +11642,8 @@ class Customer extends DataClass implements Insertable<Customer> {
       address: serializer.fromJson<String?>(json['address']),
       taxId: serializer.fromJson<String?>(json['taxId']),
       businessName: serializer.fromJson<String?>(json['businessName']),
+      creditLimitCents: serializer.fromJson<int?>(json['creditLimitCents']),
+      creditUsedCents: serializer.fromJson<int>(json['creditUsedCents']),
       isActive: serializer.fromJson<bool>(json['isActive']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
@@ -11597,6 +11662,8 @@ class Customer extends DataClass implements Insertable<Customer> {
       'address': serializer.toJson<String?>(address),
       'taxId': serializer.toJson<String?>(taxId),
       'businessName': serializer.toJson<String?>(businessName),
+      'creditLimitCents': serializer.toJson<int?>(creditLimitCents),
+      'creditUsedCents': serializer.toJson<int>(creditUsedCents),
       'isActive': serializer.toJson<bool>(isActive),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
@@ -11613,6 +11680,8 @@ class Customer extends DataClass implements Insertable<Customer> {
     Value<String?> address = const Value.absent(),
     Value<String?> taxId = const Value.absent(),
     Value<String?> businessName = const Value.absent(),
+    Value<int?> creditLimitCents = const Value.absent(),
+    int? creditUsedCents,
     bool? isActive,
     DateTime? createdAt,
     DateTime? updatedAt,
@@ -11626,6 +11695,10 @@ class Customer extends DataClass implements Insertable<Customer> {
     address: address.present ? address.value : this.address,
     taxId: taxId.present ? taxId.value : this.taxId,
     businessName: businessName.present ? businessName.value : this.businessName,
+    creditLimitCents: creditLimitCents.present
+        ? creditLimitCents.value
+        : this.creditLimitCents,
+    creditUsedCents: creditUsedCents ?? this.creditUsedCents,
     isActive: isActive ?? this.isActive,
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
@@ -11643,6 +11716,12 @@ class Customer extends DataClass implements Insertable<Customer> {
       businessName: data.businessName.present
           ? data.businessName.value
           : this.businessName,
+      creditLimitCents: data.creditLimitCents.present
+          ? data.creditLimitCents.value
+          : this.creditLimitCents,
+      creditUsedCents: data.creditUsedCents.present
+          ? data.creditUsedCents.value
+          : this.creditUsedCents,
       isActive: data.isActive.present ? data.isActive.value : this.isActive,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
@@ -11661,6 +11740,8 @@ class Customer extends DataClass implements Insertable<Customer> {
           ..write('address: $address, ')
           ..write('taxId: $taxId, ')
           ..write('businessName: $businessName, ')
+          ..write('creditLimitCents: $creditLimitCents, ')
+          ..write('creditUsedCents: $creditUsedCents, ')
           ..write('isActive: $isActive, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt')
@@ -11679,6 +11760,8 @@ class Customer extends DataClass implements Insertable<Customer> {
     address,
     taxId,
     businessName,
+    creditLimitCents,
+    creditUsedCents,
     isActive,
     createdAt,
     updatedAt,
@@ -11696,6 +11779,8 @@ class Customer extends DataClass implements Insertable<Customer> {
           other.address == this.address &&
           other.taxId == this.taxId &&
           other.businessName == this.businessName &&
+          other.creditLimitCents == this.creditLimitCents &&
+          other.creditUsedCents == this.creditUsedCents &&
           other.isActive == this.isActive &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt);
@@ -11711,6 +11796,8 @@ class CustomersCompanion extends UpdateCompanion<Customer> {
   final Value<String?> address;
   final Value<String?> taxId;
   final Value<String?> businessName;
+  final Value<int?> creditLimitCents;
+  final Value<int> creditUsedCents;
   final Value<bool> isActive;
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
@@ -11724,6 +11811,8 @@ class CustomersCompanion extends UpdateCompanion<Customer> {
     this.address = const Value.absent(),
     this.taxId = const Value.absent(),
     this.businessName = const Value.absent(),
+    this.creditLimitCents = const Value.absent(),
+    this.creditUsedCents = const Value.absent(),
     this.isActive = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
@@ -11738,6 +11827,8 @@ class CustomersCompanion extends UpdateCompanion<Customer> {
     this.address = const Value.absent(),
     this.taxId = const Value.absent(),
     this.businessName = const Value.absent(),
+    this.creditLimitCents = const Value.absent(),
+    this.creditUsedCents = const Value.absent(),
     this.isActive = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
@@ -11754,6 +11845,8 @@ class CustomersCompanion extends UpdateCompanion<Customer> {
     Expression<String>? address,
     Expression<String>? taxId,
     Expression<String>? businessName,
+    Expression<int>? creditLimitCents,
+    Expression<int>? creditUsedCents,
     Expression<bool>? isActive,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
@@ -11768,6 +11861,8 @@ class CustomersCompanion extends UpdateCompanion<Customer> {
       if (address != null) 'address': address,
       if (taxId != null) 'tax_id': taxId,
       if (businessName != null) 'business_name': businessName,
+      if (creditLimitCents != null) 'credit_limit_cents': creditLimitCents,
+      if (creditUsedCents != null) 'credit_used_cents': creditUsedCents,
       if (isActive != null) 'is_active': isActive,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
@@ -11784,6 +11879,8 @@ class CustomersCompanion extends UpdateCompanion<Customer> {
     Value<String?>? address,
     Value<String?>? taxId,
     Value<String?>? businessName,
+    Value<int?>? creditLimitCents,
+    Value<int>? creditUsedCents,
     Value<bool>? isActive,
     Value<DateTime>? createdAt,
     Value<DateTime>? updatedAt,
@@ -11798,6 +11895,8 @@ class CustomersCompanion extends UpdateCompanion<Customer> {
       address: address ?? this.address,
       taxId: taxId ?? this.taxId,
       businessName: businessName ?? this.businessName,
+      creditLimitCents: creditLimitCents ?? this.creditLimitCents,
+      creditUsedCents: creditUsedCents ?? this.creditUsedCents,
       isActive: isActive ?? this.isActive,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
@@ -11834,6 +11933,12 @@ class CustomersCompanion extends UpdateCompanion<Customer> {
     if (businessName.present) {
       map['business_name'] = Variable<String>(businessName.value);
     }
+    if (creditLimitCents.present) {
+      map['credit_limit_cents'] = Variable<int>(creditLimitCents.value);
+    }
+    if (creditUsedCents.present) {
+      map['credit_used_cents'] = Variable<int>(creditUsedCents.value);
+    }
     if (isActive.present) {
       map['is_active'] = Variable<bool>(isActive.value);
     }
@@ -11858,6 +11963,8 @@ class CustomersCompanion extends UpdateCompanion<Customer> {
           ..write('address: $address, ')
           ..write('taxId: $taxId, ')
           ..write('businessName: $businessName, ')
+          ..write('creditLimitCents: $creditLimitCents, ')
+          ..write('creditUsedCents: $creditUsedCents, ')
           ..write('isActive: $isActive, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt')
@@ -32017,6 +32124,8 @@ typedef $$CustomersTableCreateCompanionBuilder =
       Value<String?> address,
       Value<String?> taxId,
       Value<String?> businessName,
+      Value<int?> creditLimitCents,
+      Value<int> creditUsedCents,
       Value<bool> isActive,
       Value<DateTime> createdAt,
       Value<DateTime> updatedAt,
@@ -32032,6 +32141,8 @@ typedef $$CustomersTableUpdateCompanionBuilder =
       Value<String?> address,
       Value<String?> taxId,
       Value<String?> businessName,
+      Value<int?> creditLimitCents,
+      Value<int> creditUsedCents,
       Value<bool> isActive,
       Value<DateTime> createdAt,
       Value<DateTime> updatedAt,
@@ -32130,6 +32241,16 @@ class $$CustomersTableFilterComposer
 
   ColumnFilters<String> get businessName => $composableBuilder(
     column: $table.businessName,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get creditLimitCents => $composableBuilder(
+    column: $table.creditLimitCents,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get creditUsedCents => $composableBuilder(
+    column: $table.creditUsedCents,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -32253,6 +32374,16 @@ class $$CustomersTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<int> get creditLimitCents => $composableBuilder(
+    column: $table.creditLimitCents,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get creditUsedCents => $composableBuilder(
+    column: $table.creditUsedCents,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<bool> get isActive => $composableBuilder(
     column: $table.isActive,
     builder: (column) => ColumnOrderings(column),
@@ -32304,6 +32435,16 @@ class $$CustomersTableAnnotationComposer
 
   GeneratedColumn<String> get businessName => $composableBuilder(
     column: $table.businessName,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get creditLimitCents => $composableBuilder(
+    column: $table.creditLimitCents,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get creditUsedCents => $composableBuilder(
+    column: $table.creditUsedCents,
     builder: (column) => column,
   );
 
@@ -32404,6 +32545,8 @@ class $$CustomersTableTableManager
                 Value<String?> address = const Value.absent(),
                 Value<String?> taxId = const Value.absent(),
                 Value<String?> businessName = const Value.absent(),
+                Value<int?> creditLimitCents = const Value.absent(),
+                Value<int> creditUsedCents = const Value.absent(),
                 Value<bool> isActive = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
@@ -32417,6 +32560,8 @@ class $$CustomersTableTableManager
                 address: address,
                 taxId: taxId,
                 businessName: businessName,
+                creditLimitCents: creditLimitCents,
+                creditUsedCents: creditUsedCents,
                 isActive: isActive,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
@@ -32432,6 +32577,8 @@ class $$CustomersTableTableManager
                 Value<String?> address = const Value.absent(),
                 Value<String?> taxId = const Value.absent(),
                 Value<String?> businessName = const Value.absent(),
+                Value<int?> creditLimitCents = const Value.absent(),
+                Value<int> creditUsedCents = const Value.absent(),
                 Value<bool> isActive = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
@@ -32445,6 +32592,8 @@ class $$CustomersTableTableManager
                 address: address,
                 taxId: taxId,
                 businessName: businessName,
+                creditLimitCents: creditLimitCents,
+                creditUsedCents: creditUsedCents,
                 isActive: isActive,
                 createdAt: createdAt,
                 updatedAt: updatedAt,

@@ -342,7 +342,7 @@ final class AllCashMovementsProvider
   }
 }
 
-String _$allCashMovementsHash() => r'c47f83dae6929ca132b194b835119aa7ff31f09d';
+String _$allCashMovementsHash() => r'd34949a5e76e426bf23757ef8f49e822e5d4cfef';
 
 final class AllCashMovementsFamily extends $Family
     with

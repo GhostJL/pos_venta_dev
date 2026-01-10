@@ -36,6 +36,7 @@ class CustomerTableRow extends StatelessWidget {
   final Customer customer;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
+  final VoidCallback? onTap; // Add onTap
   final bool hasManagePermission;
 
   const CustomerTableRow({
@@ -43,6 +44,7 @@ class CustomerTableRow extends StatelessWidget {
     required this.customer,
     required this.onEdit,
     required this.onDelete,
+    this.onTap,
     this.hasManagePermission = true,
   });
 
@@ -58,7 +60,9 @@ class CustomerTableRow extends StatelessWidget {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
-        onTap: hasManagePermission ? onEdit : null,
+        onTap:
+            onTap ??
+            (hasManagePermission ? onEdit : null), // Use onTap if provided
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           child: Row(

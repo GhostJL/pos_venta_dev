@@ -8,6 +8,7 @@ import 'package:posventa/data/repositories/sale_repository_impl.dart';
 import 'package:posventa/domain/use_cases/sale/create_sale_use_case.dart';
 import 'package:posventa/domain/use_cases/sale/get_sales_use_case.dart';
 import 'package:posventa/domain/use_cases/sale/get_sale_by_id_use_case.dart';
+import 'package:posventa/domain/use_cases/sale/get_sales_by_customer_use_case.dart';
 import 'package:posventa/domain/use_cases/sale/generate_next_sale_number_use_case.dart';
 import 'package:posventa/domain/use_cases/sale/cancel_sale_use_case.dart';
 import 'package:posventa/domain/repositories/sale_return_repository.dart';
@@ -57,6 +58,10 @@ Future<CreateSaleUseCase> createSaleUseCase(ref) async => CreateSaleUseCase(
 @riverpod
 GetSalesUseCase getSalesUseCase(ref) =>
     GetSalesUseCase(ref.watch(saleRepositoryProvider));
+
+@riverpod
+GetSalesByCustomerUseCase getSalesByCustomerUseCase(ref) =>
+    GetSalesByCustomerUseCase(ref.watch(saleRepositoryProvider));
 
 @riverpod
 GetSaleByIdUseCase getSaleByIdUseCase(ref) =>

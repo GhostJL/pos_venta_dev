@@ -15,6 +15,8 @@ import 'package:posventa/presentation/providers/di/product_di.dart';
 import 'package:posventa/presentation/providers/di/inventory_di.dart';
 import 'package:posventa/presentation/providers/settings_provider.dart';
 
+import 'package:posventa/presentation/providers/di/customer_di.dart';
+import 'package:posventa/presentation/providers/customer_providers.dart';
 import 'package:posventa/presentation/providers/notification_providers.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -598,7 +600,49 @@ class POSNotifier extends _$POSNotifier {
       );
 
       final createSale = await ref.read(createSaleUseCaseProvider.future);
-      await createSale.call(sale);
+
+      // Credit Logic
+      if (paymentMethod == 'Crédito') {
+        if (state.selectedCustomer == null) {
+          throw Exception('Debe seleccionar un cliente para ventas a crédito');
+        }
+
+        // Fetch fresh customer data to ensure up-to-date credit usage
+        // This prevents bypassing limit if multiple sales are made in session without re-selecting customer
+        final customerResult = await ref.read(
+          customerByIdProvider(state.selectedCustomer!.id!).future,
+        );
+
+        if (customerResult == null) {
+          throw Exception('Cliente no encontrado al validar crédito');
+        }
+
+        final customer = customerResult;
+        final newBalance = customer.creditUsed + (totalCents / 100.0);
+
+        if (customer.creditLimit != null &&
+            newBalance > customer.creditLimit!) {
+          throw Exception(
+            'El cliente excede su límite de crédito. Disponible: \$${(customer.creditLimit! - customer.creditUsed).toStringAsFixed(2)}',
+          );
+        }
+
+        await createSale.call(sale);
+
+        await ref
+            .read(updateCustomerCreditUseCaseProvider)
+            .call(customer.id!, totalCents / 100.0, isIncrement: true);
+
+        // Invalidate the customer provider to ensure next fetch gets updated credit usage
+        ref.invalidate(customerByIdProvider(customer.id!));
+
+        // Update selected customer in state to reflect new balance immediately for UI
+        state = state.copyWith(
+          selectedCustomer: customer.copyWith(creditUsed: newBalance),
+        );
+      } else {
+        await createSale.call(sale);
+      }
 
       // Record change as a cash movement if applicable
       final change = amountPaid - (totalCents / 100.0);
