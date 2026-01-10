@@ -5,6 +5,8 @@ import 'package:posventa/presentation/widgets/dashboard/dashboard_sections/cashi
 import 'package:posventa/presentation/widgets/dashboard/dashboard_sections/dashboard_app_bar.dart';
 import 'package:posventa/presentation/widgets/dashboard/dashboard_sections/dashboard_operations_section.dart';
 import 'package:posventa/presentation/widgets/dashboard/dashboard_sections/dashboard_welcome_section.dart';
+import 'package:posventa/presentation/widgets/dashboard/dashboard_sections/dashboard_cashier_actions.dart';
+import 'package:posventa/presentation/widgets/dashboard/dashboard_sections/dashboard_cashier_movements.dart';
 
 class DashboardCashierPage extends ConsumerWidget {
   const DashboardCashierPage({super.key});
@@ -30,6 +32,16 @@ class DashboardCashierPage extends ConsumerWidget {
 
               // 2. Session Metrics (Replacing generic status)
               const CashierSessionMetrics(),
+
+              const SizedBox(height: 24),
+
+              // 2.5 Actions (New)
+              const DashboardCashierActions(),
+
+              const SizedBox(height: 24),
+
+              // 2.7 Recent Movements (New)
+              const DashboardCashierMovements(),
 
               const SizedBox(height: 32),
 

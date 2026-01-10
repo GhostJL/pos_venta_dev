@@ -6,6 +6,8 @@ import 'package:posventa/domain/entities/cash_session.dart';
 import 'package:go_router/go_router.dart';
 import 'package:posventa/presentation/providers/cash_session_providers.dart';
 import 'package:posventa/presentation/providers/cashier_providers.dart';
+import 'package:posventa/presentation/providers/auth_provider.dart';
+import 'package:posventa/domain/entities/user.dart';
 import 'package:posventa/core/theme/theme.dart';
 
 class CashSessionHistoryPage extends ConsumerStatefulWidget {
@@ -34,8 +36,14 @@ class _CashSessionHistoryPageState
 
   @override
   Widget build(BuildContext context) {
+    final user = ref.watch(authProvider).user;
+    final isCashier = user?.role == UserRole.cajero;
+
+    // Force filter if cashier
+    final effectiveUserId = isCashier ? user!.id : _selectedUserId;
+
     final filter = CashSessionFilter(
-      userId: _selectedUserId,
+      userId: effectiveUserId,
       warehouseId: _selectedWarehouseId,
       startDate: _selectedDateRange?.start,
       endDate: _selectedDateRange?.end,
@@ -59,8 +67,12 @@ class _CashSessionHistoryPageState
         actions: [
           IconButton(
             icon: const Icon(Icons.filter_list),
-            onPressed: () =>
-                _showFilterDialog(context, cashiersAsync, warehousesAsync),
+            onPressed: () => _showFilterDialog(
+              context,
+              cashiersAsync,
+              warehousesAsync,
+              isCashier,
+            ),
           ),
         ],
       ),
@@ -89,6 +101,7 @@ class _CashSessionHistoryPageState
     BuildContext context,
     AsyncValue<List<dynamic>> cashiersAsync,
     AsyncValue<List<dynamic>> warehousesAsync,
+    bool isCashier,
   ) {
     showDialog(
       context: context,
@@ -122,29 +135,32 @@ class _CashSessionHistoryPageState
                       },
                     ),
                     const SizedBox(height: 16),
-                    // Cashier Dropdown
-                    cashiersAsync.when(
-                      data: (cashiers) => DropdownButtonFormField<int>(
-                        initialValue: _selectedUserId,
-                        decoration: const InputDecoration(labelText: 'Cajero'),
-                        items: [
-                          const DropdownMenuItem<int>(
-                            value: null,
-                            child: Text('Todos'),
+                    // Cashier Dropdown (Only for Admins)
+                    if (!isCashier)
+                      cashiersAsync.when(
+                        data: (cashiers) => DropdownButtonFormField<int>(
+                          initialValue: _selectedUserId,
+                          decoration: const InputDecoration(
+                            labelText: 'Cajero',
                           ),
-                          ...cashiers.map(
-                            (c) => DropdownMenuItem(
-                              value: c.id,
-                              child: Text(c.username),
+                          items: [
+                            const DropdownMenuItem<int>(
+                              value: null,
+                              child: Text('Todos'),
                             ),
-                          ),
-                        ],
-                        onChanged: (val) =>
-                            setDialogState(() => _selectedUserId = val),
+                            ...cashiers.map(
+                              (c) => DropdownMenuItem(
+                                value: c.id,
+                                child: Text(c.username),
+                              ),
+                            ),
+                          ],
+                          onChanged: (val) =>
+                              setDialogState(() => _selectedUserId = val),
+                        ),
+                        loading: () => const CircularProgressIndicator(),
+                        error: (_, __) => const Text('Error cargando cajeros'),
                       ),
-                      loading: () => const CircularProgressIndicator(),
-                      error: (_, __) => const Text('Error cargando cajeros'),
-                    ),
                     const SizedBox(height: 16),
                     // Warehouse Dropdown
                     warehousesAsync.when(

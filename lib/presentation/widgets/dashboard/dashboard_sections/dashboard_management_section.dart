@@ -34,6 +34,14 @@ class DashboardManagementSection extends StatelessWidget {
         onTap: () => context.go('/purchases'),
         isTablet: isTablet,
       ),
+      DashboardActionCard(
+        title: 'Movimientos de Caja',
+        description: 'Auditoría de efectivo',
+        icon: Icons.account_balance_wallet_rounded,
+        color: Colors.orange.shade700,
+        onTap: () => context.go('/cash-movements'),
+        isTablet: isTablet,
+      ),
     ];
 
     return Column(

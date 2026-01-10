@@ -238,8 +238,13 @@ class CashSessionRepositoryImpl implements CashSessionRepository {
   Future<List<CashMovement>> getAllMovements({
     DateTime? startDate,
     DateTime? endDate,
+    int? userId,
   }) async {
     final q = db.select(db.cashMovements);
+
+    if (userId != null) {
+      q.where((t) => t.performedBy.equals(userId));
+    }
 
     if (startDate != null) {
       q.where((t) => t.movementDate.isBiggerOrEqualValue(startDate));
@@ -330,5 +335,22 @@ class CashSessionRepositoryImpl implements CashSessionRepository {
         receivedBy: p.receivedBy,
       );
     }).toList();
+  }
+
+  @override
+  Future<void> addCashMovement(CashMovement movement) async {
+    await db
+        .into(db.cashMovements)
+        .insert(
+          drift_db.CashMovementsCompanion.insert(
+            cashSessionId: movement.cashSessionId,
+            movementType: movement.movementType,
+            amountCents: movement.amountCents,
+            reason: movement.reason,
+            description: Value(movement.description),
+            performedBy: movement.performedBy,
+            movementDate: Value(movement.movementDate),
+          ),
+        );
   }
 }

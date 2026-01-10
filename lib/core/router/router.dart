@@ -12,6 +12,7 @@ import 'package:posventa/presentation/pages/adjustments/returns_management_page.
 import 'package:posventa/presentation/pages/adjustments/shift_close_page.dart';
 import 'package:posventa/presentation/pages/brands/brands_page.dart';
 import 'package:posventa/presentation/pages/cash/cash_session_close_page.dart';
+import 'package:posventa/presentation/pages/cash/cash_movements_page.dart';
 import 'package:posventa/presentation/pages/cash/cash_session_detail_page.dart';
 import 'package:posventa/presentation/pages/cash/cash_session_history_page.dart';
 import 'package:posventa/presentation/pages/cash/cash_session_open_page.dart';
@@ -437,6 +438,11 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: '/users-permissions',
             pageBuilder: (context, state) =>
                 const NoTransitionPage(child: UsersPermissionsPage()),
+          ),
+          GoRoute(
+            path: '/cash-movements',
+            pageBuilder: (context, state) =>
+                const NoTransitionPage(child: CashMovementsPage()),
           ),
           GoRoute(
             path: '/settings',

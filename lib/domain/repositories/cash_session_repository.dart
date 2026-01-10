@@ -16,7 +16,9 @@ abstract class CashSessionRepository {
   Future<List<CashMovement>> getAllMovements({
     DateTime? startDate,
     DateTime? endDate,
+    int? userId,
   });
   Future<List<SalePayment>> getSessionPayments(int sessionId);
   Future<List<SalePayment>> getAllSessionPayments(int sessionId);
+  Future<void> addCashMovement(CashMovement movement);
 }

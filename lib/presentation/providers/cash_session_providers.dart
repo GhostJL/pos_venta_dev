@@ -54,8 +54,9 @@ class CashSessionFilter {
 class CashMovementFilter {
   final DateTime? startDate;
   final DateTime? endDate;
+  final int? userId;
 
-  CashMovementFilter({this.startDate, this.endDate});
+  CashMovementFilter({this.startDate, this.endDate, this.userId});
 
   @override
   bool operator ==(Object other) {
@@ -107,6 +108,7 @@ Future<List<CashMovement>> allCashMovements(
   return repo.getAllMovements(
     startDate: filter.startDate,
     endDate: filter.endDate,
+    userId: filter.userId,
   );
 }
 
