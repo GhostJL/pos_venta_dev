@@ -48,4 +48,4 @@ final class PrinterServiceProvider
   }
 }
 
-String _$printerServiceHash() => r'42f6bd6915f7e310e53ce1dd95254906ff2cf7a6';
+String _$printerServiceHash() => r'b44c0ee8c5ce347835598fa78e021ce51b8625de';

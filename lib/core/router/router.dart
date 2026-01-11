@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:posventa/domain/entities/user.dart';
 import 'package:posventa/presentation/pages/inventory/inventory_lot_detail_page.dart';
 import 'package:posventa/presentation/pages/inventory/inventory_lots_page.dart';
+import 'package:posventa/presentation/pages/settings/backup/backup_settings_page.dart';
 
 import 'package:posventa/presentation/pages/shared/main_layout.dart';
 
@@ -475,6 +476,11 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: '/settings/hardware',
             pageBuilder: (context, state) =>
                 const NoTransitionPage(child: HardwareSettingsPage()),
+          ),
+          GoRoute(
+            path: '/settings/backup',
+            pageBuilder: (context, state) =>
+                const NoTransitionPage(child: BackupSettingsPage()),
           ),
 
           GoRoute(

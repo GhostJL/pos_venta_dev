@@ -29,7 +29,7 @@ class AuthState {
 // Notifier for authentication logic
 @Riverpod(keepAlive: true)
 class Auth extends _$Auth {
-  late final AuthRepository _authRepository;
+  late AuthRepository _authRepository;
 
   @override
   AuthState build() {

@@ -48,7 +48,7 @@ final class AppDatabaseProvider
   }
 }
 
-String _$appDatabaseHash() => r'e6789280bc57fbfb4c21a7ebba6656b05b9acb06';
+String _$appDatabaseHash() => r'c675127bc622bd2a1013b8fd2ffb93b2ee78ce93';
 
 @ProviderFor(tableUpdateStream)
 const tableUpdateStreamProvider = TableUpdateStreamProvider._();

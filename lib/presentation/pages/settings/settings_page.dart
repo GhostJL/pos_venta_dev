@@ -60,6 +60,13 @@ class SettingsPage extends ConsumerWidget {
                 data: (settings) => SettingsSectionContainer(
                   children: [
                     SettingsCategoryTile(
+                      icon: Icons.save_alt_rounded,
+                      title: 'Respaldo y Restauración',
+                      subtitle: 'Exportar o importar base de datos',
+                      onTap: () => context.push('/settings/backup'),
+                    ),
+                    const Divider(height: 1, indent: 56),
+                    SettingsCategoryTile(
                       icon: Icons.print_rounded,
                       title: 'Hardware e Impresoras',
                       subtitle: 'Configurar impresoras y periféricos',

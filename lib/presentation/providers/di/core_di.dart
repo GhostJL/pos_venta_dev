@@ -25,7 +25,11 @@ import 'package:posventa/data/repositories/settings_repository_impl.dart';
 part 'core_di.g.dart';
 
 @riverpod
-AppDatabase appDatabase(ref) => AppDatabase();
+AppDatabase appDatabase(ref) {
+  final db = AppDatabase();
+  ref.onDispose(() => db.close());
+  return db;
+}
 
 @riverpod
 Stream<Set<TableUpdate>> tableUpdateStream(Ref ref) {
