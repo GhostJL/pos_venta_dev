@@ -2,37 +2,51 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:posventa/presentation/pages/settings/backup/backup_controller.dart';
 import 'package:posventa/presentation/pages/settings/widgets/settings_components.dart';
+import 'package:posventa/presentation/providers/backup_state_provider.dart';
 
 class BackupSettingsPage extends ConsumerWidget {
   const BackupSettingsPage({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // Listen to controller state for error handling or success messages
-    ref.listen(backupControllerProvider, (previous, next) {
-      next.when(
-        data: (_) {
-          // If we transition from loading to data, it might mean success
-          if (previous?.isLoading == true && !next.isLoading) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Operación completada con éxito')),
-            );
-          }
-        },
-        error: (err, stack) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Error: ${err.toString()}'),
-              backgroundColor: Theme.of(context).colorScheme.error,
-            ),
-          );
-        },
-        loading: () {},
-      );
-    });
+    // Escuchar cambios de estado para feedback UI
+    ref.listen<BackupState>(backupControllerProvider, (previous, next) {
+      // 1. Manejar transición a Loading
+      if (next.status == BackupStatus.loading) {
+        if (previous?.status != BackupStatus.loading) {
+          _showLoadingDialog(context, next.message ?? 'Procesando...');
+        }
+      }
 
-    final state = ref.watch(backupControllerProvider);
-    final isLoading = state.isLoading;
+      // 2. Manejar salida de Loading (Cerrar diálogo de carga)
+      if (previous?.status == BackupStatus.loading &&
+          next.status != BackupStatus.loading) {
+        Navigator.of(context, rootNavigator: true).pop();
+      }
+
+      // 3. Manejar Éxito
+      if (next.status == BackupStatus.success) {
+        _showSuccessDialog(
+          context,
+          next.title ?? 'Operación Exitosa',
+          next.message ?? 'Tarea completada correctamente.',
+          onDismiss: () {
+            // Si es restauración, reiniciar. Si es exportación, solo resetear estado.
+            if (next.title?.toLowerCase().contains('restauración') ?? false) {
+              ref.read(backupControllerProvider.notifier).restartApp();
+            } else {
+              ref.read(backupControllerProvider.notifier).resetState();
+            }
+          },
+        );
+      }
+
+      // 4. Manejar Error
+      if (next.status == BackupStatus.error) {
+        _showErrorDialog(context, next.message ?? 'Error desconocido');
+        ref.read(backupControllerProvider.notifier).resetState();
+      }
+    });
 
     return Scaffold(
       appBar: AppBar(title: const Text('Respaldo y Restauración')),
@@ -46,7 +60,6 @@ class BackupSettingsPage extends ConsumerWidget {
               style: TextStyle(fontSize: 14, color: Colors.grey),
             ),
             const SizedBox(height: 24),
-
             SettingsSectionContainer(
               children: [
                 ListTile(
@@ -58,20 +71,8 @@ class BackupSettingsPage extends ConsumerWidget {
                   subtitle: const Text(
                     'Guarda una copia de seguridad en tu dispositivo',
                   ),
-                  trailing: isLoading
-                      ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Icon(Icons.arrow_forward_ios, size: 16),
-                  onTap: isLoading
-                      ? null
-                      : () {
-                          ref
-                              .read(backupControllerProvider.notifier)
-                              .exportDatabase();
-                        },
+                  trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                  onTap: () => _handleExport(context, ref),
                 ),
                 const Divider(height: 1, indent: 56),
                 ListTile(
@@ -83,14 +84,8 @@ class BackupSettingsPage extends ConsumerWidget {
                   subtitle: const Text(
                     'Importa una copia de seguridad existente',
                   ),
-                  trailing: isLoading
-                      ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Icon(Icons.arrow_forward_ios, size: 16),
-                  onTap: isLoading ? null : () => _confirmRestore(context, ref),
+                  trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                  onTap: () => _confirmRestore(context, ref),
                 ),
               ],
             ),
@@ -121,6 +116,27 @@ class BackupSettingsPage extends ConsumerWidget {
     );
   }
 
+  Future<void> _handleExport(BuildContext context, WidgetRef ref) async {
+    final path = await ref
+        .read(backupControllerProvider.notifier)
+        .pickExportPath();
+
+    if (path == null) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Exportación cancelada'),
+            behavior: SnackBarBehavior.floating,
+            backgroundColor: Theme.of(context).colorScheme.secondary,
+          ),
+        );
+      }
+      return;
+    }
+
+    ref.read(backupControllerProvider.notifier).executeExport(path);
+  }
+
   void _confirmRestore(BuildContext context, WidgetRef ref) {
     showDialog(
       context: context,
@@ -135,15 +151,114 @@ class BackupSettingsPage extends ConsumerWidget {
             child: const Text('Cancelar'),
           ),
           FilledButton(
-            onPressed: () {
-              Navigator.pop(context);
-              ref.read(backupControllerProvider.notifier).importDatabase();
+            onPressed: () async {
+              Navigator.pop(context); // Cierra diálogo de confirmación
+              final path = await ref
+                  .read(backupControllerProvider.notifier)
+                  .pickImportPath();
+
+              if (path == null) {
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: const Text('Restauración cancelada'),
+                      behavior: SnackBarBehavior.floating,
+                      backgroundColor: Theme.of(context).colorScheme.secondary,
+                    ),
+                  );
+                }
+                return;
+              }
+              // Ejecuta importación, el listener manejará el loading/success
+              ref.read(backupControllerProvider.notifier).executeImport(path);
             },
             style: FilledButton.styleFrom(
               backgroundColor: Colors.red,
               foregroundColor: Colors.white,
             ),
             child: const Text('Sí, Restaurar'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showLoadingDialog(BuildContext context, String message) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      useRootNavigator: true,
+      builder: (context) => PopScope(
+        canPop: false,
+        child: AlertDialog(
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(height: 16),
+              const CircularProgressIndicator(),
+              const SizedBox(height: 24),
+              const Text(
+                'Procesando',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                message,
+                textAlign: TextAlign.center,
+                style: const TextStyle(fontSize: 14),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showSuccessDialog(
+    BuildContext context,
+    String title,
+    String message, {
+    VoidCallback? onDismiss,
+  }) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      useRootNavigator: true,
+      builder: (context) => AlertDialog(
+        icon: const Icon(Icons.check_circle, color: Colors.green, size: 48),
+        title: Text(title),
+        content: Text(message, textAlign: TextAlign.center),
+        actions: [
+          FilledButton(
+            onPressed: () {
+              Navigator.of(
+                context,
+                rootNavigator: true,
+              ).pop(); // Use root navigator explicitly
+              onDismiss?.call();
+            },
+            child: const Text('Aceptar'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showErrorDialog(BuildContext context, String error) {
+    showDialog(
+      context: context,
+      useRootNavigator: true, // Also use root navigator for error
+      builder: (context) => AlertDialog(
+        icon: const Icon(Icons.error, color: Colors.red, size: 48),
+        title: const Text('Error'),
+        content: Text(
+          'Ha ocurrido un error durante el proceso: \n\n$error',
+          textAlign: TextAlign.center,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context, rootNavigator: true).pop(),
+            child: const Text('Cerrar'),
           ),
         ],
       ),

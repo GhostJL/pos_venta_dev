@@ -4,6 +4,7 @@ import 'package:posventa/presentation/pages/cash/cash_session_open_page.dart';
 
 import 'package:posventa/presentation/providers/auth_provider.dart';
 import 'package:posventa/presentation/providers/providers.dart';
+import 'package:posventa/presentation/providers/backup_state_provider.dart';
 import 'package:posventa/domain/entities/user.dart';
 
 /// Wrapper que valida si el usuario tiene una sesión de caja abierta
@@ -16,6 +17,13 @@ class CashSessionGuard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // If a backup/restore is in progress, do not block access or show errors
+    // just because the DB is closed. Keep the current UI mounted.
+    final isBackup = ref.watch(isBackupInProgressProvider);
+    if (isBackup) {
+      return child;
+    }
+
     final user = ref.watch(authProvider).user;
 
     // Solo validar sesión para cajeros y administradores

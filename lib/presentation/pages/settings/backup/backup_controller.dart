@@ -3,75 +3,105 @@ import 'package:intl/intl.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:posventa/presentation/providers/di/backup_di.dart';
 import 'package:posventa/presentation/providers/di/core_di.dart';
-// import 'package:share_plus/share_plus.dart'; // Unused
+import 'package:posventa/presentation/providers/backup_state_provider.dart';
 
 part 'backup_controller.g.dart';
 
 @Riverpod(keepAlive: true)
 class BackupController extends _$BackupController {
   @override
-  FutureOr<void> build() {
-    // Initial state is idle
+  BackupState build() {
+    return const BackupState();
   }
 
-  Future<void> exportDatabase() async {
-    state = const AsyncValue.loading();
-    state = await AsyncValue.guard(() async {
-      final repository = ref.read(backupRepositoryProvider);
+  Future<String?> pickExportPath() async {
+    final timestamp = DateFormat('yyyyMMdd_HHmmss').format(DateTime.now());
+    final filename = 'pos_backup_$timestamp.sqlite';
 
-      // Determine default filename with timestamp
-      final timestamp = DateFormat('yyyyMMdd_HHmmss').format(DateTime.now());
-      final filename = 'pos_backup_$timestamp.sqlite';
-
-      // Pick location to save
-      final String? outputFile = await FilePicker.platform.saveFile(
-        dialogTitle: 'Exportar Base de Datos',
-        fileName: filename,
-        type: FileType.any, // .sqlite might not be standard filter everywhere
-      );
-
-      if (outputFile == null) {
-        // User canceled
-        return;
-      }
-
-      await repository.exportDatabase(outputFile);
-    });
+    return await FilePicker.platform.saveFile(
+      dialogTitle: 'Exportar Base de Datos',
+      fileName: filename,
+      type: FileType.any,
+    );
   }
 
-  Future<void> importDatabase() async {
-    // Step 1: Pick file
-    final FilePickerResult? result = await FilePicker.platform.pickFiles();
-    if (result == null || result.files.isEmpty) return;
-
-    final path = result.files.single.path;
-    if (path == null) return;
-
-    state = const AsyncValue.loading();
+  Future<void> executeExport(String path) async {
+    state = const BackupState(
+      status: BackupStatus.loading,
+      message: 'Exportando base de datos...\nPor favor espere.',
+    );
 
     try {
       final repository = ref.read(backupRepositoryProvider);
+      await repository.exportDatabase(path);
+      state = const BackupState(
+        status: BackupStatus.success,
+        title: 'Exportación Completa',
+        message: 'La base de datos se ha exportado correctamente.',
+      );
+    } catch (e) {
+      state = BackupState(status: BackupStatus.error, message: e.toString());
+      // Optional: Log error
+    }
+  }
 
-      // Force close database connection
-      // We accept that this might cause errors if other async ops are running.
-      // Ideally we invalidate the provider.
-      ref.invalidate(appDatabaseProvider);
+  Future<String?> pickImportPath() async {
+    final FilePickerResult? result = await FilePicker.platform.pickFiles();
+    if (result == null || result.files.isEmpty) return null;
+    return result.files.single.path;
+  }
 
-      await Future.delayed(const Duration(milliseconds: 500)); // Safety buffer
+  Future<void> executeImport(String path) async {
+    // 1. Set global flag for Guard
+    ref.read(isBackupInProgressProvider.notifier).state = true;
 
-      // If the controller was disposed (e.g. page changed) during the waiting,
-      // 'ref' might be invalid. But keeping it alive helps.
+    // 2. Update local state to loading
+    state = const BackupState(
+      status: BackupStatus.loading,
+      message: 'Restaurando base de datos...\nEsto puede tardar unos momentos.',
+    );
 
+    // Allow UI to rebuild
+    await Future.delayed(const Duration(milliseconds: 100));
+
+    try {
+      // 3. Close database
+      try {
+        await ref.read(appDatabaseProvider).close();
+      } catch (e) {
+        // Ignore close errors
+      }
+
+      await Future.delayed(const Duration(milliseconds: 500));
+
+      // 4. Import
+      final repository = ref.read(backupRepositoryProvider);
       await repository.importDatabase(path);
 
-      // Success
-      state = const AsyncValue.data(null);
-    } catch (e, stack) {
-      // If controller is disposed, setting state throws, but with keepAlive it should be safe unless scope is disposed.
-      // We can check if we are still mounted by just trying?
-      // Actually Ref doesn't expose mounted in this version easily.
-      // But since we are keepAlive, we should be fine.
-      state = AsyncValue.error(e, stack);
+      // 5. Success
+      state = const BackupState(
+        status: BackupStatus.success,
+        title: 'Restauración Completa',
+        message:
+            'La base de datos se ha restaurado correctamente. La aplicación se reiniciará.',
+      );
+
+      // Note: We intentionally leave isBackupInProgressProvider = true
+      // until the user dismisses the success dialog and app restarts.
+    } catch (e) {
+      ref.read(isBackupInProgressProvider.notifier).state = false;
+      state = BackupState(status: BackupStatus.error, message: e.toString());
     }
+  }
+
+  void resetState() {
+    state = const BackupState(status: BackupStatus.idle);
+  }
+
+  void restartApp() {
+    // This will trigger the Auth restart and Router redirect
+    ref.invalidate(appDatabaseProvider);
+    // Reset backup flag just in case, though app might reload
+    ref.read(isBackupInProgressProvider.notifier).state = false;
   }
 }

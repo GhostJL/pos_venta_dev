@@ -13,7 +13,7 @@ part of 'backup_controller.dart';
 const backupControllerProvider = BackupControllerProvider._();
 
 final class BackupControllerProvider
-    extends $AsyncNotifierProvider<BackupController, void> {
+    extends $NotifierProvider<BackupController, BackupState> {
   const BackupControllerProvider._()
     : super(
         from: null,
@@ -31,25 +31,33 @@ final class BackupControllerProvider
   @$internal
   @override
   BackupController create() => BackupController();
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(BackupState value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<BackupState>(value),
+    );
+  }
 }
 
-String _$backupControllerHash() => r'3bd427971914d61dbc27e94a0d140db6d1819016';
+String _$backupControllerHash() => r'10ff9952ecd6f7673f4b4259d3b78b78d7e158c0';
 
-abstract class _$BackupController extends $AsyncNotifier<void> {
-  FutureOr<void> build();
+abstract class _$BackupController extends $Notifier<BackupState> {
+  BackupState build();
   @$mustCallSuper
   @override
   void runBuild() {
-    build();
-    final ref = this.ref as $Ref<AsyncValue<void>, void>;
+    final created = build();
+    final ref = this.ref as $Ref<BackupState, BackupState>;
     final element =
         ref.element
             as $ClassProviderElement<
-              AnyNotifier<AsyncValue<void>, void>,
-              AsyncValue<void>,
+              AnyNotifier<BackupState, BackupState>,
+              BackupState,
               Object?,
               Object?
             >;
-    element.handleValue(ref, null);
+    element.handleValue(ref, created);
   }
 }
