@@ -9,6 +9,101 @@ part of 'backup_di.dart';
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
 
+@ProviderFor(encryptionService)
+const encryptionServiceProvider = EncryptionServiceProvider._();
+
+final class EncryptionServiceProvider
+    extends
+        $FunctionalProvider<
+          EncryptionService,
+          EncryptionService,
+          EncryptionService
+        >
+    with $Provider<EncryptionService> {
+  const EncryptionServiceProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'encryptionServiceProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$encryptionServiceHash();
+
+  @$internal
+  @override
+  $ProviderElement<EncryptionService> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  EncryptionService create(Ref ref) {
+    return encryptionService(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(EncryptionService value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<EncryptionService>(value),
+    );
+  }
+}
+
+String _$encryptionServiceHash() => r'28464f413788be35e4ccb00e9507f71f887e95db';
+
+@ProviderFor(backupLocalDataSource)
+const backupLocalDataSourceProvider = BackupLocalDataSourceProvider._();
+
+final class BackupLocalDataSourceProvider
+    extends
+        $FunctionalProvider<
+          BackupLocalDataSource,
+          BackupLocalDataSource,
+          BackupLocalDataSource
+        >
+    with $Provider<BackupLocalDataSource> {
+  const BackupLocalDataSourceProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'backupLocalDataSourceProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$backupLocalDataSourceHash();
+
+  @$internal
+  @override
+  $ProviderElement<BackupLocalDataSource> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  BackupLocalDataSource create(Ref ref) {
+    return backupLocalDataSource(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(BackupLocalDataSource value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<BackupLocalDataSource>(value),
+    );
+  }
+}
+
+String _$backupLocalDataSourceHash() =>
+    r'dcda3e9e6dc953ce46987e6b110871c91fa4b5e6';
+
 @ProviderFor(backupRepository)
 const backupRepositoryProvider = BackupRepositoryProvider._();
 
@@ -53,4 +148,4 @@ final class BackupRepositoryProvider
   }
 }
 
-String _$backupRepositoryHash() => r'ae1ad5fb492fe5f84d4037da60b19891b7d022a7';
+String _$backupRepositoryHash() => r'289bfef8be7d30d0e4ef77f4b1841b63c0cbd90e';
