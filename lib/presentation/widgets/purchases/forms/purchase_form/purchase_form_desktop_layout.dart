@@ -10,7 +10,6 @@ import 'package:posventa/presentation/widgets/purchases/cards/purchase_totals_fo
 
 class PurchaseFormDesktopLayout extends StatelessWidget {
   final PurchaseFormState formState;
-  final Map<int, Product> productMap;
   final Function(Product, ProductVariant?) onProductSelected;
   final Function(int) onEditItem;
   final Function(int) onRemoveItem;
@@ -21,7 +20,6 @@ class PurchaseFormDesktopLayout extends StatelessWidget {
   const PurchaseFormDesktopLayout({
     super.key,
     required this.formState,
-    required this.productMap,
     required this.onProductSelected,
     required this.onEditItem,
     required this.onRemoveItem,
@@ -153,7 +151,6 @@ class PurchaseFormDesktopLayout extends StatelessWidget {
                         const SizedBox(height: 16),
                         PurchaseItemsListWidget(
                           items: formState.items,
-                          productMap: productMap,
                           onEditItem: onEditItem,
                           onRemoveItem: onRemoveItem,
                           onQuantityChanged: onQuantityChanged,

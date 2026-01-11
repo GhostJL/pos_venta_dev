@@ -67,10 +67,18 @@ class ProductLocalDataSourceImpl implements ProductLocalDataSource {
 
       if (query != null && query.isNotEmpty) {
         final searchParams = '%$query%';
+        final variantSubquery = db.selectOnly(db.productVariants)
+          ..addColumns([db.productVariants.productId])
+          ..where(
+            db.productVariants.barcode.like(searchParams) |
+                db.productVariants.variantName.like(searchParams),
+          );
+
         q.where(
           db.products.name.like(searchParams) |
               db.products.code.like(searchParams) |
-              db.products.description.like(searchParams),
+              db.products.description.like(searchParams) |
+              db.products.id.isInQuery(variantSubquery),
         );
       }
 
@@ -246,10 +254,18 @@ class ProductLocalDataSourceImpl implements ProductLocalDataSource {
 
     if (query != null && query.isNotEmpty) {
       final searchParams = '%$query%';
+      final variantSubquery = db.selectOnly(db.productVariants)
+        ..addColumns([db.productVariants.productId])
+        ..where(
+          db.productVariants.barcode.like(searchParams) |
+              db.productVariants.variantName.like(searchParams),
+        );
+
       q.where(
         db.products.name.like(searchParams) |
             db.products.code.like(searchParams) |
-            db.products.description.like(searchParams),
+            db.products.description.like(searchParams) |
+            db.products.id.isInQuery(variantSubquery),
       );
     }
 

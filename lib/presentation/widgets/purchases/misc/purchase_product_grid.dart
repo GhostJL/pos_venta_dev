@@ -133,10 +133,12 @@ class _PurchaseProductGridState extends ConsumerState<PurchaseProductGrid>
                             icon: const Icon(Icons.clear, size: 20),
                             onPressed: () {
                               _searchController.clear();
-                              ref
-                                  .read(productListProvider.notifier)
-                                  .searchProducts('');
-                              setState(() {});
+                              debounceSearch(
+                                () => ref
+                                    .read(productListProvider.notifier)
+                                    .searchProducts(''),
+                                duration: Duration.zero,
+                              );
                             },
                           )
                         : null,
@@ -154,6 +156,7 @@ class _PurchaseProductGridState extends ConsumerState<PurchaseProductGrid>
                       () => ref
                           .read(productListProvider.notifier)
                           .searchProducts(value),
+                      duration: const Duration(milliseconds: 1000),
                     );
                   },
                 ),

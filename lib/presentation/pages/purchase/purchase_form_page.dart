@@ -46,43 +46,43 @@ class _PurchaseFormPageState extends ConsumerState<PurchaseFormPage> {
   }
 
   Future<void> _editItem(int index, PurchaseItem item) async {
-    final productsAsync = ref.read(productNotifierProvider);
+    // Determine product via provider check or reuse
+    // Since we don't hold the full list, we request it by ID via productProvider
+    // Using `ref.read` on a future provider?
 
-    await productsAsync.when(
-      data: (products) async {
-        // final products = state.products; // Removed
-        final product = products
-            .where((p) => p.id == item.productId)
-            .firstOrNull;
+    // We can't synchronously get it if not loaded.
+    // But `_editItem` is async.
 
-        if (product != null) {
-          final variant = item.variantId != null
-              ? product.variants
-                    ?.where((v) => v.id == item.variantId)
-                    .firstOrNull
-              : null;
+    try {
+      final product = await ref.read(productProvider(item.productId).future);
+      if (product != null) {
+        final variant = item.variantId != null
+            ? product.variants?.where((v) => v.id == item.variantId).firstOrNull
+            : null;
 
-          final warehouseId = ref.read(purchaseFormProvider).warehouse?.id;
-          if (warehouseId == null) return;
+        final warehouseId = ref.read(purchaseFormProvider).warehouse?.id;
+        if (warehouseId == null) return;
 
-          final result = await showDialog<PurchaseItem>(
-            context: context,
-            builder: (context) => PurchaseItemDialog(
-              warehouseId: warehouseId,
-              existingItem: item,
-              product: product,
-              variant: variant,
-            ),
-          );
+        if (!mounted) return;
 
-          if (result != null) {
-            ref.read(purchaseFormProvider.notifier).updateItem(index, result);
-          }
+        final result = await showDialog<PurchaseItem>(
+          context: context,
+          builder: (context) => PurchaseItemDialog(
+            warehouseId: warehouseId,
+            existingItem: item,
+            product: product,
+            variant: variant,
+          ),
+        );
+
+        if (result != null) {
+          ref.read(purchaseFormProvider.notifier).updateItem(index, result);
         }
-      },
-      loading: () {},
-      error: (_, __) {},
-    );
+      }
+    } catch (_) {
+      // Handle error if product load fails or network error
+      if (mounted) _showSnackBar('Error cargando producto para edición');
+    }
   }
 
   Future<void> _savePurchase() async {
@@ -121,67 +121,60 @@ class _PurchaseFormPageState extends ConsumerState<PurchaseFormPage> {
     );
   }
 
-  void _onQuantityChanged(
-    int index,
-    double quantity,
-    Map<int, Product> productMap,
-  ) {
+  Future<void> _onQuantityChanged(int index, double quantity) async {
     final item = ref.read(purchaseFormProvider).items[index];
-    final product = productMap[item.productId];
-    if (product != null) {
-      ref
-          .read(purchaseFormProvider.notifier)
-          .updateItemQuantity(index, quantity, product);
-    }
+    // Fetch product to ensure valid update or just pass product stub if we only need basic info?
+    // updateItemQuantity usages `product` to recalculate costs if unit cost changes?
+    // Actually `PurchaseFormNotifier.updateItemQuantity` uses `product` to Re-calculate defaults?
+    // checking `PurchaseFormNotifier`:
+    // updateItemQuantity(index, newQty, product) -> calls PurchaseCalculations.createPurchaseItem...
+    // which effectively just updates totals. It optionally updates unitCost if default logic applies.
+    // If we only change quantity, we might not strictly need the full product re-fetch if we trust `item.unitCost`.
+    // BUT `updateItemQuantity` signature requires `Product`.
+
+    // So we fetch it.
+    try {
+      final product = await ref.read(productProvider(item.productId).future);
+      if (product != null) {
+        ref
+            .read(purchaseFormProvider.notifier)
+            .updateItemQuantity(index, quantity, product);
+      }
+    } catch (_) {}
   }
 
   @override
   Widget build(BuildContext context) {
     final isMobile = MediaQuery.of(context).size.width < 800;
-    final productsAsync = ref.watch(productNotifierProvider);
+    // Removed ref.watch(productNotifierProvider) to avoid full rebuilds on search
     final formState = ref.watch(purchaseFormProvider);
 
     if (formState.isLoading) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
-    return productsAsync.when(
-      data: (products) {
-        // final products = state.products; // Removed
-        final productMap = {for (var p in products) p.id!: p};
+    if (isMobile) {
+      return PurchaseFormMobileLayout(
+        formState: formState,
+        onProductSelected: _onProductSelected,
+        onEditItem: (index) => _editItem(index, formState.items[index]),
+        onRemoveItem: (index) =>
+            ref.read(purchaseFormProvider.notifier).removeItem(index),
+        onQuantityChanged: _onQuantityChanged,
+        onSavePurchase: _savePurchase,
+        formKey: _formKey,
+      );
+    }
 
-        if (isMobile) {
-          return PurchaseFormMobileLayout(
-            formState: formState,
-            productMap: productMap,
-            onProductSelected: _onProductSelected,
-            onEditItem: (index) => _editItem(index, formState.items[index]),
-            onRemoveItem: (index) =>
-                ref.read(purchaseFormProvider.notifier).removeItem(index),
-            onQuantityChanged: (index, quantity) =>
-                _onQuantityChanged(index, quantity, productMap),
-            onSavePurchase: _savePurchase,
-            formKey: _formKey,
-          );
-        }
-
-        return PurchaseFormDesktopLayout(
-          formState: formState,
-          productMap: productMap,
-          onProductSelected: _onProductSelected,
-          onEditItem: (index) => _editItem(index, formState.items[index]),
-          onRemoveItem: (index) =>
-              ref.read(purchaseFormProvider.notifier).removeItem(index),
-          onQuantityChanged: (index, quantity) =>
-              _onQuantityChanged(index, quantity, productMap),
-          onSavePurchase: _savePurchase,
-          formKey: _formKey,
-        );
-      },
-      loading: () =>
-          const Scaffold(body: Center(child: CircularProgressIndicator())),
-      error: (error, stack) =>
-          Scaffold(body: Center(child: Text('Error: $error'))),
+    return PurchaseFormDesktopLayout(
+      formState: formState,
+      onProductSelected: _onProductSelected,
+      onEditItem: (index) => _editItem(index, formState.items[index]),
+      onRemoveItem: (index) =>
+          ref.read(purchaseFormProvider.notifier).removeItem(index),
+      onQuantityChanged: _onQuantityChanged,
+      onSavePurchase: _savePurchase,
+      formKey: _formKey,
     );
   }
 }

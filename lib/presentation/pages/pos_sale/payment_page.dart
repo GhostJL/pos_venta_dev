@@ -5,6 +5,8 @@ import 'package:go_router/go_router.dart';
 import 'package:posventa/core/theme/theme.dart';
 import 'package:posventa/features/sales/domain/models/ticket_data.dart';
 import 'package:posventa/presentation/providers/pos_providers.dart';
+import 'package:posventa/presentation/providers/settings_provider.dart';
+import 'package:printing/printing.dart';
 import 'package:posventa/presentation/widgets/pos/payment/widgets/numeric_keypad.dart';
 import 'package:posventa/presentation/widgets/pos/payment/widgets/payment_action_buttons.dart';
 import 'package:posventa/presentation/widgets/pos/payment/widgets/payment_change_display.dart';
@@ -159,6 +161,18 @@ class _PaymentPageState extends ConsumerState<PaymentPage> {
           final sale = next.lastCompletedSale!;
           final printerService = ref.read(printerServiceProvider);
 
+          // Get saved printer from settings
+          final settings = await ref.read(settingsProvider.future);
+          final printerName = settings.printerName;
+
+          Printer? targetPrinter;
+          if (printerName != null) {
+            final printers = await printerService.getPrinters();
+            targetPrinter = printers
+                .where((p) => p.name == printerName)
+                .firstOrNull;
+          }
+
           final ticketData = TicketData(
             sale: sale,
             items: sale.items,
@@ -169,29 +183,36 @@ class _PaymentPageState extends ConsumerState<PaymentPage> {
           try {
             // We await this so the dialog shows up before navigation if using layoutPdf
             // Use unawaited if you want fire-and-forget
-            printerService.printTicket(ticketData);
+            await printerService.printTicket(
+              ticketData,
+              printer: targetPrinter,
+            );
           } catch (e) {
             debugPrint('Print error: $e');
           }
         }
 
-        context.go('/sales');
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(next.successMessage!),
-            backgroundColor: AppTheme.transactionSuccess,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
+        if (context.mounted) {
+          context.go('/sales');
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(next.successMessage!),
+              backgroundColor: AppTheme.transactionSuccess,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
       }
       if (next.errorMessage != null && next.errorMessage!.isNotEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(next.errorMessage!),
-            backgroundColor: theme.colorScheme.error,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(next.errorMessage!),
+              backgroundColor: theme.colorScheme.error,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
       }
     });
 

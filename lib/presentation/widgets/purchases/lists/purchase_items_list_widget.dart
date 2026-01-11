@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:posventa/domain/entities/product.dart';
 import 'package:posventa/domain/entities/purchase_item.dart';
 import 'package:posventa/presentation/widgets/purchases/your_purchase/cart_item_widget.dart';
 
 class PurchaseItemsListWidget extends StatelessWidget {
   final List<PurchaseItem> items;
-  final Map<int, Product> productMap;
   final Function(int index) onEditItem;
   final Function(int index) onRemoveItem;
   final Function(int index, double newQuantity) onQuantityChanged;
@@ -13,7 +11,6 @@ class PurchaseItemsListWidget extends StatelessWidget {
   const PurchaseItemsListWidget({
     super.key,
     required this.items,
-    required this.productMap,
     required this.onEditItem,
     required this.onRemoveItem,
     required this.onQuantityChanged,
@@ -30,7 +27,6 @@ class PurchaseItemsListWidget extends StatelessWidget {
       separatorBuilder: (_, __) => const SizedBox(height: 12),
       itemBuilder: (context, index) => CartItemWidget(
         item: items[index],
-        product: productMap[items[index].productId],
         index: index,
         onEditItem: onEditItem,
         onRemoveItem: onRemoveItem,
