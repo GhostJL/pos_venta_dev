@@ -108,6 +108,12 @@ class MenuConfig {
             route: '/cash-sessions-history',
             requiredPermissions: [PermissionConstants.reportsView],
           ),
+          const MenuItem(
+            title: 'Reportes y Analíticas',
+            icon: Icons.bar_chart_rounded,
+            route: '/reports',
+            requiredPermissions: [PermissionConstants.reportsView],
+          ),
         ],
       ),
 

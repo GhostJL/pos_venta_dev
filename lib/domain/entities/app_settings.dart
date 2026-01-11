@@ -4,19 +4,38 @@ class AppSettings extends Equatable {
   final bool useInventory;
   final bool useTax;
 
-  const AppSettings({required this.useInventory, required this.useTax});
+  final String? printerName;
+  final int paperWidthMm;
+
+  const AppSettings({
+    required this.useInventory,
+    required this.useTax,
+    this.printerName,
+    this.paperWidthMm = 80,
+  });
 
   factory AppSettings.defaults() {
-    return const AppSettings(useInventory: true, useTax: true);
+    return const AppSettings(
+      useInventory: true,
+      useTax: true,
+      paperWidthMm: 80,
+    );
   }
 
-  AppSettings copyWith({bool? useInventory, bool? useTax}) {
+  AppSettings copyWith({
+    bool? useInventory,
+    bool? useTax,
+    String? printerName,
+    int? paperWidthMm,
+  }) {
     return AppSettings(
       useInventory: useInventory ?? this.useInventory,
       useTax: useTax ?? this.useTax,
+      printerName: printerName ?? this.printerName,
+      paperWidthMm: paperWidthMm ?? this.paperWidthMm,
     );
   }
 
   @override
-  List<Object?> get props => [useInventory, useTax];
+  List<Object?> get props => [useInventory, useTax, printerName, paperWidthMm];
 }

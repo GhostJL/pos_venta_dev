@@ -59,6 +59,13 @@ class SettingsPage extends ConsumerWidget {
               settingsAsync.when(
                 data: (settings) => SettingsSectionContainer(
                   children: [
+                    SettingsCategoryTile(
+                      icon: Icons.print_rounded,
+                      title: 'Hardware e Impresoras',
+                      subtitle: 'Configurar impresoras y periféricos',
+                      onTap: () => context.push('/settings/hardware'),
+                    ),
+                    const Divider(height: 1, indent: 56),
                     SettingsToggleTile(
                       title: 'Gestionar Inventario',
                       subtitle: 'Activa o desactiva el control de stock',
