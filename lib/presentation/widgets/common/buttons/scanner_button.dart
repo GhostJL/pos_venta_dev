@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:posventa/presentation/widgets/common/base/base_button.dart';
 
@@ -17,6 +18,10 @@ class ScannerButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (!Platform.isAndroid && !Platform.isIOS) {
+      return const SizedBox.shrink();
+    }
+
     if (isCompact) {
       return IconButton(
         icon: const Icon(Icons.qr_code_scanner),

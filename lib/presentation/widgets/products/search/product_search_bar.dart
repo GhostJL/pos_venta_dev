@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 
 class ProductSearchBar extends StatelessWidget {
@@ -30,20 +31,21 @@ class ProductSearchBar extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 8),
-        Container(
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surface,
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: IconButton(
-            icon: Icon(
-              Icons.qr_code_scanner,
-              color: Theme.of(context).colorScheme.onSurface,
+        if (Platform.isAndroid || Platform.isIOS)
+          Container(
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.surface,
+              borderRadius: BorderRadius.circular(8),
             ),
-            onPressed: onScannerPressed,
-            tooltip: 'Escanear código',
+            child: IconButton(
+              icon: Icon(
+                Icons.qr_code_scanner,
+                color: Theme.of(context).colorScheme.onSurface,
+              ),
+              onPressed: onScannerPressed,
+              tooltip: 'Escanear código',
+            ),
           ),
-        ),
       ],
     );
   }

@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 
 import 'package:posventa/presentation/pages/shared/main_layout.dart';
@@ -85,17 +86,21 @@ class ProductSearchBar extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 12),
-          FilledButton.icon(
-            onPressed: onScan,
-            style: FilledButton.styleFrom(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+          if (Platform.isAndroid || Platform.isIOS)
+            FilledButton.icon(
+              onPressed: onScan,
+              style: FilledButton.styleFrom(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 14,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
               ),
+              icon: const Icon(Icons.qr_code_scanner, size: 20),
+              label: const Text("Escanear"),
             ),
-            icon: const Icon(Icons.qr_code_scanner, size: 20),
-            label: const Text("Escanear"),
-          ),
         ],
       ),
     );

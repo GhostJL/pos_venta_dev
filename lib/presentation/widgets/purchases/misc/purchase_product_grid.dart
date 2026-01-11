@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -6,6 +7,7 @@ import 'package:posventa/domain/entities/product_variant.dart';
 import 'package:posventa/presentation/providers/product_provider.dart';
 import 'package:posventa/presentation/widgets/products/shared/product_card.dart';
 import 'package:posventa/presentation/widgets/common/misc/scanner_arguments.dart';
+import 'package:posventa/presentation/mixins/search_debounce_mixin.dart';
 
 /// Helper class to represent a product or variant as a single grid item
 class PurchaseGridItem {
@@ -43,7 +45,8 @@ class PurchaseProductGrid extends ConsumerStatefulWidget {
       _PurchaseProductGridState();
 }
 
-class _PurchaseProductGridState extends ConsumerState<PurchaseProductGrid> {
+class _PurchaseProductGridState extends ConsumerState<PurchaseProductGrid>
+    with SearchDebounceMixin {
   final TextEditingController _searchController = TextEditingController();
 
   @override
@@ -110,7 +113,6 @@ class _PurchaseProductGridState extends ConsumerState<PurchaseProductGrid> {
 
   @override
   Widget build(BuildContext context) {
-    final productsAsync = ref.watch(productListProvider);
     final isMobile = MediaQuery.of(context).size.width < 600;
 
     return Column(
@@ -148,96 +150,112 @@ class _PurchaseProductGridState extends ConsumerState<PurchaseProductGrid> {
                     isDense: true,
                   ),
                   onChanged: (value) {
-                    ref
-                        .read(productListProvider.notifier)
-                        .searchProducts(value);
-                    setState(() {});
+                    debounceSearch(
+                      () => ref
+                          .read(productListProvider.notifier)
+                          .searchProducts(value),
+                    );
                   },
                 ),
               ),
               const SizedBox(width: 8),
-              Container(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(8),
-                  color: Theme.of(context).primaryColor.withAlpha(20),
-                ),
-                child: IconButton(
-                  icon: Icon(
-                    Icons.qr_code_scanner,
-                    color: Theme.of(context).primaryColor,
+              if (Platform.isAndroid || Platform.isIOS)
+                Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(8),
+                    color: Theme.of(context).primaryColor.withAlpha(20),
                   ),
-                  onPressed: _openScanner,
-                  tooltip: 'Escanear código',
+                  child: IconButton(
+                    icon: Icon(
+                      Icons.qr_code_scanner,
+                      color: Theme.of(context).primaryColor,
+                    ),
+                    onPressed: _openScanner,
+                    tooltip: 'Escanear código',
+                  ),
                 ),
-              ),
             ],
           ),
         ),
 
         // Product Grid
         Expanded(
-          child: productsAsync.when(
-            data: (products) {
-              // final products = state.products; // Removed
-              if (products.isEmpty) {
-                return const Center(
-                  child: Text(
-                    'No se encontraron productos',
-                    style: TextStyle(color: Color(0xFF9E9E9E)),
-                  ),
-                );
-              }
+          child: Consumer(
+            builder: (context, ref, child) {
+              final productsAsync = ref.watch(productListProvider);
 
-              // Flatten products and variants into grid items
-              final List<PurchaseGridItem> gridItems = [];
-              for (final product in products) {
-                final variants = product.variants ?? [];
+              return productsAsync.when(
+                data: (products) {
+                  // final products = state.products; // Removed
+                  if (products.isEmpty) {
+                    return const Center(
+                      child: Text(
+                        'No se encontraron productos',
+                        style: TextStyle(color: Color(0xFF9E9E9E)),
+                      ),
+                    );
+                  }
 
-                if (variants.isNotEmpty) {
-                  // Add each variant as a separate grid item
-                  for (final variant in variants) {
-                    if (variant.type == VariantType.purchase) {
-                      gridItems.add(
-                        PurchaseGridItem(product: product, variant: variant),
-                      );
+                  // Flatten products and variants into grid items
+                  final List<PurchaseGridItem> gridItems = [];
+                  for (final product in products) {
+                    final variants = product.variants ?? [];
+
+                    if (variants.isNotEmpty) {
+                      // Add each variant as a separate grid item
+                      for (final variant in variants) {
+                        if (variant.type == VariantType.purchase) {
+                          gridItems.add(
+                            PurchaseGridItem(
+                              product: product,
+                              variant: variant,
+                            ),
+                          );
+                        }
+                      }
+                    } else {
+                      // Add simple product
+                      gridItems.add(PurchaseGridItem(product: product));
                     }
                   }
-                }
-              }
 
-              // Determinar número de columnas según el tamaño
-              final crossAxisCount = isMobile ? 2 : 3;
+                  // Determinar número de columnas según el tamaño
+                  final crossAxisCount = isMobile ? 2 : 3;
 
-              return GridView.builder(
-                padding: const EdgeInsets.symmetric(vertical: 8),
-                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: crossAxisCount,
-                  childAspectRatio: 1.1, // Slightly taller for cost display
-                  crossAxisSpacing: 8,
-                  mainAxisSpacing: 8,
-                ),
-                itemCount: gridItems.length,
-                itemBuilder: (context, index) {
-                  final item = gridItems[index];
-                  return ProductCard(
-                    product: item.product,
-                    variant: item.variant,
-                    isMobile: isMobile,
-                    showCost: true, // Show cost for purchases
-                    onTap: () {
-                      widget.onProductSelected(item.product, item.variant);
+                  return GridView.builder(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: crossAxisCount,
+                      childAspectRatio: 1.1, // Slightly taller for cost display
+                      crossAxisSpacing: 8,
+                      mainAxisSpacing: 8,
+                    ),
+                    itemCount: gridItems.length,
+                    itemBuilder: (context, index) {
+                      final item = gridItems[index];
+                      return ProductCard(
+                        product: item.product,
+                        variant: item.variant,
+                        isMobile: isMobile,
+                        showCost: true, // Show cost for purchases
+                        onTap: () {
+                          widget.onProductSelected(item.product, item.variant);
+                        },
+                      );
                     },
                   );
                 },
+                loading: () => const Center(child: CircularProgressIndicator()),
+                error: (err, stack) => Center(
+                  child: Text(
+                    'Error: $err',
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.error,
+                    ),
+                  ),
+                ),
               );
             },
-            loading: () => const Center(child: CircularProgressIndicator()),
-            error: (err, stack) => Center(
-              child: Text(
-                'Error: $err',
-                style: TextStyle(color: Theme.of(context).colorScheme.error),
-              ),
-            ),
           ),
         ),
       ],

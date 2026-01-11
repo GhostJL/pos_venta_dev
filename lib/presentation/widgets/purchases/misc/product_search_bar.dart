@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:posventa/domain/entities/product.dart';
 
@@ -90,12 +91,13 @@ class ProductSearchBar extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 8),
-        IconButton.filled(
-          onPressed: onScanPressed,
-          icon: const Icon(Icons.qr_code_scanner),
-          tooltip: 'Escanear código de barras',
-          style: IconButton.styleFrom(padding: const EdgeInsets.all(16)),
-        ),
+        if (Platform.isAndroid || Platform.isIOS)
+          IconButton.filled(
+            onPressed: onScanPressed,
+            icon: const Icon(Icons.qr_code_scanner),
+            tooltip: 'Escanear código de barras',
+            style: IconButton.styleFrom(padding: const EdgeInsets.all(16)),
+          ),
       ],
     );
   }

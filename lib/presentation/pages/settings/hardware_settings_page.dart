@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -88,24 +89,27 @@ class _HardwareSettingsPageState extends ConsumerState<HardwareSettingsPage> {
                           trailing: const Icon(Icons.print),
                         ),
                         const Divider(),
-                        ..._printers.map((printer) {
-                          final isSelected = printer.name == currentPrinter;
-                          return RadioListTile<String>(
-                            title: Text(printer.name),
-                            subtitle: Text(printer.url),
-                            value: printer.name,
-                            groupValue: currentPrinter,
-                            onChanged: (value) async {
-                              if (value != null) {
-                                await ref
-                                    .read(settingsProvider.notifier)
-                                    .updateSettings(
-                                      settings.copyWith(printerName: value),
-                                    );
-                              }
-                            },
-                          );
-                        }),
+                        RadioGroup<String?>(
+                          groupValue: currentPrinter,
+                          onChanged: (value) async {
+                            if (value != null) {
+                              await ref
+                                  .read(settingsProvider.notifier)
+                                  .updateSettings(
+                                    settings.copyWith(printerName: value),
+                                  );
+                            }
+                          },
+                          child: Column(
+                            children: _printers.map((printer) {
+                              return RadioListTile<String?>(
+                                title: Text(printer.name),
+                                subtitle: Text(printer.url),
+                                value: printer.name,
+                              );
+                            }).toList(),
+                          ),
+                        ),
                       ],
                     ),
                   ),
@@ -113,23 +117,25 @@ class _HardwareSettingsPageState extends ConsumerState<HardwareSettingsPage> {
                   _buildHeader(theme, 'Ancho del Papel'),
                   const SizedBox(height: 16),
                   Card(
-                    child: Column(
-                      children: paperWidths.map((width) {
-                        return RadioListTile<int>(
-                          title: Text('$width mm'),
-                          value: width,
-                          groupValue: currentWidth,
-                          onChanged: (value) async {
-                            if (value != null) {
-                              await ref
-                                  .read(settingsProvider.notifier)
-                                  .updateSettings(
-                                    settings.copyWith(paperWidthMm: value),
-                                  );
-                            }
-                          },
-                        );
-                      }).toList(),
+                    child: RadioGroup<int>(
+                      groupValue: currentWidth,
+                      onChanged: (value) async {
+                        if (value != null) {
+                          await ref
+                              .read(settingsProvider.notifier)
+                              .updateSettings(
+                                settings.copyWith(paperWidthMm: value),
+                              );
+                        }
+                      },
+                      child: Column(
+                        children: paperWidths.map((width) {
+                          return RadioListTile<int>(
+                            title: Text('$width mm'),
+                            value: width,
+                          );
+                        }).toList(),
+                      ),
                     ),
                   ),
                   const SizedBox(height: 24),
@@ -211,29 +217,31 @@ class _HardwareSettingsPageState extends ConsumerState<HardwareSettingsPage> {
                               );
                             },
                           ),
-                          const SizedBox(height: 24),
-                          Text(
-                            'Escáner de Cámara',
-                            style: theme.textTheme.titleSmall,
-                          ),
-                          const SizedBox(height: 8),
-                          FilledButton.icon(
-                            onPressed: () async {
-                              // Navigate to scanner page
-                              final result = await context.push('/scanner');
-                              if (result != null && context.mounted) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text(
-                                      'Código escaneado (Cámara): $result',
+                          if (Platform.isAndroid || Platform.isIOS) ...[
+                            const SizedBox(height: 24),
+                            Text(
+                              'Escáner de Cámara',
+                              style: theme.textTheme.titleSmall,
+                            ),
+                            const SizedBox(height: 8),
+                            FilledButton.icon(
+                              onPressed: () async {
+                                // Navigate to scanner page
+                                final result = await context.push('/scanner');
+                                if (result != null && context.mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(
+                                        'Código escaneado (Cámara): $result',
+                                      ),
                                     ),
-                                  ),
-                                );
-                              }
-                            },
-                            icon: const Icon(Icons.camera_alt),
-                            label: const Text('Abrir Escáner de Cámara'),
-                          ),
+                                  );
+                                }
+                              },
+                              icon: const Icon(Icons.camera_alt),
+                              label: const Text('Abrir Escáner de Cámara'),
+                            ),
+                          ],
                         ],
                       ),
                     ),
