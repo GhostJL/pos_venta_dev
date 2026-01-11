@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:posventa/core/theme/theme.dart';
+import 'package:posventa/features/sales/domain/models/ticket_data.dart';
 import 'package:posventa/presentation/providers/pos_providers.dart';
 import 'package:posventa/presentation/widgets/pos/payment/widgets/numeric_keypad.dart';
 import 'package:posventa/presentation/widgets/pos/payment/widgets/payment_action_buttons.dart';
@@ -151,8 +152,29 @@ class _PaymentPageState extends ConsumerState<PaymentPage> {
     final colorScheme = theme.colorScheme;
     final total = posState.total;
 
-    ref.listen(pOSProvider, (previous, next) {
+    ref.listen(pOSProvider, (previous, next) async {
       if (next.successMessage != null && next.successMessage!.isNotEmpty) {
+        // Print Ticket
+        if (next.lastCompletedSale != null) {
+          final sale = next.lastCompletedSale!;
+          final printerService = ref.read(printerServiceProvider);
+
+          final ticketData = TicketData(
+            sale: sale,
+            items: sale.items,
+            storeName: 'Mi Tienda POS',
+            storeAddress: 'Ubicación General',
+          );
+
+          try {
+            // We await this so the dialog shows up before navigation if using layoutPdf
+            // Use unawaited if you want fire-and-forget
+            printerService.printTicket(ticketData);
+          } catch (e) {
+            debugPrint('Print error: $e');
+          }
+        }
+
         context.go('/sales');
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(

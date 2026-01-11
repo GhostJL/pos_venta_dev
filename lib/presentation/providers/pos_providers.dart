@@ -8,6 +8,8 @@ import 'package:posventa/domain/entities/sale_item.dart';
 import 'package:posventa/domain/entities/sale_item_tax.dart';
 import 'package:posventa/domain/entities/sale_payment.dart';
 import 'package:posventa/domain/entities/tax_rate.dart';
+import 'package:posventa/domain/services/printer_service.dart';
+import 'package:posventa/data/services/printer_service_impl.dart';
 import 'package:posventa/presentation/providers/auth_provider.dart';
 import 'package:posventa/presentation/providers/product_provider.dart';
 import 'package:posventa/presentation/providers/di/sale_di.dart';
@@ -28,6 +30,7 @@ class POSState {
   final bool isLoading;
   final String? errorMessage;
   final String? successMessage;
+  final Sale? lastCompletedSale;
 
   const POSState({
     this.cart = const [],
@@ -35,6 +38,7 @@ class POSState {
     this.isLoading = false,
     this.errorMessage,
     this.successMessage,
+    this.lastCompletedSale,
   });
 
   POSState copyWith({
@@ -43,6 +47,7 @@ class POSState {
     bool? isLoading,
     String? errorMessage,
     String? successMessage,
+    Object? lastCompletedSale = _undefined,
   }) {
     return POSState(
       cart: cart ?? this.cart,
@@ -52,6 +57,9 @@ class POSState {
       isLoading: isLoading ?? this.isLoading,
       errorMessage: errorMessage,
       successMessage: successMessage,
+      lastCompletedSale: lastCompletedSale == _undefined
+          ? this.lastCompletedSale
+          : lastCompletedSale as Sale?,
     );
   }
 
@@ -546,7 +554,11 @@ class POSNotifier extends _$POSNotifier {
       return;
     }
 
-    state = state.copyWith(isLoading: true, errorMessage: null);
+    state = state.copyWith(
+      isLoading: true,
+      errorMessage: null,
+      lastCompletedSale: null,
+    ); // Reset last sale
 
     try {
       final user = ref.read(authProvider).user;
@@ -722,6 +734,7 @@ class POSNotifier extends _$POSNotifier {
         cart: const [],
         selectedCustomer: null,
         successMessage: 'Venta realizada con éxito: $saleNumber',
+        lastCompletedSale: sale,
       );
     } catch (e) {
       state = state.copyWith(isLoading: false, errorMessage: e.toString());
@@ -754,4 +767,8 @@ final taxRatesMapProvider = Provider<Map<int, TaxRate>>((ref) {
     data: (rates) => {for (var rate in rates) rate.id!: rate},
     orElse: () => const {},
   );
+});
+
+final printerServiceProvider = Provider<PrinterService>((ref) {
+  return PrinterServiceImpl();
 });
