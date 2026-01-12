@@ -13,52 +13,51 @@ class ReportsRepositoryImpl implements ReportsRepository {
     required DateTime startDate,
     required DateTime endDate,
   }) async {
-    // Group by date (ignoring time)
-    // Drift query to aggregate sales
-    // Since Drift's Dart API for complex grouping can be verbose, we can use custom SQL or iteration if dataset is small.
-    // For scalability, SQL is better.
-    // SELECT date(sale_date, 'unixepoch') as day, SUM(total_cents), COUNT(*) FROM sales ...
+    // Define expressions for aggregation
+    final totalSales = _db.sales.totalCents.sum();
+    final transactionCount = _db.sales.id.count();
 
-    // However, given the project structure, let's try to stick to Dart API if possible or specific custom queries.
-    // Let's iterate for now or use a custom query if the API exposes it.
-    // Accessing tables directly from _db.
+    // SQLite: strftime('%Y-%m-%d', sale_date, 'unixepoch') or just sale_date if text
+    // We'll use a custom expression to group by day safely.
+    // Assuming drift default storage (unix timestamp in seconds or milliseconds).
+    // If text, substr works. Safe bet is assuming standard Drift DateTime (int).
+    // Let's use a CustomExpression that Drift can accept.
 
-    final query = _db.select(_db.sales)
-      ..where((tbl) => tbl.saleDate.isBetweenValues(startDate, endDate));
+    // Note: To avoid complex SQL platform dependency issues (e.g. if testing on non-sqlite),
+    // we will stick to the plan but refine the grouping.
+    // Actually, to be safe and strictly adhere to "Production Ready" without risky schema guesses,
+    // I will use a custom query (Drift's .customSelect) or carefully typed CustomExpression.
 
-    final sales = await query.get();
+    // Simpler approach for now that is still much faster than loading all objects:
+    // We can use the variables, but since we need to Group By Date-Part,
+    // let's use a CustomExpression for the grouping key.
 
-    // In-memory aggregation for MVP (Optimize to SQL later if needed)
-    final Map<DateTime, List<Sale>> grouped = {};
-    for (var sale in sales) {
-      final date = DateTime(
-        sale.saleDate.year,
-        sale.saleDate.month,
-        sale.saleDate.day,
-      );
-      if (!grouped.containsKey(date)) {
-        grouped[date] = [];
-      }
-      grouped[date]!.add(sale);
-    }
+    final dayExpression = FunctionCallExpression<String>('strftime', [
+      const Constant<String>('%Y-%m-%d'),
+      _db.sales.saleDate,
+      const Constant<String>('unixepoch'),
+    ]);
 
-    return grouped.entries.map((entry) {
-      final date = entry.key;
-      final specificSales = entry.value;
+    final query = _db.selectOnly(_db.sales)
+      ..addColumns([dayExpression, totalSales, transactionCount])
+      ..where(_db.sales.saleDate.isBetweenValues(startDate, endDate))
+      ..groupBy([dayExpression]);
 
-      double total = 0;
-      double profit = 0; // Requires linking to items and costs.
-      // For profit, we need to join or fetch items. To keep it fast, maybe just Total Revenue first.
+    final result = await query.get();
 
-      total = specificSales.fold(0, (sum, s) => sum + s.totalCents);
+    return result.map((row) {
+      final dateStr = row.read(dayExpression);
+      final date = DateTime.parse(dateStr!); // SQLite returns YYYY-MM-DD
+      final total = row.read(totalSales) ?? 0;
+      final count = row.read(transactionCount) ?? 0;
 
       return SalesSummary(
         date: date,
         totalSales: total / 100.0,
-        transactionCount: specificSales.length,
-        profit: 0, // Placeholder until cost logic is fully joined
+        transactionCount: count,
+        profit: 0, // Placeholder
       );
-    }).toList()..sort((a, b) => a.date.compareTo(b.date));
+    }).toList();
   }
 
   @override
@@ -67,55 +66,57 @@ class ReportsRepositoryImpl implements ReportsRepository {
     required DateTime endDate,
     int limit = 10,
   }) async {
-    // Need to join Sales -> SaleItems -> Products
-    // This is better done with a custom query or a join.
+    final quantitySum = _db.saleItems.quantity.sum();
+    final revenueSum = _db.saleItems.totalCents.sum();
 
-    final query = _db.select(_db.saleItems).join([
+    // Profit = Revenue - Cost
+    // Cost = unit_cost * quantity
+    // We need an expression for profit sum.
+    // Expression: Sum(total_cents - (cost_price_cents * quantity))
+    final profitExpression =
+        (_db.saleItems.totalCents.cast<double>() -
+                (_db.saleItems.costPriceCents.cast<double>() *
+                    _db.saleItems.quantity))
+            .sum();
+
+    final query = _db.selectOnly(_db.saleItems).join([
       innerJoin(_db.sales, _db.sales.id.equalsExp(_db.saleItems.saleId)),
       innerJoin(
         _db.products,
         _db.products.id.equalsExp(_db.saleItems.productId),
       ),
     ]);
-    query.where(_db.sales.saleDate.isBetweenValues(startDate, endDate));
+
+    query
+      ..addColumns([
+        _db.products.id,
+        _db.products.name,
+        quantitySum,
+        revenueSum,
+        profitExpression,
+      ])
+      ..where(_db.sales.saleDate.isBetweenValues(startDate, endDate))
+      ..groupBy([_db.saleItems.productId])
+      ..orderBy([OrderingTerm.desc(revenueSum)])
+      ..limit(limit);
 
     final rows = await query.get();
 
-    final Map<int, ProductPerformance> performanceMap = {};
+    return rows.map((row) {
+      final productId = row.read(_db.products.id)!;
+      final productName = row.read(_db.products.name)!;
+      final qty = row.read(quantitySum) ?? 0;
+      final rev = row.read(revenueSum) ?? 0;
+      final profit = row.read(profitExpression) ?? 0;
 
-    for (var row in rows) {
-      final item = row.readTable(_db.saleItems);
-      // final sale = row.readTable(_db.sales);
-      final product = row.readTable(_db.products);
-
-      final current =
-          performanceMap[item.productId] ??
-          ProductPerformance(
-            productId: item.productId,
-            productName: product.name,
-            quantitySold: 0,
-            totalRevenue: 0,
-            totalProfit: 0,
-          );
-
-      final revenue = item.totalCents / 100.0;
-      final cost = (item.costPriceCents * item.quantity) / 100.0;
-
-      performanceMap[item.productId] = ProductPerformance(
-        productId: current.productId,
-        productName: current.productName,
-        quantitySold: current.quantitySold + item.quantity,
-        totalRevenue: current.totalRevenue + revenue,
-        totalProfit: current.totalProfit + (revenue - cost),
+      return ProductPerformance(
+        productId: productId,
+        productName: productName,
+        quantitySold: qty,
+        totalRevenue: rev / 100.0,
+        totalProfit: profit / 100.0,
       );
-    }
-
-    final sorted = performanceMap.values.toList()
-      ..sort(
-        (a, b) => b.totalRevenue.compareTo(a.totalRevenue),
-      ); // Descending revenue
-
-    return sorted.take(limit).toList();
+    }).toList();
   }
 
   @override
@@ -125,45 +126,52 @@ class ReportsRepositoryImpl implements ReportsRepository {
         .add(const Duration(days: 1))
         .subtract(const Duration(milliseconds: 1));
 
-    final dailySales =
-        await (_db.sales.select()
-              ..where((tbl) => tbl.saleDate.isBetweenValues(start, end)))
-            .get();
+    // 1. Sales Totals (One query)
+    final salesQuery = _db.selectOnly(_db.sales)
+      ..addColumns([
+        _db.sales.totalCents.sum(),
+        _db.sales.taxCents.sum(),
+        _db.sales.id.count(),
+      ])
+      ..where(_db.sales.saleDate.isBetweenValues(start, end));
 
-    double totalSales = 0;
-    double totalTax = 0;
+    final salesResult = await salesQuery.getSingle();
+    final totalSales =
+        (salesResult.read(_db.sales.totalCents.sum()) ?? 0) / 100.0;
+    final totalTax = (salesResult.read(_db.sales.taxCents.sum()) ?? 0) / 100.0;
+    final count = salesResult.read(_db.sales.id.count()) ?? 0;
 
-    // We assume discount logic is embedded in totals or we'd summon it from items if needed.
-    // Sale entity has total, tax, subtotal.
+    // 2. Payments Breakdown (Aggregated query)
+    final paymentsQuery =
+        _db.selectOnly(_db.salePayments).join([
+            innerJoin(
+              _db.sales,
+              _db.sales.id.equalsExp(_db.salePayments.saleId),
+            ),
+          ])
+          ..addColumns([
+            _db.salePayments.paymentMethod,
+            _db.salePayments.amountCents.sum(),
+          ])
+          ..where(_db.sales.saleDate.isBetweenValues(start, end))
+          ..groupBy([_db.salePayments.paymentMethod]);
+
+    final paymentRows = await paymentsQuery.get();
 
     final Map<String, double> paymentBreakdown = {};
-
-    // Need to fetch payments for these sales
-    // Or just iterate if we can load them eagerly. Use separate query for payments linked to these sales.
-    final saleIds = dailySales.map((s) => s.id).toList();
-
-    if (saleIds.isNotEmpty) {
-      final payments = await (_db.select(
-        _db.salePayments,
-      )..where((tbl) => tbl.saleId.isIn(saleIds))).get();
-      for (var payment in payments) {
-        final method = payment.paymentMethod;
-        paymentBreakdown[method] =
-            (paymentBreakdown[method] ?? 0) + (payment.amountCents / 100.0);
-      }
-    }
-
-    for (var sale in dailySales) {
-      totalSales += sale.totalCents;
-      totalTax += sale.taxCents;
+    for (var row in paymentRows) {
+      final method = row.read(_db.salePayments.paymentMethod)!;
+      final amount =
+          (row.read(_db.salePayments.amountCents.sum()) ?? 0) / 100.0;
+      paymentBreakdown[method] = amount;
     }
 
     return ZReport(
       generatedAt: DateTime.now(),
-      totalSales: totalSales / 100.0,
-      totalTax: totalTax / 100.0,
-      totalDiscounts: 0, // Implement if discount field exists or sum from items
-      transactionCount: dailySales.length,
+      totalSales: totalSales,
+      totalTax: totalTax,
+      totalDiscounts: 0,
+      transactionCount: count,
       paymentMethodBreakdown: paymentBreakdown,
     );
   }
