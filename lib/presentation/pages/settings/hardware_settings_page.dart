@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:printing/printing.dart';
@@ -28,10 +29,28 @@ class _HardwareSettingsPageState extends ConsumerState<HardwareSettingsPage> {
     try {
       final service = ref.read(printerServiceProvider);
       final printers = await service.getPrinters();
-      setState(() {
-        _printers = printers;
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _printers = printers;
+          _isLoading = false;
+        });
+      }
+    } on MissingPluginException {
+      // Catch specific plugin error (usually happens during dev if not rebuilt)
+      // We treat this as "no printers found" but with a gentle warning or silent fail
+      // rather than a crash/scary error.
+      if (mounted) {
+        setState(() {
+          _printers = [];
+          _isLoading = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('No se pudo acceder al servicio de impresión.'),
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
     } catch (e) {
       if (mounted) {
         setState(() {
@@ -41,6 +60,7 @@ class _HardwareSettingsPageState extends ConsumerState<HardwareSettingsPage> {
           SnackBar(content: Text('Error cargando impresoras: $e')),
         );
       }
+      debugPrint('Error loading printers: $e');
     }
   }
 
@@ -64,16 +84,51 @@ class _HardwareSettingsPageState extends ConsumerState<HardwareSettingsPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildHeader(theme, 'Impresora de Tickets'),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    _buildHeader(theme, 'Impresora de Tickets'),
+                    IconButton(
+                      onPressed: _isLoading ? null : _loadPrinters,
+                      icon: const Icon(Icons.refresh),
+                      tooltip: 'Actualizar lista',
+                    ),
+                  ],
+                ),
                 const SizedBox(height: 16),
                 if (_isLoading)
                   const Center(child: CircularProgressIndicator())
                 else if (_printers.isEmpty)
-                  const Card(
+                  Card(
+                    color: theme.colorScheme.surfaceContainerHighest,
                     child: Padding(
-                      padding: EdgeInsets.all(16.0),
-                      child: Text(
-                        'No se encontraron impresoras. Asegúrate de tener una impresora instalada en el sistema.',
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        children: [
+                          const Icon(
+                            Icons.print_disabled,
+                            size: 48,
+                            color: Colors.grey,
+                          ),
+                          const SizedBox(height: 16),
+                          const Text(
+                            'No se encontraron impresoras.',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          const SizedBox(height: 8),
+                          const Text(
+                            'Asegúrese de que la impresora esté encendida, conectada y configurada en los ajustes del sistema de su dispositivo.',
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: 16),
+                          if (Platform.isAndroid)
+                            const Text(
+                              'En Android, puede que necesite instalar un "Servicio de impresión" desde la Play Store para su marca de impresora.',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(fontSize: 12),
+                            ),
+                        ],
                       ),
                     ),
                   )
@@ -226,16 +281,31 @@ class _HardwareSettingsPageState extends ConsumerState<HardwareSettingsPage> {
                             const SizedBox(height: 8),
                             FilledButton.icon(
                               onPressed: () async {
-                                // Navigate to scanner page
-                                final result = await context.push('/scanner');
-                                if (result != null && context.mounted) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text(
-                                        'Código escaneado (Cámara): $result',
+                                try {
+                                  // Navigate to scanner page
+                                  final result = await context.push('/scanner');
+                                  if (result != null && context.mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text(
+                                          'Código escaneado (Cámara): $result',
+                                        ),
+                                        backgroundColor: Colors.green,
                                       ),
-                                    ),
-                                  );
+                                    );
+                                  }
+                                } catch (e) {
+                                  if (context.mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text(
+                                          'Error al abrir el escáner: $e. Verifique los permisos de cámara.',
+                                        ),
+                                        backgroundColor:
+                                            theme.colorScheme.error,
+                                      ),
+                                    );
+                                  }
                                 }
                               },
                               icon: const Icon(Icons.camera_alt),

@@ -165,30 +165,36 @@ class _PaymentPageState extends ConsumerState<PaymentPage> {
           final settings = await ref.read(settingsProvider.future);
           final printerName = settings.printerName;
 
-          Printer? targetPrinter;
-          if (printerName != null) {
-            final printers = await printerService.getPrinters();
-            targetPrinter = printers
-                .where((p) => p.name == printerName)
-                .firstOrNull;
-          }
-
-          final ticketData = TicketData(
-            sale: sale,
-            items: sale.items,
-            storeName: 'Mi Tienda POS',
-            storeAddress: 'Ubicación General',
-          );
-
           try {
+            Printer? targetPrinter;
+            if (printerName != null) {
+              try {
+                final printers = await printerService.getPrinters();
+                targetPrinter = printers
+                    .where((p) => p.name == printerName)
+                    .firstOrNull;
+              } catch (e) {
+                debugPrint('Error loading printers for auto-print: $e');
+              }
+            }
+
             // We await this so the dialog shows up before navigation if using layoutPdf
             // Use unawaited if you want fire-and-forget
+            final ticketData = TicketData(
+              sale: sale,
+              items: sale.items,
+              storeName: 'Mi Tienda POS',
+              storeAddress: 'Ubicación General',
+            );
+
             await printerService.printTicket(
               ticketData,
               printer: targetPrinter,
             );
           } catch (e) {
             debugPrint('Print error: $e');
+            // If it's a MissingPluginException, it means printing is not supported/loaded.
+            // We just swallow it here to avoid disrupting the flow.
           }
         }
 
