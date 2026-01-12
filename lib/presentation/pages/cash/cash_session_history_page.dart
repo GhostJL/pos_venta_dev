@@ -1,9 +1,9 @@
-import 'package:posventa/presentation/pages/shared/main_layout.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:posventa/domain/entities/cash_session.dart';
 import 'package:go_router/go_router.dart';
+import 'package:posventa/presentation/pages/shared/main_layout.dart';
 import 'package:posventa/presentation/providers/cash_session_providers.dart';
 import 'package:posventa/presentation/providers/cashier_providers.dart';
 import 'package:posventa/presentation/providers/auth_provider.dart';
@@ -59,8 +59,7 @@ class _CashSessionHistoryPageState
         leading: isSmallScreen
             ? IconButton(
                 icon: const Icon(Icons.menu),
-                onPressed: () =>
-                    MainLayout.scaffoldKey.currentState?.openDrawer(),
+                onPressed: () => MainLayout.of(context)?.openDrawer(),
               )
             : null,
         title: const Text('Sesiones de Caja'),

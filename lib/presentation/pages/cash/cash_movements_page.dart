@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import 'package:posventa/presentation/pages/shared/main_layout.dart';
+
 import 'package:posventa/presentation/providers/cash_session_providers.dart';
 import 'package:posventa/presentation/providers/cashier_providers.dart';
 import 'package:go_router/go_router.dart';
+import 'package:posventa/presentation/pages/shared/main_layout.dart';
 
 class CashMovementsPage extends ConsumerStatefulWidget {
   const CashMovementsPage({super.key});
@@ -37,8 +38,7 @@ class _CashMovementsPageState extends ConsumerState<CashMovementsPage> {
         leading: isSmallScreen
             ? IconButton(
                 icon: const Icon(Icons.menu),
-                onPressed: () =>
-                    MainLayout.scaffoldKey.currentState?.openDrawer(),
+                onPressed: () => MainLayout.of(context)?.openDrawer(),
               )
             : null,
         actions: [

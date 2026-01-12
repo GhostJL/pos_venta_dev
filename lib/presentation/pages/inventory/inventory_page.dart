@@ -3,8 +3,9 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:posventa/presentation/providers/settings_provider.dart';
 import 'package:go_router/go_router.dart';
-import 'package:posventa/core/constants/permission_constants.dart';
 import 'package:posventa/presentation/pages/shared/main_layout.dart';
+import 'package:posventa/core/constants/permission_constants.dart';
+
 import 'package:posventa/domain/entities/inventory.dart';
 import 'package:posventa/domain/entities/product.dart';
 import 'package:posventa/domain/entities/product_variant.dart';
@@ -72,8 +73,7 @@ class _InventoryPageState extends ConsumerState<InventoryPage> {
           leading: isSmallScreen
               ? IconButton(
                   icon: const Icon(Icons.menu),
-                  onPressed: () =>
-                      MainLayout.scaffoldKey.currentState?.openDrawer(),
+                  onPressed: () => MainLayout.of(context)?.openDrawer(),
                 )
               : null,
           title: const Text(

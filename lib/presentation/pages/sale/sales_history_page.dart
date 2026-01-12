@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:posventa/presentation/pages/shared/main_layout.dart';
 
 import 'package:posventa/domain/entities/user.dart';
-import 'package:posventa/presentation/pages/shared/main_layout.dart';
+
 import 'package:posventa/presentation/providers/paginated_sales_provider.dart';
 import 'package:posventa/core/constants/permission_constants.dart';
 import 'package:posventa/presentation/providers/permission_provider.dart';
@@ -124,8 +125,7 @@ class _SalesHistoryPageState extends ConsumerState<SalesHistoryPage> {
         leading: isSmallScreen
             ? IconButton(
                 icon: const Icon(Icons.menu),
-                onPressed: () =>
-                    MainLayout.scaffoldKey.currentState?.openDrawer(),
+                onPressed: () => MainLayout.of(context)?.openDrawer(),
               )
             : null,
         title: countAsync.when(

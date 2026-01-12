@@ -5,22 +5,28 @@ import 'package:posventa/presentation/widgets/menu/side_menu.dart';
 
 class MainLayout extends StatefulWidget {
   final Widget child;
-  static final GlobalKey<ScaffoldState> scaffoldKey =
-      GlobalKey<ScaffoldState>();
-
   const MainLayout({super.key, required this.child});
 
   @override
-  State<MainLayout> createState() => _MainLayoutState();
+  State<MainLayout> createState() => MainLayoutState();
+
+  static MainLayoutState? of(BuildContext context) {
+    return context.findAncestorStateOfType<MainLayoutState>();
+  }
 }
 
-class _MainLayoutState extends State<MainLayout> {
+class MainLayoutState extends State<MainLayout> {
   final ValueNotifier<bool> _isMenuVisible = ValueNotifier<bool>(true);
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   @override
   void dispose() {
     _isMenuVisible.dispose();
     super.dispose();
+  }
+
+  void openDrawer() {
+    _scaffoldKey.currentState?.openDrawer();
   }
 
   @override
@@ -50,7 +56,7 @@ class _MainLayoutState extends State<MainLayout> {
             // The inner pages have their own Scaffold/AppBar, which will automatically
             // show the generic Menu icon to open this drawer.
             return Scaffold(
-              key: MainLayout.scaffoldKey,
+              key: _scaffoldKey,
               body: widget.child,
               drawer: const SideMenu(isRail: false),
             );

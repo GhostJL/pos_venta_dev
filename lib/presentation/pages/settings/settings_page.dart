@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:posventa/presentation/pages/shared/main_layout.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:posventa/domain/entities/user.dart';
-import 'package:posventa/presentation/pages/shared/main_layout.dart';
+
 import 'package:posventa/presentation/providers/auth_provider.dart';
 import 'package:posventa/presentation/providers/settings_provider.dart';
 import 'package:posventa/presentation/pages/settings/widgets/settings_components.dart';
@@ -23,8 +24,7 @@ class SettingsPage extends ConsumerWidget {
         leading: isSmallScreen
             ? IconButton(
                 icon: const Icon(Icons.menu),
-                onPressed: () =>
-                    MainLayout.scaffoldKey.currentState?.openDrawer(),
+                onPressed: () => MainLayout.of(context)?.openDrawer(),
               )
             : null,
         title: const Text('Configuración'),

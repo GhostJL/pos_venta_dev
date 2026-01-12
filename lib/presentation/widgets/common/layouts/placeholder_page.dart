@@ -1,6 +1,6 @@
-import 'package:posventa/presentation/pages/shared/main_layout.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:posventa/presentation/pages/shared/main_layout.dart';
 import 'package:posventa/core/theme/theme.dart';
 
 /// Reusable placeholder page for modules under development
@@ -33,8 +33,7 @@ class PlaceholderPage extends StatelessWidget {
         leading: (showMenuButton && isSmallScreen)
             ? IconButton(
                 icon: const Icon(Icons.menu),
-                onPressed: () =>
-                    MainLayout.scaffoldKey.currentState?.openDrawer(),
+                onPressed: () => MainLayout.of(context)?.openDrawer(),
               )
             : IconButton(
                 icon: const Icon(Icons.arrow_back),

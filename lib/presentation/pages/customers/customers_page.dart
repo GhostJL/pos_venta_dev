@@ -4,6 +4,7 @@ import 'package:posventa/domain/entities/customer.dart';
 import 'package:posventa/presentation/providers/customer_providers.dart';
 import 'package:posventa/presentation/providers/paginated_customers_provider.dart';
 import 'package:go_router/go_router.dart';
+import 'package:posventa/presentation/pages/shared/main_layout.dart';
 import 'package:posventa/core/constants/permission_constants.dart';
 import 'package:posventa/presentation/providers/permission_provider.dart';
 import 'package:posventa/presentation/widgets/common/confirm_delete_dialog.dart';
@@ -11,7 +12,7 @@ import 'package:posventa/presentation/widgets/common/async_value_handler.dart';
 import 'package:posventa/presentation/mixins/page_lifecycle_mixin.dart';
 import 'package:posventa/presentation/mixins/search_debounce_mixin.dart';
 import 'package:flutter/services.dart';
-import 'package:posventa/presentation/pages/shared/main_layout.dart';
+
 import 'package:posventa/presentation/widgets/customers/customer_card.dart';
 import 'package:posventa/presentation/widgets/customers/customer_table_row.dart';
 import 'package:posventa/presentation/widgets/common/empty_state_widget.dart';
@@ -100,8 +101,7 @@ class CustomersPageState extends ConsumerState<CustomersPage>
           leading: isSmallScreen
               ? IconButton(
                   icon: const Icon(Icons.menu),
-                  onPressed: () =>
-                      MainLayout.scaffoldKey.currentState?.openDrawer(),
+                  onPressed: () => MainLayout.of(context)?.openDrawer(),
                 )
               : null,
           title: countAsync.when(

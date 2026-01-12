@@ -1,6 +1,5 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-
 import 'package:posventa/presentation/pages/shared/main_layout.dart';
 
 class ProductSearchBar extends StatelessWidget {
@@ -30,8 +29,7 @@ class ProductSearchBar extends StatelessWidget {
           if (showMenu) ...[
             IconButton(
               icon: const Icon(Icons.menu),
-              onPressed: () =>
-                  MainLayout.scaffoldKey.currentState?.openDrawer(),
+              onPressed: () => MainLayout.of(context)?.openDrawer(),
             ),
             const SizedBox(width: 8),
           ],

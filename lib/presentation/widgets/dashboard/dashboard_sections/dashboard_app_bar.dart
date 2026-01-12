@@ -23,7 +23,7 @@ class DashboardAppBar extends ConsumerWidget implements PreferredSizeWidget {
           ? IconButton(
               icon: const Icon(Icons.menu),
               onPressed: () {
-                MainLayout.scaffoldKey.currentState?.openDrawer();
+                MainLayout.of(context)?.openDrawer();
               },
             )
           : null,

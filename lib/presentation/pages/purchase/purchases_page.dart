@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:posventa/presentation/pages/shared/main_layout.dart';
+
 import 'package:posventa/presentation/providers/paginated_purchases_provider.dart';
 import 'package:posventa/presentation/providers/purchase_filter_chip_provider.dart';
 import 'package:posventa/core/constants/permission_constants.dart';
@@ -77,8 +78,7 @@ class _PurchasesPageState extends ConsumerState<PurchasesPage> {
           leading: isSmallScreen
               ? IconButton(
                   icon: const Icon(Icons.menu),
-                  onPressed: () =>
-                      MainLayout.scaffoldKey.currentState?.openDrawer(),
+                  onPressed: () => MainLayout.of(context)?.openDrawer(),
                 )
               : null,
           title: countAsync.when(

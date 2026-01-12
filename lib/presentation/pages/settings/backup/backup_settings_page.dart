@@ -117,24 +117,7 @@ class BackupSettingsPage extends ConsumerWidget {
   }
 
   Future<void> _handleExport(BuildContext context, WidgetRef ref) async {
-    final path = await ref
-        .read(backupControllerProvider.notifier)
-        .pickExportPath();
-
-    if (path == null) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text('Exportación cancelada'),
-            behavior: SnackBarBehavior.floating,
-            backgroundColor: Theme.of(context).colorScheme.secondary,
-          ),
-        );
-      }
-      return;
-    }
-
-    ref.read(backupControllerProvider.notifier).executeExport(path);
+    await ref.read(backupControllerProvider.notifier).executeExport();
   }
 
   void _confirmRestore(BuildContext context, WidgetRef ref) {
@@ -235,7 +218,9 @@ class BackupSettingsPage extends ConsumerWidget {
                 context,
                 rootNavigator: true,
               ).pop(); // Use root navigator explicitly
-              onDismiss?.call();
+              Future.delayed(const Duration(milliseconds: 300), () {
+                onDismiss?.call();
+              });
             },
             child: const Text('Aceptar'),
           ),

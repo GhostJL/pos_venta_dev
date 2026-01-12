@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:file_picker/file_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -14,26 +16,48 @@ class BackupController extends _$BackupController {
     return const BackupState();
   }
 
-  Future<String?> pickExportPath() async {
-    final timestamp = DateFormat('yyyyMMdd_HHmmss').format(DateTime.now());
-    final filename = 'pos_backup_$timestamp.sqlite';
-
-    return await FilePicker.platform.saveFile(
-      dialogTitle: 'Exportar Base de Datos',
-      fileName: filename,
-      type: FileType.any,
-    );
-  }
-
-  Future<void> executeExport(String path) async {
+  Future<void> executeExport() async {
     state = const BackupState(
       status: BackupStatus.loading,
       message: 'Exportando base de datos...\nPor favor espere.',
     );
 
+    File? tempFile;
     try {
       final repository = ref.read(backupRepositoryProvider);
-      await repository.exportDatabase(path);
+
+      // 1. Generate encrypted backup file
+      tempFile = await repository.createBackupFile();
+
+      final timestamp = DateFormat('yyyyMMdd_HHmmss').format(DateTime.now());
+      final filename = 'pos_backup_$timestamp.sqlite';
+
+      if (Platform.isAndroid || Platform.isIOS) {
+        // Mobile: Must pass bytes to saveFile
+        final bytes = await tempFile.readAsBytes();
+        await FilePicker.platform.saveFile(
+          dialogTitle: 'Exportar Base de Datos',
+          fileName: filename,
+          bytes: bytes,
+          type: FileType.any,
+        );
+      } else {
+        // Desktop: Get path then copy
+        final outFile = await FilePicker.platform.saveFile(
+          dialogTitle: 'Exportar Base de Datos',
+          fileName: filename,
+          type: FileType.any,
+        );
+
+        if (outFile == null) {
+          // User cancelled
+          state = const BackupState(status: BackupStatus.idle);
+          return;
+        }
+
+        await tempFile.copy(outFile);
+      }
+
       state = const BackupState(
         status: BackupStatus.success,
         title: 'Exportación Completa',
@@ -41,7 +65,13 @@ class BackupController extends _$BackupController {
       );
     } catch (e) {
       state = BackupState(status: BackupStatus.error, message: e.toString());
-      // Optional: Log error
+    } finally {
+      // Cleanup temp file
+      if (tempFile != null && await tempFile.exists()) {
+        try {
+          await tempFile.delete();
+        } catch (_) {}
+      }
     }
   }
 

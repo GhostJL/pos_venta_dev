@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:posventa/domain/entities/supplier.dart';
 import 'package:go_router/go_router.dart';
+import 'package:posventa/presentation/pages/shared/main_layout.dart';
 import 'package:posventa/presentation/providers/supplier_providers.dart';
 import 'package:posventa/presentation/providers/paginated_suppliers_provider.dart';
 import 'package:posventa/core/constants/permission_constants.dart';
@@ -11,7 +12,7 @@ import 'package:posventa/presentation/widgets/common/async_value_handler.dart';
 import 'package:posventa/presentation/mixins/page_lifecycle_mixin.dart';
 import 'package:posventa/presentation/mixins/search_debounce_mixin.dart';
 import 'package:flutter/services.dart';
-import 'package:posventa/presentation/pages/shared/main_layout.dart';
+
 import 'package:posventa/presentation/widgets/suppliers/supplier_card.dart';
 import 'package:posventa/presentation/widgets/suppliers/supplier_table_row.dart';
 import 'package:posventa/presentation/widgets/common/empty_state_widget.dart';
@@ -100,8 +101,7 @@ class SuppliersPageState extends ConsumerState<SuppliersPage>
           leading: isSmallScreen
               ? IconButton(
                   icon: const Icon(Icons.menu),
-                  onPressed: () =>
-                      MainLayout.scaffoldKey.currentState?.openDrawer(),
+                  onPressed: () => MainLayout.of(context)?.openDrawer(),
                 )
               : null,
           title: countAsync.when(

@@ -49,6 +49,15 @@ class BackupLocalDataSourceImpl implements BackupLocalDataSource {
       // 1. Decrypt
       await _encryptionService.decryptFile(sourceFile, tempDecryptedFile);
 
+      // 1.1 Verify Header (SQLite format 3)
+      final headerBytes = await tempDecryptedFile.openRead(0, 16).first;
+      final headerString = String.fromCharCodes(headerBytes);
+      if (!headerString.startsWith('SQLite format 3')) {
+        throw Exception(
+          'El archivo no es una base de datos válida o está corrupto.',
+        );
+      }
+
       // 2. Backup current DB (Safety)
       final backupFile = File('${currentDbFile.path}.bak');
       if (currentDbFile.existsSync()) {

@@ -22,6 +22,25 @@ class BackupRepositoryImpl implements BackupRepository {
 
   @override
   Future<File> exportDatabase(String destinationPath) async {
+    File? tempBackup;
+    try {
+      tempBackup = await createBackupFile();
+      // Copy to destination
+      return await tempBackup.copy(destinationPath);
+    } catch (e, stack) {
+      _logger.severe('Export failed', e, stack);
+      rethrow;
+    } finally {
+      if (tempBackup != null && await tempBackup.exists()) {
+        try {
+          await tempBackup.delete();
+        } catch (_) {}
+      }
+    }
+  }
+
+  @override
+  Future<File> createBackupFile() async {
     File? tempSnapshot;
     try {
       // 1. Create a temp file path for the snapshot
@@ -31,18 +50,20 @@ class BackupRepositoryImpl implements BackupRepository {
       tempSnapshot = File(snapshotPath);
 
       // 2. Execute VACUUM INTO to create a consistent snapshot (includes WAL)
-      // This works even while the DB is open and active
       await _database.customStatement('VACUUM INTO ?', [snapshotPath]);
 
-      // 3. Encrypt the snapshot to the destination
-      await _dataSource.exportDatabase(tempSnapshot, destinationPath);
+      // 3. Encrypt the snapshot to a new temp file
+      final backupPath = p.join(tempDir.path, 'backup_$timestamp.sqlite');
+      final backupFile = File(backupPath);
 
-      return File(destinationPath);
+      await _dataSource.exportDatabase(tempSnapshot, backupPath);
+
+      return backupFile;
     } catch (e, stack) {
-      _logger.severe('Export failed', e, stack);
+      _logger.severe('Create backup file failed', e, stack);
       rethrow;
     } finally {
-      // 4. Cleanup
+      // 4. Cleanup snapshot
       if (tempSnapshot != null && await tempSnapshot.exists()) {
         try {
           await tempSnapshot.delete();

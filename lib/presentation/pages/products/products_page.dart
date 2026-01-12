@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:go_router/go_router.dart';
+import 'package:posventa/presentation/pages/shared/main_layout.dart';
 import 'package:posventa/domain/entities/product.dart';
 import 'package:posventa/presentation/providers/product_provider.dart';
 import 'package:posventa/presentation/providers/paginated_products_provider.dart';
@@ -13,7 +14,6 @@ import 'package:posventa/presentation/widgets/products/lists/product_card.dart';
 import 'package:posventa/presentation/widgets/products/lists/product_list_tile.dart'; // Import Tile
 import 'package:posventa/presentation/widgets/products/lists/product_list_skeleton.dart'; // Import Skeleton
 import 'package:posventa/presentation/widgets/products/search/product_search_bar.dart';
-import 'package:posventa/presentation/pages/shared/main_layout.dart';
 
 import 'package:posventa/presentation/widgets/products/actions/product_actions_sheet.dart';
 import 'package:posventa/presentation/providers/product_filters.dart';
@@ -111,7 +111,7 @@ class ProductsPageState extends ConsumerState<ProductsPage>
               ? IconButton(
                   icon: const Icon(Icons.menu),
                   onPressed: () {
-                    MainLayout.scaffoldKey.currentState?.openDrawer();
+                    MainLayout.of(context)?.openDrawer();
                   },
                 )
               : null,
