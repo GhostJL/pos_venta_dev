@@ -11,4 +11,13 @@ abstract class PrinterService {
 
   /// Test print
   Future<void> testPrint({Printer? printer});
+
+  /// Scan for Bluetooth printers (Android only)
+  Future<List<Printer>> scanBluetoothPrinters();
+
+  /// Connect to Bluetooth printer (Android only)
+  Future<void> connectToDevice(Printer printer);
+
+  /// Disconnect from current printer
+  Future<void> disconnect();
 }

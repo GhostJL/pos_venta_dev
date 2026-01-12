@@ -87,7 +87,12 @@ class _HardwareSettingsPageState extends ConsumerState<HardwareSettingsPage> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    _buildHeader(theme, 'Impresora de Tickets'),
+                    _buildHeader(
+                      theme,
+                      Platform.isAndroid
+                          ? 'Impresoras Bluetooth'
+                          : 'Impresora de Tickets',
+                    ),
                     IconButton(
                       onPressed: _isLoading ? null : _loadPrinters,
                       icon: const Icon(Icons.refresh),
@@ -124,7 +129,7 @@ class _HardwareSettingsPageState extends ConsumerState<HardwareSettingsPage> {
                           const SizedBox(height: 16),
                           if (Platform.isAndroid)
                             const Text(
-                              'En Android, puede que necesite instalar un "Servicio de impresión" desde la Play Store para su marca de impresora.',
+                              'En Android, asegúrese de que el Bluetooth esté encendido y la impresora esté emparejada en los ajustes del sistema.',
                               textAlign: TextAlign.center,
                               style: TextStyle(fontSize: 12),
                             ),
