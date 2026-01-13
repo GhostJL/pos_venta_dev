@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:bcrypt/bcrypt.dart';
 import 'package:crypto/crypto.dart';
 import 'package:drift/drift.dart';
 import 'package:posventa/data/datasources/local/database/app_database.dart'
@@ -14,25 +15,50 @@ class AuthRepositoryImpl implements AuthRepository, UserRepository {
   AuthRepositoryImpl(this.db);
 
   String _hashPassword(String password) {
-    final bytes = utf8.encode(password);
-    final digest = sha256.convert(bytes);
-    return digest.toString();
+    return BCrypt.hashpw(password, BCrypt.gensalt());
   }
 
   @override
   Future<User?> login(String username, String password) async {
-    final hashedPassword = _hashPassword(password);
+    // 1. Get user by username only
     final query = db.select(db.users)
-      ..where(
-        (u) =>
-            u.username.equals(username) & u.passwordHash.equals(hashedPassword),
-      );
-
+      ..where((u) => u.username.equals(username));
     final userRow = await query.getSingleOrNull();
 
-    if (userRow != null) {
+    if (userRow == null) {
+      return null;
+    }
+
+    // 2. Verify password
+    bool isPasswordCorrect = false;
+    bool needsMigration = false;
+
+    // Check if it's a valid bcrypt hash
+    if (userRow.passwordHash.startsWith(r'$2')) {
+      isPasswordCorrect = BCrypt.checkpw(password, userRow.passwordHash);
+    } else {
+      // 3. Fallback: Check for legacy SHA-256 hash
+      final bytes = utf8.encode(password);
+      final legacyHash = sha256.convert(bytes).toString();
+      if (userRow.passwordHash == legacyHash) {
+        isPasswordCorrect = true;
+        needsMigration = true;
+      }
+    }
+
+    if (isPasswordCorrect) {
+      if (needsMigration) {
+        // 4. Migrate to bcrypt
+        final newHash = _hashPassword(password);
+        await (db.update(db.users)..where((u) => u.id.equals(userRow.id)))
+            .write(drift_db.UsersCompanion(passwordHash: Value(newHash)));
+
+        // Return user with new hash (optional, but good for consistency)
+        return _mapToUser(userRow.copyWith(passwordHash: newHash));
+      }
       return _mapToUser(userRow);
     }
+
     return null;
   }
 
