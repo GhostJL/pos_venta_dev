@@ -41,7 +41,7 @@ final class BackupControllerProvider
   }
 }
 
-String _$backupControllerHash() => r'5287aad2ab81ac2f043c6b9256eaa49848d05872';
+String _$backupControllerHash() => r'3d43a6d42a8b67b40f8e3c57a3acce0cce0509e1';
 
 abstract class _$BackupController extends $Notifier<BackupState> {
   BackupState build();

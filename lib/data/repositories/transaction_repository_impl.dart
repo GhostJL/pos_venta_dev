@@ -16,7 +16,7 @@ class TransactionRepositoryImpl implements TransactionRepository {
         .insert(
           drift_db.TransactionsCompanion.insert(
             userId: Value(transaction.userId),
-            amount: transaction.amount,
+            amountCents: transaction.amountCents,
             type: transaction.type.name,
             description: Value(transaction.description),
             date: transaction.timestamp,
@@ -35,7 +35,7 @@ class TransactionRepositoryImpl implements TransactionRepository {
           (row) => Transaction(
             id: row.id,
             userId: row.userId!,
-            amount: row.amount,
+            amountCents: row.amountCents,
             type: TransactionType.values.firstWhere((e) => e.name == row.type),
             description: row.description ?? '',
             timestamp: row.date,
@@ -57,7 +57,7 @@ class TransactionRepositoryImpl implements TransactionRepository {
           (row) => Transaction(
             id: row.id,
             userId: row.userId!,
-            amount: row.amount,
+            amountCents: row.amountCents,
             type: TransactionType.values.firstWhere((e) => e.name == row.type),
             description: row.description ?? '',
             timestamp: row.date,

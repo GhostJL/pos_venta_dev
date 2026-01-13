@@ -3,15 +3,17 @@ enum TransactionType { entrada, salida }
 class Transaction {
   final int? id;
   final int userId;
-  final double amount;
+  final int amountCents;
   final TransactionType type;
   final DateTime timestamp;
   final String description;
 
+  double get amount => amountCents / 100.0;
+
   Transaction({
     this.id,
     required this.userId,
-    required this.amount,
+    required this.amountCents,
     required this.type,
     required this.timestamp,
     required this.description,
@@ -21,7 +23,7 @@ class Transaction {
     return {
       'id': id,
       'user_id': userId,
-      'amount': amount,
+      'amount_cents': amountCents,
       'type': type.name, // Use .name instead of describeEnum
       'timestamp': timestamp.toIso8601String(),
       'description': description,
@@ -32,7 +34,7 @@ class Transaction {
     return Transaction(
       id: map['id'] as int?,
       userId: map['user_id'] as int,
-      amount: map['amount'] as double,
+      amountCents: map['amount_cents'] as int,
       type: TransactionType.values.firstWhere(
         (e) => e.name == map['type'],
       ), // Use .name for comparison

@@ -96,7 +96,7 @@ class AppMeta extends Table {
 class Transactions extends Table {
   IntColumn get id => integer().autoIncrement()();
   IntColumn get userId => integer().nullable().references(Users, #id)();
-  RealColumn get amount => real()();
+  IntColumn get amountCents => integer().named('amount_cents')();
   TextColumn get type => text()();
   TextColumn get description => text().nullable()();
   DateTimeColumn get date => dateTime()();
