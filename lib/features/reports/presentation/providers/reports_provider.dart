@@ -11,6 +11,7 @@ class ReportsState {
   final ZReport? zReport;
   final DateTime startDate;
   final DateTime endDate;
+  final Map<String, double> paymentBreakdown;
 
   const ReportsState({
     this.isLoading = false,
@@ -19,6 +20,7 @@ class ReportsState {
     this.zReport,
     required this.startDate,
     required this.endDate,
+    this.paymentBreakdown = const {},
   });
 
   ReportsState copyWith({
@@ -28,6 +30,7 @@ class ReportsState {
     ZReport? zReport,
     DateTime? startDate,
     DateTime? endDate,
+    Map<String, double>? paymentBreakdown,
   }) {
     return ReportsState(
       isLoading: isLoading ?? this.isLoading,
@@ -36,6 +39,7 @@ class ReportsState {
       zReport: zReport ?? this.zReport,
       startDate: startDate ?? this.startDate,
       endDate: endDate ?? this.endDate,
+      paymentBreakdown: paymentBreakdown ?? this.paymentBreakdown,
     );
   }
 }
@@ -61,6 +65,11 @@ class ReportsNotifier extends _$ReportsNotifier {
         endDate: state.endDate,
       );
 
+      final breakdown = await repo.getPaymentMethodBreakdown(
+        startDate: state.startDate,
+        endDate: state.endDate,
+      );
+
       final products = await repo.getTopSellingProducts(
         startDate: state.startDate,
         endDate: state.endDate,
@@ -73,6 +82,7 @@ class ReportsNotifier extends _$ReportsNotifier {
         dailySales: sales,
         topProducts: products,
         zReport: z,
+        paymentBreakdown: breakdown,
       );
     } catch (e) {
       state = state.copyWith(isLoading: false);

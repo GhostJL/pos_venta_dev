@@ -12,5 +12,10 @@ abstract class ReportsRepository {
     int limit = 10,
   });
 
+  Future<Map<String, double>> getPaymentMethodBreakdown({
+    required DateTime startDate,
+    required DateTime endDate,
+  });
+
   Future<ZReport> generateZReport({required DateTime date});
 }

@@ -13,51 +13,86 @@ class ReportsRepositoryImpl implements ReportsRepository {
     required DateTime startDate,
     required DateTime endDate,
   }) async {
-    // Define expressions for aggregation
-    final totalSales = _db.sales.totalCents.sum();
-    final transactionCount = _db.sales.id.count();
-
-    // SQLite: strftime('%Y-%m-%d', sale_date, 'unixepoch') or just sale_date if text
-    // We'll use a custom expression to group by day safely.
-    // Assuming drift default storage (unix timestamp in seconds or milliseconds).
-    // If text, substr works. Safe bet is assuming standard Drift DateTime (int).
-    // Let's use a CustomExpression that Drift can accept.
-
-    // Note: To avoid complex SQL platform dependency issues (e.g. if testing on non-sqlite),
-    // we will stick to the plan but refine the grouping.
-    // Actually, to be safe and strictly adhere to "Production Ready" without risky schema guesses,
-    // I will use a custom query (Drift's .customSelect) or carefully typed CustomExpression.
-
-    // Simpler approach for now that is still much faster than loading all objects:
-    // We can use the variables, but since we need to Group By Date-Part,
-    // let's use a CustomExpression for the grouping key.
-
+    final saleDate = _db.sales.saleDate;
     final dayExpression = FunctionCallExpression<String>('strftime', [
       const Constant<String>('%Y-%m-%d'),
-      _db.sales.saleDate,
+      saleDate,
       const Constant<String>('unixepoch'),
     ]);
 
-    final query = _db.selectOnly(_db.sales)
-      ..addColumns([dayExpression, totalSales, transactionCount])
-      ..where(_db.sales.saleDate.isBetweenValues(startDate, endDate))
-      ..groupBy([dayExpression]);
+    // Profit = Sum(Item.total - (Item.cost * Item.quantity))
+    final profitExpression =
+        (_db.saleItems.totalCents.cast<double>() -
+                (_db.saleItems.costPriceCents.cast<double>() *
+                    _db.saleItems.quantity))
+            .sum();
+
+    // Sum revenue from items to match the profit calculation scope
+    final revenueSum = _db.saleItems.totalCents.sum();
+
+    // Count distinct sales to avoid double counting due to join
+    final transactionCount = _db.sales.id.count(distinct: true);
+
+    final query =
+        _db.selectOnly(_db.saleItems).join([
+            innerJoin(_db.sales, _db.sales.id.equalsExp(_db.saleItems.saleId)),
+          ])
+          ..addColumns([
+            dayExpression,
+            revenueSum,
+            transactionCount,
+            profitExpression,
+          ])
+          ..where(saleDate.isBetweenValues(startDate, endDate))
+          ..groupBy([dayExpression]);
 
     final result = await query.get();
 
     return result.map((row) {
       final dateStr = row.read(dayExpression);
-      final date = DateTime.parse(dateStr!); // SQLite returns YYYY-MM-DD
-      final total = row.read(totalSales) ?? 0;
+      final date = DateTime.parse(dateStr!);
+      final total = row.read(revenueSum) ?? 0;
       final count = row.read(transactionCount) ?? 0;
+      final profit = row.read(profitExpression) ?? 0;
 
       return SalesSummary(
         date: date,
         totalSales: total / 100.0,
         transactionCount: count,
-        profit: 0, // Placeholder
+        profit: profit / 100.0,
       );
     }).toList();
+  }
+
+  @override
+  Future<Map<String, double>> getPaymentMethodBreakdown({
+    required DateTime startDate,
+    required DateTime endDate,
+  }) async {
+    final paymentsQuery =
+        _db.selectOnly(_db.salePayments).join([
+            innerJoin(
+              _db.sales,
+              _db.sales.id.equalsExp(_db.salePayments.saleId),
+            ),
+          ])
+          ..addColumns([
+            _db.salePayments.paymentMethod,
+            _db.salePayments.amountCents.sum(),
+          ])
+          ..where(_db.sales.saleDate.isBetweenValues(startDate, endDate))
+          ..groupBy([_db.salePayments.paymentMethod]);
+
+    final rows = await paymentsQuery.get();
+
+    final Map<String, double> breakdown = {};
+    for (var row in rows) {
+      final method = row.read(_db.salePayments.paymentMethod)!;
+      final amount =
+          (row.read(_db.salePayments.amountCents.sum()) ?? 0) / 100.0;
+      breakdown[method] = amount;
+    }
+    return breakdown;
   }
 
   @override

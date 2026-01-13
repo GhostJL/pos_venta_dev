@@ -85,6 +85,11 @@ class _ReportsPageState extends ConsumerState<ReportsPage> {
                       const SizedBox(height: 24),
                       _TopProductsSection(state: state, isMobile: isMobile),
                       const SizedBox(height: 24),
+                      _PaymentBreakdownSection(
+                        breakdown: state.paymentBreakdown,
+                        isMobile: isMobile,
+                      ),
+                      const SizedBox(height: 24),
                       if (state.zReport != null)
                         _ZReportSection(
                           zReport: state.zReport!,
@@ -117,6 +122,10 @@ class _SummarySection extends StatelessWidget {
       0,
       (sum, item) => sum + item.transactionCount,
     );
+    final totalProfit = state.dailySales.fold<double>(
+      0,
+      (sum, item) => sum + item.profit,
+    );
 
     final cards = [
       _SummaryCard(
@@ -131,6 +140,13 @@ class _SummarySection extends StatelessWidget {
         value: totalTransactions.toString(),
         icon: Icons.receipt,
         color: Colors.blue,
+      ),
+      if (isMobile) const SizedBox(height: 12) else const SizedBox(width: 16),
+      _SummaryCard(
+        title: 'Ganancia Bruta',
+        value: currency.format(totalProfit),
+        icon: Icons.trending_up,
+        color: Colors.orange,
       ),
     ];
 
@@ -429,6 +445,51 @@ class _ZReportSection extends StatelessWidget {
                   (e) => _RowInfo(e.key, currency.format(e.value)),
                 ),
               ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _PaymentBreakdownSection extends StatelessWidget {
+  final Map<String, double> breakdown;
+  final bool isMobile;
+
+  const _PaymentBreakdownSection({
+    required this.breakdown,
+    required this.isMobile,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final currency = NumberFormat.currency(locale: 'es_MX', symbol: '\$');
+
+    if (breakdown.isEmpty) return const SizedBox.shrink();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('Ventas por Método de Pago', style: theme.textTheme.titleLarge),
+        const SizedBox(height: 8),
+        Card(
+          elevation: 2,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              children: breakdown.entries.map((e) {
+                return Column(
+                  children: [
+                    _RowInfo(e.key, currency.format(e.value)),
+                    if (e.key != breakdown.keys.last) const Divider(),
+                  ],
+                );
+              }).toList(),
             ),
           ),
         ),
