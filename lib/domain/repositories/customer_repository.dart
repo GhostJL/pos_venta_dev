@@ -23,7 +23,7 @@ abstract class CustomerRepository {
     bool isIncrement = true,
   });
   Future<double> getCustomerBalance(int customerId);
-  Future<int> registerPayment(CustomerPayment payment);
+  Future<int> registerPayment(CustomerPayment payment, {int? cashSessionId});
   Future<List<CustomerPayment>> getPayments(int customerId);
   Future<List<Customer>> getDebtors();
 }

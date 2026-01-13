@@ -22,6 +22,7 @@ class SaleCardHistoryWidget extends ConsumerWidget {
 
     final isCancelled = sale.status == SaleStatus.cancelled;
     final isReturned = sale.status == SaleStatus.returned;
+    final isCredit = sale.payments.any((p) => p.paymentMethod == 'Crédito');
 
     Color statusColor;
     String statusLabel;
@@ -31,6 +32,9 @@ class SaleCardHistoryWidget extends ConsumerWidget {
     } else if (isReturned) {
       statusColor = AppTheme.alertWarning;
       statusLabel = 'DEVUELTA';
+    } else if (isCredit) {
+      statusColor = cs.tertiary;
+      statusLabel = 'CRÉDITO';
     } else {
       statusColor = AppTheme.transactionSuccess;
       statusLabel = 'COMPLETADA';

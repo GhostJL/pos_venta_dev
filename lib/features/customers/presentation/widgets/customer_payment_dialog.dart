@@ -6,6 +6,7 @@ import 'package:posventa/presentation/providers/customer_providers.dart';
 import 'package:posventa/presentation/providers/debtors_provider.dart';
 import 'package:posventa/presentation/providers/di/customer_di.dart';
 import 'package:posventa/presentation/providers/auth_provider.dart';
+import 'package:posventa/presentation/providers/di/sale_di.dart';
 
 class CustomerPaymentDialog extends ConsumerStatefulWidget {
   final Customer customer;
@@ -37,6 +38,29 @@ class _CustomerPaymentDialogState extends ConsumerState<CustomerPaymentDialog> {
 
       try {
         final amount = double.parse(_amountController.text);
+
+        // Validation: If Cash payment, verify active session
+        int? cashSessionId;
+        if (_selectedMethod == 'Efectivo') {
+          final activeSession = await ref.read(
+            currentCashSessionProvider.future,
+          );
+          if (activeSession == null) {
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text(
+                    'No hay sesión de caja abierta. Abra la caja para recibir efectivo.',
+                  ),
+                  backgroundColor: Colors.red,
+                ),
+              );
+            }
+            return;
+          }
+          cashSessionId = activeSession.id;
+        }
+
         final user = ref.read(authProvider).user;
 
         final payment = CustomerPayment(
@@ -51,7 +75,9 @@ class _CustomerPaymentDialogState extends ConsumerState<CustomerPaymentDialog> {
           createdAt: DateTime.now(),
         );
 
-        await ref.read(customerRepositoryProvider).registerPayment(payment);
+        await ref
+            .read(customerRepositoryProvider)
+            .registerPayment(payment, cashSessionId: cashSessionId);
 
         if (mounted) {
           Navigator.of(context).pop();
@@ -62,8 +88,6 @@ class _CustomerPaymentDialogState extends ConsumerState<CustomerPaymentDialog> {
           ref.invalidate(customerProvider);
           ref.invalidate(debtorsProvider);
           ref.invalidate(customerByIdProvider(widget.customer.id!));
-          // Assuming we have a provider for transactions, invalidate it too if it exists
-          // ref.invalidate(customerTransactionsProvider(widget.customer.id!));
         }
       } catch (e) {
         if (mounted) {

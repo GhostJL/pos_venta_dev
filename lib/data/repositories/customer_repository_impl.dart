@@ -302,7 +302,10 @@ class CustomerRepositoryImpl implements CustomerRepository {
   }
 
   @override
-  Future<int> registerPayment(CustomerPayment payment) async {
+  Future<int> registerPayment(
+    CustomerPayment payment, {
+    int? cashSessionId,
+  }) async {
     return await db.transaction(() async {
       // 1. Insert payment record
       final id = await db
@@ -324,6 +327,25 @@ class CustomerRepositoryImpl implements CustomerRepository {
         payment.amount,
         isIncrement: false,
       );
+
+      // 3. If cash payment and session provided, register cash movement
+      if (cashSessionId != null && payment.paymentMethod == 'Efectivo') {
+        await db
+            .into(db.cashMovements)
+            .insert(
+              drift_db.CashMovementsCompanion.insert(
+                cashSessionId: cashSessionId,
+                movementType: 'entry',
+                amountCents: (payment.amount * 100).round(),
+                reason: 'Abono a cuenta',
+                description: Value(
+                  'Abono de cliente ID: ${payment.customerId}. Ref: ${payment.reference}',
+                ),
+                performedBy: payment.processedBy,
+                movementDate: Value(DateTime.now()),
+              ),
+            );
+      }
 
       return id;
     });
