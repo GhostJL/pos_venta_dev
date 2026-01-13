@@ -40,6 +40,7 @@ part 'app_database.g.dart';
     PurchaseItems,
     CashSessions,
     CashMovements,
+    CustomerPayments,
     AuditLogs,
   ],
 )
@@ -47,7 +48,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 37; // Bumped to 37
+  int get schemaVersion => 38; // Bumped to 38
 
   static QueryExecutor _openConnection() {
     return driftDatabase(
@@ -66,6 +67,10 @@ class AppDatabase extends _$AppDatabase {
         // Migration to version 37: Add credit columns to customers table
         await m.addColumn(customers, customers.creditLimitCents);
         await m.addColumn(customers, customers.creditUsedCents);
+      }
+      if (from < 38) {
+        // Migration to version 38: Create customer_payments table
+        await m.createTable(customerPayments);
       }
     },
     beforeOpen: (details) async {

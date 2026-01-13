@@ -10,6 +10,7 @@ import 'package:posventa/domain/use_cases/customer/generate_next_customer_code_u
 import 'package:posventa/domain/use_cases/customer/update_customer_credit_use_case.dart';
 import 'package:posventa/domain/use_cases/customer/get_customer_balance_use_case.dart';
 import 'package:posventa/domain/use_cases/customer/get_customer_by_id_use_case.dart';
+import 'package:posventa/domain/use_cases/customer/get_debtors_use_case.dart';
 import 'package:posventa/presentation/providers/di/core_di.dart';
 
 part 'customer_di.g.dart';
@@ -55,3 +56,6 @@ GetCustomerBalanceUseCase getCustomerBalanceUseCase(ref) =>
 @riverpod
 GetCustomerByIdUseCase getCustomerByIdUseCase(ref) =>
     GetCustomerByIdUseCase(ref.watch(customerRepositoryProvider));
+@riverpod
+GetDebtorsUseCase getDebtorsUseCase(ref) =>
+    GetDebtorsUseCase(ref.watch(customerRepositoryProvider));

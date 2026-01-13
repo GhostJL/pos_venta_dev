@@ -492,3 +492,50 @@ final class GetCustomerByIdUseCaseProvider
 
 String _$getCustomerByIdUseCaseHash() =>
     r'90c5ed05636f91d0e5de35cf95631ec97947fecf';
+
+@ProviderFor(getDebtorsUseCase)
+const getDebtorsUseCaseProvider = GetDebtorsUseCaseProvider._();
+
+final class GetDebtorsUseCaseProvider
+    extends
+        $FunctionalProvider<
+          GetDebtorsUseCase,
+          GetDebtorsUseCase,
+          GetDebtorsUseCase
+        >
+    with $Provider<GetDebtorsUseCase> {
+  const GetDebtorsUseCaseProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'getDebtorsUseCaseProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$getDebtorsUseCaseHash();
+
+  @$internal
+  @override
+  $ProviderElement<GetDebtorsUseCase> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  GetDebtorsUseCase create(Ref ref) {
+    return getDebtorsUseCase(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(GetDebtorsUseCase value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<GetDebtorsUseCase>(value),
+    );
+  }
+}
+
+String _$getDebtorsUseCaseHash() => r'06b3757479b782f45625cc8e7e698d66493dabfc';

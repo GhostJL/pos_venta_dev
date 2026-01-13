@@ -1,4 +1,5 @@
 import 'package:posventa/domain/entities/customer.dart';
+import 'package:posventa/domain/entities/customer_payment.dart';
 
 abstract class CustomerRepository {
   Future<List<Customer>> getCustomers({
@@ -22,4 +23,7 @@ abstract class CustomerRepository {
     bool isIncrement = true,
   });
   Future<double> getCustomerBalance(int customerId);
+  Future<int> registerPayment(CustomerPayment payment);
+  Future<List<CustomerPayment>> getPayments(int customerId);
+  Future<List<Customer>> getDebtors();
 }

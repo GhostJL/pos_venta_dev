@@ -454,6 +454,25 @@ class Suppliers extends Table {
       dateTime().withDefault(currentDateAndTime).named('updated_at')();
 }
 
+class CustomerPayments extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  IntColumn get customerId =>
+      integer().named('customer_id').references(Customers, #id)();
+  IntColumn get amountCents => integer().named('amount_cents')();
+  TextColumn get paymentMethod => text().named('payment_method')();
+  TextColumn get reference => text().nullable()();
+  DateTimeColumn get paymentDate =>
+      dateTime().withDefault(currentDateAndTime).named('payment_date')();
+  IntColumn get processedBy =>
+      integer().named('processed_by').references(Users, #id)();
+  TextColumn get notes => text().nullable()();
+  DateTimeColumn get createdAt =>
+      dateTime().withDefault(currentDateAndTime).named('created_at')();
+
+  @override
+  String get tableName => 'customer_payments';
+}
+
 // =================================================================
 // 5. SALES TABLES
 // =================================================================

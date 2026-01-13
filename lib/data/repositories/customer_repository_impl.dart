@@ -3,6 +3,7 @@ import 'package:posventa/data/datasources/local/database/app_database.dart'
     as drift_db;
 import 'package:posventa/data/models/customer_model.dart';
 import 'package:posventa/domain/entities/customer.dart';
+import 'package:posventa/domain/entities/customer_payment.dart';
 import 'package:posventa/domain/repositories/customer_repository.dart';
 
 class CustomerRepositoryImpl implements CustomerRepository {
@@ -298,5 +299,91 @@ class CustomerRepositoryImpl implements CustomerRepository {
       db.customers,
     )..where((t) => t.id.equals(customerId))).getSingle();
     return customer.creditUsedCents / 100.0;
+  }
+
+  @override
+  Future<int> registerPayment(CustomerPayment payment) async {
+    return await db.transaction(() async {
+      // 1. Insert payment record
+      final id = await db
+          .into(db.customerPayments)
+          .insert(
+            drift_db.CustomerPaymentsCompanion.insert(
+              customerId: payment.customerId,
+              amountCents: (payment.amount * 100).round(),
+              paymentMethod: payment.paymentMethod,
+              reference: Value(payment.reference),
+              processedBy: payment.processedBy,
+              notes: Value(payment.notes),
+            ),
+          );
+
+      // 2. Update customer credit usage (decrease debt)
+      await updateCustomerCredit(
+        payment.customerId,
+        payment.amount,
+        isIncrement: false,
+      );
+
+      return id;
+    });
+  }
+
+  @override
+  Future<List<CustomerPayment>> getPayments(int customerId) async {
+    final rows =
+        await (db.select(db.customerPayments)
+              ..where((t) => t.customerId.equals(customerId))
+              ..orderBy([(t) => OrderingTerm.desc(t.paymentDate)]))
+            .get();
+
+    return rows
+        .map(
+          (row) => CustomerPayment(
+            id: row.id,
+            customerId: row.customerId,
+            amount: row.amountCents / 100.0,
+            paymentMethod: row.paymentMethod,
+            reference: row.reference,
+            paymentDate: row.paymentDate,
+            processedBy: row.processedBy,
+            notes: row.notes,
+            createdAt: row.createdAt,
+          ),
+        )
+        .toList();
+  }
+
+  @override
+  Future<List<Customer>> getDebtors() async {
+    // Filter customers with creditUsed > 0
+    final q = db.select(db.customers)
+      ..where((t) => t.creditUsedCents.isBiggerThanValue(0))
+      ..orderBy([(t) => OrderingTerm.desc(t.creditUsedCents)]);
+
+    final rows = await q.get();
+
+    return rows
+        .map(
+          (row) => CustomerModel(
+            id: row.id,
+            code: row.code,
+            firstName: row.firstName,
+            lastName: row.lastName,
+            businessName: row.businessName,
+            taxId: row.taxId,
+            creditLimit: row.creditLimitCents != null
+                ? row.creditLimitCents! / 100.0
+                : null,
+            creditUsed: row.creditUsedCents / 100.0,
+            phone: row.phone,
+            email: row.email,
+            address: row.address,
+            isActive: row.isActive,
+            createdAt: row.createdAt,
+            updatedAt: row.updatedAt,
+          ),
+        )
+        .toList();
   }
 }
