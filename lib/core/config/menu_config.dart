@@ -186,12 +186,7 @@ class MenuConfig {
             route: '/customers',
             requiredPermissions: [PermissionConstants.customerManage],
           ),
-          const MenuItem(
-            title: 'Cuentas por Cobrar',
-            icon: Icons.payments_rounded,
-            route: '/customers/debt',
-            requiredPermissions: [PermissionConstants.customerManage],
-          ),
+
           const MenuItem(
             title: 'Proveedores',
             icon: Icons.local_shipping_rounded,

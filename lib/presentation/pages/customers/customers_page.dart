@@ -16,6 +16,7 @@ import 'package:flutter/services.dart';
 import 'package:posventa/presentation/widgets/customers/customer_card.dart';
 import 'package:posventa/presentation/widgets/customers/customer_table_row.dart';
 import 'package:posventa/presentation/widgets/common/empty_state_widget.dart';
+import 'package:posventa/presentation/widgets/customers/debtors_tab.dart';
 
 class CustomersPage extends ConsumerStatefulWidget {
   const CustomersPage({super.key});
@@ -86,192 +87,211 @@ class CustomersPageState extends ConsumerState<CustomersPage>
     final colorScheme = theme.colorScheme;
     final isSmallScreen = MediaQuery.of(context).size.width < 1200;
 
-    return CallbackShortcuts(
-      bindings: {
-        const SingleActivator(LogicalKeyboardKey.keyN, control: true): () {
-          if (hasManagePermission) _navigateToForm();
+    return DefaultTabController(
+      length: 2,
+      child: CallbackShortcuts(
+        bindings: {
+          const SingleActivator(LogicalKeyboardKey.keyN, control: true): () {
+            if (hasManagePermission) _navigateToForm();
+          },
         },
-        const SingleActivator(LogicalKeyboardKey.keyF, control: true): () {
-          // Focus search
-        },
-      },
-      child: Scaffold(
-        backgroundColor: colorScheme.surface,
-        appBar: AppBar(
-          leading: isSmallScreen
-              ? IconButton(
-                  icon: const Icon(Icons.menu),
-                  onPressed: () => MainLayout.of(context)?.openDrawer(),
-                )
-              : null,
-          title: countAsync.when(
-            data: (count) => Text(
-              'Clientes ($count)',
-              style: theme.textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            loading: () => const Text('Clientes'),
-            error: (_, __) => const Text('Clientes'),
-          ),
-          scrolledUnderElevation: 2,
+        child: Scaffold(
           backgroundColor: colorScheme.surface,
-          bottom: PreferredSize(
-            preferredSize: const Size.fromHeight(70),
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-              child: TextField(
-                controller: _searchController,
-                onChanged: _onSearchChanged,
-                decoration: InputDecoration(
-                  hintText: 'Buscar clientes...',
-                  prefixIcon: Icon(
-                    Icons.search_rounded,
-                    color: colorScheme.primary,
+          appBar: AppBar(
+            leading: isSmallScreen
+                ? IconButton(
+                    icon: const Icon(Icons.menu),
+                    onPressed: () => MainLayout.of(context)?.openDrawer(),
+                  )
+                : null,
+            title: const Text('Gestión de Clientes'),
+            bottom: PreferredSize(
+              preferredSize: const Size.fromHeight(
+                120,
+              ), // Height for TabBar + Search
+              child: Column(
+                children: [
+                  TabBar(
+                    tabs: const [
+                      Tab(text: 'Directorio'),
+                      Tab(text: 'Cuentas por Cobrar'),
+                    ],
                   ),
-                  filled: true,
-                  fillColor: colorScheme.surfaceContainerHighest.withAlpha(100),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(28),
-                    borderSide: BorderSide.none,
-                  ),
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 0,
-                  ),
-                  suffixIcon: _searchController.text.isNotEmpty
-                      ? IconButton(
-                          icon: const Icon(Icons.clear),
-                          onPressed: () {
-                            _searchController.clear();
-                            _onSearchChanged('');
-                          },
-                        )
-                      : null,
-                ),
-              ),
-            ),
-          ),
-          actions: [
-            // Filter Button
-            Consumer(
-              builder: (context, ref, _) {
-                final showInactive = ref.watch(customerShowInactiveProvider);
-                return IconButton(
-                  icon: Icon(
-                    showInactive
-                        ? Icons.visibility_off_outlined
-                        : Icons.visibility_outlined,
-                  ),
-                  tooltip: showInactive ? 'Ocultar Inactivos' : 'Ver Inactivos',
-                  onPressed: () {
-                    ref.read(customerShowInactiveProvider.notifier).toggle();
-                  },
-                );
-              },
-            ),
-          ],
-        ),
-        body: AsyncValueHandler<int>(
-          value: countAsync,
-          data: (count) {
-            if (count == 0) {
-              return const EmptyStateWidget(
-                icon: Icons.person_off_rounded,
-                message: 'No se encontraron clientes',
-              );
-            }
-
-            return LayoutBuilder(
-              builder: (context, constraints) {
-                final isDesktop = constraints.maxWidth > 800;
-
-                return Column(
-                  children: [
-                    if (isDesktop) const CustomerHeader(),
-                    Expanded(
-                      child: ListView.builder(
-                        controller: _scrollController,
-                        padding: const EdgeInsets.all(16),
-                        itemCount: count,
-                        itemBuilder: (context, index) {
-                          final pageIndex = index ~/ kCustomerPageSize;
-                          final indexInPage = index % kCustomerPageSize;
-
-                          final pageAsync = ref.watch(
-                            paginatedCustomersPageProvider(
-                              pageIndex: pageIndex,
-                            ),
-                          );
-
-                          return pageAsync.when(
-                            data: (customers) {
-                              if (indexInPage >= customers.length) {
-                                return const SizedBox.shrink();
-                              }
-                              final customer = customers[indexInPage];
-
-                              if (isDesktop) {
-                                return CustomerTableRow(
-                                  customer: customer,
-                                  hasManagePermission: hasManagePermission,
-                                  onEdit: () => _navigateToForm(customer),
-                                  onDelete: () =>
-                                      _confirmDelete(context, ref, customer),
-                                  onTap: () =>
-                                      context.push('/customers/${customer.id}'),
-                                );
-                              } else {
-                                return Column(
-                                  children: [
-                                    CustomerCard(
-                                      customer: customer,
-                                      hasManagePermission: hasManagePermission,
-                                      onEdit: () => _navigateToForm(customer),
-                                      onDelete: () => _confirmDelete(
-                                        context,
-                                        ref,
-                                        customer,
-                                      ),
-                                      onTap: () => context.push(
-                                        '/customers/${customer.id}',
-                                      ),
-                                    ),
-                                    if (index < count - 1)
-                                      const SizedBox(height: 12),
-                                  ],
-                                );
-                              }
-                            },
-                            loading: () => _buildSkeletonItem(),
-                            error: (_, __) => const SizedBox.shrink(),
-                          );
-                        },
+                  Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: TextField(
+                      controller: _searchController,
+                      onChanged: _onSearchChanged,
+                      decoration: InputDecoration(
+                        hintText: 'Buscar clientes...',
+                        prefixIcon: Icon(
+                          Icons.search_rounded,
+                          color: colorScheme.primary,
+                        ),
+                        filled: true,
+                        fillColor: colorScheme.surfaceContainerHighest
+                            .withAlpha(100),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(28),
+                          borderSide: BorderSide.none,
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 0,
+                        ),
+                        suffixIcon: _searchController.text.isNotEmpty
+                            ? IconButton(
+                                icon: const Icon(Icons.clear),
+                                onPressed: () {
+                                  _searchController.clear();
+                                  _onSearchChanged('');
+                                },
+                              )
+                            : null,
                       ),
                     ),
-                  ],
-                );
-              },
-            );
-          },
-          emptyState: const EmptyStateWidget(
-            icon: Icons.person_off_rounded,
-            message: 'No se encontraron clientes',
+                  ),
+                ],
+              ),
+            ),
+            actions: [
+              // Filter Button
+              Consumer(
+                builder: (context, ref, _) {
+                  final showInactive = ref.watch(customerShowInactiveProvider);
+                  return IconButton(
+                    icon: Icon(
+                      showInactive
+                          ? Icons.visibility_off_outlined
+                          : Icons.visibility_outlined,
+                    ),
+                    tooltip: showInactive
+                        ? 'Ocultar Inactivos'
+                        : 'Ver Inactivos',
+                    onPressed: () {
+                      ref.read(customerShowInactiveProvider.notifier).toggle();
+                    },
+                  );
+                },
+              ),
+            ],
           ),
+          body: TabBarView(
+            children: [
+              // Tab 1: Directory
+              AsyncValueHandler<int>(
+                value: countAsync,
+                data: (count) {
+                  if (count == 0) {
+                    return const EmptyStateWidget(
+                      icon: Icons.person_off_rounded,
+                      message: 'No se encontraron clientes',
+                    );
+                  }
+
+                  return LayoutBuilder(
+                    builder: (context, constraints) {
+                      final isDesktop = constraints.maxWidth > 800;
+
+                      return Column(
+                        children: [
+                          if (isDesktop) const CustomerHeader(),
+                          Expanded(
+                            child: ListView.builder(
+                              controller: _scrollController,
+                              padding: const EdgeInsets.all(16),
+                              itemCount: count,
+                              itemBuilder: (context, index) {
+                                final pageIndex = index ~/ kCustomerPageSize;
+                                final indexInPage = index % kCustomerPageSize;
+
+                                final pageAsync = ref.watch(
+                                  paginatedCustomersPageProvider(
+                                    pageIndex: pageIndex,
+                                  ),
+                                );
+
+                                return pageAsync.when(
+                                  data: (customers) {
+                                    if (indexInPage >= customers.length) {
+                                      return const SizedBox.shrink();
+                                    }
+                                    final customer = customers[indexInPage];
+
+                                    if (isDesktop) {
+                                      return CustomerTableRow(
+                                        customer: customer,
+                                        hasManagePermission:
+                                            hasManagePermission,
+                                        onEdit: () => _navigateToForm(customer),
+                                        onDelete: () => _confirmDelete(
+                                          context,
+                                          ref,
+                                          customer,
+                                        ),
+                                        onTap: () => context.push(
+                                          '/customers/${customer.id}',
+                                        ),
+                                      );
+                                    } else {
+                                      return Column(
+                                        children: [
+                                          CustomerCard(
+                                            customer: customer,
+                                            hasManagePermission:
+                                                hasManagePermission,
+                                            onEdit: () =>
+                                                _navigateToForm(customer),
+                                            onDelete: () => _confirmDelete(
+                                              context,
+                                              ref,
+                                              customer,
+                                            ),
+                                            onTap: () => context.push(
+                                              '/customers/${customer.id}',
+                                            ),
+                                          ),
+                                          if (index < count - 1)
+                                            const SizedBox(height: 12),
+                                        ],
+                                      );
+                                    }
+                                  },
+                                  loading: () => _buildSkeletonItem(),
+                                  error: (_, __) => const SizedBox.shrink(),
+                                );
+                              },
+                            ),
+                          ),
+                        ],
+                      );
+                    },
+                  );
+                },
+                emptyState: const EmptyStateWidget(
+                  icon: Icons.person_off_rounded,
+                  message: 'No se encontraron clientes',
+                ),
+              ),
+
+              // Tab 2: Debtors
+              const DebtorsTab(),
+            ],
+          ),
+          floatingActionButton: _showScrollToTop
+              ? FloatingActionButton(
+                  onPressed: _scrollToTop,
+                  mini: true,
+                  child: const Icon(Icons.arrow_upward),
+                )
+              : (hasManagePermission
+                    ? FloatingActionButton.extended(
+                        onPressed: () => _navigateToForm(),
+                        icon: const Icon(Icons.add_rounded),
+                        label: const Text('Nuevo Cliente'),
+                      )
+                    : null),
         ),
-        floatingActionButton: _showScrollToTop
-            ? FloatingActionButton(
-                onPressed: _scrollToTop,
-                mini: true,
-                child: const Icon(Icons.arrow_upward),
-              )
-            : (hasManagePermission
-                  ? FloatingActionButton.extended(
-                      onPressed: () => _navigateToForm(),
-                      icon: const Icon(Icons.add_rounded),
-                      label: const Text('Nuevo Cliente'),
-                    )
-                  : null),
       ),
     );
   }

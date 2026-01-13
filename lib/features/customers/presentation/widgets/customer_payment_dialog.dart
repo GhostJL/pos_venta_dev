@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:posventa/domain/entities/customer.dart';
 import 'package:posventa/domain/entities/customer_payment.dart';
 import 'package:posventa/presentation/providers/customer_providers.dart';
+import 'package:posventa/presentation/providers/debtors_provider.dart';
 import 'package:posventa/presentation/providers/di/customer_di.dart';
 import 'package:posventa/presentation/providers/auth_provider.dart';
 
@@ -59,6 +60,10 @@ class _CustomerPaymentDialogState extends ConsumerState<CustomerPaymentDialog> {
           );
           // Refresh customer list to update balance
           ref.invalidate(customerProvider);
+          ref.invalidate(debtorsProvider);
+          ref.invalidate(customerByIdProvider(widget.customer.id!));
+          // Assuming we have a provider for transactions, invalidate it too if it exists
+          // ref.invalidate(customerTransactionsProvider(widget.customer.id!));
         }
       } catch (e) {
         if (mounted) {

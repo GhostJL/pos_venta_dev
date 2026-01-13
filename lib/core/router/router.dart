@@ -23,7 +23,7 @@ import 'package:posventa/presentation/pages/cashier/cashier_permissions_page.dar
 import 'package:posventa/presentation/pages/categories/categories_page.dart';
 import 'package:posventa/presentation/pages/customers/customers_page.dart';
 import 'package:posventa/presentation/pages/customers/customer_details_page.dart';
-import 'package:posventa/features/customers/presentation/pages/customer_debt_page.dart';
+
 import 'package:posventa/presentation/pages/dashboards/dashboard_admin_page.dart';
 import 'package:posventa/presentation/pages/dashboards/dashboard_cashier_page.dart';
 import 'package:posventa/presentation/pages/departaments/departments_page.dart';
@@ -198,11 +198,6 @@ final routerProvider = Provider<GoRouter>((ref) {
             pageBuilder: (context, state) =>
                 const NoTransitionPage(child: CustomersPage()),
             routes: [
-              GoRoute(
-                path: 'debt',
-                pageBuilder: (context, state) =>
-                    const NoTransitionPage(child: CustomerDebtPage()),
-              ),
               GoRoute(
                 path: 'form',
                 pageBuilder: (context, state) {
