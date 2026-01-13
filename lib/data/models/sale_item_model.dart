@@ -80,6 +80,7 @@ class SaleItemModel extends SaleItem {
     );
   }
 
+  @override
   SaleItemModel copyWith({
     int? id,
     int? saleId,
@@ -95,6 +96,7 @@ class SaleItemModel extends SaleItem {
     int? costPriceCents,
     int? lotId,
     String? productName,
+    String? variantDescription,
     List<SaleItemTax>? taxes,
     double? unitsPerPack,
   }) {

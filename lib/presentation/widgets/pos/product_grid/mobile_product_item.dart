@@ -35,21 +35,21 @@ class MobileProductItem extends ConsumerWidget {
         : (product.stock ?? 0);
 
     // Calculate Gross Price
-    final double basePrice = variant != null ? variant!.price : product.price;
-    final Map<int, TaxRate> taxRates = ref.watch(taxRatesMapProvider);
-
-    final double grossPrice = _calculateGrossPrice(
-      basePrice,
-      product.productTaxes,
-      taxRates,
-    );
-
-    final String displayName = product.name;
-    final String? variantName = variant?.description;
-
     // Global Settings
     final settingsAsync = ref.watch(settingsProvider);
     final useInventory = settingsAsync.value?.useInventory ?? true;
+    final useTax = settingsAsync.value?.useTax ?? true;
+
+    // Calculate Gross Price
+    final double basePrice = variant != null ? variant!.price : product.price;
+    final Map<int, TaxRate> taxRates = ref.watch(taxRatesMapProvider);
+
+    final double grossPrice = useTax
+        ? _calculateGrossPrice(basePrice, product.productTaxes, taxRates)
+        : basePrice;
+
+    final String displayName = product.name;
+    final String? variantName = variant?.description;
 
     // Cart State Logic
     final isSelected = quantityInCart > 0;

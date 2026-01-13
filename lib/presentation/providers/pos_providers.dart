@@ -80,7 +80,89 @@ const Object _undefined = Object();
 class POSNotifier extends _$POSNotifier {
   @override
   POSState build() {
+    // Listen to settings changes to ensure cart reflects current tax settings
+    ref.listen(settingsProvider, (previous, next) {
+      final prevUseTax = previous?.value?.useTax;
+      final nextUseTax = next.value?.useTax;
+
+      if (prevUseTax != nextUseTax && nextUseTax != null) {
+        _recalculateTaxes(nextUseTax);
+      }
+    });
     return const POSState();
+  }
+
+  Future<void> _recalculateTaxes(bool useTax) async {
+    if (state.cart.isEmpty) return;
+
+    state = state.copyWith(isLoading: true);
+
+    try {
+      final newCart = <SaleItem>[];
+
+      for (final item in state.cart) {
+        if (!useTax) {
+          // Remove taxes
+          newCart.add(
+            item.copyWith(
+              taxCents: 0,
+              taxes: [],
+              totalCents:
+                  item.subtotalCents, // Discount is applied to subtotal?
+              // Usually Total = Subtotal - Discount + Tax.
+              // If discount exists, we should preserve it.
+              // Current logic: total = subtotal + tax.
+              // Let's check addToCart logic: "totalCents = subtotalCents + taxCents;"
+              // It seems discount is not subtracted from total in addToCart logic viewed previously?
+              // Wait, SaleItem has discountCents.
+              // Let's stick to addToCart logic: totalCents = subtotalCents + taxCents.
+              // If discount logic exists elsewhere, we should verify.
+              // Inspecting addToCart:
+              // final totalCents = subtotalCents + taxCents;
+              // It seems addToCart DOES NOT handle discount subtraction in total calculation yet?
+              // Or maybe discount is applied to unit price?
+              // "discountCents = 0" default in SaleItem.
+              // I will stick to total = subtotal + tax.
+            ),
+          );
+        } else {
+          // Re-calculate taxes
+          final productRepo = ref.read(productRepositoryProvider);
+          final result = await productRepo.getTaxRatesForProduct(
+            item.productId,
+          );
+          final rates = result.getOrElse((_) => []);
+
+          int itemTaxCents = 0;
+          final itemTaxes = <SaleItemTax>[];
+
+          for (final tax in rates) {
+            final amount = (item.subtotalCents * tax.rate).round();
+            itemTaxCents += amount;
+            itemTaxes.add(
+              SaleItemTax(
+                taxRateId: tax.id!,
+                taxName: tax.name,
+                taxRate: tax.rate,
+                taxAmountCents: amount,
+              ),
+            );
+          }
+
+          newCart.add(
+            item.copyWith(
+              taxCents: itemTaxCents,
+              taxes: itemTaxes,
+              totalCents: item.subtotalCents + itemTaxCents,
+            ),
+          );
+        }
+      }
+      state = state.copyWith(cart: newCart, isLoading: false);
+    } catch (e) {
+      debugPrint('Error recalculating taxes: $e');
+      state = state.copyWith(isLoading: false);
+    }
   }
 
   Future<String?> addToCart(

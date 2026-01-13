@@ -43,6 +43,8 @@ class CreateAccountNotifier extends Notifier<CreateAccountState> {
     required String lastName,
     required String email,
     required String warehouseName,
+    required bool useInventory,
+    required bool useTax,
   }) async {
     state = state.copyWith(isLoading: true, error: null, isSuccess: false);
 
@@ -112,7 +114,14 @@ class CreateAccountNotifier extends Notifier<CreateAccountState> {
 
         await createWarehouse.call(newWarehouse);
 
-        // 6. Invalidate warehouse provider to refresh the list in other screens
+        // 6. Save Settings (Inventory & Tax)
+        final settingsRepository = await ref.read(
+          settingsRepositoryProvider.future,
+        );
+        await settingsRepository.setUseInventory(useInventory);
+        await settingsRepository.setUseTax(useTax);
+
+        // 7. Invalidate warehouse provider to refresh the list in other screens
         ref.invalidate(warehouseProvider);
       }
 

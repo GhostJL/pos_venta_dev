@@ -45,4 +45,44 @@ class SaleItem {
   double get tax => taxCents / 100.0;
   double get total => totalCents / 100.0;
   double get discount => discountCents / 100.0;
+
+  SaleItem copyWith({
+    int? id,
+    int? saleId,
+    int? productId,
+    int? variantId,
+    double? quantity,
+    String? unitOfMeasure,
+    int? unitPriceCents,
+    int? discountCents,
+    int? subtotalCents,
+    int? taxCents,
+    int? totalCents,
+    int? costPriceCents,
+    int? lotId,
+    String? productName,
+    String? variantDescription,
+    List<SaleItemTax>? taxes,
+    double? unitsPerPack,
+  }) {
+    return SaleItem(
+      id: id ?? this.id,
+      saleId: saleId ?? this.saleId,
+      productId: productId ?? this.productId,
+      variantId: variantId ?? this.variantId,
+      quantity: quantity ?? this.quantity,
+      unitOfMeasure: unitOfMeasure ?? this.unitOfMeasure,
+      unitPriceCents: unitPriceCents ?? this.unitPriceCents,
+      discountCents: discountCents ?? this.discountCents,
+      subtotalCents: subtotalCents ?? this.subtotalCents,
+      taxCents: taxCents ?? this.taxCents,
+      totalCents: totalCents ?? this.totalCents,
+      costPriceCents: costPriceCents ?? this.costPriceCents,
+      lotId: lotId ?? this.lotId,
+      productName: productName ?? this.productName,
+      variantDescription: variantDescription ?? this.variantDescription,
+      taxes: taxes ?? this.taxes,
+      unitsPerPack: unitsPerPack ?? this.unitsPerPack,
+    );
+  }
 }

@@ -20,6 +20,8 @@ class _CreateAccountFormState extends ConsumerState<CreateAccountForm> {
   final _warehouseNameController = TextEditingController();
   bool _isPasswordObscured = true;
   bool _isConfirmPasswordObscured = true;
+  bool _useInventory = true;
+  bool _useTax = true;
   int _currentStep = 0;
 
   @override
@@ -56,11 +58,14 @@ class _CreateAccountFormState extends ConsumerState<CreateAccountForm> {
           lastName: _lastNameController.text.trim(),
           email: _emailController.text.trim(),
           warehouseName: _warehouseNameController.text.trim(),
+          useInventory: _useInventory,
+          useTax: _useTax,
         );
   }
 
   @override
   Widget build(BuildContext context) {
+    // ... existing build method ...
     final state = ref.watch(createAccountProvider);
 
     return Container(
@@ -262,6 +267,28 @@ class _CreateAccountFormState extends ConsumerState<CreateAccountForm> {
               value!.isEmpty ? 'El nombre de la sucursal es obligatorio' : null,
         ),
         const SizedBox(height: 16),
+
+        // Settings Toggles
+        SwitchListTile(
+          title: const Text('Gestionar Inventario'),
+          subtitle: const Text('Control de stock (recomendado: activado)'),
+          value: _useInventory,
+          onChanged: (value) => setState(() => _useInventory = value),
+          contentPadding: EdgeInsets.zero,
+        ),
+
+        SwitchListTile(
+          title: const Text('Gestionar Impuestos (IVA)'),
+          subtitle: const Text(
+            'Aplicar impuestos a ventas (recomendado: activado)',
+          ),
+          value: _useTax,
+          onChanged: (value) => setState(() => _useTax = value),
+          contentPadding: EdgeInsets.zero,
+        ),
+
+        const SizedBox(height: 16),
+
         TextFormField(
           controller: _passwordController,
           obscureText: _isPasswordObscured,
