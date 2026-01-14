@@ -280,8 +280,11 @@ class CashSessionRepositoryImpl implements CashSessionRepository {
         db.select(db.salePayments).join([
           innerJoin(db.sales, db.sales.id.equalsExp(db.salePayments.saleId)),
         ])..where(
-          db.sales.cashierId.equals(session.userId) &
-              db.sales.saleDate.isBetweenValues(session.openedAt, endTime) &
+          db.salePayments.receivedBy.equals(session.userId) &
+              db.salePayments.paymentDate.isBetweenValues(
+                session.openedAt,
+                endTime,
+              ) &
               db.salePayments.paymentMethod.equals('Efectivo'),
         );
 
@@ -313,8 +316,11 @@ class CashSessionRepositoryImpl implements CashSessionRepository {
         db.select(db.salePayments).join([
           innerJoin(db.sales, db.sales.id.equalsExp(db.salePayments.saleId)),
         ])..where(
-          db.sales.cashierId.equals(session.userId) &
-              db.sales.saleDate.isBetweenValues(session.openedAt, endTime),
+          db.salePayments.receivedBy.equals(session.userId) &
+              db.salePayments.paymentDate.isBetweenValues(
+                session.openedAt,
+                endTime,
+              ),
         );
 
     final rows = await q.get();

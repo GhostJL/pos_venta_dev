@@ -1,8 +1,12 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:path/path.dart' as p;
+import 'package:path_provider/path_provider.dart';
 import 'package:posventa/presentation/providers/providers.dart';
 import 'package:posventa/presentation/providers/auth_provider.dart';
+import 'package:posventa/presentation/providers/di/backup_di.dart';
 import 'package:posventa/core/constants/permission_constants.dart';
 import 'package:posventa/presentation/providers/permission_provider.dart';
 import 'package:posventa/presentation/widgets/common/layouts/permission_denied_widget.dart';
@@ -78,6 +82,33 @@ class _CashSessionClosePageState extends ConsumerState<CashSessionClosePage> {
       final closedSession = await ref
           .read(closeCashSessionUseCaseProvider)
           .call(currentSession.id!, closingBalanceCents);
+
+      // Trigger automatic backup after successful session close
+      try {
+        final backupRepo = ref.read(backupRepositoryProvider);
+        final backupFile = await backupRepo.createBackupFile();
+
+        // Move backup to documents directory with timestamp
+        final docsDir = await getApplicationDocumentsDirectory();
+        final timestamp = DateTime.now().toIso8601String().replaceAll(':', '-');
+        final backupPath = p.join(
+          docsDir.path,
+          'backups',
+          'session_$timestamp.sqlite',
+        );
+
+        // Ensure backup directory exists
+        final backupDir = Directory(p.dirname(backupPath));
+        if (!await backupDir.exists()) {
+          await backupDir.create(recursive: true);
+        }
+
+        await backupFile.copy(backupPath);
+        await backupFile.delete(); // Clean up temp file
+      } catch (backupError) {
+        // Log backup error but don't fail session close
+        debugPrint('Backup failed after session close: $backupError');
+      }
 
       if (mounted) {
         // Mostrar resumen del cierre

@@ -253,15 +253,20 @@ class _CustomerPaymentDialogState extends ConsumerState<CustomerPaymentDialog> {
           onPressed: _isLoading ? null : () => Navigator.of(context).pop(),
           child: const Text('Cancelar'),
         ),
-        ElevatedButton(
-          onPressed: _isLoading ? _submit : _submit,
-          child: _isLoading
-              ? const SizedBox(
-                  height: 16,
-                  width: 16,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                )
-              : const Text('Registrar Abono'),
+        Tooltip(
+          message:
+              'Registrar un pago (abono) para reducir la deuda del cliente. '
+              'Los pagos en efectivo se registran en la sesión de caja actual.',
+          child: ElevatedButton(
+            onPressed: _isLoading ? _submit : _submit,
+            child: _isLoading
+                ? const SizedBox(
+                    height: 16,
+                    width: 16,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Text('Registrar Abono'),
+          ),
         ),
       ],
     );

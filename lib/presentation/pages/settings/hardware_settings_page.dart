@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:printing/printing.dart';
 import 'package:posventa/presentation/providers/di/printer_di.dart';
 import 'package:posventa/presentation/providers/settings_provider.dart';
+import 'package:posventa/presentation/widgets/hardware/printer_status_indicator.dart';
 
 class HardwareSettingsPage extends ConsumerStatefulWidget {
   const HardwareSettingsPage({super.key});
@@ -93,13 +94,21 @@ class _HardwareSettingsPageState extends ConsumerState<HardwareSettingsPage> {
                           ? 'Impresoras Bluetooth'
                           : 'Impresora de Tickets',
                     ),
-                    IconButton(
-                      onPressed: _isLoading ? null : _loadPrinters,
-                      icon: const Icon(Icons.refresh),
-                      tooltip: 'Actualizar lista',
+                    Row(
+                      children: [
+                        const PrinterStatusIndicator(showLabel: false),
+                        const SizedBox(width: 8),
+                        IconButton(
+                          onPressed: _isLoading ? null : _loadPrinters,
+                          icon: const Icon(Icons.refresh),
+                          tooltip: 'Actualizar lista',
+                        ),
+                      ],
                     ),
                   ],
                 ),
+                const SizedBox(height: 8),
+                const PrinterStatusIndicator(),
                 const SizedBox(height: 16),
                 if (_isLoading)
                   const Center(child: CircularProgressIndicator())
