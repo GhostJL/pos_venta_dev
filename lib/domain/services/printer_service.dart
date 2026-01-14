@@ -1,3 +1,5 @@
+import 'package:posventa/domain/entities/customer.dart';
+import 'package:posventa/domain/entities/customer_payment.dart';
 import 'package:posventa/features/sales/domain/models/ticket_data.dart';
 
 import 'package:printing/printing.dart'; // We use the printing package types for Printer object
@@ -21,4 +23,11 @@ abstract class PrinterService {
 
   /// Disconnect from current printer
   Future<void> disconnect();
+
+  /// Print a payment receipt
+  Future<void> printPaymentReceipt({
+    required CustomerPayment payment,
+    required Customer customer,
+    Printer? printer,
+  });
 }

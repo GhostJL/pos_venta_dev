@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:posventa/domain/entities/customer.dart';
@@ -6,6 +7,10 @@ import 'package:posventa/presentation/providers/customer_providers.dart';
 import 'package:posventa/presentation/providers/debtors_provider.dart';
 import 'package:posventa/presentation/providers/auth_provider.dart';
 import 'package:posventa/presentation/providers/providers.dart'; // For storeRepositoryProvider
+import 'package:printing/printing.dart'; // For Printer class
+import 'package:posventa/domain/services/printer_service.dart';
+import 'package:posventa/presentation/providers/di/printer_di.dart';
+import 'package:posventa/presentation/providers/settings_provider.dart';
 
 class CustomerPaymentDialog extends ConsumerStatefulWidget {
   final Customer customer;
@@ -76,9 +81,48 @@ class _CustomerPaymentDialogState extends ConsumerState<CustomerPaymentDialog> {
           createdAt: DateTime.now(),
         );
 
-        await ref
+        final paymentId = await ref
             .read(customerRepositoryProvider)
             .registerPayment(payment, cashSessionId: cashSessionId);
+
+        // Print Receipt
+        try {
+          final printerService = ref.read(printerServiceProvider);
+          final settings = await ref.read(settingsProvider.future);
+          final printerName = settings.printerName;
+
+          Printer? targetPrinter;
+          if (printerName != null) {
+            final printers = await printerService.getPrinters();
+            targetPrinter = printers
+                .where((p) => p.name == printerName)
+                .firstOrNull;
+          }
+
+          if (targetPrinter != null || !Platform.isAndroid) {
+            // Construct payment with ID
+            final paymentWithId = CustomerPayment(
+              id: paymentId,
+              customerId: payment.customerId,
+              amount: payment.amount,
+              paymentMethod: payment.paymentMethod,
+              reference: payment.reference,
+              paymentDate: payment.paymentDate,
+              processedBy: payment.processedBy,
+              notes: payment.notes,
+              saleId: payment.saleId,
+              createdAt: payment.createdAt,
+            );
+
+            await printerService.printPaymentReceipt(
+              payment: paymentWithId,
+              customer: widget.customer,
+              printer: targetPrinter,
+            );
+          }
+        } catch (e) {
+          debugPrint('Error printing receipt: $e');
+        }
 
         if (mounted) {
           Navigator.of(context).pop();

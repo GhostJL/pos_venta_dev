@@ -60,23 +60,18 @@ class CashSessionRepositoryImpl implements CashSessionRepository {
         throw Exception('Sesión no encontrada o no pertenece al usuario');
       }
 
-      // 2. Calculate Expected Cash
-      // 2a. Cash from Sales (Sum sale_payments where method='Efectivo' and sale.cashier_id = user within session time)
-      // We need to join SalePayments with Sales to check cashier and date
-      final salesCashQuery =
-          db.selectOnly(db.salePayments).join([
-              innerJoin(
-                db.sales,
-                db.sales.id.equalsExp(db.salePayments.saleId),
-              ),
-            ])
-            ..addColumns([db.salePayments.amountCents.sum()])
-            ..where(
-              db.sales.cashierId.equals(_userId) &
-                  db.salePayments.paymentMethod.equals('Efectivo') &
-                  db.sales.saleDate.isBiggerOrEqualValue(sessionRow.openedAt) &
-                  db.sales.saleDate.isSmallerOrEqualValue(now),
-            );
+      // 2a. Cash from Sales (Sum sale_payments where method='Efectivo' and payment_date within session time)
+      // We filter by paymentDate and receivedBy ensuring it matches the session user.
+      final salesCashQuery = db.selectOnly(db.salePayments)
+        ..addColumns([db.salePayments.amountCents.sum()])
+        ..where(
+          db.salePayments.receivedBy.equals(_userId) &
+              db.salePayments.paymentMethod.equals('Efectivo') &
+              db.salePayments.paymentDate.isBiggerOrEqualValue(
+                sessionRow.openedAt,
+              ) &
+              db.salePayments.paymentDate.isSmallerOrEqualValue(now),
+        );
 
       final salesCashResult = await salesCashQuery.getSingle();
       final cashFromSales =

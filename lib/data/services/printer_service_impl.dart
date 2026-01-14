@@ -4,6 +4,8 @@ import 'package:blue_thermal_printer/blue_thermal_printer.dart' as blue;
 import 'package:flutter_esc_pos_utils/flutter_esc_pos_utils.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
+import 'package:posventa/domain/entities/customer.dart';
+import 'package:posventa/domain/entities/customer_payment.dart';
 import 'package:posventa/domain/services/printer_service.dart';
 import 'package:posventa/features/sales/domain/models/ticket_data.dart';
 import 'package:posventa/features/sales/presentation/widgets/ticket_pdf_builder.dart';
@@ -250,5 +252,135 @@ class PrinterServiceImpl implements PrinterService {
       printer: printer ?? const Printer(url: 'default'),
       onLayout: (format) async => pdf.save(),
     );
+  }
+
+  @override
+  Future<void> printPaymentReceipt({
+    required CustomerPayment payment,
+    required Customer customer,
+    Printer? printer,
+  }) async {
+    if (Platform.isAndroid) {
+      await _printAndroidPaymentReceipt(payment, customer, printer);
+      return;
+    }
+
+    final pdf = pw.Document();
+    pdf.addPage(
+      pw.Page(
+        pageFormat: PdfPageFormat.roll80,
+        build: (pw.Context context) {
+          return pw.Column(
+            crossAxisAlignment: pw.CrossAxisAlignment.center,
+            mainAxisSize: pw.MainAxisSize.min,
+            children: [
+              pw.Text(
+                'COMPROBANTE DE PAGO',
+                style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+              ),
+              pw.SizedBox(height: 10),
+              pw.Text('Cliente: ${customer.fullName}'),
+              pw.Text(
+                'Fecha: ${payment.paymentDate.toString().substring(0, 16)}',
+              ),
+              pw.Divider(),
+              pw.Text(
+                'ABONO: \$${payment.amount.toStringAsFixed(2)}',
+                style: pw.TextStyle(
+                  fontWeight: pw.FontWeight.bold,
+                  fontSize: 16,
+                ),
+              ),
+              pw.Text('Método: ${payment.paymentMethod}'),
+              if (payment.reference != null && payment.reference!.isNotEmpty)
+                pw.Text('Ref: ${payment.reference}'),
+              pw.Divider(),
+              pw.Text('¡Gracias por su pago!'),
+            ],
+          );
+        },
+      ),
+    );
+
+    if (printer != null) {
+      await Printing.directPrintPdf(
+        printer: printer,
+        onLayout: (PdfPageFormat format) async => pdf.save(),
+      );
+    } else {
+      await Printing.layoutPdf(
+        onLayout: (PdfPageFormat format) async => pdf.save(),
+        name: 'Comprobante_${payment.id}',
+        format: PdfPageFormat.roll80,
+      );
+    }
+  }
+
+  Future<void> _printAndroidPaymentReceipt(
+    CustomerPayment payment,
+    Customer customer,
+    Printer? printer,
+  ) async {
+    if (printer != null && (await _bluetooth.isConnected) != true) {
+      await connectToDevice(printer);
+    }
+
+    if ((await _bluetooth.isConnected) != true) {
+      throw Exception('Printer not connected');
+    }
+
+    final profile = await CapabilityProfile.load();
+    final generator = Generator(PaperSize.mm80, profile);
+    List<int> bytes = [];
+
+    // Header
+    bytes += generator.text(
+      'COMPROBANTE DE PAGO',
+      styles: const PosStyles(
+        align: PosAlign.center,
+        height: PosTextSize.size2,
+        width: PosTextSize.size2,
+        bold: true,
+      ),
+    );
+    bytes += generator.feed(1);
+
+    bytes += generator.text('Cliente: ${customer.fullName}');
+    bytes += generator.text(
+      'Fecha: ${payment.paymentDate.toString().substring(0, 16)}',
+    );
+    bytes += generator.hr();
+
+    // Amount
+    bytes += generator.text(
+      'ABONO: \$${payment.amount.toStringAsFixed(2)}',
+      styles: const PosStyles(
+        align: PosAlign.center,
+        height: PosTextSize.size2,
+        width: PosTextSize.size2,
+        bold: true,
+      ),
+    );
+    bytes += generator.text(
+      'Método: ${payment.paymentMethod}',
+      styles: const PosStyles(align: PosAlign.center),
+    );
+
+    if (payment.reference != null && payment.reference!.isNotEmpty) {
+      bytes += generator.text(
+        'Ref: ${payment.reference}',
+        styles: const PosStyles(align: PosAlign.center),
+      );
+    }
+
+    bytes += generator.feed(2);
+    bytes += generator.text(
+      '¡Gracias por su pago!',
+      styles: const PosStyles(align: PosAlign.center, bold: true),
+    );
+    bytes += generator.feed(3);
+    bytes += generator.cut();
+
+    await _bluetooth.writeBytes(Uint8List.fromList(bytes));
   }
 }
