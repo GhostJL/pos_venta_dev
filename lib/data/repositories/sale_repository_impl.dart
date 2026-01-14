@@ -33,6 +33,7 @@ class SaleRepositoryImpl implements SaleRepository {
 
     if (onlyUnpaid) {
       q.where(db.sales.paymentStatus.equals('paid').not());
+      q.where(db.sales.balanceCents.isBiggerThanValue(0));
     }
 
     if (startDate != null) {
@@ -185,6 +186,7 @@ class SaleRepositoryImpl implements SaleRepository {
 
     if (onlyUnpaid) {
       q.where(db.sales.paymentStatus.equals('paid').not());
+      q.where(db.sales.balanceCents.isBiggerThanValue(0));
     }
 
     if (startDate != null) {

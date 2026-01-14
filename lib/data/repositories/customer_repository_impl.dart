@@ -375,9 +375,17 @@ class CustomerRepositoryImpl implements CustomerRepository {
             : '';
 
         // Add allocation info to description
-        final allocText = payment.saleId != null
-            ? 'Nota #${payment.saleId}'
-            : 'Abono General';
+        String allocText = 'Abono General';
+        if (payment.saleId != null) {
+          final saleRow = await (db.select(
+            db.sales,
+          )..where((t) => t.id.equals(payment.saleId!))).getSingleOrNull();
+          if (saleRow != null) {
+            allocText = 'Nota ${saleRow.saleNumber}';
+          } else {
+            allocText = 'Nota #${payment.saleId}';
+          }
+        }
 
         await db
             .into(db.cashMovements)
