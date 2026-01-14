@@ -28,7 +28,7 @@ void main() async {
     windowManager.waitUntilReadyToShow(windowOptions, () async {
       await windowManager.show();
       await windowManager.focus();
-      await windowManager.setAlwaysOnTop(true); // Keep app in focus
+      await windowManager.setAlwaysOnTop(false); // Keep app in focus
     });
   }
 

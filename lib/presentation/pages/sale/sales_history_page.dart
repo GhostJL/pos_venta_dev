@@ -167,29 +167,71 @@ class _SalesHistoryPageState extends ConsumerState<SalesHistoryPage> {
               ref.invalidate(paginatedSalesCountProvider);
               return Future.delayed(const Duration(milliseconds: 500));
             },
-            child: ListView.builder(
-              controller: _scrollController,
-              padding: const EdgeInsets.all(16),
-              itemCount: count,
-              itemBuilder: (context, index) {
-                final pageIndex = index ~/ kSalePageSize;
-                final indexInPage = index % kSalePageSize;
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final isWide = constraints.maxWidth >= 900;
 
-                final pageAsync = ref.watch(
-                  paginatedSalesPageProvider(pageIndex: pageIndex),
-                );
+                if (isWide) {
+                  return GridView.builder(
+                    controller:
+                        _scrollController, // Use same controller for scrolling features
+                    padding: const EdgeInsets.all(24),
+                    gridDelegate:
+                        const SliverGridDelegateWithMaxCrossAxisExtent(
+                          maxCrossAxisExtent: 400,
+                          mainAxisSpacing: 16,
+                          crossAxisSpacing: 16,
+                          childAspectRatio: 1.6, // Adjusted for card content
+                        ),
+                    itemCount: count,
+                    itemBuilder: (context, index) {
+                      final pageIndex = index ~/ kSalePageSize;
+                      final indexInPage = index % kSalePageSize;
 
-                return pageAsync.when(
-                  data: (sales) {
-                    if (indexInPage >= sales.length) {
-                      return const SizedBox.shrink();
-                    }
-                    final sale = sales[indexInPage];
-                    return SaleCardHistoryWidget(sale: sale);
-                  },
-                  loading: () => _buildSkeletonItem(),
-                  error: (_, __) => const SizedBox.shrink(),
-                );
+                      final pageAsync = ref.watch(
+                        paginatedSalesPageProvider(pageIndex: pageIndex),
+                      );
+
+                      return pageAsync.when(
+                        data: (sales) {
+                          if (indexInPage >= sales.length) {
+                            return const SizedBox.shrink();
+                          }
+                          final sale = sales[indexInPage];
+                          return SaleCardHistoryWidget(sale: sale);
+                        },
+                        loading: () => _buildSkeletonItem(), // Grid skeleton
+                        error: (_, __) => const SizedBox.shrink(),
+                      );
+                    },
+                  );
+                } else {
+                  return ListView.builder(
+                    controller: _scrollController,
+                    padding: const EdgeInsets.all(16),
+                    itemCount: count,
+                    itemBuilder: (context, index) {
+                      final pageIndex = index ~/ kSalePageSize;
+                      final indexInPage = index % kSalePageSize;
+
+                      final pageAsync = ref.watch(
+                        paginatedSalesPageProvider(pageIndex: pageIndex),
+                      );
+
+                      return pageAsync.when(
+                        data: (sales) {
+                          if (indexInPage >= sales.length) {
+                            return const SizedBox.shrink();
+                          }
+                          final sale = sales[indexInPage];
+                          return SaleCardHistoryWidget(sale: sale);
+                        },
+                        loading: () => _buildSkeletonItem(),
+                        error: (_, __) => const SizedBox.shrink(),
+                      );
+                    },
+                  );
+                }
               },
             ),
           );

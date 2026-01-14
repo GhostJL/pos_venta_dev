@@ -51,9 +51,9 @@ class SaleCardHistoryWidget extends ConsumerWidget {
         borderRadius: BorderRadius.circular(16),
         side: BorderSide(color: cs.outlineVariant.withValues(alpha: 0.5)),
       ),
+      clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: () => context.push('/sale-detail/${sale.id}'),
-        borderRadius: BorderRadius.circular(16),
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Column(
@@ -73,11 +73,12 @@ class SaleCardHistoryWidget extends ConsumerWidget {
                             letterSpacing: -0.2,
                           ),
                         ),
-                        const SizedBox(height: 2),
+                        const SizedBox(height: 4),
                         Text(
                           saleDateText,
                           style: tt.bodySmall?.copyWith(
                             color: cs.onSurfaceVariant,
+                            fontWeight: FontWeight.w500,
                           ),
                         ),
                       ],
@@ -89,11 +90,7 @@ class SaleCardHistoryWidget extends ConsumerWidget {
               const SizedBox(height: 16),
               Row(
                 children: [
-                  Icon(
-                    Icons.person_outline,
-                    size: 16,
-                    color: cs.onSurfaceVariant,
-                  ),
+                  Icon(Icons.person_outline, size: 16, color: cs.primary),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
@@ -113,30 +110,35 @@ class SaleCardHistoryWidget extends ConsumerWidget {
                   Icon(
                     Icons.shopping_bag_outlined,
                     size: 16,
-                    color: cs.onSurfaceVariant,
+                    color: cs.primary,
                   ),
                   const SizedBox(width: 8),
                   Text(
                     '${sale.items.length} ${sale.items.length == 1 ? 'producto' : 'productos'}',
-                    style: tt.bodySmall,
+                    style: tt.bodySmall?.copyWith(fontWeight: FontWeight.w500),
                   ),
-                  if (returns.isNotEmpty) ...[
-                    const SizedBox(width: 16),
+                ],
+              ),
+              if (returns.isNotEmpty) ...[
+                const SizedBox(height: 8),
+                Row(
+                  children: [
                     Icon(
                       Icons.keyboard_return_outlined,
                       size: 16,
                       color: AppTheme.alertWarning,
                     ),
-                    const SizedBox(width: 4),
+                    const SizedBox(width: 8),
                     Text(
                       'Devolución activa',
                       style: tt.bodySmall?.copyWith(
                         color: AppTheme.alertWarning,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
                   ],
-                ],
-              ),
+                ),
+              ],
               const SizedBox(height: 16),
               Divider(
                 height: 1,
@@ -160,6 +162,7 @@ class SaleCardHistoryWidget extends ConsumerWidget {
                         decoration: isCancelled
                             ? TextDecoration.lineThrough
                             : null,
+                        fontFeatures: [const FontFeature.tabularFigures()],
                       ),
                     ),
                   ],
@@ -171,6 +174,7 @@ class SaleCardHistoryWidget extends ConsumerWidget {
                   style: tt.bodySmall?.copyWith(
                     color: cs.onSurfaceVariant,
                     decoration: TextDecoration.lineThrough,
+                    fontFeatures: [const FontFeature.tabularFigures()],
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -180,6 +184,7 @@ class SaleCardHistoryWidget extends ConsumerWidget {
                   style: tt.bodySmall?.copyWith(
                     color: AppTheme.transactionRefund,
                     fontWeight: FontWeight.bold,
+                    fontFeatures: [const FontFeature.tabularFigures()],
                   ),
                 ),
                 const SizedBox(height: 8),
@@ -198,6 +203,7 @@ class SaleCardHistoryWidget extends ConsumerWidget {
                         fontWeight: FontWeight.w900,
                         color: cs.primary,
                         letterSpacing: -0.5,
+                        fontFeatures: [const FontFeature.tabularFigures()],
                       ),
                     ),
                   ],

@@ -29,9 +29,11 @@ class SaleReturnsSection extends ConsumerWidget {
           elevation: 0,
           clipBehavior: Clip.antiAlias,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(12),
             side: BorderSide(
-              color: Theme.of(context).colorScheme.outlineVariant,
+              color: Theme.of(
+                context,
+              ).colorScheme.outlineVariant.withValues(alpha: 0.5),
               width: 1,
             ),
           ),
@@ -40,7 +42,7 @@ class SaleReturnsSection extends ConsumerWidget {
               context.push('/sale-returns-detail/${sale.id}', extra: sale);
             },
             child: Padding(
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.all(16),
               child: Column(
                 children: [
                   Row(
@@ -49,7 +51,7 @@ class SaleReturnsSection extends ConsumerWidget {
                         padding: const EdgeInsets.all(10),
                         decoration: BoxDecoration(
                           color: Theme.of(context).colorScheme.errorContainer,
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(8),
                         ),
                         child: Icon(
                           Icons.keyboard_return_outlined,
@@ -91,10 +93,12 @@ class SaleReturnsSection extends ConsumerWidget {
                     ],
                   ),
                   Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 20),
+                    padding: const EdgeInsets.symmetric(vertical: 16),
                     child: Divider(
                       height: 1,
-                      color: Theme.of(context).colorScheme.outlineVariant,
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.outlineVariant.withValues(alpha: 0.5),
                     ),
                   ),
                   Row(
@@ -114,6 +118,7 @@ class SaleReturnsSection extends ConsumerWidget {
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
                           color: Theme.of(context).colorScheme.error,
+                          fontFeatures: const [FontFeature.tabularFigures()],
                         ),
                       ),
                     ],
@@ -137,6 +142,7 @@ class SaleReturnsSection extends ConsumerWidget {
                           fontWeight: FontWeight.w900,
                           letterSpacing: -0.5,
                           color: Theme.of(context).colorScheme.primary,
+                          fontFeatures: const [FontFeature.tabularFigures()],
                         ),
                       ),
                     ],

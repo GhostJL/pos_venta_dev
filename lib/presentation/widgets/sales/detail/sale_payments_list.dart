@@ -16,16 +16,15 @@ class SalePaymentsList extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const SizedBox(height: 32),
+        const SizedBox(height: 24),
         Padding(
-          padding: const EdgeInsets.only(left: 4, bottom: 16),
+          padding: const EdgeInsets.only(left: 4, bottom: 12),
           child: Text(
             'Pagos',
             style: TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-              letterSpacing: 0.5,
+              fontSize: 14,
+              fontWeight: FontWeight.w700,
+              color: Theme.of(context).colorScheme.onSurface,
             ),
           ),
         ),
@@ -34,26 +33,28 @@ class SalePaymentsList extends StatelessWidget {
             elevation: 0,
             margin: const EdgeInsets.only(bottom: 12),
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(12),
               side: BorderSide(
-                color: Theme.of(context).colorScheme.outlineVariant,
+                color: Theme.of(
+                  context,
+                ).colorScheme.outlineVariant.withValues(alpha: 0.5),
                 width: 1,
               ),
             ),
             child: Padding(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(12),
               child: Row(
                 children: [
                   Container(
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.primaryContainer,
-                      borderRadius: BorderRadius.circular(12),
+                      color: Theme.of(context).colorScheme.tertiaryContainer,
+                      borderRadius: BorderRadius.circular(8),
                     ),
                     child: Icon(
                       _getPaymentIcon(payment.paymentMethod),
                       size: 20,
-                      color: Theme.of(context).colorScheme.onPrimaryContainer,
+                      color: Theme.of(context).colorScheme.onTertiaryContainer,
                     ),
                   ),
                   const SizedBox(width: 16),
@@ -64,12 +65,12 @@ class SalePaymentsList extends StatelessWidget {
                         Text(
                           payment.paymentMethod,
                           style: TextStyle(
-                            fontSize: 15,
+                            fontSize: 14,
                             fontWeight: FontWeight.bold,
                             color: Theme.of(context).colorScheme.onSurface,
                           ),
                         ),
-                        const SizedBox(height: 4),
+                        const SizedBox(height: 2),
                         Text(
                           dateFormat.format(payment.paymentDate),
                           style: TextStyle(
@@ -77,6 +78,7 @@ class SalePaymentsList extends StatelessWidget {
                             color: Theme.of(
                               context,
                             ).colorScheme.onSurfaceVariant,
+                            fontFeatures: const [FontFeature.tabularFigures()],
                           ),
                         ),
                       ],
@@ -85,10 +87,11 @@ class SalePaymentsList extends StatelessWidget {
                   Text(
                     '\$${(payment.amountCents / 100).toStringAsFixed(2)}',
                     style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w900,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
                       color: Theme.of(context).colorScheme.primary,
                       letterSpacing: -0.5,
+                      fontFeatures: const [FontFeature.tabularFigures()],
                     ),
                   ),
                 ],

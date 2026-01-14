@@ -93,22 +93,130 @@ class SaleDetailPage extends ConsumerWidget {
   }
 
   Widget _buildSaleDetail(BuildContext context, WidgetRef ref, Sale sale) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SaleHeaderCard(sale: sale),
-          SaleReturnsSection(sale: sale),
-          const SizedBox(height: 32),
-          SaleProductsList(sale: sale),
-          SalePaymentsList(sale: sale),
-          const SizedBox(height: 32),
-          SaleTotalsCard(sale: sale),
-          SaleActionButtons(sale: sale),
-          const SizedBox(height: 16),
-        ],
-      ),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isBroad = constraints.maxWidth >= 900;
+
+        if (isBroad) {
+          // Desktop Layout (2 Columns)
+          // Left: Independent List for Products
+          // Right: Detailed Info (Header, Totals, Actions, Payments)
+          return Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Left Column: Products List (Independent Scroll)
+              Expanded(
+                flex: 4,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
+                      child: Text(
+                        'Productos (${sale.items.length})',
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                    Expanded(
+                      child: SaleProductsList(
+                        sale: sale,
+                        padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              // Right Column: Summary & Actions (Scrollable)
+              Expanded(
+                flex: 3,
+                child: Container(
+                  decoration: BoxDecoration(
+                    border: Border(
+                      left: BorderSide(
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.outlineVariant.withValues(alpha: 0.5),
+                      ),
+                    ),
+                  ),
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.all(24),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        SaleHeaderCard(sale: sale),
+                        SaleReturnsSection(sale: sale),
+                        const SizedBox(height: 24),
+                        SaleTotalsCard(sale: sale),
+                        const SizedBox(height: 24),
+                        SaleActionButtons(sale: sale),
+                        const SizedBox(height: 32),
+                        SalePaymentsList(sale: sale),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          );
+        } else {
+          // Mobile Layout (Tabs)
+          // Tab 1: Resumen (Header, Returns, Totals, Actions)
+          // Tab 2: Productos (Full List)
+          // Tab 3: Pagos (Full List)
+          return DefaultTabController(
+            length: 3,
+            child: Column(
+              children: [
+                TabBar(
+                  labelColor: Theme.of(context).colorScheme.primary,
+                  unselectedLabelColor: Theme.of(
+                    context,
+                  ).colorScheme.onSurfaceVariant,
+                  indicatorColor: Theme.of(context).colorScheme.primary,
+                  labelStyle: const TextStyle(fontWeight: FontWeight.w600),
+                  tabs: const [
+                    Tab(text: 'Resumen'),
+                    Tab(text: 'Productos'),
+                    Tab(text: 'Pagos'),
+                  ],
+                ),
+                Expanded(
+                  child: TabBarView(
+                    children: [
+                      // Tab 1: Resumen
+                      SingleChildScrollView(
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          children: [
+                            SaleHeaderCard(sale: sale),
+                            SaleReturnsSection(sale: sale),
+                            const SizedBox(height: 24),
+                            SaleTotalsCard(sale: sale),
+                            const SizedBox(height: 24),
+                            SaleActionButtons(sale: sale),
+                          ],
+                        ),
+                      ),
+                      // Tab 2: Productos (List)
+                      SaleProductsList(
+                        sale: sale,
+                        padding: const EdgeInsets.all(16),
+                      ),
+                      // Tab 3: Pagos
+                      SingleChildScrollView(
+                        padding: const EdgeInsets.all(16),
+                        child: SalePaymentsList(sale: sale),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          );
+        }
+      },
     );
   }
 }

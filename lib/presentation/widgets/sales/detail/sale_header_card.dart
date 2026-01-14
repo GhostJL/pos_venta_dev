@@ -38,11 +38,11 @@ class SaleHeaderCard extends StatelessWidget {
           elevation: 0,
           margin: EdgeInsets.zero,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(12),
             side: BorderSide(color: cs.outlineVariant.withValues(alpha: 0.5)),
           ),
           child: Padding(
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.all(16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -55,7 +55,7 @@ class SaleHeaderCard extends StatelessWidget {
                         children: [
                           Text(
                             sale.saleNumber,
-                            style: tt.headlineSmall?.copyWith(
+                            style: tt.titleLarge?.copyWith(
                               fontWeight: FontWeight.bold,
                               letterSpacing: -0.5,
                             ),
@@ -63,7 +63,7 @@ class SaleHeaderCard extends StatelessWidget {
                           const SizedBox(height: 4),
                           Text(
                             dateFormat.format(sale.saleDate),
-                            style: tt.bodyMedium?.copyWith(
+                            style: tt.bodySmall?.copyWith(
                               color: cs.onSurfaceVariant,
                             ),
                           ),
@@ -73,13 +73,13 @@ class SaleHeaderCard extends StatelessWidget {
                     _StatusBadge(color: statusColor, label: statusLabel),
                   ],
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 20),
                 _InfoItem(
                   icon: Icons.person_outline,
                   label: 'Cliente',
                   value: sale.customerName ?? 'Público General',
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 12),
                 _InfoItem(
                   icon: Icons.warehouse_outlined,
                   label: 'Almacén',

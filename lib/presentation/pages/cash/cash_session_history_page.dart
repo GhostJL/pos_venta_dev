@@ -107,9 +107,10 @@ class _CashSessionHistoryPageState
                 // Tablet/Desktop: Grid View
                 return GridView.builder(
                   padding: const EdgeInsets.all(16),
-                  gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
+                  gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
                     maxCrossAxisExtent: 400,
-                    mainAxisExtent: 180, // Fixed height for consistency
+                    mainAxisExtent:
+                        260, // Increased height to fit closed session details
                     crossAxisSpacing: 16,
                     mainAxisSpacing: 16,
                   ),
