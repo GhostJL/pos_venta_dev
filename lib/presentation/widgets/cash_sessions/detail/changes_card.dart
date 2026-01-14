@@ -16,73 +16,111 @@ class ChangesCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // Filter only "Change" movements
-    // Assuming we use 'withdrawal' type and reason 'Cambio' based on previous implementation
     final changes = detail.movements
         .where((m) => m.reason == 'Cambio')
         .toList();
 
     if (changes.isEmpty) return const SizedBox.shrink();
 
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(
-                  Icons.change_circle_outlined,
-                  color: Colors.orange, // Distinct color for change
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(
+          color: colorScheme.outlineVariant.withValues(alpha: 0.5),
+        ),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Column(
+        children: [
+          // Header
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+              border: Border(
+                bottom: BorderSide(
+                  color: colorScheme.outlineVariant.withValues(alpha: 0.5),
                 ),
-                const SizedBox(width: 8),
+              ),
+            ),
+            child: Row(
+              children: [
+                const Icon(
+                  Icons.change_circle_outlined,
+                  color: Colors.orange,
+                  size: 20,
+                ),
+                const SizedBox(width: 12),
                 Text(
                   'Cambios Entregados',
-                  style: Theme.of(
-                    context,
-                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: colorScheme.onSurface,
+                  ),
                 ),
               ],
             ),
-            const Divider(height: 24),
-            ListView.separated(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: changes.length,
-              separatorBuilder: (_, __) => const Divider(height: 1),
-              itemBuilder: (context, index) {
-                final movement = changes[index];
-                return ListTile(
-                  contentPadding: const EdgeInsets.symmetric(vertical: 8),
-                  leading: CircleAvatar(
-                    backgroundColor: Colors.orange.withAlpha(25),
-                    child: const Icon(Icons.remove, color: Colors.orange),
+          ),
+
+          ListView.separated(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: changes.length,
+            separatorBuilder: (_, __) => Divider(
+              height: 1,
+              color: colorScheme.outlineVariant.withValues(alpha: 0.5),
+            ),
+            itemBuilder: (context, index) {
+              final movement = changes[index];
+              return ListTile(
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
+                leading: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.orange.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(8),
                   ),
-                  title: Text(
-                    movement.description ?? movement.reason,
-                    style: const TextStyle(fontWeight: FontWeight.w500),
+                  child: const Icon(
+                    Icons.remove,
+                    color: Colors.orange,
+                    size: 20,
                   ),
-                  subtitle: Text(
+                ),
+                title: Text(
+                  movement.description ?? movement.reason,
+                  style: const TextStyle(fontWeight: FontWeight.w600),
+                ),
+                subtitle: Padding(
+                  padding: const EdgeInsets.only(top: 4),
+                  child: Text(
                     DateFormat(
                       'dd/MM/yyyy HH:mm',
                     ).format(movement.movementDate),
-                    style: Theme.of(context).textTheme.bodySmall,
-                  ),
-                  trailing: Text(
-                    '-${currencyFormat.format(movement.amountCents.abs() / 100)}',
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                      color: Colors.orange,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: colorScheme.onSurfaceVariant,
                     ),
                   ),
-                );
-              },
-            ),
-          ],
-        ),
+                ),
+                trailing: Text(
+                  '-${currencyFormat.format(movement.amountCents.abs() / 100)}',
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                    color: Colors.orange,
+                  ),
+                ),
+              );
+            },
+          ),
+        ],
       ),
     );
   }

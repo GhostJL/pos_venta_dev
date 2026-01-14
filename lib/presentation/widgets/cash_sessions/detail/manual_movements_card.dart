@@ -21,107 +21,150 @@ class ManualMovementsCard extends StatelessWidget {
         .where((m) => m.reason != 'Cambio')
         .toList();
 
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(
+          color: colorScheme.outlineVariant.withValues(alpha: 0.5),
+        ),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Column(
+        children: [
+          // Header
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+              border: Border(
+                bottom: BorderSide(
+                  color: colorScheme.outlineVariant.withValues(alpha: 0.5),
+                ),
+              ),
+            ),
+            child: Row(
               children: [
                 Icon(
                   Icons.swap_vert_rounded,
-                  color: Theme.of(context).primaryColor,
+                  color: colorScheme.primary,
+                  size: 20,
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: 12),
                 Text(
                   'Movimientos Manuales',
-                  style: Theme.of(
-                    context,
-                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: colorScheme.onSurface,
+                  ),
                 ),
               ],
             ),
-            const Divider(height: 24),
-            if (filteredMovements.isEmpty)
-              const Padding(
-                padding: EdgeInsets.all(16.0),
-                child: Center(
-                  child: Text('No hay movimientos manuales en esta sesión.'),
+          ),
+
+          if (filteredMovements.isEmpty)
+            Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: Center(
+                child: Text(
+                  'No hay movimientos manuales',
+                  style: TextStyle(color: colorScheme.onSurfaceVariant),
                 ),
-              )
-            else
-              ListView.separated(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: filteredMovements.length,
-                separatorBuilder: (_, __) => const Divider(height: 1),
-                itemBuilder: (context, index) {
-                  final movement = filteredMovements[index];
-                  final isEntry = movement.movementType == 'entry';
-                  final isReturn = movement.movementType == 'return';
+              ),
+            )
+          else
+            ListView.separated(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: filteredMovements.length,
+              separatorBuilder: (_, __) => Divider(
+                height: 1,
+                color: colorScheme.outlineVariant.withValues(alpha: 0.5),
+              ),
+              itemBuilder: (context, index) {
+                final movement = filteredMovements[index];
+                final isEntry = movement.movementType == 'entry';
+                final isReturn = movement.movementType == 'return';
 
-                  Color iconColor;
-                  IconData iconData;
-                  Color backgroundColor;
+                Color iconColor;
+                IconData iconData;
+                Color backgroundColor;
 
-                  if (isEntry) {
-                    iconColor = AppTheme.transactionSuccess;
-                    iconData = Icons.add;
-                    backgroundColor = AppTheme.transactionSuccess.withAlpha(25);
-                  } else if (isReturn) {
-                    iconColor = Colors.orange;
-                    iconData = Icons.assignment_return;
-                    backgroundColor = Colors.orange.withAlpha(25);
-                  } else {
-                    iconColor = AppTheme.transactionFailed;
-                    iconData = Icons.remove;
-                    backgroundColor = Theme.of(
-                      context,
-                    ).colorScheme.error.withAlpha(25);
-                  }
+                if (isEntry) {
+                  iconColor = AppTheme.transactionSuccess;
+                  iconData = Icons.add;
+                  backgroundColor = AppTheme.transactionSuccess.withValues(
+                    alpha: 0.1,
+                  );
+                } else if (isReturn) {
+                  iconColor = Colors.orange;
+                  iconData = Icons.assignment_return;
+                  backgroundColor = Colors.orange.withValues(alpha: 0.1);
+                } else {
+                  iconColor = AppTheme.transactionFailed;
+                  iconData = Icons.remove;
+                  backgroundColor = Theme.of(
+                    context,
+                  ).colorScheme.error.withValues(alpha: 0.1);
+                }
 
-                  return ListTile(
-                    contentPadding: const EdgeInsets.symmetric(vertical: 8),
-                    leading: CircleAvatar(
-                      backgroundColor: backgroundColor,
-                      child: Icon(iconData, color: iconColor),
+                return ListTile(
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
+                  leading: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: backgroundColor,
+                      borderRadius: BorderRadius.circular(8),
                     ),
-                    title: Text(
-                      movement.reason,
-                      style: const TextStyle(fontWeight: FontWeight.w500),
-                    ),
-                    subtitle: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        if (movement.description != null &&
-                            movement.description!.isNotEmpty)
-                          Text(movement.description!),
-                        Text(
+                    child: Icon(iconData, color: iconColor, size: 20),
+                  ),
+                  title: Text(
+                    movement.reason,
+                    style: const TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                  subtitle: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (movement.description != null &&
+                          movement.description!.isNotEmpty)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 2),
+                          child: Text(movement.description!),
+                        ),
+                      Padding(
+                        padding: const EdgeInsets.only(top: 4),
+                        child: Text(
                           DateFormat(
                             'dd/MM/yyyy HH:mm',
                           ).format(movement.movementDate),
-                          style: Theme.of(context).textTheme.bodySmall,
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: colorScheme.onSurfaceVariant,
+                          ),
                         ),
-                      ],
-                    ),
-                    trailing: Text(
-                      '${isEntry ? '+' : '-'}${currencyFormat.format(movement.amountCents.abs() / 100)}',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                        color: isEntry
-                            ? AppTheme.transactionSuccess
-                            : AppTheme.transactionFailed,
                       ),
+                    ],
+                  ),
+                  trailing: Text(
+                    '${isEntry ? '+' : '-'}${currencyFormat.format(movement.amountCents.abs() / 100)}',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                      color: isEntry
+                          ? AppTheme.transactionSuccess
+                          : AppTheme.transactionFailed,
                     ),
-                  );
-                },
-              ),
-          ],
-        ),
+                  ),
+                );
+              },
+            ),
+        ],
       ),
     );
   }

@@ -28,79 +28,145 @@ class CashSessionDetailPage extends ConsumerWidget {
       appBar: AppBar(
         title: Text('Sesión #${session.id}'),
         actions: [
-          if (session.status == 'open')
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Chip(
-                label: const Text('Abierta'),
-                backgroundColor: AppTheme.transactionSuccess.withAlpha(50),
-                labelStyle: const TextStyle(
-                  color: AppTheme.transactionSuccess,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            )
-          else
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Chip(
-                label: Text('Cerrada'),
-                backgroundColor: Colors.grey.withAlpha(50),
-                labelStyle: TextStyle(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  fontWeight: FontWeight.bold,
-                ),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: session.status == 'open'
+                  ? AppTheme.transactionSuccess.withValues(alpha: 0.1)
+                  : Colors.grey.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: session.status == 'open'
+                    ? AppTheme.transactionSuccess.withValues(alpha: 0.2)
+                    : Colors.transparent,
               ),
             ),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.circle,
+                  size: 8,
+                  color: session.status == 'open'
+                      ? AppTheme.transactionSuccess
+                      : Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  session.status == 'open' ? 'ABIERTA' : 'CERRADA',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    color: session.status == 'open'
+                        ? AppTheme.transactionSuccess
+                        : Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 16),
         ],
       ),
       body: detailAsync.when(
         data: (detail) {
-          return SingleChildScrollView(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Session Info Card
-                SessionInfoCard(
-                  session: session,
-                  warehousesAsync: warehousesAsync,
-                  dateFormat: dateFormat,
-                ),
-                const SizedBox(height: 16),
-
-                // Financial Summary Card
-                FinancialSummaryCard(
-                  detail: detail,
-                  currencyFormat: currencyFormat,
-                ),
-                const SizedBox(height: 16),
-
-                // Sales Summary Card
-                SalesSummaryCard(
-                  detail: detail,
-                  currencyFormat: currencyFormat,
-                ),
-                const SizedBox(height: 16),
-
-                // Manual Movements
-                ManualMovementsCard(
-                  detail: detail,
-                  currencyFormat: currencyFormat,
-                ),
-                const SizedBox(height: 16),
-
-                // Changes Card
-                ChangesCard(detail: detail, currencyFormat: currencyFormat),
-                const SizedBox(height: 16),
-
-                // Payment Methods Summary
-                PaymentMethodsCard(
-                  detail: detail,
-                  currencyFormat: currencyFormat,
-                ),
-              ],
-            ),
+          return LayoutBuilder(
+            builder: (context, constraints) {
+              if (constraints.maxWidth < 900) {
+                // Mobile Layout (Single Column)
+                return SingleChildScrollView(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      SessionInfoCard(
+                        session: session,
+                        warehousesAsync: warehousesAsync,
+                        dateFormat: dateFormat,
+                      ),
+                      const SizedBox(height: 16),
+                      FinancialSummaryCard(
+                        detail: detail,
+                        currencyFormat: currencyFormat,
+                      ),
+                      const SizedBox(height: 16),
+                      SalesSummaryCard(
+                        detail: detail,
+                        currencyFormat: currencyFormat,
+                      ),
+                      const SizedBox(height: 16),
+                      PaymentMethodsCard(
+                        detail: detail,
+                        currencyFormat: currencyFormat,
+                      ),
+                      const SizedBox(height: 16),
+                      ManualMovementsCard(
+                        detail: detail,
+                        currencyFormat: currencyFormat,
+                      ),
+                      const SizedBox(height: 16),
+                      ChangesCard(
+                        detail: detail,
+                        currencyFormat: currencyFormat,
+                      ),
+                    ],
+                  ),
+                );
+              } else {
+                // Desktop Layout (Two Columns)
+                return SingleChildScrollView(
+                  padding: const EdgeInsets.all(24),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Left Column: Key Info & Financials
+                      Expanded(
+                        child: Column(
+                          children: [
+                            SessionInfoCard(
+                              session: session,
+                              warehousesAsync: warehousesAsync,
+                              dateFormat: dateFormat,
+                            ),
+                            const SizedBox(height: 24),
+                            FinancialSummaryCard(
+                              detail: detail,
+                              currencyFormat: currencyFormat,
+                            ),
+                            const SizedBox(height: 24),
+                            SalesSummaryCard(
+                              detail: detail,
+                              currencyFormat: currencyFormat,
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 24),
+                      // Right Column: Breakdown & Logs
+                      Expanded(
+                        child: Column(
+                          children: [
+                            PaymentMethodsCard(
+                              detail: detail,
+                              currencyFormat: currencyFormat,
+                            ),
+                            const SizedBox(height: 24),
+                            ManualMovementsCard(
+                              detail: detail,
+                              currencyFormat: currencyFormat,
+                            ),
+                            const SizedBox(height: 24),
+                            ChangesCard(
+                              detail: detail,
+                              currencyFormat: currencyFormat,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }
+            },
           );
         },
         loading: () => const Center(child: CircularProgressIndicator()),

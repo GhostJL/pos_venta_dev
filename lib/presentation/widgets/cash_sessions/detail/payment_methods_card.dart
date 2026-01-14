@@ -22,66 +22,125 @@ class PaymentMethodsCard extends StatelessWidget {
           (paymentsByMethod[payment.paymentMethod] ?? 0) + payment.amountCents;
     }
 
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(
+          color: colorScheme.outlineVariant.withValues(alpha: 0.5),
+        ),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Column(
+        children: [
+          // Header
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+              border: Border(
+                bottom: BorderSide(
+                  color: colorScheme.outlineVariant.withValues(alpha: 0.5),
+                ),
+              ),
+            ),
+            child: Row(
               children: [
                 Icon(
                   Icons.payment_outlined,
-                  color: Theme.of(context).primaryColor,
+                  color: colorScheme.primary,
+                  size: 20,
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: 12),
                 Text(
                   'Métodos de Pago',
-                  style: Theme.of(
-                    context,
-                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: colorScheme.onSurface,
+                  ),
                 ),
               ],
             ),
-            const Divider(height: 24),
-            if (paymentsByMethod.isEmpty)
-              const Padding(
-                padding: EdgeInsets.all(16.0),
-                child: Center(child: Text('No hay pagos registrados.')),
-              )
-            else
-              ...paymentsByMethod.entries.map((entry) {
-                return Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 8.0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Row(
+          ),
+
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              children: [
+                if (paymentsByMethod.isEmpty)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 24.0),
+                    child: Center(
+                      child: Text(
+                        'No hay pagos registrados',
+                        style: TextStyle(color: colorScheme.onSurfaceVariant),
+                      ),
+                    ),
+                  )
+                else
+                  ...paymentsByMethod.entries.map((entry) {
+                    final normalizedKey = entry.key.toLowerCase();
+                    final isCash = normalizedKey == 'efectivo';
+                    final isCard = normalizedKey.contains('tarjeta');
+
+                    return Container(
+                      margin: const EdgeInsets.only(bottom: 12),
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: colorScheme.surfaceContainer.withValues(
+                          alpha: 0.5,
+                        ),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Row(
                         children: [
-                          Icon(
-                            _getPaymentIcon(entry.key),
-                            size: 20,
-                            color: Theme.of(context).primaryColor,
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: isCash
+                                  ? Colors.green.withValues(alpha: 0.1)
+                                  : (isCard
+                                        ? Colors.blue.withValues(alpha: 0.1)
+                                        : colorScheme.primaryContainer),
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(
+                              _getPaymentIcon(entry.key),
+                              size: 20,
+                              color: isCash
+                                  ? Colors.green
+                                  : (isCard
+                                        ? Colors.blue
+                                        : colorScheme.primary),
+                            ),
                           ),
-                          const SizedBox(width: 8),
-                          Text(entry.key, style: const TextStyle(fontSize: 16)),
+                          const SizedBox(width: 16),
+                          Text(
+                            entry.key,
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          const Spacer(),
+                          Text(
+                            currencyFormat.format(entry.value / 100),
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                         ],
                       ),
-                      Text(
-                        currencyFormat.format(entry.value / 100),
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              }),
-          ],
-        ),
+                    );
+                  }),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
