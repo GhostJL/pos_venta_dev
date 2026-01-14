@@ -153,35 +153,136 @@ class _ReturnProcessingPageState extends ConsumerState<ReturnProcessingPage> {
   }
 
   Widget _buildReturnProcessingView(ReturnProcessingState state) {
-    return ListView(
-      padding: const EdgeInsets.all(24.0),
-      children: [
-        // Sale info card
-        if (state.selectedSale == null)
-          const Center(child: CircularProgressIndicator())
-        else
-          _buildSaleInfoCard(state),
-        const SizedBox(height: 24),
+    if (state.selectedSale == null) {
+      return const Center(child: CircularProgressIndicator());
+    }
 
-        // Items selector
-        Text(
-          'Seleccionar Productos a Devolver',
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: Theme.of(context).colorScheme.onSurface,
-          ),
-        ),
-        const SizedBox(height: 16),
-        const ReturnItemsSelector(),
-        const SizedBox(height: 24),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isBroad = constraints.maxWidth >= 900;
 
-        // Summary and process
-        if (state.selectedItems.isNotEmpty) ...[
-          const ReturnSummaryCard(),
-          const SizedBox(height: 24),
-        ],
-      ],
+        if (isBroad) {
+          return Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Left Column: Selection
+              Expanded(
+                flex: 2,
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildSaleInfoCard(state),
+                      const SizedBox(height: 32),
+                      Text(
+                        'Seleccionar Productos a Devolver',
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 16),
+                      const ReturnItemsSelector(),
+                    ],
+                  ),
+                ),
+              ),
+              // Right Column: Summary & Actions
+              Expanded(
+                flex: 1,
+                child: Container(
+                  decoration: BoxDecoration(
+                    border: Border(
+                      left: BorderSide(
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.outlineVariant.withValues(alpha: 0.5),
+                      ),
+                    ),
+                  ),
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.all(24),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        if (state.selectedItems.isNotEmpty) ...[
+                          const ReturnSummaryCard(),
+                          const SizedBox(height: 24),
+                          FilledButton.icon(
+                            onPressed: state.canProcess && !state.isProcessing
+                                ? () => _triggerProcessReturn()
+                                : null,
+                            icon: state.isProcessing
+                                ? SizedBox(
+                                    width: 20,
+                                    height: 20,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      valueColor: AlwaysStoppedAnimation<Color>(
+                                        Theme.of(
+                                          context,
+                                        ).colorScheme.onSecondary,
+                                      ),
+                                    ),
+                                  )
+                                : const Icon(Icons.check_circle),
+                            label: Text(
+                              state.isProcessing
+                                  ? 'Procesando...'
+                                  : 'Procesar Devolución',
+                            ),
+                            style: FilledButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(vertical: 20),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                          ),
+                        ] else
+                          Center(
+                            child: Padding(
+                              padding: const EdgeInsets.all(32.0),
+                              child: Text(
+                                'Seleccione productos para continuar',
+                                style: TextStyle(
+                                  color: Theme.of(context).colorScheme.outline,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          );
+        } else {
+          // Mobile View
+          return ListView(
+            padding: const EdgeInsets.all(16.0),
+            children: [
+              _buildSaleInfoCard(state),
+              const SizedBox(height: 24),
+              Text(
+                'Seleccionar Productos a Devolver',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Theme.of(context).colorScheme.onSurface,
+                ),
+              ),
+              const SizedBox(height: 16),
+              const ReturnItemsSelector(),
+              const SizedBox(height: 24),
+              if (state.selectedItems.isNotEmpty) ...[
+                const ReturnSummaryCard(),
+                const SizedBox(height: 100), // Space for FAB/BottomBar
+              ],
+            ],
+          );
+        }
+      },
     );
   }
 

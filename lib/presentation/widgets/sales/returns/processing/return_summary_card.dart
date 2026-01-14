@@ -27,6 +27,16 @@ class _ReturnSummaryCardState extends ConsumerState<ReturnSummaryCard> {
     final state = ref.watch(returnProcessingProvider);
 
     return Card(
+      elevation: 0,
+      clipBehavior: Clip.antiAlias,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(
+          color: Theme.of(
+            context,
+          ).colorScheme.outlineVariant.withValues(alpha: 0.5),
+        ),
+      ),
       child: Padding(
         padding: const EdgeInsets.all(20.0),
         child: Column(
@@ -36,7 +46,7 @@ class _ReturnSummaryCardState extends ConsumerState<ReturnSummaryCard> {
             Row(
               children: [
                 Icon(
-                  Icons.summarize,
+                  Icons.summarize_outlined,
                   color: Theme.of(context).colorScheme.secondary,
                   size: 24,
                 ),
@@ -45,7 +55,7 @@ class _ReturnSummaryCardState extends ConsumerState<ReturnSummaryCard> {
                   child: Text(
                     'Resumen de Devolución',
                     style: TextStyle(
-                      fontSize: 18,
+                      fontSize: 16,
                       fontWeight: FontWeight.bold,
                       color: Theme.of(context).colorScheme.onSurface,
                     ),
@@ -55,7 +65,15 @@ class _ReturnSummaryCardState extends ConsumerState<ReturnSummaryCard> {
                 ),
               ],
             ),
-            const Divider(height: 24),
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              child: Divider(
+                height: 1,
+                color: Theme.of(
+                  context,
+                ).colorScheme.outlineVariant.withValues(alpha: 0.5),
+              ),
+            ),
 
             // Items count
             _buildSummaryRow(
@@ -74,7 +92,15 @@ class _ReturnSummaryCardState extends ConsumerState<ReturnSummaryCard> {
               'Impuestos',
               '\$${(state.totalTaxCents / 100.0).toStringAsFixed(2)}',
             ),
-            const Divider(height: 24),
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              child: Divider(
+                height: 1,
+                color: Theme.of(
+                  context,
+                ).colorScheme.outlineVariant.withValues(alpha: 0.5),
+              ),
+            ),
             _buildSummaryRow(
               'Total a Reembolsar',
               '\$${(state.totalCents / 100.0).toStringAsFixed(2)}',
@@ -86,14 +112,15 @@ class _ReturnSummaryCardState extends ConsumerState<ReturnSummaryCard> {
             Text(
               'Método de Reembolso *',
               style: TextStyle(
-                fontSize: 14,
+                fontSize: 13,
                 fontWeight: FontWeight.w600,
                 color: Theme.of(context).colorScheme.onSurface,
               ),
             ),
             const SizedBox(height: 12),
             Wrap(
-              spacing: 12,
+              spacing: 8,
+              runSpacing: 8,
               children: RefundMethod.values.map((method) {
                 final isSelected = state.refundMethod == method;
                 return ChoiceChip(
@@ -106,12 +133,29 @@ class _ReturnSummaryCardState extends ConsumerState<ReturnSummaryCard> {
                           .setRefundMethod(method);
                     }
                   },
-                  selectedColor: Theme.of(
-                    context,
-                  ).colorScheme.secondaryContainer,
+                  showCheckmark: false,
+                  avatar: isSelected
+                      ? Icon(
+                          Icons.check,
+                          size: 16,
+                          color: Theme.of(context).colorScheme.onPrimary,
+                        )
+                      : null,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  side: BorderSide(
+                    color: isSelected
+                        ? Colors.transparent
+                        : Theme.of(
+                            context,
+                          ).colorScheme.outline.withValues(alpha: 0.3),
+                  ),
+                  backgroundColor: Theme.of(context).colorScheme.surface,
+                  selectedColor: Theme.of(context).colorScheme.primary,
                   labelStyle: TextStyle(
                     color: isSelected
-                        ? Theme.of(context).colorScheme.onSecondary
+                        ? Theme.of(context).colorScheme.onPrimary
                         : Theme.of(context).colorScheme.onSurface,
                     fontWeight: isSelected
                         ? FontWeight.w600
@@ -123,7 +167,6 @@ class _ReturnSummaryCardState extends ConsumerState<ReturnSummaryCard> {
             const SizedBox(height: 24),
 
             // Reason
-            // Reason
             DropdownButtonFormField<ReturnReason>(
               isExpanded: true,
               initialValue: _reasonController.text.isNotEmpty
@@ -132,9 +175,12 @@ class _ReturnSummaryCardState extends ConsumerState<ReturnSummaryCard> {
                       orElse: () => ReturnReason.other,
                     )
                   : null,
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 labelText: 'Motivo de la Devolución *',
-                border: OutlineInputBorder(),
+                isDense: true,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
               ),
               items: ReturnReason.values.map((reason) {
                 return DropdownMenuItem(
@@ -156,17 +202,21 @@ class _ReturnSummaryCardState extends ConsumerState<ReturnSummaryCard> {
             // Notes
             TextField(
               controller: _notesController,
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 labelText: 'Notas Adicionales (opcional)',
                 hintText: 'Información adicional sobre la devolución...',
-                border: OutlineInputBorder(),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                isDense: true,
               ),
               maxLines: 3,
+              style: const TextStyle(fontSize: 14),
               onChanged: (value) {
                 ref.read(returnProcessingProvider.notifier).setNotes(value);
               },
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 8),
           ],
         ),
       ),
