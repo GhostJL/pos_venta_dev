@@ -1,23 +1,30 @@
+import 'dart:async';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:posventa/presentation/providers/auto_backup_provider.dart';
+import 'package:posventa/presentation/providers/settings_provider.dart';
+import 'package:posventa/presentation/widgets/dialogs/backup_confirmation_dialog.dart';
 import 'package:posventa/presentation/widgets/menu/side_menu.dart';
 
-class MainLayout extends StatefulWidget {
+class MainLayout extends ConsumerStatefulWidget {
   final Widget child;
   const MainLayout({super.key, required this.child});
 
   @override
-  State<MainLayout> createState() => MainLayoutState();
+  ConsumerState<MainLayout> createState() => MainLayoutState();
 
   static MainLayoutState? of(BuildContext context) {
     return context.findAncestorStateOfType<MainLayoutState>();
   }
 }
 
-class MainLayoutState extends State<MainLayout> {
+class MainLayoutState extends ConsumerState<MainLayout> {
   final ValueNotifier<bool> _isMenuVisible = ValueNotifier<bool>(true);
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  DateTime? _lastBackPress;
 
   @override
   void dispose() {
@@ -27,6 +34,51 @@ class MainLayoutState extends State<MainLayout> {
 
   void openDrawer() {
     _scaffoldKey.currentState?.openDrawer();
+  }
+
+  Future<bool> _onWillPop() async {
+    final now = DateTime.now();
+
+    // Check if this is a double-back (within 2 seconds)
+    if (_lastBackPress == null ||
+        now.difference(_lastBackPress!) > const Duration(seconds: 2)) {
+      // First back press
+      _lastBackPress = now;
+
+      // Show SnackBar
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Presiona de nuevo para salir'),
+            duration: Duration(seconds: 2),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+
+      return false; // Don't exit
+    }
+
+    // Second back press - check if backup is needed
+    final settings = await ref.read(settingsProvider.future);
+
+    if (settings.backupOnAppClose && mounted) {
+      // Show backup confirmation dialog
+      final shouldBackup = await showBackupConfirmationDialog(
+        context,
+        title: 'Salir de la Aplicación',
+        message: '¿Deseas crear un backup antes de salir?',
+        onBackup: () async {
+          final autoBackupService = ref.read(autoBackupServiceProvider);
+          return await autoBackupService.executeBackup(settings);
+        },
+      );
+
+      // Exit regardless of backup choice
+      return true;
+    }
+
+    return true; // Exit
   }
 
   @override
@@ -52,13 +104,25 @@ class MainLayoutState extends State<MainLayout> {
           final bool isSmallScreen = constraints.maxWidth < 1200;
 
           if (isSmallScreen) {
-            // On mobile, wrap with Scaffold to provide the Drawer.
-            // The inner pages have their own Scaffold/AppBar, which will automatically
-            // show the generic Menu icon to open this drawer.
-            return Scaffold(
-              key: _scaffoldKey,
-              body: widget.child,
-              drawer: const SideMenu(isRail: false),
+            // On mobile, wrap with PopScope for double-back to exit
+            return PopScope(
+              canPop: false,
+              onPopInvokedWithResult: (didPop, result) async {
+                if (didPop) return;
+
+                // Only handle back on Android/iOS
+                if (Platform.isAndroid || Platform.isIOS) {
+                  final shouldPop = await _onWillPop();
+                  if (shouldPop && context.mounted) {
+                    SystemNavigator.pop();
+                  }
+                }
+              },
+              child: Scaffold(
+                key: _scaffoldKey,
+                body: widget.child,
+                drawer: const SideMenu(isRail: false),
+              ),
             );
           } else {
             return Scaffold(

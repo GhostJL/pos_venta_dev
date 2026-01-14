@@ -80,6 +80,9 @@ class Auth extends _$Auth {
   }
 
   Future<void> logout() async {
+    // Note: Backup confirmation should be handled by the UI layer before calling this method
+    // The UI should check settings.backupOnLogout and show BackupConfirmationDialog if needed
+
     state = AuthState.loading();
     await _authRepository.logout();
     final prefs = await SharedPreferences.getInstance();

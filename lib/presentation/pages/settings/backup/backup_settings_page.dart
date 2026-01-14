@@ -153,27 +153,7 @@ class BackupSettingsPage extends ConsumerWidget {
                                     _showScheduleDialog(context, ref, settings),
                               ),
                             ],
-                            const Divider(height: 1, indent: 56),
-                            SwitchListTile(
-                              secondary: const Icon(
-                                Icons.exit_to_app,
-                                color: Colors.orange,
-                              ),
-                              title: const Text('Backup al Cerrar App'),
-                              subtitle: const Text(
-                                'Preguntar si desea hacer backup al salir',
-                              ),
-                              value: settings.backupOnAppClose,
-                              onChanged: (value) async {
-                                await ref
-                                    .read(settingsProvider.notifier)
-                                    .updateSettings(
-                                      settings.copyWith(
-                                        backupOnAppClose: value,
-                                      ),
-                                    );
-                              },
-                            ),
+
                             const Divider(height: 1, indent: 56),
                             SwitchListTile(
                               secondary: const Icon(
