@@ -20,108 +20,77 @@ class ChangesCard extends StatelessWidget {
         .where((m) => m.reason == 'Cambio')
         .toList();
 
-    if (changes.isEmpty) return const SizedBox.shrink();
-
     final colorScheme = Theme.of(context).colorScheme;
 
-    return Card(
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(
-          color: colorScheme.outlineVariant.withValues(alpha: 0.5),
-        ),
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: Column(
-        children: [
-          // Header
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            decoration: BoxDecoration(
-              color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
-              border: Border(
-                bottom: BorderSide(
-                  color: colorScheme.outlineVariant.withValues(alpha: 0.5),
-                ),
+    if (changes.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(
+              Icons.change_circle_outlined,
+              size: 48,
+              color: Colors.orange,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'No hay cambios registrados',
+              style: TextStyle(
+                color: colorScheme.onSurfaceVariant,
+                fontSize: 16,
               ),
             ),
-            child: Row(
-              children: [
-                const Icon(
-                  Icons.change_circle_outlined,
-                  color: Colors.orange,
-                  size: 20,
-                ),
-                const SizedBox(width: 12),
-                Text(
-                  'Cambios Entregados',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: colorScheme.onSurface,
-                  ),
-                ),
-              ],
-            ),
-          ),
+          ],
+        ),
+      );
+    }
 
-          ListView.separated(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: changes.length,
-            separatorBuilder: (_, __) => Divider(
-              height: 1,
-              color: colorScheme.outlineVariant.withValues(alpha: 0.5),
-            ),
-            itemBuilder: (context, index) {
-              final movement = changes[index];
-              return ListTile(
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 8,
-                ),
-                leading: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.orange.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const Icon(
-                    Icons.remove,
-                    color: Colors.orange,
-                    size: 20,
-                  ),
-                ),
-                title: Text(
-                  movement.description ?? movement.reason,
-                  style: const TextStyle(fontWeight: FontWeight.w600),
-                ),
-                subtitle: Padding(
-                  padding: const EdgeInsets.only(top: 4),
-                  child: Text(
-                    DateFormat(
-                      'dd/MM/yyyy HH:mm',
-                    ).format(movement.movementDate),
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                ),
-                trailing: Text(
-                  '-${currencyFormat.format(movement.amountCents.abs() / 100)}',
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                    color: Colors.orange,
-                  ),
-                ),
-              );
-            },
-          ),
-        ],
+    return ListView.separated(
+      padding: const EdgeInsets.all(16),
+      itemCount: changes.length,
+      separatorBuilder: (_, __) => Divider(
+        height: 1,
+        color: colorScheme.outlineVariant.withValues(alpha: 0.5),
       ),
+      itemBuilder: (context, index) {
+        final movement = changes[index];
+        return ListTile(
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 8,
+            vertical: 8,
+          ),
+          leading: Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: Colors.orange.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: const Icon(Icons.remove, color: Colors.orange, size: 20),
+          ),
+          title: Text(
+            movement.description ?? movement.reason,
+            style: const TextStyle(fontWeight: FontWeight.w600),
+          ),
+          subtitle: Padding(
+            padding: const EdgeInsets.only(top: 4),
+            child: Text(
+              DateFormat('dd/MM/yyyy HH:mm').format(movement.movementDate),
+              style: TextStyle(
+                fontSize: 12,
+                color: colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ),
+          trailing: Text(
+            '-${currencyFormat.format(movement.amountCents.abs() / 100)}',
+            style: const TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 16,
+              color: Colors.orange,
+            ),
+          ),
+        );
+      },
     );
   }
 }
