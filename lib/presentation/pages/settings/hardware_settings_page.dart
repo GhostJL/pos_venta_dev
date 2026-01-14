@@ -178,7 +178,9 @@ class _HardwareSettingsPageState extends ConsumerState<HardwareSettingsPage> {
                               title: Text(printer.name),
                               subtitle: Text(printer.url),
                               value: printer.name,
+                              // ignore: deprecated_member_use
                               groupValue: currentPrinter,
+                              // ignore: deprecated_member_use
                               onChanged: (value) async {
                                 if (value != null) {
                                   final selectedPrinter = _printers.firstWhere(
@@ -211,7 +213,9 @@ class _HardwareSettingsPageState extends ConsumerState<HardwareSettingsPage> {
                         return RadioListTile<int>(
                           title: Text('$width mm'),
                           value: width,
+                          // ignore: deprecated_member_use
                           groupValue: currentWidth,
+                          // ignore: deprecated_member_use
                           onChanged: (value) async {
                             if (value != null) {
                               await ref
