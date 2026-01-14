@@ -53,6 +53,7 @@ import 'package:posventa/presentation/pages/tax/tax_rate_page.dart';
 import 'package:posventa/presentation/pages/settings/settings_page.dart';
 import 'package:posventa/presentation/pages/settings/help/app_shortcuts_page.dart';
 import 'package:posventa/presentation/pages/settings/hardware_settings_page.dart';
+import 'package:posventa/presentation/pages/settings/print_settings_page.dart';
 import 'package:posventa/features/reports/presentation/pages/reports_page.dart';
 
 import 'package:posventa/presentation/pages/users/users_permissions_page.dart';
@@ -482,6 +483,11 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: '/settings/backup',
             pageBuilder: (context, state) =>
                 const NoTransitionPage(child: BackupSettingsPage()),
+          ),
+          GoRoute(
+            path: '/settings/print',
+            pageBuilder: (context, state) =>
+                const NoTransitionPage(child: PrintSettingsPage()),
           ),
 
           GoRoute(

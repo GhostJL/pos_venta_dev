@@ -30,4 +30,14 @@ abstract class PrinterService {
     required Customer customer,
     Printer? printer,
   });
+
+  /// Save a ticket as PDF to the specified path
+  Future<String> savePdfTicket(TicketData ticketData, String savePath);
+
+  /// Save a payment receipt as PDF to the specified path
+  Future<String> savePdfPaymentReceipt({
+    required CustomerPayment payment,
+    required Customer customer,
+    required String savePath,
+  });
 }

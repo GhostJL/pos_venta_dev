@@ -73,6 +73,13 @@ class SettingsPage extends ConsumerWidget {
                       onTap: () => context.push('/settings/hardware'),
                     ),
                     const Divider(height: 1, indent: 56),
+                    SettingsCategoryTile(
+                      icon: Icons.print_outlined,
+                      title: 'Configuración de Impresión',
+                      subtitle: 'Control de impresión y guardado de PDFs',
+                      onTap: () => context.push('/settings/print'),
+                    ),
+                    const Divider(height: 1, indent: 56),
                     SettingsToggleTile(
                       title: 'Gestionar Inventario',
                       subtitle: 'Activa o desactiva el control de stock',

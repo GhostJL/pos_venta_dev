@@ -1,8 +1,11 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:posventa/core/theme/theme.dart';
+import 'package:posventa/core/utils/file_manager_service.dart';
+import 'package:posventa/domain/services/printer_service.dart';
 import 'package:posventa/features/sales/domain/models/ticket_data.dart';
 import 'package:posventa/presentation/providers/pos_providers.dart';
 import 'package:posventa/presentation/providers/settings_provider.dart';
@@ -147,6 +150,35 @@ class _PaymentPageState extends ConsumerState<PaymentPage> {
         .completeSale(_selectedPaymentMethod, amountPaid);
   }
 
+  Future<void> _savePdfFallback(
+    BuildContext context,
+    PrinterService printerService,
+    TicketData ticketData,
+    dynamic settings,
+    String message,
+  ) async {
+    try {
+      final pdfPath =
+          settings.pdfSavePath ??
+          await FileManagerService.getDefaultPdfSavePath();
+      final savedPath = await printerService.savePdfTicket(ticketData, pdfPath);
+
+      // Only log success, don't show snackbar (would be annoying on every sale)
+      debugPrint('PDF guardado exitosamente: $savedPath');
+    } catch (e) {
+      debugPrint('Error saving PDF: $e');
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error al guardar PDF: $e'),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final posState = ref.watch(pOSProvider);
@@ -156,45 +188,125 @@ class _PaymentPageState extends ConsumerState<PaymentPage> {
 
     ref.listen(pOSProvider, (previous, next) async {
       if (next.successMessage != null && next.successMessage!.isNotEmpty) {
-        // Print Ticket
+        // Print/Save Ticket
         if (next.lastCompletedSale != null) {
           final sale = next.lastCompletedSale!;
           final printerService = ref.read(printerServiceProvider);
 
-          // Get saved printer from settings
+          // Get saved printer and settings
           final settings = await ref.read(settingsProvider.future);
           final printerName = settings.printerName;
+          final enablePrinting = settings.enableSalesPrinting;
+
+          final ticketData = TicketData(
+            sale: sale,
+            items: sale.items,
+            storeName: 'Mi Tienda POS',
+            storeAddress: 'Ubicación General',
+          );
 
           try {
-            Printer? targetPrinter;
-            if (printerName != null) {
-              try {
-                final printers = await printerService.getPrinters();
-                targetPrinter = printers
-                    .where((p) => p.name == printerName)
-                    .firstOrNull;
-              } catch (e) {
-                debugPrint('Error loading printers for auto-print: $e');
+            if (enablePrinting) {
+              // Printing is enabled, check if we have a valid printer
+              Printer? targetPrinter;
+              bool printerAvailable = false;
+
+              if (printerName != null) {
+                try {
+                  final printers = await printerService.getPrinters();
+                  targetPrinter = printers
+                      .where((p) => p.name == printerName)
+                      .firstOrNull;
+
+                  // Check if printer was found and is not a PDF virtual printer
+                  if (targetPrinter != null) {
+                    // Filter out common PDF virtual printers
+                    final lowerName = targetPrinter.name.toLowerCase();
+                    final isPdfPrinter =
+                        lowerName.contains('pdf') ||
+                        lowerName.contains('microsoft print to pdf') ||
+                        lowerName.contains('adobe pdf') ||
+                        lowerName.contains('foxit') ||
+                        lowerName.contains('cutepdf') ||
+                        lowerName.contains('novapdf');
+
+                    printerAvailable = !isPdfPrinter;
+                  }
+                } catch (e) {
+                  debugPrint('Error loading printers for auto-print: $e');
+                }
+              }
+
+              if (printerAvailable && targetPrinter != null) {
+                // We have a physical printer configured
+                if (Platform.isAndroid) {
+                  // Android: Try to print, save PDF only if fails
+                  try {
+                    await printerService.printTicket(
+                      ticketData,
+                      printer: targetPrinter,
+                    );
+                  } catch (printError) {
+                    debugPrint('Print error: $printError');
+                    if (settings.autoSavePdfWhenPrintDisabled) {
+                      await _savePdfFallback(
+                        context,
+                        printerService,
+                        ticketData,
+                        settings,
+                        'No se pudo imprimir. Ticket guardado como PDF.',
+                      );
+                    }
+                  }
+                } else {
+                  // Desktop: Print AND save PDF (can't verify if printer is actually connected)
+                  // Attempt to print (will queue if printer available)
+                  try {
+                    await printerService.printTicket(
+                      ticketData,
+                      printer: targetPrinter,
+                    );
+                  } catch (printError) {
+                    debugPrint('Print error: $printError');
+                  }
+
+                  // Always save PDF as backup on Desktop
+                  if (settings.autoSavePdfWhenPrintDisabled) {
+                    await _savePdfFallback(
+                      context,
+                      printerService,
+                      ticketData,
+                      settings,
+                      'Ticket guardado como PDF.',
+                    );
+                  }
+                }
+              } else {
+                // No physical printer available, save as PDF
+                if (settings.autoSavePdfWhenPrintDisabled) {
+                  await _savePdfFallback(
+                    context,
+                    printerService,
+                    ticketData,
+                    settings,
+                    'Sin impresora física disponible. Ticket guardado como PDF.',
+                  );
+                }
+              }
+            } else {
+              // Printing is disabled, save as PDF
+              if (settings.autoSavePdfWhenPrintDisabled) {
+                await _savePdfFallback(
+                  context,
+                  printerService,
+                  ticketData,
+                  settings,
+                  'Ticket guardado como PDF',
+                );
               }
             }
-
-            // We await this so the dialog shows up before navigation if using layoutPdf
-            // Use unawaited if you want fire-and-forget
-            final ticketData = TicketData(
-              sale: sale,
-              items: sale.items,
-              storeName: 'Mi Tienda POS',
-              storeAddress: 'Ubicación General',
-            );
-
-            await printerService.printTicket(
-              ticketData,
-              printer: targetPrinter,
-            );
           } catch (e) {
-            debugPrint('Print error: $e');
-            // If it's a MissingPluginException, it means printing is not supported/loaded.
-            // We just swallow it here to avoid disrupting the flow.
+            debugPrint('Error in print/save flow: $e');
           }
         }
 

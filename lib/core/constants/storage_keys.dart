@@ -5,4 +5,15 @@ class StorageKeys {
   static const String printerAddress = 'settings_printer_address';
   static const String paperWidthMm = 'settings_paper_width_mm';
   static const String paymentReceiptAction = 'settings_payment_receipt_action';
+
+  // Backup and PDF paths
+  static const String backupPath = 'settings_backup_path';
+  static const String pdfSavePath = 'settings_pdf_save_path';
+
+  // Print enable/disable flags
+  static const String enableSalesPrinting = 'settings_enable_sales_printing';
+  static const String enablePaymentPrinting =
+      'settings_enable_payment_printing';
+  static const String autoSavePdfWhenPrintDisabled =
+      'settings_auto_save_pdf_when_print_disabled';
 }

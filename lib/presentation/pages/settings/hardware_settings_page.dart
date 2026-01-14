@@ -30,9 +30,23 @@ class _HardwareSettingsPageState extends ConsumerState<HardwareSettingsPage> {
     try {
       final service = ref.read(printerServiceProvider);
       final printers = await service.getPrinters();
+
+      // Filter out PDF virtual printers
+      final physicalPrinters = printers.where((printer) {
+        final lowerName = printer.name.toLowerCase();
+        final isPdfPrinter =
+            lowerName.contains('pdf') ||
+            lowerName.contains('microsoft print to pdf') ||
+            lowerName.contains('adobe pdf') ||
+            lowerName.contains('foxit') ||
+            lowerName.contains('cutepdf') ||
+            lowerName.contains('novapdf');
+        return !isPdfPrinter;
+      }).toList();
+
       if (mounted) {
         setState(() {
-          _printers = printers;
+          _printers = physicalPrinters;
           _isLoading = false;
         });
       }

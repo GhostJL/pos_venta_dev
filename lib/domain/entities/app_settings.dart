@@ -7,12 +7,26 @@ class AppSettings extends Equatable {
   final String? printerAddress;
   final int paperWidthMm;
 
+  // Backup and PDF save paths (null = use platform default)
+  final String? backupPath;
+  final String? pdfSavePath;
+
+  // Print enable/disable flags
+  final bool enableSalesPrinting;
+  final bool enablePaymentPrinting;
+  final bool autoSavePdfWhenPrintDisabled;
+
   const AppSettings({
     required this.useInventory,
     required this.useTax,
     this.printerName,
     this.printerAddress,
     this.paperWidthMm = 80,
+    this.backupPath,
+    this.pdfSavePath,
+    this.enableSalesPrinting = true,
+    this.enablePaymentPrinting = true,
+    this.autoSavePdfWhenPrintDisabled = true,
   });
 
   factory AppSettings.defaults() {
@@ -20,6 +34,9 @@ class AppSettings extends Equatable {
       useInventory: true,
       useTax: true,
       paperWidthMm: 80,
+      enableSalesPrinting: true,
+      enablePaymentPrinting: true,
+      autoSavePdfWhenPrintDisabled: true,
     );
   }
 
@@ -29,6 +46,11 @@ class AppSettings extends Equatable {
     String? printerName,
     String? printerAddress,
     int? paperWidthMm,
+    String? backupPath,
+    String? pdfSavePath,
+    bool? enableSalesPrinting,
+    bool? enablePaymentPrinting,
+    bool? autoSavePdfWhenPrintDisabled,
   }) {
     return AppSettings(
       useInventory: useInventory ?? this.useInventory,
@@ -36,6 +58,13 @@ class AppSettings extends Equatable {
       printerName: printerName ?? this.printerName,
       printerAddress: printerAddress ?? this.printerAddress,
       paperWidthMm: paperWidthMm ?? this.paperWidthMm,
+      backupPath: backupPath ?? this.backupPath,
+      pdfSavePath: pdfSavePath ?? this.pdfSavePath,
+      enableSalesPrinting: enableSalesPrinting ?? this.enableSalesPrinting,
+      enablePaymentPrinting:
+          enablePaymentPrinting ?? this.enablePaymentPrinting,
+      autoSavePdfWhenPrintDisabled:
+          autoSavePdfWhenPrintDisabled ?? this.autoSavePdfWhenPrintDisabled,
     );
   }
 
@@ -46,5 +75,10 @@ class AppSettings extends Equatable {
     printerName,
     printerAddress,
     paperWidthMm,
+    backupPath,
+    pdfSavePath,
+    enableSalesPrinting,
+    enablePaymentPrinting,
+    autoSavePdfWhenPrintDisabled,
   ];
 }

@@ -16,12 +16,29 @@ class SettingsRepositoryImpl implements SettingsRepository {
     final printerAddress = _prefs.getString(StorageKeys.printerAddress);
     final paperWidthMm = _prefs.getInt(StorageKeys.paperWidthMm) ?? 80;
 
+    // Backup and PDF paths
+    final backupPath = _prefs.getString(StorageKeys.backupPath);
+    final pdfSavePath = _prefs.getString(StorageKeys.pdfSavePath);
+
+    // Print enable/disable flags
+    final enableSalesPrinting =
+        _prefs.getBool(StorageKeys.enableSalesPrinting) ?? true;
+    final enablePaymentPrinting =
+        _prefs.getBool(StorageKeys.enablePaymentPrinting) ?? true;
+    final autoSavePdfWhenPrintDisabled =
+        _prefs.getBool(StorageKeys.autoSavePdfWhenPrintDisabled) ?? true;
+
     return AppSettings(
       useInventory: useInventory,
       useTax: useTax,
       printerName: printerName,
       printerAddress: printerAddress,
       paperWidthMm: paperWidthMm,
+      backupPath: backupPath,
+      pdfSavePath: pdfSavePath,
+      enableSalesPrinting: enableSalesPrinting,
+      enablePaymentPrinting: enablePaymentPrinting,
+      autoSavePdfWhenPrintDisabled: autoSavePdfWhenPrintDisabled,
     );
   }
 
@@ -29,12 +46,13 @@ class SettingsRepositoryImpl implements SettingsRepository {
   Future<void> saveSettings(AppSettings settings) async {
     await _prefs.setBool(StorageKeys.useInventory, settings.useInventory);
     await _prefs.setBool(StorageKeys.useTax, settings.useTax);
-    await _prefs.setBool(StorageKeys.useTax, settings.useTax);
+
     if (settings.printerName != null) {
       await _prefs.setString(StorageKeys.printerName, settings.printerName!);
     } else {
       await _prefs.remove(StorageKeys.printerName);
     }
+
     if (settings.printerAddress != null) {
       await _prefs.setString(
         StorageKeys.printerAddress,
@@ -43,7 +61,35 @@ class SettingsRepositoryImpl implements SettingsRepository {
     } else {
       await _prefs.remove(StorageKeys.printerAddress);
     }
+
     await _prefs.setInt(StorageKeys.paperWidthMm, settings.paperWidthMm);
+
+    // Backup and PDF paths
+    if (settings.backupPath != null) {
+      await _prefs.setString(StorageKeys.backupPath, settings.backupPath!);
+    } else {
+      await _prefs.remove(StorageKeys.backupPath);
+    }
+
+    if (settings.pdfSavePath != null) {
+      await _prefs.setString(StorageKeys.pdfSavePath, settings.pdfSavePath!);
+    } else {
+      await _prefs.remove(StorageKeys.pdfSavePath);
+    }
+
+    // Print enable/disable flags
+    await _prefs.setBool(
+      StorageKeys.enableSalesPrinting,
+      settings.enableSalesPrinting,
+    );
+    await _prefs.setBool(
+      StorageKeys.enablePaymentPrinting,
+      settings.enablePaymentPrinting,
+    );
+    await _prefs.setBool(
+      StorageKeys.autoSavePdfWhenPrintDisabled,
+      settings.autoSavePdfWhenPrintDisabled,
+    );
   }
 
   @override

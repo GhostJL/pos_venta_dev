@@ -1,15 +1,17 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:posventa/core/utils/file_manager_service.dart';
 import 'package:posventa/domain/entities/customer.dart';
 import 'package:posventa/domain/entities/customer_payment.dart';
-import 'package:posventa/presentation/providers/customer_providers.dart';
-import 'package:posventa/presentation/providers/debtors_provider.dart';
+import 'package:posventa/domain/services/printer_service.dart';
 import 'package:posventa/presentation/providers/auth_provider.dart';
-import 'package:posventa/presentation/providers/providers.dart'; // For storeRepositoryProvider
-import 'package:printing/printing.dart'; // For Printer class
 import 'package:posventa/presentation/providers/di/printer_di.dart';
 import 'package:posventa/presentation/providers/settings_provider.dart';
+import 'package:posventa/presentation/providers/customer_providers.dart';
+import 'package:posventa/presentation/providers/debtors_provider.dart';
+import 'package:posventa/presentation/providers/providers.dart';
+import 'package:printing/printing.dart';
 
 class CustomerPaymentDialog extends ConsumerStatefulWidget {
   final Customer customer;
@@ -28,6 +30,38 @@ class _CustomerPaymentDialogState extends ConsumerState<CustomerPaymentDialog> {
   int? _selectedSaleId;
   String _selectedMethod = 'Efectivo';
   bool _isLoading = false;
+
+  Future<void> _savePdfPaymentFallback(
+    BuildContext context,
+    PrinterService printerService,
+    CustomerPayment payment,
+    dynamic settings,
+  ) async {
+    try {
+      final pdfPath =
+          settings.pdfSavePath ??
+          await FileManagerService.getDefaultPdfSavePath();
+      final savedPath = await printerService.savePdfPaymentReceipt(
+        payment: payment,
+        customer: widget.customer,
+        savePath: pdfPath,
+      );
+
+      // Only log success, don't show snackbar (would be annoying on every payment)
+      debugPrint('PDF de abono guardado exitosamente: $savedPath');
+    } catch (e) {
+      debugPrint('Error saving payment PDF: $e');
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error al guardar PDF de abono: $e'),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    }
+  }
 
   @override
   void dispose() {
@@ -84,43 +118,126 @@ class _CustomerPaymentDialogState extends ConsumerState<CustomerPaymentDialog> {
             .read(customerRepositoryProvider)
             .registerPayment(payment, cashSessionId: cashSessionId);
 
-        // Print Receipt
+        // Print/Save Receipt
         try {
           final printerService = ref.read(printerServiceProvider);
           final settings = await ref.read(settingsProvider.future);
           final printerName = settings.printerName;
+          final enablePrinting = settings.enablePaymentPrinting;
 
-          Printer? targetPrinter;
-          if (printerName != null) {
-            final printers = await printerService.getPrinters();
-            targetPrinter = printers
-                .where((p) => p.name == printerName)
-                .firstOrNull;
-          }
+          // Construct payment with ID
+          final paymentWithId = CustomerPayment(
+            id: paymentId,
+            customerId: payment.customerId,
+            amount: payment.amount,
+            paymentMethod: payment.paymentMethod,
+            reference: payment.reference,
+            paymentDate: payment.paymentDate,
+            processedBy: payment.processedBy,
+            notes: payment.notes,
+            saleId: payment.saleId,
+            createdAt: payment.createdAt,
+          );
 
-          if (targetPrinter != null || !Platform.isAndroid) {
-            // Construct payment with ID
-            final paymentWithId = CustomerPayment(
-              id: paymentId,
-              customerId: payment.customerId,
-              amount: payment.amount,
-              paymentMethod: payment.paymentMethod,
-              reference: payment.reference,
-              paymentDate: payment.paymentDate,
-              processedBy: payment.processedBy,
-              notes: payment.notes,
-              saleId: payment.saleId,
-              createdAt: payment.createdAt,
-            );
+          if (enablePrinting) {
+            // Printing is enabled, check if we have a valid printer
+            Printer? targetPrinter;
+            bool printerAvailable = false;
 
-            await printerService.printPaymentReceipt(
-              payment: paymentWithId,
-              customer: widget.customer,
-              printer: targetPrinter,
-            );
+            if (printerName != null) {
+              try {
+                final printers = await printerService.getPrinters();
+                targetPrinter = printers
+                    .where((p) => p.name == printerName)
+                    .firstOrNull;
+
+                // Check if printer was found and is not a PDF virtual printer
+                if (targetPrinter != null) {
+                  // Filter out common PDF virtual printers
+                  final lowerName = targetPrinter.name.toLowerCase();
+                  final isPdfPrinter =
+                      lowerName.contains('pdf') ||
+                      lowerName.contains('microsoft print to pdf') ||
+                      lowerName.contains('adobe pdf') ||
+                      lowerName.contains('foxit') ||
+                      lowerName.contains('cutepdf') ||
+                      lowerName.contains('novapdf');
+
+                  printerAvailable = !isPdfPrinter;
+                }
+              } catch (e) {
+                debugPrint('Error loading printers for auto-print: $e');
+              }
+            }
+
+            if (printerAvailable && targetPrinter != null) {
+              // We have a physical printer configured
+              if (Platform.isAndroid) {
+                // Android: Try to print, save PDF only if fails
+                try {
+                  await printerService.printPaymentReceipt(
+                    payment: paymentWithId,
+                    customer: widget.customer,
+                    printer: targetPrinter,
+                  );
+                } catch (printError) {
+                  debugPrint('Print error: $printError');
+                  if (settings.autoSavePdfWhenPrintDisabled && mounted) {
+                    await _savePdfPaymentFallback(
+                      context,
+                      printerService,
+                      paymentWithId,
+                      settings,
+                    );
+                  }
+                }
+              } else {
+                // Desktop: Print AND save PDF (can't verify if printer is actually connected)
+                // Attempt to print (will queue if printer available)
+                try {
+                  await printerService.printPaymentReceipt(
+                    payment: paymentWithId,
+                    customer: widget.customer,
+                    printer: targetPrinter,
+                  );
+                } catch (printError) {
+                  debugPrint('Print error: $printError');
+                }
+
+                // Always save PDF as backup on Desktop
+                if (settings.autoSavePdfWhenPrintDisabled && mounted) {
+                  await _savePdfPaymentFallback(
+                    context,
+                    printerService,
+                    paymentWithId,
+                    settings,
+                  );
+                }
+              }
+            } else {
+              // No physical printer available, save as PDF
+              if (settings.autoSavePdfWhenPrintDisabled && mounted) {
+                await _savePdfPaymentFallback(
+                  context,
+                  printerService,
+                  paymentWithId,
+                  settings,
+                );
+              }
+            }
+          } else {
+            // Printing is disabled, save as PDF
+            if (settings.autoSavePdfWhenPrintDisabled && mounted) {
+              await _savePdfPaymentFallback(
+                context,
+                printerService,
+                paymentWithId,
+                settings,
+              );
+            }
           }
         } catch (e) {
-          debugPrint('Error printing receipt: $e');
+          debugPrint('Error in print/save flow: $e');
         }
 
         if (mounted) {

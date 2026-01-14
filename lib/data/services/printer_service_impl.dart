@@ -4,13 +4,13 @@ import 'package:blue_thermal_printer/blue_thermal_printer.dart' as blue;
 import 'package:flutter_esc_pos_utils/flutter_esc_pos_utils.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
+import 'package:posventa/core/utils/file_manager_service.dart';
 import 'package:posventa/domain/entities/customer.dart';
 import 'package:posventa/domain/entities/customer_payment.dart';
 import 'package:posventa/domain/services/printer_service.dart';
 import 'package:posventa/features/sales/domain/models/ticket_data.dart';
 import 'package:posventa/features/sales/presentation/widgets/ticket_pdf_builder.dart';
 import 'package:printing/printing.dart';
-
 import 'package:permission_handler/permission_handler.dart';
 
 class PrinterServiceImpl implements PrinterService {
@@ -382,5 +382,96 @@ class PrinterServiceImpl implements PrinterService {
     bytes += generator.cut();
 
     await _bluetooth.writeBytes(Uint8List.fromList(bytes));
+  }
+
+  @override
+  Future<String> savePdfTicket(TicketData ticketData, String savePath) async {
+    // Generate organized path with year/month subdirectories
+    final organizedPath = FileManagerService.getOrganizedPath(savePath);
+    await FileManagerService.ensureDirectoryExists(organizedPath);
+
+    // Generate unique filename
+    final fileName = FileManagerService.generateFileName(
+      'ticket',
+      'pdf',
+      identifier: ticketData.sale.saleNumber,
+    );
+
+    final filePath = '$organizedPath${Platform.pathSeparator}$fileName';
+
+    // Build PDF
+    final pdf = await TicketPdfBuilder.buildTicket(ticketData);
+    final bytes = await pdf.save();
+
+    // Save to file
+    final file = File(filePath);
+    await file.writeAsBytes(bytes);
+
+    return filePath;
+  }
+
+  @override
+  Future<String> savePdfPaymentReceipt({
+    required CustomerPayment payment,
+    required Customer customer,
+    required String savePath,
+  }) async {
+    // Generate organized path with year/month subdirectories
+    final organizedPath = FileManagerService.getOrganizedPath(savePath);
+    await FileManagerService.ensureDirectoryExists(organizedPath);
+
+    // Generate unique filename
+    final fileName = FileManagerService.generateFileName(
+      'payment',
+      'pdf',
+      identifier: payment.id?.toString() ?? 'new',
+    );
+
+    final filePath = '$organizedPath${Platform.pathSeparator}$fileName';
+
+    // Build PDF
+    final pdf = pw.Document();
+    pdf.addPage(
+      pw.Page(
+        pageFormat: PdfPageFormat.roll80,
+        build: (pw.Context context) {
+          return pw.Column(
+            crossAxisAlignment: pw.CrossAxisAlignment.center,
+            mainAxisSize: pw.MainAxisSize.min,
+            children: [
+              pw.Text(
+                'COMPROBANTE DE PAGO',
+                style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+              ),
+              pw.SizedBox(height: 10),
+              pw.Text('Cliente: ${customer.fullName}'),
+              pw.Text(
+                'Fecha: ${payment.paymentDate.toString().substring(0, 16)}',
+              ),
+              pw.Divider(),
+              pw.Text(
+                'ABONO: \$${payment.amount.toStringAsFixed(2)}',
+                style: pw.TextStyle(
+                  fontWeight: pw.FontWeight.bold,
+                  fontSize: 16,
+                ),
+              ),
+              pw.Text('Método: ${payment.paymentMethod}'),
+              if (payment.reference != null && payment.reference!.isNotEmpty)
+                pw.Text('Ref: ${payment.reference}'),
+              pw.Divider(),
+              pw.Text('¡Gracias por su pago!'),
+            ],
+          );
+        },
+      ),
+    );
+
+    // Save to file
+    final bytes = await pdf.save();
+    final file = File(filePath);
+    await file.writeAsBytes(bytes);
+
+    return filePath;
   }
 }
