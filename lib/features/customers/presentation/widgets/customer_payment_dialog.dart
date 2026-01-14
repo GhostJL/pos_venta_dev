@@ -8,7 +8,6 @@ import 'package:posventa/presentation/providers/debtors_provider.dart';
 import 'package:posventa/presentation/providers/auth_provider.dart';
 import 'package:posventa/presentation/providers/providers.dart'; // For storeRepositoryProvider
 import 'package:printing/printing.dart'; // For Printer class
-import 'package:posventa/domain/services/printer_service.dart';
 import 'package:posventa/presentation/providers/di/printer_di.dart';
 import 'package:posventa/presentation/providers/settings_provider.dart';
 
