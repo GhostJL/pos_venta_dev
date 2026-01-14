@@ -28,6 +28,19 @@ class SettingsRepositoryImpl implements SettingsRepository {
     final autoSavePdfWhenPrintDisabled =
         _prefs.getBool(StorageKeys.autoSavePdfWhenPrintDisabled) ?? true;
 
+    // Automatic backup settings
+    final autoBackupEnabled =
+        _prefs.getBool(StorageKeys.autoBackupEnabled) ?? false;
+    final autoBackupTimesJson =
+        _prefs.getStringList(StorageKeys.autoBackupTimes) ?? [];
+    final backupOnAppClose =
+        _prefs.getBool(StorageKeys.backupOnAppClose) ?? true;
+    final backupOnLogout = _prefs.getBool(StorageKeys.backupOnLogout) ?? true;
+    final lastBackupTimeStr = _prefs.getString(StorageKeys.lastBackupTime);
+    final lastBackupTime = lastBackupTimeStr != null
+        ? DateTime.tryParse(lastBackupTimeStr)
+        : null;
+
     return AppSettings(
       useInventory: useInventory,
       useTax: useTax,
@@ -39,6 +52,11 @@ class SettingsRepositoryImpl implements SettingsRepository {
       enableSalesPrinting: enableSalesPrinting,
       enablePaymentPrinting: enablePaymentPrinting,
       autoSavePdfWhenPrintDisabled: autoSavePdfWhenPrintDisabled,
+      autoBackupEnabled: autoBackupEnabled,
+      autoBackupTimes: autoBackupTimesJson,
+      backupOnAppClose: backupOnAppClose,
+      backupOnLogout: backupOnLogout,
+      lastBackupTime: lastBackupTime,
     );
   }
 
@@ -90,6 +108,29 @@ class SettingsRepositoryImpl implements SettingsRepository {
       StorageKeys.autoSavePdfWhenPrintDisabled,
       settings.autoSavePdfWhenPrintDisabled,
     );
+
+    // Automatic backup settings
+    await _prefs.setBool(
+      StorageKeys.autoBackupEnabled,
+      settings.autoBackupEnabled,
+    );
+    await _prefs.setStringList(
+      StorageKeys.autoBackupTimes,
+      settings.autoBackupTimes,
+    );
+    await _prefs.setBool(
+      StorageKeys.backupOnAppClose,
+      settings.backupOnAppClose,
+    );
+    await _prefs.setBool(StorageKeys.backupOnLogout, settings.backupOnLogout);
+    if (settings.lastBackupTime != null) {
+      await _prefs.setString(
+        StorageKeys.lastBackupTime,
+        settings.lastBackupTime!.toIso8601String(),
+      );
+    } else {
+      await _prefs.remove(StorageKeys.lastBackupTime);
+    }
   }
 
   @override

@@ -16,4 +16,11 @@ class StorageKeys {
       'settings_enable_payment_printing';
   static const String autoSavePdfWhenPrintDisabled =
       'settings_auto_save_pdf_when_print_disabled';
+
+  // Automatic backup settings
+  static const String autoBackupEnabled = 'auto_backup_enabled';
+  static const String autoBackupTimes = 'auto_backup_times';
+  static const String backupOnAppClose = 'backup_on_app_close';
+  static const String backupOnLogout = 'backup_on_logout';
+  static const String lastBackupTime = 'last_backup_time';
 }

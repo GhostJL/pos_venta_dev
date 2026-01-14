@@ -16,6 +16,13 @@ class AppSettings extends Equatable {
   final bool enablePaymentPrinting;
   final bool autoSavePdfWhenPrintDisabled;
 
+  // Automatic backup configuration
+  final bool autoBackupEnabled;
+  final List<String> autoBackupTimes; // Format: ["09:00", "18:00"]
+  final bool backupOnAppClose;
+  final bool backupOnLogout;
+  final DateTime? lastBackupTime;
+
   const AppSettings({
     required this.useInventory,
     required this.useTax,
@@ -27,6 +34,11 @@ class AppSettings extends Equatable {
     this.enableSalesPrinting = true,
     this.enablePaymentPrinting = true,
     this.autoSavePdfWhenPrintDisabled = true,
+    this.autoBackupEnabled = false,
+    this.autoBackupTimes = const [],
+    this.backupOnAppClose = true,
+    this.backupOnLogout = true,
+    this.lastBackupTime,
   });
 
   factory AppSettings.defaults() {
@@ -37,6 +49,10 @@ class AppSettings extends Equatable {
       enableSalesPrinting: true,
       enablePaymentPrinting: true,
       autoSavePdfWhenPrintDisabled: true,
+      autoBackupEnabled: false,
+      autoBackupTimes: [],
+      backupOnAppClose: true,
+      backupOnLogout: true,
     );
   }
 
@@ -51,6 +67,11 @@ class AppSettings extends Equatable {
     bool? enableSalesPrinting,
     bool? enablePaymentPrinting,
     bool? autoSavePdfWhenPrintDisabled,
+    bool? autoBackupEnabled,
+    List<String>? autoBackupTimes,
+    bool? backupOnAppClose,
+    bool? backupOnLogout,
+    DateTime? lastBackupTime,
   }) {
     return AppSettings(
       useInventory: useInventory ?? this.useInventory,
@@ -65,6 +86,11 @@ class AppSettings extends Equatable {
           enablePaymentPrinting ?? this.enablePaymentPrinting,
       autoSavePdfWhenPrintDisabled:
           autoSavePdfWhenPrintDisabled ?? this.autoSavePdfWhenPrintDisabled,
+      autoBackupEnabled: autoBackupEnabled ?? this.autoBackupEnabled,
+      autoBackupTimes: autoBackupTimes ?? this.autoBackupTimes,
+      backupOnAppClose: backupOnAppClose ?? this.backupOnAppClose,
+      backupOnLogout: backupOnLogout ?? this.backupOnLogout,
+      lastBackupTime: lastBackupTime ?? this.lastBackupTime,
     );
   }
 
@@ -80,5 +106,10 @@ class AppSettings extends Equatable {
     enableSalesPrinting,
     enablePaymentPrinting,
     autoSavePdfWhenPrintDisabled,
+    autoBackupEnabled,
+    autoBackupTimes,
+    backupOnAppClose,
+    backupOnLogout,
+    lastBackupTime,
   ];
 }

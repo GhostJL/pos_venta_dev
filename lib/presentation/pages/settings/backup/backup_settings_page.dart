@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:posventa/presentation/pages/settings/backup/backup_controller.dart';
 import 'package:posventa/presentation/pages/settings/widgets/settings_components.dart';
 import 'package:posventa/presentation/providers/backup_state_provider.dart';
+import 'package:posventa/presentation/providers/settings_provider.dart';
 
 class BackupSettingsPage extends ConsumerWidget {
   const BackupSettingsPage({super.key});
@@ -89,6 +90,135 @@ class BackupSettingsPage extends ConsumerWidget {
                 ),
               ],
             ),
+            const SizedBox(height: 32),
+
+            // Automatic Backup Configuration Section
+            Text(
+              'Configuración de Backups Automáticos',
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 16),
+
+            SettingsSectionContainer(
+              children: [
+                Consumer(
+                  builder: (context, ref, _) {
+                    final settingsAsync = ref.watch(settingsProvider);
+                    return settingsAsync.when(
+                      data: (settings) {
+                        return Column(
+                          children: [
+                            SwitchListTile(
+                              secondary: const Icon(
+                                Icons.schedule,
+                                color: Colors.blue,
+                              ),
+                              title: const Text('Backups Automáticos'),
+                              subtitle: Text(
+                                settings.autoBackupEnabled
+                                    ? 'Activado - ${settings.autoBackupTimes.length} horarios configurados'
+                                    : 'Desactivado',
+                              ),
+                              value: settings.autoBackupEnabled,
+                              onChanged: (value) async {
+                                await ref
+                                    .read(settingsProvider.notifier)
+                                    .updateSettings(
+                                      settings.copyWith(
+                                        autoBackupEnabled: value,
+                                      ),
+                                    );
+                              },
+                            ),
+                            if (settings.autoBackupEnabled) ...[
+                              const Divider(height: 1, indent: 56),
+                              ListTile(
+                                leading: const Icon(
+                                  Icons.access_time,
+                                  color: Colors.green,
+                                ),
+                                title: const Text('Horarios de Backup'),
+                                subtitle: Text(
+                                  settings.autoBackupTimes.isEmpty
+                                      ? 'No hay horarios configurados'
+                                      : settings.autoBackupTimes.join(', '),
+                                ),
+                                trailing: const Icon(
+                                  Icons.arrow_forward_ios,
+                                  size: 16,
+                                ),
+                                onTap: () =>
+                                    _showScheduleDialog(context, ref, settings),
+                              ),
+                            ],
+                            const Divider(height: 1, indent: 56),
+                            SwitchListTile(
+                              secondary: const Icon(
+                                Icons.exit_to_app,
+                                color: Colors.orange,
+                              ),
+                              title: const Text('Backup al Cerrar App'),
+                              subtitle: const Text(
+                                'Preguntar si desea hacer backup al salir',
+                              ),
+                              value: settings.backupOnAppClose,
+                              onChanged: (value) async {
+                                await ref
+                                    .read(settingsProvider.notifier)
+                                    .updateSettings(
+                                      settings.copyWith(
+                                        backupOnAppClose: value,
+                                      ),
+                                    );
+                              },
+                            ),
+                            const Divider(height: 1, indent: 56),
+                            SwitchListTile(
+                              secondary: const Icon(
+                                Icons.logout,
+                                color: Colors.red,
+                              ),
+                              title: const Text('Backup al Cerrar Sesión'),
+                              subtitle: const Text(
+                                'Preguntar si desea hacer backup al cerrar sesión',
+                              ),
+                              value: settings.backupOnLogout,
+                              onChanged: (value) async {
+                                await ref
+                                    .read(settingsProvider.notifier)
+                                    .updateSettings(
+                                      settings.copyWith(backupOnLogout: value),
+                                    );
+                              },
+                            ),
+                            if (settings.lastBackupTime != null) ...[
+                              const Divider(height: 1, indent: 56),
+                              ListTile(
+                                leading: const Icon(
+                                  Icons.history,
+                                  color: Colors.grey,
+                                ),
+                                title: const Text('Último Backup'),
+                                subtitle: Text(
+                                  _formatDateTime(settings.lastBackupTime!),
+                                ),
+                              ),
+                            ],
+                          ],
+                        );
+                      },
+                      loading: () =>
+                          const Center(child: CircularProgressIndicator()),
+                      error: (_, __) => const ListTile(
+                        title: Text('Error al cargar configuración'),
+                      ),
+                    );
+                  },
+                ),
+              ],
+            ),
             const SizedBox(height: 24),
             Container(
               padding: const EdgeInsets.all(12),
@@ -109,6 +239,104 @@ class BackupSettingsPage extends ConsumerWidget {
                   ),
                 ],
               ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  String _formatDateTime(DateTime dateTime) {
+    final now = DateTime.now();
+    final difference = now.difference(dateTime);
+
+    if (difference.inMinutes < 1) {
+      return 'Hace un momento';
+    } else if (difference.inHours < 1) {
+      return 'Hace ${difference.inMinutes} minutos';
+    } else if (difference.inDays < 1) {
+      return 'Hace ${difference.inHours} horas';
+    } else if (difference.inDays == 1) {
+      return 'Ayer a las ${dateTime.hour}:${dateTime.minute.toString().padLeft(2, '0')}';
+    } else {
+      return '${dateTime.day}/${dateTime.month}/${dateTime.year} ${dateTime.hour}:${dateTime.minute.toString().padLeft(2, '0')}';
+    }
+  }
+
+  Future<void> _showScheduleDialog(
+    BuildContext context,
+    WidgetRef ref,
+    dynamic settings,
+  ) async {
+    final times = List<String>.from(settings.autoBackupTimes);
+
+    await showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          title: const Text('Horarios de Backup'),
+          content: SizedBox(
+            width: double.maxFinite,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (times.isEmpty)
+                  const Padding(
+                    padding: EdgeInsets.all(16.0),
+                    child: Text('No hay horarios configurados'),
+                  )
+                else
+                  ListView.builder(
+                    shrinkWrap: true,
+                    itemCount: times.length,
+                    itemBuilder: (context, index) {
+                      return ListTile(
+                        leading: const Icon(Icons.schedule),
+                        title: Text(times[index]),
+                        trailing: IconButton(
+                          icon: const Icon(Icons.delete, color: Colors.red),
+                          onPressed: () {
+                            setState(() {
+                              times.removeAt(index);
+                            });
+                          },
+                        ),
+                      );
+                    },
+                  ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () async {
+                final time = await showTimePicker(
+                  context: context,
+                  initialTime: TimeOfDay.now(),
+                );
+                if (time != null) {
+                  final timeString =
+                      '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}';
+                  if (!times.contains(timeString)) {
+                    setState(() {
+                      times.add(timeString);
+                      times.sort();
+                    });
+                  }
+                }
+              },
+              child: const Text('Agregar Horario'),
+            ),
+            FilledButton(
+              onPressed: () async {
+                await ref
+                    .read(settingsProvider.notifier)
+                    .updateSettings(settings.copyWith(autoBackupTimes: times));
+                if (context.mounted) {
+                  Navigator.of(context).pop();
+                }
+              },
+              child: const Text('Guardar'),
             ),
           ],
         ),
