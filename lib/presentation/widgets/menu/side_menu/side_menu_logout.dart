@@ -98,7 +98,7 @@ class SideMenuLogout extends ConsumerWidget {
           ],
         ),
       );
-    } else {
+    } else if (context.mounted) {
       // Show confirmation dialog before logging out
       await showDialog(
         context: context,

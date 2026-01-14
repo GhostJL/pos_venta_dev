@@ -249,13 +249,15 @@ class _PaymentPageState extends ConsumerState<PaymentPage> {
                   } catch (printError) {
                     debugPrint('Print error: $printError');
                     if (settings.autoSavePdfWhenPrintDisabled) {
-                      await _savePdfFallback(
-                        context,
-                        printerService,
-                        ticketData,
-                        settings,
-                        'No se pudo imprimir. Ticket guardado como PDF.',
-                      );
+                      if (context.mounted) {
+                        await _savePdfFallback(
+                          context,
+                          printerService,
+                          ticketData,
+                          settings,
+                          'No se pudo imprimir. Ticket guardado como PDF.',
+                        );
+                      }
                     }
                   }
                 } else {
@@ -272,37 +274,43 @@ class _PaymentPageState extends ConsumerState<PaymentPage> {
 
                   // Always save PDF as backup on Desktop
                   if (settings.autoSavePdfWhenPrintDisabled) {
-                    await _savePdfFallback(
-                      context,
-                      printerService,
-                      ticketData,
-                      settings,
-                      'Ticket guardado como PDF.',
-                    );
+                    if (context.mounted) {
+                      await _savePdfFallback(
+                        context,
+                        printerService,
+                        ticketData,
+                        settings,
+                        'Ticket guardado como PDF.',
+                      );
+                    }
                   }
                 }
               } else {
                 // No physical printer available, save as PDF
                 if (settings.autoSavePdfWhenPrintDisabled) {
-                  await _savePdfFallback(
-                    context,
-                    printerService,
-                    ticketData,
-                    settings,
-                    'Sin impresora física disponible. Ticket guardado como PDF.',
-                  );
+                  if (context.mounted) {
+                    await _savePdfFallback(
+                      context,
+                      printerService,
+                      ticketData,
+                      settings,
+                      'Sin impresora física disponible. Ticket guardado como PDF.',
+                    );
+                  }
                 }
               }
             } else {
               // Printing is disabled, save as PDF
               if (settings.autoSavePdfWhenPrintDisabled) {
-                await _savePdfFallback(
-                  context,
-                  printerService,
-                  ticketData,
-                  settings,
-                  'Ticket guardado como PDF',
-                );
+                if (context.mounted) {
+                  await _savePdfFallback(
+                    context,
+                    printerService,
+                    ticketData,
+                    settings,
+                    'Ticket guardado como PDF',
+                  );
+                }
               }
             }
           } catch (e) {
