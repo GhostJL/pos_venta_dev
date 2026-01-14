@@ -8,6 +8,7 @@ import 'package:posventa/presentation/providers/di/sale_di.dart';
 import 'package:posventa/presentation/widgets/common/async_value_handler.dart';
 import 'package:intl/intl.dart';
 import 'package:posventa/domain/entities/customer_payment.dart';
+import 'package:posventa/features/customers/presentation/widgets/customer_payment_dialog.dart';
 import 'package:posventa/presentation/providers/di/customer_di.dart';
 
 class CustomerDetailsPage extends ConsumerStatefulWidget {
@@ -393,61 +394,9 @@ class _CustomerDetailsPageState extends ConsumerState<CustomerDetailsPage>
   }
 
   void _showPaymentDialog(BuildContext context, Customer customer) {
-    final controller = TextEditingController();
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Registrar Pago'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text('Deuda actual: \$${customer.creditUsed.toStringAsFixed(2)}'),
-            const SizedBox(height: 16),
-            TextField(
-              controller: controller,
-              keyboardType: const TextInputType.numberWithOptions(
-                decimal: true,
-              ),
-              decoration: const InputDecoration(
-                labelText: 'Monto a pagar',
-                prefixText: '\$ ',
-                border: OutlineInputBorder(),
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancelar'),
-          ),
-          FilledButton(
-            onPressed: () async {
-              final amount = double.tryParse(controller.text);
-              if (amount != null && amount > 0) {
-                // Determine logic: We update the debt in CustomerNotifier
-                // But we are in Details Page with specialized provider.
-                // We should call CustomerNotifier to handle the logic logic
-                await ref
-                    .read(customerProvider.notifier)
-                    .payDebt(customer.id!, amount);
-                // Also invalidate local provider
-                ref.invalidate(customerByIdProvider(customer.id!));
-
-                if (context.mounted) {
-                  Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Pago registrado correctamente'),
-                    ),
-                  );
-                }
-              }
-            },
-            child: const Text('Pagar'),
-          ),
-        ],
-      ),
+      builder: (context) => CustomerPaymentDialog(customer: customer),
     );
   }
 }
