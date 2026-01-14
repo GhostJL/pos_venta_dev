@@ -1,4 +1,7 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:posventa/presentation/widgets/auth/login/login_footer.dart';
 import 'package:posventa/presentation/widgets/auth/login/login_form.dart';
@@ -43,6 +46,21 @@ class LoginPage extends ConsumerWidget {
           ),
         ),
       ),
+      floatingActionButton:
+          (Platform.isWindows || Platform.isLinux || Platform.isMacOS)
+          ? FloatingActionButton.extended(
+              onPressed: () {
+                exit(0);
+              },
+              label: const Text('Salir'),
+              icon: const Icon(Icons.exit_to_app),
+              tooltip: 'Cerrar aplicación',
+              backgroundColor: Theme.of(
+                context,
+              ).colorScheme.surfaceContainerHighest,
+              foregroundColor: Theme.of(context).colorScheme.onSurfaceVariant,
+            )
+          : null,
     );
   }
 }

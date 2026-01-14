@@ -22,11 +22,13 @@ void main() async {
       backgroundColor: Colors.transparent,
       skipTaskbar: false,
       titleBarStyle: TitleBarStyle.normal,
+      fullScreen: true, // True fullscreen - hides taskbar and window borders
     );
 
     windowManager.waitUntilReadyToShow(windowOptions, () async {
       await windowManager.show();
       await windowManager.focus();
+      await windowManager.setAlwaysOnTop(true); // Keep app in focus
     });
   }
 

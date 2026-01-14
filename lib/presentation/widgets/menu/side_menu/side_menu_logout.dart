@@ -99,7 +99,30 @@ class SideMenuLogout extends ConsumerWidget {
         ),
       );
     } else {
-      ref.read(authProvider.notifier).logout();
+      // Show confirmation dialog before logging out
+      await showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Cerrar Sesión'),
+          content: const Text('¿Estás seguro de que deseas cerrar sesión?'),
+          actions: [
+            TextButton(
+              onPressed: () => context.pop(),
+              child: const Text('Cancelar'),
+            ),
+            FilledButton(
+              onPressed: () {
+                context.pop();
+                ref.read(authProvider.notifier).logout();
+              },
+              style: FilledButton.styleFrom(
+                backgroundColor: Theme.of(context).colorScheme.error,
+              ),
+              child: const Text('Cerrar Sesión'),
+            ),
+          ],
+        ),
+      );
     }
   }
 }
