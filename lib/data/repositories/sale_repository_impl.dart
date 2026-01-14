@@ -22,6 +22,7 @@ class SaleRepositoryImpl implements SaleRepository {
     int? offset,
     int? cashierId,
     int? customerId,
+    bool onlyUnpaid = false,
   }) async {
     final q = db.select(db.sales).join([
       leftOuterJoin(
@@ -29,6 +30,10 @@ class SaleRepositoryImpl implements SaleRepository {
         db.customers.id.equalsExp(db.sales.customerId),
       ),
     ]);
+
+    if (onlyUnpaid) {
+      q.where(db.sales.paymentStatus.equals('paid').not());
+    }
 
     if (startDate != null) {
       q.where(db.sales.saleDate.isBiggerOrEqualValue(startDate));
@@ -71,6 +76,9 @@ class SaleRepositoryImpl implements SaleRepository {
           discountCents: saleRow.discountCents,
           taxCents: saleRow.taxCents,
           totalCents: saleRow.totalCents,
+          amountPaidCents: saleRow.amountPaidCents,
+          balanceCents: saleRow.balanceCents,
+          paymentStatus: saleRow.paymentStatus,
           status: SaleStatus.values.firstWhere(
             (e) => e.name == saleRow.status,
             orElse: () => SaleStatus.completed,
@@ -171,8 +179,13 @@ class SaleRepositoryImpl implements SaleRepository {
     DateTime? endDate,
     int? cashierId,
     int? customerId,
+    bool onlyUnpaid = false,
   }) async {
     final q = db.selectOnly(db.sales)..addColumns([db.sales.id.count()]);
+
+    if (onlyUnpaid) {
+      q.where(db.sales.paymentStatus.equals('paid').not());
+    }
 
     if (startDate != null) {
       q.where(db.sales.saleDate.isBiggerOrEqualValue(startDate));
@@ -215,6 +228,9 @@ class SaleRepositoryImpl implements SaleRepository {
       discountCents: saleRow.discountCents,
       taxCents: saleRow.taxCents,
       totalCents: saleRow.totalCents,
+      amountPaidCents: saleRow.amountPaidCents,
+      balanceCents: saleRow.balanceCents,
+      paymentStatus: saleRow.paymentStatus,
       status: SaleStatus.values.firstWhere(
         (e) => e.name == saleRow.status,
         orElse: () => SaleStatus.completed,
@@ -251,6 +267,7 @@ class SaleRepositoryImpl implements SaleRepository {
     int? offset,
     int? cashierId,
     int? customerId,
+    bool onlyUnpaid = false,
   }) {
     // Basic stream implementation watching the sales table
     // For more complex querying relative to filters, we might need to re-query
@@ -266,6 +283,7 @@ class SaleRepositoryImpl implements SaleRepository {
         offset: offset,
         cashierId: cashierId,
         customerId: customerId,
+        onlyUnpaid: onlyUnpaid,
       ),
     );
   }
@@ -284,6 +302,17 @@ class SaleRepositoryImpl implements SaleRepository {
   Future<int> executeSaleTransaction(SaleTransaction transaction) async {
     return db.transaction(() async {
       // 1. Insert Sale
+      // Calculate totals from payments to ensure consistency
+      int calculatedAmountPaid = 0;
+      for (final p in transaction.sale.payments) {
+        calculatedAmountPaid += p.amountCents;
+      }
+      final calculatedBalance =
+          transaction.sale.totalCents - calculatedAmountPaid;
+      final calculatedPaymentStatus = calculatedBalance <= 0
+          ? 'paid'
+          : (calculatedAmountPaid > 0 ? 'partial' : 'unpaid');
+
       final saleId = await db
           .into(db.sales)
           .insert(
@@ -296,6 +325,9 @@ class SaleRepositoryImpl implements SaleRepository {
               discountCents: Value(transaction.sale.discountCents),
               taxCents: Value(transaction.sale.taxCents),
               totalCents: transaction.sale.totalCents,
+              amountPaidCents: Value(calculatedAmountPaid),
+              balanceCents: Value(calculatedBalance),
+              paymentStatus: Value(calculatedPaymentStatus),
               status: Value(transaction.sale.status.name),
               saleDate: transaction.sale.saleDate,
               createdAt: Value(transaction.sale.createdAt),

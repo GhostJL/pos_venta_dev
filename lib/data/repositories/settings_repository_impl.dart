@@ -13,12 +13,14 @@ class SettingsRepositoryImpl implements SettingsRepository {
     final useInventory = _prefs.getBool(StorageKeys.useInventory) ?? true;
     final useTax = _prefs.getBool(StorageKeys.useTax) ?? true;
     final printerName = _prefs.getString(StorageKeys.printerName);
+    final printerAddress = _prefs.getString(StorageKeys.printerAddress);
     final paperWidthMm = _prefs.getInt(StorageKeys.paperWidthMm) ?? 80;
 
     return AppSettings(
       useInventory: useInventory,
       useTax: useTax,
       printerName: printerName,
+      printerAddress: printerAddress,
       paperWidthMm: paperWidthMm,
     );
   }
@@ -27,10 +29,19 @@ class SettingsRepositoryImpl implements SettingsRepository {
   Future<void> saveSettings(AppSettings settings) async {
     await _prefs.setBool(StorageKeys.useInventory, settings.useInventory);
     await _prefs.setBool(StorageKeys.useTax, settings.useTax);
+    await _prefs.setBool(StorageKeys.useTax, settings.useTax);
     if (settings.printerName != null) {
       await _prefs.setString(StorageKeys.printerName, settings.printerName!);
     } else {
       await _prefs.remove(StorageKeys.printerName);
+    }
+    if (settings.printerAddress != null) {
+      await _prefs.setString(
+        StorageKeys.printerAddress,
+        settings.printerAddress!,
+      );
+    } else {
+      await _prefs.remove(StorageKeys.printerAddress);
     }
     await _prefs.setInt(StorageKeys.paperWidthMm, settings.paperWidthMm);
   }

@@ -1,0 +1,80 @@
+
+  Future<void> _confirmVoidPayment(
+    BuildContext context,
+    CustomerPayment payment,
+  ) async {
+    final reasonController = TextEditingController();
+    final shouldVoid = await showDialog<bool>(
+      context: context,
+      builder:
+          (context) => AlertDialog(
+            title: const Text('Anular Abono'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  '¿Está seguro de anular el abono de \$${payment.amount.toStringAsFixed(2)}?',
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: reasonController,
+                  decoration: const InputDecoration(
+                    labelText: 'Motivo de anulación',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: const Text('Cancelar'),
+              ),
+              FilledButton(
+                onPressed: () {
+                  if (reasonController.text.isEmpty) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Ingrese un motivo')),
+                    );
+                    return;
+                  }
+                  Navigator.of(context).pop(true);
+                },
+                style: FilledButton.styleFrom(backgroundColor: Colors.red),
+                child: const Text('Anular'),
+              ),
+            ],
+          ),
+    );
+
+    if (shouldVoid == true) {
+      if (!mounted) return;
+      
+      final user = ref.read(authProvider).user;
+      final userId = user?.id ?? 1;
+
+      try {
+        await ref.read(customerRepositoryProvider).voidPayment(
+          paymentId: payment.id!,
+          performedBy: userId,
+          reason: reasonController.text,
+        );
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Abono anulado correctamente')),
+          );
+          // Refresh
+          ref.invalidate(customerHistoryProvider(payment.customerId));
+          ref.invalidate(customerByIdProvider(payment.customerId));
+          ref.invalidate(customerProvider);
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Error al anular: $e')),
+          );
+        }
+      }
+    }
+  }

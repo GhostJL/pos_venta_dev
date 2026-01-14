@@ -466,6 +466,10 @@ class CustomerPayments extends Table {
   IntColumn get processedBy =>
       integer().named('processed_by').references(Users, #id)();
   TextColumn get notes => text().nullable()();
+  TextColumn get status => text().withDefault(const Constant('active'))();
+  TextColumn get type => text().withDefault(const Constant('payment'))();
+  IntColumn get saleId =>
+      integer().nullable().named('sale_id').references(Sales, #id)();
   DateTimeColumn get createdAt =>
       dateTime().withDefault(currentDateAndTime).named('created_at')();
 
@@ -492,6 +496,12 @@ class Sales extends Table {
   IntColumn get taxCents =>
       integer().withDefault(const Constant(0)).named('tax_cents')();
   IntColumn get totalCents => integer().named('total_cents')();
+  IntColumn get balanceCents =>
+      integer().withDefault(const Constant(0)).named('balance_cents')();
+  IntColumn get amountPaidCents =>
+      integer().withDefault(const Constant(0)).named('amount_paid_cents')();
+  TextColumn get paymentStatus =>
+      text().withDefault(const Constant('unpaid')).named('payment_status')();
   TextColumn get status => text().withDefault(const Constant('completed'))();
   DateTimeColumn get saleDate => dateTime().named('sale_date')();
   DateTimeColumn get createdAt =>

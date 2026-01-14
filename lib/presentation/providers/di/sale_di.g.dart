@@ -181,6 +181,80 @@ final class GetSalesUseCaseProvider
 
 String _$getSalesUseCaseHash() => r'b8404b9c68a426df76866da8169c2d0562cc427a';
 
+@ProviderFor(unpaidSales)
+const unpaidSalesProvider = UnpaidSalesFamily._();
+
+final class UnpaidSalesProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<List<Sale>>,
+          List<Sale>,
+          FutureOr<List<Sale>>
+        >
+    with $FutureModifier<List<Sale>>, $FutureProvider<List<Sale>> {
+  const UnpaidSalesProvider._({
+    required UnpaidSalesFamily super.from,
+    required int super.argument,
+  }) : super(
+         retry: null,
+         name: r'unpaidSalesProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
+
+  @override
+  String debugGetCreateSourceHash() => _$unpaidSalesHash();
+
+  @override
+  String toString() {
+    return r'unpaidSalesProvider'
+        ''
+        '($argument)';
+  }
+
+  @$internal
+  @override
+  $FutureProviderElement<List<Sale>> $createElement($ProviderPointer pointer) =>
+      $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<List<Sale>> create(Ref ref) {
+    final argument = this.argument as int;
+    return unpaidSales(ref, argument);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return other is UnpaidSalesProvider && other.argument == argument;
+  }
+
+  @override
+  int get hashCode {
+    return argument.hashCode;
+  }
+}
+
+String _$unpaidSalesHash() => r'ef99a8a11d07130d37ca2e7284db132c62f51497';
+
+final class UnpaidSalesFamily extends $Family
+    with $FunctionalFamilyOverride<FutureOr<List<Sale>>, int> {
+  const UnpaidSalesFamily._()
+    : super(
+        retry: null,
+        name: r'unpaidSalesProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: true,
+      );
+
+  UnpaidSalesProvider call(int customerId) =>
+      UnpaidSalesProvider._(argument: customerId, from: this);
+
+  @override
+  String toString() => r'unpaidSalesProvider';
+}
+
 @ProviderFor(getSalesByCustomerUseCase)
 const getSalesByCustomerUseCaseProvider = GetSalesByCustomerUseCaseProvider._();
 

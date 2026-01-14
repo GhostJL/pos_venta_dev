@@ -9,6 +9,7 @@ abstract class SaleRepository {
     int? offset,
     int? cashierId,
     int? customerId,
+    bool onlyUnpaid = false,
   });
 
   Future<int> countSales({
@@ -16,6 +17,7 @@ abstract class SaleRepository {
     DateTime? endDate,
     int? cashierId,
     int? customerId,
+    bool onlyUnpaid = false,
   });
 
   Stream<List<Sale>> getSalesStream({
@@ -25,6 +27,7 @@ abstract class SaleRepository {
     int? offset,
     int? cashierId,
     int? customerId,
+    bool onlyUnpaid = false,
   });
 
   Future<Sale?> getSaleById(int id);

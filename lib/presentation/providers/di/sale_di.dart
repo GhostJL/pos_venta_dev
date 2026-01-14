@@ -60,6 +60,13 @@ GetSalesUseCase getSalesUseCase(ref) =>
     GetSalesUseCase(ref.watch(saleRepositoryProvider));
 
 @riverpod
+Future<List<Sale>> unpaidSales(ref, int customerId) {
+  return ref
+      .watch(saleRepositoryProvider)
+      .getSales(customerId: customerId, onlyUnpaid: true);
+}
+
+@riverpod
 GetSalesByCustomerUseCase getSalesByCustomerUseCase(ref) =>
     GetSalesByCustomerUseCase(ref.watch(saleRepositoryProvider));
 

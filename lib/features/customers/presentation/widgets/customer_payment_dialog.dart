@@ -4,9 +4,8 @@ import 'package:posventa/domain/entities/customer.dart';
 import 'package:posventa/domain/entities/customer_payment.dart';
 import 'package:posventa/presentation/providers/customer_providers.dart';
 import 'package:posventa/presentation/providers/debtors_provider.dart';
-import 'package:posventa/presentation/providers/di/customer_di.dart';
 import 'package:posventa/presentation/providers/auth_provider.dart';
-import 'package:posventa/presentation/providers/di/sale_di.dart';
+import 'package:posventa/presentation/providers/providers.dart'; // For storeRepositoryProvider
 
 class CustomerPaymentDialog extends ConsumerStatefulWidget {
   final Customer customer;
@@ -22,6 +21,7 @@ class _CustomerPaymentDialogState extends ConsumerState<CustomerPaymentDialog> {
   final _formKey = GlobalKey<FormState>();
   final _amountController = TextEditingController();
   final _notesController = TextEditingController();
+  int? _selectedSaleId;
   String _selectedMethod = 'Efectivo';
   bool _isLoading = false;
 
@@ -72,6 +72,7 @@ class _CustomerPaymentDialogState extends ConsumerState<CustomerPaymentDialog> {
               user?.id ??
               1, // Fallback to 1 if no user (should not happen in real app)
           notes: _notesController.text,
+          saleId: _selectedSaleId,
           createdAt: DateTime.now(),
         );
 
@@ -84,6 +85,7 @@ class _CustomerPaymentDialogState extends ConsumerState<CustomerPaymentDialog> {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Abono registrado correctamente')),
           );
+
           // Refresh customer list to update balance
           ref.invalidate(customerProvider);
           ref.invalidate(debtorsProvider);
@@ -143,6 +145,39 @@ class _CustomerPaymentDialogState extends ConsumerState<CustomerPaymentDialog> {
                   return null;
                 },
               ),
+              const SizedBox(height: 16),
+              ref
+                  .watch(unpaidSalesProvider(widget.customer.id!))
+                  .when(
+                    data: (sales) {
+                      return DropdownButtonFormField<int?>(
+                        initialValue: _selectedSaleId,
+                        decoration: const InputDecoration(
+                          labelText: 'Asignar a Venta (Opcional)',
+                          border: OutlineInputBorder(),
+                        ),
+                        items: [
+                          const DropdownMenuItem<int?>(
+                            value: null,
+                            child: Text('Abono General'),
+                          ),
+                          ...sales.map(
+                            (s) => DropdownMenuItem<int?>(
+                              value: s.id,
+                              child: Text(
+                                'Venta #${s.saleNumber} - Bal: \$${s.balance.toStringAsFixed(2)}',
+                              ),
+                            ),
+                          ),
+                        ],
+                        onChanged: (val) {
+                          setState(() => _selectedSaleId = val);
+                        },
+                      );
+                    },
+                    loading: () => const LinearProgressIndicator(),
+                    error: (err, stack) => Text('Error cargando ventas: $err'),
+                  ),
               const SizedBox(height: 16),
               DropdownButtonFormField<String>(
                 initialValue: _selectedMethod,

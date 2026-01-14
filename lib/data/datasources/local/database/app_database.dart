@@ -48,7 +48,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 38; // Bumped to 38
+  int get schemaVersion => 39; // Bumped to 39
 
   static QueryExecutor _openConnection() {
     return driftDatabase(
@@ -71,6 +71,16 @@ class AppDatabase extends _$AppDatabase {
       if (from < 38) {
         // Migration to version 38: Create customer_payments table
         await m.createTable(customerPayments);
+      }
+      if (from < 39) {
+        // Migration to 39: Add credit/allocation columns
+        await m.addColumn(customerPayments, customerPayments.status);
+        await m.addColumn(customerPayments, customerPayments.type);
+        await m.addColumn(customerPayments, customerPayments.saleId);
+
+        await m.addColumn(sales, sales.balanceCents);
+        await m.addColumn(sales, sales.amountPaidCents);
+        await m.addColumn(sales, sales.paymentStatus);
       }
     },
     beforeOpen: (details) async {

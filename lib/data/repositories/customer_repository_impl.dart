@@ -318,6 +318,9 @@ class CustomerRepositoryImpl implements CustomerRepository {
               reference: Value(payment.reference),
               processedBy: payment.processedBy,
               notes: Value(payment.notes),
+              status: const Value('active'),
+              type: const Value('payment'),
+              saleId: Value(payment.saleId),
             ),
           );
 
@@ -328,7 +331,27 @@ class CustomerRepositoryImpl implements CustomerRepository {
         isIncrement: false,
       );
 
-      // 3. If cash payment and session provided, register cash movement
+      // 3. Update Sale Balance (Allocation Logic)
+      if (payment.saleId != null) {
+        final sale = await (db.select(
+          db.sales,
+        )..where((t) => t.id.equals(payment.saleId!))).getSingle();
+
+        final paymentAmountCents = (payment.amount * 100).round();
+        final newPaid = sale.amountPaidCents + paymentAmountCents;
+        final newBalance = sale.totalCents - newPaid;
+        final newPaymentStatus = newBalance <= 0 ? 'paid' : 'partial';
+
+        await (db.update(db.sales)..where((t) => t.id.equals(sale.id))).write(
+          drift_db.SalesCompanion(
+            amountPaidCents: Value(newPaid),
+            balanceCents: Value(newBalance),
+            paymentStatus: Value(newPaymentStatus),
+          ),
+        );
+      }
+
+      // 4. If cash payment and session provided, register cash movement
       if (cashSessionId != null && payment.paymentMethod == 'Efectivo') {
         // Fetch customer and user details for better description
         final customerRow = await (db.select(
@@ -351,6 +374,11 @@ class CustomerRepositoryImpl implements CustomerRepository {
             ? 'Ref: ${payment.reference}'
             : '';
 
+        // Add allocation info to description
+        final allocText = payment.saleId != null
+            ? 'Nota #${payment.saleId}'
+            : 'Abono General';
+
         await db
             .into(db.cashMovements)
             .insert(
@@ -360,7 +388,7 @@ class CustomerRepositoryImpl implements CustomerRepository {
                 amountCents: (payment.amount * 100).round(),
                 reason: 'Abono a cuenta',
                 description: Value(
-                  'Abono de: $customerName. Realizado por: $userName. $refText',
+                  'Abono ($allocText): $customerName. Realizado por: $userName. $refText',
                 ),
                 performedBy: payment.processedBy,
                 movementDate: Value(DateTime.now()),
@@ -369,6 +397,89 @@ class CustomerRepositoryImpl implements CustomerRepository {
       }
 
       return id;
+    });
+  }
+
+  @override
+  Future<void> voidPayment({
+    required int paymentId,
+    required int performedBy,
+    required String reason,
+  }) async {
+    return await db.transaction(() async {
+      // 1. Get original payment
+      final original = await (db.select(
+        db.customerPayments,
+      )..where((t) => t.id.equals(paymentId))).getSingle();
+
+      if (original.status == 'voided') {
+        throw Exception('El pago ya ha sido anulado.');
+      }
+
+      // 2. Update Status to 'voided'
+      await (db.update(
+        db.customerPayments,
+      )..where((t) => t.id.equals(paymentId))).write(
+        drift_db.CustomerPaymentsCompanion(
+          status: const Value('voided'),
+          notes: Value('${original.notes ?? ''} [ANULADO: $reason]'.trim()),
+        ),
+      );
+
+      // 3. Update Credit (Add debt back - Reverse payment effect)
+      await updateCustomerCredit(
+        original.customerId,
+        original.amountCents / 100.0,
+        isIncrement: true,
+      );
+
+      // 4. Revert Allocation (If assigned to sale)
+      if (original.saleId != null) {
+        final sale = await (db.select(
+          db.sales,
+        )..where((t) => t.id.equals(original.saleId!))).getSingle();
+
+        final newPaid = sale.amountPaidCents - original.amountCents;
+        final newBalance = sale.totalCents - newPaid;
+        final newPaymentStatus = newPaid <= 0
+            ? 'unpaid'
+            : (newBalance <= 0 ? 'paid' : 'partial');
+
+        await (db.update(db.sales)..where((t) => t.id.equals(sale.id))).write(
+          drift_db.SalesCompanion(
+            amountPaidCents: Value(newPaid),
+            balanceCents: Value(newBalance),
+            paymentStatus: Value(newPaymentStatus),
+          ),
+        );
+      }
+
+      // 5. If cash, reverse movement (Withdrawal)
+      if (original.paymentMethod == 'Efectivo') {
+        final session =
+            await (db.select(db.cashSessions)..where(
+                  (t) => t.userId.equals(performedBy) & t.closedAt.isNull(),
+                ))
+                .getSingleOrNull();
+
+        if (session != null) {
+          await db
+              .into(db.cashMovements)
+              .insert(
+                drift_db.CashMovementsCompanion.insert(
+                  cashSessionId: session.id,
+                  movementType: 'withdrawal',
+                  amountCents: original.amountCents,
+                  reason: 'Anulación de Abono',
+                  description: Value(
+                    'Anulación abono #${original.id}. Razón: $reason',
+                  ),
+                  performedBy: performedBy,
+                  movementDate: Value(DateTime.now()),
+                ),
+              );
+        }
+      }
     });
   }
 
@@ -399,6 +510,9 @@ class CustomerRepositoryImpl implements CustomerRepository {
           processedBy: payment.processedBy,
           processedByName: user?.username,
           notes: payment.notes,
+          status: payment.status,
+          type: payment.type,
+          saleId: payment.saleId,
           createdAt: payment.createdAt,
         );
       }).toList();
@@ -433,6 +547,9 @@ class CustomerRepositoryImpl implements CustomerRepository {
         processedBy: payment.processedBy,
         processedByName: user?.username,
         notes: payment.notes,
+        status: payment.status,
+        type: payment.type,
+        saleId: payment.saleId,
         createdAt: payment.createdAt,
       );
     }).toList();

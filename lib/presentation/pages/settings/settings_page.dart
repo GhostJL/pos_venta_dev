@@ -122,6 +122,7 @@ class SettingsPage extends ConsumerWidget {
                         }
                       },
                     ),
+                    const Divider(height: 1, indent: 16, endIndent: 16),
                   ],
                 ),
                 loading: () => const Center(

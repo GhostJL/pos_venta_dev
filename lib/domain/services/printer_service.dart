@@ -1,4 +1,5 @@
 import 'package:posventa/features/sales/domain/models/ticket_data.dart';
+
 import 'package:printing/printing.dart'; // We use the printing package types for Printer object
 
 abstract class PrinterService {

@@ -13,6 +13,9 @@ class Sale {
   final int discountCents;
   final int taxCents;
   final int totalCents;
+  final int amountPaidCents;
+  final int balanceCents;
+  final String paymentStatus;
   final SaleStatus status;
   final DateTime saleDate;
   final DateTime createdAt;
@@ -33,6 +36,9 @@ class Sale {
     this.discountCents = 0,
     this.taxCents = 0,
     required this.totalCents,
+    this.amountPaidCents = 0,
+    this.balanceCents = 0,
+    this.paymentStatus = 'unpaid',
     this.status = SaleStatus.completed,
     required this.saleDate,
     required this.createdAt,
@@ -48,4 +54,6 @@ class Sale {
   double get discount => discountCents / 100.0;
   double get tax => taxCents / 100.0;
   double get total => totalCents / 100.0;
+  double get amountPaid => amountPaidCents / 100.0;
+  double get balance => balanceCents / 100.0;
 }

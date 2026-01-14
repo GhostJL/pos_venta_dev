@@ -153,10 +153,18 @@ class _HardwareSettingsPageState extends ConsumerState<HardwareSettingsPage> {
                           groupValue: currentPrinter,
                           onChanged: (value) async {
                             if (value != null) {
+                              final selectedPrinter = _printers.firstWhere(
+                                (p) => p.name == value,
+                                orElse: () => Printer(url: '', name: value),
+                              );
+
                               await ref
                                   .read(settingsProvider.notifier)
                                   .updateSettings(
-                                    settings.copyWith(printerName: value),
+                                    settings.copyWith(
+                                      printerName: selectedPrinter.name,
+                                      printerAddress: selectedPrinter.url,
+                                    ),
                                   );
                             }
                           },

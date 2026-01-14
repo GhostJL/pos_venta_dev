@@ -13,6 +13,9 @@ class SaleModel extends Sale {
     super.discountCents,
     super.taxCents,
     required super.totalCents,
+    super.amountPaidCents,
+    super.balanceCents,
+    super.paymentStatus,
     super.status,
     required super.saleDate,
     required super.createdAt,
@@ -35,6 +38,9 @@ class SaleModel extends Sale {
       discountCents: json['discount_cents'] ?? 0,
       taxCents: json['tax_cents'] ?? 0,
       totalCents: json['total_cents'],
+      amountPaidCents: json['amount_paid_cents'] ?? 0,
+      balanceCents: json['balance_cents'] ?? json['total_cents'] ?? 0,
+      paymentStatus: json['payment_status'] ?? 'unpaid',
       status: json['status'] == 'completed'
           ? SaleStatus.completed
           : json['status'] == 'pending'
@@ -49,7 +55,7 @@ class SaleModel extends Sale {
           ? DateTime.parse(json['cancelled_at'])
           : null,
       cancellationReason: json['cancellation_reason'],
-      customerName: json['customer_name'], // Joined field
+      customerName: json['customer_name'],
     );
   }
 
@@ -64,6 +70,9 @@ class SaleModel extends Sale {
       'discount_cents': discountCents,
       'tax_cents': taxCents,
       'total_cents': totalCents,
+      'amount_paid_cents': amountPaidCents,
+      'balance_cents': balanceCents,
+      'payment_status': paymentStatus,
       'status': status.name,
       'sale_date': saleDate.toIso8601String(),
       'created_at': createdAt.toIso8601String(),
@@ -84,6 +93,9 @@ class SaleModel extends Sale {
       discountCents: sale.discountCents,
       taxCents: sale.taxCents,
       totalCents: sale.totalCents,
+      amountPaidCents: sale.amountPaidCents,
+      balanceCents: sale.balanceCents,
+      paymentStatus: sale.paymentStatus,
       status: sale.status,
       saleDate: sale.saleDate,
       createdAt: sale.createdAt,
@@ -110,6 +122,9 @@ class SaleModel extends Sale {
       discountCents: discountCents,
       taxCents: taxCents,
       totalCents: totalCents,
+      amountPaidCents: amountPaidCents,
+      balanceCents: balanceCents,
+      paymentStatus: paymentStatus,
       status: status,
       saleDate: saleDate,
       createdAt: createdAt,

@@ -8,6 +8,9 @@ class CustomerPayment {
   final int processedBy;
   final String? processedByName;
   final String? notes;
+  final String status;
+  final String type;
+  final int? saleId;
   final DateTime createdAt;
 
   CustomerPayment({
@@ -20,6 +23,9 @@ class CustomerPayment {
     required this.processedBy,
     this.processedByName,
     this.notes,
+    this.status = 'active',
+    this.type = 'payment',
+    this.saleId,
     required this.createdAt,
   });
 }

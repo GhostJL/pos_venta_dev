@@ -10,6 +10,7 @@ import 'package:intl/intl.dart';
 import 'package:posventa/domain/entities/customer_payment.dart';
 import 'package:posventa/features/customers/presentation/widgets/customer_payment_dialog.dart';
 import 'package:posventa/presentation/providers/di/customer_di.dart';
+import 'package:posventa/presentation/providers/auth_provider.dart';
 
 class CustomerDetailsPage extends ConsumerStatefulWidget {
   final int customerId;
@@ -182,27 +183,51 @@ class _CustomerDetailsPageState extends ConsumerState<CustomerDetailsPage>
   }
 
   Widget _buildPaymentItem(BuildContext context, CustomerPayment payment) {
+    final isVoided = payment.status == 'voided';
+    final color = isVoided ? Colors.grey : Colors.green;
+    final bgColor = isVoided
+        ? Colors.grey.withAlpha(50)
+        : Colors.green.withAlpha(20);
+    final borderColor = isVoided
+        ? Colors.grey.withAlpha(100)
+        : Colors.green.withAlpha(50);
+
     return Card(
       elevation: 0,
-      color: Colors.green.withAlpha(20),
+      color: bgColor,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: Colors.green.withAlpha(50)),
+        side: BorderSide(color: borderColor),
       ),
       margin: const EdgeInsets.only(bottom: 8),
       child: ListTile(
         leading: CircleAvatar(
-          backgroundColor: Colors.green.withAlpha(50),
-          child: const Icon(Icons.payment, color: Colors.green, size: 20),
+          backgroundColor: color.withAlpha(50),
+          child: Icon(
+            isVoided ? Icons.block : Icons.payment,
+            color: color,
+            size: 20,
+          ),
         ),
-        title: const Text(
-          'Abono a Cuenta',
-          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.green),
+        title: Text(
+          isVoided ? 'Abono (ANULADO)' : 'Abono a Cuenta',
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: color,
+            decoration: isVoided ? TextDecoration.lineThrough : null,
+          ),
         ),
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(DateFormat('dd/MM/yyyy HH:mm').format(payment.paymentDate)),
+            if (payment.saleId != null)
+              Text(
+                'Asignado a Nota #${payment.saleId}', // Could fetch sale number if joined, but ID is okay or verify join
+                style: Theme.of(
+                  context,
+                ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.bold),
+              ),
             if (payment.notes != null && payment.notes!.isNotEmpty)
               Text(
                 payment.notes!,
@@ -222,12 +247,38 @@ class _CustomerDetailsPageState extends ConsumerState<CustomerDetailsPage>
               ),
           ],
         ),
-        trailing: Text(
-          '+\$${payment.amount.toStringAsFixed(2)}',
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.bold,
-            color: Colors.green,
-          ),
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              '+\$${payment.amount.toStringAsFixed(2)}',
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: color,
+                decoration: isVoided ? TextDecoration.lineThrough : null,
+              ),
+            ),
+            if (!isVoided)
+              PopupMenuButton<String>(
+                onSelected: (value) {
+                  if (value == 'void') {
+                    _confirmVoidPayment(context, payment);
+                  }
+                },
+                itemBuilder: (context) => [
+                  const PopupMenuItem(
+                    value: 'void',
+                    child: Row(
+                      children: [
+                        Icon(Icons.cancel, color: Colors.red, size: 20),
+                        SizedBox(width: 8),
+                        Text('Anular', style: TextStyle(color: Colors.red)),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+          ],
         ),
       ),
     );
@@ -398,6 +449,80 @@ class _CustomerDetailsPageState extends ConsumerState<CustomerDetailsPage>
       context: context,
       builder: (context) => CustomerPaymentDialog(customer: customer),
     );
+  }
+
+  Future<void> _confirmVoidPayment(
+    BuildContext context,
+    CustomerPayment payment,
+  ) async {
+    final messenger = ScaffoldMessenger.of(context);
+    final reasonController = TextEditingController();
+    final shouldVoid = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Anular Abono'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              '¿Está seguro de anular el abono de \$${payment.amount.toStringAsFixed(2)}?',
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: reasonController,
+              decoration: const InputDecoration(
+                labelText: 'Motivo de anulación',
+                border: OutlineInputBorder(),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancelar'),
+          ),
+          FilledButton(
+            onPressed: () {
+              if (reasonController.text.isEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Ingrese un motivo')),
+                );
+                return;
+              }
+              Navigator.of(context).pop(true);
+            },
+            style: FilledButton.styleFrom(backgroundColor: Colors.red),
+            child: const Text('Anular'),
+          ),
+        ],
+      ),
+    );
+
+    if (shouldVoid == true && mounted) {
+      final user = ref.read(authProvider).user;
+      final userId = user?.id ?? 1;
+
+      try {
+        await ref
+            .read(customerRepositoryProvider)
+            .voidPayment(
+              paymentId: payment.id!,
+              performedBy: userId,
+              reason: reasonController.text,
+            );
+
+        messenger.showSnackBar(
+          const SnackBar(content: Text('Abono anulado correctamente')),
+        );
+        // Refresh
+        ref.invalidate(customerHistoryProvider(payment.customerId));
+        ref.invalidate(customerByIdProvider(payment.customerId));
+        ref.invalidate(customerProvider);
+      } catch (e) {
+        messenger.showSnackBar(SnackBar(content: Text('Error al anular: $e')));
+      }
+    }
   }
 }
 

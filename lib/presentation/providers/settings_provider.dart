@@ -1,5 +1,6 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:posventa/domain/entities/app_settings.dart';
+
 import 'package:posventa/presentation/providers/di/core_di.dart';
 import 'package:posventa/presentation/providers/di/inventory_di.dart';
 
