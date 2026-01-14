@@ -7,6 +7,7 @@ import 'package:posventa/domain/entities/sale.dart';
 import 'package:posventa/domain/entities/sale_item.dart';
 import 'package:posventa/domain/entities/sale_item_tax.dart';
 import 'package:posventa/domain/entities/sale_payment.dart';
+import 'package:posventa/domain/entities/sale_transaction.dart';
 import 'package:posventa/domain/entities/tax_rate.dart';
 import 'package:posventa/domain/services/printer_service.dart';
 import 'package:posventa/data/services/printer_service_impl.dart';
@@ -17,7 +18,6 @@ import 'package:posventa/presentation/providers/di/product_di.dart';
 import 'package:posventa/presentation/providers/di/inventory_di.dart';
 import 'package:posventa/presentation/providers/settings_provider.dart';
 
-import 'package:posventa/presentation/providers/di/customer_di.dart';
 import 'package:posventa/presentation/providers/customer_providers.dart';
 import 'package:posventa/presentation/providers/notification_providers.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -721,11 +721,13 @@ class POSNotifier extends _$POSNotifier {
           );
         }
 
-        await createSale.call(sale);
+        final update = CreditUpdate(
+          customerId: customer.id!,
+          amountCents: totalCents,
+          isIncrement: true,
+        );
 
-        await ref
-            .read(updateCustomerCreditUseCaseProvider)
-            .call(customer.id!, totalCents / 100.0, isIncrement: true);
+        await createSale.call(sale, creditUpdate: update);
 
         // Invalidate the customer provider to ensure next fetch gets updated credit usage
         ref.invalidate(customerByIdProvider(customer.id!));

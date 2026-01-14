@@ -16,11 +16,28 @@ class SaleTransaction {
   /// Movements to record
   final List<InventoryMovement> movements;
 
+  /// Optional credit update for the customer
+  final CreditUpdate? creditUpdate;
+
   SaleTransaction({
     required this.sale,
     required this.lotDeductions,
     required this.inventoryAdjustments,
     required this.movements,
+    this.creditUpdate,
+  });
+}
+
+/// Helper class to encapsulate credit update details
+class CreditUpdate {
+  final int customerId;
+  final int amountCents;
+  final bool isIncrement;
+
+  CreditUpdate({
+    required this.customerId,
+    required this.amountCents,
+    required this.isIncrement,
   });
 }
 

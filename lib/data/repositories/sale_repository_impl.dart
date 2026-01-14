@@ -449,6 +449,22 @@ class SaleRepositoryImpl implements SaleRepository {
             );
       }
 
+      // 7. Update Customer Credit (if applicable)
+
+      if (transaction.creditUpdate != null) {
+        final update = transaction.creditUpdate!;
+        final operator = update.isIncrement ? '+' : '-';
+
+        await db.customUpdate(
+          'UPDATE customers SET credit_used_cents = credit_used_cents $operator ? WHERE id = ?',
+          variables: [
+            Variable.withInt(update.amountCents),
+            Variable.withInt(update.customerId),
+          ],
+          updates: {db.customers},
+        );
+      }
+
       return saleId;
     });
   }

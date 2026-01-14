@@ -16,7 +16,7 @@ class CreateSaleUseCase {
     this._settingsRepository,
   );
 
-  Future<int> call(Sale sale) async {
+  Future<int> call(Sale sale, {CreditUpdate? creditUpdate}) async {
     // Prepare transaction data
     final List<SaleItemLotDeduction> lotDeductions = [];
     final List<InventoryAdjustment> inventoryAdjustments = [];
@@ -107,6 +107,7 @@ class CreateSaleUseCase {
       lotDeductions: lotDeductions,
       inventoryAdjustments: inventoryAdjustments,
       movements: movements,
+      creditUpdate: creditUpdate,
     );
 
     // Execute
