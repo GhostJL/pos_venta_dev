@@ -134,12 +134,12 @@ class _PosSalesPageState extends ConsumerState<PosSalesPage> {
               builder: (context, constraints) {
                 // Breakpoints
                 final width = constraints.maxWidth;
-                final isMobile = width < 700;
+                final isMobile = width < 900; // Adjusted breakpoint
 
                 if (isMobile) {
                   return _MobileLayout(searchFocusNode: _searchFocusNode);
                 } else {
-                  return _DesktopLayout(searchFocusNode: _searchFocusNode);
+                  return _WideLayout(searchFocusNode: _searchFocusNode);
                 }
               },
             ),
@@ -161,10 +161,10 @@ class _MobileLayout extends StatelessWidget {
   }
 }
 
-class _DesktopLayout extends StatelessWidget {
+class _WideLayout extends StatelessWidget {
   final FocusNode searchFocusNode;
 
-  const _DesktopLayout({required this.searchFocusNode});
+  const _WideLayout({required this.searchFocusNode});
 
   @override
   Widget build(BuildContext context) {
@@ -173,15 +173,15 @@ class _DesktopLayout extends StatelessWidget {
       children: [
         // Product Grid Area - Takes up more space
         Expanded(
-          flex: 6, // 60% width
+          flex: 65, // 65% width
           child: Padding(
-            padding: const EdgeInsets.all(12.0),
+            padding: const EdgeInsets.all(16.0),
             child: Card(
               elevation: 0,
               color: Theme.of(context).colorScheme.surface,
               clipBehavior: Clip.antiAlias,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(24), // Softer corners
                 side: BorderSide(
                   color: Theme.of(context).colorScheme.outlineVariant,
                 ),
@@ -196,16 +196,16 @@ class _DesktopLayout extends StatelessWidget {
 
         // Cart Area - Takes up less space but remains readable
         Expanded(
-          flex: 4, // 40% width
+          flex: 35, // 35% width
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(0, 12, 12, 12),
+            padding: const EdgeInsets.fromLTRB(0, 16, 16, 16),
             child: Card(
-              elevation: 4,
-              shadowColor: Colors.black12,
+              elevation: 8, // Higher elevation for Cart
+              shadowColor: Colors.black.withValues(alpha: 0.1),
               color: Theme.of(context).colorScheme.surface,
               clipBehavior: Clip.antiAlias,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(24),
               ),
               child: const CartSection(isMobile: false),
             ),
