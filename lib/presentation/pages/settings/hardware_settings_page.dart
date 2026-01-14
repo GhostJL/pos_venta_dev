@@ -172,34 +172,32 @@ class _HardwareSettingsPageState extends ConsumerState<HardwareSettingsPage> {
                           trailing: const Icon(Icons.print),
                         ),
                         const Divider(),
-                        RadioGroup<String?>(
-                          groupValue: currentPrinter,
-                          onChanged: (value) async {
-                            if (value != null) {
-                              final selectedPrinter = _printers.firstWhere(
-                                (p) => p.name == value,
-                                orElse: () => Printer(url: '', name: value),
-                              );
-
-                              await ref
-                                  .read(settingsProvider.notifier)
-                                  .updateSettings(
-                                    settings.copyWith(
-                                      printerName: selectedPrinter.name,
-                                      printerAddress: selectedPrinter.url,
-                                    ),
+                        Column(
+                          children: _printers.map((printer) {
+                            return RadioListTile<String?>(
+                              title: Text(printer.name),
+                              subtitle: Text(printer.url),
+                              value: printer.name,
+                              groupValue: currentPrinter,
+                              onChanged: (value) async {
+                                if (value != null) {
+                                  final selectedPrinter = _printers.firstWhere(
+                                    (p) => p.name == value,
+                                    orElse: () => Printer(url: '', name: value),
                                   );
-                            }
-                          },
-                          child: Column(
-                            children: _printers.map((printer) {
-                              return RadioListTile<String?>(
-                                title: Text(printer.name),
-                                subtitle: Text(printer.url),
-                                value: printer.name,
-                              );
-                            }).toList(),
-                          ),
+
+                                  await ref
+                                      .read(settingsProvider.notifier)
+                                      .updateSettings(
+                                        settings.copyWith(
+                                          printerName: selectedPrinter.name,
+                                          printerAddress: selectedPrinter.url,
+                                        ),
+                                      );
+                                }
+                              },
+                            );
+                          }).toList(),
                         ),
                       ],
                     ),
@@ -208,25 +206,23 @@ class _HardwareSettingsPageState extends ConsumerState<HardwareSettingsPage> {
                   _buildHeader(theme, 'Ancho del Papel'),
                   const SizedBox(height: 16),
                   Card(
-                    child: RadioGroup<int>(
-                      groupValue: currentWidth,
-                      onChanged: (value) async {
-                        if (value != null) {
-                          await ref
-                              .read(settingsProvider.notifier)
-                              .updateSettings(
-                                settings.copyWith(paperWidthMm: value),
-                              );
-                        }
-                      },
-                      child: Column(
-                        children: paperWidths.map((width) {
-                          return RadioListTile<int>(
-                            title: Text('$width mm'),
-                            value: width,
-                          );
-                        }).toList(),
-                      ),
+                    child: Column(
+                      children: paperWidths.map((width) {
+                        return RadioListTile<int>(
+                          title: Text('$width mm'),
+                          value: width,
+                          groupValue: currentWidth,
+                          onChanged: (value) async {
+                            if (value != null) {
+                              await ref
+                                  .read(settingsProvider.notifier)
+                                  .updateSettings(
+                                    settings.copyWith(paperWidthMm: value),
+                                  );
+                            }
+                          },
+                        );
+                      }).toList(),
                     ),
                   ),
                   const SizedBox(height: 24),

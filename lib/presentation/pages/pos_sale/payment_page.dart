@@ -206,48 +206,104 @@ class _PaymentPageState extends ConsumerState<PaymentPage> {
           );
 
           try {
-            if (enablePrinting) {
-              // Printing is enabled, check if we have a valid printer
-              Printer? targetPrinter;
-              bool printerAvailable = false;
+            // Force a timeout on the entire printing process to avoid hanging navigation
+            await Future<void>.delayed(Duration.zero)
+                .then((_) async {
+                  if (enablePrinting) {
+                    // Printing is enabled, check if we have a valid printer
+                    Printer? targetPrinter;
+                    bool printerAvailable = false;
 
-              if (printerName != null) {
-                try {
-                  final printers = await printerService.getPrinters();
-                  targetPrinter = printers
-                      .where((p) => p.name == printerName)
-                      .firstOrNull;
+                    if (printerName != null) {
+                      try {
+                        final printers = await printerService.getPrinters();
+                        targetPrinter = printers
+                            .where((p) => p.name == printerName)
+                            .firstOrNull;
 
-                  // Check if printer was found and is not a PDF virtual printer
-                  if (targetPrinter != null) {
-                    // Filter out common PDF virtual printers
-                    final lowerName = targetPrinter.name.toLowerCase();
-                    final isPdfPrinter =
-                        lowerName.contains('pdf') ||
-                        lowerName.contains('microsoft print to pdf') ||
-                        lowerName.contains('adobe pdf') ||
-                        lowerName.contains('foxit') ||
-                        lowerName.contains('cutepdf') ||
-                        lowerName.contains('novapdf');
+                        // Check if printer was found and is not a PDF virtual printer
+                        if (targetPrinter != null) {
+                          // Filter out common PDF virtual printers
+                          final lowerName = targetPrinter.name.toLowerCase();
+                          final isPdfPrinter =
+                              lowerName.contains('pdf') ||
+                              lowerName.contains('microsoft print to pdf') ||
+                              lowerName.contains('adobe pdf') ||
+                              lowerName.contains('foxit') ||
+                              lowerName.contains('cutepdf') ||
+                              lowerName.contains('novapdf');
 
-                    printerAvailable = !isPdfPrinter;
-                  }
-                } catch (e) {
-                  debugPrint('Error loading printers for auto-print: $e');
-                }
-              }
+                          printerAvailable = !isPdfPrinter;
+                        }
+                      } catch (e) {
+                        debugPrint('Error loading printers for auto-print: $e');
+                      }
+                    }
 
-              if (printerAvailable && targetPrinter != null) {
-                // We have a physical printer configured
-                if (Platform.isAndroid) {
-                  // Android: Try to print, save PDF only if fails
-                  try {
-                    await printerService.printTicket(
-                      ticketData,
-                      printer: targetPrinter,
-                    );
-                  } catch (printError) {
-                    debugPrint('Print error: $printError');
+                    if (printerAvailable && targetPrinter != null) {
+                      // We have a physical printer configured
+                      if (Platform.isAndroid) {
+                        // Android: Try to print, save PDF only if fails
+                        try {
+                          await printerService.printTicket(
+                            ticketData,
+                            printer: targetPrinter,
+                          );
+                        } catch (printError) {
+                          debugPrint('Print error: $printError');
+                          if (settings.autoSavePdfWhenPrintDisabled) {
+                            if (context.mounted) {
+                              await _savePdfFallback(
+                                context,
+                                printerService,
+                                ticketData,
+                                settings,
+                                'No se pudo imprimir. Ticket guardado como PDF.',
+                              );
+                            }
+                          }
+                        }
+                      } else {
+                        // Desktop: Print AND save PDF (can't verify if printer is actually connected)
+                        // Attempt to print (will queue if printer available)
+                        try {
+                          await printerService.printTicket(
+                            ticketData,
+                            printer: targetPrinter,
+                          );
+                        } catch (printError) {
+                          debugPrint('Print error: $printError');
+                        }
+
+                        // Always save PDF as backup on Desktop
+                        if (settings.autoSavePdfWhenPrintDisabled) {
+                          if (context.mounted) {
+                            await _savePdfFallback(
+                              context,
+                              printerService,
+                              ticketData,
+                              settings,
+                              'Ticket guardado como PDF.',
+                            );
+                          }
+                        }
+                      }
+                    } else {
+                      // No physical printer available, save as PDF
+                      if (settings.autoSavePdfWhenPrintDisabled) {
+                        if (context.mounted) {
+                          await _savePdfFallback(
+                            context,
+                            printerService,
+                            ticketData,
+                            settings,
+                            'Sin impresora física disponible. Ticket guardado como PDF.',
+                          );
+                        }
+                      }
+                    }
+                  } else {
+                    // Printing is disabled, save as PDF
                     if (settings.autoSavePdfWhenPrintDisabled) {
                       if (context.mounted) {
                         await _savePdfFallback(
@@ -255,64 +311,18 @@ class _PaymentPageState extends ConsumerState<PaymentPage> {
                           printerService,
                           ticketData,
                           settings,
-                          'No se pudo imprimir. Ticket guardado como PDF.',
+                          'Ticket guardado como PDF',
                         );
                       }
                     }
                   }
-                } else {
-                  // Desktop: Print AND save PDF (can't verify if printer is actually connected)
-                  // Attempt to print (will queue if printer available)
-                  try {
-                    await printerService.printTicket(
-                      ticketData,
-                      printer: targetPrinter,
-                    );
-                  } catch (printError) {
-                    debugPrint('Print error: $printError');
-                  }
-
-                  // Always save PDF as backup on Desktop
-                  if (settings.autoSavePdfWhenPrintDisabled) {
-                    if (context.mounted) {
-                      await _savePdfFallback(
-                        context,
-                        printerService,
-                        ticketData,
-                        settings,
-                        'Ticket guardado como PDF.',
-                      );
-                    }
-                  }
-                }
-              } else {
-                // No physical printer available, save as PDF
-                if (settings.autoSavePdfWhenPrintDisabled) {
-                  if (context.mounted) {
-                    await _savePdfFallback(
-                      context,
-                      printerService,
-                      ticketData,
-                      settings,
-                      'Sin impresora física disponible. Ticket guardado como PDF.',
-                    );
-                  }
-                }
-              }
-            } else {
-              // Printing is disabled, save as PDF
-              if (settings.autoSavePdfWhenPrintDisabled) {
-                if (context.mounted) {
-                  await _savePdfFallback(
-                    context,
-                    printerService,
-                    ticketData,
-                    settings,
-                    'Ticket guardado como PDF',
-                  );
-                }
-              }
-            }
+                })
+                .timeout(
+                  const Duration(seconds: 4),
+                  onTimeout: () {
+                    debugPrint('Printing process timed out');
+                  },
+                );
           } catch (e) {
             debugPrint('Error in print/save flow: $e');
           }
