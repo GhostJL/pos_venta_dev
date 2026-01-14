@@ -330,6 +330,27 @@ class CustomerRepositoryImpl implements CustomerRepository {
 
       // 3. If cash payment and session provided, register cash movement
       if (cashSessionId != null && payment.paymentMethod == 'Efectivo') {
+        // Fetch customer and user details for better description
+        final customerRow = await (db.select(
+          db.customers,
+        )..where((t) => t.id.equals(payment.customerId))).getSingleOrNull();
+
+        final customerName = customerRow != null
+            ? '${customerRow.firstName} ${customerRow.lastName}'
+            : 'Cliente ID: ${payment.customerId}';
+
+        final userName =
+            (await (db.select(db.users)
+                      ..where((t) => t.id.equals(payment.processedBy)))
+                    .getSingleOrNull())
+                ?.username ??
+            'Usuario ID: ${payment.processedBy}';
+
+        final refText =
+            payment.reference != null && payment.reference!.isNotEmpty
+            ? 'Ref: ${payment.reference}'
+            : '';
+
         await db
             .into(db.cashMovements)
             .insert(
@@ -339,7 +360,7 @@ class CustomerRepositoryImpl implements CustomerRepository {
                 amountCents: (payment.amount * 100).round(),
                 reason: 'Abono a cuenta',
                 description: Value(
-                  'Abono de cliente ID: ${payment.customerId}. Ref: ${payment.reference}',
+                  'Abono de: $customerName. Realizado por: $userName. $refText',
                 ),
                 performedBy: payment.processedBy,
                 movementDate: Value(DateTime.now()),
@@ -349,6 +370,31 @@ class CustomerRepositoryImpl implements CustomerRepository {
 
       return id;
     });
+  }
+
+  @override
+  Stream<List<CustomerPayment>> getPaymentsStream(int customerId) {
+    return (db.select(db.customerPayments)
+          ..where((t) => t.customerId.equals(customerId))
+          ..orderBy([(t) => OrderingTerm.desc(t.paymentDate)]))
+        .watch()
+        .map(
+          (rows) => rows
+              .map(
+                (row) => CustomerPayment(
+                  id: row.id,
+                  customerId: row.customerId,
+                  amount: row.amountCents / 100.0,
+                  paymentMethod: row.paymentMethod,
+                  reference: row.reference,
+                  paymentDate: row.paymentDate,
+                  processedBy: row.processedBy,
+                  notes: row.notes,
+                  createdAt: row.createdAt,
+                ),
+              )
+              .toList(),
+        );
   }
 
   @override

@@ -25,5 +25,6 @@ abstract class CustomerRepository {
   Future<double> getCustomerBalance(int customerId);
   Future<int> registerPayment(CustomerPayment payment, {int? cashSessionId});
   Future<List<CustomerPayment>> getPayments(int customerId);
+  Stream<List<CustomerPayment>> getPaymentsStream(int customerId);
   Future<List<Customer>> getDebtors();
 }

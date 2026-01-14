@@ -7,6 +7,8 @@ import 'package:posventa/presentation/providers/customer_providers.dart';
 import 'package:posventa/presentation/providers/di/sale_di.dart';
 import 'package:posventa/presentation/widgets/common/async_value_handler.dart';
 import 'package:intl/intl.dart';
+import 'package:posventa/domain/entities/customer_payment.dart';
+import 'package:posventa/presentation/providers/di/customer_di.dart';
 
 class CustomerDetailsPage extends ConsumerStatefulWidget {
   final int customerId;
@@ -100,79 +102,123 @@ class _CustomerDetailsPageState extends ConsumerState<CustomerDetailsPage>
   }
 
   Widget _buildTransactionsTab(BuildContext context, int customerId) {
-    final transactionsAsync = ref.watch(
-      customerTransactionsProvider(customerId),
-    );
+    // We need to fetch both sales and payments to show a complete history
+    final historyAsync = ref.watch(customerHistoryProvider(customerId));
 
-    return AsyncValueHandler<List<Sale>>(
-      value: transactionsAsync,
-      data: (transactions) {
-        if (transactions.isEmpty) {
+    return AsyncValueHandler<List<dynamic>>(
+      value: historyAsync,
+      data: (historyItems) {
+        if (historyItems.isEmpty) {
           return const Center(child: Text('No hay transacciones registradas'));
         }
 
         return ListView.builder(
           padding: const EdgeInsets.all(16),
-          itemCount: transactions.length,
+          itemCount: historyItems.length,
           itemBuilder: (context, index) {
-            final sale = transactions[index];
-            final isCredit = sale.payments.any(
-              (p) => p.paymentMethod == 'Crédito',
-            );
+            final item = historyItems[index];
 
-            return Card(
-              elevation: 0,
-              color: Theme.of(
-                context,
-              ).colorScheme.surfaceContainerHighest.withAlpha(50),
-              margin: const EdgeInsets.only(bottom: 8),
-              child: ListTile(
-                leading: CircleAvatar(
-                  backgroundColor: isCredit
-                      ? Theme.of(context).colorScheme.tertiaryContainer
-                      : Theme.of(context).colorScheme.primaryContainer,
-                  child: Icon(
-                    isCredit ? Icons.credit_card : Icons.attach_money,
-                    color: isCredit
-                        ? Theme.of(context).colorScheme.onTertiaryContainer
-                        : Theme.of(context).colorScheme.onPrimaryContainer,
-                    size: 20,
-                  ),
-                ),
-                title: Text(
-                  sale.saleNumber,
-                  style: const TextStyle(fontWeight: FontWeight.bold),
-                ),
-                subtitle: Text(
-                  DateFormat('dd/MM/yyyy HH:mm').format(sale.saleDate),
-                ),
-                trailing: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Text(
-                      '\$${sale.total.toStringAsFixed(2)}',
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: isCredit
-                            ? Theme.of(context).colorScheme.error
-                            : null,
-                      ),
-                    ),
-                    Text(
-                      sale.status.name.toUpperCase(),
-                      style: Theme.of(context).textTheme.labelSmall,
-                    ),
-                  ],
-                ),
-                onTap: () {
-                  // Navigate to sale details?
-                },
-              ),
-            );
+            if (item is Sale) {
+              return _buildSaleItem(context, item);
+            } else if (item is CustomerPayment) {
+              return _buildPaymentItem(context, item);
+            }
+            return const SizedBox.shrink();
           },
         );
       },
+    );
+  }
+
+  Widget _buildSaleItem(BuildContext context, Sale sale) {
+    final isCredit = sale.payments.any((p) => p.paymentMethod == 'Crédito');
+    return Card(
+      elevation: 0,
+      color: Theme.of(
+        context,
+      ).colorScheme.surfaceContainerHighest.withAlpha(50),
+      margin: const EdgeInsets.only(bottom: 8),
+      child: ListTile(
+        leading: CircleAvatar(
+          backgroundColor: isCredit
+              ? Theme.of(context).colorScheme.tertiaryContainer
+              : Theme.of(context).colorScheme.primaryContainer,
+          child: Icon(
+            isCredit ? Icons.credit_card : Icons.shopping_bag,
+            color: isCredit
+                ? Theme.of(context).colorScheme.onTertiaryContainer
+                : Theme.of(context).colorScheme.onPrimaryContainer,
+            size: 20,
+          ),
+        ),
+        title: Text(
+          sale.saleNumber,
+          style: const TextStyle(fontWeight: FontWeight.bold),
+        ),
+        subtitle: Text(DateFormat('dd/MM/yyyy HH:mm').format(sale.saleDate)),
+        trailing: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            Text(
+              '\$${sale.total.toStringAsFixed(2)}',
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: isCredit ? Theme.of(context).colorScheme.error : null,
+              ),
+            ),
+            Text(
+              sale.status.name.toUpperCase(),
+              style: Theme.of(context).textTheme.labelSmall,
+            ),
+          ],
+        ),
+        onTap: () {
+          // Navigate to sale details?
+        },
+      ),
+    );
+  }
+
+  Widget _buildPaymentItem(BuildContext context, CustomerPayment payment) {
+    return Card(
+      elevation: 0,
+      color: Colors.green.withAlpha(20),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(color: Colors.green.withAlpha(50)),
+      ),
+      margin: const EdgeInsets.only(bottom: 8),
+      child: ListTile(
+        leading: CircleAvatar(
+          backgroundColor: Colors.green.withAlpha(50),
+          child: const Icon(Icons.payment, color: Colors.green, size: 20),
+        ),
+        title: const Text(
+          'Abono a Cuenta',
+          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.green),
+        ),
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(DateFormat('dd/MM/yyyy HH:mm').format(payment.paymentDate)),
+            if (payment.notes != null && payment.notes!.isNotEmpty)
+              Text(
+                payment.notes!,
+                style: Theme.of(context).textTheme.bodySmall,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+          ],
+        ),
+        trailing: Text(
+          '+\$${payment.amount.toStringAsFixed(2)}',
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.bold,
+            color: Colors.green,
+          ),
+        ),
+      ),
     );
   }
 
@@ -496,10 +542,68 @@ class _CreditCard extends StatelessWidget {
   }
 }
 
-final customerTransactionsProvider = StreamProvider.family<List<Sale>, int>((
+final customerSalesProvider = StreamProvider.family<List<Sale>, int>((
   ref,
   customerId,
 ) {
   final repository = ref.read(saleRepositoryProvider);
   return repository.getSalesStream(customerId: customerId);
 });
+
+final customerPaymentsProvider =
+    StreamProvider.family<List<CustomerPayment>, int>((ref, customerId) {
+      final repository = ref.read(customerRepositoryProvider);
+      return repository.getPaymentsStream(customerId);
+    });
+
+final customerHistoryProvider = Provider.family<AsyncValue<List<dynamic>>, int>(
+  (ref, customerId) {
+    final salesAsync = ref.watch(customerSalesProvider(customerId));
+    final paymentsAsync = ref.watch(customerPaymentsProvider(customerId));
+
+    // If either is loading and we don't have data yet, show loading
+    if (salesAsync.isLoading || paymentsAsync.isLoading) {
+      if (!salesAsync.hasValue && !paymentsAsync.hasValue) {
+        return const AsyncValue.loading();
+      }
+    }
+
+    // If we have errors
+    if (salesAsync.hasError) {
+      return AsyncValue.error(salesAsync.error!, salesAsync.stackTrace!);
+    }
+    if (paymentsAsync.hasError) {
+      return AsyncValue.error(paymentsAsync.error!, paymentsAsync.stackTrace!);
+    }
+
+    final sales = salesAsync.value ?? [];
+    final payments = paymentsAsync.value ?? [];
+
+    final combined = [...sales, ...payments];
+
+    combined.sort((a, b) {
+      DateTime dateA;
+      DateTime dateB;
+
+      if (a is Sale) {
+        dateA = a.saleDate;
+      } else if (a is CustomerPayment) {
+        dateA = a.paymentDate;
+      } else {
+        dateA = DateTime(0);
+      }
+
+      if (b is Sale) {
+        dateB = b.saleDate;
+      } else if (b is CustomerPayment) {
+        dateB = b.paymentDate;
+      } else {
+        dateB = DateTime(0);
+      }
+
+      return dateB.compareTo(dateA); // Descending
+    });
+
+    return AsyncValue.data(combined);
+  },
+);
