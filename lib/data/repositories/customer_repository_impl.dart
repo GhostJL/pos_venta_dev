@@ -374,52 +374,68 @@ class CustomerRepositoryImpl implements CustomerRepository {
 
   @override
   Stream<List<CustomerPayment>> getPaymentsStream(int customerId) {
-    return (db.select(db.customerPayments)
-          ..where((t) => t.customerId.equals(customerId))
-          ..orderBy([(t) => OrderingTerm.desc(t.paymentDate)]))
-        .watch()
-        .map(
-          (rows) => rows
-              .map(
-                (row) => CustomerPayment(
-                  id: row.id,
-                  customerId: row.customerId,
-                  amount: row.amountCents / 100.0,
-                  paymentMethod: row.paymentMethod,
-                  reference: row.reference,
-                  paymentDate: row.paymentDate,
-                  processedBy: row.processedBy,
-                  notes: row.notes,
-                  createdAt: row.createdAt,
-                ),
-              )
-              .toList(),
+    final query =
+        db.select(db.customerPayments).join([
+            leftOuterJoin(
+              db.users,
+              db.users.id.equalsExp(db.customerPayments.processedBy),
+            ),
+          ])
+          ..where(db.customerPayments.customerId.equals(customerId))
+          ..orderBy([OrderingTerm.desc(db.customerPayments.paymentDate)]);
+
+    return query.watch().map((rows) {
+      return rows.map((row) {
+        final payment = row.readTable(db.customerPayments);
+        final user = row.readTableOrNull(db.users);
+
+        return CustomerPayment(
+          id: payment.id,
+          customerId: payment.customerId,
+          amount: payment.amountCents / 100.0,
+          paymentMethod: payment.paymentMethod,
+          reference: payment.reference,
+          paymentDate: payment.paymentDate,
+          processedBy: payment.processedBy,
+          processedByName: user?.username,
+          notes: payment.notes,
+          createdAt: payment.createdAt,
         );
+      }).toList();
+    });
   }
 
   @override
   Future<List<CustomerPayment>> getPayments(int customerId) async {
-    final rows =
-        await (db.select(db.customerPayments)
-              ..where((t) => t.customerId.equals(customerId))
-              ..orderBy([(t) => OrderingTerm.desc(t.paymentDate)]))
-            .get();
+    final query =
+        db.select(db.customerPayments).join([
+            leftOuterJoin(
+              db.users,
+              db.users.id.equalsExp(db.customerPayments.processedBy),
+            ),
+          ])
+          ..where(db.customerPayments.customerId.equals(customerId))
+          ..orderBy([OrderingTerm.desc(db.customerPayments.paymentDate)]);
 
-    return rows
-        .map(
-          (row) => CustomerPayment(
-            id: row.id,
-            customerId: row.customerId,
-            amount: row.amountCents / 100.0,
-            paymentMethod: row.paymentMethod,
-            reference: row.reference,
-            paymentDate: row.paymentDate,
-            processedBy: row.processedBy,
-            notes: row.notes,
-            createdAt: row.createdAt,
-          ),
-        )
-        .toList();
+    final rows = await query.get();
+
+    return rows.map((row) {
+      final payment = row.readTable(db.customerPayments);
+      final user = row.readTableOrNull(db.users);
+
+      return CustomerPayment(
+        id: payment.id,
+        customerId: payment.customerId,
+        amount: payment.amountCents / 100.0,
+        paymentMethod: payment.paymentMethod,
+        reference: payment.reference,
+        paymentDate: payment.paymentDate,
+        processedBy: payment.processedBy,
+        processedByName: user?.username,
+        notes: payment.notes,
+        createdAt: payment.createdAt,
+      );
+    }).toList();
   }
 
   @override

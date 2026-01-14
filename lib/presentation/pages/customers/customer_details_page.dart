@@ -209,6 +209,16 @@ class _CustomerDetailsPageState extends ConsumerState<CustomerDetailsPage>
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
+            if (payment.processedByName != null)
+              Text(
+                'Atendido por: ${payment.processedByName}',
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  fontStyle: FontStyle.italic,
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.onSurface.withValues(alpha: 0.6),
+                ),
+              ),
           ],
         ),
         trailing: Text(

@@ -6,6 +6,7 @@ class CustomerPayment {
   final String? reference;
   final DateTime paymentDate;
   final int processedBy;
+  final String? processedByName;
   final String? notes;
   final DateTime createdAt;
 
@@ -17,6 +18,7 @@ class CustomerPayment {
     this.reference,
     required this.paymentDate,
     required this.processedBy,
+    this.processedByName,
     this.notes,
     required this.createdAt,
   });
