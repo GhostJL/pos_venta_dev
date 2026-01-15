@@ -6,7 +6,6 @@ import 'package:posventa/presentation/providers/auth_provider.dart';
 import 'package:posventa/presentation/providers/permission_provider.dart';
 import 'package:posventa/core/config/menu_config.dart';
 import 'package:posventa/presentation/widgets/menu/menu_group_widget.dart';
-import 'package:posventa/presentation/widgets/menu/menu_item_widget.dart';
 import 'package:posventa/presentation/widgets/menu/side_menu/side_menu_logout.dart';
 import 'package:posventa/presentation/providers/settings_provider.dart';
 
@@ -83,28 +82,19 @@ class _SideMenuState extends ConsumerState<SideMenu> {
       user,
       useInventory: useInventory,
     );
-    final useGroups = MenuConfig.shouldUseGroups(user);
 
     return ListView(
       padding: EdgeInsets.symmetric(
         horizontal: widget.isCollapsed ? 0 : 12,
         vertical: 8,
       ),
-      children: useGroups
-          ? _buildGroupedMenu(
-              context,
-              menuData as List<MenuGroup>,
-              user,
-              permissions,
-              currentPath,
-            )
-          : _buildFlatMenu(
-              context,
-              menuData as List<MenuItem>,
-              user,
-              permissions,
-              currentPath,
-            ),
+      children: _buildGroupedMenu(
+        context,
+        menuData,
+        user,
+        permissions,
+        currentPath,
+      ),
     );
   }
 
@@ -147,25 +137,6 @@ class _SideMenuState extends ConsumerState<SideMenu> {
       );
     }
     return widgets;
-  }
-
-  List<Widget> _buildFlatMenu(
-    BuildContext context,
-    List<MenuItem> items,
-    User user,
-    List<String> permissions,
-    String currentPath,
-  ) {
-    return items
-        .where((item) => item.hasAccess(user, permissions))
-        .map(
-          (item) => MenuItemWidget(
-            menuItem: item,
-            currentPath: currentPath,
-            isCollapsed: widget.isCollapsed,
-          ),
-        )
-        .toList();
   }
 }
 

@@ -202,45 +202,15 @@ class MenuConfig {
     ];
   }
 
-  /// Get the simplified cashier menu
-  static List<MenuItem> getCashierMenu() {
-    return [
-      const MenuItem(
-        title: 'Inicio',
-        icon: Icons.dashboard_rounded,
-        route: '/home',
-      ),
-      const MenuItem(
-        title: 'Punto de Venta (POS)',
-        icon: Icons.point_of_sale_rounded,
-        route: '/sales',
-        requiredPermissions: [PermissionConstants.posAccess],
-      ),
-      const MenuItem(
-        title: 'Historial de Ventas',
-        icon: Icons.receipt_long_rounded,
-        route: '/sales-history',
-        requiredPermissions: [PermissionConstants.reportsView],
-      ),
-    ];
-  }
-
   /// Get menu configuration based on user role
-  static dynamic getMenuForUser(User? user, {bool useInventory = true}) {
+  static List<MenuGroup> getMenuForUser(
+    User? user, {
+    bool useInventory = true,
+  }) {
     if (user == null) return <MenuGroup>[];
 
-    // Cashiers get a flat list of menu items (no groups)
-    if (user.role == UserRole.cajero) {
-      return getCashierMenu();
-    }
-
-    // Administrators and Managers get the full grouped menu
-    // The visibility checks inside MenuItem/MenuGroup will hide what they can't see
+    // All roles now use the grouped menu structure.
+    // The visibility checks inside MenuItem/MenuGroup will hide what they can't see.
     return getFullMenu(useInventory: useInventory);
-  }
-
-  /// Check if the menu should use groups (true) or flat list (false)
-  static bool shouldUseGroups(User? user) {
-    return user?.role != UserRole.cajero;
   }
 }
