@@ -7,6 +7,9 @@ import 'package:posventa/presentation/widgets/dashboard/dashboard_sections/dashb
 import 'package:posventa/presentation/widgets/dashboard/dashboard_sections/dashboard_operations_section.dart';
 import 'package:posventa/presentation/widgets/dashboard/dashboard_sections/dashboard_status_section.dart';
 import 'package:posventa/presentation/widgets/dashboard/dashboard_sections/dashboard_welcome_section.dart';
+import 'package:posventa/presentation/widgets/dashboard/dashboard_sections/cashier_session_metrics.dart';
+import 'package:posventa/presentation/widgets/dashboard/dashboard_sections/dashboard_cashier_actions.dart';
+import 'package:posventa/presentation/widgets/dashboard/dashboard_sections/dashboard_cashier_movements.dart';
 
 class DashboardAdminPage extends ConsumerWidget {
   const DashboardAdminPage({super.key});
@@ -41,8 +44,23 @@ class DashboardAdminPage extends ConsumerWidget {
 
               const SizedBox(height: 24),
 
+              // 2.5 Session Metrics (Added)
+              const CashierSessionMetrics(),
+
+              const SizedBox(height: 24),
+
               // 3. Status
               const DashboardStatusSection(),
+
+              const SizedBox(height: 24),
+
+              // 4. Cashier Actions (Added)
+              const DashboardCashierActions(),
+
+              const SizedBox(height: 24),
+
+              // 5. Cashier Movements (Added)
+              const DashboardCashierMovements(),
 
               const SizedBox(height: 32),
 
