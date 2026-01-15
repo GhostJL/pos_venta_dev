@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:posventa/domain/entities/store.dart';
 import 'package:posventa/presentation/providers/store_provider.dart';
 import 'package:posventa/presentation/pages/settings/ticket/widgets/ticket_preview_widget.dart';
+import 'package:file_picker/file_picker.dart';
+import 'dart:io';
 
 class UnifiedTicketPage extends ConsumerStatefulWidget {
   const UnifiedTicketPage({super.key});
@@ -24,8 +26,9 @@ class _UnifiedTicketPageState extends ConsumerState<UnifiedTicketPage> {
   late TextEditingController _websiteController;
   late TextEditingController _footerController;
 
-  // Local state for preview (so we don't save to DB on every keystroke)
+  // Local state for preview
   Store? _previewStore;
+  String? _logoPath;
 
   @override
   void initState() {
@@ -66,6 +69,26 @@ class _UnifiedTicketPageState extends ConsumerState<UnifiedTicketPage> {
       _websiteController.text = store.website ?? '';
       _footerController.text = store.receiptFooter ?? '';
     }
+  }
+
+  Future<void> _pickLogo() async {
+    FilePickerResult? result = await FilePicker.platform.pickFiles(
+      type: FileType.image,
+    );
+
+    if (result != null && result.files.single.path != null) {
+      setState(() {
+        _logoPath = result.files.single.path;
+        _previewStore = _previewStore?.copyWith(logoPath: _logoPath);
+      });
+    }
+  }
+
+  void _removeLogo() {
+    setState(() {
+      _logoPath = null;
+      _previewStore = _previewStore?.copyWith(logoPath: '');
+    });
   }
 
   void _updatePreview() {
@@ -138,6 +161,71 @@ class _UnifiedTicketPageState extends ConsumerState<UnifiedTicketPage> {
                 children: [
                   _buildSectionHeader(context, 'Información del Negocio'),
                   const SizedBox(height: 16),
+
+                  // LOGO PICKER
+                  Center(
+                    child: Column(
+                      children: [
+                        Container(
+                          width: 120,
+                          height: 120,
+                          decoration: BoxDecoration(
+                            border: Border.all(color: Colors.grey.shade300),
+                            borderRadius: BorderRadius.circular(12),
+                            color: Colors.grey.shade50,
+                          ),
+                          child:
+                              _previewStore?.logoPath != null &&
+                                  _previewStore!.logoPath!.isNotEmpty
+                              ? ClipRRect(
+                                  borderRadius: BorderRadius.circular(12),
+                                  child: Image.file(
+                                    File(_previewStore!.logoPath!),
+                                    fit: BoxFit.contain,
+                                    errorBuilder: (context, error, stackTrace) {
+                                      return const Icon(
+                                        Icons.broken_image,
+                                        size: 40,
+                                        color: Colors.grey,
+                                      );
+                                    },
+                                  ),
+                                )
+                              : const Icon(
+                                  Icons.add_photo_alternate,
+                                  size: 40,
+                                  color: Colors.grey,
+                                ),
+                        ),
+                        const SizedBox(height: 8),
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            TextButton.icon(
+                              onPressed: _pickLogo,
+                              icon: const Icon(Icons.upload_file),
+                              label: const Text('Cargar Logo'),
+                            ),
+                            if (_previewStore?.logoPath != null &&
+                                _previewStore!.logoPath!.isNotEmpty)
+                              TextButton.icon(
+                                onPressed: _removeLogo,
+                                icon: const Icon(
+                                  Icons.delete,
+                                  color: Colors.red,
+                                ),
+                                label: const Text(
+                                  'Eliminar',
+                                  style: TextStyle(color: Colors.red),
+                                ),
+                              ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 24),
                   TextFormField(
                     controller: _nameController,
                     decoration: const InputDecoration(

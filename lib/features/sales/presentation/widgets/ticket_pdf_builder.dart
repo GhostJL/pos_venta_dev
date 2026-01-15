@@ -154,8 +154,8 @@ class TicketPdfBuilder {
 
               // Cashier Name
               if (ticket.cashierName != null && ticket.cashierName!.isNotEmpty)
-                pw.Row(
-                  mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                pw.Column(
+                  crossAxisAlignment: pw.CrossAxisAlignment.start,
                   children: [
                     pw.Text(
                       'Le atendió:',
@@ -163,7 +163,10 @@ class TicketPdfBuilder {
                     ),
                     pw.Text(
                       ticket.cashierName!,
-                      style: const pw.TextStyle(fontSize: 10),
+                      style: pw.TextStyle(
+                        fontSize: 10,
+                        fontWeight: pw.FontWeight.bold,
+                      ),
                     ),
                   ],
                 ),
@@ -262,6 +265,23 @@ class TicketPdfBuilder {
               pw.Row(
                 mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                 children: [
+                  pw.Text(
+                    'Artículos:',
+                    style: const pw.TextStyle(fontSize: 10),
+                  ),
+                  pw.Text(
+                    ticket.totalItems.toString().replaceAll(
+                      RegExp(r'\.0+$'),
+                      '',
+                    ),
+                    style: const pw.TextStyle(fontSize: 10),
+                  ),
+                ],
+              ),
+              pw.SizedBox(height: 4),
+              pw.Row(
+                mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                children: [
                   pw.Text('Subtotal:', style: const pw.TextStyle(fontSize: 10)),
                   pw.Text(
                     currency.format(ticket.subtotal),
@@ -286,7 +306,9 @@ class TicketPdfBuilder {
 
               // Tax if applicable
               // if (ticket.tax > 0) ...
-              pw.SizedBox(height: 4),
+              pw.SizedBox(height: 8),
+              pw.Divider(borderStyle: pw.BorderStyle.dashed),
+              pw.SizedBox(height: 2),
               pw.Row(
                 mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                 children: [

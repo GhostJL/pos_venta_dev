@@ -165,13 +165,15 @@ class TicketPreviewWidget extends ConsumerWidget {
                       Text('A-000123', style: boldStyle),
                     ],
                   ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text('Le atendió:', style: receiptStyle),
                       Text(
                         ref.read(authProvider).user?.name ?? 'Cajero',
-                        style: receiptStyle,
+                        style: receiptStyle.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ],
                   ),
@@ -240,8 +242,16 @@ class TicketPreviewWidget extends ConsumerWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text('SUBTOTAL:', style: receiptStyle),
-                      Text('\$125.50', style: receiptStyle),
+                      Text('Artículos:', style: receiptStyle),
+                      Text('5', style: receiptStyle),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text('Subtotal:', style: receiptStyle),
+                      Text('\$322.52', style: receiptStyle),
                     ],
                   ),
                   Row(
@@ -251,24 +261,28 @@ class TicketPreviewWidget extends ConsumerWidget {
                       Text('\$0.00', style: receiptStyle),
                     ],
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 8),
+                  Text(
+                    '- - - - - - - - - - - - - - - - - - - - - -',
+                    style: receiptStyle,
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 2),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
                         'TOTAL:',
-                        style: GoogleFonts.courierPrime(
-                          fontSize: 18,
+                        style: receiptStyle.copyWith(
+                          fontSize: 16,
                           fontWeight: FontWeight.bold,
-                          color: Colors.black,
                         ),
                       ),
                       Text(
-                        '\$125.50',
-                        style: GoogleFonts.courierPrime(
-                          fontSize: 18,
+                        '\$322.52',
+                        style: receiptStyle.copyWith(
+                          fontSize: 16,
                           fontWeight: FontWeight.bold,
-                          color: Colors.black,
                         ),
                       ),
                     ],

@@ -38,6 +38,10 @@ class TicketData {
     return sale.payments.map((p) => p.paymentMethod).toSet().join(', ');
   }
 
+  double get totalItems {
+    return items.fold(0.0, (sum, item) => sum + item.quantity);
+  }
+
   const TicketData({
     required this.sale,
     required this.items,
