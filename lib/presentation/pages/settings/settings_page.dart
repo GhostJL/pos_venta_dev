@@ -40,6 +40,13 @@ class SettingsPage extends ConsumerWidget {
               SettingsSectionContainer(
                 children: [
                   SettingsCategoryTile(
+                    icon: Icons.account_circle,
+                    title: 'Mi Cuenta',
+                    subtitle: 'Datos personales y contraseña',
+                    onTap: () => context.push('/settings/profile'),
+                  ),
+                  const Divider(height: 1, indent: 56),
+                  SettingsCategoryTile(
                     icon: Icons.store_mall_directory_rounded,
                     title: 'Datos del Negocio y Ticket',
                     subtitle: 'Información de la tienda y diseño del ticket',

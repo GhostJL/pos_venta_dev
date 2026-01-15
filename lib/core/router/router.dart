@@ -56,6 +56,8 @@ import 'package:posventa/presentation/pages/settings/hardware_settings_page.dart
 import 'package:posventa/presentation/pages/settings/print_settings_page.dart';
 import 'package:posventa/features/reports/presentation/pages/reports_page.dart';
 import 'package:posventa/presentation/pages/settings/ticket/unified_ticket_page.dart';
+import 'package:posventa/presentation/pages/settings/profile/admin_profile_page.dart';
+import 'package:posventa/presentation/pages/settings/profile/change_password_page.dart';
 
 import 'package:posventa/presentation/pages/users/users_permissions_page.dart';
 import 'package:posventa/presentation/pages/warehouses/warehouses_page.dart';
@@ -494,6 +496,18 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: '/settings/business',
             pageBuilder: (context, state) =>
                 const NoTransitionPage(child: UnifiedTicketPage()),
+          ),
+          GoRoute(
+            path: '/settings/profile',
+            pageBuilder: (context, state) =>
+                const NoTransitionPage(child: AdminProfilePage()),
+            routes: [
+              GoRoute(
+                path: 'change-password',
+                pageBuilder: (context, state) =>
+                    const NoTransitionPage(child: ChangePasswordPage()),
+              ),
+            ],
           ),
 
           /* Deprecated routes retained for safety if needed, or removed */

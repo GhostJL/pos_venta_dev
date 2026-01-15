@@ -89,4 +89,19 @@ class Auth extends _$Auth {
     await prefs.remove('user_id');
     state = AuthState.unauthenticated();
   }
+
+  Future<void> updateUser(User updatedUser) async {
+    try {
+      await _authRepository.updateUser(updatedUser);
+      // Update local state with the new user data
+      if (state.user?.id == updatedUser.id) {
+        state = AuthState.authenticated(updatedUser);
+      }
+    } catch (e) {
+      // If update fails, we might want to reload session or keep previous state but show error?
+      // For now, we propagate error or handle it.
+      // Ideally, the UI handles the catch, but we need to update state on success.
+      rethrow;
+    }
+  }
 }

@@ -108,11 +108,6 @@ class AuthRepositoryImpl implements AuthRepository, UserRepository {
   }
 
   @override
-  Future<User?> getUser(int id) {
-    return getUserById(id);
-  }
-
-  @override
   Future<List<User>> getUsers() async {
     final userRows = await db.select(db.users).get();
     return userRows.map(_mapToUser).toList();
@@ -139,6 +134,14 @@ class AuthRepositoryImpl implements AuthRepository, UserRepository {
         lastLoginAt: Value(user.lastLoginAt),
         updatedAt: Value(DateTime.now()),
       ),
+    );
+  }
+
+  @override
+  Future<void> updatePassword(int userId, String newPassword) async {
+    final hashedPassword = _hashPassword(newPassword);
+    await (db.update(db.users)..where((u) => u.id.equals(userId))).write(
+      drift_db.UsersCompanion(passwordHash: Value(hashedPassword)),
     );
   }
 
