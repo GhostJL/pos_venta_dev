@@ -14,7 +14,22 @@ class StoreRepositoryImpl implements IStoreRepository {
     final query = db.select(db.stores)..limit(1);
     final row = await query.getSingleOrNull();
 
-    if (row == null) return null;
+    if (row == null) {
+      // Lazy initialization: Create default store if none exists
+      final newStore = domain.Store(
+        name: 'Mi Tienda',
+        businessName: '',
+        taxId: '',
+        address: '',
+        phone: '',
+        email: '',
+        website: '',
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      );
+      await updateStore(newStore);
+      return newStore;
+    }
 
     return domain.Store(
       id: row.id,
