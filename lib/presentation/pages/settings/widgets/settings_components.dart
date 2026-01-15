@@ -30,6 +30,7 @@ class SettingsCategoryTile extends StatelessWidget {
   final String title;
   final String subtitle;
   final VoidCallback onTap;
+  final bool selected;
 
   const SettingsCategoryTile({
     super.key,
@@ -37,27 +38,61 @@ class SettingsCategoryTile extends StatelessWidget {
     required this.title,
     required this.subtitle,
     required this.onTap,
+    this.selected = false,
   });
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return ListTile(
-      leading: Container(
-        padding: const EdgeInsets.all(8.0),
-        decoration: BoxDecoration(
-          color: theme.colorScheme.secondaryContainer.withValues(alpha: 0.4),
-          borderRadius: BorderRadius.circular(8.0),
+    final colorScheme = theme.colorScheme;
+
+    return Material(
+      color: Colors.transparent,
+      child: ListTile(
+        selected: selected,
+        selectedTileColor: colorScheme.primaryContainer.withValues(alpha: 0.1),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16.0,
+          vertical: 4.0,
         ),
-        child: Icon(icon, color: theme.colorScheme.primary, size: 20),
+        leading: Container(
+          padding: const EdgeInsets.all(10.0),
+          decoration: BoxDecoration(
+            color: selected
+                ? colorScheme.primary
+                : colorScheme.surfaceContainerHigh,
+            borderRadius: BorderRadius.circular(12.0),
+          ),
+          child: Icon(
+            icon,
+            color: selected ? colorScheme.onPrimary : colorScheme.primary,
+            size: 22,
+          ),
+        ),
+        title: Text(
+          title,
+          style: TextStyle(
+            fontWeight: selected ? FontWeight.bold : FontWeight.w600,
+            fontSize: 16,
+          ),
+        ),
+        subtitle: Padding(
+          padding: const EdgeInsets.only(top: 4.0),
+          child: Text(
+            subtitle,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(color: colorScheme.onSurfaceVariant, fontSize: 13),
+          ),
+        ),
+        trailing: Icon(
+          Icons.chevron_right_rounded,
+          color: colorScheme.outline.withValues(alpha: 0.5),
+          size: 20,
+        ),
+        onTap: onTap,
       ),
-      title: Text(title, style: const TextStyle(fontWeight: FontWeight.w500)),
-      subtitle: Text(subtitle, maxLines: 1, overflow: TextOverflow.ellipsis),
-      trailing: Icon(
-        Icons.chevron_right,
-        color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
-      ),
-      onTap: onTap,
     );
   }
 }
@@ -96,15 +131,15 @@ class SettingsSectionContainer extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       elevation: 0,
-      margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
-      color: Theme.of(context).colorScheme.surfaceContainerLowest,
+      margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+      color: Theme.of(context).colorScheme.surfaceContainerLow,
       clipBehavior: Clip.antiAlias,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(16),
         side: BorderSide(
           color: Theme.of(
             context,
-          ).colorScheme.outlineVariant.withValues(alpha: 0.4),
+          ).colorScheme.outlineVariant.withValues(alpha: 0.2),
         ),
       ),
       child: Column(children: children),
