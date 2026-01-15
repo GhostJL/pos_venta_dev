@@ -47,6 +47,12 @@ class ReturnItemData {
   int get taxCents =>
       (saleItem.taxCents * (returnQuantity / saleItem.quantity)).round();
   int get totalCents => subtotalCents + taxCents;
+
+  bool get isValid =>
+      returnQuantity > 0 &&
+      returnQuantity <= maxQuantity &&
+      reason != null &&
+      reason!.isNotEmpty;
 }
 
 class ReturnProcessingState {
@@ -118,6 +124,7 @@ class ReturnProcessingState {
         refundMethod != null &&
         generalReason != null &&
         generalReason!.trim().isNotEmpty &&
+        !selectedItems.values.any((item) => !item.isValid) &&
         !isProcessing;
   }
 }
@@ -163,20 +170,21 @@ class ReturnProcessing extends _$ReturnProcessing {
     final item = newItems[itemId];
 
     if (item != null) {
+      String? errorMessage;
       if (quantity > item.maxQuantity) {
-        state = state.copyWith(
-          error: 'La cantidad no puede exceder ${item.maxQuantity}',
-        );
-        return;
+        errorMessage = 'La cantidad no puede exceder ${item.maxQuantity}';
+      } else if (quantity <= 0) {
+        // Optional: errorMessage = 'La cantidad debe ser mayor a 0';
       }
 
-      if (quantity <= 0) {
-        state = state.copyWith(error: 'La cantidad debe ser mayor a 0');
-        return;
-      }
-
+      // Always update logic to ensure state matches UI input
       newItems[itemId] = item.copyWith(returnQuantity: quantity);
-      state = state.copyWith(selectedItems: newItems, clearError: true);
+
+      state = state.copyWith(
+        selectedItems: newItems,
+        error: errorMessage,
+        clearError: errorMessage == null,
+      );
     }
   }
 

@@ -181,7 +181,7 @@ class _SalesHistoryPageState extends ConsumerState<SalesHistoryPage> {
                           maxCrossAxisExtent: 400,
                           mainAxisSpacing: 16,
                           crossAxisSpacing: 16,
-                          childAspectRatio: 1.6, // Adjusted for card content
+                          mainAxisExtent: 300,
                         ),
                     itemCount: count,
                     itemBuilder: (context, index) {

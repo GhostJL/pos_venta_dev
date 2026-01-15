@@ -275,6 +275,13 @@ class _ReturnItemsSelectorState extends ConsumerState<ReturnItemsSelector> {
                                             returnProcessingProvider.notifier,
                                           )
                                           .updateItemQuantity(item.id!, qty);
+                                    } else {
+                                      // Handle empty or invalid input by setting to 0 (invalid)
+                                      ref
+                                          .read(
+                                            returnProcessingProvider.notifier,
+                                          )
+                                          .updateItemQuantity(item.id!, 0.0);
                                     }
                                   },
                                 ),

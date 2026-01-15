@@ -357,7 +357,9 @@ class SaleReturnRepositoryImpl implements SaleReturnRepository {
         'UPDATE inventory SET quantity_on_hand = quantity_on_hand + ?, updated_at = ? WHERE product_id = ? AND warehouse_id = ?',
         variables: [
           Variable.withReal(quantityToRestore),
-          Variable.withString(DateTime.now().toIso8601String()),
+          Variable.withInt(
+            DateTime.now().millisecondsSinceEpoch ~/ 1000,
+          ), // Fix: Store as int timestamp
           Variable.withInt(item.productId),
           Variable.withInt(warehouseId),
         ],

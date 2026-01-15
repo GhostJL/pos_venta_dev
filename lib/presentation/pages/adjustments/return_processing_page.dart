@@ -31,6 +31,7 @@ class _ReturnProcessingPageState extends ConsumerState<ReturnProcessingPage> {
   Widget build(BuildContext context) {
     final state = ref.watch(returnProcessingProvider);
     final statsAsync = ref.watch(todayReturnsStatsProvider);
+    final isDesktop = MediaQuery.of(context).size.width >= 900;
 
     // Listen for errors and success messages
     ref.listen<ReturnProcessingState>(returnProcessingProvider, (
@@ -99,7 +100,7 @@ class _ReturnProcessingPageState extends ConsumerState<ReturnProcessingPage> {
         ),
       ),
       body: _buildReturnProcessingView(state),
-      bottomNavigationBar: state.selectedItems.isNotEmpty
+      bottomNavigationBar: (state.selectedItems.isNotEmpty && !isDesktop)
           ? SafeArea(
               child: Padding(
                 padding: const EdgeInsets.all(16.0),
