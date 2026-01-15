@@ -82,7 +82,7 @@ class TicketPreviewWidget extends ConsumerWidget {
                         File(store.logoPath!),
                         fit: BoxFit.contain,
                         filterQuality: FilterQuality.medium,
-                        cacheWidth: 300, // Optimize memory usage
+                        cacheWidth: 150, // Match PDF compression
                       ),
                     )
                   else

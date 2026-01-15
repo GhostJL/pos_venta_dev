@@ -45,12 +45,17 @@ class TicketPdfBuilder {
                       final file = File(ticket.storeLogoPath!);
                       if (file.existsSync()) {
                         final bytes = file.readAsBytesSync();
-                        final image = img.decodeImage(bytes);
+                        var image = img.decodeImage(bytes);
                         if (image != null) {
-                          final grayscale = img.grayscale(image);
-                          final pngBytes = img.encodePng(grayscale);
+                          // Aggressive compression to keep file size < 24KB as requested
+                          // Resize to 150px width
+                          if (image.width > 150) {
+                            image = img.copyResize(image, width: 150);
+                          }
+                          // Use JPEG with 60% quality for better compression than PNG
+                          final jpgBytes = img.encodeJpg(image, quality: 60);
                           return pw.Image(
-                            pw.MemoryImage(pngBytes),
+                            pw.MemoryImage(jpgBytes),
                             fit: pw.BoxFit.contain,
                           );
                         }
