@@ -38,8 +38,9 @@ class _CustomerPaymentDialogState extends ConsumerState<CustomerPaymentDialog> {
     PrinterService printerService,
     CustomerPayment payment,
     dynamic settings,
-    Store store,
-  ) async {
+    Store store, [
+    String? cashierName,
+  ]) async {
     try {
       final pdfPath =
           settings.pdfSavePath ??
@@ -48,6 +49,7 @@ class _CustomerPaymentDialogState extends ConsumerState<CustomerPaymentDialog> {
         payment: payment,
         customer: widget.customer,
         store: store,
+        cashierName: cashierName,
         savePath: pdfPath,
       );
 
@@ -196,6 +198,7 @@ class _CustomerPaymentDialogState extends ConsumerState<CustomerPaymentDialog> {
                     customer: widget.customer,
                     printer: targetPrinter,
                     store: store,
+                    cashierName: ref.read(authProvider).user?.name,
                   );
                 } catch (printError) {
                   debugPrint('Print error: $printError');
@@ -206,6 +209,7 @@ class _CustomerPaymentDialogState extends ConsumerState<CustomerPaymentDialog> {
                       paymentWithId,
                       settings,
                       store,
+                      ref.read(authProvider).user?.name,
                     );
                   }
                 }
@@ -218,6 +222,7 @@ class _CustomerPaymentDialogState extends ConsumerState<CustomerPaymentDialog> {
                     customer: widget.customer,
                     printer: targetPrinter,
                     store: store,
+                    cashierName: ref.read(authProvider).user?.name,
                   );
                 } catch (printError) {
                   debugPrint('Print error: $printError');
@@ -231,6 +236,7 @@ class _CustomerPaymentDialogState extends ConsumerState<CustomerPaymentDialog> {
                     paymentWithId,
                     settings,
                     store,
+                    ref.read(authProvider).user?.name,
                   );
                 }
               }
@@ -243,6 +249,7 @@ class _CustomerPaymentDialogState extends ConsumerState<CustomerPaymentDialog> {
                   paymentWithId,
                   settings,
                   store,
+                  ref.read(authProvider).user?.name,
                 );
               }
             }
@@ -255,6 +262,7 @@ class _CustomerPaymentDialogState extends ConsumerState<CustomerPaymentDialog> {
                 paymentWithId,
                 settings,
                 store,
+                ref.read(authProvider).user?.name,
               );
             }
           }

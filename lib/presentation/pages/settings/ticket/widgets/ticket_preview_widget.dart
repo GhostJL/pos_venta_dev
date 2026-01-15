@@ -1,16 +1,18 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:posventa/domain/entities/store.dart';
+import 'package:posventa/presentation/providers/auth_provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-class TicketPreviewWidget extends StatelessWidget {
+class TicketPreviewWidget extends ConsumerWidget {
   final Store store;
 
   const TicketPreviewWidget({super.key, required this.store});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     // 80mm roll is roughly 300-320 pixel width simulation
     const double receiptWidth = 300.0;
 
@@ -76,15 +78,11 @@ class TicketPreviewWidget extends StatelessWidget {
                     Container(
                       constraints: const BoxConstraints(maxHeight: 120),
                       margin: const EdgeInsets.only(bottom: 8),
-                      child: ColorFiltered(
-                        colorFilter: const ColorFilter.mode(
-                          Colors.white,
-                          BlendMode.saturation,
-                        ),
-                        child: Image.file(
-                          File(store.logoPath!),
-                          fit: BoxFit.contain,
-                        ),
+                      child: Image.file(
+                        File(store.logoPath!),
+                        fit: BoxFit.contain,
+                        filterQuality: FilterQuality.medium,
+                        cacheWidth: 300, // Optimize memory usage
                       ),
                     )
                   else
@@ -170,8 +168,11 @@ class TicketPreviewWidget extends StatelessWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text('Cajero:', style: receiptStyle),
-                      Text('Administrador', style: receiptStyle),
+                      Text('Le atendió:', style: receiptStyle),
+                      Text(
+                        ref.read(authProvider).user?.name ?? 'Cajero',
+                        style: receiptStyle,
+                      ),
                     ],
                   ),
 

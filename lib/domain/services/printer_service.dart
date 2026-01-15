@@ -30,6 +30,7 @@ abstract class PrinterService {
     required CustomerPayment payment,
     required Customer customer,
     required Store store,
+    String? cashierName,
     Printer? printer,
   });
 
@@ -41,6 +42,7 @@ abstract class PrinterService {
     required CustomerPayment payment,
     required Customer customer,
     required Store store,
+    String? cashierName,
     required String savePath,
   });
 }

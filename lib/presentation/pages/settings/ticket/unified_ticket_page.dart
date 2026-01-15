@@ -86,9 +86,10 @@ class _UnifiedTicketPageState extends ConsumerState<UnifiedTicketPage> {
 
   Future<void> _saveChanges() async {
     if (_previewStore == null) return;
-    if (!_formKey.currentState!.validate()) return;
+    if (_formKey.currentState?.validate() != true) return;
 
     try {
+      if (_previewStore == null) return;
       await ref.read(storeProvider.notifier).updateStore(_previewStore!);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

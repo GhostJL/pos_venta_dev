@@ -10,6 +10,7 @@ import 'package:posventa/features/sales/domain/models/ticket_data.dart';
 import 'package:posventa/presentation/providers/pos_providers.dart';
 import 'package:posventa/presentation/providers/store_provider.dart';
 import 'package:posventa/presentation/providers/settings_provider.dart';
+import 'package:posventa/presentation/providers/auth_provider.dart';
 import 'package:printing/printing.dart';
 import 'package:posventa/presentation/widgets/pos/payment/widgets/numeric_keypad.dart';
 import 'package:posventa/presentation/widgets/pos/payment/widgets/payment_action_buttons.dart';
@@ -212,6 +213,7 @@ class _PaymentPageState extends ConsumerState<PaymentPage> {
             storeWebsite: store?.website,
             storeLogoPath: store?.logoPath,
             footerMessage: store?.receiptFooter ?? '¡Gracias por su compra!',
+            cashierName: ref.read(authProvider).user?.name, // Use full name
           );
 
           try {

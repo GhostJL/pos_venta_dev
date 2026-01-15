@@ -13,6 +13,7 @@ class TicketData {
   final String? storeWebsite;
   final String? storeLogoPath;
   final String? footerMessage;
+  final String? cashierName;
 
   // Calculated fields
   double get total => sale.totalCents / 100.0;
@@ -32,5 +33,6 @@ class TicketData {
     this.storeWebsite,
     this.storeLogoPath,
     this.footerMessage = '¡Gracias por su compra!',
+    this.cashierName,
   });
 }

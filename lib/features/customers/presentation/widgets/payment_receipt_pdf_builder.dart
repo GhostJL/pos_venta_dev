@@ -12,6 +12,7 @@ class PaymentReceiptPdfBuilder {
     required CustomerPayment payment,
     required Customer customer,
     required Store store,
+    String? cashierName,
     bool is58mm = false,
   }) async {
     final pdf = pw.Document();
@@ -160,6 +161,23 @@ class PaymentReceiptPdfBuilder {
                   ),
                 ],
               ),
+
+              if (cashierName != null && cashierName.isNotEmpty) ...[
+                pw.SizedBox(height: 2),
+                pw.Row(
+                  mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                  children: [
+                    pw.Text(
+                      'Le atendió:',
+                      style: const pw.TextStyle(fontSize: 10),
+                    ),
+                    pw.Text(
+                      cashierName,
+                      style: const pw.TextStyle(fontSize: 10),
+                    ),
+                  ],
+                ),
+              ],
 
               pw.SizedBox(height: 6),
               pw.Divider(borderStyle: pw.BorderStyle.dashed),

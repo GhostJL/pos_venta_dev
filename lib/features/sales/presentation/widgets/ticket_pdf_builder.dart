@@ -147,14 +147,21 @@ class TicketPdfBuilder {
                 ],
               ),
 
-              // Optional: Cashier Name
-              // pw.Row(
-              //   mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-              //   children: [
-              //     pw.Text('Cajero:', style: const pw.TextStyle(fontSize: 10)),
-              //     pw.Text('Admin', style: const pw.TextStyle(fontSize: 10)),
-              //   ],
-              // ),
+              // Cashier Name
+              if (ticket.cashierName != null && ticket.cashierName!.isNotEmpty)
+                pw.Row(
+                  mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                  children: [
+                    pw.Text(
+                      'Le atendió:',
+                      style: const pw.TextStyle(fontSize: 10),
+                    ),
+                    pw.Text(
+                      ticket.cashierName!,
+                      style: const pw.TextStyle(fontSize: 10),
+                    ),
+                  ],
+                ),
               pw.SizedBox(height: 6),
               pw.Divider(borderStyle: pw.BorderStyle.dashed),
               pw.SizedBox(height: 4),

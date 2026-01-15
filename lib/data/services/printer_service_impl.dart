@@ -261,10 +261,17 @@ class PrinterServiceImpl implements PrinterService {
     required CustomerPayment payment,
     required Customer customer,
     required Store store,
+    String? cashierName,
     Printer? printer,
   }) async {
     if (Platform.isAndroid) {
-      await _printAndroidPaymentReceipt(payment, customer, store, printer);
+      await _printAndroidPaymentReceipt(
+        payment,
+        customer,
+        store,
+        printer,
+        cashierName,
+      );
       return;
     }
 
@@ -272,6 +279,7 @@ class PrinterServiceImpl implements PrinterService {
       payment: payment,
       customer: customer,
       store: store,
+      cashierName: cashierName,
     );
 
     if (printer != null) {
@@ -293,6 +301,7 @@ class PrinterServiceImpl implements PrinterService {
     Customer customer,
     Store store,
     Printer? printer,
+    String? cashierName,
   ) async {
     if (printer != null && (await _bluetooth.isConnected) != true) {
       await connectToDevice(printer);
@@ -366,6 +375,9 @@ class PrinterServiceImpl implements PrinterService {
     bytes += generator.feed(1);
 
     bytes += generator.text('Cliente: ${customer.fullName}');
+    if (cashierName != null && cashierName.isNotEmpty) {
+      bytes += generator.text('Le atendió: $cashierName');
+    }
     bytes += generator.text(
       'Fecha: ${payment.paymentDate.toString().substring(0, 16)}',
     );
@@ -444,6 +456,7 @@ class PrinterServiceImpl implements PrinterService {
     required CustomerPayment payment,
     required Customer customer,
     required Store store,
+    String? cashierName,
     required String savePath,
   }) async {
     // Generate organized path with year/month subdirectories
@@ -464,6 +477,7 @@ class PrinterServiceImpl implements PrinterService {
       payment: payment,
       customer: customer,
       store: store,
+      cashierName: cashierName,
     );
 
     // Save to file

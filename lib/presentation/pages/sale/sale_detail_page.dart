@@ -8,6 +8,7 @@ import 'package:posventa/presentation/providers/providers.dart';
 import 'package:posventa/presentation/providers/di/printer_di.dart'; // import printerServiceProvider
 import 'package:posventa/presentation/providers/settings_provider.dart';
 import 'package:posventa/presentation/providers/store_provider.dart';
+import 'package:posventa/presentation/providers/auth_provider.dart';
 import 'package:posventa/presentation/widgets/sales/detail/sale_action_buttons.dart';
 import 'package:posventa/presentation/widgets/sales/detail/sale_header_card.dart';
 import 'package:posventa/presentation/widgets/sales/detail/sale_payments_list.dart';
@@ -252,6 +253,7 @@ class SaleDetailPage extends ConsumerWidget {
         storeWebsite: store?.website,
         storeLogoPath: store?.logoPath,
         footerMessage: store?.receiptFooter ?? '¡Gracias por su compra!',
+        cashierName: ref.read(authProvider).user?.name,
       );
 
       bool printed = false;
