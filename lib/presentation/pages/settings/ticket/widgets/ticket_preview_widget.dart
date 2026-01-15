@@ -278,7 +278,14 @@ class TicketPreviewWidget extends ConsumerWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text('Su Pago:', style: receiptStyle),
+                      Text('Forma de Pago:', style: receiptStyle),
+                      Text('Efectivo', style: receiptStyle),
+                    ],
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text('Pago:', style: receiptStyle),
                       Text('\$200.00', style: receiptStyle),
                     ],
                   ),

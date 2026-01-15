@@ -307,6 +307,43 @@ class TicketPdfBuilder {
                 ],
               ),
 
+              pw.SizedBox(height: 8),
+
+              // Payment Details
+              pw.Row(
+                mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                children: [
+                  pw.Text(
+                    'Forma de Pago:',
+                    style: const pw.TextStyle(fontSize: 10),
+                  ),
+                  pw.Text(
+                    ticket.paymentMethod,
+                    style: const pw.TextStyle(fontSize: 10),
+                  ),
+                ],
+              ),
+              pw.Row(
+                mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                children: [
+                  pw.Text('Pago:', style: const pw.TextStyle(fontSize: 10)),
+                  pw.Text(
+                    currency.format(ticket.amountReceived),
+                    style: const pw.TextStyle(fontSize: 10),
+                  ),
+                ],
+              ),
+              pw.Row(
+                mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                children: [
+                  pw.Text('Cambio:', style: const pw.TextStyle(fontSize: 10)),
+                  pw.Text(
+                    currency.format(ticket.change),
+                    style: const pw.TextStyle(fontSize: 10),
+                  ),
+                ],
+              ),
+
               // Payment info (if available in ticket data, otherwise skipped)
               pw.SizedBox(height: 12),
 
