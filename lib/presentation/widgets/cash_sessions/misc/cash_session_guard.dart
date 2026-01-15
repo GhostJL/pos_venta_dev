@@ -26,9 +26,8 @@ class CashSessionGuard extends ConsumerWidget {
 
     final user = ref.watch(authProvider).user;
 
-    // Solo validar sesión para cajeros y administradores
-    if (user == null ||
-        (user.role != UserRole.cajero && user.role != UserRole.administrador)) {
+    // Validar sesión para todos los roles excepto espectadores
+    if (user == null || user.role == UserRole.espectador) {
       return child;
     }
 
