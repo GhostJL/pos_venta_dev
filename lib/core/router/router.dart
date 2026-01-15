@@ -54,8 +54,8 @@ import 'package:posventa/presentation/pages/settings/settings_page.dart';
 import 'package:posventa/presentation/pages/settings/help/app_shortcuts_page.dart';
 import 'package:posventa/presentation/pages/settings/hardware_settings_page.dart';
 import 'package:posventa/presentation/pages/settings/print_settings_page.dart';
-import 'package:posventa/presentation/pages/settings/ticket/ticket_config_page.dart';
 import 'package:posventa/features/reports/presentation/pages/reports_page.dart';
+import 'package:posventa/presentation/pages/settings/ticket/unified_ticket_page.dart';
 
 import 'package:posventa/presentation/pages/users/users_permissions_page.dart';
 import 'package:posventa/presentation/pages/warehouses/warehouses_page.dart';
@@ -491,11 +491,19 @@ final routerProvider = Provider<GoRouter>((ref) {
                 const NoTransitionPage(child: PrintSettingsPage()),
           ),
           GoRoute(
+            path: '/settings/business',
+            pageBuilder: (context, state) =>
+                const NoTransitionPage(child: UnifiedTicketPage()),
+          ),
+
+          /* Deprecated routes retained for safety if needed, or removed */
+          /*
+          GoRoute(
             path: '/settings/ticket',
             pageBuilder: (context, state) =>
                 const NoTransitionPage(child: TicketConfigPage()),
           ),
-
+          */
           GoRoute(
             path: '/reports',
             pageBuilder: (context, state) =>

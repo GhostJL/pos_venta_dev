@@ -204,8 +204,13 @@ class _PaymentPageState extends ConsumerState<PaymentPage> {
             sale: sale,
             items: sale.items,
             storeName: store?.name ?? 'Mi Tienda POS',
+            storeBusinessName: store?.businessName,
             storeAddress: store?.address ?? '',
             storePhone: store?.phone ?? '',
+            storeTaxId: store?.taxId,
+            storeEmail: store?.email,
+            storeWebsite: store?.website,
+            storeLogoPath: store?.logoPath,
             footerMessage: store?.receiptFooter ?? '¡Gracias por su compra!',
           );
 

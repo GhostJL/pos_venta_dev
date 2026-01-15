@@ -41,17 +41,9 @@ class SettingsPage extends ConsumerWidget {
                 children: [
                   SettingsCategoryTile(
                     icon: Icons.store_mall_directory_rounded,
-                    title: 'Mi Tienda',
-                    subtitle: 'Información del negocio',
-                    onTap: () => context.push('/store'),
-                  ),
-                  const Divider(height: 1, indent: 56),
-                  // Ticket configuration
-                  SettingsCategoryTile(
-                    icon: Icons.receipt_long_rounded,
-                    title: 'Ticket',
-                    subtitle: 'Mensaje de pie de página',
-                    onTap: () => context.push('/settings/ticket'),
+                    title: 'Datos del Negocio y Ticket',
+                    subtitle: 'Información de la tienda y diseño del ticket',
+                    onTap: () => context.push('/settings/business'),
                   ),
                   const Divider(height: 1, indent: 56),
                   SettingsCategoryTile(
