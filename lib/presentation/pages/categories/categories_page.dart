@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:posventa/presentation/widgets/common/confirm_delete_sheet.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:posventa/domain/entities/category.dart';
 import 'package:posventa/domain/entities/department.dart';
@@ -8,7 +9,6 @@ import 'package:go_router/go_router.dart';
 import 'package:posventa/core/constants/permission_constants.dart';
 import 'package:posventa/presentation/providers/permission_provider.dart';
 import 'package:posventa/presentation/widgets/common/actions/catalog_module_actions_sheet.dart';
-import 'package:posventa/presentation/widgets/common/confirm_delete_dialog.dart';
 import 'package:posventa/presentation/widgets/common/pages/generic_module_list_page.dart';
 import 'package:posventa/presentation/mixins/page_lifecycle_mixin.dart';
 
@@ -29,12 +29,14 @@ class _CategoriesPageState extends ConsumerState<CategoriesPage>
   }
 
   void _confirmDelete(BuildContext context, WidgetRef ref, Category category) {
-    ConfirmDeleteDialog.show(
+    ConfirmDeleteSheet.show(
       context: context,
       itemName: category.name,
       itemType: 'la categoría',
-      onConfirm: () {
-        ref.read(categoryListProvider.notifier).deleteCategory(category.id!);
+      onConfirm: () async {
+        await ref
+            .read(categoryListProvider.notifier)
+            .deleteCategory(category.id!);
       },
       successMessage: 'Categoría eliminada correctamente',
     );
@@ -160,14 +162,8 @@ class _CategoryCard extends StatelessWidget {
                         builder: (context) => CatalogModuleActionsSheet(
                           icon: Icons.category_rounded,
                           title: category.name,
-                          onEdit: () {
-                            Navigator.pop(context);
-                            onEdit();
-                          },
-                          onDelete: () {
-                            Navigator.pop(context);
-                            onDelete();
-                          },
+                          onEdit: onEdit,
+                          onDelete: onDelete,
                         ),
                       );
                     },

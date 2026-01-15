@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:posventa/presentation/widgets/common/confirm_delete_sheet.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:posventa/domain/entities/brand.dart';
 import 'package:go_router/go_router.dart';
 import 'package:posventa/presentation/providers/brand_providers.dart';
 import 'package:posventa/core/constants/permission_constants.dart';
-import 'package:posventa/presentation/widgets/common/confirm_delete_dialog.dart';
 import 'package:posventa/presentation/providers/permission_provider.dart';
 import 'package:posventa/presentation/widgets/common/actions/catalog_module_actions_sheet.dart';
 import 'package:posventa/presentation/widgets/common/pages/generic_module_list_page.dart';
@@ -27,12 +27,12 @@ class _BrandsPageState extends ConsumerState<BrandsPage>
   }
 
   void _confirmDelete(BuildContext context, WidgetRef ref, Brand brand) {
-    ConfirmDeleteDialog.show(
+    ConfirmDeleteSheet.show(
       context: context,
       itemName: brand.name,
       itemType: 'la marca',
-      onConfirm: () {
-        ref.read(brandListProvider.notifier).deleteBrand(brand.id!);
+      onConfirm: () async {
+        await ref.read(brandListProvider.notifier).deleteBrand(brand.id!);
       },
       successMessage: 'Marca eliminada correctamente',
     );
@@ -141,14 +141,8 @@ class _BrandCard extends StatelessWidget {
                         builder: (context) => CatalogModuleActionsSheet(
                           icon: Icons.label_rounded,
                           title: brand.name,
-                          onEdit: () {
-                            Navigator.pop(context);
-                            onEdit();
-                          },
-                          onDelete: () {
-                            Navigator.pop(context);
-                            onDelete();
-                          },
+                          onEdit: onEdit,
+                          onDelete: onDelete,
                         ),
                       );
                     },

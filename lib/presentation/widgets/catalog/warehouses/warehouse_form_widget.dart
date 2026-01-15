@@ -3,34 +3,29 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:posventa/domain/entities/warehouse.dart';
 import 'package:posventa/presentation/providers/warehouse_providers.dart';
-import 'package:posventa/core/constants/ui_constants.dart';
+import 'package:posventa/presentation/widgets/common/generic_form_scaffold.dart';
 
-class WarehouseFormWidget extends ConsumerStatefulWidget {
+class WarehouseForm extends ConsumerStatefulWidget {
   final Warehouse? warehouse;
-  final VoidCallback? onSuccess;
 
-  const WarehouseFormWidget({super.key, this.warehouse, this.onSuccess});
+  const WarehouseForm({super.key, this.warehouse});
 
   @override
-  ConsumerState<WarehouseFormWidget> createState() =>
-      _WarehouseFormWidgetState();
+  ConsumerState<WarehouseForm> createState() => _WarehouseFormState();
 }
 
-class _WarehouseFormWidgetState extends ConsumerState<WarehouseFormWidget> {
+class _WarehouseFormState extends ConsumerState<WarehouseForm> {
   final _formKey = GlobalKey<FormState>();
   late String _name;
-  late String _code;
   String? _address;
   String? _phone;
   late bool _isMain;
   late bool _isActive;
   bool _isLoading = false;
-
   @override
   void initState() {
     super.initState();
     _name = widget.warehouse?.name ?? '';
-    _code = widget.warehouse?.code ?? '';
     _address = widget.warehouse?.address;
     _phone = widget.warehouse?.phone;
     _isMain = widget.warehouse?.isMain ?? false;
@@ -43,10 +38,14 @@ class _WarehouseFormWidgetState extends ConsumerState<WarehouseFormWidget> {
       setState(() => _isLoading = true);
 
       try {
+        final code =
+            widget.warehouse?.code ??
+            'ALM-${DateTime.now().millisecondsSinceEpoch.toString().substring(5)}';
+
         final newWarehouse = Warehouse(
           id: widget.warehouse?.id,
           name: _name,
-          code: _code,
+          code: code,
           address: _address,
           phone: _phone,
           isMain: _isMain,
@@ -61,11 +60,7 @@ class _WarehouseFormWidgetState extends ConsumerState<WarehouseFormWidget> {
         }
 
         if (mounted) {
-          if (widget.onSuccess != null) {
-            widget.onSuccess!();
-          } else {
-            Navigator.of(context).pop();
-          }
+          Navigator.of(context).pop(true);
 
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -93,119 +88,73 @@ class _WarehouseFormWidgetState extends ConsumerState<WarehouseFormWidget> {
 
   @override
   Widget build(BuildContext context) {
-    final isCreating = widget.warehouse == null;
-    final textTheme = Theme.of(context).textTheme;
+    final title = widget.warehouse == null
+        ? 'Añadir Almacén'
+        : 'Editar Almacén';
+    final submitText = widget.warehouse == null ? 'Guardar' : 'Actualizar';
 
-    return AlertDialog(
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(UIConstants.borderRadiusLarge),
-      ),
-      elevation: 0,
-      backgroundColor: Theme.of(context).colorScheme.surface,
-      title: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 8.0),
-        child: Text(
-          isCreating ? 'Añadir Almacén' : 'Editar Almacén',
-          style: textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
-        ),
-      ),
-      content: SizedBox(
-        width: MediaQuery.of(context).size.width,
-        child: Form(
-          key: _formKey,
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 8.0,
-              vertical: 12.0,
+    return GenericFormScaffold(
+      title: title,
+      isLoading: _isLoading,
+      onSubmit: _submit,
+      submitButtonText: submitText,
+      formKey: _formKey,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          TextFormField(
+            initialValue: _name,
+            decoration: const InputDecoration(
+              labelText: 'Nombre del Almacén',
+              prefixIcon: Icon(Icons.store_mall_directory_rounded),
             ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextFormField(
-                  initialValue: _name,
-                  decoration: const InputDecoration(
-                    labelText: 'Nombre del Almacén',
-                  ),
-                  validator: (value) => (value == null || value.isEmpty)
-                      ? 'Campo requerido'
-                      : null,
-                  onSaved: (value) => _name = value!,
-                ),
-                const SizedBox(height: UIConstants.spacingMedium),
-                TextFormField(
-                  initialValue: _code,
-                  decoration: const InputDecoration(labelText: 'Código Único'),
-                  validator: (value) => (value == null || value.isEmpty)
-                      ? 'Campo requerido'
-                      : null,
-                  onSaved: (value) => _code = value!,
-                ),
-                const SizedBox(height: UIConstants.spacingMedium),
-                TextFormField(
-                  initialValue: _address,
-                  decoration: const InputDecoration(
-                    labelText: 'Dirección (Opcional)',
-                  ),
-                  onSaved: (value) => _address = value,
-                ),
-                const SizedBox(height: UIConstants.spacingMedium),
-                TextFormField(
-                  initialValue: _phone,
-                  decoration: const InputDecoration(
-                    labelText: 'Teléfono (Opcional)',
-                  ),
-                  onSaved: (value) => _phone = value,
-                ),
-                const SizedBox(height: 20),
-                const Divider(height: 1),
-                const SizedBox(height: 20),
-                _SwitchTile(
-                  title: 'Almacén Principal',
-                  subtitle: 'Define si este es el almacén por defecto.',
-                  value: _isMain,
-                  onChanged: (value) => setState(() => _isMain = value),
-                ),
-                const SizedBox(height: 16),
-                _SwitchTile(
-                  title: 'Almacén Activo',
-                  subtitle:
-                      'Los almacenes inactivos no se mostrarán en las operaciones.',
-                  value: _isActive,
-                  onChanged: (value) => setState(() => _isActive = value),
-                ),
-              ],
+            validator: (value) =>
+                (value == null || value.isEmpty) ? 'Campo requerido' : null,
+            onSaved: (value) => _name = value!,
+            textInputAction: TextInputAction.next,
+          ),
+          const SizedBox(height: 16),
+          TextFormField(
+            initialValue: _address,
+            decoration: const InputDecoration(
+              labelText: 'Dirección (Opcional)',
+              prefixIcon: Icon(Icons.location_on_rounded),
             ),
+            onSaved: (value) => _address = value,
+            textInputAction: TextInputAction.next,
           ),
-        ),
+          const SizedBox(height: 16),
+          TextFormField(
+            initialValue: _phone,
+            decoration: const InputDecoration(
+              labelText: 'Teléfono (Opcional)',
+              prefixIcon: Icon(Icons.phone_rounded),
+            ),
+            onSaved: (value) => _phone = value,
+            textInputAction: TextInputAction.done,
+            keyboardType: TextInputType.phone,
+          ),
+          const SizedBox(height: 24),
+          const Divider(),
+          const SizedBox(height: 16),
+          _SwitchTile(
+            title: 'Almacén Principal',
+            subtitle: 'Define si este es el almacén por defecto.',
+            value: _isMain,
+            onChanged: (value) => setState(() => _isMain = value),
+            icon: Icons.star_rounded,
+          ),
+          const SizedBox(height: 16),
+          _SwitchTile(
+            title: 'Almacén Activo',
+            subtitle:
+                'Los almacenes inactivos no se mostrarán en las operaciones.',
+            value: _isActive,
+            onChanged: (value) => setState(() => _isActive = value),
+            icon: Icons.check_circle_rounded,
+          ),
+        ],
       ),
-      actions: <Widget>[
-        Padding(
-          padding: const EdgeInsets.fromLTRB(24, 0, 24, 16),
-          child: Row(
-            children: [
-              Expanded(
-                child: TextButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  child: const Text('Cancelar'),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: ElevatedButton(
-                  onPressed: _isLoading ? null : _submit,
-                  child: _isLoading
-                      ? const SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : Text(isCreating ? 'Guardar' : 'Actualizar'),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
     );
   }
 }
@@ -215,41 +164,26 @@ class _SwitchTile extends StatelessWidget {
   final String subtitle;
   final bool value;
   final ValueChanged<bool> onChanged;
+  final IconData icon;
 
   const _SwitchTile({
     required this.title,
     required this.subtitle,
     required this.value,
     required this.onChanged,
+    required this.icon,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                style: Theme.of(
-                  context,
-                ).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                subtitle,
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(width: 16),
-        Switch(value: value, onChanged: onChanged),
-      ],
+    return SwitchListTile(
+      value: value,
+      onChanged: onChanged,
+      title: Text(title, style: const TextStyle(fontWeight: FontWeight.w600)),
+      subtitle: Text(subtitle),
+      secondary: Icon(icon),
+      contentPadding: EdgeInsets.zero,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
     );
   }
 }

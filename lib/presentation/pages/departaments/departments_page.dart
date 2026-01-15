@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:posventa/presentation/widgets/common/confirm_delete_sheet.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:posventa/domain/entities/department.dart';
 import 'package:posventa/presentation/providers/department_providers.dart';
@@ -6,7 +7,6 @@ import 'package:go_router/go_router.dart';
 import 'package:posventa/core/constants/permission_constants.dart';
 import 'package:posventa/presentation/providers/permission_provider.dart';
 import 'package:posventa/presentation/widgets/common/actions/catalog_module_actions_sheet.dart';
-import 'package:posventa/presentation/widgets/common/confirm_delete_dialog.dart';
 import 'package:posventa/presentation/widgets/common/pages/generic_module_list_page.dart';
 import 'package:posventa/presentation/mixins/page_lifecycle_mixin.dart';
 
@@ -31,12 +31,12 @@ class _DepartmentsPageState extends ConsumerState<DepartmentsPage>
     WidgetRef ref,
     Department department,
   ) {
-    ConfirmDeleteDialog.show(
+    ConfirmDeleteSheet.show(
       context: context,
       itemName: department.name,
       itemType: 'el departamento',
-      onConfirm: () {
-        ref
+      onConfirm: () async {
+        await ref
             .read(departmentListProvider.notifier)
             .deleteDepartment(department.id!);
       },
@@ -151,14 +151,8 @@ class _DepartmentCard extends StatelessWidget {
                         builder: (context) => CatalogModuleActionsSheet(
                           icon: Icons.apartment_rounded,
                           title: department.name,
-                          onEdit: () {
-                            Navigator.pop(context);
-                            onEdit();
-                          },
-                          onDelete: () {
-                            Navigator.pop(context);
-                            onDelete();
-                          },
+                          onEdit: onEdit,
+                          onDelete: onDelete,
                         ),
                       );
                     },

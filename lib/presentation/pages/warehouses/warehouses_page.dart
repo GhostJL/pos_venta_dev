@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:posventa/domain/entities/warehouse.dart';
 import 'package:posventa/presentation/providers/warehouse_providers.dart';
 import 'package:posventa/core/constants/permission_constants.dart';
 import 'package:posventa/presentation/providers/permission_provider.dart';
-import 'package:posventa/presentation/widgets/catalog/warehouses/warehouse_form_widget.dart';
 import 'package:posventa/presentation/widgets/common/actions/catalog_module_actions_sheet.dart';
+import 'package:posventa/presentation/widgets/common/confirm_delete_sheet.dart';
 import 'package:posventa/presentation/widgets/common/pages/generic_module_list_page.dart';
 import 'package:posventa/presentation/mixins/page_lifecycle_mixin.dart';
 
@@ -21,10 +22,25 @@ class _WarehousesPageState extends ConsumerState<WarehousesPage>
   @override
   List<dynamic> get providersToInvalidate => [warehouseProvider];
 
-  void _showWarehouseForm([Warehouse? warehouse]) {
-    showDialog(
+  void _navigateToForm([Warehouse? warehouse]) {
+    context.push('/warehouses/form', extra: warehouse);
+  }
+
+  void _confirmDelete(
+    BuildContext context,
+    WidgetRef ref,
+    Warehouse warehouse,
+  ) {
+    ConfirmDeleteSheet.show(
       context: context,
-      builder: (context) => WarehouseFormWidget(warehouse: warehouse),
+      itemName: warehouse.name,
+      itemType: 'el almacén',
+      onConfirm: () async {
+        await ref
+            .read(warehouseProvider.notifier)
+            .removeWarehouse(warehouse.id!);
+      },
+      successMessage: 'Almacén eliminado correctamente',
     );
   }
 
@@ -42,15 +58,15 @@ class _WarehousesPageState extends ConsumerState<WarehousesPage>
       emptyIcon: Icons.warehouse_rounded,
       emptyMessage: 'No se encontraron almacenes',
       addButtonLabel: 'Añadir Almacén',
-      onAddPressed: hasManagePermission ? () => _showWarehouseForm() : null,
+      onAddPressed: hasManagePermission ? () => _navigateToForm() : null,
       filterPlaceholder: 'Buscar almacenes...',
       filterCallback: (warehouse, query) =>
           warehouse.name.toLowerCase().contains(query.toLowerCase()),
       itemBuilder: (context, warehouse) {
         return _WarehouseCard(
           warehouse: warehouse,
-          onEdit: () => _showWarehouseForm(warehouse),
-          onDelete: () => _showWarehouseForm(warehouse),
+          onEdit: () => _navigateToForm(warehouse),
+          onDelete: () => _confirmDelete(context, ref, warehouse),
         );
       },
     );
@@ -181,14 +197,8 @@ class _WarehouseCard extends StatelessWidget {
                         builder: (context) => CatalogModuleActionsSheet(
                           icon: Icons.warehouse_rounded,
                           title: warehouse.name,
-                          onEdit: () {
-                            Navigator.pop(context);
-                            onEdit();
-                          },
-                          onDelete: () {
-                            Navigator.pop(context);
-                            onDelete();
-                          },
+                          onEdit: onEdit,
+                          onDelete: onDelete,
                         ),
                       );
                     },

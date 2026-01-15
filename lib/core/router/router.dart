@@ -87,6 +87,8 @@ import 'package:posventa/domain/entities/category.dart';
 import 'package:posventa/domain/entities/customer.dart';
 import 'package:posventa/domain/entities/department.dart';
 import 'package:posventa/domain/entities/supplier.dart';
+import 'package:posventa/domain/entities/warehouse.dart';
+import 'package:posventa/presentation/widgets/catalog/warehouses/warehouse_form_widget.dart';
 
 final GlobalKey<NavigatorState> _rootNavigatorKey = GlobalKey<NavigatorState>();
 
@@ -181,6 +183,15 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: '/warehouses',
             pageBuilder: (context, state) =>
                 const NoTransitionPage(child: WarehousesPage()),
+          ),
+          GoRoute(
+            path: '/warehouses/form',
+            pageBuilder: (context, state) {
+              final warehouse = state.extra as Warehouse?;
+              return NoTransitionPage(
+                child: WarehouseForm(warehouse: warehouse),
+              );
+            },
           ),
           GoRoute(
             path: '/tax-rates',
