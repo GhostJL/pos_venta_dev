@@ -34,6 +34,17 @@ class UserNotifier extends _$UserNotifier {
       return ref.read(getAllUsersProvider).call();
     });
   }
+
+  Future<void> updatePassword(int userId, String newPassword) async {
+    await ref.read(authRepositoryProvider).updatePassword(userId, newPassword);
+  }
+
+  Future<void> refresh() async {
+    state = const AsyncValue.loading();
+    state = await AsyncValue.guard(() async {
+      return ref.read(getAllUsersProvider).call();
+    });
+  }
 }
 
 @riverpod

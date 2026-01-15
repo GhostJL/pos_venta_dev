@@ -188,10 +188,10 @@ class SettingsPage extends ConsumerWidget {
               SettingsSectionContainer(
                 children: [
                   SettingsCategoryTile(
-                    icon: Icons.people_alt_rounded,
-                    title: 'Usuarios',
-                    subtitle: 'Gestión de personal y cajeros',
-                    onTap: () => context.push('/cashiers'),
+                    icon: Icons.badge_rounded,
+                    title: 'Gestión de Usuarios',
+                    subtitle: 'Administrar usuarios, roles y permisos',
+                    onTap: () => context.push('/users-permissions'),
                   ),
                 ],
               ),

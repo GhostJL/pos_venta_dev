@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:posventa/presentation/providers/cashier_providers.dart';
 import 'package:posventa/presentation/providers/auth_provider.dart';
 import 'package:posventa/core/theme/theme.dart';
+import 'package:posventa/presentation/widgets/users/admin_change_password_dialog.dart';
 
 class CashierListPage extends ConsumerWidget {
   const CashierListPage({super.key});
@@ -81,6 +82,9 @@ class CashierListPage extends ConsumerWidget {
                   trailing: PopupMenuButton<String>(
                     onSelected: (value) {
                       switch (value) {
+                        case 'change_password':
+                          _showChangePasswordDialog(context, ref, cashier);
+                          break;
                         case 'permissions':
                           context.push('/cashiers/permissions', extra: cashier);
                           break;
@@ -93,6 +97,19 @@ class CashierListPage extends ConsumerWidget {
                       }
                     },
                     itemBuilder: (context) => [
+                      PopupMenuItem(
+                        value: 'change_password',
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.lock_reset_rounded,
+                              color: Theme.of(context).colorScheme.primary,
+                            ),
+                            const SizedBox(width: 8),
+                            const Text('Cambiar Contraseña'),
+                          ],
+                        ),
+                      ),
                       PopupMenuItem(
                         value: 'permissions',
                         child: Row(
@@ -154,6 +171,34 @@ class CashierListPage extends ConsumerWidget {
         label: const Text('Nuevo Cajero'),
       ),
     );
+  }
+
+  void _showChangePasswordDialog(
+    BuildContext context,
+    WidgetRef ref,
+    User cashier,
+  ) {
+    final messenger = ScaffoldMessenger.of(context);
+    showDialog<bool>(
+      context: context,
+      builder: (context) => AdminChangePasswordDialog(user: cashier),
+    ).then((result) {
+      if (result == true) {
+        // Refresh the cashier list
+        ref.invalidate(cashierListProvider);
+        messenger.showSnackBar(
+          SnackBar(
+            content: Text('Contraseña actualizada para ${cashier.name}'),
+            behavior: SnackBarBehavior.floating,
+            backgroundColor: Colors.green,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+            showCloseIcon: true,
+          ),
+        );
+      }
+    });
   }
 
   void _confirmDelete(BuildContext context, WidgetRef ref, User cashier) {
