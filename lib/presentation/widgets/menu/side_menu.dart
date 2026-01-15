@@ -38,7 +38,12 @@ class _SideMenuState extends ConsumerState<SideMenu> {
 
           Expanded(child: _buildMenuContent(context)),
 
-          const SizedBox(height: 16),
+          const SizedBox(height: 8),
+          _SettingsItem(
+            user: ref.watch(authProvider).user,
+            isCollapsed: widget.isCollapsed,
+          ),
+          const SizedBox(height: 8),
           SideMenuLogout(isCollapsed: widget.isCollapsed),
           const SizedBox(height: 16),
         ],
@@ -263,28 +268,78 @@ class _MinimalHeader extends StatelessWidget {
               ),
             ),
           ],
-          if (user?.role == UserRole.administrador) ...[
-            const SizedBox(height: 8),
-            Align(
-              alignment: Alignment.centerRight,
-              child: IconButton(
-                icon: const Icon(Icons.settings_rounded, size: 20),
-                onPressed: () {
-                  GoRouter.of(context).push('/settings');
-                  final scaffold = Scaffold.maybeOf(context);
-                  if (scaffold?.isDrawerOpen ?? false) {
-                    scaffold!.closeDrawer();
-                  }
-                },
-                tooltip: 'Configuración',
-                style: IconButton.styleFrom(
-                  visualDensity: VisualDensity.compact,
-                  foregroundColor: colorScheme.onSurfaceVariant,
-                ),
+          //... (removed)
+        ],
+      ),
+    );
+  }
+}
+
+class _SettingsItem extends StatelessWidget {
+  final User? user;
+  final bool isCollapsed;
+
+  const _SettingsItem({required this.user, required this.isCollapsed});
+
+  @override
+  Widget build(BuildContext context) {
+    if (user?.role != UserRole.administrador) return const SizedBox.shrink();
+
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+      child: Tooltip(
+        message: isCollapsed ? 'Configuración' : '',
+        waitDuration: const Duration(milliseconds: 500),
+        child: Material(
+          color: Colors.transparent,
+          borderRadius: BorderRadius.circular(12),
+          child: InkWell(
+            onTap: () {
+              GoRouter.of(context).push('/settings');
+              final scaffold = Scaffold.maybeOf(context);
+              if (scaffold?.isDrawerOpen ?? false) {
+                scaffold!.closeDrawer();
+              }
+            },
+            borderRadius: BorderRadius.circular(12),
+            hoverColor: colorScheme.onSurface.withValues(alpha: 0.08),
+            splashColor: colorScheme.primary.withValues(alpha: 0.12),
+            child: Container(
+              height: 50,
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              alignment: Alignment.centerLeft,
+              child: Row(
+                mainAxisAlignment: isCollapsed
+                    ? MainAxisAlignment.center
+                    : MainAxisAlignment.start,
+                children: [
+                  Icon(
+                    Icons.settings_rounded,
+                    color: colorScheme.onSurfaceVariant,
+                    size: 22,
+                  ),
+                  if (!isCollapsed) ...[
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        'Configuración',
+                        style: textTheme.labelLarge?.copyWith(
+                          color: colorScheme.onSurfaceVariant,
+                          fontWeight: FontWeight.w500,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ],
               ),
             ),
-          ],
-        ],
+          ),
+        ),
       ),
     );
   }
