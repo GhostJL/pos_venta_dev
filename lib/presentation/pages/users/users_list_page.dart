@@ -35,64 +35,6 @@ class _UsersListPageState extends ConsumerState<UsersListPage> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         actions: [
-          // Filter by role
-          PopupMenuButton<UserRole?>(
-            icon: Icon(Icons.filter_list_rounded, color: colorScheme.onSurface),
-            tooltip: 'Filtrar por rol',
-            onSelected: (role) {
-              setState(() {
-                _selectedRoleFilter = role;
-              });
-            },
-            itemBuilder: (context) => [
-              PopupMenuItem(
-                value: null,
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.clear_all_rounded,
-                      color: _selectedRoleFilter == null
-                          ? colorScheme.primary
-                          : colorScheme.onSurface,
-                    ),
-                    const SizedBox(width: 12),
-                    Text(
-                      'Todos',
-                      style: TextStyle(
-                        fontWeight: _selectedRoleFilter == null
-                            ? FontWeight.bold
-                            : FontWeight.normal,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              ...UserRole.values.map(
-                (role) => PopupMenuItem(
-                  value: role,
-                  child: Row(
-                    children: [
-                      Icon(
-                        _getRoleIcon(role),
-                        color: _selectedRoleFilter == role
-                            ? colorScheme.primary
-                            : colorScheme.onSurface,
-                      ),
-                      const SizedBox(width: 12),
-                      Text(
-                        _getRoleLabel(role),
-                        style: TextStyle(
-                          fontWeight: _selectedRoleFilter == role
-                              ? FontWeight.bold
-                              : FontWeight.normal,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
           // Refresh button
           IconButton(
             icon: const Icon(Icons.refresh_rounded),
@@ -103,86 +45,161 @@ class _UsersListPageState extends ConsumerState<UsersListPage> {
           ),
         ],
       ),
-      body: usersAsync.when(
-        data: (users) {
-          // Apply filter
-          final filteredUsers = _selectedRoleFilter == null
-              ? users
-              : users.where((u) => u.role == _selectedRoleFilter).toList();
-
-          if (filteredUsers.isEmpty) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.people_outline_rounded,
-                    size: 64,
-                    color: colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    _selectedRoleFilter == null
-                        ? 'No hay usuarios registrados'
-                        : 'No hay usuarios con el rol seleccionado',
-                    style: TextStyle(
-                      color: colorScheme.onSurfaceVariant,
-                      fontSize: 16,
-                    ),
-                  ),
-                ],
-              ),
-            );
-          }
-
-          return LayoutBuilder(
-            builder: (context, constraints) {
-              final isDesktop = constraints.maxWidth > 600;
-
-              if (isDesktop) {
-                return _buildDesktopLayout(
-                  filteredUsers,
-                  currentUser,
-                  colorScheme,
-                );
-              } else {
-                return _buildMobileLayout(
-                  filteredUsers,
-                  currentUser,
-                  colorScheme,
-                );
-              }
-            },
-          );
-        },
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, stack) => Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                Icons.error_outline_rounded,
-                size: 64,
-                color: colorScheme.error,
-              ),
-              const SizedBox(height: 16),
-              Text(
-                'Error al cargar usuarios',
-                style: TextStyle(
-                  color: colorScheme.error,
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
+      body: Column(
+        children: [
+          // Filter Section
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+            decoration: BoxDecoration(
+              color: colorScheme.surface,
+              border: Border(
+                bottom: BorderSide(
+                  color: colorScheme.outlineVariant.withValues(alpha: 0.3),
                 ),
               ),
-              const SizedBox(height: 8),
-              Text(
-                error.toString(),
-                style: TextStyle(color: colorScheme.onSurfaceVariant),
-                textAlign: TextAlign.center,
-              ),
-            ],
+            ),
+            child: Row(
+              children: [
+                Text(
+                  'Filtrar por:',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                    color: colorScheme.onSurfaceVariant,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      children: [
+                        _buildFilterChip(
+                          label: 'Todos',
+                          icon: Icons.people_outline_rounded,
+                          isSelected: _selectedRoleFilter == null,
+                          onTap: () {
+                            setState(() {
+                              _selectedRoleFilter = null;
+                            });
+                          },
+                          colorScheme: colorScheme,
+                        ),
+                        const SizedBox(width: 8),
+                        ...UserRole.values.map((role) {
+                          final isSelected = _selectedRoleFilter == role;
+                          return Padding(
+                            padding: const EdgeInsets.only(right: 8),
+                            child: _buildFilterChip(
+                              label: _getRoleLabel(role),
+                              icon: _getRoleIcon(role),
+                              isSelected: isSelected,
+                              onTap: () {
+                                setState(() {
+                                  _selectedRoleFilter = role;
+                                });
+                              },
+                              colorScheme: colorScheme,
+                            ),
+                          );
+                        }),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
-        ),
+          const Divider(height: 1),
+          Expanded(
+            child: usersAsync.when(
+              data: (users) {
+                // Apply filter
+                final filteredUsers = _selectedRoleFilter == null
+                    ? users
+                    : users
+                          .where((u) => u.role == _selectedRoleFilter)
+                          .toList();
+
+                if (filteredUsers.isEmpty) {
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.people_outline_rounded,
+                          size: 64,
+                          color: colorScheme.onSurfaceVariant.withValues(
+                            alpha: 0.5,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          _selectedRoleFilter == null
+                              ? 'No hay usuarios registrados'
+                              : 'No hay usuarios con el rol seleccionado',
+                          style: TextStyle(
+                            color: colorScheme.onSurfaceVariant,
+                            fontSize: 16,
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }
+
+                return LayoutBuilder(
+                  builder: (context, constraints) {
+                    final isDesktop = constraints.maxWidth > 600;
+
+                    if (isDesktop) {
+                      return _buildDesktopLayout(
+                        filteredUsers,
+                        currentUser,
+                        colorScheme,
+                      );
+                    } else {
+                      return _buildMobileLayout(
+                        filteredUsers,
+                        currentUser,
+                        colorScheme,
+                      );
+                    }
+                  },
+                );
+              },
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (error, stack) => Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.error_outline_rounded,
+                      size: 64,
+                      color: colorScheme.error,
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Error al cargar usuarios',
+                      style: TextStyle(
+                        color: colorScheme.error,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      error.toString(),
+                      style: TextStyle(color: colorScheme.onSurfaceVariant),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -227,6 +244,7 @@ class _UsersListPageState extends ConsumerState<UsersListPage> {
                           ),
                         ),
                       ),
+                      const SizedBox(width: 16),
                       Expanded(
                         flex: 2,
                         child: Text(
@@ -237,6 +255,7 @@ class _UsersListPageState extends ConsumerState<UsersListPage> {
                           ),
                         ),
                       ),
+                      const SizedBox(width: 16),
                       Expanded(
                         flex: 2,
                         child: Text(
@@ -247,8 +266,9 @@ class _UsersListPageState extends ConsumerState<UsersListPage> {
                           ),
                         ),
                       ),
+                      const SizedBox(width: 16),
                       Expanded(
-                        flex: 1,
+                        flex: 2,
                         child: Text(
                           'Estado',
                           style: GoogleFonts.outfit(
@@ -339,6 +359,7 @@ class _UsersListPageState extends ConsumerState<UsersListPage> {
               ],
             ),
           ),
+          const SizedBox(width: 16),
           // Username
           Expanded(
             flex: 2,
@@ -350,12 +371,23 @@ class _UsersListPageState extends ConsumerState<UsersListPage> {
               ),
             ),
           ),
+          const SizedBox(width: 16),
           // Role
-          Expanded(flex: 2, child: _buildRoleChip(user.role, colorScheme)),
+          Expanded(
+            flex: 2,
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: _buildRoleChip(user.role, colorScheme),
+            ),
+          ),
+          const SizedBox(width: 16),
           // Status
           Expanded(
-            flex: 1,
-            child: _buildStatusChip(user.isActive, colorScheme),
+            flex: 2,
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: _buildStatusChip(user.isActive, colorScheme),
+            ),
           ),
           // Actions
           SizedBox(
@@ -569,40 +601,100 @@ class _UsersListPageState extends ConsumerState<UsersListPage> {
   }
 
   Widget _buildRoleChip(UserRole role, ColorScheme colorScheme) {
-    return Chip(
-      avatar: Icon(
-        _getRoleIcon(role),
-        size: 16,
-        color: colorScheme.onSecondaryContainer,
+    final colors = _getRoleColors(role, colorScheme);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: colors['background'],
+        borderRadius: BorderRadius.circular(20),
       ),
-      label: Text(_getRoleLabel(role), style: const TextStyle(fontSize: 12)),
-      backgroundColor: colorScheme.secondaryContainer,
-      labelStyle: TextStyle(
-        color: colorScheme.onSecondaryContainer,
-        fontWeight: FontWeight.w600,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Icon(_getRoleIcon(role), size: 14, color: colors['text']),
+          const SizedBox(width: 6),
+          Text(
+            _getRoleLabel(role),
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+              color: colors['text'],
+              height: 1.1,
+            ),
+          ),
+        ],
       ),
-      padding: EdgeInsets.zero,
-      visualDensity: VisualDensity.compact,
     );
   }
 
+  Map<String, Color> _getRoleColors(UserRole role, ColorScheme colorScheme) {
+    switch (role) {
+      case UserRole.administrador:
+        return {
+          'background': colorScheme.errorContainer.withValues(alpha: 0.3),
+          'border': colorScheme.error.withValues(alpha: 0.3),
+          'text': colorScheme.error,
+        };
+      case UserRole.gerente:
+        return {
+          'background': colorScheme.tertiaryContainer.withValues(alpha: 0.3),
+          'border': colorScheme.tertiary.withValues(alpha: 0.3),
+          'text': colorScheme.tertiary,
+        };
+      case UserRole.cajero:
+        return {
+          'background': colorScheme.primaryContainer.withValues(alpha: 0.3),
+          'border': colorScheme.primary.withValues(alpha: 0.3),
+          'text': colorScheme.primary,
+        };
+      case UserRole.espectador:
+        return {
+          'background': colorScheme.surfaceContainerHighest.withValues(
+            alpha: 0.5,
+          ),
+          'border': colorScheme.outline.withValues(alpha: 0.3),
+          'text': colorScheme.onSurfaceVariant,
+        };
+    }
+  }
+
   Widget _buildStatusChip(bool isActive, ColorScheme colorScheme) {
-    return Chip(
-      label: Text(
-        isActive ? 'Activo' : 'Inactivo',
-        style: const TextStyle(fontSize: 12),
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: isActive ? const Color(0xFFF0FDF4) : const Color(0xFFF9FAFB),
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(
+          color: isActive ? const Color(0xFFDCFCE7) : const Color(0xFFE5E7EB),
+        ),
       ),
-      backgroundColor: isActive
-          ? colorScheme.tertiaryContainer
-          : colorScheme.surfaceContainerHighest,
-      labelStyle: TextStyle(
-        color: isActive
-            ? colorScheme.onTertiaryContainer
-            : colorScheme.onSurfaceVariant,
-        fontWeight: FontWeight.w600,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 6,
+            height: 6,
+            decoration: BoxDecoration(
+              color: isActive
+                  ? const Color(0xFF22C55E)
+                  : const Color(0xFF9CA3AF),
+              shape: BoxShape.circle,
+            ),
+          ),
+          const SizedBox(width: 6),
+          Text(
+            isActive ? 'Activo' : 'Inactivo',
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+              color: isActive
+                  ? const Color(0xFF15803D)
+                  : const Color(0xFF4B5563),
+            ),
+          ),
+        ],
       ),
-      padding: EdgeInsets.zero,
-      visualDensity: VisualDensity.compact,
     );
   }
 
@@ -700,5 +792,54 @@ class _UsersListPageState extends ConsumerState<UsersListPage> {
         );
       }
     }
+  }
+
+  Widget _buildFilterChip({
+    required String label,
+    required IconData icon,
+    required bool isSelected,
+    required VoidCallback onTap,
+    required ColorScheme colorScheme,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? colorScheme.primaryContainer.withValues(alpha: 0.6)
+              : Colors.transparent,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: isSelected
+                ? colorScheme.primary.withValues(alpha: 0.3)
+                : colorScheme.outline.withValues(alpha: 0.2),
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              icon,
+              size: 14,
+              color: isSelected
+                  ? colorScheme.primary
+                  : colorScheme.onSurfaceVariant,
+            ),
+            const SizedBox(width: 6),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                color: isSelected ? colorScheme.primary : colorScheme.onSurface,
+                letterSpacing: 0.2,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
