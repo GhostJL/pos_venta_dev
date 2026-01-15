@@ -46,13 +46,13 @@ class PaymentReceiptPdfBuilder {
                         final bytes = file.readAsBytesSync();
                         var image = img.decodeImage(bytes);
                         if (image != null) {
-                          // Aggressive compression to keep file size < 24KB as requested
-                          // Resize to 150px width
-                          if (image.width > 150) {
-                            image = img.copyResize(image, width: 150);
+                          // Optimized compression for print quality
+                          // Resize to 350px width (approx 200dpi for 48mm)
+                          if (image.width > 350) {
+                            image = img.copyResize(image, width: 350);
                           }
-                          // Use JPEG with 60% quality for better compression than PNG
-                          final jpgBytes = img.encodeJpg(image, quality: 60);
+                          // Use JPEG with 85% quality for clear text/logos while keeping size reasonable
+                          final jpgBytes = img.encodeJpg(image, quality: 85);
                           return pw.Image(
                             pw.MemoryImage(jpgBytes),
                             fit: pw.BoxFit.contain,
