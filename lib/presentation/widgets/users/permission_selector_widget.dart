@@ -6,11 +6,13 @@ import 'package:posventa/presentation/providers/cashier_providers.dart';
 class PermissionSelectorWidget extends ConsumerStatefulWidget {
   final List<int> selectedPermissionIds;
   final ValueChanged<List<int>> onChanged;
+  final List<String>? visiblePermissionCodes;
 
   const PermissionSelectorWidget({
     super.key,
     required this.selectedPermissionIds,
     required this.onChanged,
+    this.visiblePermissionCodes,
   });
 
   @override
@@ -43,9 +45,16 @@ class _PermissionSelectorWidgetState
 
     return allPermissionsAsync.when(
       data: (allPermissions) {
+        // Filter permissions if visiblePermissionCodes is provided
+        final visiblePermissions = widget.visiblePermissionCodes == null
+            ? allPermissions
+            : allPermissions
+                  .where((p) => widget.visiblePermissionCodes!.contains(p.code))
+                  .toList();
+
         // Group permissions by module
         final Map<String, List<Permission>> groupedPermissions = {};
-        for (var perm in allPermissions) {
+        for (var perm in visiblePermissions) {
           groupedPermissions.putIfAbsent(perm.module, () => []);
           groupedPermissions[perm.module]!.add(perm);
         }

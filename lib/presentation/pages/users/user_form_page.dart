@@ -197,7 +197,7 @@ class _UserFormPageState extends ConsumerState<UserFormPage> {
 
               const SizedBox(height: 16),
               DropdownButtonFormField<UserRole>(
-                value: _selectedRole,
+                initialValue: _selectedRole,
                 decoration: const InputDecoration(labelText: 'Rol'),
                 items: UserRole.values.map((role) {
                   return DropdownMenuItem(
@@ -234,8 +234,12 @@ class _UserFormPageState extends ConsumerState<UserFormPage> {
                   ),
                 ),
                 const SizedBox(height: 8),
+                const SizedBox(height: 8),
                 PermissionSelectorWidget(
                   selectedPermissionIds: _selectedPermissionIds,
+                  visiblePermissionCodes: _getVisiblePermissionsForRole(
+                    _selectedRole,
+                  ),
                   onChanged: (ids) {
                     setState(() {
                       _selectedPermissionIds = ids;
@@ -270,6 +274,35 @@ class _UserFormPageState extends ConsumerState<UserFormPage> {
         color: Theme.of(context).colorScheme.primary,
       ),
     );
+  }
+
+  List<String>? _getVisiblePermissionsForRole(UserRole role) {
+    switch (role) {
+      case UserRole.gerente:
+        // Managers see all permissions
+        return null;
+      case UserRole.cajero:
+        return [
+          PermissionConstants.posAccess,
+          PermissionConstants.posDiscount,
+          PermissionConstants.posRefund,
+          PermissionConstants.posVoidItem,
+          PermissionConstants.cashOpen,
+          PermissionConstants.cashClose,
+          PermissionConstants.cashMovement,
+          PermissionConstants.reportsView,
+          PermissionConstants.customerManage,
+          // Explicitly adding Inventory View as it might be useful for checking stock during sale
+          PermissionConstants.inventoryView,
+        ];
+      case UserRole.espectador:
+        return [
+          PermissionConstants.inventoryView,
+          PermissionConstants.reportsView,
+        ];
+      case UserRole.administrador:
+        return null; // Should not happen as admin doesn't see selector, but safe default
+    }
   }
 
   Future<void> _submit() async {
