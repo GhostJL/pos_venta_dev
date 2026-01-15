@@ -195,48 +195,46 @@ class CustomersPageState extends ConsumerState<CustomersPage>
 
                       return Column(
                         children: [
-                          if (isDesktop) const CustomerHeader(),
+                          if (isDesktop)
+                            const CustomerHeader(), // Optional: Hide header if using Grid
                           Expanded(
-                            child: ListView.builder(
-                              controller: _scrollController,
-                              padding: const EdgeInsets.all(16),
-                              itemCount: count,
-                              itemBuilder: (context, index) {
-                                final pageIndex = index ~/ kCustomerPageSize;
-                                final indexInPage = index % kCustomerPageSize;
-
-                                final pageAsync = ref.watch(
-                                  paginatedCustomersPageProvider(
-                                    pageIndex: pageIndex,
-                                  ),
-                                );
-
-                                return pageAsync.when(
-                                  data: (customers) {
-                                    if (indexInPage >= customers.length) {
-                                      return const SizedBox.shrink();
-                                    }
-                                    final customer = customers[indexInPage];
-
-                                    if (isDesktop) {
-                                      return CustomerTableRow(
-                                        customer: customer,
-                                        hasManagePermission:
-                                            hasManagePermission,
-                                        onEdit: () => _navigateToForm(customer),
-                                        onDelete: () => _confirmDelete(
-                                          context,
-                                          ref,
-                                          customer,
+                            child: isDesktop
+                                ? GridView.builder(
+                                    controller: _scrollController,
+                                    padding: const EdgeInsets.all(24),
+                                    cacheExtent: 500,
+                                    physics:
+                                        const AlwaysScrollableScrollPhysics(),
+                                    gridDelegate:
+                                        const SliverGridDelegateWithMaxCrossAxisExtent(
+                                          maxCrossAxisExtent: 400,
+                                          mainAxisSpacing: 16,
+                                          crossAxisSpacing: 16,
+                                          mainAxisExtent:
+                                              220, // Adjusted for Card
                                         ),
-                                        onTap: () => context.push(
-                                          '/customers/${customer.id}',
+                                    itemCount: count,
+                                    itemBuilder: (context, index) {
+                                      final pageIndex =
+                                          index ~/ kCustomerPageSize;
+                                      final indexInPage =
+                                          index % kCustomerPageSize;
+
+                                      final pageAsync = ref.watch(
+                                        paginatedCustomersPageProvider(
+                                          pageIndex: pageIndex,
                                         ),
                                       );
-                                    } else {
-                                      return Column(
-                                        children: [
-                                          CustomerCard(
+
+                                      return pageAsync.when(
+                                        data: (customers) {
+                                          if (indexInPage >= customers.length) {
+                                            return const SizedBox.shrink();
+                                          }
+                                          final customer =
+                                              customers[indexInPage];
+                                          // Use Card for Desktop Grid too for premium look
+                                          return CustomerCard(
                                             customer: customer,
                                             hasManagePermission:
                                                 hasManagePermission,
@@ -250,18 +248,69 @@ class CustomersPageState extends ConsumerState<CustomersPage>
                                             onTap: () => context.push(
                                               '/customers/${customer.id}',
                                             ),
-                                          ),
-                                          if (index < count - 1)
-                                            const SizedBox(height: 12),
-                                        ],
+                                          );
+                                        },
+                                        loading: () => _buildSkeletonItem(),
+                                        error: (_, __) =>
+                                            const SizedBox.shrink(),
                                       );
-                                    }
-                                  },
-                                  loading: () => _buildSkeletonItem(),
-                                  error: (_, __) => const SizedBox.shrink(),
-                                );
-                              },
-                            ),
+                                    },
+                                  )
+                                : ListView.builder(
+                                    controller: _scrollController,
+                                    padding: const EdgeInsets.all(16),
+                                    cacheExtent: 500,
+                                    physics:
+                                        const AlwaysScrollableScrollPhysics(),
+                                    itemCount: count,
+                                    itemBuilder: (context, index) {
+                                      final pageIndex =
+                                          index ~/ kCustomerPageSize;
+                                      final indexInPage =
+                                          index % kCustomerPageSize;
+
+                                      final pageAsync = ref.watch(
+                                        paginatedCustomersPageProvider(
+                                          pageIndex: pageIndex,
+                                        ),
+                                      );
+
+                                      return pageAsync.when(
+                                        data: (customers) {
+                                          if (indexInPage >= customers.length) {
+                                            return const SizedBox.shrink();
+                                          }
+                                          final customer =
+                                              customers[indexInPage];
+
+                                          return Column(
+                                            children: [
+                                              CustomerCard(
+                                                customer: customer,
+                                                hasManagePermission:
+                                                    hasManagePermission,
+                                                onEdit: () =>
+                                                    _navigateToForm(customer),
+                                                onDelete: () => _confirmDelete(
+                                                  context,
+                                                  ref,
+                                                  customer,
+                                                ),
+                                                onTap: () => context.push(
+                                                  '/customers/${customer.id}',
+                                                ),
+                                              ),
+                                              if (index < count - 1)
+                                                const SizedBox(height: 12),
+                                            ],
+                                          );
+                                        },
+                                        loading: () => _buildSkeletonItem(),
+                                        error: (_, __) =>
+                                            const SizedBox.shrink(),
+                                      );
+                                    },
+                                  ),
                           ),
                         ],
                       );

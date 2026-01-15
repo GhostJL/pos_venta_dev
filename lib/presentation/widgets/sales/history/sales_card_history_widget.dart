@@ -6,23 +6,33 @@ import 'package:posventa/core/theme/theme.dart';
 import 'package:posventa/domain/entities/sale.dart';
 import 'package:posventa/presentation/providers/return_processing_provider.dart';
 
-class SaleCardHistoryWidget extends ConsumerWidget {
+class SaleCardHistoryWidget extends ConsumerStatefulWidget {
   final Sale sale;
 
   const SaleCardHistoryWidget({super.key, required this.sale});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<SaleCardHistoryWidget> createState() =>
+      _SaleCardHistoryWidgetState();
+}
+
+class _SaleCardHistoryWidgetState extends ConsumerState<SaleCardHistoryWidget> {
+  bool _isHovering = false;
+
+  @override
+  Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final cs = theme.colorScheme;
     final tt = theme.textTheme;
 
     final dateFormat = DateFormat('dd MMM yyyy · HH:mm', 'es');
-    final saleDateText = dateFormat.format(sale.saleDate);
+    final saleDateText = dateFormat.format(widget.sale.saleDate);
 
-    final isCancelled = sale.status == SaleStatus.cancelled;
-    final isReturned = sale.status == SaleStatus.returned;
-    final isCredit = sale.payments.any((p) => p.paymentMethod == 'Crédito');
+    final isCancelled = widget.sale.status == SaleStatus.cancelled;
+    final isReturned = widget.sale.status == SaleStatus.returned;
+    final isCredit = widget.sale.payments.any(
+      (p) => p.paymentMethod == 'Crédito',
+    );
 
     Color statusColor;
     String statusLabel;
@@ -40,176 +50,194 @@ class SaleCardHistoryWidget extends ConsumerWidget {
       statusLabel = 'COMPLETADA';
     }
 
-    final returns = ref.watch(saleReturnsForSaleProvider(sale.id!));
+    final returns = ref.watch(saleReturnsForSaleProvider(widget.sale.id!));
     final totalReturnedCents = returns.fold(0, (sum, r) => sum + r.totalCents);
-    final finalTotalCents = sale.totalCents - totalReturnedCents;
+    final finalTotalCents = widget.sale.totalCents - totalReturnedCents;
 
-    return Card(
-      elevation: 0,
-      margin: const EdgeInsets.only(bottom: 12),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: cs.outlineVariant.withValues(alpha: 0.5)),
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: () => context.push('/sale-detail/${sale.id}'),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
+    final double scale = _isHovering ? 1.01 : 1.0;
+    final double elevation = _isHovering ? 4.0 : 0.0;
+
+    return MouseRegion(
+      onEnter: (_) => setState(() => _isHovering = true),
+      onExit: (_) => setState(() => _isHovering = false),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeOutCubic,
+        transform: Matrix4.diagonal3Values(scale, scale, 1.0),
+        child: Card(
+          elevation: elevation,
+          margin: const EdgeInsets.only(bottom: 12),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+            side: _isHovering
+                ? BorderSide(color: cs.primary.withValues(alpha: 0.3))
+                : BorderSide(color: cs.outlineVariant.withValues(alpha: 0.5)),
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: InkWell(
+            onTap: () => context.push('/sale-detail/${widget.sale.id}'),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          sale.saleNumber,
-                          style: tt.titleMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: -0.2,
-                          ),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              widget.sale.saleNumber,
+                              style: tt.titleMedium?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: -0.2,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              saleDateText,
+                              style: tt.bodySmall?.copyWith(
+                                color: cs.onSurfaceVariant,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
                         ),
-                        const SizedBox(height: 4),
-                        Text(
-                          saleDateText,
-                          style: tt.bodySmall?.copyWith(
-                            color: cs.onSurfaceVariant,
+                      ),
+                      _StatusBadge(color: statusColor, label: statusLabel),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      Icon(Icons.person_outline, size: 16, color: cs.primary),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          widget.sale.customerName ?? 'Público General',
+                          style: tt.bodyMedium?.copyWith(
                             fontWeight: FontWeight.w500,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.shopping_bag_outlined,
+                        size: 16,
+                        color: cs.primary,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        '${widget.sale.items.length} ${widget.sale.items.length == 1 ? 'producto' : 'productos'}',
+                        style: tt.bodySmall?.copyWith(
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                  if (returns.isNotEmpty) ...[
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.keyboard_return_outlined,
+                          size: 16,
+                          color: AppTheme.alertWarning,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Devolución activa',
+                          style: tt.bodySmall?.copyWith(
+                            color: AppTheme.alertWarning,
+                            fontWeight: FontWeight.bold,
                           ),
                         ),
                       ],
                     ),
+                  ],
+                  const SizedBox(height: 16),
+                  Divider(
+                    height: 1,
+                    color: cs.outlineVariant.withValues(alpha: 0.5),
                   ),
-                  _StatusBadge(color: statusColor, label: statusLabel),
-                ],
-              ),
-              const SizedBox(height: 16),
-              Row(
-                children: [
-                  Icon(Icons.person_outline, size: 16, color: cs.primary),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      sale.customerName ?? 'Público General',
-                      style: tt.bodyMedium?.copyWith(
-                        fontWeight: FontWeight.w500,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  Icon(
-                    Icons.shopping_bag_outlined,
-                    size: 16,
-                    color: cs.primary,
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    '${sale.items.length} ${sale.items.length == 1 ? 'producto' : 'productos'}',
-                    style: tt.bodySmall?.copyWith(fontWeight: FontWeight.w500),
-                  ),
-                ],
-              ),
-              if (returns.isNotEmpty) ...[
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    Icon(
-                      Icons.keyboard_return_outlined,
-                      size: 16,
-                      color: AppTheme.alertWarning,
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      'Devolución activa',
+                  const SizedBox(height: 12),
+                  if (returns.isEmpty)
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Total',
+                          style: tt.bodySmall?.copyWith(
+                            color: cs.onSurfaceVariant,
+                          ),
+                        ),
+                        Text(
+                          '\$ ${(widget.sale.totalCents / 100).toStringAsFixed(2)}',
+                          style: tt.titleLarge?.copyWith(
+                            fontWeight: FontWeight.w900,
+                            color: isCancelled ? cs.error : cs.primary,
+                            letterSpacing: -0.5,
+                            decoration: isCancelled
+                                ? TextDecoration.lineThrough
+                                : null,
+                            fontFeatures: [const FontFeature.tabularFigures()],
+                          ),
+                        ),
+                      ],
+                    )
+                  else ...[
+                    _TotalRow(
+                      label: 'Total Original',
+                      amount: widget.sale.totalCents / 100,
                       style: tt.bodySmall?.copyWith(
-                        color: AppTheme.alertWarning,
-                        fontWeight: FontWeight.bold,
+                        color: cs.onSurfaceVariant,
+                        decoration: TextDecoration.lineThrough,
+                        fontFeatures: [const FontFeature.tabularFigures()],
                       ),
                     ),
+                    const SizedBox(height: 4),
+                    _TotalRow(
+                      label: 'Devolución',
+                      amount: -(totalReturnedCents / 100),
+                      style: tt.bodySmall?.copyWith(
+                        color: AppTheme.transactionRefund,
+                        fontWeight: FontWeight.bold,
+                        fontFeatures: [const FontFeature.tabularFigures()],
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Total Final',
+                          style: tt.titleSmall?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        Text(
+                          '\$ ${(finalTotalCents / 100).toStringAsFixed(2)}',
+                          style: tt.titleLarge?.copyWith(
+                            fontWeight: FontWeight.w900,
+                            color: cs.primary,
+                            letterSpacing: -0.5,
+                            fontFeatures: [const FontFeature.tabularFigures()],
+                          ),
+                        ),
+                      ],
+                    ),
                   ],
-                ),
-              ],
-              const SizedBox(height: 16),
-              Divider(
-                height: 1,
-                color: cs.outlineVariant.withValues(alpha: 0.5),
+                ],
               ),
-              const SizedBox(height: 12),
-              if (returns.isEmpty)
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'Total',
-                      style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-                    ),
-                    Text(
-                      '\$ ${(sale.totalCents / 100).toStringAsFixed(2)}',
-                      style: tt.titleLarge?.copyWith(
-                        fontWeight: FontWeight.w900,
-                        color: isCancelled ? cs.error : cs.primary,
-                        letterSpacing: -0.5,
-                        decoration: isCancelled
-                            ? TextDecoration.lineThrough
-                            : null,
-                        fontFeatures: [const FontFeature.tabularFigures()],
-                      ),
-                    ),
-                  ],
-                )
-              else ...[
-                _TotalRow(
-                  label: 'Total Original',
-                  amount: sale.totalCents / 100,
-                  style: tt.bodySmall?.copyWith(
-                    color: cs.onSurfaceVariant,
-                    decoration: TextDecoration.lineThrough,
-                    fontFeatures: [const FontFeature.tabularFigures()],
-                  ),
-                ),
-                const SizedBox(height: 4),
-                _TotalRow(
-                  label: 'Devolución',
-                  amount: -(totalReturnedCents / 100),
-                  style: tt.bodySmall?.copyWith(
-                    color: AppTheme.transactionRefund,
-                    fontWeight: FontWeight.bold,
-                    fontFeatures: [const FontFeature.tabularFigures()],
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'Total Final',
-                      style: tt.titleSmall?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    Text(
-                      '\$ ${(finalTotalCents / 100).toStringAsFixed(2)}',
-                      style: tt.titleLarge?.copyWith(
-                        fontWeight: FontWeight.w900,
-                        color: cs.primary,
-                        letterSpacing: -0.5,
-                        fontFeatures: [const FontFeature.tabularFigures()],
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ],
+            ),
           ),
         ),
       ),

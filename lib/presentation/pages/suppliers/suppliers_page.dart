@@ -189,39 +189,38 @@ class SuppliersPageState extends ConsumerState<SuppliersPage>
                   children: [
                     if (isDesktop) const SupplierHeader(),
                     Expanded(
-                      child: ListView.builder(
-                        controller: _scrollController,
-                        padding: const EdgeInsets.all(16),
-                        itemCount: count,
-                        itemBuilder: (context, index) {
-                          final pageIndex = index ~/ kSupplierPageSize;
-                          final indexInPage = index % kSupplierPageSize;
+                      child: isDesktop
+                          ? GridView.builder(
+                              controller: _scrollController,
+                              padding: const EdgeInsets.all(24),
+                              cacheExtent: 500,
+                              physics: const AlwaysScrollableScrollPhysics(),
+                              gridDelegate:
+                                  const SliverGridDelegateWithMaxCrossAxisExtent(
+                                    maxCrossAxisExtent: 400,
+                                    mainAxisSpacing: 16,
+                                    crossAxisSpacing: 16,
+                                    mainAxisExtent: 200, // Adjusted for Card
+                                  ),
+                              itemCount: count,
+                              itemBuilder: (context, index) {
+                                final pageIndex = index ~/ kSupplierPageSize;
+                                final indexInPage = index % kSupplierPageSize;
 
-                          final pageAsync = ref.watch(
-                            paginatedSuppliersPageProvider(
-                              pageIndex: pageIndex,
-                            ),
-                          );
-
-                          return pageAsync.when(
-                            data: (suppliers) {
-                              if (indexInPage >= suppliers.length) {
-                                return const SizedBox.shrink();
-                              }
-                              final supplier = suppliers[indexInPage];
-
-                              if (isDesktop) {
-                                return SupplierTableRow(
-                                  supplier: supplier,
-                                  hasManagePermission: hasManagePermission,
-                                  onEdit: () => _navigateToForm(supplier),
-                                  onDelete: () =>
-                                      _confirmDelete(context, ref, supplier),
+                                final pageAsync = ref.watch(
+                                  paginatedSuppliersPageProvider(
+                                    pageIndex: pageIndex,
+                                  ),
                                 );
-                              } else {
-                                return Column(
-                                  children: [
-                                    SupplierCard(
+
+                                return pageAsync.when(
+                                  data: (suppliers) {
+                                    if (indexInPage >= suppliers.length) {
+                                      return const SizedBox.shrink();
+                                    }
+                                    final supplier = suppliers[indexInPage];
+
+                                    return SupplierCard(
                                       supplier: supplier,
                                       hasManagePermission: hasManagePermission,
                                       onEdit: () => _navigateToForm(supplier),
@@ -230,18 +229,60 @@ class SuppliersPageState extends ConsumerState<SuppliersPage>
                                         ref,
                                         supplier,
                                       ),
-                                    ),
-                                    if (index < count - 1)
-                                      const SizedBox(height: 12),
-                                  ],
+                                    );
+                                  },
+                                  loading: () => _buildSkeletonItem(),
+                                  error: (_, __) => const SizedBox.shrink(),
                                 );
-                              }
-                            },
-                            loading: () => _buildSkeletonItem(),
-                            error: (_, __) => const SizedBox.shrink(),
-                          );
-                        },
-                      ),
+                              },
+                            )
+                          : ListView.builder(
+                              controller: _scrollController,
+                              padding: const EdgeInsets.all(16),
+                              cacheExtent: 500,
+                              physics: const AlwaysScrollableScrollPhysics(),
+                              itemCount: count,
+                              itemBuilder: (context, index) {
+                                final pageIndex = index ~/ kSupplierPageSize;
+                                final indexInPage = index % kSupplierPageSize;
+
+                                final pageAsync = ref.watch(
+                                  paginatedSuppliersPageProvider(
+                                    pageIndex: pageIndex,
+                                  ),
+                                );
+
+                                return pageAsync.when(
+                                  data: (suppliers) {
+                                    if (indexInPage >= suppliers.length) {
+                                      return const SizedBox.shrink();
+                                    }
+                                    final supplier = suppliers[indexInPage];
+
+                                    return Column(
+                                      children: [
+                                        SupplierCard(
+                                          supplier: supplier,
+                                          hasManagePermission:
+                                              hasManagePermission,
+                                          onEdit: () =>
+                                              _navigateToForm(supplier),
+                                          onDelete: () => _confirmDelete(
+                                            context,
+                                            ref,
+                                            supplier,
+                                          ),
+                                        ),
+                                        if (index < count - 1)
+                                          const SizedBox(height: 12),
+                                      ],
+                                    );
+                                  },
+                                  loading: () => _buildSkeletonItem(),
+                                  error: (_, __) => const SizedBox.shrink(),
+                                );
+                              },
+                            ),
                     ),
                   ],
                 );

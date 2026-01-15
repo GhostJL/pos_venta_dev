@@ -176,6 +176,8 @@ class _SalesHistoryPageState extends ConsumerState<SalesHistoryPage> {
                     controller:
                         _scrollController, // Use same controller for scrolling features
                     padding: const EdgeInsets.all(24),
+                    cacheExtent: 500,
+                    physics: const AlwaysScrollableScrollPhysics(),
                     gridDelegate:
                         const SliverGridDelegateWithMaxCrossAxisExtent(
                           maxCrossAxisExtent: 400,
@@ -209,6 +211,8 @@ class _SalesHistoryPageState extends ConsumerState<SalesHistoryPage> {
                   return ListView.builder(
                     controller: _scrollController,
                     padding: const EdgeInsets.all(16),
+                    cacheExtent: 500,
+                    physics: const AlwaysScrollableScrollPhysics(),
                     itemCount: count,
                     itemBuilder: (context, index) {
                       final pageIndex = index ~/ kSalePageSize;

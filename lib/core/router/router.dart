@@ -142,53 +142,53 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/', // Admin dashboard
             pageBuilder: (context, state) =>
-                const NoTransitionPage(child: DashboardAdminPage()),
+                const AppTransitionPage(child: DashboardAdminPage()),
           ),
           GoRoute(
             path: '/home', // Cashier home
             pageBuilder: (context, state) =>
-                const NoTransitionPage(child: DashboardCashierPage()),
+                const AppTransitionPage(child: DashboardCashierPage()),
           ),
           GoRoute(
             path: '/products',
             pageBuilder: (context, state) =>
-                NoTransitionPage(child: ProductsPage()),
+                AppTransitionPage(child: ProductsPage()),
           ),
           GoRoute(
             path: '/departments',
             pageBuilder: (context, state) =>
-                const NoTransitionPage(child: DepartmentsPage()),
+                const AppTransitionPage(child: DepartmentsPage()),
           ),
           GoRoute(
             path: '/categories',
             pageBuilder: (context, state) =>
-                const NoTransitionPage(child: CategoriesPage()),
+                const AppTransitionPage(child: CategoriesPage()),
           ),
           GoRoute(
             path: '/brands',
             pageBuilder: (context, state) =>
-                const NoTransitionPage(child: BrandsPage()),
+                const AppTransitionPage(child: BrandsPage()),
           ),
           GoRoute(
             path: '/inventory/notifications',
             pageBuilder: (context, state) =>
-                const NoTransitionPage(child: InventoryNotificationsPage()),
+                const AppTransitionPage(child: InventoryNotificationsPage()),
           ),
           GoRoute(
             path: '/suppliers',
             pageBuilder: (context, state) =>
-                const NoTransitionPage(child: SuppliersPage()),
+                const AppTransitionPage(child: SuppliersPage()),
           ),
           GoRoute(
             path: '/warehouses',
             pageBuilder: (context, state) =>
-                const NoTransitionPage(child: WarehousesPage()),
+                const AppTransitionPage(child: WarehousesPage()),
           ),
           GoRoute(
             path: '/warehouses/form',
             pageBuilder: (context, state) {
               final warehouse = state.extra as Warehouse?;
-              return NoTransitionPage(
+              return AppTransitionPage(
                 child: WarehouseForm(warehouse: warehouse),
               );
             },
@@ -196,28 +196,28 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/tax-rates',
             pageBuilder: (context, state) =>
-                const NoTransitionPage(child: TaxRatePage()),
+                const AppTransitionPage(child: TaxRatePage()),
           ),
           GoRoute(
             path: '/store',
             pageBuilder: (context, state) =>
-                const NoTransitionPage(child: StorePage()),
+                const AppTransitionPage(child: StorePage()),
           ),
           GoRoute(
             path: '/inventory',
             pageBuilder: (context, state) =>
-                const NoTransitionPage(child: InventoryPage()),
+                const AppTransitionPage(child: InventoryPage()),
           ),
           GoRoute(
             path: '/customers',
             pageBuilder: (context, state) =>
-                const NoTransitionPage(child: CustomersPage()),
+                const AppTransitionPage(child: CustomersPage()),
             routes: [
               GoRoute(
                 path: 'form',
                 pageBuilder: (context, state) {
                   final customer = state.extra as Customer?;
-                  return NoTransitionPage(
+                  return AppTransitionPage(
                     child: CustomerForm(customer: customer),
                   );
                 },
@@ -226,7 +226,7 @@ final routerProvider = Provider<GoRouter>((ref) {
                 path: ':id',
                 pageBuilder: (context, state) {
                   final id = int.parse(state.pathParameters['id']!);
-                  return NoTransitionPage(
+                  return AppTransitionPage(
                     child: CustomerDetailsPage(customerId: id),
                   );
                 },
@@ -236,28 +236,28 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/sales',
             pageBuilder: (context, state) =>
-                const NoTransitionPage(child: PosSalesPage()),
+                const AppTransitionPage(child: PosSalesPage()),
           ),
           GoRoute(
             path: '/cart',
             pageBuilder: (context, state) =>
-                const NoTransitionPage(child: CartPage()),
+                const AppTransitionPage(child: CartPage()),
           ),
           GoRoute(
             path: '/pos/payment',
             pageBuilder: (context, state) =>
-                const NoTransitionPage(child: PaymentPage()),
+                const AppTransitionPage(child: PaymentPage()),
           ),
           GoRoute(
             path: '/sales-history',
             pageBuilder: (context, state) =>
-                const NoTransitionPage(child: SalesHistoryPage()),
+                const AppTransitionPage(child: SalesHistoryPage()),
           ),
           GoRoute(
             path: '/sale-detail/:id',
             pageBuilder: (context, state) {
               final id = int.parse(state.pathParameters['id']!);
-              return NoTransitionPage(child: SaleDetailPage(saleId: id));
+              return AppTransitionPage(child: SaleDetailPage(saleId: id));
             },
           ),
           GoRoute(
@@ -265,7 +265,7 @@ final routerProvider = Provider<GoRouter>((ref) {
             pageBuilder: (context, state) {
               final id = int.parse(state.pathParameters['id']!);
               final sale = state.extra as Sale;
-              return NoTransitionPage(
+              return AppTransitionPage(
                 child: SaleReturnsDetailPage(saleId: id, sale: sale),
               );
             },
@@ -273,7 +273,7 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/purchases',
             pageBuilder: (context, state) =>
-                const NoTransitionPage(child: PurchasesPage()),
+                const AppTransitionPage(child: PurchasesPage()),
           ),
           GoRoute(
             path: '/purchases/:id',
@@ -281,9 +281,9 @@ final routerProvider = Provider<GoRouter>((ref) {
               final id = state.pathParameters['id']!;
               if (id == 'new') {
                 // Step 1: Header page
-                return const NoTransitionPage(child: PurchaseHeaderPage());
+                return const AppTransitionPage(child: PurchaseHeaderPage());
               }
-              return NoTransitionPage(
+              return AppTransitionPage(
                 child: PurchaseDetailPage(purchaseId: int.parse(id)),
               );
             },
@@ -292,7 +292,7 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: '/purchases/reception/:id',
             pageBuilder: (context, state) {
               final id = state.pathParameters['id']!;
-              return NoTransitionPage(
+              return AppTransitionPage(
                 child: PurchaseReceptionPage(purchaseId: int.parse(id)),
               );
             },
@@ -302,7 +302,7 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: '/purchases/new/products',
             pageBuilder: (context, state) {
               final headerData = state.extra as Map<String, dynamic>?;
-              return NoTransitionPage(
+              return AppTransitionPage(
                 child: PurchaseFormPage(headerData: headerData),
               );
             },
@@ -311,16 +311,16 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/purchase-items',
             pageBuilder: (context, state) =>
-                const NoTransitionPage(child: PurchaseItemsPage()),
+                const AppTransitionPage(child: PurchaseItemsPage()),
           ),
           GoRoute(
             path: '/purchase-items/:id',
             pageBuilder: (context, state) {
               final id = state.pathParameters['id']!;
               if (id == 'new') {
-                return const NoTransitionPage(child: PurchaseItemFormPage());
+                return const AppTransitionPage(child: PurchaseItemFormPage());
               }
-              return NoTransitionPage(
+              return AppTransitionPage(
                 child: PurchaseItemDetailPage(itemId: int.parse(id)),
               );
             },
@@ -328,12 +328,12 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/cashiers',
             pageBuilder: (context, state) =>
-                const NoTransitionPage(child: CashierListPage()),
+                const AppTransitionPage(child: CashierListPage()),
           ),
           GoRoute(
             path: '/cash-sessions-history',
             pageBuilder: (context, state) =>
-                const NoTransitionPage(child: CashSessionHistoryPage()),
+                const AppTransitionPage(child: CashSessionHistoryPage()),
           ),
 
           // Form Routes
@@ -341,19 +341,21 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: '/products/form',
             pageBuilder: (context, state) {
               final product = state.extra as Product?;
-              return NoTransitionPage(child: ProductFormPage(product: product));
+              return AppTransitionPage(
+                child: ProductFormPage(product: product),
+              );
             },
           ),
           GoRoute(
             path: '/products/new',
             pageBuilder: (context, state) =>
-                const NoTransitionPage(child: ProductFormPage(product: null)),
+                const AppTransitionPage(child: ProductFormPage(product: null)),
           ),
           GoRoute(
             path: '/products/matrix-generator',
             pageBuilder: (context, state) {
               final productId = state.extra as int?;
-              return NoTransitionPage(
+              return AppTransitionPage(
                 child: MatrixGeneratorPage(productId: productId ?? 0),
               );
             },
@@ -361,13 +363,13 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/products/import_csv',
             pageBuilder: (context, state) =>
-                const NoTransitionPage(child: BulkImportPage()),
+                const AppTransitionPage(child: BulkImportPage()),
           ),
           GoRoute(
             path: '/product-form/variant',
             pageBuilder: (context, state) {
               final extra = state.extra as Map<String, dynamic>?;
-              return NoTransitionPage(
+              return AppTransitionPage(
                 child: VariantFormPage(
                   variant: extra?['variant'],
                   productId: extra?['productId'],
@@ -382,14 +384,14 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: '/suppliers/form',
             pageBuilder: (context, state) {
               final supplier = state.extra as Supplier?;
-              return NoTransitionPage(child: SupplierForm(supplier: supplier));
+              return AppTransitionPage(child: SupplierForm(supplier: supplier));
             },
           ),
           GoRoute(
             path: '/departments/form',
             pageBuilder: (context, state) {
               final department = state.extra as Department?;
-              return NoTransitionPage(
+              return AppTransitionPage(
                 child: DepartmentForm(department: department),
               );
             },
@@ -399,14 +401,14 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: '/categories/form',
             pageBuilder: (context, state) {
               final category = state.extra as Category?;
-              return NoTransitionPage(child: CategoryForm(category: category));
+              return AppTransitionPage(child: CategoryForm(category: category));
             },
           ),
           GoRoute(
             path: '/brands/form',
             pageBuilder: (context, state) {
               final brand = state.extra as Brand?;
-              return NoTransitionPage(child: BrandForm(brand: brand));
+              return AppTransitionPage(child: BrandForm(brand: brand));
             },
           ),
 
@@ -414,14 +416,16 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: '/cashiers/form',
             pageBuilder: (context, state) {
               final cashier = state.extra as User?;
-              return NoTransitionPage(child: CashierFormPage(cashier: cashier));
+              return AppTransitionPage(
+                child: CashierFormPage(cashier: cashier),
+              );
             },
           ),
           GoRoute(
             path: '/cashiers/permissions',
             pageBuilder: (context, state) {
               final cashier = state.extra as User;
-              return NoTransitionPage(
+              return AppTransitionPage(
                 child: CashierPermissionsPage(cashier: cashier),
               );
             },
@@ -430,7 +434,7 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: '/cash-sessions/detail',
             pageBuilder: (context, state) {
               final session = state.extra as CashSession;
-              return NoTransitionPage(
+              return AppTransitionPage(
                 child: CashSessionDetailPage(session: session),
               );
             },
@@ -439,7 +443,7 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: '/scanner',
             pageBuilder: (context, state) {
               final args = state.extra as ScannerArguments?;
-              return NoTransitionPage(
+              return AppTransitionPage(
                 child: BarcodeScannerWidget(
                   args: args,
                   onBarcodeScanned: (context, barcode) {
@@ -454,14 +458,14 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/returns',
             pageBuilder: (context, state) =>
-                const NoTransitionPage(child: ReturnsManagementPage()),
+                const AppTransitionPage(child: ReturnsManagementPage()),
           ),
 
           GoRoute(
             path: '/adjustments/return-processing',
             pageBuilder: (context, state) {
               final sale = state.extra as Sale?;
-              return NoTransitionPage(child: ReturnProcessingPage(sale: sale));
+              return AppTransitionPage(child: ReturnProcessingPage(sale: sale));
             },
           ),
 
@@ -471,52 +475,52 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/users-permissions',
             pageBuilder: (context, state) =>
-                const NoTransitionPage(child: UsersPermissionsPage()),
+                const AppTransitionPage(child: UsersPermissionsPage()),
           ),
           GoRoute(
             path: '/cash-movements',
             pageBuilder: (context, state) =>
-                const NoTransitionPage(child: CashMovementsPage()),
+                const AppTransitionPage(child: CashMovementsPage()),
           ),
           GoRoute(
             path: '/settings',
             pageBuilder: (context, state) =>
-                const NoTransitionPage(child: SettingsPage()),
+                const AppTransitionPage(child: SettingsPage()),
           ),
           GoRoute(
             path: '/settings/shortcuts',
             pageBuilder: (context, state) =>
-                const NoTransitionPage(child: AppShortcutsPage()),
+                const AppTransitionPage(child: AppShortcutsPage()),
           ),
           GoRoute(
             path: '/settings/hardware',
             pageBuilder: (context, state) =>
-                const NoTransitionPage(child: HardwareSettingsPage()),
+                const AppTransitionPage(child: HardwareSettingsPage()),
           ),
           GoRoute(
             path: '/settings/backup',
             pageBuilder: (context, state) =>
-                const NoTransitionPage(child: BackupSettingsPage()),
+                const AppTransitionPage(child: BackupSettingsPage()),
           ),
           GoRoute(
             path: '/settings/print',
             pageBuilder: (context, state) =>
-                const NoTransitionPage(child: PrintSettingsPage()),
+                const AppTransitionPage(child: PrintSettingsPage()),
           ),
           GoRoute(
             path: '/settings/business',
             pageBuilder: (context, state) =>
-                const NoTransitionPage(child: UnifiedTicketPage()),
+                const AppTransitionPage(child: UnifiedTicketPage()),
           ),
           GoRoute(
             path: '/settings/profile',
             pageBuilder: (context, state) =>
-                const NoTransitionPage(child: AdminProfilePage()),
+                const AppTransitionPage(child: AdminProfilePage()),
             routes: [
               GoRoute(
                 path: 'change-password',
                 pageBuilder: (context, state) =>
-                    const NoTransitionPage(child: ChangePasswordPage()),
+                    const AppTransitionPage(child: ChangePasswordPage()),
               ),
             ],
           ),
@@ -526,19 +530,19 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/settings/ticket',
             pageBuilder: (context, state) =>
-                const NoTransitionPage(child: TicketConfigPage()),
+                const AppTransitionPage(child: TicketConfigPage()),
           ),
           */
           GoRoute(
             path: '/reports',
             pageBuilder: (context, state) =>
-                const NoTransitionPage(child: ReportsPage()),
+                const AppTransitionPage(child: ReportsPage()),
           ),
 
           GoRoute(
             path: '/shift-close',
             pageBuilder: (context, state) =>
-                const NoTransitionPage(child: ShiftClosePage()),
+                const AppTransitionPage(child: ShiftClosePage()),
           ),
           GoRoute(
             path: '/inventory/lots/:productId/:warehouseId',
@@ -554,7 +558,7 @@ final routerProvider = Provider<GoRouter>((ref) {
                   ? int.tryParse(variantIdStr)
                   : null;
 
-              return NoTransitionPage(
+              return AppTransitionPage(
                 child: InventoryLotsPage(
                   productId: productId,
                   warehouseId: warehouseId,
@@ -568,7 +572,7 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: '/inventory/lot/:lotId',
             pageBuilder: (context, state) {
               final lotId = state.pathParameters['lotId']!;
-              return NoTransitionPage(
+              return AppTransitionPage(
                 child: InventoryLotDetailPage(lotId: int.parse(lotId)),
               );
             },
@@ -581,7 +585,7 @@ final routerProvider = Provider<GoRouter>((ref) {
               final variant = extra?['variant'] as ProductVariant?;
               // Fallback to fetching product by ID if not in extra?
               // For now assume extra is provided.
-              return NoTransitionPage(
+              return AppTransitionPage(
                 child: ProductHistoryPage(product: product, variant: variant),
               );
             },
@@ -630,14 +634,23 @@ final routerProvider = Provider<GoRouter>((ref) {
   );
 });
 
-class NoTransitionPage<T> extends CustomTransitionPage<T> {
-  const NoTransitionPage({super.key, super.name, required super.child})
-    : super(transitionsBuilder: _transitionsBuilder);
+class AppTransitionPage<T> extends CustomTransitionPage<T> {
+  const AppTransitionPage({super.key, super.name, required super.child})
+    : super(
+        transitionsBuilder: _transitionsBuilder,
+        transitionDuration: const Duration(milliseconds: 150),
+        reverseTransitionDuration: const Duration(milliseconds: 150),
+      );
 
   static Widget _transitionsBuilder(
     BuildContext context,
     Animation<double> animation,
     Animation<double> secondaryAnimation,
     Widget child,
-  ) => child;
+  ) {
+    return FadeTransition(
+      opacity: CurveTween(curve: Curves.easeOut).animate(animation),
+      child: child,
+    );
+  }
 }

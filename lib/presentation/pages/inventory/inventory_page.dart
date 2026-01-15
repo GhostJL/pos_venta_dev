@@ -305,6 +305,10 @@ class _InventoryPageState extends ConsumerState<InventoryPage> {
                               final isDesktop = constraints.maxWidth > 800;
                               return ListView(
                                 padding: const EdgeInsets.all(16),
+                                cacheExtent:
+                                    500, // Pre-render items for smooth scrolling
+                                physics:
+                                    const AlwaysScrollableScrollPhysics(), // Desktop feel
                                 children: [
                                   SingleChildScrollView(
                                     scrollDirection: Axis.horizontal,
