@@ -46,38 +46,46 @@ class _UserFormPageState extends ConsumerState<UserFormPage> {
 
     // Initialize permissions if editing a cashier/user with permissions logic
     // For now, new users get defaults if cashier
-    if (user == null && _selectedRole == UserRole.cajero) {
-      _setDefaultCashierPermissions();
+    if (user == null && _selectedRole != UserRole.administrador) {
+      _setDefaultPermissions();
     }
   }
 
-  void _setDefaultCashierPermissions() {
-    // We need to wait for permissions to be loaded to map them by name
-    // For now, we can try to fetch them or assume IDs if known, but using names is safer.
-    // Since we don't have the map here immediately, checking names in the selector or here.
-    // Let's defer this to when the user selects the role or after build if we have the data.
-    // A better approach: The Selector handles display, but WE manage the list.
-    // We'll set a flag or just leave empty and letting the user pick might be safer?
-    // User requested "defaults". Let's try to set them.
-
-    // We'll trigger a read of all permissions to find the IDs for common constants.
+  void _setDefaultPermissions() {
     ref.read(allPermissionsProvider.future).then((perms) {
       if (!mounted) return;
-      final defaultPermissions = perms
-          .where((p) {
-            return [
-              PermissionConstants.posAccess,
-              PermissionConstants.reportsView,
-              PermissionConstants.customerManage,
-            ].contains(
-              p.code,
-            ); // Assuming Permission entity has a 'code' or we match by name
-            // Wait, Permission entity might not have 'code'. Let's check names or just skip for now to avoid errors.
-            // Actually, let's keep it simple: empty by default, or select all for POS?
-            // Let's select POS Access by default if we can find it.
-          })
-          .map((p) => p.id!)
-          .toList();
+      List<int> defaultPermissions = [];
+
+      if (_selectedRole == UserRole.gerente) {
+        // Manager gets ALL permissions
+        defaultPermissions = perms.map((p) => p.id!).toList();
+      } else if (_selectedRole == UserRole.espectador) {
+        // Viewer gets Read-Only permissions (Inventory View, Reports View)
+        defaultPermissions = perms
+            .where((p) {
+              return [
+                PermissionConstants.inventoryView,
+                PermissionConstants.reportsView,
+              ].contains(p.code);
+            })
+            .map((p) => p.id!)
+            .toList();
+      } else if (_selectedRole == UserRole.cajero) {
+        // Cashier gets default set
+        defaultPermissions = perms
+            .where((p) {
+              return [
+                PermissionConstants.posAccess,
+                PermissionConstants.reportsView,
+                PermissionConstants.customerManage,
+                PermissionConstants.cashOpen,
+                PermissionConstants.cashClose,
+                PermissionConstants.cashMovement,
+              ].contains(p.code);
+            })
+            .map((p) => p.id!)
+            .toList();
+      }
 
       setState(() {
         _selectedPermissionIds = defaultPermissions;
@@ -197,20 +205,16 @@ class _UserFormPageState extends ConsumerState<UserFormPage> {
                     child: Text(role.name.toUpperCase()),
                   );
                 }).toList(),
-                onChanged: isEditing
-                    ? null
-                    : (UserRole? newValue) {
-                        // Prevent role change on edit for simplicity if complex
-                        if (newValue != null) {
-                          setState(() {
-                            _selectedRole = newValue;
-                            if (_selectedRole == UserRole.cajero &&
-                                !isEditing) {
-                              _setDefaultCashierPermissions();
-                            }
-                          });
-                        }
-                      },
+                onChanged: (UserRole? newValue) {
+                  if (newValue != null) {
+                    setState(() {
+                      _selectedRole = newValue;
+                      if (_selectedRole != UserRole.administrador) {
+                        _setDefaultPermissions();
+                      }
+                    });
+                  }
+                },
               ),
               const SizedBox(height: 16),
               SwitchListTile(
@@ -220,9 +224,15 @@ class _UserFormPageState extends ConsumerState<UserFormPage> {
                 onChanged: (val) => setState(() => _isActive = val),
               ),
 
-              if (_selectedRole == UserRole.cajero) ...[
+              if (_selectedRole != UserRole.administrador) ...[
                 const SizedBox(height: 32),
-                _buildSectionTitle('Permisos de Cajero'),
+                Text(
+                  'Permisos de ${_selectedRole.name.toUpperCase()}',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                ),
                 const SizedBox(height: 8),
                 PermissionSelectorWidget(
                   selectedPermissionIds: _selectedPermissionIds,
@@ -287,64 +297,18 @@ class _UserFormPageState extends ConsumerState<UserFormPage> {
         // If cashier, also update permissions?
         // Current existing flow keeps permissions separate for editing, but we could merge.
         // For now, let's respect the user update.
-        if (_selectedRole == UserRole.cajero) {
+        if (_selectedRole != UserRole.administrador) {
           await ref
               .read(cashierControllerProvider.notifier)
               .updatePermissions(user.id!, _selectedPermissionIds);
         }
       } else {
         // Create
-        // check if we have a special provider for creation with permissions
-        // We will use the cashier controller for creating with permissions if role is cashier
-        // OR we need to update the UserNotifier to handle this.
-        if (_selectedRole == UserRole.cajero) {
-          // Cashier creation needs password and permissions
-          // The existing createCashier didn't take permissions, it did it in 2 steps?
-          // Actually createCashier in CashierController only takes user + password.
-          // We might need to manually call create, then update permissions.
-          // Or update the controller.
-
-          // For simplicity in this Task:
-          // 1. Create User
-          // 2. If success, update permissions
-
-          // But wait, we need the new user ID.
-          // The repository create method USUALLY returns the ID or the created object.
-          // If the current provider doesn't return it, we might have a race condition or difficulty getting the ID.
-
-          // Let's use the CashierController.createCashier, but we need to verify if it returns the user or ID.
-          // Looking at `CashierController.createCashier`:
-          // await ref.read(createCashierUseCaseProvider)(cashier, password);
-          // It returns void in the Future.
-
-          // Workaround: Create user, then fetch user by username to get ID? risky.
-          // Better: Update `UserNotifier` or `CashierController` to return the created ID/User.
-          // But I can't easily change the UseCase return type without checking the whole chain.
-
-          // Alternative: Just call create for now. Permissions might have to be set AFTER creation in a separate step if we can't get ID.
-          // HOWEVER, the user asked for this flow.
-
-          // Let's rely on `CashierController` for creation.
-          // I will simply call createCashier.
-          // And for permissions?
-          // If I can't get the ID, I can't set permissions right away.
-
-          // Let's check `CashierRepositoryImpl`.
-          // Usually `db.insert` returns the ID.
-
-          // I'll stick to a simpler approach:
-          // Call `CashierController.createCashier`.
-          // Then we might need to assume the user goes to the list and edits permissions, OR
-          // I will try to implement a `createWithPermissions` in the provider if possible in the next step.
-          // For now, let's just create the user.
-
+        if (_selectedRole != UserRole.administrador) {
+          // Create user with permissions logic
           await ref
               .read(cashierControllerProvider.notifier)
               .createCashier(user, _passwordController.text);
-
-          // Optimistic attempt to set permissions if we could... but we can't without ID.
-          // We will notify the user that permissions need to be configured if we can't do it here.
-          // OR: we fetch the latest user with that username.
 
           final users = await ref.read(userProvider.future);
           final createdUser = users.firstWhere(
@@ -358,10 +322,7 @@ class _UserFormPageState extends ConsumerState<UserFormPage> {
                 .updatePermissions(createdUser.id!, _selectedPermissionIds);
           }
         } else {
-          // Admin/Manager/Viewer
-          // Use generic add user if exists or CashierController (it essentially creates a user)
-          // The `createCashier` nomenclature is misleading, it creates a USER with a role.
-          // So `CashierController` can create any user really.
+          // Admin
           await ref
               .read(cashierControllerProvider.notifier)
               .createCashier(user, _passwordController.text);
