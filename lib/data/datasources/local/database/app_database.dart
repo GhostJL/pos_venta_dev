@@ -86,6 +86,12 @@ class AppDatabase extends _$AppDatabase {
     beforeOpen: (details) async {
       await customStatement('PRAGMA foreign_keys = ON');
 
+      // FIX: Sanitize inventory.updated_at if it contains text strings (from previous bug)
+      // This prevents "FormatException: Invalid radix-10 number"
+      await customStatement(
+        "UPDATE inventory SET updated_at = CAST(strftime('%s', updated_at) AS INTEGER) WHERE typeof(updated_at) = 'text'",
+      );
+
       // Seed permissions if empty
       final countFunc = permissions.id.count();
       final query = selectOnly(permissions)..addColumns([countFunc]);

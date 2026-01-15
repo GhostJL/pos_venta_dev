@@ -90,34 +90,39 @@ class SaleReturnsDetailPage extends ConsumerWidget {
     );
     final int netTotalCents = (sale.totalCents - totalReturnedCents).toInt();
 
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SaleReturnsHeaderCard(
-            sale: sale,
-            returns: returns,
-            totalReturnedCents: totalReturnedCents,
-            netTotalCents: netTotalCents,
-          ),
-          const SizedBox(height: 32),
-          Padding(
-            padding: const EdgeInsets.only(left: 4, bottom: 16),
-            child: Text(
-              'Historial',
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-                letterSpacing: 0.5,
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 1000),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SaleReturnsHeaderCard(
+                sale: sale,
+                returns: returns,
+                totalReturnedCents: totalReturnedCents,
+                netTotalCents: netTotalCents,
               ),
-            ),
+              const SizedBox(height: 32),
+              Padding(
+                padding: const EdgeInsets.only(left: 4, bottom: 16),
+                child: Text(
+                  'Historial',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: Theme.of(context).colorScheme.onSurface,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+              ),
+              ...returns.map(
+                (returnItem) => SaleReturnCard(returnItem: returnItem),
+              ),
+            ],
           ),
-          ...returns.map(
-            (returnItem) => SaleReturnCard(returnItem: returnItem),
-          ),
-        ],
+        ),
       ),
     );
   }

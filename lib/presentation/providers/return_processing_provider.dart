@@ -390,3 +390,21 @@ final returnsStatsProvider =
       final useCase = ref.watch(getReturnsStatsUseCaseProvider);
       return await useCase(startDate: dateRange.start, endDate: dateRange.end);
     });
+
+// Filtered Returns Stream Provider
+final filteredSaleReturnsStreamProvider = StreamProvider.autoDispose
+    .family<List<SaleReturn>, DateTimeRange?>((ref, dateRange) {
+      final repository = ref.watch(saleReturnRepositoryProvider);
+
+      // Default to "All time" or some sensible default if null?
+      // Actually, if null, maybe just last 30 days or everything?
+      // Let's pass the range directly. logic inside repo handles nulls (as "all").
+      // But typically we want *some* default if the UI doesn't provide one,
+      // or the UI provides a default.
+      // Let's assume UI passes a range, or null for "all".
+
+      return repository.getSaleReturnsStream(
+        startDate: dateRange?.start,
+        endDate: dateRange?.end,
+      );
+    });

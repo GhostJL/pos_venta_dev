@@ -226,113 +226,101 @@ class _ReturnItemsSelectorState extends ConsumerState<ReturnItemsSelector> {
                                   .withValues(alpha: 0.5),
                             ),
                           ),
-                          Row(
+                          Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Expanded(
-                                flex: 2,
-                                child: TextFormField(
-                                  controller: _quantityControllers[item.id],
-                                  decoration: InputDecoration(
-                                    labelText: 'Cantidad',
-                                    isDense: true,
-                                    border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                    suffixText: item.unitOfMeasure,
+                              TextFormField(
+                                controller: _quantityControllers[item.id],
+                                decoration: InputDecoration(
+                                  labelText: 'Cantidad',
+                                  isDense: true,
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(8),
                                   ),
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                  keyboardType:
-                                      const TextInputType.numberWithOptions(
-                                        decimal: true,
-                                      ),
-                                  inputFormatters: [
-                                    FilteringTextInputFormatter.allow(
-                                      RegExp(r'^\d+\.?\d{0,2}'),
-                                    ),
-                                  ],
-                                  autovalidateMode:
-                                      AutovalidateMode.onUserInteraction,
-                                  validator: (value) {
-                                    if (value == null || value.isEmpty) {
-                                      return 'Requerido';
-                                    }
-                                    final qty = double.tryParse(value);
-                                    if (qty == null) return 'Inválido';
-                                    if (qty <= 0) return '> 0';
-                                    if (qty > maxQuantity) {
-                                      return 'Max: $maxQuantity';
-                                    }
-                                    return null;
-                                  },
-                                  onChanged: (value) {
-                                    final qty = double.tryParse(value);
-                                    if (qty != null) {
-                                      ref
-                                          .read(
-                                            returnProcessingProvider.notifier,
-                                          )
-                                          .updateItemQuantity(item.id!, qty);
-                                    } else {
-                                      // Handle empty or invalid input by setting to 0 (invalid)
-                                      ref
-                                          .read(
-                                            returnProcessingProvider.notifier,
-                                          )
-                                          .updateItemQuantity(item.id!, 0.0);
-                                    }
-                                  },
+                                  suffixText: item.unitOfMeasure,
                                 ),
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                                keyboardType:
+                                    const TextInputType.numberWithOptions(
+                                      decimal: true,
+                                    ),
+                                inputFormatters: [
+                                  FilteringTextInputFormatter.allow(
+                                    RegExp(r'^\d+\.?\d{0,2}'),
+                                  ),
+                                ],
+                                autovalidateMode:
+                                    AutovalidateMode.onUserInteraction,
+                                validator: (value) {
+                                  if (value == null || value.isEmpty) {
+                                    return 'Requerido';
+                                  }
+                                  final qty = double.tryParse(value);
+                                  if (qty == null) return 'Inválido';
+                                  if (qty <= 0) return '> 0';
+                                  if (qty > maxQuantity) {
+                                    return 'Max: $maxQuantity';
+                                  }
+                                  return null;
+                                },
+                                onChanged: (value) {
+                                  final qty = double.tryParse(value);
+                                  if (qty != null) {
+                                    ref
+                                        .read(returnProcessingProvider.notifier)
+                                        .updateItemQuantity(item.id!, qty);
+                                  } else {
+                                    // Handle empty or invalid input by setting to 0 (invalid)
+                                    ref
+                                        .read(returnProcessingProvider.notifier)
+                                        .updateItemQuantity(item.id!, 0.0);
+                                  }
+                                },
                               ),
-                              const SizedBox(width: 16),
-                              Expanded(
-                                flex: 3,
-                                child: DropdownButtonFormField<ReturnReason>(
-                                  isExpanded: true,
-                                  initialValue: itemData?.reason != null
-                                      ? ReturnReason.values.firstWhere(
-                                          (e) => e.label == itemData?.reason,
-                                          orElse: () => ReturnReason.other,
-                                        )
-                                      : null,
-                                  decoration: InputDecoration(
-                                    labelText: 'Motivo',
-                                    isDense: true,
-                                    border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                    contentPadding: const EdgeInsets.symmetric(
-                                      horizontal: 12,
-                                      vertical: 14,
-                                    ),
+                              const SizedBox(height: 16),
+                              DropdownButtonFormField<ReturnReason>(
+                                isExpanded: true,
+                                initialValue: itemData?.reason != null
+                                    ? ReturnReason.values.firstWhere(
+                                        (e) => e.label == itemData?.reason,
+                                        orElse: () => ReturnReason.other,
+                                      )
+                                    : null,
+                                decoration: InputDecoration(
+                                  labelText: 'Motivo',
+                                  isDense: true,
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(8),
                                   ),
-                                  items: ReturnReason.values.map((reason) {
-                                    return DropdownMenuItem(
-                                      value: reason,
-                                      child: Text(
-                                        reason.label,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: const TextStyle(fontSize: 13),
-                                      ),
-                                    );
-                                  }).toList(),
-                                  onChanged: (value) {
-                                    if (value != null) {
-                                      _reasonControllers[item.id]?.text =
-                                          value.label;
-                                      ref
-                                          .read(
-                                            returnProcessingProvider.notifier,
-                                          )
-                                          .updateItemReason(
-                                            item.id!,
-                                            value.label,
-                                          );
-                                    }
-                                  },
+                                  contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                    vertical: 14,
+                                  ),
                                 ),
+                                items: ReturnReason.values.map((reason) {
+                                  return DropdownMenuItem(
+                                    value: reason,
+                                    child: Text(
+                                      reason.label,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: const TextStyle(fontSize: 13),
+                                    ),
+                                  );
+                                }).toList(),
+                                onChanged: (value) {
+                                  if (value != null) {
+                                    _reasonControllers[item.id]?.text =
+                                        value.label;
+                                    ref
+                                        .read(returnProcessingProvider.notifier)
+                                        .updateItemReason(
+                                          item.id!,
+                                          value.label,
+                                        );
+                                  }
+                                },
                               ),
                             ],
                           ),

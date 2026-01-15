@@ -424,9 +424,7 @@ class SaleRepositoryImpl implements SaleRepository {
           'UPDATE inventory SET quantity_on_hand = quantity_on_hand - ?, updated_at = ? WHERE product_id = ? AND warehouse_id = ?',
           variables: [
             Variable.withReal(adj.quantityToDeduct),
-            Variable.withString(
-              DateTime.now().toIso8601String(),
-            ), // using string for consistency if Drift doesn't auto-convert in custom update
+            Variable.withInt(DateTime.now().millisecondsSinceEpoch ~/ 1000),
             Variable.withInt(adj.productId),
             Variable.withInt(adj.warehouseId),
           ],
@@ -568,7 +566,7 @@ class SaleRepositoryImpl implements SaleRepository {
             'UPDATE inventory SET quantity_on_hand = quantity_on_hand + ?, updated_at = ? WHERE product_id = ? AND warehouse_id = ?',
             variables: [
               Variable.withReal(quantityToRestore),
-              Variable.withString(DateTime.now().toIso8601String()),
+              Variable.withInt(DateTime.now().millisecondsSinceEpoch ~/ 1000),
               Variable.withInt(item.productId),
               Variable.withInt(sale.warehouseId),
             ],

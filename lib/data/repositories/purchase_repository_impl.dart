@@ -376,7 +376,7 @@ class PurchaseRepositoryImpl implements PurchaseRepository {
             'UPDATE inventory SET quantity_on_hand = quantity_on_hand + ?, updated_at = ? WHERE id = ?',
             variables: [
               Variable.withReal(adj.quantityToAdd),
-              Variable.withString(DateTime.now().toIso8601String()),
+              Variable.withInt(DateTime.now().millisecondsSinceEpoch ~/ 1000),
               Variable.withInt(inventory.id),
             ],
             updates: {db.inventory},
