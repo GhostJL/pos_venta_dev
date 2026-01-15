@@ -11,6 +11,7 @@ import 'package:posventa/domain/entities/store.dart';
 import 'package:posventa/domain/services/printer_service.dart';
 import 'package:posventa/features/sales/domain/models/ticket_data.dart';
 import 'package:posventa/features/sales/presentation/widgets/ticket_pdf_builder.dart';
+import 'package:posventa/features/customers/presentation/widgets/payment_receipt_pdf_builder.dart';
 import 'package:printing/printing.dart';
 import 'package:permission_handler/permission_handler.dart';
 
@@ -267,69 +268,10 @@ class PrinterServiceImpl implements PrinterService {
       return;
     }
 
-    final pdf = pw.Document();
-    pdf.addPage(
-      pw.Page(
-        pageFormat: PdfPageFormat.roll80,
-        build: (pw.Context context) {
-          return pw.Column(
-            crossAxisAlignment: pw.CrossAxisAlignment.center,
-            mainAxisSize: pw.MainAxisSize.min,
-            children: [
-              pw.Text(
-                store.name,
-                style: pw.TextStyle(
-                  fontWeight: pw.FontWeight.bold,
-                  fontSize: 18,
-                ),
-              ),
-              if (store.address != null && store.address!.isNotEmpty)
-                pw.Text(
-                  store.address!,
-                  style: const pw.TextStyle(fontSize: 10),
-                  textAlign: pw.TextAlign.center,
-                ),
-              if (store.phone != null && store.phone!.isNotEmpty)
-                pw.Text(
-                  'Tel: ${store.phone}',
-                  style: const pw.TextStyle(fontSize: 10),
-                ),
-              pw.SizedBox(height: 10),
-              pw.Text(
-                'COMPROBANTE DE PAGO',
-                style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
-              ),
-              pw.SizedBox(height: 5),
-              pw.Text('Cliente: ${customer.fullName}'),
-              pw.Text(
-                'Fecha: ${payment.paymentDate.toString().substring(0, 16)}',
-              ),
-              pw.Divider(),
-              pw.Text(
-                'ABONO: \$${payment.amount.toStringAsFixed(2)}',
-                style: pw.TextStyle(
-                  fontWeight: pw.FontWeight.bold,
-                  fontSize: 16,
-                ),
-              ),
-              pw.Text('Método: ${payment.paymentMethod}'),
-              if (payment.reference != null && payment.reference!.isNotEmpty)
-                pw.Text('Ref: ${payment.reference}'),
-              pw.Divider(),
-              if (store.receiptFooter != null &&
-                  store.receiptFooter!.isNotEmpty) ...[
-                pw.Text(
-                  store.receiptFooter!,
-                  textAlign: pw.TextAlign.center,
-                  style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
-                ),
-                pw.SizedBox(height: 5),
-              ],
-              pw.Text('¡Gracias por su pago!'),
-            ],
-          );
-        },
-      ),
+    final pdf = await PaymentReceiptPdfBuilder.buildReceipt(
+      payment: payment,
+      customer: customer,
+      store: store,
     );
 
     if (printer != null) {
@@ -376,6 +318,13 @@ class PrinterServiceImpl implements PrinterService {
     );
     bytes += generator.feed(1);
 
+    if (store.businessName != null && store.businessName!.isNotEmpty) {
+      bytes += generator.text(
+        store.businessName!,
+        styles: const PosStyles(align: PosAlign.center),
+      );
+    }
+
     if (store.address != null && store.address!.isNotEmpty) {
       bytes += generator.text(
         store.address!,
@@ -385,6 +334,25 @@ class PrinterServiceImpl implements PrinterService {
     if (store.phone != null && store.phone!.isNotEmpty) {
       bytes += generator.text(
         'Tel: ${store.phone}',
+        styles: const PosStyles(align: PosAlign.center),
+      );
+    }
+
+    if (store.taxId != null && store.taxId!.isNotEmpty) {
+      bytes += generator.text(
+        'RFC: ${store.taxId}',
+        styles: const PosStyles(align: PosAlign.center),
+      );
+    }
+    if (store.email != null && store.email!.isNotEmpty) {
+      bytes += generator.text(
+        store.email!,
+        styles: const PosStyles(align: PosAlign.center),
+      );
+    }
+    if (store.website != null && store.website!.isNotEmpty) {
+      bytes += generator.text(
+        store.website!,
         styles: const PosStyles(align: PosAlign.center),
       );
     }
@@ -492,69 +460,10 @@ class PrinterServiceImpl implements PrinterService {
     final filePath = '$organizedPath${Platform.pathSeparator}$fileName';
 
     // Build PDF
-    final pdf = pw.Document();
-    pdf.addPage(
-      pw.Page(
-        pageFormat: PdfPageFormat.roll80,
-        build: (pw.Context context) {
-          return pw.Column(
-            crossAxisAlignment: pw.CrossAxisAlignment.center,
-            mainAxisSize: pw.MainAxisSize.min,
-            children: [
-              pw.Text(
-                store.name,
-                style: pw.TextStyle(
-                  fontWeight: pw.FontWeight.bold,
-                  fontSize: 18,
-                ),
-              ),
-              if (store.address != null && store.address!.isNotEmpty)
-                pw.Text(
-                  store.address!,
-                  style: const pw.TextStyle(fontSize: 10),
-                  textAlign: pw.TextAlign.center,
-                ),
-              if (store.phone != null && store.phone!.isNotEmpty)
-                pw.Text(
-                  'Tel: ${store.phone}',
-                  style: const pw.TextStyle(fontSize: 10),
-                ),
-              pw.SizedBox(height: 10),
-              pw.Text(
-                'COMPROBANTE DE PAGO',
-                style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
-              ),
-              pw.SizedBox(height: 10),
-              pw.Text('Cliente: ${customer.fullName}'),
-              pw.Text(
-                'Fecha: ${payment.paymentDate.toString().substring(0, 16)}',
-              ),
-              pw.Divider(),
-              pw.Text(
-                'ABONO: \$${payment.amount.toStringAsFixed(2)}',
-                style: pw.TextStyle(
-                  fontWeight: pw.FontWeight.bold,
-                  fontSize: 16,
-                ),
-              ),
-              pw.Text('Método: ${payment.paymentMethod}'),
-              if (payment.reference != null && payment.reference!.isNotEmpty)
-                pw.Text('Ref: ${payment.reference}'),
-              pw.Divider(),
-              if (store.receiptFooter != null &&
-                  store.receiptFooter!.isNotEmpty) ...[
-                pw.Text(
-                  store.receiptFooter!,
-                  textAlign: pw.TextAlign.center,
-                  style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
-                ),
-                pw.SizedBox(height: 5),
-              ],
-              pw.Text('¡Gracias por su pago!'),
-            ],
-          );
-        },
-      ),
+    final pdf = await PaymentReceiptPdfBuilder.buildReceipt(
+      payment: payment,
+      customer: customer,
+      store: store,
     );
 
     // Save to file
