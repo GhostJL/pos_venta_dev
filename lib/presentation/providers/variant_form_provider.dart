@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:posventa/presentation/providers/auth_provider.dart';
 
 import 'package:equatable/equatable.dart';
 import 'package:path/path.dart' as path;
@@ -540,7 +541,16 @@ class VariantForm extends _$VariantForm {
       if (productId > 0) {
         final productRepo = ref.read(productRepositoryProvider);
         if (newVariant.id != null) {
-          final result = await productRepo.updateVariant(newVariant);
+          final userId = ref.read(authProvider).user?.id;
+          if (userId == null) {
+            state = state.copyWithNullable(isSaving: false);
+            return null;
+          }
+
+          final result = await productRepo.updateVariant(
+            newVariant,
+            userId: userId,
+          );
           bool proceed = false;
           result.fold((l) => proceed = false, (r) => proceed = true);
 
@@ -552,7 +562,16 @@ class VariantForm extends _$VariantForm {
           state = state.copyWithNullable(isSaving: false);
           return newVariant;
         } else {
-          final result = await productRepo.saveVariant(newVariant);
+          final userId = ref.read(authProvider).user?.id;
+          if (userId == null) {
+            state = state.copyWithNullable(isSaving: false);
+            return null;
+          }
+
+          final result = await productRepo.saveVariant(
+            newVariant,
+            userId: userId,
+          );
           ProductVariant? savedVariant;
           result.fold(
             (l) => savedVariant = null,

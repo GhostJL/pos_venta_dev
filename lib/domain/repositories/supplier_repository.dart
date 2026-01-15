@@ -8,8 +8,8 @@ abstract class SupplierRepository {
     bool showInactive = false,
   });
   Future<int> countSuppliers({String? query, bool showInactive = false});
-  Future<Supplier> createSupplier(Supplier supplier);
-  Future<Supplier> updateSupplier(Supplier supplier);
-  Future<void> deleteSupplier(int supplierId);
+  Future<Supplier> createSupplier(Supplier supplier, {required int userId});
+  Future<Supplier> updateSupplier(Supplier supplier, {required int userId});
+  Future<void> deleteSupplier(int supplierId, {required int userId});
   Future<bool> isCodeUnique(String code, {int? excludeId});
 }

@@ -7,7 +7,7 @@ class DeleteProduct {
 
   DeleteProduct(this.repository);
 
-  Future<Either<Failure, void>> call(int id) {
-    return repository.deleteProduct(id);
+  Future<Either<Failure, void>> call(int id, {required int userId}) {
+    return repository.deleteProduct(id, userId: userId);
   }
 }

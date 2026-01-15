@@ -143,7 +143,7 @@ final class ProductRepositoryProvider
   }
 }
 
-String _$productRepositoryHash() => r'93c77cfa01bbb8aac03e50a25b3959ef83e79930';
+String _$productRepositoryHash() => r'21b6c7863ea37fefbedb0767ae07aecaa8b9ea5d';
 
 @ProviderFor(getAllProducts)
 const getAllProductsProvider = GetAllProductsProvider._();
@@ -981,7 +981,7 @@ final class SupplierRepositoryProvider
 }
 
 String _$supplierRepositoryHash() =>
-    r'335c8e354d84345de98fd71471c7504de8483b53';
+    r'210b2401e114ed8cf42a618156444e121ea8770b';
 
 @ProviderFor(getAllSuppliersUseCase)
 const getAllSuppliersUseCaseProvider = GetAllSuppliersUseCaseProvider._();

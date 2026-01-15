@@ -18,8 +18,10 @@ part 'customer_di.g.dart';
 // --- Customer Providers ---
 
 @riverpod
-CustomerRepository customerRepository(ref) =>
-    CustomerRepositoryImpl(ref.watch(appDatabaseProvider));
+CustomerRepository customerRepository(ref) => CustomerRepositoryImpl(
+  ref.watch(appDatabaseProvider),
+  ref.watch(auditServiceProvider),
+);
 
 @riverpod
 GetCustomersUseCase getCustomersUseCase(ref) =>

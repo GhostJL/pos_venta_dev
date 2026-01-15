@@ -6,7 +6,7 @@ class UpdateCustomerUseCase {
 
   UpdateCustomerUseCase(this._repository);
 
-  Future<int> call(Customer customer) async {
-    return await _repository.updateCustomer(customer);
+  Future<int> call(Customer customer, {required int userId}) async {
+    return await _repository.updateCustomer(customer, userId: userId);
   }
 }

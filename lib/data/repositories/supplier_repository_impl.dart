@@ -4,11 +4,13 @@ import 'package:posventa/data/datasources/local/database/app_database.dart'
 import 'package:posventa/data/models/supplier_model.dart';
 import 'package:posventa/domain/entities/supplier.dart';
 import 'package:posventa/domain/repositories/supplier_repository.dart';
+import 'package:posventa/domain/services/audit_service.dart';
 
 class SupplierRepositoryImpl implements SupplierRepository {
   final drift_db.AppDatabase db;
+  final AuditService auditService;
 
-  SupplierRepositoryImpl(this.db);
+  SupplierRepositoryImpl(this.db, this.auditService);
 
   @override
   Future<List<Supplier>> getAllSuppliers({
@@ -95,50 +97,87 @@ class SupplierRepositoryImpl implements SupplierRepository {
   }
 
   @override
-  Future<Supplier> createSupplier(Supplier supplier) async {
-    final id = await db
-        .into(db.suppliers)
-        .insert(
-          drift_db.SuppliersCompanion.insert(
-            name: supplier.name,
-            code: supplier.code,
-            contactPerson: Value(supplier.contactPerson),
-            phone: Value(supplier.phone),
-            email: Value(supplier.email),
-            address: Value(supplier.address),
-            taxId: Value(supplier.taxId),
-            creditDays: Value(supplier.creditDays),
-            isActive: Value(supplier.isActive),
-          ),
-          mode: InsertMode.replace,
-        );
-    final created = await _getSupplierById(id);
-    return created;
+  Future<Supplier> createSupplier(
+    Supplier supplier, {
+    required int userId,
+  }) async {
+    return await db.transaction(() async {
+      final id = await db
+          .into(db.suppliers)
+          .insert(
+            drift_db.SuppliersCompanion.insert(
+              name: supplier.name,
+              code: supplier.code,
+              contactPerson: Value(supplier.contactPerson),
+              phone: Value(supplier.phone),
+              email: Value(supplier.email),
+              address: Value(supplier.address),
+              taxId: Value(supplier.taxId),
+              creditDays: Value(supplier.creditDays),
+              isActive: Value(supplier.isActive),
+            ),
+            mode: InsertMode.replace,
+          );
+
+      await auditService.logAction(
+        action: 'create',
+        module: 'suppliers',
+        details: 'Created supplier: ${supplier.name} (${supplier.code})',
+        userId: userId,
+      );
+
+      final created = await _getSupplierById(id);
+      return created;
+    });
   }
 
   @override
-  Future<Supplier> updateSupplier(Supplier supplier) async {
-    await (db.update(
-      db.suppliers,
-    )..where((t) => t.id.equals(supplier.id!))).write(
-      drift_db.SuppliersCompanion(
-        name: Value(supplier.name),
-        code: Value(supplier.code),
-        contactPerson: Value(supplier.contactPerson),
-        phone: Value(supplier.phone),
-        email: Value(supplier.email),
-        address: Value(supplier.address),
-        taxId: Value(supplier.taxId),
-        creditDays: Value(supplier.creditDays),
-        isActive: Value(supplier.isActive),
-      ),
-    );
+  Future<Supplier> updateSupplier(
+    Supplier supplier, {
+    required int userId,
+  }) async {
+    await db.transaction(() async {
+      await (db.update(
+        db.suppliers,
+      )..where((t) => t.id.equals(supplier.id!))).write(
+        drift_db.SuppliersCompanion(
+          name: Value(supplier.name),
+          code: Value(supplier.code),
+          contactPerson: Value(supplier.contactPerson),
+          phone: Value(supplier.phone),
+          email: Value(supplier.email),
+          address: Value(supplier.address),
+          taxId: Value(supplier.taxId),
+          creditDays: Value(supplier.creditDays),
+          isActive: Value(supplier.isActive),
+        ),
+      );
+
+      await auditService.logAction(
+        action: 'update',
+        module: 'suppliers',
+        details: 'Updated supplier: ${supplier.name} (${supplier.code})',
+        userId: userId,
+      );
+    });
     return await _getSupplierById(supplier.id!);
   }
 
   @override
-  Future<void> deleteSupplier(int supplierId) async {
-    await (db.delete(db.suppliers)..where((t) => t.id.equals(supplierId))).go();
+  Future<void> deleteSupplier(int supplierId, {required int userId}) async {
+    await db.transaction(() async {
+      final supplier = await _getSupplierById(supplierId); // Verify exists
+      await (db.delete(
+        db.suppliers,
+      )..where((t) => t.id.equals(supplierId))).go();
+
+      await auditService.logAction(
+        action: 'delete',
+        module: 'suppliers',
+        details: 'Deleted supplier: ${supplier.name} (ID: $supplierId)',
+        userId: userId,
+      );
+    });
   }
 
   Future<Supplier> _getSupplierById(int id) async {

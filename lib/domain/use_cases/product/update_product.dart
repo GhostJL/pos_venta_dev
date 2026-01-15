@@ -8,7 +8,7 @@ class UpdateProduct {
 
   UpdateProduct(this.repository);
 
-  Future<Either<Failure, void>> call(Product product) {
-    return repository.updateProduct(product);
+  Future<Either<Failure, void>> call(Product product, {required int userId}) {
+    return repository.updateProduct(product, userId: userId);
   }
 }

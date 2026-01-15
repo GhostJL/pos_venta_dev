@@ -9,6 +9,7 @@ import 'package:posventa/presentation/providers/providers.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:posventa/domain/entities/tax_rate.dart';
 import 'package:posventa/presentation/providers/tax_rate_provider.dart';
+import 'package:posventa/presentation/providers/auth_provider.dart';
 
 part 'product_form_provider.g.dart';
 
@@ -693,13 +694,36 @@ class ProductFormNotifier extends _$ProductFormNotifier {
     String? saveError;
 
     if (state.initialProduct == null || state.initialProduct?.id == null) {
-      final createResult = await productRepo.createProduct(newProduct);
+      final userId = ref.read(authProvider).user?.id;
+      if (userId == null) {
+        state = state.copyWith(
+          isLoading: false,
+          error: 'Usuario no autenticado',
+        );
+        return false;
+      }
+
+      final createResult = await productRepo.createProduct(
+        newProduct,
+        userId: userId,
+      );
       createResult.fold(
         (failure) => saveError = failure.message,
         (newId) => savedProduct = newProduct.copyWith(id: newId),
       );
     } else {
-      final updateResult = await productRepo.updateProduct(newProduct);
+      final userId = ref.read(authProvider).user?.id;
+      if (userId == null) {
+        state = state.copyWith(
+          isLoading: false,
+          error: 'Usuario no autenticado',
+        );
+        return false;
+      }
+      final updateResult = await productRepo.updateProduct(
+        newProduct,
+        userId: userId,
+      );
       updateResult.fold(
         (failure) => saveError = failure.message,
         (_) => savedProduct = newProduct,

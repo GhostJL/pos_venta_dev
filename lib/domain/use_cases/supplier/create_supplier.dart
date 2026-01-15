@@ -6,8 +6,8 @@ class CreateSupplier {
 
   CreateSupplier(this.repository);
 
-  Future<Supplier> call(Supplier supplier) async {
+  Future<Supplier> call(Supplier supplier, {required int userId}) async {
     // Aquí se podrían añadir validaciones de negocio antes de crear
-    return await repository.createSupplier(supplier);
+    return await repository.createSupplier(supplier, userId: userId);
   }
 }

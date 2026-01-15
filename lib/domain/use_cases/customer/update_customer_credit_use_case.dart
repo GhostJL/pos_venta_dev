@@ -5,10 +5,16 @@ class UpdateCustomerCreditUseCase {
 
   UpdateCustomerCreditUseCase(this._repository);
 
-  Future<void> call(int customerId, double amount, {bool isIncrement = true}) {
+  Future<void> call(
+    int customerId,
+    double amount, {
+    required int userId,
+    bool isIncrement = true,
+  }) {
     return _repository.updateCustomerCredit(
       customerId,
       amount,
+      userId: userId,
       isIncrement: isIncrement,
     );
   }

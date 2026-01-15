@@ -10,6 +10,7 @@ import 'package:posventa/presentation/providers/category_providers.dart';
 import 'package:posventa/domain/entities/warehouse.dart';
 import 'package:posventa/presentation/providers/providers.dart';
 import 'package:posventa/presentation/providers/product_provider.dart';
+import 'package:posventa/presentation/providers/auth_provider.dart';
 
 part 'bulk_import_provider.g.dart';
 
@@ -310,9 +311,13 @@ class BulkImport extends _$BulkImport {
         }
       }
 
+      final userId = ref.read(authProvider).user?.id;
+      if (userId == null) throw "User not authenticated";
+
       final result = await repository.batchCreateProducts(
         state.validProducts,
         defaultWarehouseId: defaultWarehouseId,
+        userId: userId,
       );
 
       result.fold(

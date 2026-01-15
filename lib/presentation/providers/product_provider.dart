@@ -4,6 +4,7 @@ import 'package:posventa/domain/entities/product_variant.dart';
 import 'package:posventa/presentation/providers/providers.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:posventa/presentation/providers/auth_provider.dart';
 
 part 'product_provider.g.dart';
 
@@ -61,19 +62,31 @@ class ProductList extends _$ProductList {
   }
 
   Future<void> addProduct(Product product) async {
-    final result = await ref.read(createProductProvider).call(product);
+    final userId = ref.read(authProvider).user?.id;
+    if (userId == null) throw "Authenticated user required for audit";
+    final result = await ref
+        .read(createProductProvider)
+        .call(product, userId: userId);
     result.fold((failure) => throw failure.message, (success) => null);
     // Stream will auto-update if it's watching the DB
   }
 
   Future<void> updateProduct(Product product) async {
-    final result = await ref.read(updateProductProvider).call(product);
+    final userId = ref.read(authProvider).user?.id;
+    if (userId == null) throw "Authenticated user required for audit";
+    final result = await ref
+        .read(updateProductProvider)
+        .call(product, userId: userId);
     result.fold((failure) => throw failure.message, (success) => null);
     // Stream will auto-update if it's watching the DB
   }
 
   Future<void> deleteProduct(int id) async {
-    final result = await ref.read(deleteProductProvider).call(id);
+    final userId = ref.read(authProvider).user?.id;
+    if (userId == null) throw "Authenticated user required for audit";
+    final result = await ref
+        .read(deleteProductProvider)
+        .call(id, userId: userId);
     result.fold((failure) => throw failure.message, (success) => null);
     // Stream will auto-update if it's watching the DB
   }

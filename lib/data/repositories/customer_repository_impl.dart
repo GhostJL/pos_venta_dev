@@ -5,11 +5,13 @@ import 'package:posventa/data/models/customer_model.dart';
 import 'package:posventa/domain/entities/customer.dart';
 import 'package:posventa/domain/entities/customer_payment.dart';
 import 'package:posventa/domain/repositories/customer_repository.dart';
+import 'package:posventa/domain/services/audit_service.dart';
 
 class CustomerRepositoryImpl implements CustomerRepository {
   final drift_db.AppDatabase db;
+  final AuditService auditService;
 
-  CustomerRepositoryImpl(this.db);
+  CustomerRepositoryImpl(this.db, this.auditService);
 
   @override
   Future<List<Customer>> getCustomers({
@@ -158,72 +160,105 @@ class CustomerRepositoryImpl implements CustomerRepository {
   }
 
   @override
-  Future<int> createCustomer(Customer customer) async {
-    return await db
-        .into(db.customers)
-        .insert(
-          drift_db.CustomersCompanion.insert(
-            code: customer.code,
-            firstName: customer.firstName,
-            lastName: customer.lastName,
-            businessName: Value(customer.businessName),
-            creditLimitCents: Value(
-              customer.creditLimit != null
-                  ? (customer.creditLimit! * 100).round()
-                  : null,
+  Future<int> createCustomer(Customer customer, {required int userId}) async {
+    return await db.transaction(() async {
+      final id = await db
+          .into(db.customers)
+          .insert(
+            drift_db.CustomersCompanion.insert(
+              code: customer.code,
+              firstName: customer.firstName,
+              lastName: customer.lastName,
+              businessName: Value(customer.businessName),
+              creditLimitCents: Value(
+                customer.creditLimit != null
+                    ? (customer.creditLimit! * 100).round()
+                    : null,
+              ),
+              creditUsedCents: Value((customer.creditUsed * 100).round()),
+              taxId: Value(customer.taxId),
+              phone: Value(customer.phone),
+              email: Value(customer.email),
+              address: Value(customer.address),
+              isActive: Value(customer.isActive),
+              createdAt: Value(customer.createdAt),
+              updatedAt: Value(DateTime.now()),
             ),
-            creditUsedCents: Value((customer.creditUsed * 100).round()),
-            taxId: Value(customer.taxId),
-            phone: Value(customer.phone),
-            email: Value(customer.email),
-            address: Value(customer.address),
-            isActive: Value(customer.isActive),
-            createdAt: Value(customer.createdAt),
-            updatedAt: Value(DateTime.now()),
-          ),
-        );
+          );
+
+      await auditService.logAction(
+        action: 'create',
+        module: 'customers',
+        details:
+            'Created customer: ${customer.firstName} ${customer.lastName} (${customer.code})',
+        userId: userId,
+      );
+
+      return id;
+    });
   }
 
   @override
-  Future<int> updateCustomer(Customer customer) async {
-    await (db.update(
-      db.customers,
-    )..where((t) => t.id.equals(customer.id!))).write(
-      drift_db.CustomersCompanion(
-        code: Value(customer.code),
-        firstName: Value(customer.firstName),
-        lastName: Value(customer.lastName),
-        businessName: Value(customer.businessName),
-        creditLimitCents: Value(
-          customer.creditLimit != null
-              ? (customer.creditLimit! * 100).round()
-              : null,
+  Future<int> updateCustomer(Customer customer, {required int userId}) async {
+    await db.transaction(() async {
+      await (db.update(
+        db.customers,
+      )..where((t) => t.id.equals(customer.id!))).write(
+        drift_db.CustomersCompanion(
+          code: Value(customer.code),
+          firstName: Value(customer.firstName),
+          lastName: Value(customer.lastName),
+          businessName: Value(customer.businessName),
+          creditLimitCents: Value(
+            customer.creditLimit != null
+                ? (customer.creditLimit! * 100).round()
+                : null,
+          ),
+          taxId: Value(customer.taxId),
+          phone: Value(customer.phone),
+          email: Value(customer.email),
+          address: Value(customer.address),
+          isActive: Value(customer.isActive),
+          updatedAt: Value(DateTime.now()),
         ),
-        taxId: Value(customer.taxId),
-        phone: Value(customer.phone),
-        email: Value(customer.email),
-        address: Value(customer.address),
-        isActive: Value(customer.isActive),
-        updatedAt: Value(DateTime.now()),
-      ),
-    );
+      );
+
+      await auditService.logAction(
+        action: 'update',
+        module: 'customers',
+        details:
+            'Updated customer: ${customer.firstName} ${customer.lastName} (${customer.code})',
+        userId: userId,
+      );
+    });
     return customer.id!;
   }
 
   @override
-  Future<int> deleteCustomer(int id) async {
-    final customer = await getCustomerById(id);
-    if (customer != null) {
-      // Soft delete
-      await (db.update(db.customers)..where((t) => t.id.equals(id))).write(
-        drift_db.CustomersCompanion(
-          isActive: Value(false),
-          updatedAt: Value(DateTime.now()),
-        ),
-      );
-      return 1;
-    }
-    return 0;
+  Future<int> deleteCustomer(int id, {required int userId}) async {
+    return await db.transaction(() async {
+      final customer = await getCustomerById(id);
+      if (customer != null) {
+        // Soft delete
+        await (db.update(db.customers)..where((t) => t.id.equals(id))).write(
+          drift_db.CustomersCompanion(
+            isActive: Value(false),
+            updatedAt: Value(DateTime.now()),
+          ),
+        );
+
+        await auditService.logAction(
+          action: 'delete',
+          module: 'customers',
+          details:
+              'Deleted (soft) customer: ${customer.firstName} ${customer.lastName} (ID: $id)',
+          userId: userId,
+        );
+
+        return 1;
+      }
+      return 0;
+    });
   }
 
   @override
@@ -266,31 +301,46 @@ class CustomerRepositoryImpl implements CustomerRepository {
   Future<void> updateCustomerCredit(
     int customerId,
     double amount, {
+    required int userId,
     bool isIncrement = true,
   }) async {
-    final amountCents = (amount * 100).round();
+    await db.transaction(() async {
+      final amountCents = (amount * 100).round();
 
-    // Get current usage
-    final customer = await (db.select(
-      db.customers,
-    )..where((t) => t.id.equals(customerId))).getSingle();
-    final currentUsed = customer.creditUsedCents;
+      // Get current usage
+      final customer = await (db.select(
+        db.customers,
+      )..where((t) => t.id.equals(customerId))).getSingle();
+      final currentUsed = customer.creditUsedCents;
 
-    int newUsed;
-    if (isIncrement) {
-      newUsed = currentUsed + amountCents;
-    } else {
-      newUsed = currentUsed - amountCents;
-    }
+      int newUsed;
+      if (isIncrement) {
+        newUsed = currentUsed + amountCents;
+      } else {
+        newUsed = currentUsed - amountCents;
+      }
 
-    await (db.update(
-      db.customers,
-    )..where((t) => t.id.equals(customerId))).write(
-      drift_db.CustomersCompanion(
-        creditUsedCents: Value(newUsed),
-        updatedAt: Value(DateTime.now()),
-      ),
-    );
+      await (db.update(
+        db.customers,
+      )..where((t) => t.id.equals(customerId))).write(
+        drift_db.CustomersCompanion(
+          creditUsedCents: Value(newUsed),
+          updatedAt: Value(DateTime.now()),
+        ),
+      );
+
+      // Audit internal credit update if not part of a bigger transaction that already audited?
+      // Since this is specific method, we should log it.
+      // But avoid duplicate logs if registerPayment calls it.
+      // We can make audit optional or log detail "Credit Adjustment".
+      await auditService.logAction(
+        action: 'update_credit',
+        module: 'customers',
+        details:
+            'Credit ${isIncrement ? "Increased" : "Decreased"} by $amount for Customer ID: $customerId',
+        userId: userId,
+      );
+    });
   }
 
   @override
@@ -328,6 +378,7 @@ class CustomerRepositoryImpl implements CustomerRepository {
       await updateCustomerCredit(
         payment.customerId,
         payment.amount,
+        userId: payment.processedBy, // Pass processedBy as userId
         isIncrement: false,
       );
 
@@ -404,6 +455,14 @@ class CustomerRepositoryImpl implements CustomerRepository {
             );
       }
 
+      await auditService.logAction(
+        action: 'register_payment',
+        module: 'customers',
+        details:
+            'Registered payment of \$${payment.amount} for Customer ID: ${payment.customerId}',
+        userId: payment.processedBy,
+      );
+
       return id;
     });
   }
@@ -438,6 +497,7 @@ class CustomerRepositoryImpl implements CustomerRepository {
       await updateCustomerCredit(
         original.customerId,
         original.amountCents / 100.0,
+        userId: performedBy, // Pass performedBy
         isIncrement: true,
       );
 
@@ -488,6 +548,13 @@ class CustomerRepositoryImpl implements CustomerRepository {
               );
         }
       }
+
+      await auditService.logAction(
+        action: 'void_payment',
+        module: 'customers',
+        details: 'Voided payment ID: $paymentId. Reason: $reason',
+        userId: performedBy,
+      );
     });
   }
 

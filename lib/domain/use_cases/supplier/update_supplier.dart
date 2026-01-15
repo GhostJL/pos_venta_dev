@@ -6,8 +6,8 @@ class UpdateSupplier {
 
   UpdateSupplier(this.repository);
 
-  Future<Supplier> call(Supplier supplier) async {
+  Future<Supplier> call(Supplier supplier, {required int userId}) async {
     // Validaciones antes de actualizar
-    return await repository.updateSupplier(supplier);
+    return await repository.updateSupplier(supplier, userId: userId);
   }
 }

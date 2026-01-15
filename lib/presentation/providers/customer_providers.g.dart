@@ -33,7 +33,7 @@ final class CustomerNotifierProvider
   CustomerNotifier create() => CustomerNotifier();
 }
 
-String _$customerNotifierHash() => r'3c1f87b03fc6f9e2a84ccb8f169cec4d2662b2b1';
+String _$customerNotifierHash() => r'1fc24e9563ff1babf4c5c3b084e00d2d7cd3137c';
 
 abstract class _$CustomerNotifier extends $AsyncNotifier<List<Customer>> {
   FutureOr<List<Customer>> build();

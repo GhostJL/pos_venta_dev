@@ -642,3 +642,44 @@ final class StoreRepositoryProvider
 }
 
 String _$storeRepositoryHash() => r'50df64263cafa4dc858f1d86730544d6fd7f0551';
+
+@ProviderFor(auditService)
+const auditServiceProvider = AuditServiceProvider._();
+
+final class AuditServiceProvider
+    extends $FunctionalProvider<AuditService, AuditService, AuditService>
+    with $Provider<AuditService> {
+  const AuditServiceProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'auditServiceProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$auditServiceHash();
+
+  @$internal
+  @override
+  $ProviderElement<AuditService> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  AuditService create(Ref ref) {
+    return auditService(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(AuditService value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<AuditService>(value),
+    );
+  }
+}
+
+String _$auditServiceHash() => r'57e507b9cf903bef6e1802f621bf4710dec190a7';

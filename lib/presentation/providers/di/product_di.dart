@@ -45,8 +45,10 @@ ProductLocalDataSource productLocalDataSource(ref) =>
     ProductLocalDataSourceImpl(ref.watch(appDatabaseProvider));
 
 @riverpod
-ProductRepository productRepository(ref) =>
-    ProductRepositoryImpl(ref.watch(productLocalDataSourceProvider));
+ProductRepository productRepository(ref) => ProductRepositoryImpl(
+  ref.watch(productLocalDataSourceProvider),
+  ref.watch(auditServiceProvider),
+);
 
 @riverpod
 GetAllProducts getAllProducts(ref) =>
@@ -130,8 +132,10 @@ DeleteDepartment deleteDepartmentUseCase(ref) =>
 // --- Supplier Providers ---
 
 @riverpod
-SupplierRepository supplierRepository(ref) =>
-    SupplierRepositoryImpl(ref.watch(appDatabaseProvider));
+SupplierRepository supplierRepository(ref) => SupplierRepositoryImpl(
+  ref.watch(appDatabaseProvider),
+  ref.watch(auditServiceProvider),
+);
 
 @riverpod
 GetAllSuppliers getAllSuppliersUseCase(ref) =>

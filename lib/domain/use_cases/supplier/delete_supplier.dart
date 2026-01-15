@@ -5,7 +5,7 @@ class DeleteSupplier {
 
   DeleteSupplier(this.repository);
 
-  Future<void> call(int supplierId) async {
-    return await repository.deleteSupplier(supplierId);
+  Future<void> call(int supplierId, {required int userId}) async {
+    return await repository.deleteSupplier(supplierId, userId: userId);
   }
 }

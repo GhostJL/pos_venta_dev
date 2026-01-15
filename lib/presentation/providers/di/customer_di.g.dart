@@ -55,7 +55,7 @@ final class CustomerRepositoryProvider
 }
 
 String _$customerRepositoryHash() =>
-    r'a951a50031918051ab15246283893956ad1a2980';
+    r'd7430429b9c27c091bfd5ec02b8d424d15915830';
 
 @ProviderFor(getCustomersUseCase)
 const getCustomersUseCaseProvider = GetCustomersUseCaseProvider._();

@@ -10,11 +10,13 @@ import 'package:posventa/domain/entities/product_tax.dart';
 import 'package:posventa/domain/entities/product_variant.dart';
 import 'package:posventa/domain/entities/tax_rate.dart';
 import 'package:posventa/domain/repositories/product_repository.dart';
+import 'package:posventa/domain/services/audit_service.dart';
 
 class ProductRepositoryImpl implements ProductRepository {
   final ProductLocalDataSource dataSource;
+  final AuditService auditService;
 
-  ProductRepositoryImpl(this.dataSource);
+  ProductRepositoryImpl(this.dataSource, this.auditService);
 
   @override
   Future<Either<Failure, List<Product>>> getProducts({
@@ -75,10 +77,21 @@ class ProductRepositoryImpl implements ProductRepository {
   }
 
   @override
-  Future<Either<Failure, int>> createProduct(Product product) async {
+  Future<Either<Failure, int>> createProduct(
+    Product product, {
+    required int userId,
+  }) async {
     try {
       final productModel = ProductModel.fromEntity(product);
       final id = await dataSource.createProduct(productModel);
+
+      await auditService.logAction(
+        action: 'create_product',
+        module: 'catalog',
+        details: 'Created product: ${product.name} (ID: $id)',
+        userId: userId,
+      );
+
       return Right(id);
     } on DatabaseException catch (e) {
       return Left(DatabaseFailure(e.message));
@@ -91,6 +104,7 @@ class ProductRepositoryImpl implements ProductRepository {
   Future<Either<Failure, void>> batchCreateProducts(
     List<Product> products, {
     required int defaultWarehouseId,
+    required int userId,
   }) async {
     try {
       final productModels = products
@@ -100,6 +114,14 @@ class ProductRepositoryImpl implements ProductRepository {
         productModels,
         defaultWarehouseId: defaultWarehouseId,
       );
+
+      await auditService.logAction(
+        action: 'batch_create_products',
+        module: 'catalog',
+        details: 'Batch created ${products.length} products',
+        userId: userId,
+      );
+
       return const Right(null);
     } on DatabaseException catch (e) {
       return Left(DatabaseFailure(e.message));
@@ -109,9 +131,22 @@ class ProductRepositoryImpl implements ProductRepository {
   }
 
   @override
-  Future<Either<Failure, void>> deleteProduct(int id) async {
+  Future<Either<Failure, void>> deleteProduct(
+    int id, {
+    required int userId,
+  }) async {
     try {
+      // Fetch product name for log before deletion (optional but good)
+      // For now, just logging ID to save a read if not needed strictly
       await dataSource.deleteProduct(id);
+
+      await auditService.logAction(
+        action: 'delete_product',
+        module: 'catalog',
+        details: 'Deleted product ID: $id',
+        userId: userId,
+      );
+
       return const Right(null);
     } on DatabaseException catch (e) {
       return Left(DatabaseFailure(e.message));
@@ -133,10 +168,21 @@ class ProductRepositoryImpl implements ProductRepository {
   }
 
   @override
-  Future<Either<Failure, void>> updateProduct(Product product) async {
+  Future<Either<Failure, void>> updateProduct(
+    Product product, {
+    required int userId,
+  }) async {
     try {
       final productModel = ProductModel.fromEntity(product);
       await dataSource.updateProduct(productModel);
+
+      await auditService.logAction(
+        action: 'update_product',
+        module: 'catalog',
+        details: 'Updated product: ${product.name} (ID: ${product.id})',
+        userId: userId,
+      );
+
       return const Right(null);
     } on DatabaseException catch (e) {
       return Left(DatabaseFailure(e.message));
@@ -146,10 +192,22 @@ class ProductRepositoryImpl implements ProductRepository {
   }
 
   @override
-  Future<Either<Failure, void>> addTaxToProduct(ProductTax productTax) async {
+  Future<Either<Failure, void>> addTaxToProduct(
+    ProductTax productTax, {
+    required int userId,
+  }) async {
     try {
       final model = ProductTaxModel.fromEntity(productTax);
       await dataSource.addTaxToProduct(model);
+
+      await auditService.logAction(
+        action: 'add_product_tax',
+        module: 'catalog',
+        details:
+            'Added tax (Rate ID: ${productTax.taxRateId}) to product (ID: ${productTax.productId})',
+        userId: userId,
+      );
+
       return const Right(null);
     } on DatabaseException catch (e) {
       return Left(DatabaseFailure(e.message));
@@ -175,10 +233,20 @@ class ProductRepositoryImpl implements ProductRepository {
   @override
   Future<Either<Failure, void>> removeTaxFromProduct(
     int productId,
-    int taxRateId,
-  ) async {
+    int taxRateId, {
+    required int userId,
+  }) async {
     try {
       await dataSource.removeTaxFromProduct(productId, taxRateId);
+
+      await auditService.logAction(
+        action: 'remove_product_tax',
+        module: 'catalog',
+        details:
+            'Removed tax (Rate ID: $taxRateId) from product (ID: $productId)',
+        userId: userId,
+      );
+
       return const Right(null);
     } on DatabaseException catch (e) {
       return Left(DatabaseFailure(e.message));
@@ -252,10 +320,21 @@ class ProductRepositoryImpl implements ProductRepository {
   }
 
   @override
-  Future<Either<Failure, int>> saveVariant(ProductVariant variant) async {
+  Future<Either<Failure, int>> saveVariant(
+    ProductVariant variant, {
+    required int userId,
+  }) async {
     try {
       final model = ProductVariantModel.fromEntity(variant);
       final result = await dataSource.saveVariant(model);
+
+      await auditService.logAction(
+        action: 'save_variant',
+        module: 'catalog',
+        details: 'Saved variant: ${variant.variantName} (ID: $result)',
+        userId: userId,
+      );
+
       return Right(result);
     } on DatabaseException catch (e) {
       return Left(DatabaseFailure(e.message));
@@ -265,10 +344,21 @@ class ProductRepositoryImpl implements ProductRepository {
   }
 
   @override
-  Future<Either<Failure, void>> updateVariant(ProductVariant variant) async {
+  Future<Either<Failure, void>> updateVariant(
+    ProductVariant variant, {
+    required int userId,
+  }) async {
     try {
       final model = ProductVariantModel.fromEntity(variant);
       await dataSource.updateVariant(model);
+
+      await auditService.logAction(
+        action: 'update_variant',
+        module: 'catalog',
+        details: 'Updated variant: ${variant.variantName} (ID: ${variant.id})',
+        userId: userId,
+      );
+
       return const Right(null);
     } on DatabaseException catch (e) {
       return Left(DatabaseFailure(e.message));

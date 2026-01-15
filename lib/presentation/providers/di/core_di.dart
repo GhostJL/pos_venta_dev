@@ -21,6 +21,8 @@ import 'package:posventa/data/repositories/store_repository_impl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:posventa/domain/repositories/settings_repository.dart';
 import 'package:posventa/data/repositories/settings_repository_impl.dart';
+import 'package:posventa/domain/services/audit_service.dart';
+import 'package:posventa/data/services/audit_service_impl.dart';
 
 part 'core_di.g.dart';
 
@@ -110,3 +112,7 @@ UserPermissionRepository userPermissionRepository(ref) =>
 @riverpod
 IStoreRepository storeRepository(ref) =>
     StoreRepositoryImpl(db: ref.watch(appDatabaseProvider));
+
+@riverpod
+AuditService auditService(ref) =>
+    AuditServiceImpl(ref.watch(appDatabaseProvider));

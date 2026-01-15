@@ -1,4 +1,5 @@
 import 'package:posventa/domain/entities/customer.dart';
+import 'package:posventa/presentation/providers/auth_provider.dart';
 import 'package:posventa/presentation/providers/paginated_customers_provider.dart';
 import 'package:posventa/presentation/providers/providers.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -15,9 +16,12 @@ class CustomerNotifier extends _$CustomerNotifier {
   Future<void> addCustomer(Customer customer) async {
     final createUseCase = ref.read(createCustomerUseCaseProvider);
     final getUseCase = ref.read(getCustomersUseCaseProvider);
+    final userId = ref.read(authProvider).user?.id;
+    if (userId == null) throw "Authenticated user required for audit";
+
     state = const AsyncValue.loading();
     state = await AsyncValue.guard(() async {
-      await createUseCase.call(customer);
+      await createUseCase.call(customer, userId: userId);
       ref.invalidate(paginatedCustomersCountProvider);
       ref.invalidate(paginatedCustomersPageProvider);
       return getUseCase.call();
@@ -27,9 +31,12 @@ class CustomerNotifier extends _$CustomerNotifier {
   Future<void> updateCustomer(Customer customer) async {
     final updateUseCase = ref.read(updateCustomerUseCaseProvider);
     final getUseCase = ref.read(getCustomersUseCaseProvider);
+    final userId = ref.read(authProvider).user?.id;
+    if (userId == null) throw "Authenticated user required for audit";
+
     state = const AsyncValue.loading();
     state = await AsyncValue.guard(() async {
-      await updateUseCase.call(customer);
+      await updateUseCase.call(customer, userId: userId);
       ref.invalidate(paginatedCustomersCountProvider);
       ref.invalidate(paginatedCustomersPageProvider);
       ref.invalidate(customerByIdProvider(customer.id!));
@@ -40,9 +47,12 @@ class CustomerNotifier extends _$CustomerNotifier {
   Future<void> deleteCustomer(int id) async {
     final deleteUseCase = ref.read(deleteCustomerUseCaseProvider);
     final getUseCase = ref.read(getCustomersUseCaseProvider);
+    final userId = ref.read(authProvider).user?.id;
+    if (userId == null) throw "Authenticated user required for audit";
+
     state = const AsyncValue.loading();
     state = await AsyncValue.guard(() async {
-      await deleteUseCase.call(id);
+      await deleteUseCase.call(id, userId: userId);
       ref.invalidate(paginatedCustomersCountProvider);
       ref.invalidate(paginatedCustomersPageProvider);
       ref.invalidate(customerByIdProvider(id));
@@ -68,9 +78,17 @@ class CustomerNotifier extends _$CustomerNotifier {
   Future<void> payDebt(int customerId, double amount) async {
     final updateCreditUseCase = ref.read(updateCustomerCreditUseCaseProvider);
     final getUseCase = ref.read(getCustomersUseCaseProvider);
+    final userId = ref.read(authProvider).user?.id;
+    if (userId == null) throw "Authenticated user required for audit";
+
     state = const AsyncValue.loading();
     state = await AsyncValue.guard(() async {
-      await updateCreditUseCase.call(customerId, amount, isIncrement: false);
+      await updateCreditUseCase.call(
+        customerId,
+        amount,
+        isIncrement: false,
+        userId: userId,
+      );
       // Refresh list
       ref.invalidate(paginatedCustomersCountProvider);
       ref.invalidate(paginatedCustomersPageProvider);

@@ -6,11 +6,15 @@ import 'package:posventa/domain/entities/product_variant.dart';
 import 'package:posventa/domain/entities/tax_rate.dart';
 
 abstract class ProductRepository {
-  Future<Either<Failure, int>> createProduct(Product product);
+  Future<Either<Failure, int>> createProduct(
+    Product product, {
+    required int userId,
+  });
 
   Future<Either<Failure, void>> batchCreateProducts(
     List<Product> products, {
     required int defaultWarehouseId,
+    required int userId,
   });
 
   Future<Either<Failure, Product?>> getProductById(int id);
@@ -36,15 +40,22 @@ abstract class ProductRepository {
     bool showInactive = false,
   });
 
-  Future<Either<Failure, void>> updateProduct(Product product);
+  Future<Either<Failure, void>> updateProduct(
+    Product product, {
+    required int userId,
+  });
 
-  Future<Either<Failure, void>> deleteProduct(int id);
+  Future<Either<Failure, void>> deleteProduct(int id, {required int userId});
 
-  Future<Either<Failure, void>> addTaxToProduct(ProductTax productTax);
+  Future<Either<Failure, void>> addTaxToProduct(
+    ProductTax productTax, {
+    required int userId,
+  });
   Future<Either<Failure, void>> removeTaxFromProduct(
     int productId,
-    int taxRateId,
-  );
+    int taxRateId, {
+    required int userId,
+  });
   Future<Either<Failure, List<ProductTax>>> getTaxesForProduct(int productId);
   Future<Either<Failure, List<TaxRate>>> getTaxRatesForProduct(int productId);
 
@@ -56,6 +67,12 @@ abstract class ProductRepository {
     int? excludeVariantId,
   });
 
-  Future<Either<Failure, int>> saveVariant(ProductVariant variant);
-  Future<Either<Failure, void>> updateVariant(ProductVariant variant);
+  Future<Either<Failure, int>> saveVariant(
+    ProductVariant variant, {
+    required int userId,
+  });
+  Future<Either<Failure, void>> updateVariant(
+    ProductVariant variant, {
+    required int userId,
+  });
 }

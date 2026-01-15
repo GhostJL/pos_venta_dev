@@ -11,15 +11,16 @@ abstract class CustomerRepository {
   Future<int> countCustomers({String? query, bool showInactive = false});
   Future<Customer?> getCustomerById(int id);
   Future<Customer?> getCustomerByCode(String code);
-  Future<int> createCustomer(Customer customer);
-  Future<int> updateCustomer(Customer customer);
-  Future<int> deleteCustomer(int id);
+  Future<int> createCustomer(Customer customer, {required int userId});
+  Future<int> updateCustomer(Customer customer, {required int userId});
+  Future<int> deleteCustomer(int id, {required int userId});
   Future<List<Customer>> searchCustomers(String query);
   Future<String> generateNextCustomerCode();
   Future<bool> isCodeUnique(String code, {int? excludeId});
   Future<void> updateCustomerCredit(
     int customerId,
     double amount, {
+    required int userId,
     bool isIncrement = true,
   });
   Future<double> getCustomerBalance(int customerId);

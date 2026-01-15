@@ -5,7 +5,7 @@ class DeleteCustomerUseCase {
 
   DeleteCustomerUseCase(this._repository);
 
-  Future<int> call(int id) async {
-    return await _repository.deleteCustomer(id);
+  Future<int> call(int id, {required int userId}) async {
+    return await _repository.deleteCustomer(id, userId: userId);
   }
 }
