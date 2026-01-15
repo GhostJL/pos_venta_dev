@@ -21,6 +21,10 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
 
   @override
   Widget build(BuildContext context) {
+    final authState = ref.watch(authProvider);
+    final user = authState.user;
+    final isAdmin = user?.role == UserRole.administrador;
+    final isManager = user?.role == UserRole.gerente;
     return Scaffold(
       appBar: AppBar(
         title: const Text('Configuración'),
@@ -57,6 +61,11 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
   }
 
   Widget _buildDesktopLayout() {
+    final authState = ref.watch(authProvider);
+    final user = authState.user;
+    final isAdmin = user?.role == UserRole.administrador;
+    final isManager = user?.role == UserRole.gerente;
+
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -67,27 +76,30 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
               _selectedIndex = index;
             });
           },
-          destinations: const [
+          destinations: [
             NavigationRailDestination(
               icon: Icon(Icons.dashboard_outlined),
               selectedIcon: Icon(Icons.dashboard_rounded),
               label: Text('General'),
             ),
-            NavigationRailDestination(
-              icon: Icon(Icons.settings_system_daydream_outlined),
-              selectedIcon: Icon(Icons.settings_system_daydream_rounded),
-              label: Text('Sistema'),
-            ),
-            NavigationRailDestination(
-              icon: Icon(Icons.grid_view_outlined),
-              selectedIcon: Icon(Icons.grid_view_rounded),
-              label: Text('Catálogo'),
-            ),
-            NavigationRailDestination(
-              icon: Icon(Icons.people_outline),
-              selectedIcon: Icon(Icons.people_rounded),
-              label: Text('Usuarios'),
-            ),
+            if (isAdmin)
+              NavigationRailDestination(
+                icon: Icon(Icons.settings_system_daydream_outlined),
+                selectedIcon: Icon(Icons.settings_system_daydream_rounded),
+                label: Text('Sistema'),
+              ),
+            if (isAdmin || isManager)
+              NavigationRailDestination(
+                icon: Icon(Icons.grid_view_outlined),
+                selectedIcon: Icon(Icons.grid_view_rounded),
+                label: Text('Catálogo'),
+              ),
+            if (isAdmin)
+              NavigationRailDestination(
+                icon: Icon(Icons.people_outline),
+                selectedIcon: Icon(Icons.people_rounded),
+                label: Text('Usuarios'),
+              ),
             NavigationRailDestination(
               icon: Icon(Icons.help_outline),
               selectedIcon: Icon(Icons.help_rounded),
@@ -180,12 +192,6 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
   // --- Section Builders (Shared logic wrappers) ---
 
   Widget _buildGeneralSection() {
-    final authState = ref.watch(authProvider);
-    final user = authState.user;
-    final isAdmin = user?.role == UserRole.administrador;
-
-    if (!isAdmin) return const SizedBox.shrink();
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -196,6 +202,9 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
   }
 
   Widget _buildGeneralContent() {
+    final authState = ref.watch(authProvider);
+    final isAdmin = authState.user?.role == UserRole.administrador;
+
     return SettingsSectionContainer(
       children: [
         SettingsCategoryTile(
@@ -204,20 +213,22 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
           subtitle: 'Datos personales y contraseña',
           onTap: () => context.push('/settings/profile'),
         ),
-        const Divider(height: 1, indent: 56),
-        SettingsCategoryTile(
-          icon: Icons.store_mall_directory_rounded,
-          title: 'Datos del Negocio y Ticket',
-          subtitle: 'Información de la tienda y diseño del ticket',
-          onTap: () => context.push('/settings/business'),
-        ),
-        const Divider(height: 1, indent: 56),
-        SettingsCategoryTile(
-          icon: Icons.warehouse_rounded,
-          title: 'Almacenes',
-          subtitle: 'Gestión de ubicaciones físicas',
-          onTap: () => context.push('/warehouses'),
-        ),
+        if (isAdmin) ...[
+          const Divider(height: 1, indent: 56),
+          SettingsCategoryTile(
+            icon: Icons.store_mall_directory_rounded,
+            title: 'Datos del Negocio y Ticket',
+            subtitle: 'Información de la tienda y diseño del ticket',
+            onTap: () => context.push('/settings/business'),
+          ),
+          const Divider(height: 1, indent: 56),
+          SettingsCategoryTile(
+            icon: Icons.warehouse_rounded,
+            title: 'Almacenes',
+            subtitle: 'Gestión de ubicaciones físicas',
+            onTap: () => context.push('/warehouses'),
+          ),
+        ],
       ],
     );
   }
@@ -322,9 +333,18 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
   }
 
   Widget _buildCatalogSection() {
+    // Check permission logic here manually or use a helper if available
+    // We don't have the permissions list in AuthState easily available as a List<String> property yet in this file
+    // but the Provider usually exposes it or we can check role.
+    // Managers default permissions include CATALOG_MANAGE.
+
     final authState = ref.watch(authProvider);
-    final isAdmin = authState.user?.role == UserRole.administrador;
-    if (!isAdmin) return const SizedBox.shrink();
+    final user = authState.user;
+    final isManager = user?.role == UserRole.gerente;
+    final isAdmin = user?.role == UserRole.administrador;
+
+    // Allow if Admin or Manager (since Manager has Catalog Manage)
+    if (!isAdmin && !isManager) return const SizedBox.shrink();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -397,12 +417,6 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
   }
 
   Widget _buildHelpSection() {
-    final authState = ref.watch(authProvider);
-    final isAdmin = authState.user?.role == UserRole.administrador;
-    if (!isAdmin)
-      return const SizedBox.shrink(); // Assuming help is also only for admin in this view? Or maybe help should be for everyone?
-    // The original code wrapped everything in "if (isAdmin)". So keeping it that way for safety, although help usually is for everyone.
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [

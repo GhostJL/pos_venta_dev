@@ -432,11 +432,12 @@ class _UsersListPageState extends ConsumerState<UsersListPage> {
                         onTap: () {
                           // Wait a frame to avoid popup menu animation conflict
                           Future.delayed(const Duration(milliseconds: 100), () {
-                            if (context.mounted)
+                            if (context.mounted) {
                               context.push(
                                 '/users-permissions/form',
                                 extra: user,
                               );
+                            }
                           });
                         },
                       ),
