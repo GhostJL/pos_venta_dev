@@ -35,6 +35,14 @@ class _UsersListPageState extends ConsumerState<UsersListPage> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         actions: [
+          // Add User button
+          IconButton(
+            icon: const Icon(Icons.person_add_rounded),
+            tooltip: 'Nuevo Usuario',
+            onPressed: () {
+              context.push('/users-permissions/form');
+            },
+          ),
           // Refresh button
           IconButton(
             icon: const Icon(Icons.refresh_rounded),
@@ -413,6 +421,29 @@ class _UsersListPageState extends ConsumerState<UsersListPage> {
                         child: Row(
                           children: [
                             Icon(
+                              Icons.edit_rounded,
+                              color: colorScheme.onSurface,
+                              size: 20,
+                            ),
+                            const SizedBox(width: 12),
+                            const Text('Editar Usuario'),
+                          ],
+                        ),
+                        onTap: () {
+                          // Wait a frame to avoid popup menu animation conflict
+                          Future.delayed(const Duration(milliseconds: 100), () {
+                            if (context.mounted)
+                              context.push(
+                                '/users-permissions/form',
+                                extra: user,
+                              );
+                          });
+                        },
+                      ),
+                      PopupMenuItem(
+                        child: Row(
+                          children: [
+                            Icon(
                               Icons.lock_reset_rounded,
                               color: colorScheme.onSurface,
                               size: 20,
@@ -576,6 +607,12 @@ class _UsersListPageState extends ConsumerState<UsersListPage> {
                     ),
                   ),
                   const SizedBox(width: 8),
+                  IconButton(
+                    onPressed: () =>
+                        context.push('/users-permissions/form', extra: user),
+                    icon: const Icon(Icons.edit_rounded),
+                    tooltip: 'Editar',
+                  ),
                   if (user.role == UserRole.cajero)
                     IconButton(
                       onPressed: () => _navigateToPermissions(user),

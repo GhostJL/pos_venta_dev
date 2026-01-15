@@ -60,6 +60,7 @@ import 'package:posventa/presentation/pages/settings/profile/admin_profile_page.
 import 'package:posventa/presentation/pages/settings/profile/change_password_page.dart';
 
 import 'package:posventa/presentation/pages/users/users_permissions_page.dart';
+import 'package:posventa/presentation/pages/users/user_form_page.dart';
 import 'package:posventa/presentation/pages/warehouses/warehouses_page.dart';
 import 'package:posventa/presentation/widgets/common/misc/barcode_scanner_widget.dart';
 import 'package:posventa/presentation/widgets/common/misc/scanner_arguments.dart';
@@ -476,6 +477,15 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: '/users-permissions',
             pageBuilder: (context, state) =>
                 const AppTransitionPage(child: UsersPermissionsPage()),
+            routes: [
+              GoRoute(
+                path: 'form',
+                pageBuilder: (context, state) {
+                  final user = state.extra as User?;
+                  return AppTransitionPage(child: UserFormPage(user: user));
+                },
+              ),
+            ],
           ),
           GoRoute(
             path: '/cash-movements',
