@@ -24,6 +24,14 @@ class MainLayoutState extends ConsumerState<MainLayout> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   DateTime? _lastBackPress;
 
+  bool _isMenuExpanded = false;
+
+  void _toggleMenu() {
+    setState(() {
+      _isMenuExpanded = !_isMenuExpanded;
+    });
+  }
+
   void openDrawer() {
     _scaffoldKey.currentState?.openDrawer();
   }
@@ -89,10 +97,15 @@ class MainLayoutState extends ConsumerState<MainLayout> {
             return Scaffold(
               body: Row(
                 children: [
-                  // Standard Navigation Rail
-                  const SizedBox(
-                    width: 80, // Standard Rail Width
-                    child: SideMenu(isRail: true),
+                  // Collapsible SideMenu
+                  AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    curve: Curves.easeInOut,
+                    width: _isMenuExpanded ? 280 : 80,
+                    child: SideMenu(
+                      isRail: !_isMenuExpanded,
+                      onToggle: _toggleMenu,
+                    ),
                   ),
                   const VerticalDivider(thickness: 1, width: 1),
                   Expanded(child: ClipRect(child: widget.child)),
@@ -114,7 +127,15 @@ class MainLayoutState extends ConsumerState<MainLayout> {
               },
               child: Scaffold(
                 key: _scaffoldKey,
-                drawer: const SideMenu(isRail: false),
+                drawer: SideMenu(
+                  isRail: false,
+                  onToggle: () {
+                    // Cierra el drawer en móvil si se usa el botón de toggle dentro del menú (opcional)
+                    if (_scaffoldKey.currentState?.isDrawerOpen ?? false) {
+                      _scaffoldKey.currentState?.closeDrawer();
+                    }
+                  },
+                ),
                 body: widget.child,
               ),
             );
