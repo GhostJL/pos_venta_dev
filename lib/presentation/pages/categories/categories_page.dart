@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:posventa/presentation/widgets/common/confirm_delete_sheet.dart';
+import 'package:posventa/domain/entities/user.dart';
+import 'package:posventa/presentation/providers/auth_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:posventa/domain/entities/category.dart';
 import 'package:posventa/domain/entities/department.dart';
@@ -77,7 +79,11 @@ class _CategoriesPageState extends ConsumerState<CategoriesPage>
           category: category,
           departmentName: departmentName,
           onEdit: () => _navigateToForm(category),
-          onDelete: () => _confirmDelete(context, ref, category),
+          onDelete:
+              hasManagePermission &&
+                  ref.read(authProvider).user?.role == UserRole.administrador
+              ? () => _confirmDelete(context, ref, category)
+              : null,
         );
       },
     );
@@ -88,13 +94,13 @@ class _CategoryCard extends StatelessWidget {
   final Category category;
   final String departmentName;
   final VoidCallback onEdit;
-  final VoidCallback onDelete;
+  final VoidCallback? onDelete;
 
   const _CategoryCard({
     required this.category,
     required this.departmentName,
     required this.onEdit,
-    required this.onDelete,
+    this.onDelete,
   });
 
   @override

@@ -5,7 +5,7 @@ class CatalogModuleActionsSheet extends StatelessWidget {
   final String? subtitle;
   final IconData icon;
   final VoidCallback onEdit;
-  final VoidCallback onDelete;
+  final VoidCallback? onDelete;
   final bool isActive;
 
   const CatalogModuleActionsSheet({
@@ -14,7 +14,7 @@ class CatalogModuleActionsSheet extends StatelessWidget {
     this.subtitle,
     required this.icon,
     required this.onEdit,
-    required this.onDelete,
+    this.onDelete,
     this.isActive = true,
   });
 
@@ -55,17 +55,18 @@ class CatalogModuleActionsSheet extends StatelessWidget {
                       onEdit();
                     },
                   ),
-                  _buildFlatAction(
-                    context,
-                    icon: Icons.delete_outline_rounded,
-                    color: theme.colorScheme.error,
-                    label: 'Eliminar registro',
-                    subtitle: 'Quitar permanentemente del sistema',
-                    onTap: () {
-                      Navigator.pop(context);
-                      onDelete();
-                    },
-                  ),
+                  if (onDelete != null)
+                    _buildFlatAction(
+                      context,
+                      icon: Icons.delete_outline_rounded,
+                      color: theme.colorScheme.error,
+                      label: 'Eliminar registro',
+                      subtitle: 'Quitar permanentemente del sistema',
+                      onTap: () {
+                        Navigator.pop(context);
+                        onDelete!();
+                      },
+                    ),
                 ],
               ),
             ),

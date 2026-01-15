@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:posventa/presentation/widgets/common/confirm_delete_sheet.dart';
+import 'package:posventa/domain/entities/user.dart';
+import 'package:posventa/presentation/providers/auth_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:posventa/domain/entities/department.dart';
 import 'package:posventa/presentation/providers/department_providers.dart';
@@ -66,7 +68,11 @@ class _DepartmentsPageState extends ConsumerState<DepartmentsPage>
         return _DepartmentCard(
           department: department,
           onEdit: () => _navigateToForm(department),
-          onDelete: () => _confirmDelete(context, ref, department),
+          onDelete:
+              hasManagePermission &&
+                  ref.read(authProvider).user?.role == UserRole.administrador
+              ? () => _confirmDelete(context, ref, department)
+              : null,
         );
       },
     );
@@ -76,12 +82,12 @@ class _DepartmentsPageState extends ConsumerState<DepartmentsPage>
 class _DepartmentCard extends StatelessWidget {
   final Department department;
   final VoidCallback onEdit;
-  final VoidCallback onDelete;
+  final VoidCallback? onDelete;
 
   const _DepartmentCard({
     required this.department,
     required this.onEdit,
-    required this.onDelete,
+    this.onDelete,
   });
 
   @override

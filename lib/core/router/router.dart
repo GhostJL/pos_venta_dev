@@ -5,6 +5,8 @@ import 'package:posventa/domain/entities/user.dart';
 import 'package:posventa/presentation/pages/inventory/inventory_lot_detail_page.dart';
 import 'package:posventa/presentation/pages/inventory/inventory_lots_page.dart';
 import 'package:posventa/presentation/pages/settings/backup/backup_settings_page.dart';
+import 'package:posventa/core/constants/permission_constants.dart';
+import 'package:posventa/core/utils/role_permissions_helper.dart';
 
 import 'package:posventa/presentation/pages/shared/main_layout.dart';
 
@@ -632,6 +634,12 @@ final routerProvider = Provider<GoRouter>((ref) {
         if (isAdmin && onCashierPage) return '/';
         if (!isAdmin && onAdminPage) return '/home';
 
+        // Check if user has permission for the requested route
+        if (!_checkRouteAccess(location, authState.user!)) {
+          // Redirect to appropriate home if access denied
+          return targetHome;
+        }
+
         return null;
       }
 
@@ -643,6 +651,65 @@ final routerProvider = Provider<GoRouter>((ref) {
     },
   );
 });
+
+bool _checkRouteAccess(String location, User user) {
+  // 1. Get permissions for the user's role
+  final permissions = RolePermissionsHelper.getPermissionsForRole(user.role);
+
+  // 2. Define route -> permission mapping
+  // This could be moved to a static config if it grows large
+  if (location.startsWith('/users')) {
+    // Both /users-permissions and future /users routes
+    if (!permissions.contains(PermissionConstants.userManage)) return false;
+  }
+
+  if (location.startsWith('/settings')) {
+    // Basic settings access
+    if (!permissions.contains(PermissionConstants.settingsAccess)) return false;
+
+    // Sub-sections protection
+    if (location.contains('/hardware') || location.contains('/backup')) {
+      // Only Admin should manage hardware/backup (System Manage)
+      // Or explicitly check for SYSTEM_MANAGE if we added it
+      if (!permissions.contains(PermissionConstants.systemManage)) return false;
+    }
+  }
+
+  if (location.startsWith('/products') ||
+      location.startsWith('/inventory') ||
+      location.startsWith('/purchases') ||
+      location.startsWith('/suppliers') ||
+      location.startsWith('/departments') ||
+      location.startsWith('/categories') ||
+      location.startsWith('/brands') ||
+      location.startsWith('/warehouses') ||
+      location.startsWith('/tax-rates')) {
+    // Catalog/Inventory Management
+    // We can check for catalogManage or inventoryView depending on strictness
+    // For now, let's use catalogManage as a broad gatekeeper for configuration
+    // and inventoryView for inventory.
+
+    if (location.startsWith('/inventory')) {
+      if (!permissions.contains(PermissionConstants.inventoryView)) {
+        return false;
+      }
+    } else {
+      if (!permissions.contains(PermissionConstants.catalogManage)) {
+        return false;
+      }
+    }
+  }
+
+  if (location.startsWith('/reports')) {
+    if (!permissions.contains(PermissionConstants.reportsView)) return false;
+  }
+
+  if (location.startsWith('/customers')) {
+    if (!permissions.contains(PermissionConstants.customerManage)) return false;
+  }
+
+  return true;
+}
 
 class AppTransitionPage<T> extends CustomTransitionPage<T> {
   const AppTransitionPage({super.key, super.name, required super.child})

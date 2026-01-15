@@ -73,8 +73,8 @@ class MenuGroup {
 
 /// Centralized menu configuration for the application
 class MenuConfig {
-  /// Get the complete administrator menu
-  static List<MenuGroup> getAdministratorMenu({bool useInventory = true}) {
+  /// Get the complete menu (Admin & Manager)
+  static List<MenuGroup> getFullMenu({bool useInventory = true}) {
     return [
       // ═══════════════════════════════════════════════════════════
       // SECCIÓN 1: OPERACIONES DIARIAS (Más usado)
@@ -234,8 +234,9 @@ class MenuConfig {
       return getCashierMenu();
     }
 
-    // Administrators and other roles get grouped menu
-    return getAdministratorMenu(useInventory: useInventory);
+    // Administrators and Managers get the full grouped menu
+    // The visibility checks inside MenuItem/MenuGroup will hide what they can't see
+    return getFullMenu(useInventory: useInventory);
   }
 
   /// Check if the menu should use groups (true) or flat list (false)

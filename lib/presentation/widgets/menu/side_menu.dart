@@ -275,15 +275,31 @@ class _MinimalHeader extends StatelessWidget {
   }
 }
 
-class _SettingsItem extends StatelessWidget {
+class _SettingsItem extends ConsumerWidget {
   final User? user;
   final bool isCollapsed;
 
   const _SettingsItem({required this.user, required this.isCollapsed});
 
   @override
-  Widget build(BuildContext context) {
-    if (user?.role != UserRole.administrador) return const SizedBox.shrink();
+  Widget build(BuildContext context, WidgetRef ref) {
+    // Check if user has settings access (Admin or Manager)
+    final permissionsAsync = ref.watch(currentUserPermissionsProvider);
+    final permissions = permissionsAsync.asData?.value ?? [];
+
+    // Quick check: If admin, always show. If not, check permission.
+    // However, to supply 'permissions' here we need to read it from provider inside this widget or pass it down.
+    // _SettingsItem is a separate widget, so it needs to watch the provider if it's not passed.
+    // But it's stateless. Let's make it consumer or pass permissions.
+    // To minimize refactor, let's just use the role check for now as we defined in Helper:
+    // Admin has ALL, Manager has SETTINGS_ACCESS.
+    // If we want to be strict about "permission driven", we should check the permission.
+
+    // For now, simplify based on Role AND Permission existence concept
+    final allowSettings =
+        user?.role == UserRole.administrador || user?.role == UserRole.gerente;
+
+    if (!allowSettings) return const SizedBox.shrink();
 
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
