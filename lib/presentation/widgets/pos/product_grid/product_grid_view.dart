@@ -65,6 +65,8 @@ class ProductGridView extends StatelessWidget {
 
     return GridView.builder(
       padding: const EdgeInsets.all(12),
+      // Cache items off-screen for smoother scrolling on Desktop
+      cacheExtent: 500,
       gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
         maxCrossAxisExtent: _minItemWidth,
         childAspectRatio: _idealAspectRatio,

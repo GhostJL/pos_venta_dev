@@ -56,10 +56,19 @@ class _MenuItemWidgetState extends State<MenuItemWidget> {
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),
           curve: Curves.easeOut,
-          height: 56, // M3 Navigation Drawer item height standard is often 56
+          // height: 56, // Let it size itself
           decoration: ShapeDecoration(
             color: backgroundColor,
-            shape: const StadiumBorder(), // Pill shape
+            shape: StadiumBorder(
+              side: isSelected
+                  ? BorderSide(
+                      color: colorScheme.secondaryContainer.withValues(
+                        alpha: 0.5,
+                      ),
+                      width: 1,
+                    )
+                  : BorderSide.none,
+            ),
           ),
           child: Material(
             color: Colors.transparent,

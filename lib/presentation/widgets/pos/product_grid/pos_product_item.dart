@@ -8,7 +8,7 @@ import 'package:posventa/domain/entities/tax_rate.dart';
 import 'package:posventa/presentation/providers/pos_providers.dart';
 import 'package:posventa/presentation/providers/settings_provider.dart';
 
-class PosProductItem extends ConsumerWidget {
+class PosProductItem extends ConsumerStatefulWidget {
   final Product product;
   final ProductVariant? variant;
   final double quantityInCart;
@@ -25,14 +25,29 @@ class PosProductItem extends ConsumerWidget {
   });
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<PosProductItem> createState() => _PosProductItemState();
+}
+
+class _PosProductItemState extends ConsumerState<PosProductItem> {
+  bool _isHovering = false;
+
+  void _onEnter(PointerEvent details) {
+    setState(() => _isHovering = true);
+  }
+
+  void _onExit(PointerEvent details) {
+    setState(() => _isHovering = false);
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
     // Determine effective stock
-    final int stock = variant != null
-        ? (variant!.stock ?? 0).toInt()
-        : (product.stock ?? 0);
+    final int stock = widget.variant != null
+        ? (widget.variant!.stock ?? 0).toInt()
+        : (widget.product.stock ?? 0);
 
     // Calculate Gross Price
     // Global Settings
@@ -41,205 +56,250 @@ class PosProductItem extends ConsumerWidget {
     final useTax = settingsAsync.value?.useTax ?? true;
 
     // Calculate Gross Price
-    final double basePrice = variant != null ? variant!.price : product.price;
+    final double basePrice = widget.variant != null
+        ? widget.variant!.price
+        : widget.product.price;
     final Map<int, TaxRate> taxRates = ref.watch(taxRatesMapProvider);
 
     final double grossPrice = useTax
-        ? _calculateGrossPrice(basePrice, product.productTaxes, taxRates)
+        ? _calculateGrossPrice(basePrice, widget.product.productTaxes, taxRates)
         : basePrice;
 
-    final String displayName = product.name;
-    final String? variantName = variant?.description;
+    final String displayName = widget.product.name;
+    final String? variantName = widget.variant?.description;
 
     // Stock Color Logic
     Color stockColor;
     if (stock <= 0) {
       stockColor = colorScheme.error;
     } else if (stock < 10) {
-      stockColor = colorScheme.tertiary;
+      stockColor = colorScheme
+          .tertiary; // Cyan for low stock warning but keeping it cool
     } else {
       stockColor = colorScheme.primary;
     }
 
-    return Card(
-      elevation: 0,
-      color: colorScheme.surface,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(
-          color: quantityInCart > 0
-              ? colorScheme.primary
-              : colorScheme.outlineVariant,
-          width: quantityInCart > 0 ? 2 : 1,
-        ),
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: onTap,
-        onLongPress: onLongPress,
-        borderRadius: BorderRadius.circular(16),
-        child: Column(
-          children: [
-            // Image Area
-            Expanded(
-              flex: 3,
-              child: Container(
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  color: colorScheme.surfaceContainerHighest.withValues(
-                    alpha: 0.3,
-                  ),
-                  image:
-                      (variant?.photoUrl ?? product.photoUrl) != null &&
-                          (variant?.photoUrl ?? product.photoUrl)!.isNotEmpty
-                      ? DecorationImage(
-                          image: ResizeImage(
-                            (variant?.photoUrl ?? product.photoUrl)!.startsWith(
-                                  'http',
-                                )
-                                ? NetworkImage(
-                                    (variant?.photoUrl ?? product.photoUrl)!,
-                                  )
-                                : FileImage(
-                                        File(
-                                          (variant?.photoUrl ??
-                                              product.photoUrl)!,
-                                        ),
-                                      )
-                                      as ImageProvider,
-                            width: 300, // Optimize memory usage
-                          ),
-                          fit: BoxFit.cover,
-                        )
-                      : null,
-                ),
-                child:
-                    (variant?.photoUrl ?? product.photoUrl) == null ||
-                        (variant?.photoUrl ?? product.photoUrl)!.isEmpty
-                    ? Center(
-                        child: Icon(
-                          Icons.image_outlined,
-                          size: 48,
-                          color: colorScheme.onSurfaceVariant.withValues(
-                            alpha: 0.4,
-                          ),
-                        ),
-                      )
-                    : null,
-              ),
+    final double scale = _isHovering ? 1.02 : 1.0;
+    final double elevation = _isHovering ? 4.0 : 0.0;
+
+    return MouseRegion(
+      onEnter: _onEnter,
+      onExit: _onExit,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeOutCubic,
+        transform: Matrix4.diagonal3Values(scale, scale, 1.0),
+        child: Card(
+          elevation: elevation,
+          shadowColor: Colors.black.withValues(alpha: 0.2), // Softer shadow
+          color: colorScheme.surface,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+            side: BorderSide(
+              color: widget.quantityInCart > 0
+                  ? colorScheme.primary
+                  : (_isHovering
+                        ? colorScheme.primary.withValues(alpha: 0.5)
+                        : colorScheme.outlineVariant),
+              width: widget.quantityInCart > 0 ? 2 : 1,
             ),
-
-            // Content Area
-            Expanded(
-              flex: 5,
-              child: Padding(
-                padding: const EdgeInsets.all(12.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Stock Badge (Small & Top)
-                    if (useInventory) ...[
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 6,
-                          vertical: 2,
-                        ),
-                        decoration: BoxDecoration(
-                          color: stockColor.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                        child: Text(
-                          stock <= 0 ? 'Agotado' : '$stock Disp.',
-                          style: theme.textTheme.labelSmall?.copyWith(
-                            color: stockColor,
-                            fontSize: 10,
-                            fontWeight: FontWeight.bold,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: InkWell(
+            onTap: widget.onTap,
+            onLongPress: widget.onLongPress,
+            borderRadius: BorderRadius.circular(16),
+            child: Column(
+              children: [
+                // Image Area
+                Expanded(
+                  flex: 10, // Increased image ratio slightly
+                  child: Container(
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      color: colorScheme.surfaceContainerHighest.withValues(
+                        alpha: 0.3,
                       ),
-                      const SizedBox(height: 8),
-                    ],
-
-                    // Product Name
-                    Text(
-                      displayName,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: theme.textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.w600,
-                        height: 1.1,
-                      ),
-                    ),
-
-                    if (variantName != null && variantName.isNotEmpty) ...[
-                      const SizedBox(height: 2),
-                      Text(
-                        variantName,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: colorScheme.onSurfaceVariant,
-                          fontSize: 11,
-                        ),
-                      ),
-                    ],
-
-                    const Spacer(),
-
-                    // Price
-                    Text(
-                      '\$${grossPrice.toStringAsFixed(2)}',
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        color: colorScheme.primary,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-
-                    const SizedBox(height: 8),
-
-                    // Add Button / Cart Quantity
-                    SizedBox(
-                      width: double.infinity,
-                      height: 32,
-                      child: quantityInCart > 0
-                          ? FilledButton.tonal(
-                              onPressed: onTap,
-                              style: FilledButton.styleFrom(
-                                padding: EdgeInsets.zero,
-                                backgroundColor: colorScheme.primaryContainer,
-                                foregroundColor: colorScheme.onPrimaryContainer,
+                      image:
+                          (widget.variant?.photoUrl ??
+                                      widget.product.photoUrl) !=
+                                  null &&
+                              (widget.variant?.photoUrl ??
+                                      widget.product.photoUrl)!
+                                  .isNotEmpty
+                          ? DecorationImage(
+                              image: ResizeImage(
+                                (widget.variant?.photoUrl ??
+                                            widget.product.photoUrl)!
+                                        .startsWith('http')
+                                    ? NetworkImage(
+                                        (widget.variant?.photoUrl ??
+                                            widget.product.photoUrl)!,
+                                      )
+                                    : FileImage(
+                                            File(
+                                              (widget.variant?.photoUrl ??
+                                                  widget.product.photoUrl)!,
+                                            ),
+                                          )
+                                          as ImageProvider,
+                                width: 300, // Optimize memory usage
                               ),
-                              child: Text(
-                                '${quantityInCart.toInt()} en carrito',
-                                style: const TextStyle(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
+                              fit: BoxFit.cover,
                             )
-                          : FilledButton.icon(
-                              onPressed: onTap,
-                              style: FilledButton.styleFrom(
-                                padding: EdgeInsets.zero,
-                                backgroundColor:
-                                    colorScheme.surfaceContainerHigh,
-                                foregroundColor: colorScheme.onSurface,
-                                elevation: 0,
-                              ),
-                              icon: const Icon(Icons.add, size: 16),
-                              label: const Text(
-                                'Agregar',
-                                style: TextStyle(fontSize: 12),
+                          : null,
+                    ),
+                    child:
+                        (widget.variant?.photoUrl ?? widget.product.photoUrl) ==
+                                null ||
+                            (widget.variant?.photoUrl ??
+                                    widget.product.photoUrl)!
+                                .isEmpty
+                        ? Center(
+                            child: Icon(
+                              Icons.image_outlined,
+                              size: 48,
+                              color: colorScheme.onSurfaceVariant.withValues(
+                                alpha: 0.4,
                               ),
                             ),
-                    ),
-                  ],
+                          )
+                        : null,
+                  ),
                 ),
-              ),
+
+                // Content Area
+                Expanded(
+                  flex: 11, // Adjusted ratio
+                  child: Padding(
+                    padding: const EdgeInsets.all(12.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Stock Badge (Small & Top)
+                        if (useInventory) ...[
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 3,
+                            ),
+                            decoration: BoxDecoration(
+                              color: stockColor.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  stock <= 0
+                                      ? Icons.error_outline
+                                      : Icons.check_circle_outline,
+                                  size: 10,
+                                  color: stockColor,
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  stock <= 0 ? 'Agotado' : '$stock Disp.',
+                                  style: theme.textTheme.labelSmall?.copyWith(
+                                    color: stockColor,
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                        ],
+
+                        // Product Name
+                        Text(
+                          displayName,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.titleSmall?.copyWith(
+                            fontWeight: FontWeight.w600,
+                            height: 1.1,
+                            fontSize: 13, // Slightly adjusted for density
+                          ),
+                        ),
+
+                        if (variantName != null && variantName.isNotEmpty) ...[
+                          const SizedBox(height: 2),
+                          Text(
+                            variantName,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: colorScheme.onSurfaceVariant,
+                              fontSize: 11,
+                            ),
+                          ),
+                        ],
+
+                        const Spacer(),
+
+                        // Price
+                        Text(
+                          '\$${grossPrice.toStringAsFixed(2)}',
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            color: colorScheme.primary,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+
+                        const SizedBox(height: 8),
+
+                        // Add Button / Cart Quantity
+                        SizedBox(
+                          width: double.infinity,
+                          height: 32,
+                          child: widget.quantityInCart > 0
+                              ? FilledButton.tonal(
+                                  onPressed: widget.onTap,
+                                  style: FilledButton.styleFrom(
+                                    padding: EdgeInsets.zero,
+                                    backgroundColor:
+                                        colorScheme.primaryContainer,
+                                    foregroundColor:
+                                        colorScheme.onPrimaryContainer,
+                                  ),
+                                  child: Text(
+                                    '${widget.quantityInCart.toInt()} en carrito',
+                                    style: const TextStyle(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                )
+                              : FilledButton.icon(
+                                  onPressed: widget.onTap,
+                                  style: FilledButton.styleFrom(
+                                    padding: EdgeInsets.zero,
+                                    backgroundColor: _isHovering
+                                        ? colorScheme.primary
+                                        : colorScheme.surfaceContainerHigh,
+                                    foregroundColor: _isHovering
+                                        ? colorScheme.onPrimary
+                                        : colorScheme.onSurface,
+                                    elevation: 0,
+                                  ),
+                                  icon: const Icon(Icons.add, size: 16),
+                                  label: const Text(
+                                    'Agregar',
+                                    style: TextStyle(fontSize: 12),
+                                  ),
+                                ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );

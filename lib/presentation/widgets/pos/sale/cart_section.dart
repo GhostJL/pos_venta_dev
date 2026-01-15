@@ -31,6 +31,8 @@ class CartSection extends ConsumerWidget {
             child: cart.isEmpty
                 ? _buildEmptyState(context)
                 : ListView.separated(
+                    physics:
+                        const AlwaysScrollableScrollPhysics(), // Better for desktop
                     padding: const EdgeInsets.all(16),
                     itemCount: cart.length,
                     separatorBuilder: (context, index) =>
@@ -101,40 +103,37 @@ class CartSection extends ConsumerWidget {
   }
 
   Widget _buildEmptyState(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Container(
-            padding: const EdgeInsets.all(24),
+            padding: const EdgeInsets.all(32),
             decoration: BoxDecoration(
-              color: Theme.of(
-                context,
-              ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+              color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
               shape: BoxShape.circle,
             ),
             child: Icon(
               Icons.shopping_cart_outlined,
-              size: 48,
-              color: Theme.of(
-                context,
-              ).colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
+              size: 64,
+              color: colorScheme.onSurfaceVariant.withValues(alpha: 0.3),
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 24),
           Text(
             'El carrito está vacío',
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
+              color: colorScheme.onSurfaceVariant,
+              fontWeight: FontWeight.w600,
             ),
           ),
           const SizedBox(height: 8),
           Text(
-            'Agrega productos para comenzar',
+            'Escanea un producto o búscalo\npara comenzar la venta',
+            textAlign: TextAlign.center,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: Theme.of(
-                context,
-              ).colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
+              color: colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
             ),
           ),
         ],
