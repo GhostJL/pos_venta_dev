@@ -4,8 +4,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:posventa/core/utils/file_manager_service.dart';
 import 'package:posventa/domain/entities/customer.dart';
 import 'package:posventa/domain/entities/customer_payment.dart';
+import 'package:posventa/domain/entities/store.dart';
 import 'package:posventa/domain/services/printer_service.dart';
 import 'package:posventa/presentation/providers/auth_provider.dart';
+import 'package:posventa/presentation/providers/store_provider.dart'; // Import StoreProvider
 import 'package:posventa/presentation/providers/di/printer_di.dart';
 import 'package:posventa/presentation/providers/settings_provider.dart';
 import 'package:posventa/presentation/providers/customer_providers.dart';
@@ -36,6 +38,7 @@ class _CustomerPaymentDialogState extends ConsumerState<CustomerPaymentDialog> {
     PrinterService printerService,
     CustomerPayment payment,
     dynamic settings,
+    Store store,
   ) async {
     try {
       final pdfPath =
@@ -44,6 +47,7 @@ class _CustomerPaymentDialogState extends ConsumerState<CustomerPaymentDialog> {
       final savedPath = await printerService.savePdfPaymentReceipt(
         payment: payment,
         customer: widget.customer,
+        store: store,
         savePath: pdfPath,
       );
 
@@ -122,6 +126,18 @@ class _CustomerPaymentDialogState extends ConsumerState<CustomerPaymentDialog> {
         try {
           final printerService = ref.read(printerServiceProvider);
           final settings = await ref.read(settingsProvider.future);
+          final store = await ref.read(storeProvider.future); // Get Store
+
+          if (store == null) {
+            debugPrint(
+              'Store not found, cannot print receipt with store info.',
+            );
+            // Proceeding might fail if store is required, but let's assume methods require it.
+            // If store is null, we can't print standardized receipt.
+            // Throw or handle? For now, let's catch standard flow.
+            throw Exception('No se encontró información de la tienda');
+          }
+
           final printerName = settings.printerName;
           final enablePrinting = settings.enablePaymentPrinting;
 
@@ -179,6 +195,7 @@ class _CustomerPaymentDialogState extends ConsumerState<CustomerPaymentDialog> {
                     payment: paymentWithId,
                     customer: widget.customer,
                     printer: targetPrinter,
+                    store: store,
                   );
                 } catch (printError) {
                   debugPrint('Print error: $printError');
@@ -188,6 +205,7 @@ class _CustomerPaymentDialogState extends ConsumerState<CustomerPaymentDialog> {
                       printerService,
                       paymentWithId,
                       settings,
+                      store,
                     );
                   }
                 }
@@ -199,6 +217,7 @@ class _CustomerPaymentDialogState extends ConsumerState<CustomerPaymentDialog> {
                     payment: paymentWithId,
                     customer: widget.customer,
                     printer: targetPrinter,
+                    store: store,
                   );
                 } catch (printError) {
                   debugPrint('Print error: $printError');
@@ -211,6 +230,7 @@ class _CustomerPaymentDialogState extends ConsumerState<CustomerPaymentDialog> {
                     printerService,
                     paymentWithId,
                     settings,
+                    store,
                   );
                 }
               }
@@ -222,6 +242,7 @@ class _CustomerPaymentDialogState extends ConsumerState<CustomerPaymentDialog> {
                   printerService,
                   paymentWithId,
                   settings,
+                  store,
                 );
               }
             }
@@ -233,6 +254,7 @@ class _CustomerPaymentDialogState extends ConsumerState<CustomerPaymentDialog> {
                 printerService,
                 paymentWithId,
                 settings,
+                store,
               );
             }
           }

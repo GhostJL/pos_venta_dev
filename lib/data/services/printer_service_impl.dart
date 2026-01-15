@@ -7,6 +7,7 @@ import 'package:pdf/widgets.dart' as pw;
 import 'package:posventa/core/utils/file_manager_service.dart';
 import 'package:posventa/domain/entities/customer.dart';
 import 'package:posventa/domain/entities/customer_payment.dart';
+import 'package:posventa/domain/entities/store.dart';
 import 'package:posventa/domain/services/printer_service.dart';
 import 'package:posventa/features/sales/domain/models/ticket_data.dart';
 import 'package:posventa/features/sales/presentation/widgets/ticket_pdf_builder.dart';
@@ -258,10 +259,11 @@ class PrinterServiceImpl implements PrinterService {
   Future<void> printPaymentReceipt({
     required CustomerPayment payment,
     required Customer customer,
+    required Store store,
     Printer? printer,
   }) async {
     if (Platform.isAndroid) {
-      await _printAndroidPaymentReceipt(payment, customer, printer);
+      await _printAndroidPaymentReceipt(payment, customer, store, printer);
       return;
     }
 
@@ -275,10 +277,29 @@ class PrinterServiceImpl implements PrinterService {
             mainAxisSize: pw.MainAxisSize.min,
             children: [
               pw.Text(
+                store.name,
+                style: pw.TextStyle(
+                  fontWeight: pw.FontWeight.bold,
+                  fontSize: 18,
+                ),
+              ),
+              if (store.address != null && store.address!.isNotEmpty)
+                pw.Text(
+                  store.address!,
+                  style: const pw.TextStyle(fontSize: 10),
+                  textAlign: pw.TextAlign.center,
+                ),
+              if (store.phone != null && store.phone!.isNotEmpty)
+                pw.Text(
+                  'Tel: ${store.phone}',
+                  style: const pw.TextStyle(fontSize: 10),
+                ),
+              pw.SizedBox(height: 10),
+              pw.Text(
                 'COMPROBANTE DE PAGO',
                 style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
               ),
-              pw.SizedBox(height: 10),
+              pw.SizedBox(height: 5),
               pw.Text('Cliente: ${customer.fullName}'),
               pw.Text(
                 'Fecha: ${payment.paymentDate.toString().substring(0, 16)}',
@@ -295,6 +316,15 @@ class PrinterServiceImpl implements PrinterService {
               if (payment.reference != null && payment.reference!.isNotEmpty)
                 pw.Text('Ref: ${payment.reference}'),
               pw.Divider(),
+              if (store.receiptFooter != null &&
+                  store.receiptFooter!.isNotEmpty) ...[
+                pw.Text(
+                  store.receiptFooter!,
+                  textAlign: pw.TextAlign.center,
+                  style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+                ),
+                pw.SizedBox(height: 5),
+              ],
               pw.Text('¡Gracias por su pago!'),
             ],
           );
@@ -319,6 +349,7 @@ class PrinterServiceImpl implements PrinterService {
   Future<void> _printAndroidPaymentReceipt(
     CustomerPayment payment,
     Customer customer,
+    Store store,
     Printer? printer,
   ) async {
     if (printer != null && (await _bluetooth.isConnected) != true) {
@@ -333,15 +364,36 @@ class PrinterServiceImpl implements PrinterService {
     final generator = Generator(PaperSize.mm80, profile);
     List<int> bytes = [];
 
-    // Header
+    // Store Header
     bytes += generator.text(
-      'COMPROBANTE DE PAGO',
+      store.name,
       styles: const PosStyles(
         align: PosAlign.center,
         height: PosTextSize.size2,
         width: PosTextSize.size2,
         bold: true,
       ),
+    );
+    bytes += generator.feed(1);
+
+    if (store.address != null && store.address!.isNotEmpty) {
+      bytes += generator.text(
+        store.address!,
+        styles: const PosStyles(align: PosAlign.center),
+      );
+    }
+    if (store.phone != null && store.phone!.isNotEmpty) {
+      bytes += generator.text(
+        'Tel: ${store.phone}',
+        styles: const PosStyles(align: PosAlign.center),
+      );
+    }
+    bytes += generator.feed(1);
+
+    // Title
+    bytes += generator.text(
+      'COMPROBANTE DE PAGO',
+      styles: const PosStyles(align: PosAlign.center, bold: true),
     );
     bytes += generator.feed(1);
 
@@ -374,10 +426,19 @@ class PrinterServiceImpl implements PrinterService {
     }
 
     bytes += generator.feed(2);
+
+    // Footer
+    if (store.receiptFooter != null && store.receiptFooter!.isNotEmpty) {
+      bytes += generator.text(
+        store.receiptFooter!,
+        styles: const PosStyles(align: PosAlign.center, bold: true),
+      );
+    }
     bytes += generator.text(
       '¡Gracias por su pago!',
-      styles: const PosStyles(align: PosAlign.center, bold: true),
+      styles: const PosStyles(align: PosAlign.center),
     );
+
     bytes += generator.feed(3);
     bytes += generator.cut();
 
@@ -414,6 +475,7 @@ class PrinterServiceImpl implements PrinterService {
   Future<String> savePdfPaymentReceipt({
     required CustomerPayment payment,
     required Customer customer,
+    required Store store,
     required String savePath,
   }) async {
     // Generate organized path with year/month subdirectories
@@ -440,6 +502,25 @@ class PrinterServiceImpl implements PrinterService {
             mainAxisSize: pw.MainAxisSize.min,
             children: [
               pw.Text(
+                store.name,
+                style: pw.TextStyle(
+                  fontWeight: pw.FontWeight.bold,
+                  fontSize: 18,
+                ),
+              ),
+              if (store.address != null && store.address!.isNotEmpty)
+                pw.Text(
+                  store.address!,
+                  style: const pw.TextStyle(fontSize: 10),
+                  textAlign: pw.TextAlign.center,
+                ),
+              if (store.phone != null && store.phone!.isNotEmpty)
+                pw.Text(
+                  'Tel: ${store.phone}',
+                  style: const pw.TextStyle(fontSize: 10),
+                ),
+              pw.SizedBox(height: 10),
+              pw.Text(
                 'COMPROBANTE DE PAGO',
                 style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
               ),
@@ -460,6 +541,15 @@ class PrinterServiceImpl implements PrinterService {
               if (payment.reference != null && payment.reference!.isNotEmpty)
                 pw.Text('Ref: ${payment.reference}'),
               pw.Divider(),
+              if (store.receiptFooter != null &&
+                  store.receiptFooter!.isNotEmpty) ...[
+                pw.Text(
+                  store.receiptFooter!,
+                  textAlign: pw.TextAlign.center,
+                  style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+                ),
+                pw.SizedBox(height: 5),
+              ],
               pw.Text('¡Gracias por su pago!'),
             ],
           );

@@ -8,6 +8,7 @@ import 'package:posventa/core/utils/file_manager_service.dart';
 import 'package:posventa/domain/services/printer_service.dart';
 import 'package:posventa/features/sales/domain/models/ticket_data.dart';
 import 'package:posventa/presentation/providers/pos_providers.dart';
+import 'package:posventa/presentation/providers/store_provider.dart';
 import 'package:posventa/presentation/providers/settings_provider.dart';
 import 'package:printing/printing.dart';
 import 'package:posventa/presentation/widgets/pos/payment/widgets/numeric_keypad.dart';
@@ -195,14 +196,17 @@ class _PaymentPageState extends ConsumerState<PaymentPage> {
 
           // Get saved printer and settings
           final settings = await ref.read(settingsProvider.future);
+          final store = await ref.read(storeProvider.future); // Get Store
           final printerName = settings.printerName;
           final enablePrinting = settings.enableSalesPrinting;
 
           final ticketData = TicketData(
             sale: sale,
             items: sale.items,
-            storeName: 'Mi Tienda POS',
-            storeAddress: 'Ubicación General',
+            storeName: store?.name ?? 'Mi Tienda POS',
+            storeAddress: store?.address ?? '',
+            storePhone: store?.phone ?? '',
+            footerMessage: store?.receiptFooter ?? '¡Gracias por su compra!',
           );
 
           try {

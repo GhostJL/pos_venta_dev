@@ -1,7 +1,13 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:posventa/core/utils/file_manager_service.dart';
 import 'package:posventa/domain/entities/sale.dart';
+import 'package:posventa/features/sales/domain/models/ticket_data.dart';
 import 'package:posventa/presentation/providers/providers.dart';
+import 'package:posventa/presentation/providers/di/printer_di.dart'; // import printerServiceProvider
+import 'package:posventa/presentation/providers/settings_provider.dart';
+import 'package:posventa/presentation/providers/store_provider.dart';
 import 'package:posventa/presentation/widgets/sales/detail/sale_action_buttons.dart';
 import 'package:posventa/presentation/widgets/sales/detail/sale_header_card.dart';
 import 'package:posventa/presentation/widgets/sales/detail/sale_payments_list.dart';
@@ -30,12 +36,14 @@ class SaleDetailPage extends ConsumerWidget {
         actions: [
           IconButton(
             icon: const Icon(Icons.print_outlined, size: 22),
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Función de impresión próximamente'),
-                ),
+            onPressed: () async {
+              // Get Sale from current state if available (it should be since we are in detail)
+              final saleState = await ref.read(
+                saleDetailStreamProvider(saleId).future,
               );
+              if (saleState == null || !context.mounted) return;
+
+              _printTicket(context, ref, saleState);
             },
             tooltip: 'Imprimir Ticket',
           ),
@@ -218,5 +226,111 @@ class SaleDetailPage extends ConsumerWidget {
         }
       },
     );
+  }
+
+  Future<void> _printTicket(
+    BuildContext context,
+    WidgetRef ref,
+    Sale sale,
+  ) async {
+    try {
+      final printerService = ref.read(printerServiceProvider);
+      final settings = await ref.read(settingsProvider.future);
+      final store = await ref.read(storeProvider.future);
+
+      final printerName = settings.printerName;
+
+      final ticketData = TicketData(
+        sale: sale,
+        items: sale.items,
+        storeName: store?.name ?? 'Mi Tienda POS',
+        storeAddress: store?.address ?? '',
+        storePhone: store?.phone ?? '',
+        footerMessage: store?.receiptFooter ?? '¡Gracias por su compra!',
+      );
+
+      bool printed = false;
+
+      if (printerName != null) {
+        try {
+          final printers = await printerService.getPrinters();
+          final targetPrinter = printers
+              .where((p) => p.name == printerName)
+              .firstOrNull;
+
+          if (targetPrinter != null) {
+            final lowerName = targetPrinter.name.toLowerCase();
+            final isPdfPrinter =
+                lowerName.contains('pdf') ||
+                lowerName.contains('microsoft print to pdf') ||
+                lowerName.contains('adobe pdf') ||
+                lowerName.contains('foxit') ||
+                lowerName.contains('cutepdf') ||
+                lowerName.contains('novapdf');
+
+            if (!isPdfPrinter) {
+              if (Platform.isAndroid) {
+                await printerService.printTicket(
+                  ticketData,
+                  printer: targetPrinter,
+                );
+              } else {
+                await printerService.printTicket(
+                  ticketData,
+                  printer: targetPrinter,
+                );
+              }
+              printed = true;
+            }
+          }
+        } catch (e) {
+          debugPrint('Print error: $e');
+        }
+      }
+
+      if (!printed) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(const SnackBar(content: Text('Guardando PDF...')));
+        }
+
+        final pdfPath =
+            settings.pdfSavePath ??
+            await FileManagerService.getDefaultPdfSavePath();
+        final savedPath = await printerService.savePdfTicket(
+          ticketData,
+          pdfPath,
+        );
+
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Ticket guardado como PDF en: $savedPath'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        }
+      } else {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Ticket enviado a imprimir'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      debugPrint('Error in reprint: $e');
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error al imprimir: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 }
