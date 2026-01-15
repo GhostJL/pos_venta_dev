@@ -9,11 +9,13 @@ import 'package:posventa/presentation/providers/menu_state_provider.dart';
 class MenuGroupWidget extends ConsumerStatefulWidget {
   final MenuGroup menuGroup;
   final String currentPath;
+  final bool isCollapsed;
 
   const MenuGroupWidget({
     super.key,
     required this.menuGroup,
     required this.currentPath,
+    this.isCollapsed = false,
   });
 
   @override
@@ -34,6 +36,7 @@ class _MenuGroupWidgetState extends ConsumerState<MenuGroupWidget>
       vsync: this,
     );
 
+    // Initial state setup
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
 
@@ -54,17 +57,7 @@ class _MenuGroupWidgetState extends ConsumerState<MenuGroupWidget>
   @override
   void didUpdateWidget(covariant MenuGroupWidget oldWidget) {
     super.didUpdateWidget(oldWidget);
-
-    if (oldWidget.currentPath != widget.currentPath) {
-      if (_hasSelectedItem() && !_isCurrentlyExpanded()) {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (!mounted) return;
-          ref
-              .read(menuStateProvider.notifier)
-              .setExpandedGroup(widget.menuGroup.id);
-        });
-      }
-    }
+    // Removed auto-expansion logic on update to respect user's manual toggle state
   }
 
   @override
@@ -77,10 +70,6 @@ class _MenuGroupWidgetState extends ConsumerState<MenuGroupWidget>
     return widget.menuGroup.items.any(
       (item) => widget.currentPath.startsWith(item.route),
     );
-  }
-
-  bool _isCurrentlyExpanded() {
-    return ref.read(menuStateProvider).expandedGroupId == widget.menuGroup.id;
   }
 
   void _updateAnimation(bool isExpanded) {
@@ -115,12 +104,33 @@ class _MenuGroupWidgetState extends ConsumerState<MenuGroupWidget>
       ),
     );
 
-    // Use active state for styling if it's a direct link
     final isActive = isRouteActive || isExpanded;
 
     _updateAnimation(isExpanded);
 
-    // M3 Colors for Group Header
+    // If collapsed, we just show the items and maybe a divider interaction
+    if (widget.isCollapsed) {
+      return Column(
+        children: [
+          // Optional: Show a subtle divider or spacing if grouped
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+            child: Divider(height: 1),
+          ),
+
+          ...widget.menuGroup.items.map(
+            (item) => MenuItemWidget(
+              menuItem: item,
+              currentPath: widget.currentPath,
+              isCollapsed: true,
+            ),
+          ),
+        ],
+      );
+    }
+
+    // NORMAL EXPANDED BEHAVIOR
+
     final headerColor = isActive
         ? colorScheme.surfaceContainerHighest.withValues(
             alpha: 0.5,
@@ -138,9 +148,7 @@ class _MenuGroupWidgetState extends ConsumerState<MenuGroupWidget>
         : colorScheme.onSurfaceVariant;
 
     return Padding(
-      padding: const EdgeInsets.symmetric(
-        vertical: 4,
-      ), // Consistent vertical spacing
+      padding: const EdgeInsets.symmetric(vertical: 4),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -158,7 +166,9 @@ class _MenuGroupWidgetState extends ConsumerState<MenuGroupWidget>
                 height: 56, // Match MenuItem height
                 decoration: ShapeDecoration(
                   color: headerColor,
-                  shape: const StadiumBorder(),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
                 child: Material(
                   color: Colors.transparent,
@@ -172,12 +182,12 @@ class _MenuGroupWidgetState extends ConsumerState<MenuGroupWidget>
                             .toggleGroup(widget.menuGroup.id);
                       }
                     },
-                    customBorder: const StadiumBorder(),
+                    borderRadius: BorderRadius.circular(12),
                     splashColor: colorScheme.onSurface.withValues(alpha: 0.1),
                     child: Padding(
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 24,
-                      ), // Match MenuItem padding
+                        horizontal: 16,
+                      ), // Adjusted padding to match Item
                       child: Row(
                         children: [
                           if (widget.menuGroup.groupIcon != null) ...[
@@ -192,7 +202,6 @@ class _MenuGroupWidgetState extends ConsumerState<MenuGroupWidget>
                             child: Text(
                               widget.menuGroup.title,
                               style: textTheme.labelLarge?.copyWith(
-                                // Use labelLarge like items
                                 color: headerTextColor,
                                 fontWeight: isActive
                                     ? FontWeight.bold
@@ -217,31 +226,19 @@ class _MenuGroupWidgetState extends ConsumerState<MenuGroupWidget>
               ),
             ),
           ),
-          // Items del grupo (sin línea, solo indentación)
+          // Items del grupo (EXPANDED)
           AnimatedCrossFade(
             firstChild: const SizedBox(width: double.infinity, height: 0),
             secondChild: Padding(
-              padding: const EdgeInsets.only(
-                top: 2,
-              ), // Small gap between header and children
+              padding: const EdgeInsets.only(top: 2),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: widget.menuGroup.items
                     .map(
-                      (item) => Padding(
-                        padding: const EdgeInsets.only(
-                          left: 0,
-                        ), // Flat list look, indentation handled by item itself being generic? No, keeping distinct list.
-                        // Ideally strictly following M3 drawer groups, items are just items.
-                        // But here we want indentation to show hierarchy.
-                        // Let's add left padding to the wrapper of MenuItemWidget?
-                        // Or just render them.
-                        // Actually, M3 guidelines often show nested items with same left alignment but maybe different icon or text style?
-                        // Usually indenting the whole item is common.
-                        child: MenuItemWidget(
-                          menuItem: item,
-                          currentPath: widget.currentPath,
-                        ),
+                      (item) => MenuItemWidget(
+                        menuItem: item,
+                        currentPath: widget.currentPath,
+                        isCollapsed: false, // Explicitly false
                       ),
                     )
                     .toList(),

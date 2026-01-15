@@ -7,12 +7,14 @@ class MenuItemWidget extends StatefulWidget {
   final MenuItem menuItem;
   final String currentPath;
   final VoidCallback? onTap;
+  final bool isCollapsed;
 
   const MenuItemWidget({
     super.key,
     required this.menuItem,
     required this.currentPath,
     this.onTap,
+    this.isCollapsed = false,
   });
 
   @override
@@ -20,132 +22,127 @@ class MenuItemWidget extends StatefulWidget {
 }
 
 class _MenuItemWidgetState extends State<MenuItemWidget> {
-  bool _isHovered = false;
-
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
-    final currentPath = GoRouterState.of(context).uri.toString();
-    final isSelected = currentPath == widget.menuItem.route;
+    final currentUri = GoRouterState.of(context).uri;
+    final String currentPath = currentUri.path;
+    final String route = widget.menuItem.route;
 
-    // Material 3 State Colors
-    final backgroundColor = isSelected
-        ? colorScheme.secondaryContainer
-        : _isHovered
-        ? colorScheme.onSurface.withValues(alpha: 0.08)
-        : Colors.transparent;
+    bool isSelected;
+    // Strict match for root/home to prevent matching everything
+    if (route == '/' || route == '/home') {
+      isSelected = currentPath == route;
+    } else {
+      // Prefix matching for other routes (e.g. /products matches /products/form)
+      isSelected = currentPath == route;
+      if (!isSelected && currentPath.startsWith(route)) {
+        // Check boundary to ensure exact path segment match
+        if (route.endsWith('/') ||
+            (currentPath.length > route.length &&
+                currentPath[route.length] == '/')) {
+          isSelected = true;
+        }
+      }
+    }
 
-    final foregroundColor = isSelected
-        ? colorScheme.onSecondaryContainer
-        : colorScheme.onSurfaceVariant;
-
-    final iconColor = isSelected
-        ? colorScheme.onSecondaryContainer
-        : colorScheme.onSurfaceVariant;
+    // Material 3 Styling
+    final selectedColor = colorScheme.primaryContainer;
+    final unselectedColor = Colors.transparent;
+    final selectedOnColor = colorScheme.onPrimaryContainer;
+    final unselectedOnColor = colorScheme.onSurfaceVariant;
 
     return Padding(
-      padding: const EdgeInsets.symmetric(
-        horizontal: 12,
-        vertical: 4,
-      ), // Increased vertical spacing slightly
-      child: MouseRegion(
-        onEnter: (_) => setState(() => _isHovered = true),
-        onExit: (_) => setState(() => _isHovered = false),
-        cursor: SystemMouseCursors.click,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          curve: Curves.easeOut,
-          // height: 56, // Let it size itself
-          decoration: ShapeDecoration(
-            color: backgroundColor,
-            shape: StadiumBorder(
-              side: isSelected
-                  ? BorderSide(
-                      color: colorScheme.secondaryContainer.withValues(
-                        alpha: 0.5,
-                      ),
-                      width: 1,
-                    )
-                  : BorderSide.none,
-            ),
-          ),
-          child: Material(
-            color: Colors.transparent,
-            child: InkWell(
-              onTap: () => _handleTap(context),
-              customBorder: const StadiumBorder(),
-              splashColor: colorScheme.onSurface.withValues(alpha: 0.1),
-              highlightColor: Colors.transparent,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 24,
-                ), // Increased horizontal padding
-                child: Row(
-                  children: [
-                    // Icono
-                    Icon(widget.menuItem.icon, size: 24, color: iconColor),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+      child: Tooltip(
+        message: widget.isCollapsed ? widget.menuItem.title : '',
+        waitDuration: const Duration(milliseconds: 500),
+        child: Material(
+          color: isSelected ? selectedColor : unselectedColor,
+          borderRadius: BorderRadius.circular(12),
+          child: InkWell(
+            onTap: () {
+              if (widget.onTap != null) {
+                widget.onTap!();
+              } else {
+                context.go(route);
+                final scaffold = Scaffold.maybeOf(context);
+                if (scaffold?.isDrawerOpen ?? false) {
+                  scaffold!.closeDrawer();
+                }
+              }
+            },
+            borderRadius: BorderRadius.circular(12),
+            hoverColor: colorScheme.onSurface.withValues(alpha: 0.08),
+            splashColor: colorScheme.primary.withValues(alpha: 0.12),
+            child: Container(
+              height: 50, // Standard height for touch targets
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              alignment: Alignment.centerLeft,
+              child: Row(
+                mainAxisAlignment: widget.isCollapsed
+                    ? MainAxisAlignment.center
+                    : MainAxisAlignment.start,
+                children: [
+                  // Icon
+                  Icon(
+                    widget.menuItem.icon,
+                    color: isSelected ? selectedOnColor : unselectedOnColor,
+                    size: 22,
+                  ),
+
+                  // Text
+                  if (!widget.isCollapsed) ...[
                     const SizedBox(width: 12),
-                    // Texto
                     Expanded(
                       child: Text(
                         widget.menuItem.title,
                         style: textTheme.labelLarge?.copyWith(
-                          color: foregroundColor,
+                          color: isSelected
+                              ? selectedOnColor
+                              : unselectedOnColor,
                           fontWeight: isSelected
-                              ? FontWeight.bold
+                              ? FontWeight.w700
                               : FontWeight.w500,
-                          letterSpacing: 0.5,
+                          fontSize: 14,
                         ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
-                    // Badge si existe
+
+                    // Badge (if any)
                     if (widget.menuItem.badgeCount != null &&
                         widget.menuItem.badgeCount! > 0)
-                      _buildBadge(colorScheme),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 2,
+                        ),
+                        decoration: BoxDecoration(
+                          color: isSelected
+                              ? colorScheme.primary
+                              : colorScheme.error,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          '${widget.menuItem.badgeCount}',
+                          style: textTheme.labelSmall?.copyWith(
+                            color: isSelected
+                                ? colorScheme.onPrimary
+                                : colorScheme.onError,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
                   ],
-                ),
+                ],
               ),
             ),
           ),
         ),
       ),
     );
-  }
-
-  Widget _buildBadge(ColorScheme colorScheme) {
-    return Container(
-      constraints: const BoxConstraints(minWidth: 20, minHeight: 20),
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-      decoration: BoxDecoration(
-        color: colorScheme.error,
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: Center(
-        child: Text(
-          widget.menuItem.badgeCount! > 99
-              ? '99+'
-              : '${widget.menuItem.badgeCount}',
-          style: TextStyle(
-            color: colorScheme.onError,
-            fontSize: 11,
-            fontWeight: FontWeight.w600,
-            height: 1,
-          ),
-        ),
-      ),
-    );
-  }
-
-  void _handleTap(BuildContext context) {
-    if (widget.onTap != null) {
-      widget.onTap!();
-    } else {
-      context.go(widget.menuItem.route);
-      final scaffold = Scaffold.maybeOf(context);
-      if (scaffold?.isDrawerOpen ?? false) {
-        scaffold!.closeDrawer();
-      }
-    }
   }
 }

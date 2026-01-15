@@ -102,9 +102,11 @@ class MainLayoutState extends ConsumerState<MainLayout> {
                     duration: const Duration(milliseconds: 200),
                     curve: Curves.easeInOut,
                     width: _isMenuExpanded ? 280 : 80,
-                    child: SideMenu(
-                      isRail: !_isMenuExpanded,
-                      onToggle: _toggleMenu,
+                    child: ClipRect(
+                      child: SideMenu(
+                        isCollapsed: !_isMenuExpanded,
+                        onToggle: _toggleMenu,
+                      ),
                     ),
                   ),
                   const VerticalDivider(thickness: 1, width: 1),
@@ -128,9 +130,8 @@ class MainLayoutState extends ConsumerState<MainLayout> {
               child: Scaffold(
                 key: _scaffoldKey,
                 drawer: SideMenu(
-                  isRail: false,
+                  isCollapsed: false,
                   onToggle: () {
-                    // Cierra el drawer en móvil si se usa el botón de toggle dentro del menú (opcional)
                     if (_scaffoldKey.currentState?.isDrawerOpen ?? false) {
                       _scaffoldKey.currentState?.closeDrawer();
                     }
