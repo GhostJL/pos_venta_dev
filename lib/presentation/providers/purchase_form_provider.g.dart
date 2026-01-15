@@ -42,7 +42,7 @@ final class PurchaseFormNotifierProvider
 }
 
 String _$purchaseFormNotifierHash() =>
-    r'7a8a46398c75edf4da1a386421c50641bc687eb1';
+    r'905ec0d1bb25c03a72661f88cf35e622e6db3359';
 
 abstract class _$PurchaseFormNotifier extends $Notifier<PurchaseFormState> {
   PurchaseFormState build();

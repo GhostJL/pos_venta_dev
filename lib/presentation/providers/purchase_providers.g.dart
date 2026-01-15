@@ -20,7 +20,7 @@ final class PurchaseNotifierProvider
         argument: null,
         retry: null,
         name: r'purchaseProvider',
-        isAutoDispose: true,
+        isAutoDispose: false,
         dependencies: null,
         $allTransitiveDependencies: null,
       );
@@ -33,7 +33,7 @@ final class PurchaseNotifierProvider
   PurchaseNotifier create() => PurchaseNotifier();
 }
 
-String _$purchaseNotifierHash() => r'bf1da39c516a478e965ad1ced4493b37dca9b79c';
+String _$purchaseNotifierHash() => r'86b69c8578edbf481f4b1554343c3f9e01a7eb07';
 
 abstract class _$PurchaseNotifier extends $AsyncNotifier<List<Purchase>> {
   FutureOr<List<Purchase>> build();

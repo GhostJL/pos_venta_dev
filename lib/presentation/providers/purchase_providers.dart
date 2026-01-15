@@ -8,7 +8,7 @@ import 'package:posventa/presentation/providers/product_provider.dart';
 
 part 'purchase_providers.g.dart';
 
-@riverpod
+@Riverpod(keepAlive: true)
 class PurchaseNotifier extends _$PurchaseNotifier {
   @override
   Future<List<Purchase>> build() async {

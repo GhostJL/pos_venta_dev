@@ -390,7 +390,10 @@ class PurchaseRepositoryImpl implements PurchaseRepository {
             await (db.select(db.inventory)..where(
                   (t) =>
                       t.productId.equals(mov.productId) &
-                      t.warehouseId.equals(mov.warehouseId),
+                      t.warehouseId.equals(mov.warehouseId) &
+                      (mov.variantId != null
+                          ? t.variantId.equals(mov.variantId!)
+                          : t.variantId.isNull()),
                 ))
                 .getSingleOrNull();
 

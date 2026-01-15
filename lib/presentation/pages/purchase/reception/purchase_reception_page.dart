@@ -45,6 +45,7 @@ class _ReceptionItemState {
 }
 
 class _PurchaseReceptionPageState extends ConsumerState<PurchaseReceptionPage> {
+  final _formKey = GlobalKey<FormState>();
   final Map<int, _ReceptionItemState> _itemStates = {};
   bool _isInitialized = false;
 
@@ -118,6 +119,16 @@ class _PurchaseReceptionPageState extends ConsumerState<PurchaseReceptionPage> {
   }
 
   Future<void> _confirmReception(Purchase purchase) async {
+    if (!_formKey.currentState!.validate()) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Por favor, corrija los errores en el formulario'),
+          backgroundColor: AppTheme.alertCritical,
+        ),
+      );
+      return;
+    }
+
     // 1. Collect items to receive
     final List<PurchaseReceptionItem> itemsToReceive = [];
     _itemStates.forEach((itemId, state) {
@@ -230,86 +241,90 @@ class _PurchaseReceptionPageState extends ConsumerState<PurchaseReceptionPage> {
                     // final products = state.products; // Removed
                     final productMap = {for (var p in products) p.id!: p};
 
-                    return ListView(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      children: [
-                        // Scrollable Header
-                        Padding(
-                          padding: const EdgeInsets.only(top: 8, bottom: 24),
-                          child: Column(
-                            key: const ValueKey('reception_header'),
-                            children: [
-                              ReceptionSummaryCard(
-                                totalOrdered: totalOrdered,
-                                totalReceived: totalReceived,
-                                totalPending: totalPending,
-                              ),
-                              const SizedBox(height: 16),
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.end,
-                                children: [
-                                  TextButton.icon(
-                                    onPressed: _clearAll,
-                                    icon: const Icon(Icons.refresh),
-                                    label: const Text('Reiniciar'),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  FilledButton.tonalIcon(
-                                    onPressed: () => _receiveAll(purchase),
-                                    icon: const Icon(Icons.done_all),
-                                    label: const Text('Recibir Todo'),
-                                  ),
-                                ],
-                              ),
-                            ],
+                    return Form(
+                      key: _formKey,
+                      child: ListView(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        children: [
+                          // Scrollable Header
+                          Padding(
+                            padding: const EdgeInsets.only(top: 8, bottom: 24),
+                            child: Column(
+                              key: const ValueKey('reception_header'),
+                              children: [
+                                ReceptionSummaryCard(
+                                  totalOrdered: totalOrdered,
+                                  totalReceived: totalReceived,
+                                  totalPending: totalPending,
+                                ),
+                                const SizedBox(height: 16),
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.end,
+                                  children: [
+                                    TextButton.icon(
+                                      onPressed: _clearAll,
+                                      icon: const Icon(Icons.refresh),
+                                      label: const Text('Reiniciar'),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    FilledButton.tonalIcon(
+                                      onPressed: () => _receiveAll(purchase),
+                                      icon: const Icon(Icons.done_all),
+                                      label: const Text('Recibir Todo'),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
                           ),
-                        ),
 
-                        // Actual Items
-                        ...purchase.items.map((item) {
-                          final remaining =
-                              item.quantity - item.quantityReceived;
-                          final id = item.id;
-                          final product = productMap[item.productId];
-                          final variant = product?.variants
-                              ?.where((v) => v.id == item.variantId)
-                              .firstOrNull;
+                          // Actual Items
+                          ...purchase.items.map((item) {
+                            final remaining =
+                                item.quantity - item.quantityReceived;
+                            final id = item.id;
+                            final product = productMap[item.productId];
+                            final variant = product?.variants
+                                ?.where((v) => v.id == item.variantId)
+                                .firstOrNull;
 
-                          if (remaining <= 0) {
+                            if (remaining <= 0) {
+                              return Padding(
+                                padding: const EdgeInsets.only(bottom: 12),
+                                child: _CompletedItemCard(item: item),
+                              );
+                            }
+
+                            final state = _itemStates[id];
+                            if (state == null) return const SizedBox.shrink();
+
                             return Padding(
                               padding: const EdgeInsets.only(bottom: 12),
-                              child: _CompletedItemCard(item: item),
+                              child: ReceptionItemCard(
+                                item: item,
+                                product: product,
+                                variant: variant,
+                                quantityController: state.quantityController,
+                                lotController: state.lotController,
+                                expirationController:
+                                    state.expirationController,
+                                onQuantityChanged: (qty) {
+                                  setState(() {
+                                    if (qty >= 0 && qty <= remaining) {
+                                      state.quantity = qty;
+                                    }
+                                  });
+                                },
+                                onExpirationTap: () =>
+                                    _selectDate(context, state),
+                              ),
                             );
-                          }
+                          }),
 
-                          final state = _itemStates[id];
-                          if (state == null) return const SizedBox.shrink();
-
-                          return Padding(
-                            padding: const EdgeInsets.only(bottom: 12),
-                            child: ReceptionItemCard(
-                              item: item,
-                              product: product,
-                              variant: variant,
-                              quantityController: state.quantityController,
-                              lotController: state.lotController,
-                              expirationController: state.expirationController,
-                              onQuantityChanged: (qty) {
-                                setState(() {
-                                  if (qty >= 0 && qty <= remaining) {
-                                    state.quantity = qty;
-                                  }
-                                });
-                              },
-                              onExpirationTap: () =>
-                                  _selectDate(context, state),
-                            ),
-                          );
-                        }),
-
-                        // Extra space for bottom bar
-                        const SizedBox(height: 16),
-                      ],
+                          // Extra space for bottom bar
+                          const SizedBox(height: 16),
+                        ],
+                      ),
                     );
                   },
                 ),

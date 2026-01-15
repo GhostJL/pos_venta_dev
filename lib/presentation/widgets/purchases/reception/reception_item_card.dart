@@ -197,7 +197,7 @@ class ReceptionItemCard extends StatelessWidget {
                   runSpacing: 12,
                   children: [
                     // Cantidad
-                    TextField(
+                    TextFormField(
                       controller: quantityController,
                       keyboardType: const TextInputType.numberWithOptions(
                         decimal: true,
@@ -219,6 +219,22 @@ class ReceptionItemCard extends StatelessWidget {
                         fontSize: 14,
                         fontWeight: FontWeight.bold,
                       ),
+                      validator: (value) {
+                        if (value == null || value.trim().isEmpty) {
+                          return 'Requerido';
+                        }
+                        final qty = double.tryParse(value);
+                        if (qty == null) {
+                          return 'Inválido';
+                        }
+                        if (qty < 0) {
+                          return 'Mín 0';
+                        }
+                        if (qty > remaining) {
+                          return 'Máx ${remaining.toStringAsFixed(2)}';
+                        }
+                        return null;
+                      },
                       onChanged: (value) {
                         final qty = double.tryParse(value) ?? 0;
                         onQuantityChanged(qty);

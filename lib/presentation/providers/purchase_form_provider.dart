@@ -184,6 +184,7 @@ class PurchaseFormNotifier extends _$PurchaseFormNotifier {
       return false;
     }
 
+    final keepAliveLink = ref.keepAlive();
     state = state.copyWith(isLoading: true, error: null);
 
     final purchase = Purchase(
@@ -206,9 +207,11 @@ class PurchaseFormNotifier extends _$PurchaseFormNotifier {
     try {
       await ref.read(purchaseProvider.notifier).addPurchase(purchase);
       state = state.copyWith(isLoading: false);
+      keepAliveLink.close();
       return true;
     } catch (e) {
       state = state.copyWith(isLoading: false, error: 'Error al guardar: $e');
+      keepAliveLink.close();
       return false;
     }
   }
