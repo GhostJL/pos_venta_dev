@@ -54,10 +54,10 @@ El proyecto presenta una **inconsistencia arquitectónica mayor** al mezclar dos
 | Módulo | Estado | Observaciones |
 | :--- | :--- | :--- |
 | **Ventas (POS)** | ✅ Completo | Soporta impuestos, descuentos, múltiples medios de pago. |
-| **Inventario** | ⚠️ Revisar | Lógica compleja de lotes y movimientos manuales en SQL. Riesgo de desincronización. |
+| **Inventario** | ✅ Resuelto | Se eliminó el uso de SQL crudo (`customUpdate`) en los repositorios de compras y devoluciones. Se utiliza ahora la API de tipos seguros de Drift para todas las actualizaciones de inventario y lotes. |
 | **Autenticación** | ✅ Completo | Implementa migración de hash (SHA256 -> BCrypt) transparente. |
 | **Impresión** | ✅ Funcional | Soporte nativo y PDF, pero lógica acoplada a la UI. |
-| **Reportes** | ❓ Parcial | Estructura en `features/reports` parece incipiente. |
+| **Reportes** | ✅ Completo | Módulo de reportes implementado y funcional con gráficos, desglose de ventas, productos top y corte Z. |
 
 ## 5. Plan de Acción Recomendado
 

@@ -353,17 +353,13 @@ class SaleReturnRepositoryImpl implements SaleReturnRepository {
             ),
           );
     } else {
-      await db.customUpdate(
-        'UPDATE inventory SET quantity_on_hand = quantity_on_hand + ?, updated_at = ? WHERE product_id = ? AND warehouse_id = ?',
-        variables: [
-          Variable.withReal(quantityToRestore),
-          Variable.withInt(
-            DateTime.now().millisecondsSinceEpoch ~/ 1000,
-          ), // Fix: Store as int timestamp
-          Variable.withInt(item.productId),
-          Variable.withInt(warehouseId),
-        ],
-        updates: {db.inventory},
+      await (db.update(
+        db.inventory,
+      )..where((t) => t.id.equals(inventory.id))).write(
+        drift_db.InventoryCompanion(
+          quantityOnHand: Value(inventory.quantityOnHand + quantityToRestore),
+          updatedAt: Value(DateTime.now()),
+        ),
       );
     }
 
@@ -405,13 +401,16 @@ class SaleReturnRepositoryImpl implements SaleReturnRepository {
 
       if (amountToRestoreToThisLot > 0) {
         // Restore to Lot
-        await db.customUpdate(
-          'UPDATE inventory_lots SET quantity = quantity + ? WHERE id = ?',
-          variables: [
-            Variable.withReal(amountToRestoreToThisLot),
-            Variable.withInt(deduction.lotId),
-          ],
-          updates: {db.inventoryLots},
+        final lotToUpdate = await (db.select(
+          db.inventoryLots,
+        )..where((t) => t.id.equals(deduction.lotId))).getSingle();
+
+        await (db.update(
+          db.inventoryLots,
+        )..where((t) => t.id.equals(deduction.lotId))).write(
+          drift_db.InventoryLotsCompanion(
+            quantity: Value(lotToUpdate.quantity + amountToRestoreToThisLot),
+          ),
         );
 
         // Update tracking
