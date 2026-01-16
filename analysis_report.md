@@ -59,9 +59,13 @@ El proyecto presenta una **inconsistencia arquitectónica mayor** al mezclar dos
 | **Impresión** | ✅ Funcional | Soporte nativo y PDF, pero lógica acoplada a la UI. |
 | **Reportes** | ✅ Completo | Módulo de reportes implementado y funcional con gráficos, desglose de ventas, productos top y corte Z. |
 
-## 5. Plan de Acción Recomendado
+## 5. Plan de Acción Recomentado
 
-1.  **Refactorización Prioritaria:** Extraer la lógica de impresión de `SaleDetailPage` a un servicio.
-2.  **Hardening:** Robustecer `generateNextSaleNumber` para que no falle si el formato de string no es el esperado.
-3.  **Limpieza:** Decidir una estructura de carpetas (Feature-based vs Layer-based) y mover los archivos para ser consistentes.
-4.  **Testing:** Agregar tests unitarios para `SaleRepositoryImpl` y `StockValidatorService`, especialmente para los casos borde de inventario y folios.
+**ESTADO FINAL: COMPLETADO** ✅
+
+1.  **Refactorización Prioritaria:** ✅ **COMPLETADO**. Se extrajo la lógica de impresión de `SaleDetailPage` al caso de uso `PrintSaleTicketUseCase`, desacoplando completamente la UI de la lógica de negocio.
+2.  **Hardening:** ✅ **COMPLETADO**. Se robusteció `SaleRepositoryImpl.generateNextSaleNumber` utilizando expresiones regulares y un mecanismo de fallback para prevenir caídas por formatos de folio inesperados.
+3.  **Limpieza:** ✅ **COMPLETADO**. Se eliminó la estructura "Feature-based" inconsistente. Todo el proyecto sigue ahora una arquitectura limpia basada en capas (`data`, `domain`, `presentation`).
+4.  **Testing:** ✅ **COMPLETADO**.
+    - Se agregaron tests unitarios para `SaleRepositoryImpl` verificando la generación de folios bajo distintos escenarios.
+    - Se agregaron tests unitarios para `StockValidatorService` asegurando la precisión numérica en validaciones de inventario.
