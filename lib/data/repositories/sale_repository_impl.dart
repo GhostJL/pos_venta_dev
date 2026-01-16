@@ -389,13 +389,15 @@ class SaleRepositoryImpl implements SaleRepository {
           // Use custom query for atomic update or just read-modify-write if transaction lock is active
           // Drift transaction block works as a transaction, so we can read-modify-write safely-ish,
           // but SQL is better for concurrency.
-          await db.customUpdate(
-            'UPDATE inventory_lots SET quantity = quantity - ? WHERE id = ?',
-            variables: [
-              Variable.withReal(deduction.quantityToDeduct),
-              Variable.withInt(deduction.lotId),
-            ],
-            updates: {db.inventoryLots},
+          final lot = await (db.select(
+            db.inventoryLots,
+          )..where((t) => t.id.equals(deduction.lotId))).getSingle();
+          await (db.update(
+            db.inventoryLots,
+          )..where((t) => t.id.equals(deduction.lotId))).write(
+            drift_db.InventoryLotsCompanion(
+              quantity: Value(lot.quantity - deduction.quantityToDeduct),
+            ),
           );
 
           await db
@@ -420,16 +422,27 @@ class SaleRepositoryImpl implements SaleRepository {
 
       // 4. Update Inventory
       for (final adj in transaction.inventoryAdjustments) {
-        await db.customUpdate(
-          'UPDATE inventory SET quantity_on_hand = quantity_on_hand - ?, updated_at = ? WHERE product_id = ? AND warehouse_id = ?',
-          variables: [
-            Variable.withReal(adj.quantityToDeduct),
-            Variable.withInt(DateTime.now().millisecondsSinceEpoch ~/ 1000),
-            Variable.withInt(adj.productId),
-            Variable.withInt(adj.warehouseId),
-          ],
-          updates: {db.inventory},
-        );
+        final inventoryRow =
+            await (db.select(db.inventory)..where(
+                  (t) =>
+                      t.productId.equals(adj.productId) &
+                      t.warehouseId.equals(adj.warehouseId),
+                ))
+                .getSingle();
+
+        await (db.update(db.inventory)..where(
+              (t) =>
+                  t.productId.equals(adj.productId) &
+                  t.warehouseId.equals(adj.warehouseId),
+            ))
+            .write(
+              drift_db.InventoryCompanion(
+                quantityOnHand: Value(
+                  inventoryRow.quantityOnHand - adj.quantityToDeduct,
+                ),
+                updatedAt: Value(DateTime.now()),
+              ),
+            );
       }
 
       // 5. Record Movements
@@ -487,13 +500,21 @@ class SaleRepositoryImpl implements SaleRepository {
         final update = transaction.creditUpdate!;
         final operator = update.isIncrement ? '+' : '-';
 
-        await db.customUpdate(
-          'UPDATE customers SET credit_used_cents = credit_used_cents $operator ? WHERE id = ?',
-          variables: [
-            Variable.withInt(update.amountCents),
-            Variable.withInt(update.customerId),
-          ],
-          updates: {db.customers},
+        final customer = await (db.select(
+          db.customers,
+        )..where((t) => t.id.equals(update.customerId))).getSingle();
+
+        int newCreditUsed = customer.creditUsedCents;
+        if (update.isIncrement) {
+          newCreditUsed += update.amountCents;
+        } else {
+          newCreditUsed -= update.amountCents;
+        }
+
+        await (db.update(
+          db.customers,
+        )..where((t) => t.id.equals(update.customerId))).write(
+          drift_db.CustomersCompanion(creditUsedCents: Value(newCreditUsed)),
         );
       }
 
@@ -529,13 +550,15 @@ class SaleRepositoryImpl implements SaleRepository {
 
         for (final row in lotDeductions) {
           final deduction = row.readTable(db.saleItemLots);
-          await db.customUpdate(
-            'UPDATE inventory_lots SET quantity = quantity + ? WHERE id = ?',
-            variables: [
-              Variable.withReal(deduction.quantityDeducted),
-              Variable.withInt(deduction.lotId),
-            ],
-            updates: {db.inventoryLots},
+          final lot = await (db.select(
+            db.inventoryLots,
+          )..where((t) => t.id.equals(deduction.lotId))).getSingle();
+          await (db.update(
+            db.inventoryLots,
+          )..where((t) => t.id.equals(deduction.lotId))).write(
+            drift_db.InventoryLotsCompanion(
+              quantity: Value(lot.quantity + deduction.quantityDeducted),
+            ),
           );
         }
       }
@@ -562,16 +585,26 @@ class SaleRepositoryImpl implements SaleRepository {
           }
 
           // Update Inventory
-          await db.customUpdate(
-            'UPDATE inventory SET quantity_on_hand = quantity_on_hand + ?, updated_at = ? WHERE product_id = ? AND warehouse_id = ?',
-            variables: [
-              Variable.withReal(quantityToRestore),
-              Variable.withInt(DateTime.now().millisecondsSinceEpoch ~/ 1000),
-              Variable.withInt(item.productId),
-              Variable.withInt(sale.warehouseId),
-            ],
-            updates: {db.inventory},
-          );
+          final inventoryRow =
+              await (db.select(db.inventory)..where(
+                    (t) =>
+                        t.productId.equals(item.productId) &
+                        t.warehouseId.equals(sale.warehouseId),
+                  ))
+                  .getSingle();
+          await (db.update(db.inventory)..where(
+                (t) =>
+                    t.productId.equals(item.productId) &
+                    t.warehouseId.equals(sale.warehouseId),
+              ))
+              .write(
+                drift_db.InventoryCompanion(
+                  quantityOnHand: Value(
+                    inventoryRow.quantityOnHand + quantityToRestore,
+                  ),
+                  updatedAt: Value(DateTime.now()),
+                ),
+              );
 
           // Get current qty for movement record
           final invRow =

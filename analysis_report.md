@@ -15,7 +15,7 @@ El proyecto presenta una **inconsistencia arquitectónica mayor** al mezclar dos
 
 ### Base de Datos
 - Uso de **Drift** (SQLite).
-- **Riesgo Detectado:** En `SaleRepositoryImpl`, se utilizan consultas SQL crudas (`customUpdate`) para actualizaciones de inventario. Aunque se usan variables vinculadas (seguro contra inyeccions SQL), se pierde el tipado fuerte de Drift y la refactorización automática.
+- **Estado:** ✅ **Resuelto**. Se refactorizó `SaleRepositoryImpl` eliminando las consultas SQL crudas (`customUpdate`) y utilizando la API tipada de Drift (`InventoryCompanion`, `CustomersCompanion`) para todas las actualizaciones de stock y créditos, garantizando la seguridad de tipos y la mantenibilidad.
 
 ## 2. Errores y Riesgos Potenciales
 
