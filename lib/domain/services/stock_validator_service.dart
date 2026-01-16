@@ -54,8 +54,9 @@ class StockValidatorService {
         );
       }
     } catch (e) {
-      if (e is StockInsufficientException)
+      if (e is StockInsufficientException) {
         rethrow; // Allow domain specific exceptions to bubble up
+      }
       // Log unexpected errors but maybe don't block the sale if validation fails due to code error?
       // Or safer to block? Let's throw an App Exception.
       AppErrorReporter().reportError(

@@ -660,7 +660,7 @@ class SaleRepositoryImpl implements SaleRepository {
         final nextNumber = numberPart + 1;
         // Keep the prefix part if possible, otherwise default to SALE-
         final prefix = lastNumber.substring(0, match.start);
-        return '${prefix}${nextNumber.toString().padLeft(5, '0')}';
+        return '$prefix${nextNumber.toString().padLeft(5, '0')}';
       } catch (_) {
         // Fallback if parsing fails despite regex match (unlikely)
       }
