@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:posventa/features/customers/presentation/widgets/customer_payment_dialog.dart';
+import 'package:posventa/presentation/widgets/customers/customer_payment_dialog.dart';
 import 'package:posventa/presentation/providers/debtors_provider.dart';
 
 class DebtorsTab extends ConsumerWidget {

@@ -1,5 +1,5 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:posventa/features/reports/domain/models/report_models.dart';
+import 'package:posventa/domain/entities/report_models.dart';
 import 'package:posventa/presentation/providers/di/reports_di.dart';
 
 part 'reports_provider.g.dart';

@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:posventa/core/utils/file_manager_service.dart';
 import 'package:posventa/domain/entities/sale.dart';
-import 'package:posventa/features/sales/domain/models/ticket_data.dart';
+import 'package:posventa/domain/entities/ticket_data.dart';
 import 'package:posventa/presentation/providers/providers.dart';
 import 'package:posventa/presentation/providers/di/printer_di.dart'; // import printerServiceProvider
 import 'package:posventa/presentation/providers/settings_provider.dart';

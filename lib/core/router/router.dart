@@ -56,7 +56,7 @@ import 'package:posventa/presentation/pages/settings/settings_page.dart';
 import 'package:posventa/presentation/pages/settings/help/app_shortcuts_page.dart';
 import 'package:posventa/presentation/pages/settings/hardware_settings_page.dart';
 import 'package:posventa/presentation/pages/settings/print_settings_page.dart';
-import 'package:posventa/features/reports/presentation/pages/reports_page.dart';
+import 'package:posventa/presentation/pages/reports/reports_page.dart';
 import 'package:posventa/presentation/pages/settings/ticket/unified_ticket_page.dart';
 import 'package:posventa/presentation/pages/settings/profile/admin_profile_page.dart';
 import 'package:posventa/presentation/pages/settings/profile/change_password_page.dart';

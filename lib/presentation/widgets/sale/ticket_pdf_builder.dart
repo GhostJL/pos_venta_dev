@@ -2,7 +2,7 @@ import 'dart:io';
 import 'package:image/image.dart' as img;
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
-import 'package:posventa/features/sales/domain/models/ticket_data.dart';
+import 'package:posventa/domain/entities/ticket_data.dart';
 import 'package:intl/intl.dart';
 
 class TicketPdfBuilder {

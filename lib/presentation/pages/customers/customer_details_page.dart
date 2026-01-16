@@ -8,7 +8,7 @@ import 'package:posventa/presentation/providers/di/sale_di.dart';
 import 'package:posventa/presentation/widgets/common/async_value_handler.dart';
 import 'package:intl/intl.dart';
 import 'package:posventa/domain/entities/customer_payment.dart';
-import 'package:posventa/features/customers/presentation/widgets/customer_payment_dialog.dart';
+import 'package:posventa/presentation/widgets/customers/customer_payment_dialog.dart';
 import 'package:posventa/presentation/providers/di/customer_di.dart';
 import 'package:posventa/presentation/providers/auth_provider.dart';
 

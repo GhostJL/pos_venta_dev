@@ -9,9 +9,9 @@ import 'package:posventa/domain/entities/customer.dart';
 import 'package:posventa/domain/entities/customer_payment.dart';
 import 'package:posventa/domain/entities/store.dart';
 import 'package:posventa/domain/services/printer_service.dart';
-import 'package:posventa/features/sales/domain/models/ticket_data.dart';
-import 'package:posventa/features/sales/presentation/widgets/ticket_pdf_builder.dart';
-import 'package:posventa/features/customers/presentation/widgets/payment_receipt_pdf_builder.dart';
+import 'package:posventa/domain/entities/ticket_data.dart';
+import 'package:posventa/presentation/widgets/sale/ticket_pdf_builder.dart';
+import 'package:posventa/presentation/widgets/customers/payment_receipt_pdf_builder.dart';
 import 'package:printing/printing.dart';
 import 'package:permission_handler/permission_handler.dart';
 

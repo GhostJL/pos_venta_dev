@@ -2,8 +2,8 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import 'package:posventa/features/reports/domain/models/report_models.dart';
-import 'package:posventa/features/reports/presentation/providers/reports_provider.dart';
+import 'package:posventa/domain/entities/report_models.dart';
+import 'package:posventa/presentation/providers/reports_provider.dart';
 
 import 'package:posventa/presentation/pages/shared/main_layout.dart';
 

@@ -1,7 +1,7 @@
 import 'package:drift/drift.dart';
 import 'package:posventa/data/datasources/local/database/app_database.dart';
 import 'package:posventa/domain/repositories/reports_repository.dart';
-import 'package:posventa/features/reports/domain/models/report_models.dart';
+import 'package:posventa/domain/entities/report_models.dart';
 
 class ReportsRepositoryImpl implements ReportsRepository {
   final AppDatabase _db;

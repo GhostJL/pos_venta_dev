@@ -1,6 +1,6 @@
 import 'package:posventa/domain/entities/customer.dart';
 import 'package:posventa/domain/entities/customer_payment.dart';
-import 'package:posventa/features/sales/domain/models/ticket_data.dart';
+import 'package:posventa/domain/entities/ticket_data.dart';
 import 'package:posventa/domain/entities/store.dart';
 
 import 'package:printing/printing.dart'; // We use the printing package types for Printer object

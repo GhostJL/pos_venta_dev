@@ -1,4 +1,4 @@
-import 'package:posventa/features/reports/domain/models/report_models.dart';
+import 'package:posventa/domain/entities/report_models.dart';
 
 abstract class ReportsRepository {
   Future<List<SalesSummary>> getDailySales({

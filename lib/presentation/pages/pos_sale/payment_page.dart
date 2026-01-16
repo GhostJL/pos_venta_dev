@@ -6,7 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:posventa/core/theme/theme.dart';
 import 'package:posventa/core/utils/file_manager_service.dart';
 import 'package:posventa/domain/services/printer_service.dart';
-import 'package:posventa/features/sales/domain/models/ticket_data.dart';
+import 'package:posventa/domain/entities/ticket_data.dart';
 import 'package:posventa/presentation/providers/pos_providers.dart';
 import 'package:posventa/presentation/providers/store_provider.dart';
 import 'package:posventa/presentation/providers/settings_provider.dart';
