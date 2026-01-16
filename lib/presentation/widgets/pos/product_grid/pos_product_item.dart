@@ -113,7 +113,7 @@ class _PosProductItemState extends ConsumerState<PosProductItem> {
               children: [
                 // Image Area
                 Expanded(
-                  flex: 10, // Increased image ratio slightly
+                  flex: 9, // Reduced slightly to give more room to text
                   child: Container(
                     width: double.infinity,
                     decoration: BoxDecoration(
@@ -170,9 +170,12 @@ class _PosProductItemState extends ConsumerState<PosProductItem> {
 
                 // Content Area
                 Expanded(
-                  flex: 11, // Adjusted ratio
+                  flex: 13, // Increased to Prevent Overflow
                   child: Padding(
-                    padding: const EdgeInsets.all(12.0),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8.0,
+                      vertical: 8.0,
+                    ), // Reduced Padding
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -180,8 +183,8 @@ class _PosProductItemState extends ConsumerState<PosProductItem> {
                         if (useInventory) ...[
                           Container(
                             padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 3,
+                              horizontal: 6, // Slightly tighter
+                              vertical: 2,
                             ),
                             decoration: BoxDecoration(
                               color: stockColor.withValues(alpha: 0.1),
@@ -198,20 +201,23 @@ class _PosProductItemState extends ConsumerState<PosProductItem> {
                                   color: stockColor,
                                 ),
                                 const SizedBox(width: 4),
-                                Text(
-                                  stock <= 0 ? 'Agotado' : '$stock Disp.',
-                                  style: theme.textTheme.labelSmall?.copyWith(
-                                    color: stockColor,
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.bold,
+                                Flexible(
+                                  // Prevent text overflow in badge
+                                  child: Text(
+                                    stock <= 0 ? 'Agotado' : '$stock Disp.',
+                                    style: theme.textTheme.labelSmall?.copyWith(
+                                      color: stockColor,
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
                                   ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
                                 ),
                               ],
                             ),
                           ),
-                          const SizedBox(height: 8),
+                          const SizedBox(height: 4), // Reduced spacing
                         ],
 
                         // Product Name
@@ -222,7 +228,7 @@ class _PosProductItemState extends ConsumerState<PosProductItem> {
                           style: theme.textTheme.titleSmall?.copyWith(
                             fontWeight: FontWeight.w600,
                             height: 1.1,
-                            fontSize: 13, // Slightly adjusted for density
+                            fontSize: 12, // Slightly smaller font
                           ),
                         ),
 
@@ -234,7 +240,7 @@ class _PosProductItemState extends ConsumerState<PosProductItem> {
                             overflow: TextOverflow.ellipsis,
                             style: theme.textTheme.bodySmall?.copyWith(
                               color: colorScheme.onSurfaceVariant,
-                              fontSize: 11,
+                              fontSize: 10, // Smaller font
                             ),
                           ),
                         ],
@@ -247,15 +253,15 @@ class _PosProductItemState extends ConsumerState<PosProductItem> {
                           style: theme.textTheme.titleMedium?.copyWith(
                             color: colorScheme.primary,
                             fontWeight: FontWeight.w800,
+                            fontSize: 15, // Adjusted
                           ),
                         ),
 
-                        const SizedBox(height: 8),
-
+                        const SizedBox(height: 4), // Reduced spacing
                         // Add Button / Cart Quantity
                         SizedBox(
                           width: double.infinity,
-                          height: 32,
+                          height: 30, // Slightly reduced height 32->30
                           child: widget.quantityInCart > 0
                               ? FilledButton.tonal(
                                   onPressed: widget.onTap,
