@@ -1,8 +1,8 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:posventa/domain/entities/notification.dart';
 import 'package:posventa/domain/entities/product_variant.dart';
 import 'package:posventa/domain/repositories/notification_repository.dart';
+import 'package:posventa/core/error/error_reporter.dart';
 
 class NotificationService {
   final NotificationRepository _repository;
@@ -25,8 +25,12 @@ class NotificationService {
         initializationSettings,
         // onDidReceiveNotificationResponse: ... (Handle tap if needed)
       );
-    } catch (e) {
-      debugPrint('Error initializing notifications: $e');
+    } catch (e, stackTrace) {
+      AppErrorReporter().reportError(
+        e,
+        stackTrace,
+        context: 'NotificationService - initialize',
+      );
     }
 
     await _requestPermissions();

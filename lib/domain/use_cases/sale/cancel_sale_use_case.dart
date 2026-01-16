@@ -1,4 +1,5 @@
-import 'package:flutter/foundation.dart';
+import 'package:posventa/core/error/domain_exceptions.dart';
+import 'package:posventa/core/error/error_reporter.dart';
 import 'package:posventa/domain/entities/inventory_movement.dart';
 import 'package:posventa/domain/entities/sale_transaction.dart';
 import 'package:posventa/domain/use_cases/cash_movement/get_current_session.dart';
@@ -24,16 +25,18 @@ class CancelSaleUseCase {
     // Fetch the sale to get its details
     final sale = await _repository.getSaleById(saleId);
     if (sale == null) {
-      throw Exception('Sale not found');
+      throw SaleNotFoundException(saleId);
     }
 
     if (sale.status == SaleStatus.cancelled) {
-      throw Exception('La venta ya está cancelada');
+      throw SaleAlreadyCancelledException(saleId);
     }
 
     if (sale.status == SaleStatus.returned) {
-      throw Exception(
-        'No se puede cancelar una venta que ya ha sido devuelta. Utilice el módulo de devoluciones para más detalles.',
+      throw SaleAlreadyReturnedException(
+        saleId,
+        message:
+            'No se puede cancelar una venta que ya ha sido devuelta. Utilice el módulo de devoluciones para más detalles.',
       );
     }
 
@@ -95,8 +98,18 @@ class CancelSaleUseCase {
             description: 'Cancelación Venta #${sale.saleNumber}',
           );
         }
-      } catch (e) {
-        debugPrint('Error creating cash movement for cancellation: $e');
+      } catch (e, stackTrace) {
+        AppErrorReporter().reportError(
+          e,
+          stackTrace,
+          context: 'CancelSaleUseCase - Create Cash Movement',
+        );
+        // We throw a domain exception so the UI knows something went wrong with the cash movement
+        // even though the cancellation itself (stock/sale status) succeeded.
+        throw CashMovementException(
+          'La venta se canceló, pero hubo un error al registrar la devolución de efectivo.',
+          reason: e.toString(),
+        );
       }
     }
   }

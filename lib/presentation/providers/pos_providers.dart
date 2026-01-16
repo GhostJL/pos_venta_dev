@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:posventa/domain/entities/customer.dart';
 import 'package:posventa/domain/entities/product.dart';
@@ -21,6 +20,8 @@ import 'package:posventa/presentation/providers/settings_provider.dart';
 import 'package:posventa/presentation/providers/customer_providers.dart';
 import 'package:posventa/presentation/providers/notification_providers.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:posventa/core/error/domain_exceptions.dart';
+import 'package:posventa/core/error/error_reporter.dart';
 
 part 'pos_providers.g.dart';
 
@@ -159,8 +160,12 @@ class POSNotifier extends _$POSNotifier {
         }
       }
       state = state.copyWith(cart: newCart, isLoading: false);
-    } catch (e) {
-      debugPrint('Error recalculating taxes: $e');
+    } catch (e, stackTrace) {
+      AppErrorReporter().reportError(
+        e,
+        stackTrace,
+        context: 'POSNotifier - recalculateTaxes',
+      );
       state = state.copyWith(isLoading: false);
     }
   }
@@ -179,18 +184,23 @@ class POSNotifier extends _$POSNotifier {
 
     // Validate stock availability using domain service
     // We need the current cart to calculate total stock needed
-    final stockError = await ref
-        .read(stockValidatorServiceProvider)
-        .validateStock(
-          product: product,
-          quantityToAdd: quantity,
-          variant: variant,
-          currentCart: state.cart,
-          useInventory: useInventory,
-        );
-
-    if (stockError != null) {
-      return stockError;
+    // Validate stock availability using domain service
+    // We need the current cart to calculate total stock needed
+    try {
+      await ref
+          .read(stockValidatorServiceProvider)
+          .validateStock(
+            product: product,
+            quantityToAdd: quantity,
+            variant: variant,
+            currentCart: state.cart,
+            useInventory: useInventory,
+          );
+    } catch (e) {
+      if (e is StockInsufficientException) {
+        return e.toString();
+      }
+      return 'Error al validar stock: $e';
     }
 
     // Check if product (and variant) already in cart
@@ -352,18 +362,21 @@ class POSNotifier extends _$POSNotifier {
       if (quantity > existingItem.quantity) {
         final additionalNeeded = quantity - existingItem.quantity;
 
-        final stockError = await ref
-            .read(stockValidatorServiceProvider)
-            .validateStock(
-              product: product,
-              quantityToAdd: additionalNeeded,
-              variant: variant,
-              currentCart: state.cart,
-              useInventory: useInventory,
-            );
-
-        if (stockError != null) {
-          return stockError;
+        try {
+          await ref
+              .read(stockValidatorServiceProvider)
+              .validateStock(
+                product: product,
+                quantityToAdd: additionalNeeded,
+                variant: variant,
+                currentCart: state.cart,
+                useInventory: useInventory,
+              );
+        } catch (e) {
+          if (e is StockInsufficientException) {
+            return e.toString();
+          }
+          return 'Error al validar stock: $e';
         }
       }
 
@@ -412,18 +425,22 @@ class POSNotifier extends _$POSNotifier {
     } else {
       // Add as new item with specific quantity
       // Validate stock
-      final stockError = await ref
-          .read(stockValidatorServiceProvider)
-          .validateStock(
-            product: product,
-            quantityToAdd: quantity,
-            variant: variant,
-            currentCart: state.cart,
-            useInventory: useInventory,
-          );
-
-      if (stockError != null) {
-        return stockError;
+      // Validate stock
+      try {
+        await ref
+            .read(stockValidatorServiceProvider)
+            .validateStock(
+              product: product,
+              quantityToAdd: quantity,
+              variant: variant,
+              currentCart: state.cart,
+              useInventory: useInventory,
+            );
+      } catch (e) {
+        if (e is StockInsufficientException) {
+          return e.toString();
+        }
+        return 'Error al validar stock: $e';
       }
 
       // Fetch taxes
@@ -512,10 +529,14 @@ class POSNotifier extends _$POSNotifier {
           final productResult = await productRepo.getProductById(productId);
 
           // Handle Either
+          // Handle Either
+          String? errorMessage;
           await productResult.fold(
             (failure) async {
-              debugPrint(
-                'Error validating stock inside updateQuantity: ${failure.message}',
+              AppErrorReporter().reportError(
+                failure,
+                null,
+                context: 'updateQuantity - fetchProduct',
               );
             },
             (product) async {
@@ -529,50 +550,36 @@ class POSNotifier extends _$POSNotifier {
                   } catch (_) {}
                 }
 
-                final stockError = await ref
-                    .read(stockValidatorServiceProvider)
-                    .validateStock(
-                      product: product,
-                      quantityToAdd: additionalNeeded,
-                      variant: variant,
-                      currentCart: state.cart,
-                      useInventory: useInventory,
-                    );
-
-                if (stockError != null) {
-                  // ignore: curly_braces_in_flow_control_structures
-                  return stockError; // This return is technically void because of async closure
+                try {
+                  await ref
+                      .read(stockValidatorServiceProvider)
+                      .validateStock(
+                        product: product,
+                        quantityToAdd: additionalNeeded,
+                        variant: variant,
+                        currentCart: state.cart,
+                        useInventory: useInventory,
+                      );
+                } catch (e) {
+                  if (e is StockInsufficientException) {
+                    errorMessage = e.toString();
+                  } else {
+                    errorMessage = 'Error al validar stock: $e';
+                  }
                 }
               }
             },
           );
 
-          if (productResult.isRight()) {
-            final product = productResult.getRight().toNullable();
-            if (product != null) {
-              ProductVariant? variant;
-              if (variantId != null && product.variants != null) {
-                try {
-                  variant = product.variants!.firstWhere(
-                    (v) => v.id == variantId,
-                  );
-                } catch (_) {}
-              }
-
-              final stockError = await ref
-                  .read(stockValidatorServiceProvider)
-                  .validateStock(
-                    product: product,
-                    quantityToAdd: additionalNeeded,
-                    variant: variant,
-                    currentCart: state.cart,
-                    useInventory: useInventory,
-                  );
-              if (stockError != null) return stockError;
-            }
+          if (errorMessage != null) {
+            return errorMessage;
           }
-        } catch (e) {
-          debugPrint('Error validating stock in updateQuantity: $e');
+        } catch (e, stackTrace) {
+          AppErrorReporter().reportError(
+            e,
+            stackTrace,
+            context: 'updateQuantity - validation',
+          );
         }
       }
 
@@ -758,8 +765,12 @@ class POSNotifier extends _$POSNotifier {
                   description: 'Cambio Venta #$saleNumber',
                 );
           }
-        } catch (e) {
-          debugPrint('Error recording change movement: $e');
+        } catch (e, stackTrace) {
+          AppErrorReporter().reportError(
+            e,
+            stackTrace,
+            context: 'completeSale - recordChange',
+          );
         }
       }
 
@@ -807,9 +818,13 @@ class POSNotifier extends _$POSNotifier {
               });
             }
           }
-        } catch (e) {
+        } catch (e, stackTrace) {
           // Silently fail notification checks to not disrupt sale completion
-          debugPrint('Error checking stock levels: $e');
+          AppErrorReporter().reportError(
+            e,
+            stackTrace,
+            context: 'completeSale - checkStockLevels',
+          );
         }
       }
 
@@ -820,7 +835,12 @@ class POSNotifier extends _$POSNotifier {
         successMessage: 'Venta realizada con éxito: $saleNumber',
         lastCompletedSale: sale,
       );
-    } catch (e) {
+    } catch (e, stackTrace) {
+      AppErrorReporter().reportError(
+        e,
+        stackTrace,
+        context: 'completeSale - main',
+      );
       state = state.copyWith(isLoading: false, errorMessage: e.toString());
     }
   }

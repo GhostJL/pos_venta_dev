@@ -42,10 +42,12 @@ El proyecto presenta una **inconsistencia arquitectónica mayor** al mezclar dos
 ## 3. Implementaciones Incompletas o Mejorables
 
 ### Gestión de Errores
-- Se encontraron bloques `try-catch` genéricos que simplemente imprimen en consola (`debugPrint`) o muestran un SnackBar. Falta un sistema centralizado de reporte de errores o manejo de excepciones de dominio (e.g., `StockInsufficientException` capturado específicamente).
+- **Problema:** Se encontraron bloques `try-catch` genéricos que simplemente imprimen en consola (`debugPrint`) o muestran un SnackBar. Falta un sistema centralizado de reporte de errores o manejo de excepciones de dominio (e.g., `StockInsufficientException` capturado específicamente).
+- **Estado:** ✅ **Resuelto**. Se implementó un sistema de excepciones de dominio (`domain_exceptions.dart`) incluyendo `StockInsufficientException`, `SaleNotFoundException`, etc. Se creó `AppErrorReporter` como servicio centralizado de reporte de errores. Se refactorizaron los servicios críticos (`StockValidatorService`, `CancelSaleUseCase`, `NotificationService`, `AutoBackupService`) para utilizar este nuevo sistema.
 
 ### Módulos "A medio camino"
 - **Features folder:** Las carpetas en `lib/features` parecen contener código nuevo o refactorizado, mientras que el resto está en las carpetas raíz. Esto sugiere una refactorización abandonada o en proceso.
+- **Estado:** ✅ **Resuelto**. Se verificó y completó la migración de arquitectura. La carpeta `lib/features` ha sido eliminada y todo el código reside ahora consistentemente en la estructura de capas (`data`, `domain`, `presentation`).
 
 ## 4. Resumen de Funcionalidades
 

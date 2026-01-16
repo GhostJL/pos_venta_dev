@@ -1,8 +1,8 @@
 import 'dart:async';
-import 'package:flutter/foundation.dart';
 import 'package:posventa/core/utils/file_manager_service.dart';
 import 'package:posventa/domain/entities/app_settings.dart';
 import 'package:posventa/domain/repositories/backup_repository.dart';
+import 'package:posventa/core/error/error_reporter.dart';
 
 /// Service for managing automatic backups based on configured schedules
 class AutoBackupService {
@@ -18,11 +18,11 @@ class AutoBackupService {
     _checkTimer?.cancel();
 
     if (!settings.autoBackupEnabled || settings.autoBackupTimes.isEmpty) {
-      debugPrint('Auto backup disabled or no times configured');
+      AppErrorReporter().log('Auto backup disabled or no times configured');
       return;
     }
 
-    debugPrint(
+    AppErrorReporter().log(
       'Initializing auto backup with times: ${settings.autoBackupTimes}',
     );
 
@@ -55,7 +55,7 @@ class AutoBackupService {
 
     // Check if current time matches any configured backup time
     if (settings.autoBackupTimes.contains(currentTime)) {
-      debugPrint('Auto backup triggered at $currentTime');
+      AppErrorReporter().log('Auto backup triggered at $currentTime');
       executeBackup(settings);
     }
   }
@@ -63,7 +63,7 @@ class AutoBackupService {
   /// Execute a backup
   Future<bool> executeBackup(AppSettings settings) async {
     try {
-      debugPrint('Executing automatic backup...');
+      AppErrorReporter().log('Executing automatic backup...');
       final backupPath = settings.backupPath;
 
       if (backupPath != null) {
@@ -74,10 +74,14 @@ class AutoBackupService {
         await _backupRepository.exportDatabase(defaultPath);
       }
 
-      debugPrint('Automatic backup completed successfully');
+      AppErrorReporter().log('Automatic backup completed successfully');
       return true;
-    } catch (e) {
-      debugPrint('Error during automatic backup: $e');
+    } catch (e, stackTrace) {
+      AppErrorReporter().reportError(
+        e,
+        stackTrace,
+        context: 'AutoBackupService - executeBackup',
+      );
       return false;
     }
   }
