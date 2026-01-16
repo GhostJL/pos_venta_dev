@@ -1,14 +1,10 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:posventa/core/utils/file_manager_service.dart';
 import 'package:posventa/domain/entities/sale.dart';
-import 'package:posventa/domain/entities/ticket_data.dart';
 import 'package:posventa/presentation/providers/providers.dart';
-import 'package:posventa/presentation/providers/di/printer_di.dart'; // import printerServiceProvider
-import 'package:posventa/presentation/providers/settings_provider.dart';
-import 'package:posventa/presentation/providers/store_provider.dart';
 import 'package:posventa/presentation/providers/auth_provider.dart';
+import 'package:posventa/presentation/providers/di/sale_di.dart';
+import 'package:posventa/domain/usecases/sale/print_sale_ticket_use_case.dart';
 import 'package:posventa/presentation/widgets/sales/detail/sale_action_buttons.dart';
 import 'package:posventa/presentation/widgets/sales/detail/sale_header_card.dart';
 import 'package:posventa/presentation/widgets/sales/detail/sale_payments_list.dart';
@@ -235,105 +231,43 @@ class SaleDetailPage extends ConsumerWidget {
     Sale sale,
   ) async {
     try {
-      final printerService = ref.read(printerServiceProvider);
-      final settings = await ref.read(settingsProvider.future);
-      final store = await ref.read(storeProvider.future);
-
-      final printerName = settings.printerName;
-
-      final ticketData = TicketData(
+      final useCase = await ref.read(printSaleTicketUseCaseProvider.future);
+      final result = await useCase.execute(
         sale: sale,
-        items: sale.items,
-        storeName: store?.name ?? 'Mi Tienda POS',
-        storeBusinessName: store?.businessName,
-        storeAddress: store?.address ?? '',
-        storePhone: store?.phone ?? '',
-        storeTaxId: store?.taxId,
-        storeEmail: store?.email,
-        storeWebsite: store?.website,
-        storeLogoPath: store?.logoPath,
-        footerMessage: store?.receiptFooter ?? '¡Gracias por su compra!',
-        cashierName: ref.read(authProvider).user?.name,
+        cashier: ref.read(authProvider).user,
       );
 
-      bool printed = false;
+      if (!context.mounted) return;
 
-      if (printerName != null) {
-        try {
-          final printers = await printerService.getPrinters();
-          final targetPrinter = printers
-              .where((p) => p.name == printerName)
-              .firstOrNull;
-
-          if (targetPrinter != null) {
-            final lowerName = targetPrinter.name.toLowerCase();
-            final isPdfPrinter =
-                lowerName.contains('pdf') ||
-                lowerName.contains('microsoft print to pdf') ||
-                lowerName.contains('adobe pdf') ||
-                lowerName.contains('foxit') ||
-                lowerName.contains('cutepdf') ||
-                lowerName.contains('novapdf');
-
-            if (!isPdfPrinter) {
-              if (Platform.isAndroid) {
-                await printerService.printTicket(
-                  ticketData,
-                  printer: targetPrinter,
-                );
-              } else {
-                await printerService.printTicket(
-                  ticketData,
-                  printer: targetPrinter,
-                );
-              }
-              printed = true;
-            }
-          }
-        } catch (e) {
-          debugPrint('Print error: $e');
-        }
-      }
-
-      if (!printed) {
-        if (context.mounted) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(const SnackBar(content: Text('Guardando PDF...')));
-        }
-
-        final pdfPath =
-            settings.pdfSavePath ??
-            await FileManagerService.getDefaultPdfSavePath();
-        final savedPath = await printerService.savePdfTicket(
-          ticketData,
-          pdfPath,
-        );
-
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Ticket guardado como PDF en: $savedPath'),
-              backgroundColor: Colors.green,
-            ),
-          );
-        }
-      } else {
-        if (context.mounted) {
+      switch (result) {
+        case TicketPrinted():
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('Ticket enviado a imprimir'),
               backgroundColor: Colors.green,
             ),
           );
-        }
+        case TicketPdfSaved(:final path):
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Ticket guardado como PDF en: $path'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        case TicketPrintFailure(:final message):
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Error al imprimir: $message'),
+              backgroundColor: Colors.red,
+            ),
+          );
       }
     } catch (e) {
       debugPrint('Error in reprint: $e');
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error al imprimir: $e'),
+            content: Text('Error inesperado: $e'),
             backgroundColor: Colors.red,
           ),
         );

@@ -1227,3 +1227,45 @@ final class CreateCashMovementUseCaseProvider
 
 String _$createCashMovementUseCaseHash() =>
     r'11d7fff84da89960446d5bcbc08b9627e2672cba';
+
+@ProviderFor(printSaleTicketUseCase)
+const printSaleTicketUseCaseProvider = PrintSaleTicketUseCaseProvider._();
+
+final class PrintSaleTicketUseCaseProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<PrintSaleTicketUseCase>,
+          PrintSaleTicketUseCase,
+          FutureOr<PrintSaleTicketUseCase>
+        >
+    with
+        $FutureModifier<PrintSaleTicketUseCase>,
+        $FutureProvider<PrintSaleTicketUseCase> {
+  const PrintSaleTicketUseCaseProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'printSaleTicketUseCaseProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$printSaleTicketUseCaseHash();
+
+  @$internal
+  @override
+  $FutureProviderElement<PrintSaleTicketUseCase> $createElement(
+    $ProviderPointer pointer,
+  ) => $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<PrintSaleTicketUseCase> create(Ref ref) {
+    return printSaleTicketUseCase(ref);
+  }
+}
+
+String _$printSaleTicketUseCaseHash() =>
+    r'c74006f1b7485c7189f57096b30967fed499aa88';

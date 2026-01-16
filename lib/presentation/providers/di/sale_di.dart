@@ -32,7 +32,9 @@ import 'package:posventa/domain/use_cases/cash_session/close_cash_session_use_ca
 import 'package:posventa/domain/use_cases/cash_session/get_current_cash_session_use_case.dart';
 import 'package:posventa/presentation/providers/di/core_di.dart';
 import 'package:posventa/presentation/providers/di/inventory_di.dart';
+import 'package:posventa/presentation/providers/di/printer_di.dart';
 import 'package:posventa/presentation/providers/auth_provider.dart';
+import 'package:posventa/domain/usecases/sale/print_sale_ticket_use_case.dart';
 
 part 'sale_di.g.dart';
 
@@ -206,3 +208,12 @@ CashMovementRepository cashMovementRepository(Ref ref) {
 @riverpod
 CreateCashMovement createCashMovementUseCase(Ref ref) =>
     CreateCashMovement(ref.watch(cashMovementRepositoryProvider));
+
+@riverpod
+Future<PrintSaleTicketUseCase> printSaleTicketUseCase(Ref ref) async {
+  return PrintSaleTicketUseCase(
+    ref.watch(printerServiceProvider),
+    await ref.watch(settingsRepositoryProvider.future),
+    ref.watch(storeRepositoryProvider),
+  );
+}

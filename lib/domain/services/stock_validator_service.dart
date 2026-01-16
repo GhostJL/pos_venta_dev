@@ -3,6 +3,13 @@ import 'package:posventa/domain/entities/product_variant.dart';
 import 'package:posventa/domain/entities/sale_item.dart';
 
 class StockValidatorService {
+  double _round(double value) {
+    // Use a high precision for internal stock validation to avoid 0.1 + 0.2 != 0.3 issues
+    // while allowing for standard weight handling (e.g. 3 decimals).
+    // Using 6 decimals is generally safe for avoiding floating point drift.
+    return double.parse(value.toStringAsFixed(6));
+  }
+
   Future<String?> validateStock({
     required Product product,
     required double quantityToAdd,
@@ -35,11 +42,12 @@ class StockValidatorService {
           )
           .fold(0.0, (sum, item) => sum + item.quantity);
 
-      final totalNeeded = currentStockInCart + quantityToAdd;
+      final totalNeeded = _round(currentStockInCart + quantityToAdd);
+      final availableRounded = _round(availableStock);
 
       // Check if enough stock
-      if (availableStock < totalNeeded) {
-        return 'Stock insuficiente$stockLabel (disponible: ${availableStock.toStringAsFixed(0)})';
+      if (availableRounded < totalNeeded) {
+        return 'Stock insuficiente$stockLabel (disponible: ${availableRounded.toStringAsFixed(2)})';
       }
 
       return null; // Stock OK

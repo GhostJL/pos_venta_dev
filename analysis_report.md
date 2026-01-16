@@ -26,15 +26,18 @@ El proyecto presenta una **inconsistencia arquitectónica mayor** al mezclar dos
   ```
   Si en el futuro se cambia el prefijo o el formato manual (e.g., "FAC-001"), esta función lanzará una excepción y detendrá las ventas.
 - **Solución:** Implementar una tabla de secuencias independiente o una lógica más robusta que no dependa del parseo de strings de registros anteriores.
+- **Estado:** ✅ **Resuelto**. Se refactorizó `generateNextSaleNumber` implementando una extracción robusta mediante `RegExp` y un mecanismo de fallback basado en `id + 1` para asegurar la continuidad y prevenir excepciones.
 
 ### Lógica de Negocio en UI (`SaleDetailPage`)
 - La función `_printTicket` en `SaleDetailPage.dart` contiene **lógica de negocio excesiva** (obtención de impresoras, filtrado de nombres, manejo de errores, lógica de guardado PDF).
 - **Problema:** Si se necesita imprimir desde otra pantalla (e.g., historial rápido), se tendría que duplicar este código.
 - **Solución:** Mover esta lógica a un `PrinterUseCase` o `TicketService` en la capa de dominio/aplicación.
+- **Estado:** ✅ **Resuelto**. Se creó `PrintSaleTicketUseCase` en `domain/usecases/sale/` para centralizar la lógica de impresión y manejo de errores, dejando `SaleDetailPage` limpio y encargado solo de la presentación.
 
 ### Cálculos de Dinero y Stock
 - **Stock:** `StockValidatorService` utiliza `double` para cantidades. Esto es correcto para productos a granel (kg), pero puede introducir errores de precisión de punto flotante (e.g., 0.999999 vs 1.0).
 - **Recomendación:** Asegurar redondeo estricto al nivel de decimales configurado por el sistema en cada operación aritmética.
+- **Estado:** ✅ **Resuelto**. Se implementó un método de redondeo de precisión en `StockValidatorService` para todas las comparaciones de inventario, eliminando errores de punto flotante.
 
 ## 3. Implementaciones Incompletas o Mejorables
 

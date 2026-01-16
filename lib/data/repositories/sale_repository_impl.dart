@@ -649,13 +649,25 @@ class SaleRepositoryImpl implements SaleRepository {
     }
 
     final lastNumber = row.saleNumber;
-    try {
-      final numberPart = int.parse(lastNumber.split('-').last);
-      final nextNumber = numberPart + 1;
-      return 'SALE-${nextNumber.toString().padLeft(5, '0')}';
-    } catch (_) {
-      // Fallback if format is weird
-      return 'SALE-${(row.id + 1).toString().padLeft(5, '0')}';
+
+    // Attempt to extract numeric part using Regex
+    final regExp = RegExp(r'(\d+)$');
+    final match = regExp.firstMatch(lastNumber);
+
+    if (match != null) {
+      try {
+        final numberPart = int.parse(match.group(1)!);
+        final nextNumber = numberPart + 1;
+        // Keep the prefix part if possible, otherwise default to SALE-
+        final prefix = lastNumber.substring(0, match.start);
+        return '${prefix}${nextNumber.toString().padLeft(5, '0')}';
+      } catch (_) {
+        // Fallback if parsing fails despite regex match (unlikely)
+      }
     }
+
+    // Fallback: Use ID + 1 to ensure uniqueness if parsing fails
+    // This handles cases like 'SALE-ABC' completely breaking the old logic
+    return 'SALE-${(row.id + 1).toString().padLeft(5, '0')}';
   }
 }
