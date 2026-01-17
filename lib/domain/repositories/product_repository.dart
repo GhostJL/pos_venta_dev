@@ -26,6 +26,8 @@ abstract class ProductRepository {
     int? brandId,
     int? supplierId,
     bool showInactive = false,
+    bool onlyWithStock = false,
+    List<int>? ids,
     String? sortOrder,
     int? limit,
     int? offset,

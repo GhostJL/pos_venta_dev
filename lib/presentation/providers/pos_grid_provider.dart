@@ -1,47 +1,150 @@
 import 'package:posventa/presentation/providers/product_provider.dart';
 import 'package:posventa/presentation/widgets/pos/product_grid/product_grid_item_model.dart';
 import 'package:posventa/presentation/providers/di/product_di.dart';
+import 'package:posventa/presentation/providers/di/sale_di.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'pos_grid_provider.g.dart';
 
 @riverpod
 Future<List<ProductGridItem>> posGridItems(Ref ref) async {
-  // Watch search query
+  // Watch repositories/usecases
   final query = ref.watch(productSearchQueryProvider);
   final searchUseCase = ref.watch(searchProductsProvider);
+  final saleRepository = ref.watch(saleRepositoryProvider); // Needs import
 
-  // Call use case directly with 'stock_desc' sorting
-  // Limit to 50 if query is empty to avoid loading all products at once
-  // (Though for stock sorting we fetch all in datasource, we still limit the return here)
-  final result = await searchUseCase.call(
-    query,
-    sortOrder: 'stock_desc',
-    limit: query.isEmpty ? 50 : null,
-  );
+  List<ProductGridItem> gridItems = [];
+  final Set<int> addedProductIds = {};
 
-  final products = result.fold(
-    (failure) => throw Exception(failure.message),
-    (data) => data,
-  );
+  if (query.isEmpty) {
+    // Strategy:
+    // 1. Fetch top selling products of the day
+    // 2. Fetch those specific products (filtered by stock > 0)
+    // 3. If less than 40, fetch remaining from standard list (filtered by stock > 0)
 
-  final List<ProductGridItem> gridItems = [];
-  for (final product in products) {
-    // Omit inactive products
-    if (!product.isActive) continue;
+    try {
+      final topIds = await saleRepository.getTopSellingProductIds(
+        DateTime.now(),
+      );
 
-    final sellableVariants =
-        product.variants?.where((v) => v.isForSale).toList() ?? [];
+      if (topIds.isNotEmpty) {
+        final topProductsResult = await searchUseCase.call(
+          '',
+          ids: topIds,
+          onlyWithStock: true,
+          limit: topIds.length,
+        );
 
-    if (sellableVariants.isNotEmpty) {
-      // Add each sellable variant as a separate grid item
-      for (final variant in sellableVariants) {
-        gridItems.add(ProductGridItem(product: product, variant: variant));
+        topProductsResult.fold(
+          (failure) =>
+              null, // Ignore failure for optimization, fallback to list
+          (products) {
+            for (final product in products) {
+              if (!product.isActive) continue;
+              // Process variants
+              final sellableVariants =
+                  product.variants?.where((v) => v.isForSale).toList() ?? [];
+              if (sellableVariants.isNotEmpty) {
+                for (final variant in sellableVariants) {
+                  if ((variant.stock ?? 0) > 0) {
+                    gridItems.add(
+                      ProductGridItem(product: product, variant: variant),
+                    );
+                  }
+                }
+              } else {
+                if ((product.stock ?? 0) > 0) {
+                  gridItems.add(ProductGridItem(product: product));
+                }
+              }
+              if (product.id != null) {
+                addedProductIds.add(product.id!);
+              }
+            }
+          },
+        );
       }
-    } else {
-      // Add product without variant
-      gridItems.add(ProductGridItem(product: product));
+
+      // If we don't have enough items (e.g. 40), fetch more
+      if (gridItems.length < 40) {
+        final remainingLimit = 40 - gridItems.length;
+
+        // We can't easily "exclude" IDs in one go without 'excludeIds' param which we added? No, we added 'ids'.
+        // So we just fetch standard list (limit 40 or 50) and filter in Dart, or just fetch and append if not present.
+        // Efficient way: Fetch 50, filter duplicates.
+
+        final standardResult = await searchUseCase.call(
+          '',
+          sortOrder: 'stock_desc', // Or 'id_desc'
+          onlyWithStock: true,
+          limit: 50,
+        );
+
+        standardResult.fold((failure) => throw Exception(failure.message), (
+          products,
+        ) {
+          for (final product in products) {
+            if (addedProductIds.contains(product.id)) continue;
+            if (!product.isActive) continue;
+
+            final sellableVariants =
+                product.variants?.where((v) => v.isForSale).toList() ?? [];
+            if (sellableVariants.isNotEmpty) {
+              for (final variant in sellableVariants) {
+                if ((variant.stock ?? 0) > 0) {
+                  gridItems.add(
+                    ProductGridItem(product: product, variant: variant),
+                  );
+                }
+              }
+            } else {
+              if ((product.stock ?? 0) > 0) {
+                gridItems.add(ProductGridItem(product: product));
+              }
+            }
+            if (product.id != null) {
+              addedProductIds.add(product.id!);
+            }
+            if (gridItems.length >= 40) break;
+          }
+        });
+      }
+    } catch (e) {
+      // Fallback
     }
+  } else {
+    // Search query active
+    final result = await searchUseCase.call(
+      query,
+      sortOrder: 'stock_desc',
+      onlyWithStock: true, // Requested optimization
+      limit: 50,
+    );
+
+    result.fold((failure) => throw Exception(failure.message), (data) {
+      for (final product in data) {
+        if (!product.isActive) continue;
+        final sellableVariants =
+            product.variants?.where((v) => v.isForSale).toList() ?? [];
+        if (sellableVariants.isNotEmpty) {
+          for (final variant in sellableVariants) {
+            // Should we enforce stock > 0 for search too?
+            // User said "creo que es mejor solo mostrar los productos con stock disponible".
+            // Implied generally.
+            if ((variant.stock ?? 0) > 0) {
+              gridItems.add(
+                ProductGridItem(product: product, variant: variant),
+              );
+            }
+          }
+        } else {
+          if ((product.stock ?? 0) > 0) {
+            gridItems.add(ProductGridItem(product: product));
+          }
+        }
+      }
+    });
   }
+
   return gridItems;
 }

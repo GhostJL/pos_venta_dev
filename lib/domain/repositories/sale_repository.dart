@@ -43,4 +43,6 @@ abstract class SaleRepository {
   Future<void> executeSaleCancellation(SaleCancellationTransaction transaction);
 
   Future<String> generateNextSaleNumber();
+
+  Future<List<int>> getTopSellingProductIds(DateTime date, {int limit = 40});
 }

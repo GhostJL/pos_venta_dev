@@ -13,12 +13,16 @@ class SearchProducts {
     int? limit,
     int? offset,
     String? sortOrder,
+    bool onlyWithStock = false,
+    List<int>? ids,
   }) {
     return repository.getProducts(
       query: query,
       limit: limit,
       offset: offset,
       sortOrder: sortOrder,
+      onlyWithStock: onlyWithStock,
+      ids: ids,
     );
   }
 }

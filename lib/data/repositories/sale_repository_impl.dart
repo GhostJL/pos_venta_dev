@@ -670,4 +670,36 @@ class SaleRepositoryImpl implements SaleRepository {
     // This handles cases like 'SALE-ABC' completely breaking the old logic
     return 'SALE-${(row.id + 1).toString().padLeft(5, '0')}';
   }
+
+  @override
+  Future<List<int>> getTopSellingProductIds(
+    DateTime date, {
+    int limit = 40,
+  }) async {
+    // Determine start and end of the day
+    final startOfDay = DateTime(date.year, date.month, date.day);
+    final endOfDay = startOfDay.add(const Duration(days: 1));
+
+    // Define aliases for aggregation
+    final quantitySum = db.saleItems.quantity.sum();
+
+    final query = db.selectOnly(db.saleItems).join([
+      innerJoin(db.sales, db.sales.id.equalsExp(db.saleItems.saleId)),
+    ]);
+
+    query.where(
+      db.sales.saleDate.isBiggerOrEqualValue(startOfDay) &
+          db.sales.saleDate.isSmallerThanValue(endOfDay) &
+          db.sales.status.equals('completed'),
+    );
+
+    query.addColumns([db.saleItems.productId, quantitySum]);
+    query.groupBy([db.saleItems.productId]);
+    query.orderBy([OrderingTerm.desc(quantitySum)]);
+    query.limit(limit);
+
+    final rows = await query.get();
+
+    return rows.map((row) => row.read(db.saleItems.productId)!).toList();
+  }
 }

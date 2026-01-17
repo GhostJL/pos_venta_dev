@@ -29,6 +29,8 @@ class ProductLocalDataSourceImpl implements ProductLocalDataSource {
     int? brandId,
     int? supplierId,
     bool showInactive = false,
+    bool onlyWithStock = false,
+    List<int>? ids,
     String? sortOrder,
     int? limit,
     int? offset,
@@ -50,6 +52,26 @@ class ProductLocalDataSourceImpl implements ProductLocalDataSource {
         } else {
           q.where(db.products.isActive.equals(true));
         }
+      }
+
+      if (ids != null && ids.isNotEmpty) {
+        q.where(db.products.id.isIn(ids));
+      }
+
+      if (onlyWithStock) {
+        // Subquery to find product IDs that have at least one variant with stock > 0
+        // We join inventory with product variants to check stock
+        /* 
+           SELECT distinct product_id 
+           FROM inventory 
+           WHERE quantity_on_hand > 0
+        */
+        // Or cleaner in Drift:
+        final stockSubquery = db.selectOnly(db.inventory)
+          ..addColumns([db.inventory.productId])
+          ..where(db.inventory.quantityOnHand.isBiggerThanValue(0));
+
+        q.where(db.products.id.isInQuery(stockSubquery));
       }
 
       if (departmentId != null) {
