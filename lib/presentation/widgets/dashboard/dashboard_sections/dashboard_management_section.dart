@@ -15,7 +15,7 @@ class DashboardManagementSection extends StatelessWidget {
         icon: Icons.inventory_2_rounded,
         color: Colors.indigo.shade600,
         onTap: () => context.go('/inventory'),
-        isTablet: isTablet,
+        isTablet: true,
       ),
 
       DashboardActionCard(
@@ -24,7 +24,7 @@ class DashboardManagementSection extends StatelessWidget {
         icon: Icons.people_alt_rounded,
         color: Theme.of(context).colorScheme.primary,
         onTap: () => context.go('/customers'),
-        isTablet: isTablet,
+        isTablet: true,
       ),
       DashboardActionCard(
         title: 'Compras',
@@ -32,7 +32,7 @@ class DashboardManagementSection extends StatelessWidget {
         icon: Icons.shopping_cart_rounded,
         color: Colors.teal.shade600,
         onTap: () => context.go('/purchases'),
-        isTablet: isTablet,
+        isTablet: true,
       ),
       DashboardActionCard(
         title: 'Movimientos de Caja',
@@ -40,36 +40,47 @@ class DashboardManagementSection extends StatelessWidget {
         icon: Icons.account_balance_wallet_rounded,
         color: Colors.orange.shade700,
         onTap: () => context.go('/cash-movements'),
-        isTablet: isTablet,
+        isTablet: true,
       ),
     ];
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _buildSectionTitle(
-          context,
-          'Gestión y Administración',
-          Icons.admin_panel_settings_rounded,
-        ),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final bool useColumn = constraints.maxWidth < 500;
 
-        isTablet
-            ? Column(
-                children: actionCards.map((card) {
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: 16.0),
-                    child: SizedBox(width: double.infinity, child: card),
-                  );
-                }).toList(),
-              )
-            : Wrap(
-                spacing: 16,
-                runSpacing: 16,
-                children: actionCards.map((card) {
-                  return SizedBox(width: double.infinity, child: card);
-                }).toList(),
-              ),
-      ],
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildSectionTitle(
+              context,
+              'Gestión y Administración',
+              Icons.admin_panel_settings_rounded,
+            ),
+
+            useColumn
+                ? Column(
+                    children: actionCards.map((card) {
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 16.0),
+                        child: SizedBox(width: double.infinity, child: card),
+                      );
+                    }).toList(),
+                  )
+                : Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Wrap(
+                      spacing: 16,
+                      runSpacing: 16,
+                      children: actionCards.map((card) {
+                        // 2 columns with safer calculation to avoid sub-pixel overflow
+                        final width = (constraints.maxWidth - 32) / 2;
+                        return SizedBox(width: width, child: card);
+                      }).toList(),
+                    ),
+                  ),
+          ],
+        );
+      },
     );
   }
 

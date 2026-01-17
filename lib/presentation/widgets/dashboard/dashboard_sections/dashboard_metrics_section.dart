@@ -21,8 +21,9 @@ class DashboardMetricsSection extends ConsumerWidget {
     return LayoutBuilder(
       builder: (context, constraints) {
         // Adapt grid based on width
-        int crossAxisCount = constraints.maxWidth > 600 ? 3 : 1;
-        if (constraints.maxWidth > 900) crossAxisCount = 3;
+        int crossAxisCount = 1;
+        if (constraints.maxWidth > 600) crossAxisCount = 2;
+        if (constraints.maxWidth > 1000) crossAxisCount = 3;
 
         return Wrap(
           spacing: 16,
@@ -84,31 +85,42 @@ class DashboardMetricsSection extends ConsumerWidget {
     return SizedBox(
       width: width,
       child: Container(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
-          color: colorScheme.surfaceContainer,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: colorScheme.outlineVariant.withAlpha(50)),
+          color: colorScheme.surfaceContainerLow,
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: colorScheme.outlineVariant.withAlpha(40)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withAlpha(5),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
         ),
         child: Row(
           children: [
             Container(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: color.withAlpha(25),
-                shape: BoxShape.circle,
+                color: color.withAlpha(
+                  30,
+                ), // Slightly less transparent for better visibility
+                borderRadius: BorderRadius.circular(20),
               ),
-              child: Icon(icon, color: color, size: 28),
+              child: Icon(icon, color: color, size: 32),
             ),
-            const SizedBox(width: 16),
+            const SizedBox(width: 20),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
                     title,
                     style: theme.textTheme.bodyMedium?.copyWith(
                       color: colorScheme.onSurfaceVariant,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
                   const SizedBox(height: 4),
@@ -117,22 +129,25 @@ class DashboardMetricsSection extends ConsumerWidget {
                       isCurrency
                           ? currencyFormat.format(value)
                           : value.toString(),
-                      style: theme.textTheme.headlineSmall?.copyWith(
-                        fontWeight: FontWeight.bold,
+                      style: theme.textTheme.headlineMedium?.copyWith(
+                        // Increased size
+                        fontWeight: FontWeight.w800,
                         color: colorScheme.onSurface,
+                        letterSpacing: -1.0,
+                        height: 1.1,
                       ),
                     ),
                     loading: () => SizedBox(
                       height: 32,
                       width: 32,
                       child: CircularProgressIndicator(
-                        strokeWidth: 2,
+                        strokeWidth: 3,
                         color: color,
                       ),
                     ),
                     error: (_, __) => Text(
                       '--',
-                      style: theme.textTheme.headlineSmall?.copyWith(
+                      style: theme.textTheme.headlineMedium?.copyWith(
                         fontWeight: FontWeight.bold,
                         color: colorScheme.error,
                       ),
@@ -163,31 +178,40 @@ class DashboardMetricsSection extends ConsumerWidget {
     return SizedBox(
       width: width,
       child: Container(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
-          color: colorScheme.surfaceContainer,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: colorScheme.outlineVariant.withAlpha(50)),
+          color: colorScheme.surfaceContainerLow,
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: colorScheme.outlineVariant.withAlpha(40)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withAlpha(5),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
         ),
         child: Row(
           children: [
             Container(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: color.withAlpha(25),
-                shape: BoxShape.circle,
+                color: color.withAlpha(30),
+                borderRadius: BorderRadius.circular(20),
               ),
-              child: Icon(icon, color: color, size: 28),
+              child: Icon(icon, color: color, size: 32),
             ),
-            const SizedBox(width: 16),
+            const SizedBox(width: 20),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
                     title,
                     style: theme.textTheme.bodyMedium?.copyWith(
                       color: colorScheme.onSurfaceVariant,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
                   const SizedBox(height: 4),
@@ -196,14 +220,14 @@ class DashboardMetricsSection extends ConsumerWidget {
                       height: 32,
                       width: 32,
                       child: CircularProgressIndicator(
-                        strokeWidth: 2,
+                        strokeWidth: 3,
                         color: color,
                       ),
                     )
                   else if (revenueAsync.hasError || transactionsAsync.hasError)
                     Text(
                       '--',
-                      style: theme.textTheme.headlineSmall?.copyWith(
+                      style: theme.textTheme.headlineMedium?.copyWith(
                         fontWeight: FontWeight.bold,
                         color: colorScheme.error,
                       ),
@@ -219,9 +243,11 @@ class DashboardMetricsSection extends ConsumerWidget {
                             : 0;
                         return Text(
                           currencyFormat.format(avg),
-                          style: theme.textTheme.headlineSmall?.copyWith(
-                            fontWeight: FontWeight.bold,
+                          style: theme.textTheme.headlineMedium?.copyWith(
+                            fontWeight: FontWeight.w800,
                             color: colorScheme.onSurface,
+                            letterSpacing: -1.0,
+                            height: 1.1,
                           ),
                         );
                       },
