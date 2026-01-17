@@ -426,14 +426,20 @@ class SaleRepositoryImpl implements SaleRepository {
             await (db.select(db.inventory)..where(
                   (t) =>
                       t.productId.equals(adj.productId) &
-                      t.warehouseId.equals(adj.warehouseId),
+                      t.warehouseId.equals(adj.warehouseId) &
+                      (adj.variantId != null
+                          ? t.variantId.equals(adj.variantId!)
+                          : t.variantId.isNull()),
                 ))
                 .getSingle();
 
         await (db.update(db.inventory)..where(
               (t) =>
                   t.productId.equals(adj.productId) &
-                  t.warehouseId.equals(adj.warehouseId),
+                  t.warehouseId.equals(adj.warehouseId) &
+                  (adj.variantId != null
+                      ? t.variantId.equals(adj.variantId!)
+                      : t.variantId.isNull()),
             ))
             .write(
               drift_db.InventoryCompanion(
@@ -451,7 +457,10 @@ class SaleRepositoryImpl implements SaleRepository {
             await (db.select(db.inventory)..where(
                   (t) =>
                       t.productId.equals(mov.productId) &
-                      t.warehouseId.equals(mov.warehouseId),
+                      t.warehouseId.equals(mov.warehouseId) &
+                      (mov.variantId != null
+                          ? t.variantId.equals(mov.variantId!)
+                          : t.variantId.isNull()),
                 ))
                 .getSingleOrNull();
 
@@ -589,13 +598,19 @@ class SaleRepositoryImpl implements SaleRepository {
               await (db.select(db.inventory)..where(
                     (t) =>
                         t.productId.equals(item.productId) &
-                        t.warehouseId.equals(sale.warehouseId),
+                        t.warehouseId.equals(sale.warehouseId) &
+                        (item.variantId != null
+                            ? t.variantId.equals(item.variantId!)
+                            : t.variantId.isNull()),
                   ))
                   .getSingle();
           await (db.update(db.inventory)..where(
                 (t) =>
                     t.productId.equals(item.productId) &
-                    t.warehouseId.equals(sale.warehouseId),
+                    t.warehouseId.equals(sale.warehouseId) &
+                    (item.variantId != null
+                        ? t.variantId.equals(item.variantId!)
+                        : t.variantId.isNull()),
               ))
               .write(
                 drift_db.InventoryCompanion(
@@ -611,7 +626,10 @@ class SaleRepositoryImpl implements SaleRepository {
               await (db.select(db.inventory)..where(
                     (t) =>
                         t.productId.equals(item.productId) &
-                        t.warehouseId.equals(sale.warehouseId),
+                        t.warehouseId.equals(sale.warehouseId) &
+                        (item.variantId != null
+                            ? t.variantId.equals(item.variantId!)
+                            : t.variantId.isNull()),
                   ))
                   .getSingle();
 
