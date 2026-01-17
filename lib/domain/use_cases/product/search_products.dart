@@ -12,7 +12,13 @@ class SearchProducts {
     String query, {
     int? limit,
     int? offset,
+    String? sortOrder,
   }) {
-    return repository.getProducts(query: query, limit: limit, offset: offset);
+    return repository.getProducts(
+      query: query,
+      limit: limit,
+      offset: offset,
+      sortOrder: sortOrder,
+    );
   }
 }

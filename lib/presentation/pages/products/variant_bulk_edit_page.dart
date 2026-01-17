@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'dart:async';
 
 import 'package:posventa/domain/entities/product.dart';
 import 'package:posventa/domain/entities/product_variant.dart';
@@ -1015,7 +1016,7 @@ class _VariantBulkEditPageState extends ConsumerState<VariantBulkEditPage> {
   }
 }
 
-class _EditableCell extends StatelessWidget {
+class _EditableCell extends StatefulWidget {
   final String value;
   final ValueChanged<String> onChanged;
   final bool isNumeric;
@@ -1030,24 +1031,60 @@ class _EditableCell extends StatelessWidget {
   });
 
   @override
+  State<_EditableCell> createState() => _EditableCellState();
+}
+
+class _EditableCellState extends State<_EditableCell> {
+  late TextEditingController _controller;
+  Timer? _debounce;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(text: widget.value);
+  }
+
+  @override
+  void didUpdateWidget(covariant _EditableCell oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.value != _controller.text && !_controller.selection.isValid) {
+      _controller.text = widget.value;
+    }
+  }
+
+  @override
+  void dispose() {
+    _debounce?.cancel();
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _onChanged(String value) {
+    if (_debounce?.isActive ?? false) _debounce!.cancel();
+    _debounce = Timer(const Duration(milliseconds: 500), () {
+      widget.onChanged(value);
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     return TextFormField(
-      initialValue: value,
-      keyboardType: isNumeric
+      controller: _controller,
+      keyboardType: widget.isNumeric
           ? const TextInputType.numberWithOptions(decimal: true)
           : TextInputType.text,
       decoration: InputDecoration(
         isDense: true,
         border: InputBorder.none,
         contentPadding: const EdgeInsets.symmetric(vertical: 8),
-        suffixIcon: suffixIcon,
+        suffixIcon: widget.suffixIcon,
       ),
-      onFieldSubmitted: onChanged,
+      onChanged: _onChanged,
     );
   }
 }
 
-class _CompactInput extends StatelessWidget {
+class _CompactInput extends StatefulWidget {
   final String label;
   final String value;
   final ValueChanged<String> onChanged;
@@ -1064,23 +1101,62 @@ class _CompactInput extends StatelessWidget {
   });
 
   @override
+  State<_CompactInput> createState() => _CompactInputState();
+}
+
+class _CompactInputState extends State<_CompactInput> {
+  late TextEditingController _controller;
+  Timer? _debounce;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(text: widget.value);
+  }
+
+  @override
+  void didUpdateWidget(covariant _CompactInput oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Only update if value changed externally and not focused?
+    // Simplified: update if value mismatches strongly, but careful not to overwrite typing.
+    // Ideally we rely on local state while typing.
+    if (widget.value != _controller.text && !_controller.selection.isValid) {
+      _controller.text = widget.value;
+    }
+  }
+
+  @override
+  void dispose() {
+    _debounce?.cancel();
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _onChanged(String value) {
+    if (_debounce?.isActive ?? false) _debounce!.cancel();
+    _debounce = Timer(const Duration(milliseconds: 500), () {
+      widget.onChanged(value);
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     return TextFormField(
-      initialValue: value,
-      keyboardType: isNumeric
+      controller: _controller,
+      keyboardType: widget.isNumeric
           ? const TextInputType.numberWithOptions(decimal: true)
           : TextInputType.text,
       decoration: InputDecoration(
-        labelText: label,
+        labelText: widget.label,
         isDense: true,
         border: const OutlineInputBorder(),
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 12,
           vertical: 12,
         ),
-        suffixIcon: suffixIcon,
+        suffixIcon: widget.suffixIcon,
       ),
-      onFieldSubmitted: onChanged,
+      onChanged: _onChanged,
     );
   }
 }

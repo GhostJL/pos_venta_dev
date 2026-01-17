@@ -225,7 +225,7 @@ class _VariantCard extends ConsumerWidget {
                         const SizedBox(width: 6),
                         Flexible(
                           child: Text(
-                            "${variant.quantity.toInt()} ${unitName ?? ''}",
+                            "${variant.conversionFactor} ${unitName ?? ''}",
                             overflow: TextOverflow.ellipsis,
                             maxLines: 1,
                             style: theme.textTheme.bodySmall?.copyWith(

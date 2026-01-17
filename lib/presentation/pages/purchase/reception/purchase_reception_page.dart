@@ -178,6 +178,10 @@ class _PurchaseReceptionPageState extends ConsumerState<PurchaseReceptionPage> {
           .read(purchaseProvider.notifier)
           .receivePurchase(purchase.id!, itemsToReceive, user.id!);
 
+      // Invalidate product providers to ensure stock is updated in POS & Lists
+      ref.invalidate(productListProvider);
+      // ref.invalidate(posGridItemsProvider); // Depends on productListProvider, so it will likely auto-refresh, but explicit doesn't hurt.
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(

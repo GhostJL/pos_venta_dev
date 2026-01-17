@@ -23,11 +23,20 @@ class ProductSearchBar extends StatelessWidget {
           child: TextField(
             focusNode: focusNode,
             controller: controller,
-            decoration: const InputDecoration(
-              hintText: 'Buscar por nombre, código o código de barras',
-              prefixIcon: Icon(Icons.search_rounded),
-            ),
             onChanged: onChanged,
+            decoration: InputDecoration(
+              hintText: 'Buscar por nombre, código o código de barras',
+              prefixIcon: const Icon(Icons.search_rounded),
+              suffixIcon: controller.text.isNotEmpty
+                  ? IconButton(
+                      icon: const Icon(Icons.clear),
+                      onPressed: () {
+                        controller.clear();
+                        onChanged('');
+                      },
+                    )
+                  : null,
+            ),
           ),
         ),
         const SizedBox(width: 8),

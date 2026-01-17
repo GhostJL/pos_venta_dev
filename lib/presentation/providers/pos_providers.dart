@@ -184,15 +184,47 @@ class POSNotifier extends _$POSNotifier {
 
     // Validate stock availability using domain service
     // We need the current cart to calculate total stock needed
-    // Validate stock availability using domain service
-    // We need the current cart to calculate total stock needed
+    // Fetch fresh product data to ensure stock is up to date
+    Product productToCheck = product;
+    final productRepo = ref.read(productRepositoryProvider);
+    final freshProductResult = await productRepo.getProductById(product.id!);
+    freshProductResult.fold(
+      (failure) {
+        // Log error, continue with existing product data as fallback?
+        // Or fail? Better to warn but maybe proceed with best effort.
+        // For strictness, we might want to fail, but let's use existing.
+        AppErrorReporter().reportError(
+          failure,
+          null,
+          context: 'addToCart - refreshProduct',
+        );
+      },
+      (freshProduct) {
+        if (freshProduct != null) {
+          productToCheck = freshProduct;
+        }
+      },
+    );
+
+    // If variant is provided, we should also try to get the fresh variant from the fresh product
+    ProductVariant? variantToCheck = variant;
+    if (variant != null && productToCheck.variants != null) {
+      try {
+        variantToCheck = productToCheck.variants!.firstWhere(
+          (v) => v.id == variant.id,
+        );
+      } catch (_) {
+        // Variant might have been deleted? Use old one or fail?
+      }
+    }
+
     try {
       await ref
           .read(stockValidatorServiceProvider)
           .validateStock(
-            product: product,
+            product: productToCheck,
             quantityToAdd: quantity,
-            variant: variant,
+            variant: variantToCheck,
             currentCart: state.cart,
             useInventory: useInventory,
           );
@@ -525,10 +557,11 @@ class POSNotifier extends _$POSNotifier {
         final additionalNeeded = quantity - existingItem.quantity;
 
         try {
+          // Fetch fresh product data to ensure stock is up to date
+          // The existing code already calls getProductById, but let's ensure we use the result correctly
           final productRepo = ref.read(productRepositoryProvider);
           final productResult = await productRepo.getProductById(productId);
 
-          // Handle Either
           // Handle Either
           String? errorMessage;
           await productResult.fold(
@@ -547,7 +580,10 @@ class POSNotifier extends _$POSNotifier {
                     variant = product.variants!.firstWhere(
                       (v) => v.id == variantId,
                     );
-                  } catch (_) {}
+                  } catch (_) {
+                    // Variant might have been deleted, validation will use product stock if variant is null?
+                    // Or should we fail?
+                  }
                 }
 
                 try {

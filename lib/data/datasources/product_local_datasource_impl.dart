@@ -83,6 +83,8 @@ class ProductLocalDataSourceImpl implements ProductLocalDataSource {
       }
 
       // Sorting
+      bool manualPagination = false;
+
       if (sortOrder != null) {
         if (sortOrder == 'name_asc') {
           q.orderBy([OrderingTerm.asc(db.products.name)]);
@@ -92,6 +94,11 @@ class ProductLocalDataSourceImpl implements ProductLocalDataSource {
           q.orderBy([OrderingTerm.asc(db.products.id)]);
         } else if (sortOrder == 'price_desc') {
           q.orderBy([OrderingTerm.desc(db.products.id)]);
+        } else if (sortOrder == 'stock_desc') {
+          // Stock is computed in Dart, so we cannot sort in SQL easily.
+          // We must fetch matching rows, compute stock, then sort, then apply limit.
+          manualPagination = true;
+          // No SQL orderBy
         } else {
           q.orderBy([OrderingTerm.desc(db.products.id)]);
         }
@@ -99,7 +106,7 @@ class ProductLocalDataSourceImpl implements ProductLocalDataSource {
         q.orderBy([OrderingTerm.desc(db.products.id)]);
       }
 
-      if (limit != null) {
+      if (limit != null && !manualPagination) {
         q.limit(limit, offset: offset);
       }
 
@@ -194,12 +201,13 @@ class ProductLocalDataSourceImpl implements ProductLocalDataSource {
             isSoldByWeight: v.isSoldByWeight,
             conversionFactor: v.conversionFactor,
             photoUrl: v.photoUrl,
+            linkedVariantId: v.linkedVariantId,
           ),
         );
       }
 
       // Merge back
-      return productList
+      var resultList = productList
           .map((p) {
             final pTaxes = taxesMap[p.id] ?? [];
             final pVariants = variantsMap[p.id] ?? [];
@@ -217,6 +225,24 @@ class ProductLocalDataSourceImpl implements ProductLocalDataSource {
           })
           .map((p) => ProductModel.fromEntity(p))
           .toList();
+
+      // Apply Manual Sorting and Pagination if needed
+      if (manualPagination && sortOrder == 'stock_desc') {
+        resultList.sort((a, b) => (b.stock ?? 0).compareTo(a.stock ?? 0));
+
+        if (limit != null) {
+          final start = offset ?? 0;
+          if (start >= resultList.length) {
+            return [];
+          }
+          final end = (start + limit) > resultList.length
+              ? resultList.length
+              : (start + limit);
+          resultList = resultList.sublist(start, end);
+        }
+      }
+
+      return resultList;
     } catch (e) {
       throw DatabaseException(e.toString());
     }
@@ -330,6 +356,7 @@ class ProductLocalDataSourceImpl implements ProductLocalDataSource {
           isSoldByWeight: v.isSoldByWeight,
           conversionFactor: v.conversionFactor,
           photoUrl: v.photoUrl,
+          linkedVariantId: v.linkedVariantId,
         );
       }).toList();
 
@@ -444,6 +471,7 @@ class ProductLocalDataSourceImpl implements ProductLocalDataSource {
                     isSoldByWeight: Value(variant.isSoldByWeight),
                     conversionFactor: Value(variant.conversionFactor),
                     photoUrl: Value(variant.photoUrl),
+                    linkedVariantId: Value(variant.linkedVariantId),
                   ),
                 );
 
@@ -565,6 +593,7 @@ class ProductLocalDataSourceImpl implements ProductLocalDataSource {
             isSoldByWeight: Value(variant.isSoldByWeight),
             conversionFactor: Value(variant.conversionFactor),
             photoUrl: Value(variant.photoUrl),
+            linkedVariantId: Value(variant.linkedVariantId),
           );
 
           if (variant.id != null && existingIds.contains(variant.id)) {
@@ -737,6 +766,7 @@ class ProductLocalDataSourceImpl implements ProductLocalDataSource {
             isSoldByWeight: Value(variant.isSoldByWeight),
             conversionFactor: Value(variant.conversionFactor),
             photoUrl: Value(variant.photoUrl),
+            linkedVariantId: Value(variant.linkedVariantId),
           ),
         );
     return variantId;
@@ -764,6 +794,7 @@ class ProductLocalDataSourceImpl implements ProductLocalDataSource {
         isSoldByWeight: Value(variant.isSoldByWeight),
         conversionFactor: Value(variant.conversionFactor),
         photoUrl: Value(variant.photoUrl),
+        linkedVariantId: Value(variant.linkedVariantId),
       ),
     );
   }

@@ -257,316 +257,356 @@ class _VariantFormPageState extends ConsumerState<VariantFormPage> {
     return Scaffold(
       body: SafeArea(
         child: Center(
-          child: Container(
-            constraints: const BoxConstraints(maxWidth: 600),
-            child: Form(
-              key: _formKey,
-              child: CustomScrollView(
-                slivers: [
-                  SliverAppBar(
-                    floating: true,
-                    pinned: true,
-                    scrolledUnderElevation: 0,
-                    title: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          isEditing ? 'Editar Variante' : 'Nueva Variante',
-                          style: theme.textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        Text(
-                          type == VariantType.sales
-                              ? 'Para Venta'
-                              : 'Para Compra',
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            fontWeight: FontWeight.normal,
-                            color: theme.colorScheme.onSurfaceVariant,
-                          ),
-                        ),
-                      ],
-                    ),
-                    actions: [
-                      // Save Action
-                      Padding(
-                        padding: const EdgeInsets.only(right: 16.0),
-                        child: isSaving
-                            ? SizedBox(
-                                width: 24,
-                                height: 24,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  color: theme.colorScheme.primary,
-                                ),
-                              )
-                            : MediaQuery.of(context).size.width < 600
-                            ? IconButton.filled(
-                                onPressed: isModified ? _saveVariant : null,
-                                icon: const Icon(
-                                  Icons.check_rounded,
-                                  color: Colors.white,
-                                ),
-                                tooltip: isEditing ? 'Actualizar' : 'Guardar',
-                              )
-                            : TextButton.icon(
-                                onPressed: isModified ? _saveVariant : null,
-                                icon: const Icon(Icons.check_circle_rounded),
-                                label: Text(
-                                  isEditing ? 'Actualizar' : 'Guardar',
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                style: TextButton.styleFrom(
-                                  foregroundColor: theme.colorScheme.primary,
-                                  disabledForegroundColor: theme
-                                      .colorScheme
-                                      .onSurface
-                                      .withValues(alpha: 0.38),
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final isDesktop = constraints.maxWidth > 900;
+              final contentWidth = isDesktop ? 900.0 : 600.0;
+
+              return Center(
+                child: Container(
+                  constraints: BoxConstraints(maxWidth: contentWidth),
+                  child: Form(
+                    key: _formKey,
+                    child: CustomScrollView(
+                      slivers: [
+                        SliverAppBar(
+                          floating: true,
+                          pinned: true,
+                          scrolledUnderElevation: 0,
+                          title: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                isEditing
+                                    ? 'Editar Variante'
+                                    : 'Nueva Variante',
+                                style: theme.textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.bold,
                                 ),
                               ),
-                      ),
-                    ],
-                  ),
-                  SliverToBoxAdapter(
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
-                      child: Column(
-                        children: [
-                          if (widget.productName != null) ...[
-                            Container(
-                              width: double.infinity,
-                              padding: const EdgeInsets.all(12),
-                              margin: const EdgeInsets.only(bottom: 24),
-                              decoration: BoxDecoration(
-                                color: theme.colorScheme.primaryContainer
-                                    .withValues(alpha: 0.3),
-                                borderRadius: BorderRadius.circular(8),
-                                border: Border.all(
-                                  color: theme.colorScheme.primaryContainer,
+                              Text(
+                                type == VariantType.sales
+                                    ? 'Para Venta'
+                                    : 'Para Compra',
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  fontWeight: FontWeight.normal,
+                                  color: theme.colorScheme.onSurfaceVariant,
                                 ),
                               ),
-                              child: Row(
-                                children: [
-                                  Icon(
-                                    Icons.inventory_2_outlined,
-                                    size: 20,
-                                    color: theme.colorScheme.primary,
-                                  ),
-                                  const SizedBox(width: 12),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          'Producto Principal',
-                                          style: theme.textTheme.labelSmall
-                                              ?.copyWith(
-                                                color:
-                                                    theme.colorScheme.primary,
-                                                fontWeight: FontWeight.bold,
-                                              ),
+                            ],
+                          ),
+                          actions: [
+                            // Save Action
+                            Padding(
+                              padding: const EdgeInsets.only(right: 16.0),
+                              child: isSaving
+                                  ? SizedBox(
+                                      width: 24,
+                                      height: 24,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        color: theme.colorScheme.primary,
+                                      ),
+                                    )
+                                  : MediaQuery.of(context).size.width < 600
+                                  ? IconButton.filled(
+                                      onPressed: isModified
+                                          ? _saveVariant
+                                          : null,
+                                      icon: const Icon(
+                                        Icons.check_rounded,
+                                        color: Colors.white,
+                                      ),
+                                      tooltip: isEditing
+                                          ? 'Actualizar'
+                                          : 'Guardar',
+                                    )
+                                  : TextButton.icon(
+                                      onPressed: isModified
+                                          ? _saveVariant
+                                          : null,
+                                      icon: const Icon(
+                                        Icons.check_circle_rounded,
+                                      ),
+                                      label: Text(
+                                        isEditing ? 'Actualizar' : 'Guardar',
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.bold,
                                         ),
-                                        Text(
-                                          widget.productName!,
-                                          style: theme.textTheme.titleSmall
-                                              ?.copyWith(
-                                                fontWeight: FontWeight.w600,
+                                      ),
+                                      style: TextButton.styleFrom(
+                                        foregroundColor:
+                                            theme.colorScheme.primary,
+                                        disabledForegroundColor: theme
+                                            .colorScheme
+                                            .onSurface
+                                            .withValues(alpha: 0.38),
+                                      ),
+                                    ),
+                            ),
+                          ],
+                        ),
+                        SliverToBoxAdapter(
+                          child: Padding(
+                            padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
+                            child: Column(
+                              children: [
+                                if (widget.productName != null) ...[
+                                  Container(
+                                    width: double.infinity,
+                                    padding: const EdgeInsets.all(12),
+                                    margin: const EdgeInsets.only(bottom: 24),
+                                    decoration: BoxDecoration(
+                                      color: theme.colorScheme.primaryContainer
+                                          .withValues(alpha: 0.3),
+                                      borderRadius: BorderRadius.circular(8),
+                                      border: Border.all(
+                                        color:
+                                            theme.colorScheme.primaryContainer,
+                                      ),
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        Icon(
+                                          Icons.inventory_2_outlined,
+                                          size: 20,
+                                          color: theme.colorScheme.primary,
+                                        ),
+                                        const SizedBox(width: 12),
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                'Producto Principal',
+                                                style: theme
+                                                    .textTheme
+                                                    .labelSmall
+                                                    ?.copyWith(
+                                                      color: theme
+                                                          .colorScheme
+                                                          .primary,
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                    ),
                                               ),
+                                              Text(
+                                                widget.productName!,
+                                                style: theme
+                                                    .textTheme
+                                                    .titleSmall
+                                                    ?.copyWith(
+                                                      fontWeight:
+                                                          FontWeight.w600,
+                                                    ),
+                                              ),
+                                            ],
+                                          ),
                                         ),
                                       ],
                                     ),
                                   ),
                                 ],
-                              ),
-                            ),
-                          ],
-                          // General Info Section
-                          _buildSectionHeader(
-                            context,
-                            'Información General',
-                            Icons.info_outline_rounded,
-                          ),
-                          const SizedBox(height: 16),
-                          _buildCard(
-                            context,
-                            child: Column(
-                              children: [
-                                VariantBasicInfoSection(
-                                  variant: widget.variant,
-                                  initialType: widget.initialType,
-                                  availableVariants: widget.availableVariants,
-                                  nameController: _nameController,
-                                  quantityController: _quantityController,
-                                  conversionController: _conversionController,
-                                  imageFile: ref.watch(
-                                    provider.select((s) => s.imageFile),
-                                  ),
-                                  photoUrl: ref.watch(
-                                    provider.select((s) => s.photoUrl),
-                                  ),
-                                  onImageSelected: ref
-                                      .read(provider.notifier)
-                                      .pickImage,
-                                  onRemoveImage: ref
-                                      .read(provider.notifier)
-                                      .removeImage,
+                                // General Info Section
+                                _buildSectionHeader(
+                                  context,
+                                  'Información General',
+                                  Icons.info_outline_rounded,
                                 ),
                                 const SizedBox(height: 16),
-                                // UNIT OF MEASURE
-                                Consumer(
-                                  builder: (context, ref, _) {
-                                    final unitsAsync = ref.watch(
-                                      unitListProvider,
-                                    );
-                                    final selectedUnitId = ref.watch(
-                                      provider.select((s) => s.unitId),
-                                    );
-
-                                    return unitsAsync.when(
-                                      data: (units) {
-                                        final selectedUnit = units
-                                            .cast<UnitOfMeasure?>()
-                                            .firstWhere(
-                                              (u) => u?.id == selectedUnitId,
-                                              orElse: () => null,
-                                            );
-
-                                        return SelectionField(
-                                          label: 'Unidad de Medida',
-                                          placeholder: 'Seleccionar unidad',
-                                          value: selectedUnit?.name,
-                                          helperText:
-                                              'Unidad de venta (ej. Pieza, Kg)',
-                                          prefixIcon: Icons.scale_rounded,
-                                          onTap: () =>
-                                              _showSelectionSheet<
-                                                UnitOfMeasure
-                                              >(
-                                                context: context,
-                                                title: 'Seleccionar Unidad',
-                                                items: units,
-                                                labelBuilder: (u) =>
-                                                    '${u.name} (${u.code})',
-                                                selectedItem: selectedUnit,
-                                                onSelected: (u) => ref
-                                                    .read(provider.notifier)
-                                                    .updateUnitId(u?.id),
-                                              ),
-                                          onClear: () => ref
-                                              .read(provider.notifier)
-                                              .updateUnitId(null),
-                                        );
-                                      },
-                                      loading: () => SelectionField(
-                                        label: 'Unidad de Medida',
-                                        onTap: _noOp,
-                                        isLoading: true,
-                                      ),
-                                      error: (e, s) => Text('Error: $e'),
-                                    );
-                                  },
-                                ),
-
-                                const SizedBox(height: 16),
-                                // SOLD BY WEIGHT
-                                Consumer(
-                                  builder: (context, ref, _) {
-                                    final isSoldByWeight = ref.watch(
-                                      provider.select((s) => s.isSoldByWeight),
-                                    );
-                                    return SwitchListTile(
-                                      title: const Text(
-                                        'Venta a granel / Por peso',
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 14,
+                                _buildCard(
+                                  context,
+                                  child: Column(
+                                    children: [
+                                      VariantBasicInfoSection(
+                                        variant: widget.variant,
+                                        initialType: widget.initialType,
+                                        availableVariants:
+                                            widget.availableVariants,
+                                        nameController: _nameController,
+                                        quantityController: _quantityController,
+                                        conversionController:
+                                            _conversionController,
+                                        imageFile: ref.watch(
+                                          provider.select((s) => s.imageFile),
                                         ),
+                                        photoUrl: ref.watch(
+                                          provider.select((s) => s.photoUrl),
+                                        ),
+                                        onImageSelected: ref
+                                            .read(provider.notifier)
+                                            .pickImage,
+                                        onRemoveImage: ref
+                                            .read(provider.notifier)
+                                            .removeImage,
                                       ),
-                                      subtitle: const Text(
-                                        'Habilita la captura de peso/cantidad en el punto de venta',
-                                        style: TextStyle(fontSize: 12),
+                                      const SizedBox(height: 16),
+                                      // UNIT OF MEASURE
+                                      Consumer(
+                                        builder: (context, ref, _) {
+                                          final unitsAsync = ref.watch(
+                                            unitListProvider,
+                                          );
+                                          final selectedUnitId = ref.watch(
+                                            provider.select((s) => s.unitId),
+                                          );
+
+                                          return unitsAsync.when(
+                                            data: (units) {
+                                              final selectedUnit = units
+                                                  .cast<UnitOfMeasure?>()
+                                                  .firstWhere(
+                                                    (u) =>
+                                                        u?.id == selectedUnitId,
+                                                    orElse: () => null,
+                                                  );
+
+                                              return SelectionField(
+                                                label: 'Unidad de Medida',
+                                                placeholder:
+                                                    'Seleccionar unidad',
+                                                value: selectedUnit?.name,
+                                                helperText:
+                                                    'Unidad de venta (ej. Pieza, Kg)',
+                                                prefixIcon: Icons.scale_rounded,
+                                                onTap: () =>
+                                                    _showSelectionSheet<
+                                                      UnitOfMeasure
+                                                    >(
+                                                      context: context,
+                                                      title:
+                                                          'Seleccionar Unidad',
+                                                      items: units,
+                                                      labelBuilder: (u) =>
+                                                          '${u.name} (${u.code})',
+                                                      selectedItem:
+                                                          selectedUnit,
+                                                      onSelected: (u) => ref
+                                                          .read(
+                                                            provider.notifier,
+                                                          )
+                                                          .updateUnitId(u?.id),
+                                                    ),
+                                                onClear: () => ref
+                                                    .read(provider.notifier)
+                                                    .updateUnitId(null),
+                                              );
+                                            },
+                                            loading: () => SelectionField(
+                                              label: 'Unidad de Medida',
+                                              onTap: _noOp,
+                                              isLoading: true,
+                                            ),
+                                            error: (e, s) => Text('Error: $e'),
+                                          );
+                                        },
                                       ),
-                                      value: isSoldByWeight,
-                                      onChanged: (val) => ref
-                                          .read(provider.notifier)
-                                          .updateIsSoldByWeight(val),
-                                      contentPadding: EdgeInsets.zero,
-                                    );
-                                  },
+
+                                      const SizedBox(height: 16),
+                                      // SOLD BY WEIGHT
+                                      Consumer(
+                                        builder: (context, ref, _) {
+                                          final isSoldByWeight = ref.watch(
+                                            provider.select(
+                                              (s) => s.isSoldByWeight,
+                                            ),
+                                          );
+                                          return SwitchListTile(
+                                            title: const Text(
+                                              'Venta a granel / Por peso',
+                                              style: TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: 14,
+                                              ),
+                                            ),
+                                            subtitle: const Text(
+                                              'Habilita la captura de peso/cantidad en el punto de venta',
+                                              style: TextStyle(fontSize: 12),
+                                            ),
+                                            value: isSoldByWeight,
+                                            onChanged: (val) => ref
+                                                .read(provider.notifier)
+                                                .updateIsSoldByWeight(val),
+                                            contentPadding: EdgeInsets.zero,
+                                          );
+                                        },
+                                      ),
+                                    ],
+                                  ),
                                 ),
+                                const SizedBox(height: 32),
+
+                                // Price & Cost Section
+                                _buildSectionHeader(
+                                  context,
+                                  'Precios y Costos',
+                                  Icons.payments_outlined,
+                                ),
+                                const SizedBox(height: 16),
+                                _buildCard(
+                                  context,
+                                  child: VariantPriceSection(
+                                    variant: widget.variant,
+                                    initialType: widget.initialType,
+                                    priceController: _priceController,
+                                    costController: _costController,
+                                    wholesalePriceController:
+                                        _wholesaleController,
+                                    marginController: _marginController,
+                                    priceFocus: _priceFocus,
+                                    costFocus: _costFocus,
+                                    marginFocus: _marginFocus,
+                                  ),
+                                ),
+                                const SizedBox(height: 32),
+
+                                // Identification Section
+                                _buildSectionHeader(
+                                  context,
+                                  'Identificación',
+                                  Icons.qr_code_scanner_rounded,
+                                ),
+                                const SizedBox(height: 16),
+                                _buildCard(
+                                  context,
+                                  child: VariantBarcodeSection(
+                                    variant: widget.variant,
+                                    initialType: widget.initialType,
+                                    barcodeController: _barcodeController,
+                                  ),
+                                ),
+
+                                if (type == VariantType.sales &&
+                                    useInventory) ...[
+                                  const SizedBox(height: 32),
+                                  // Settings Section
+                                  _buildSectionHeader(
+                                    context,
+                                    'Configuración Adicional',
+                                    Icons.settings_outlined,
+                                  ),
+                                  const SizedBox(height: 16),
+                                  _buildCard(
+                                    context,
+                                    child: VariantSettingsSection(
+                                      variant: widget.variant,
+                                      stockMinController: _stockMinController,
+                                      stockMaxController: _stockMaxController,
+                                    ),
+                                  ),
+                                ],
+                                const SizedBox(height: 40), // Bottom padding
                               ],
                             ),
                           ),
-                          const SizedBox(height: 32),
-
-                          // Price & Cost Section
-                          _buildSectionHeader(
-                            context,
-                            'Precios y Costos',
-                            Icons.payments_outlined,
-                          ),
-                          const SizedBox(height: 16),
-                          _buildCard(
-                            context,
-                            child: VariantPriceSection(
-                              variant: widget.variant,
-                              initialType: widget.initialType,
-                              priceController: _priceController,
-                              costController: _costController,
-                              wholesalePriceController: _wholesaleController,
-                              marginController: _marginController,
-                              priceFocus: _priceFocus,
-                              costFocus: _costFocus,
-                              marginFocus: _marginFocus,
-                            ),
-                          ),
-                          const SizedBox(height: 32),
-
-                          // Identification Section
-                          _buildSectionHeader(
-                            context,
-                            'Identificación',
-                            Icons.qr_code_scanner_rounded,
-                          ),
-                          const SizedBox(height: 16),
-                          _buildCard(
-                            context,
-                            child: VariantBarcodeSection(
-                              variant: widget.variant,
-                              initialType: widget.initialType,
-                              barcodeController: _barcodeController,
-                            ),
-                          ),
-
-                          if (type == VariantType.sales && useInventory) ...[
-                            const SizedBox(height: 32),
-                            // Settings Section
-                            _buildSectionHeader(
-                              context,
-                              'Configuración Adicional',
-                              Icons.settings_outlined,
-                            ),
-                            const SizedBox(height: 16),
-                            _buildCard(
-                              context,
-                              child: VariantSettingsSection(
-                                variant: widget.variant,
-                                stockMinController: _stockMinController,
-                                stockMaxController: _stockMaxController,
-                              ),
-                            ),
-                          ],
-                          const SizedBox(height: 40), // Bottom padding
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
                   ),
-                ],
-              ),
-            ),
+                ),
+              );
+            },
           ),
         ),
       ),
