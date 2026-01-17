@@ -1,20 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:posventa/presentation/providers/settings_provider.dart';
-import 'package:go_router/go_router.dart';
-import 'package:posventa/presentation/pages/shared/main_layout.dart';
-import 'package:posventa/core/constants/permission_constants.dart';
-
-import 'package:posventa/domain/entities/inventory.dart';
-import 'package:posventa/domain/entities/product.dart';
-import 'package:posventa/domain/entities/product_variant.dart';
-import 'package:posventa/domain/entities/warehouse.dart';
 import 'package:posventa/presentation/providers/inventory_providers.dart';
-import 'package:posventa/presentation/providers/notification_providers.dart';
-import 'package:posventa/presentation/providers/permission_provider.dart';
 import 'package:posventa/presentation/providers/product_provider.dart';
-import 'package:posventa/presentation/widgets/inventory/card/inventory_card_widget.dart';
+import 'package:posventa/presentation/providers/settings_provider.dart';
+import 'package:posventa/presentation/viewmodels/inventory_view_model.dart';
+import 'package:posventa/presentation/widgets/inventory/inventory_card_widget.dart';
+import 'package:posventa/presentation/widgets/inventory/inventory_header.dart';
 import 'package:posventa/presentation/widgets/inventory/inventory_table_row.dart';
 
 class InventoryPage extends ConsumerStatefulWidget {
@@ -25,415 +16,249 @@ class InventoryPage extends ConsumerStatefulWidget {
 }
 
 class _InventoryPageState extends ConsumerState<InventoryPage> {
-  String _searchQuery = '';
+  final TextEditingController _searchController = TextEditingController();
   final FocusNode _searchFocusNode = FocusNode();
 
   @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.invalidate(inventoryProvider); // Refresh on entry
-    });
-  }
-
-  @override
   void dispose() {
+    _searchController.dispose();
     _searchFocusNode.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final inventoryAsync = ref.watch(inventoryProvider);
-    final productsAsync = ref.watch(productNotifierProvider);
-    final warehousesAsync = ref.watch(warehousesProvider);
+    // Correctly handle AsyncValue reading
+    final settingsAsync = ref.watch(settingsProvider);
+    final useInventory = settingsAsync.asData?.value.useInventory ?? false;
+    final theme = Theme.of(context);
 
-    final hasViewAccess = ref.watch(
-      hasPermissionProvider(PermissionConstants.inventoryView),
-    );
-    final hasAdjustAccess = ref.watch(
-      hasPermissionProvider(PermissionConstants.inventoryAdjust),
-    );
-    final isSmallScreen = MediaQuery.of(context).size.width < 1200;
+    if (settingsAsync.isLoading) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
 
-    if (!hasViewAccess) {
-      return const Scaffold(
-        body: Center(child: Text('No tienes acceso al inventario')),
+    if (!useInventory) {
+      return Scaffold(
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.inventory_2_outlined,
+                size: 64,
+                color: theme.colorScheme.outline,
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Gestión de Inventario Desactivada',
+                style: theme.textTheme.headlineSmall,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Activa el control de inventario en Configuración > Sistema para usar esta función.',
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+        ),
       );
     }
 
-    return CallbackShortcuts(
-      bindings: {
-        const SingleActivator(LogicalKeyboardKey.keyF, control: true): () {
-          _searchFocusNode.requestFocus();
-        },
-      },
-      child: Scaffold(
-        appBar: AppBar(
-          leading: isSmallScreen
-              ? IconButton(
-                  icon: const Icon(Icons.menu),
-                  onPressed: () => MainLayout.of(context)?.openDrawer(),
+    final inventoryState = ref.watch(inventoryViewModelProvider);
+
+    return Scaffold(
+      backgroundColor: theme.colorScheme.surface,
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          final isDesktop = constraints.maxWidth > 800;
+
+          return CustomScrollView(
+            slivers: [
+              _buildAppBar(context, isDesktop),
+
+              if (inventoryState.isLoading)
+                const SliverFillRemaining(
+                  child: Center(child: CircularProgressIndicator()),
                 )
-              : null,
-          title: const Text(
-            'Inventario',
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 24),
-          ),
-          centerTitle: false,
-          backgroundColor: Theme.of(context).colorScheme.surface,
-          foregroundColor: Theme.of(context).colorScheme.onSurface,
-          elevation: 0,
-          actions: [
-            Consumer(
-              builder: (context, ref, child) {
-                final unreadAsync = ref.watch(
-                  unreadNotificationsStreamProvider,
-                );
-
-                return IconButton(
-                  icon: Badge(
-                    isLabelVisible:
-                        unreadAsync.asData?.value.isNotEmpty ?? false,
-                    label: Text('${unreadAsync.asData?.value.length ?? 0}'),
-                    child: const Icon(Icons.notifications_none_rounded),
+              else if (inventoryState.error != null)
+                SliverFillRemaining(
+                  child: Center(child: Text('Error: ${inventoryState.error}')),
+                )
+              else ...[
+                SliverPadding(
+                  padding: const EdgeInsets.all(16.0),
+                  sliver: SliverToBoxAdapter(
+                    child: _SummarySection(stats: inventoryState.stats),
                   ),
-                  onPressed: () {
-                    context.push('/inventory/notifications');
-                  },
-                );
-              },
-            ),
-            const SizedBox(width: 8),
-          ],
-        ),
-        body: productsAsync.when(
-          loading: () => const Center(child: CircularProgressIndicator()),
-          error: (e, s) => Center(child: Text('Error al cargar productos: $e')),
-          data: (products) {
-            // final products = state.products; // Removed
-            return inventoryAsync.when(
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (e, s) => const SizedBox(),
-              data: (inventoryList) {
-                return warehousesAsync.when(
-                  loading: () => const SizedBox(),
-                  error: (e, s) => const SizedBox(),
-                  data: (warehouses) {
-                    final displayItems = <_InventoryDisplayItem>[];
-                    final warehouseMap = {for (var w in warehouses) w.id: w};
+                ),
 
-                    // Iterate PRODUCTS -> VARIANTS (Sales)
-                    // If Inventory exists -> Add item with warehouse
-                    // If NO Inventory exists -> Add item with 0 stock (and default warehouse concept?)
-
-                    for (var product in products) {
-                      if (product.variants == null) continue;
-
-                      for (var variant in product.variants!) {
-                        // User requirement: "deben de aparecer las variantes de venta"
-                        if (variant.type != VariantType.sales) continue;
-
-                        // Find matching inventory records
-                        // Matches if: productId matches AND (variantId matches OR (variantId is null AND product has only 1 variant? - Strict for now))
-                        // Let's stick to strict variantId match if possible, BUT since we just added the field
-                        // it might be null in DB.
-                        // IF we filter by strict variant ID, we see nothing.
-
-                        // Heuristic: If we have inventory for this product, and we haven't assigned it to another variant, maybe show it?
-                        // Better approach for "Show Variants":
-                        // 1. Strict Match
-                        final strictMatches = inventoryList
-                            .where(
-                              (i) =>
-                                  i.productId == product.id &&
-                                  i.variantId == variant.id,
-                            )
-                            .toList();
-
-                        if (strictMatches.isNotEmpty) {
-                          for (var match in strictMatches) {
-                            displayItems.add(
-                              _InventoryDisplayItem(
-                                match,
-                                product,
-                                variant,
-                                warehouseMap[match.warehouseId],
-                              ),
-                            );
-                          }
-                        } else {
-                          // No strict inventory found.
-                          // Does partial inventory exist (Product ID match, Variant ID null)?
-                          // If so, we might be hiding it.
-                          // BUT for now, let's ensure the VARIANT appears as 0 stock if no strict match.
-                          if (warehouses.isNotEmpty) {
-                            // E.g. show for the first warehouse or 'Unassigned'
-                            // Let's create a Virtual Inventory item with 0 stock for visualization
-                            // using the first warehouse ID as a placeholder if available
-                            final defaultWarehouseId = warehouses.first.id;
-                            displayItems.add(
-                              _InventoryDisplayItem(
-                                Inventory(
-                                  productId: product.id!,
-                                  warehouseId: defaultWarehouseId!,
-                                  variantId: variant.id,
-                                  quantityOnHand: variant.stock ?? 0,
-                                  minStock: variant.stockMin?.toInt() ?? 0,
-                                  maxStock: variant.stockMax?.toInt() ?? 0,
-                                ),
-                                product,
-                                variant,
-                                warehouseMap[defaultWarehouseId],
-                              ),
-                            );
-                          }
-                        }
-                      }
-                    }
-
-                    // Filtering
-                    final filteredItems = displayItems.where((item) {
-                      final q = _searchQuery.toLowerCase();
-                      return item.product.name.toLowerCase().contains(q) ||
-                          item.variant.variantName.toLowerCase().contains(q) ||
-                          (item.variant.barcode?.toLowerCase().contains(q) ??
-                              false) ||
-                          (item.variant.additionalBarcodes?.any(
-                                (code) => code.toLowerCase().contains(q),
-                              ) ??
-                              false);
-                    }).toList();
-
-                    // Stats
-                    int lowStockCount = 0;
-                    double totalInfo = 0;
-
-                    for (var item in displayItems) {
-                      final stock = item.inventory.quantityOnHand;
-                      final min =
-                          item.inventory.minStock ??
-                          item.variant.stockMin ??
-                          0.0;
-                      if (stock <= min && min > 0) lowStockCount++;
-                      totalInfo += stock * item.variant.costPrice;
-                    }
-
-                    // Global Settings
-                    final settingsAsync = ref.watch(settingsProvider);
-                    final useInventory =
-                        settingsAsync.value?.useInventory ?? true;
-
-                    if (!useInventory) {
-                      return Center(
-                        child: Padding(
-                          padding: const EdgeInsets.all(16.0),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                Icons.inventory_2_outlined,
-                                size: 64,
-                                color: Theme.of(context).colorScheme.outline,
-                              ),
-                              const SizedBox(height: 16),
-                              Text(
-                                'Gestión de Inventario Desactivada',
-                                textAlign: TextAlign.center,
-                                style: Theme.of(context).textTheme.titleLarge,
-                              ),
-                              const SizedBox(height: 8),
-                              Text(
-                                textAlign: TextAlign.center,
-                                'Activa "Control de Inventario" en Configuración para ver esta sección.',
-                                style: Theme.of(context).textTheme.bodyMedium
-                                    ?.copyWith(
-                                      color: Theme.of(
-                                        context,
-                                      ).colorScheme.onSurfaceVariant,
-                                    ),
-                              ),
-                            ],
+                // Search & Filter
+                SliverPersistentHeader(
+                  pinned: true,
+                  delegate: _StickyHeaderDelegate(
+                    minHeight: 80,
+                    maxHeight: 80,
+                    child: Container(
+                      color: theme.colorScheme.surface,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
+                      child: SearchBar(
+                        controller: _searchController,
+                        focusNode: _searchFocusNode,
+                        elevation: WidgetStateProperty.all(0),
+                        backgroundColor: WidgetStateProperty.all(
+                          theme.colorScheme.surfaceContainerHighest.withValues(
+                            alpha: 0.5,
                           ),
                         ),
-                      );
-                    }
-
-                    return Column(
-                      children: [
-                        // Search
-                        Padding(
-                          padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-                          child: TextField(
-                            focusNode: _searchFocusNode,
-                            onChanged: (val) =>
-                                setState(() => _searchQuery = val),
-                            decoration: InputDecoration(
-                              hintText: 'Buscar nombre, SKU, o escanear...',
-                              prefixIcon: Icon(
-                                Icons.search,
-                                color: Theme.of(
-                                  context,
-                                ).colorScheme.onSurfaceVariant,
-                              ),
-                              suffixIcon: Icon(
-                                Icons.qr_code_scanner,
-                                color: Theme.of(
-                                  context,
-                                ).colorScheme.onSurfaceVariant,
-                              ),
-                              filled: true,
-                              fillColor: Theme.of(context)
-                                  .colorScheme
-                                  .surfaceContainerHighest
-                                  .withValues(alpha: 0.5),
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(28),
-                                borderSide: BorderSide.none,
-                              ),
-                              contentPadding: const EdgeInsets.symmetric(
-                                vertical: 12,
-                                horizontal: 20,
-                              ),
+                        hintText: 'Buscar por nombre, SKU o código...',
+                        leading: const Icon(Icons.search),
+                        onChanged: (val) {
+                          ref
+                              .read(inventorySearchQueryProvider.notifier)
+                              .update(val);
+                        },
+                        trailing: [
+                          if (_searchController.text.isNotEmpty)
+                            IconButton(
+                              icon: const Icon(Icons.clear),
+                              onPressed: () {
+                                _searchController.clear();
+                                ref
+                                    .read(inventorySearchQueryProvider.notifier)
+                                    .update('');
+                              },
                             ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+
+                if (inventoryState.items.isEmpty)
+                  SliverFillRemaining(
+                    hasScrollBody: false,
+                    child: Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.search_off,
+                            size: 48,
+                            color: theme.colorScheme.outline,
                           ),
-                        ),
-
-                        Expanded(
-                          child: LayoutBuilder(
-                            builder: (context, constraints) {
-                              final isDesktop = constraints.maxWidth > 800;
-                              return ListView(
-                                padding: const EdgeInsets.all(16),
-                                cacheExtent:
-                                    500, // Pre-render items for smooth scrolling
-                                physics:
-                                    const AlwaysScrollableScrollPhysics(), // Desktop feel
-                                children: [
-                                  SingleChildScrollView(
-                                    scrollDirection: Axis.horizontal,
-                                    child: Row(
-                                      children: [
-                                        _SummaryCard(
-                                          label: 'BAJO STOCK',
-                                          value: '$lowStockCount',
-                                          subValue: 'Atención requerida',
-                                          icon: Icons.warning_amber_rounded,
-                                          color: Theme.of(
-                                            context,
-                                          ).colorScheme.error,
-                                        ),
-                                        const SizedBox(width: 12),
-                                        _SummaryCard(
-                                          label: 'VALORACIÓN',
-                                          value:
-                                              '\$${totalInfo.toStringAsFixed(1)}',
-                                          subValue: 'Total en inventario',
-                                          icon: Icons.attach_money,
-                                          color: Theme.of(
-                                            context,
-                                          ).colorScheme.primary,
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  const SizedBox(height: 24),
-
-                                  Row(
-                                    children: [
-                                      const Text(
-                                        'Lista de Stock',
-                                        style: TextStyle(
-                                          fontSize: 18,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                      const Spacer(),
-                                      if (isDesktop)
-                                        // Maybe toggle view button or export
-                                        const SizedBox(),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 12),
-
-                                  if (filteredItems.isEmpty)
-                                    _buildEmptyState(
-                                      context,
-                                      _searchQuery.isNotEmpty,
-                                    )
-                                  else if (isDesktop) ...[
-                                    const InventoryHeader(),
-                                    ...filteredItems.map(
-                                      (item) => InventoryTableRow(
-                                        inventory: item.inventory,
-                                        product: item.product,
-                                        variant: item.variant,
-                                        warehouse: item.warehouse,
-                                        hasAdjustAccess: hasAdjustAccess,
-                                      ),
-                                    ),
-                                  ] else
-                                    ...filteredItems.map(
-                                      (item) => Padding(
-                                        padding: const EdgeInsets.only(
-                                          bottom: 12,
-                                        ),
-                                        child: InventoryCardWidget(
-                                          inventory: item.inventory,
-                                          product: item.product,
-                                          variant: item.variant,
-                                          warehouse: item.warehouse,
-                                        ),
-                                      ),
-                                    ),
-                                ],
-                              );
-                            },
+                          const SizedBox(height: 16),
+                          Text(
+                            'No se encontraron resultados',
+                            style: theme.textTheme.titleMedium,
                           ),
-                        ),
-                      ],
-                    );
-                  },
-                );
-              },
-            );
-          },
-        ),
+                        ],
+                      ),
+                    ),
+                  )
+                else
+                  // Content Layout
+                  isDesktop
+                      ? _buildDesktopTable(inventoryState.items)
+                      : _buildMobileList(inventoryState.items),
+              ],
+            ],
+          );
+        },
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () {
+          // Provide manual refresh action
+          ref.invalidate(inventoryProvider);
+          ref.invalidate(productNotifierProvider);
+          ref.invalidate(warehousesProvider);
+        },
+        icon: const Icon(Icons.refresh),
+        label: const Text('Actualizar'),
       ),
     );
   }
 
-  Widget _buildEmptyState(BuildContext context, bool isSearch) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.only(top: 40),
-        child: Column(
-          children: [
-            Icon(Icons.inventory_2_outlined, size: 64, color: Colors.grey[400]),
-            const SizedBox(height: 16),
-            Text(
-              isSearch ? 'No se encontraron resultados' : 'No hay inventario',
-              style: TextStyle(color: Colors.grey[600]),
-            ),
-          ],
-        ),
-      ),
+  Widget _buildAppBar(BuildContext context, bool isDesktop) {
+    if (isDesktop) {
+      return const SliverToBoxAdapter(child: SizedBox.shrink());
+    }
+
+    return const SliverAppBar(
+      title: Text('Inventario'),
+      floating: true,
+      snap: true,
+    );
+  }
+
+  Widget _buildDesktopTable(List<InventoryDisplayItem> items) {
+    return SliverList(
+      delegate: SliverChildBuilderDelegate((context, index) {
+        if (index == 0) return const InventoryHeader();
+        final item = items[index - 1];
+        return InventoryTableRow(
+          inventory: item.inventory,
+          product: item.product,
+          variant: item.variant,
+          warehouse: item.warehouse,
+        );
+      }, childCount: items.length + 1),
+    );
+  }
+
+  Widget _buildMobileList(List<InventoryDisplayItem> items) {
+    return SliverList(
+      delegate: SliverChildBuilderDelegate((context, index) {
+        final item = items[index];
+        return InventoryCardWidget(
+          inventory: item.inventory,
+          product: item.product,
+          variant: item.variant,
+          warehouse: item.warehouse,
+        );
+      }, childCount: items.length),
     );
   }
 }
 
-class _InventoryDisplayItem {
-  final Inventory inventory;
-  final Product product;
-  final ProductVariant variant;
-  final Warehouse? warehouse;
+class _SummarySection extends StatelessWidget {
+  final InventoryStats stats;
+  const _SummarySection({required this.stats});
 
-  _InventoryDisplayItem(
-    this.inventory,
-    this.product,
-    this.variant,
-    this.warehouse,
-  );
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Row(
+      children: [
+        Expanded(
+          child: _SummaryCard(
+            label: 'VALORACIÓN',
+            value: '\$${(stats.totalValue).toStringAsFixed(2)}',
+            subValue: '${stats.totalItems} productos',
+            icon: Icons.attach_money,
+            color: Colors.green,
+          ),
+        ),
+        const SizedBox(width: 16),
+        Expanded(
+          child: _SummaryCard(
+            label: 'BAJO STOCK',
+            value: stats.lowStockCount.toString(),
+            subValue: 'Requieren atención',
+            icon: Icons.warning_amber_rounded,
+            color: stats.lowStockCount > 0
+                ? Colors.orange
+                : theme.colorScheme.primary,
+          ),
+        ),
+      ],
+    );
+  }
 }
 
 class _SummaryCard extends StatelessWidget {
@@ -454,11 +279,10 @@ class _SummaryCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 160,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -490,7 +314,7 @@ class _SummaryCard extends StatelessWidget {
           Text(
             value,
             style: TextStyle(
-              fontSize: 22,
+              fontSize: 20,
               fontWeight: FontWeight.bold,
               color: Theme.of(context).colorScheme.onSurface,
             ),
@@ -509,5 +333,39 @@ class _SummaryCard extends StatelessWidget {
         ],
       ),
     );
+  }
+}
+
+class _StickyHeaderDelegate extends SliverPersistentHeaderDelegate {
+  final Widget child;
+  final double minHeight;
+  final double maxHeight;
+
+  _StickyHeaderDelegate({
+    required this.child,
+    required this.minHeight,
+    required this.maxHeight,
+  });
+
+  @override
+  Widget build(
+    BuildContext context,
+    double shrinkOffset,
+    bool overlapsContent,
+  ) {
+    return SizedBox.expand(child: child);
+  }
+
+  @override
+  double get maxExtent => maxHeight;
+
+  @override
+  double get minExtent => minHeight;
+
+  @override
+  bool shouldRebuild(_StickyHeaderDelegate oldDelegate) {
+    return maxHeight != oldDelegate.maxHeight ||
+        minHeight != oldDelegate.minHeight ||
+        child != oldDelegate.child;
   }
 }

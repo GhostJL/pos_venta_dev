@@ -10,40 +10,6 @@ import 'package:posventa/presentation/providers/inventory_providers.dart';
 import 'package:posventa/presentation/providers/inventory_lot_providers.dart';
 import 'package:posventa/presentation/providers/settings_provider.dart';
 
-class InventoryHeader extends StatelessWidget {
-  const InventoryHeader({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-      child: Row(
-        children: [
-          const SizedBox(width: 48 + 16), // Image space
-          Expanded(
-            flex: 3,
-            child: _buildHeader(context, 'Producto / Variante'),
-          ),
-          Expanded(flex: 2, child: _buildHeader(context, 'Almacén')),
-          Expanded(flex: 2, child: _buildHeader(context, 'Stock')),
-          Expanded(flex: 1, child: _buildHeader(context, 'Estado')),
-          const SizedBox(width: 48), // Actions space
-        ],
-      ),
-    );
-  }
-
-  Widget _buildHeader(BuildContext context, String text) {
-    return Text(
-      text,
-      style: TextStyle(
-        fontWeight: FontWeight.bold,
-        color: Theme.of(context).colorScheme.onSurfaceVariant,
-      ),
-    );
-  }
-}
-
 class InventoryTableRow extends ConsumerStatefulWidget {
   final Inventory inventory;
   final Product product;
@@ -200,12 +166,12 @@ class _InventoryTableRowState extends ConsumerState<InventoryTableRow> {
                     ),
                   ),
 
-                  // Stock
+                  // Stock (Fixed Alignment)
                   Expanded(
                     flex: 2,
                     child: useInventory
                         ? Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                            crossAxisAlignment: CrossAxisAlignment.end,
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               Text(
@@ -238,58 +204,67 @@ class _InventoryTableRowState extends ConsumerState<InventoryTableRow> {
                               ),
                             ],
                           )
-                        : const Text('-'),
+                        : const Align(
+                            alignment: Alignment.centerRight,
+                            child: Text('-'),
+                          ),
                   ),
 
-                  // Status
+                  // Status (Fixed Alignment)
                   Expanded(
-                    flex: 1,
+                    flex: 2,
                     child: useInventory
-                        ? _buildStatusBadge(
-                            context,
-                            isZeroStock,
-                            isLowStock,
-                            isNearLowStock,
+                        ? Center(
+                            child: _buildStatusBadge(
+                              context,
+                              isZeroStock,
+                              isLowStock,
+                              isNearLowStock,
+                            ),
                           )
                         : const SizedBox(),
                   ),
 
-                  // Actions
-                  PopupMenuButton<String>(
-                    icon: Icon(
-                      Icons.more_vert,
-                      color: colorScheme.onSurfaceVariant,
-                    ),
-                    onSelected: (value) {
-                      if (value == 'delete' && widget.hasAdjustAccess) {
-                        _confirmDelete(
-                          context,
-                          ref,
-                          widget.inventory,
-                          widget.product.name,
-                        );
-                      }
-                    },
-                    itemBuilder: (context) => [
-                      if (widget.hasAdjustAccess)
-                        const PopupMenuItem(
-                          value: 'delete',
-                          child: Row(
-                            children: [
-                              Icon(
-                                Icons.delete_outline,
-                                color: Colors.red,
-                                size: 20,
-                              ),
-                              SizedBox(width: 8),
-                              Text(
-                                'Eliminar',
-                                style: TextStyle(color: Colors.red),
-                              ),
-                            ],
+                  // Actions (Fixed Width)
+                  SizedBox(
+                    width: 48,
+                    child: PopupMenuButton<String>(
+                      icon: Icon(
+                        Icons.more_vert,
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                      padding: EdgeInsets.zero,
+                      onSelected: (value) {
+                        if (value == 'delete' && widget.hasAdjustAccess) {
+                          _confirmDelete(
+                            context,
+                            ref,
+                            widget.inventory,
+                            widget.product.name,
+                          );
+                        }
+                      },
+                      itemBuilder: (context) => [
+                        if (widget.hasAdjustAccess)
+                          const PopupMenuItem(
+                            value: 'delete',
+                            child: Row(
+                              children: [
+                                Icon(
+                                  Icons.delete_outline,
+                                  color: Colors.red,
+                                  size: 20,
+                                ),
+                                SizedBox(width: 8),
+                                Text(
+                                  'Eliminar',
+                                  style: TextStyle(color: Colors.red),
+                                ),
+                              ],
+                            ),
                           ),
-                        ),
-                    ],
+                      ],
+                    ),
                   ),
                 ],
               ),
