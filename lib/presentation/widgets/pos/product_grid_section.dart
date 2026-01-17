@@ -155,6 +155,45 @@ class _ProductGridSectionState extends ConsumerState<ProductGridSection>
     );
   }
 
+  Future<void> _onProductDecrement(ProductGridItem item) async {
+    if (item.product.id == null) return;
+    final posNotifier = ref.read(pOSProvider.notifier);
+    final cart = ref.read(pOSProvider).cart;
+
+    // Find the item in the cart
+    final cartItem = cart
+        .where(
+          (i) =>
+              i.productId == item.product.id && i.variantId == item.variant?.id,
+        )
+        .firstOrNull;
+
+    if (cartItem != null) {
+      if (cartItem.quantity > 1) {
+        final error = await posNotifier.updateQuantity(
+          cartItem.productId,
+          cartItem.quantity - 1,
+          variantId: cartItem.variantId,
+        );
+        if (error != null && mounted) {
+          _showStockError(context, error);
+        }
+      } else {
+        posNotifier.removeFromCart(
+          cartItem.productId,
+          variantId: cartItem.variantId,
+        );
+      }
+    }
+  }
+
+  void _onProductDelete(ProductGridItem item) {
+    if (item.product.id == null) return;
+    ref
+        .read(pOSProvider.notifier)
+        .removeFromCart(item.product.id!, variantId: item.variant?.id);
+  }
+
   @override
   Widget build(BuildContext context) {
     final gridItemsAsync = ref.watch(posGridItemsProvider);
@@ -200,6 +239,8 @@ class _ProductGridSectionState extends ConsumerState<ProductGridSection>
                 isMobile: widget.isMobile,
                 onItemTap: _onProductTap,
                 onItemLongPress: _onProductLongPress,
+                onItemRemove: _onProductDecrement,
+                onItemDelete: _onProductDelete,
                 cartQuantities: cartQuantities,
               );
             },

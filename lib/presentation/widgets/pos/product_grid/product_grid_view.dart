@@ -8,6 +8,8 @@ class ProductGridView extends StatelessWidget {
   final bool isMobile;
   final Function(ProductGridItem) onItemTap;
   final Function(ProductGridItem) onItemLongPress;
+  final Function(ProductGridItem)? onItemRemove;
+  final Function(ProductGridItem)? onItemDelete;
   final Map<int, Map<int?, double>> cartQuantities;
 
   const ProductGridView({
@@ -16,6 +18,8 @@ class ProductGridView extends StatelessWidget {
     required this.isMobile,
     required this.onItemTap,
     required this.onItemLongPress,
+    this.onItemRemove,
+    this.onItemDelete,
     required this.cartQuantities,
   });
 
@@ -85,6 +89,8 @@ class ProductGridView extends StatelessWidget {
           variant: item.variant,
           quantityInCart: quantity,
           onTap: () => onItemTap(item),
+          onRemove: onItemRemove != null ? () => onItemRemove!(item) : null,
+          onDelete: onItemDelete != null ? () => onItemDelete!(item) : null,
           onLongPress: () => onItemLongPress(item),
         );
       },
