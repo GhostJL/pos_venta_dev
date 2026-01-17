@@ -12,6 +12,8 @@ class ReportsState {
   final DateTime startDate;
   final DateTime endDate;
   final Map<String, double> paymentBreakdown;
+  final double inventoryValue;
+  final List<LowStockItem> lowStockItems;
 
   const ReportsState({
     this.isLoading = false,
@@ -21,6 +23,8 @@ class ReportsState {
     required this.startDate,
     required this.endDate,
     this.paymentBreakdown = const {},
+    this.inventoryValue = 0.0,
+    this.lowStockItems = const [],
   });
 
   ReportsState copyWith({
@@ -31,6 +35,8 @@ class ReportsState {
     DateTime? startDate,
     DateTime? endDate,
     Map<String, double>? paymentBreakdown,
+    double? inventoryValue,
+    List<LowStockItem>? lowStockItems,
   }) {
     return ReportsState(
       isLoading: isLoading ?? this.isLoading,
@@ -40,6 +46,8 @@ class ReportsState {
       startDate: startDate ?? this.startDate,
       endDate: endDate ?? this.endDate,
       paymentBreakdown: paymentBreakdown ?? this.paymentBreakdown,
+      inventoryValue: inventoryValue ?? this.inventoryValue,
+      lowStockItems: lowStockItems ?? this.lowStockItems,
     );
   }
 }
@@ -77,12 +85,17 @@ class ReportsNotifier extends _$ReportsNotifier {
 
       final z = await repo.generateZReport(date: state.endDate);
 
+      final invValue = await repo.getInventoryValue();
+      final lowStock = await repo.getLowStockItems();
+
       state = state.copyWith(
         isLoading: false,
         dailySales: sales,
         topProducts: products,
         zReport: z,
         paymentBreakdown: breakdown,
+        inventoryValue: invValue,
+        lowStockItems: lowStock,
       );
     } catch (e) {
       state = state.copyWith(isLoading: false);

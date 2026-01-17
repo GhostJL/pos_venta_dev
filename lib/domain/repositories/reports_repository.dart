@@ -18,4 +18,8 @@ abstract class ReportsRepository {
   });
 
   Future<ZReport> generateZReport({required DateTime date});
+
+  Future<double> getInventoryValue();
+
+  Future<List<LowStockItem>> getLowStockItems({int limit = 10});
 }

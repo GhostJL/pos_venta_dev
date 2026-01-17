@@ -45,3 +45,21 @@ class ZReport {
     required this.paymentMethodBreakdown,
   });
 }
+
+class LowStockItem {
+  final int productId;
+  final String productName;
+  final String variantName;
+  final double quantityOnHand;
+  final double minStock;
+  final String? warehouseName;
+
+  const LowStockItem({
+    required this.productId,
+    required this.productName,
+    required this.variantName,
+    required this.quantityOnHand,
+    required this.minStock,
+    this.warehouseName,
+  });
+}

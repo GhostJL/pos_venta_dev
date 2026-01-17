@@ -210,4 +210,90 @@ class ReportsRepositoryImpl implements ReportsRepository {
       paymentMethodBreakdown: paymentBreakdown,
     );
   }
+
+  @override
+  Future<double> getInventoryValue() async {
+    // Inventory Value = Sum(QuantityOnHand * CostPrice)
+    // We join Inventory with ProductVariants to get the cost price (avg or current).
+    // Note: This is an estimation. For precise FIFO/LIFO, we'd query inventory_lots.
+    // Given the constraints and typical POS needs, using current variant cost is acceptable and much faster.
+
+    final costExpression =
+        (_db.inventory.quantityOnHand *
+                _db.productVariants.costPriceCents.cast<double>())
+            .sum();
+
+    final query = _db.selectOnly(_db.inventory).join([
+      innerJoin(
+        _db.productVariants,
+        _db.productVariants.id.equalsExp(_db.inventory.variantId),
+        useColumns: false, // We only need columns for the expression
+      ),
+    ])..addColumns([costExpression]);
+
+    final result = await query.getSingleOrNull();
+    final totalCents = result?.read(costExpression) ?? 0.0;
+
+    return totalCents / 100.0;
+  }
+
+  @override
+  Future<List<LowStockItem>> getLowStockItems({int limit = 10}) async {
+    // We want items where QuantityOnHand <= MinStock
+    // MinStock can be on Inventory (override) or ProductVariant (default)
+    // Logic: COALESCE(inventory.min_stock, product_variants.stock_min, 0)
+
+    // Using custom expression for the COALESCE logic in the WHERE clause
+    // since Drift's Dart API for coalesce might be verbose here.
+
+    final minStockExpression = coalesce([
+      _db.inventory.minStock.cast<double>(),
+      _db.productVariants.stockMin,
+      const Constant<double>(0.0),
+    ]);
+
+    final query =
+        _db.select(_db.inventory).join([
+            innerJoin(
+              _db.products,
+              _db.products.id.equalsExp(_db.inventory.productId),
+            ),
+            innerJoin(
+              _db.productVariants,
+              _db.productVariants.id.equalsExp(_db.inventory.variantId),
+            ),
+            leftOuterJoin(
+              _db.warehouses,
+              _db.warehouses.id.equalsExp(_db.inventory.warehouseId),
+            ),
+          ])
+          ..where(
+            _db.inventory.quantityOnHand.isSmallerOrEqual(minStockExpression) &
+                minStockExpression.isBiggerThan(const Constant(0)),
+          )
+          ..orderBy([OrderingTerm.asc(_db.inventory.quantityOnHand)])
+          ..limit(limit);
+
+    final rows = await query.get();
+
+    return rows.map((row) {
+      final product = row.readTable(_db.products);
+      final variant = row.readTable(_db.productVariants);
+      final inventory = row.readTable(_db.inventory);
+      final warehouse = row.readTableOrNull(_db.warehouses);
+
+      // Recalculate minStock to return it
+      final minStock =
+          inventory.minStock?.toDouble() ?? variant.stockMin ?? 0.0;
+
+      return LowStockItem(
+        productId: product.id,
+        productName: product.name,
+        variantName: variant.variantName,
+        quantityOnHand: inventory.quantityOnHand,
+        minStock: minStock,
+        warehouseName: warehouse?.name,
+      );
+    }).toList();
+  }
 }
