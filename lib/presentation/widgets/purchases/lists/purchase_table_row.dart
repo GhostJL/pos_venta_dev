@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:posventa/domain/entities/purchase.dart';
+import 'package:posventa/presentation/widgets/common/right_click_menu_wrapper.dart';
 
 class PurchaseHeader extends StatelessWidget {
   const PurchaseHeader({super.key});
@@ -46,97 +47,105 @@ class PurchaseTableRow extends StatelessWidget {
     final currencyFormat = NumberFormat.currency(symbol: '\$');
     final dateFormat = DateFormat('dd/MM/yyyy HH:mm');
 
-    return Card(
-      elevation: 0,
-      margin: const EdgeInsets.only(bottom: 8),
-      color: colorScheme.surfaceContainer,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(12),
-        onTap: () => context.push('/purchases/${purchase.id}'),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          child: Row(
-            children: [
-              // Proveedor
-              Expanded(
-                flex: 2,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      purchase.supplierName ?? 'Proveedor General',
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
+    final menuItems = [
+      const PopupMenuItem(
+        value: 'view',
+        child: Row(
+          children: [
+            Icon(Icons.visibility_outlined, size: 20),
+            SizedBox(width: 8),
+            Text('Ver Detalles'),
+          ],
+        ),
+      ),
+    ];
+
+    void onAction(String value) {
+      if (value == 'view') {
+        context.push('/purchases/${purchase.id}');
+      }
+    }
+
+    return RightClickMenuWrapper(
+      menuItems: menuItems,
+      onSelected: onAction,
+      child: Card(
+        elevation: 0,
+        margin: const EdgeInsets.only(bottom: 8),
+        color: colorScheme.surfaceContainer,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(12),
+          onTap: () => context.push('/purchases/${purchase.id}'),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            child: Row(
+              children: [
+                // Proveedor
+                Expanded(
+                  flex: 2,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        purchase.supplierName ?? 'Proveedor General',
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                ),
-              ),
-
-              // Fecha
-              Expanded(
-                flex: 2,
-                child: Text(
-                  dateFormat.format(purchase.purchaseDate),
-                  style: theme.textTheme.bodyMedium,
-                ),
-              ),
-
-              // Items
-              Expanded(
-                flex: 1,
-                child: Text(
-                  '${purchase.items.length} items',
-                  style: theme.textTheme.bodyMedium,
-                ),
-              ),
-
-              // Total
-              Expanded(
-                flex: 2,
-                child: Text(
-                  currencyFormat.format(purchase.total),
-                  style: theme.textTheme.bodyLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: colorScheme.primary,
+                    ],
                   ),
                 ),
-              ),
 
-              // Estado
-              Expanded(
-                flex: 2,
-                child: _buildStatusChip(context, purchase.status),
-              ),
-
-              // Actions
-              PopupMenuButton<String>(
-                icon: Icon(
-                  Icons.more_vert,
-                  color: colorScheme.onSurfaceVariant,
+                // Fecha
+                Expanded(
+                  flex: 2,
+                  child: Text(
+                    dateFormat.format(purchase.purchaseDate),
+                    style: theme.textTheme.bodyMedium,
+                  ),
                 ),
-                onSelected: (value) {
-                  if (value == 'view') {
-                    context.push('/purchases/${purchase.id}');
-                  }
-                },
-                itemBuilder: (context) => [
-                  const PopupMenuItem(
-                    value: 'view',
-                    child: Row(
-                      children: [
-                        Icon(Icons.visibility_outlined, size: 20),
-                        SizedBox(width: 8),
-                        Text('Ver Detalles'),
-                      ],
+
+                // Items
+                Expanded(
+                  flex: 1,
+                  child: Text(
+                    '${purchase.items.length} items',
+                    style: theme.textTheme.bodyMedium,
+                  ),
+                ),
+
+                // Total
+                Expanded(
+                  flex: 2,
+                  child: Text(
+                    currencyFormat.format(purchase.total),
+                    style: theme.textTheme.bodyLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: colorScheme.primary,
                     ),
                   ),
-                ],
-              ),
-            ],
+                ),
+
+                // Estado
+                Expanded(
+                  flex: 2,
+                  child: _buildStatusChip(context, purchase.status),
+                ),
+
+                // Actions
+                PopupMenuButton<String>(
+                  icon: Icon(
+                    Icons.more_vert,
+                    color: colorScheme.onSurfaceVariant,
+                  ),
+                  onSelected: onAction,
+                  itemBuilder: (context) => menuItems,
+                ),
+              ],
+            ),
           ),
         ),
       ),

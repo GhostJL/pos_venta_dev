@@ -6,6 +6,7 @@ import 'package:posventa/domain/entities/user.dart';
 import 'package:posventa/presentation/providers/auth_provider.dart';
 import 'package:posventa/presentation/providers/user_provider.dart';
 import 'package:posventa/presentation/widgets/users/admin_change_password_dialog.dart';
+import 'package:posventa/presentation/widgets/common/right_click_menu_wrapper.dart';
 
 /// Users List Page - Displays all users with management actions
 class UsersListPage extends ConsumerStatefulWidget {
@@ -320,179 +321,210 @@ class _UsersListPageState extends ConsumerState<UsersListPage> {
     bool isCurrentUser,
     ColorScheme colorScheme,
   ) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      child: Row(
-        children: [
-          // User Info
-          Expanded(
-            flex: 3,
-            child: Row(
-              children: [
-                CircleAvatar(
-                  backgroundColor: colorScheme.primaryContainer,
-                  child: Text(
-                    user.firstName.isNotEmpty
-                        ? user.firstName[0].toUpperCase()
-                        : 'U',
-                    style: TextStyle(
-                      color: colorScheme.onPrimaryContainer,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        user.name,
-                        style: GoogleFonts.outfit(
-                          fontWeight: FontWeight.w600,
-                          fontSize: 15,
-                        ),
-                      ),
-                      if (user.email != null && user.email!.isNotEmpty)
-                        Text(
-                          user.email!,
-                          style: TextStyle(
-                            color: colorScheme.onSurfaceVariant,
-                            fontSize: 13,
-                          ),
-                        ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 16),
-          // Username
-          Expanded(
-            flex: 2,
-            child: Text(
-              '@${user.username}',
-              style: TextStyle(
-                color: colorScheme.primary,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ),
-          const SizedBox(width: 16),
-          // Role
-          Expanded(
-            flex: 2,
-            child: Align(
-              alignment: Alignment.centerLeft,
-              child: _buildRoleChip(user.role, colorScheme),
-            ),
-          ),
-          const SizedBox(width: 16),
-          // Status
-          Expanded(
-            flex: 2,
-            child: Align(
-              alignment: Alignment.centerLeft,
-              child: _buildStatusChip(user.isActive, colorScheme),
-            ),
-          ),
-          // Actions
-          SizedBox(
-            width: 80,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                if (isCurrentUser)
-                  Chip(
-                    label: const Text('Tú'),
-                    labelStyle: const TextStyle(fontSize: 11),
-                    padding: EdgeInsets.zero,
-                    visualDensity: VisualDensity.compact,
-                  )
-                else
-                  PopupMenuButton(
-                    icon: Icon(
-                      Icons.more_vert_rounded,
-                      color: colorScheme.onSurfaceVariant,
-                    ),
-                    itemBuilder: (context) => [
-                      PopupMenuItem(
-                        child: Row(
-                          children: [
-                            Icon(
-                              Icons.edit_rounded,
-                              color: colorScheme.onSurface,
-                              size: 20,
-                            ),
-                            const SizedBox(width: 12),
-                            const Text('Editar Usuario'),
-                          ],
-                        ),
-                        onTap: () {
-                          // Wait a frame to avoid popup menu animation conflict
-                          Future.delayed(const Duration(milliseconds: 100), () {
-                            if (context.mounted) {
-                              context.push(
-                                '/users-permissions/form',
-                                extra: user,
-                              );
-                            }
-                          });
-                        },
-                      ),
-                      PopupMenuItem(
-                        child: Row(
-                          children: [
-                            Icon(
-                              Icons.lock_reset_rounded,
-                              color: colorScheme.onSurface,
-                              size: 20,
-                            ),
-                            const SizedBox(width: 12),
-                            const Text('Cambiar Contraseña'),
-                          ],
-                        ),
-                        onTap: () => _showChangePasswordDialog(user),
-                      ),
-                      if (user.role == UserRole.cajero)
-                        PopupMenuItem(
-                          child: Row(
-                            children: [
-                              Icon(
-                                Icons.security_rounded,
-                                color: colorScheme.onSurface,
-                                size: 20,
-                              ),
-                              const SizedBox(width: 12),
-                              const Text('Gestionar Permisos'),
-                            ],
-                          ),
-                          onTap: () => _navigateToPermissions(user),
-                        ),
-                      PopupMenuItem(
-                        child: Row(
-                          children: [
-                            Icon(
-                              user.isActive
-                                  ? Icons.block_rounded
-                                  : Icons.check_circle_rounded,
-                              color: colorScheme.onSurface,
-                              size: 20,
-                            ),
-                            const SizedBox(width: 12),
-                            Text(user.isActive ? 'Desactivar' : 'Activar'),
-                          ],
-                        ),
-                        onTap: () => _toggleUserStatus(user),
-                      ),
-                    ],
-                  ),
-              ],
-            ),
-          ),
-        ],
+    if (isCurrentUser) {
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        child: _buildUserRowContent(user, isCurrentUser, colorScheme),
+      );
+    }
+
+    final menuItems = [
+      PopupMenuItem(
+        value: 'edit',
+        child: Row(
+          children: [
+            Icon(Icons.edit_rounded, color: colorScheme.onSurface, size: 20),
+            const SizedBox(width: 12),
+            const Text('Editar Usuario'),
+          ],
+        ),
       ),
+      PopupMenuItem(
+        value: 'password',
+        child: Row(
+          children: [
+            Icon(
+              Icons.lock_reset_rounded,
+              color: colorScheme.onSurface,
+              size: 20,
+            ),
+            const SizedBox(width: 12),
+            const Text('Cambiar Contraseña'),
+          ],
+        ),
+      ),
+      if (user.role == UserRole.cajero)
+        PopupMenuItem(
+          value: 'permissions',
+          child: Row(
+            children: [
+              Icon(
+                Icons.security_rounded,
+                color: colorScheme.onSurface,
+                size: 20,
+              ),
+              const SizedBox(width: 12),
+              const Text('Gestionar Permisos'),
+            ],
+          ),
+        ),
+      PopupMenuItem(
+        value: 'toggle_status',
+        child: Row(
+          children: [
+            Icon(
+              user.isActive ? Icons.block_rounded : Icons.check_circle_rounded,
+              color: colorScheme.onSurface,
+              size: 20,
+            ),
+            const SizedBox(width: 12),
+            Text(user.isActive ? 'Desactivar' : 'Activar'),
+          ],
+        ),
+      ),
+    ];
+
+    void onAction(String value) {
+      switch (value) {
+        case 'edit':
+          context.push('/users-permissions/form', extra: user);
+          break;
+        case 'password':
+          _showChangePasswordDialog(user);
+          break;
+        case 'permissions':
+          _navigateToPermissions(user);
+          break;
+        case 'toggle_status':
+          _toggleUserStatus(user);
+          break;
+      }
+    }
+
+    return RightClickMenuWrapper(
+      menuItems: menuItems,
+      onSelected: onAction,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        child: _buildUserRowContent(
+          user,
+          isCurrentUser,
+          colorScheme,
+          menuItems: menuItems,
+          onAction: onAction,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildUserRowContent(
+    User user,
+    bool isCurrentUser,
+    ColorScheme colorScheme, {
+    List<PopupMenuEntry<String>>? menuItems,
+    Function(String)? onAction,
+  }) {
+    return Row(
+      children: [
+        // User Info
+        Expanded(
+          flex: 3,
+          child: Row(
+            children: [
+              CircleAvatar(
+                backgroundColor: colorScheme.primaryContainer,
+                child: Text(
+                  user.firstName.isNotEmpty
+                      ? user.firstName[0].toUpperCase()
+                      : 'U',
+                  style: TextStyle(
+                    color: colorScheme.onPrimaryContainer,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      user.name,
+                      style: GoogleFonts.outfit(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 15,
+                      ),
+                    ),
+                    if (user.email != null && user.email!.isNotEmpty)
+                      Text(
+                        user.email!,
+                        style: TextStyle(
+                          color: colorScheme.onSurfaceVariant,
+                          fontSize: 13,
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(width: 16),
+        // Username
+        Expanded(
+          flex: 2,
+          child: Text(
+            '@${user.username}',
+            style: TextStyle(
+              color: colorScheme.primary,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ),
+        const SizedBox(width: 16),
+        // Role
+        Expanded(
+          flex: 2,
+          child: Align(
+            alignment: Alignment.centerLeft,
+            child: _buildRoleChip(user.role, colorScheme),
+          ),
+        ),
+        const SizedBox(width: 16),
+        // Status
+        Expanded(
+          flex: 2,
+          child: Align(
+            alignment: Alignment.centerLeft,
+            child: _buildStatusChip(user.isActive, colorScheme),
+          ),
+        ),
+        // Actions
+        SizedBox(
+          width: 80,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              if (isCurrentUser)
+                Chip(
+                  label: const Text('Tú'),
+                  labelStyle: const TextStyle(fontSize: 11),
+                  padding: EdgeInsets.zero,
+                  visualDensity: VisualDensity.compact,
+                )
+              else if (menuItems != null && onAction != null)
+                PopupMenuButton<String>(
+                  icon: Icon(
+                    Icons.more_vert_rounded,
+                    color: colorScheme.onSurfaceVariant,
+                  ),
+                  itemBuilder: (context) => menuItems,
+                  onSelected: onAction,
+                ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 

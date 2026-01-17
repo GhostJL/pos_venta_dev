@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:posventa/domain/entities/customer.dart';
 import 'package:posventa/presentation/widgets/common/actions/catalog_module_actions_sheet.dart';
+import 'package:posventa/presentation/widgets/common/right_click_menu_wrapper.dart';
 
 class CustomerHeader extends StatelessWidget {
   const CustomerHeader({super.key});
@@ -53,148 +54,154 @@ class CustomerTableRow extends StatelessWidget {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
-    return Card(
-      elevation: 0,
-      margin: const EdgeInsets.only(bottom: 8),
-      color: colorScheme.surfaceContainer,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(12),
-        onTap:
-            onTap ??
-            (hasManagePermission ? onEdit : null), // Use onTap if provided
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          child: Row(
-            children: [
-              // Avatar
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: colorScheme.primaryContainer,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Center(
-                  child: Text(
-                    customer.firstName.isNotEmpty
-                        ? customer.firstName[0].toUpperCase()
-                        : '?',
-                    style: TextStyle(
-                      color: colorScheme.onPrimaryContainer,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
+    // Define action logic to reuse
+    void showActions() {
+      if (hasManagePermission) {
+        showModalBottomSheet(
+          context: context,
+          isScrollControlled: true,
+          backgroundColor: Colors.transparent,
+          builder: (ctx) => CatalogModuleActionsSheet(
+            title: customer.fullName,
+            subtitle: 'Código: ${customer.code}',
+            icon: Icons.person_rounded,
+            onEdit: onEdit,
+            onDelete: onDelete,
+          ),
+        );
+      }
+    }
+
+    return RightClickMenuWrapper(
+      onRightClick: showActions,
+      child: Card(
+        elevation: 0,
+        margin: const EdgeInsets.only(bottom: 8),
+        color: colorScheme.surfaceContainer,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(12),
+          onTap: onTap ?? (hasManagePermission ? onEdit : null),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            child: Row(
+              children: [
+                // Avatar
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: colorScheme.primaryContainer,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Center(
+                    child: Text(
+                      customer.firstName.isNotEmpty
+                          ? customer.firstName[0].toUpperCase()
+                          : '?',
+                      style: TextStyle(
+                        color: colorScheme.onPrimaryContainer,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
                     ),
                   ),
                 ),
-              ),
-              const SizedBox(width: 16),
+                const SizedBox(width: 16),
 
-              // Name & Code
-              Expanded(
-                flex: 3,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      customer.fullName,
-                      style: theme.textTheme.bodyLarge?.copyWith(
-                        fontWeight: FontWeight.w600,
+                // Name & Code
+                Expanded(
+                  flex: 3,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        customer.fullName,
+                        style: theme.textTheme.bodyLarge?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                        overflow: TextOverflow.ellipsis,
                       ),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    Text(
-                      customer.code,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        fontFamily: 'monospace',
-                        color: colorScheme.onSurfaceVariant,
+                      Text(
+                        customer.code,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          fontFamily: 'monospace',
+                          color: colorScheme.onSurfaceVariant,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
 
-              // Contact
-              Expanded(
-                flex: 2,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    if (customer.email != null && customer.email!.isNotEmpty)
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.email_outlined,
-                            size: 14,
-                            color: colorScheme.primary,
-                          ),
-                          const SizedBox(width: 4),
-                          Expanded(
-                            child: Text(
-                              customer.email!,
+                // Contact
+                Expanded(
+                  flex: 2,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (customer.email != null && customer.email!.isNotEmpty)
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.email_outlined,
+                              size: 14,
+                              color: colorScheme.primary,
+                            ),
+                            const SizedBox(width: 4),
+                            Expanded(
+                              child: Text(
+                                customer.email!,
+                                style: theme.textTheme.bodyMedium,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
+                      if (customer.phone != null && customer.phone!.isNotEmpty)
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.phone_outlined,
+                              size: 14,
+                              color: colorScheme.primary,
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              customer.phone!,
                               style: theme.textTheme.bodyMedium,
                               overflow: TextOverflow.ellipsis,
                             ),
-                          ),
-                        ],
-                      ),
-                    if (customer.phone != null && customer.phone!.isNotEmpty)
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.phone_outlined,
-                            size: 14,
-                            color: colorScheme.primary,
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            customer.phone!,
-                            style: theme.textTheme.bodyMedium,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ],
-                      ),
-                  ],
-                ),
-              ),
-
-              // Business
-              Expanded(
-                flex: 2,
-                child: Text(
-                  customer.businessName ?? '-',
-                  style: theme.textTheme.bodyMedium,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-
-              // Actions
-              if (hasManagePermission)
-                IconButton(
-                  icon: Icon(
-                    Icons.more_horiz_rounded,
-                    color: colorScheme.onSurfaceVariant,
+                          ],
+                        ),
+                    ],
                   ),
-                  onPressed: () {
-                    showModalBottomSheet(
-                      context: context,
-                      isScrollControlled: true,
-                      backgroundColor: Colors.transparent,
-                      builder: (ctx) => CatalogModuleActionsSheet(
-                        title: customer.fullName,
-                        subtitle: 'Código: ${customer.code}',
-                        icon: Icons.person_rounded,
-                        onEdit: onEdit,
-                        onDelete: onDelete,
-                      ),
-                    );
-                  },
-                )
-              else
-                const SizedBox(width: 48),
-            ],
+                ),
+
+                // Business
+                Expanded(
+                  flex: 2,
+                  child: Text(
+                    customer.businessName ?? '-',
+                    style: theme.textTheme.bodyMedium,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+
+                // Actions
+                if (hasManagePermission)
+                  IconButton(
+                    icon: Icon(
+                      Icons.more_horiz_rounded,
+                      color: colorScheme.onSurfaceVariant,
+                    ),
+                    onPressed: showActions,
+                  )
+                else
+                  const SizedBox(width: 48),
+              ],
+            ),
           ),
         ),
       ),

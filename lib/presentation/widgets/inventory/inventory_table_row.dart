@@ -9,6 +9,7 @@ import 'package:posventa/domain/entities/warehouse.dart';
 import 'package:posventa/presentation/providers/inventory_providers.dart';
 import 'package:posventa/presentation/providers/inventory_lot_providers.dart';
 import 'package:posventa/presentation/providers/settings_provider.dart';
+import 'package:posventa/presentation/widgets/common/right_click_menu_wrapper.dart';
 
 class InventoryTableRow extends ConsumerStatefulWidget {
   final Inventory inventory;
@@ -67,206 +68,209 @@ class _InventoryTableRowState extends ConsumerState<InventoryTableRow> {
     final double scale = _isHovering ? 1.01 : 1.0;
     final double elevation = _isHovering ? 2.0 : 0.0;
 
-    return MouseRegion(
-      onEnter: (_) => setState(() => _isHovering = true),
-      onExit: (_) => setState(() => _isHovering = false),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        curve: Curves.easeOutCubic,
-        transform: Matrix4.diagonal3Values(scale, scale, 1.0),
-        margin: const EdgeInsets.only(bottom: 8),
-        child: Card(
-          elevation: elevation,
-          shadowColor: Colors.black.withValues(alpha: 0.1),
-          color: colorScheme.surfaceContainer,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-            side: _isHovering
-                ? BorderSide(color: colorScheme.primary.withValues(alpha: 0.3))
-                : BorderSide.none,
+    final menuItems = <PopupMenuEntry<String>>[
+      if (widget.hasAdjustAccess)
+        const PopupMenuItem(
+          value: 'delete',
+          child: Row(
+            children: [
+              Icon(Icons.delete_outline, color: Colors.red, size: 20),
+              SizedBox(width: 8),
+              Text('Eliminar', style: TextStyle(color: Colors.red)),
+            ],
           ),
-          child: InkWell(
-            borderRadius: BorderRadius.circular(12),
-            onTap: () {
-              context.push(
-                '/inventory/lots/${widget.product.id}/${widget.inventory.warehouseId}?variantId=${widget.variant.id}',
-                extra: {
-                  'productName':
-                      '${widget.product.name} - ${widget.variant.variantName}',
-                },
-              );
-            },
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: Row(
-                children: [
-                  // Image
-                  Container(
-                    width: 48,
-                    height: 48,
-                    decoration: BoxDecoration(
-                      color: colorScheme.surfaceContainerHighest.withValues(
-                        alpha: 0.5,
+        ),
+    ];
+
+    void onAction(String value) {
+      if (value == 'delete' && widget.hasAdjustAccess) {
+        _confirmDelete(context, ref, widget.inventory, widget.product.name);
+      }
+    }
+
+    return RightClickMenuWrapper(
+      menuItems: menuItems,
+      onSelected: onAction,
+      child: MouseRegion(
+        onEnter: (_) => setState(() => _isHovering = true),
+        onExit: (_) => setState(() => _isHovering = false),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          curve: Curves.easeOutCubic,
+          transform: Matrix4.diagonal3Values(scale, scale, 1.0),
+          margin: const EdgeInsets.only(bottom: 8),
+          child: Card(
+            elevation: elevation,
+            shadowColor: Colors.black.withValues(alpha: 0.1),
+            color: colorScheme.surfaceContainer,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+              side: _isHovering
+                  ? BorderSide(
+                      color: colorScheme.primary.withValues(alpha: 0.3),
+                    )
+                  : BorderSide.none,
+            ),
+            child: InkWell(
+              borderRadius: BorderRadius.circular(12),
+              onTap: () {
+                context.push(
+                  '/inventory/lots/${widget.product.id}/${widget.inventory.warehouseId}?variantId=${widget.variant.id}',
+                  extra: {
+                    'productName':
+                        '${widget.product.name} - ${widget.variant.variantName}',
+                  },
+                );
+              },
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
+                child: Row(
+                  children: [
+                    // Image
+                    Container(
+                      width: 48,
+                      height: 48,
+                      decoration: BoxDecoration(
+                        color: colorScheme.surfaceContainerHighest.withValues(
+                          alpha: 0.5,
+                        ),
+                        borderRadius: BorderRadius.circular(10),
                       ),
-                      borderRadius: BorderRadius.circular(10),
+                      clipBehavior: Clip.antiAlias,
+                      child: _buildImage(
+                        widget.variant.photoUrl ?? widget.product.photoUrl,
+                      ),
                     ),
-                    clipBehavior: Clip.antiAlias,
-                    child: _buildImage(
-                      widget.variant.photoUrl ?? widget.product.photoUrl,
-                    ),
-                  ),
-                  const SizedBox(width: 16),
+                    const SizedBox(width: 16),
 
-                  // Product / Variant / SKU
-                  Expanded(
-                    flex: 3,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          widget.product.name,
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        Text(
-                          '${widget.variant.variantName} • SKU: ${widget.variant.barcode ?? 'N/A'}',
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: colorScheme.onSurfaceVariant,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  // Warehouse
-                  Expanded(
-                    flex: 2,
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.warehouse_outlined,
-                          size: 14,
-                          color: colorScheme.primary,
-                        ),
-                        const SizedBox(width: 4),
-                        Flexible(
-                          child: Text(
-                            widget.warehouse?.name ?? 'Desconocido',
-                            style: theme.textTheme.bodyMedium,
+                    // Product / Variant / SKU
+                    Expanded(
+                      flex: 3,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            widget.product.name,
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
+                            maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  // Stock (Fixed Alignment)
-                  Expanded(
-                    flex: 2,
-                    child: useInventory
-                        ? Column(
-                            crossAxisAlignment: CrossAxisAlignment.end,
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text(
-                                stock % 1 == 0
-                                    ? stock.toInt().toString()
-                                    : stock.toStringAsFixed(2),
-                                style: theme.textTheme.bodyLarge?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                  color: isZeroStock || isLowStock
-                                      ? colorScheme.error
-                                      : null,
-                                ),
-                              ),
-                              lotsAsync.when(
-                                data: (lots) {
-                                  final variantLots = lots
-                                      .where(
-                                        (l) => l.variantId == widget.variant.id,
-                                      )
-                                      .toList();
-                                  return Text(
-                                    '${variantLots.length} lotes',
-                                    style: theme.textTheme.labelSmall?.copyWith(
-                                      color: colorScheme.onSurfaceVariant,
-                                    ),
-                                  );
-                                },
-                                loading: () => const Text('-'),
-                                error: (_, __) => const Text('-'),
-                              ),
-                            ],
-                          )
-                        : const Align(
-                            alignment: Alignment.centerRight,
-                            child: Text('-'),
-                          ),
-                  ),
-
-                  // Status (Fixed Alignment)
-                  Expanded(
-                    flex: 2,
-                    child: useInventory
-                        ? Center(
-                            child: _buildStatusBadge(
-                              context,
-                              isZeroStock,
-                              isLowStock,
-                              isNearLowStock,
+                          Text(
+                            '${widget.variant.variantName} • SKU: ${widget.variant.barcode ?? 'N/A'}',
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: colorScheme.onSurfaceVariant,
                             ),
-                          )
-                        : const SizedBox(),
-                  ),
-
-                  // Actions (Fixed Width)
-                  SizedBox(
-                    width: 48,
-                    child: PopupMenuButton<String>(
-                      icon: Icon(
-                        Icons.more_vert,
-                        color: colorScheme.onSurfaceVariant,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
                       ),
-                      padding: EdgeInsets.zero,
-                      onSelected: (value) {
-                        if (value == 'delete' && widget.hasAdjustAccess) {
-                          _confirmDelete(
-                            context,
-                            ref,
-                            widget.inventory,
-                            widget.product.name,
-                          );
-                        }
-                      },
-                      itemBuilder: (context) => [
-                        if (widget.hasAdjustAccess)
-                          const PopupMenuItem(
-                            value: 'delete',
-                            child: Row(
+                    ),
+
+                    // Warehouse
+                    Expanded(
+                      flex: 2,
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.warehouse_outlined,
+                            size: 14,
+                            color: colorScheme.primary,
+                          ),
+                          const SizedBox(width: 4),
+                          Flexible(
+                            child: Text(
+                              widget.warehouse?.name ?? 'Desconocido',
+                              style: theme.textTheme.bodyMedium,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    // Stock (Fixed Alignment)
+                    Expanded(
+                      flex: 2,
+                      child: useInventory
+                          ? Column(
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                Icon(
-                                  Icons.delete_outline,
-                                  color: Colors.red,
-                                  size: 20,
-                                ),
-                                SizedBox(width: 8),
                                 Text(
-                                  'Eliminar',
-                                  style: TextStyle(color: Colors.red),
+                                  stock % 1 == 0
+                                      ? stock.toInt().toString()
+                                      : stock.toStringAsFixed(2),
+                                  style: theme.textTheme.bodyLarge?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                    color: isZeroStock || isLowStock
+                                        ? colorScheme.error
+                                        : null,
+                                  ),
+                                ),
+                                lotsAsync.when(
+                                  data: (lots) {
+                                    final variantLots = lots
+                                        .where(
+                                          (l) =>
+                                              l.variantId == widget.variant.id,
+                                        )
+                                        .toList();
+                                    return Text(
+                                      '${variantLots.length} lotes',
+                                      style: theme.textTheme.labelSmall
+                                          ?.copyWith(
+                                            color: colorScheme.onSurfaceVariant,
+                                          ),
+                                    );
+                                  },
+                                  loading: () => const Text('-'),
+                                  error: (_, __) => const Text('-'),
                                 ),
                               ],
+                            )
+                          : const Align(
+                              alignment: Alignment.centerRight,
+                              child: Text('-'),
                             ),
-                          ),
-                      ],
                     ),
-                  ),
-                ],
+
+                    // Status (Fixed Alignment)
+                    Expanded(
+                      flex: 2,
+                      child: useInventory
+                          ? Center(
+                              child: _buildStatusBadge(
+                                context,
+                                isZeroStock,
+                                isLowStock,
+                                isNearLowStock,
+                              ),
+                            )
+                          : const SizedBox(),
+                    ),
+
+                    // Actions (Fixed Width)
+                    SizedBox(
+                      width: 48,
+                      child: PopupMenuButton<String>(
+                        icon: Icon(
+                          Icons.more_vert,
+                          color: colorScheme.onSurfaceVariant,
+                        ),
+                        padding: EdgeInsets.zero,
+                        onSelected: onAction,
+                        itemBuilder: (context) => menuItems,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
