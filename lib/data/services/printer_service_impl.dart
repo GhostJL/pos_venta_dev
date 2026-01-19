@@ -428,7 +428,10 @@ class PrinterServiceImpl implements PrinterService {
   @override
   Future<String> savePdfTicket(TicketData ticketData, String savePath) async {
     // Generate organized path with year/month subdirectories
-    final organizedPath = FileManagerService.getOrganizedPath(savePath);
+    final organizedPath = FileManagerService.getOrganizedPath(
+      savePath,
+      category: 'Tickets Venta',
+    );
     await FileManagerService.ensureDirectoryExists(organizedPath);
 
     // Generate unique filename
@@ -460,7 +463,10 @@ class PrinterServiceImpl implements PrinterService {
     required String savePath,
   }) async {
     // Generate organized path with year/month subdirectories
-    final organizedPath = FileManagerService.getOrganizedPath(savePath);
+    final organizedPath = FileManagerService.getOrganizedPath(
+      savePath,
+      category: 'Abonos',
+    );
     await FileManagerService.ensureDirectoryExists(organizedPath);
 
     // Generate unique filename

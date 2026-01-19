@@ -144,7 +144,10 @@ class LabelService {
           settings.pdfSavePath ??
           await FileManagerService.getDefaultPdfSavePath();
 
-      final organizedPath = FileManagerService.getOrganizedPath(pdfPath);
+      final organizedPath = FileManagerService.getOrganizedPath(
+        pdfPath,
+        category: 'Etiquetas',
+      );
       await FileManagerService.ensureDirectoryExists(organizedPath);
 
       final fileName = FileManagerService.generateFileName(

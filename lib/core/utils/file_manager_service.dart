@@ -4,14 +4,21 @@ import 'package:path_provider/path_provider.dart';
 
 /// Service for managing organized file storage with date-based folder structure
 class FileManagerService {
-  /// Generates an organized path with year/month subdirectories
+  /// Generates an organized path with category/year/month subdirectories
   ///
-  /// Example: /base/path/2026/01/
-  static String getOrganizedPath(String basePath, {DateTime? date}) {
+  /// Example: /base/path/Tickets Venta/2026/01/
+  static String getOrganizedPath(
+    String basePath, {
+    String? category,
+    DateTime? date,
+  }) {
     final targetDate = date ?? DateTime.now();
     final year = targetDate.year.toString();
     final month = targetDate.month.toString().padLeft(2, '0');
 
+    if (category != null && category.isNotEmpty) {
+      return path.join(basePath, category, year, month);
+    }
     return path.join(basePath, year, month);
   }
 

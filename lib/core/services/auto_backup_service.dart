@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:posventa/core/utils/file_manager_service.dart';
 import 'package:posventa/domain/entities/app_settings.dart';
 import 'package:posventa/domain/repositories/backup_repository.dart';
@@ -64,15 +65,23 @@ class AutoBackupService {
   Future<bool> executeBackup(AppSettings settings) async {
     try {
       AppErrorReporter().log('Executing automatic backup...');
-      final backupPath = settings.backupPath;
+      final baseBackupPath =
+          settings.backupPath ??
+          await FileManagerService.getDefaultBackupPath();
 
-      if (backupPath != null) {
-        await _backupRepository.exportDatabase(backupPath);
-      } else {
-        // Use default path from FileManagerService
-        final defaultPath = await FileManagerService.getDefaultBackupPath();
-        await _backupRepository.exportDatabase(defaultPath);
-      }
+      // Organization: Backups/YYYY/MM/
+      final organizedPath = FileManagerService.getOrganizedPath(
+        baseBackupPath,
+        category: 'Backups',
+      );
+      await FileManagerService.ensureDirectoryExists(organizedPath);
+
+      // Filename: backup_YYYYMMDD_HHMMSS.sqlite
+      final fileName = FileManagerService.generateFileName('backup', 'sqlite');
+
+      final fullPath = '$organizedPath${Platform.pathSeparator}$fileName';
+
+      await _backupRepository.exportDatabase(fullPath);
 
       AppErrorReporter().log('Automatic backup completed successfully');
       return true;
