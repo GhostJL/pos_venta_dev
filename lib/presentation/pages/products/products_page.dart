@@ -37,7 +37,7 @@ class ProductsPageState extends ConsumerState<ProductsPage>
   final FocusNode _searchFocusNode = FocusNode();
 
   @override
-  List<dynamic> get providersToInvalidate => [paginatedProductsCountProvider];
+  List<dynamic> get providersToInvalidate => [];
 
   @override
   void initState() {

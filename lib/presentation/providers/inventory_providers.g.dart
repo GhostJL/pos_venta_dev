@@ -20,7 +20,7 @@ final class InventoryNotifierProvider
         argument: null,
         retry: null,
         name: r'inventoryProvider',
-        isAutoDispose: true,
+        isAutoDispose: false,
         dependencies: null,
         $allTransitiveDependencies: null,
       );
@@ -33,7 +33,7 @@ final class InventoryNotifierProvider
   InventoryNotifier create() => InventoryNotifier();
 }
 
-String _$inventoryNotifierHash() => r'13b63f8d49c5b103dae89d41b01fc2cb8bd67030';
+String _$inventoryNotifierHash() => r'e419c82375a894f5db5332b5a8a0bf78afc7055c';
 
 abstract class _$InventoryNotifier extends $StreamNotifier<List<Inventory>> {
   Stream<List<Inventory>> build();
@@ -186,7 +186,7 @@ final class WarehousesProvider
         argument: null,
         retry: null,
         name: r'warehousesProvider',
-        isAutoDispose: true,
+        isAutoDispose: false,
         dependencies: null,
         $allTransitiveDependencies: null,
       );
@@ -206,4 +206,4 @@ final class WarehousesProvider
   }
 }
 
-String _$warehousesHash() => r'83736e67e145df5acfd3ac5cdf8781d9d27c5440';
+String _$warehousesHash() => r'f1d6b02782de0fea40a17fa18fc035c79bb33c58';

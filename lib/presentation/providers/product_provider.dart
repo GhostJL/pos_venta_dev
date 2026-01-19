@@ -8,7 +8,7 @@ import 'package:posventa/presentation/providers/auth_provider.dart';
 
 part 'product_provider.g.dart';
 
-@riverpod
+@Riverpod(keepAlive: true)
 class ProductSearchQuery extends _$ProductSearchQuery {
   @override
   String build() {
@@ -20,7 +20,7 @@ class ProductSearchQuery extends _$ProductSearchQuery {
   }
 }
 
-@riverpod
+@Riverpod(keepAlive: true)
 class ProductList extends _$ProductList {
   @override
   @override

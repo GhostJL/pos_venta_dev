@@ -20,7 +20,7 @@ final class ProductSearchQueryProvider
         argument: null,
         retry: null,
         name: r'productSearchQueryProvider',
-        isAutoDispose: true,
+        isAutoDispose: false,
         dependencies: null,
         $allTransitiveDependencies: null,
       );
@@ -42,7 +42,7 @@ final class ProductSearchQueryProvider
 }
 
 String _$productSearchQueryHash() =>
-    r'95cb84da1faf175f02cfdb3bc661b446eccf1d02';
+    r'76f27188071342e9ce522c6f44a29bfaadeea96a';
 
 abstract class _$ProductSearchQuery extends $Notifier<String> {
   String build();
@@ -74,7 +74,7 @@ final class ProductListProvider
         argument: null,
         retry: null,
         name: r'productListProvider',
-        isAutoDispose: true,
+        isAutoDispose: false,
         dependencies: null,
         $allTransitiveDependencies: null,
       );
@@ -87,7 +87,7 @@ final class ProductListProvider
   ProductList create() => ProductList();
 }
 
-String _$productListHash() => r'4ee10ebb42fdb10a1ce50eaaac625030c395fff9';
+String _$productListHash() => r'168e1e9b2ccda22ddd4a60702d466c3dc76d38cb';
 
 abstract class _$ProductList extends $AsyncNotifier<List<Product>> {
   FutureOr<List<Product>> build();

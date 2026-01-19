@@ -6,7 +6,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'inventory_providers.g.dart';
 
-@riverpod
+@Riverpod(keepAlive: true)
 class InventoryNotifier extends _$InventoryNotifier {
   @override
   Stream<List<Inventory>> build() {
@@ -50,7 +50,7 @@ Future<List<Product>> products(Ref ref) async {
   );
 }
 
-@riverpod
+@Riverpod(keepAlive: true)
 Future<List<Warehouse>> warehouses(Ref ref) {
   return ref.watch(getAllWarehousesProvider).call();
 }

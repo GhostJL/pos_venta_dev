@@ -8,7 +8,7 @@ part 'paginated_products_provider.g.dart';
 
 const int kProductPageSize = 20;
 
-@riverpod
+@Riverpod(keepAlive: true)
 Future<int> paginatedProductsCount(Ref ref) async {
   final query = ref.watch(productSearchQueryProvider);
   final filters = ref.watch(productFiltersProvider);

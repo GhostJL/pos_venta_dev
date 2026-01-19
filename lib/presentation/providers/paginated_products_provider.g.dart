@@ -21,7 +21,7 @@ final class PaginatedProductsCountProvider
         argument: null,
         retry: null,
         name: r'paginatedProductsCountProvider',
-        isAutoDispose: true,
+        isAutoDispose: false,
         dependencies: null,
         $allTransitiveDependencies: null,
       );
@@ -41,7 +41,7 @@ final class PaginatedProductsCountProvider
 }
 
 String _$paginatedProductsCountHash() =>
-    r'2bcc46d1c99d4ae865b55318aa7c3036807fd610';
+    r'27fcd16947aed7e0632065b92e2a587abbd079b9';
 
 @ProviderFor(paginatedProductsPage)
 const paginatedProductsPageProvider = PaginatedProductsPageFamily._();
