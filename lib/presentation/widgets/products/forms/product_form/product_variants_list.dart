@@ -190,158 +190,217 @@ class _VariantCard extends ConsumerWidget {
       elevation: 0,
       color: theme.colorScheme.surfaceContainer,
       margin: EdgeInsets.zero,
+      clipBehavior: Clip.hardEdge,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
         side: BorderSide(
           color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
         ),
       ),
-      child: InkWell(
-        onTap: () => onEdit(variant, index),
-        borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: const EdgeInsets.all(12.0),
-          child: Row(
-            children: [
-              // Identificador Visual (Círculo pequeño con inicial o imagen)
-              Container(
-                width: 48,
-                height: 48,
-                decoration: BoxDecoration(
-                  color:
-                      (isSales
-                              ? theme.colorScheme.primary
-                              : theme.colorScheme.tertiary)
-                          .withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(10),
-                  image:
-                      (variant.photoUrl != null && variant.photoUrl!.isNotEmpty)
-                      ? DecorationImage(
-                          image: variant.photoUrl!.startsWith('http')
-                              ? NetworkImage(variant.photoUrl!)
-                              : FileImage(File(variant.photoUrl!))
-                                    as ImageProvider,
-                          fit: BoxFit.cover,
-                        )
-                      : null,
-                ),
-                child: (variant.photoUrl == null || variant.photoUrl!.isEmpty)
-                    ? Center(
-                        child: Icon(
-                          isSales
-                              ? Icons.sell_outlined
-                              : Icons.inventory_2_outlined,
-                          size: 20,
-                          color: isSales
-                              ? theme.colorScheme.primary
-                              : theme.colorScheme.tertiary,
-                        ),
-                      )
-                    : null,
-              ),
-              const SizedBox(width: 16),
-
-              // Información principal
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.center,
+      child: Row(
+        children: [
+          Expanded(
+            child: InkWell(
+              onTap: () => onEdit(variant, index),
+              onSecondaryTapUp: (details) {
+                _showContextMenu(context, details.globalPosition);
+              },
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(12, 12, 8, 12),
+                child: Row(
                   children: [
-                    Text(
-                      variant.variantName.isEmpty
-                          ? "Sin nombre"
-                          : variant.variantName,
-                      overflow: TextOverflow.ellipsis,
-                      maxLines: 1,
-                      style: theme.textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: theme.colorScheme.onSurface,
+                    // Identificador Visual (Círculo pequeño con inicial o imagen)
+                    Container(
+                      width: 48,
+                      height: 48,
+                      decoration: BoxDecoration(
+                        color:
+                            (isSales
+                                    ? theme.colorScheme.primary
+                                    : theme.colorScheme.tertiary)
+                                .withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(10),
+                        image:
+                            (variant.photoUrl != null &&
+                                variant.photoUrl!.isNotEmpty)
+                            ? DecorationImage(
+                                image: variant.photoUrl!.startsWith('http')
+                                    ? NetworkImage(variant.photoUrl!)
+                                    : FileImage(File(variant.photoUrl!))
+                                          as ImageProvider,
+                                fit: BoxFit.cover,
+                              )
+                            : null,
+                      ),
+                      child:
+                          (variant.photoUrl == null ||
+                              variant.photoUrl!.isEmpty)
+                          ? Center(
+                              child: Icon(
+                                isSales
+                                    ? Icons.sell_outlined
+                                    : Icons.inventory_2_outlined,
+                                size: 20,
+                                color: isSales
+                                    ? theme.colorScheme.primary
+                                    : theme.colorScheme.tertiary,
+                              ),
+                            )
+                          : null,
+                    ),
+                    const SizedBox(width: 16),
+
+                    // Información principal
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            variant.variantName.isEmpty
+                                ? "Sin nombre"
+                                : variant.variantName,
+                            overflow: TextOverflow.ellipsis,
+                            maxLines: 1,
+                            style: theme.textTheme.titleSmall?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: theme.colorScheme.onSurface,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Wrap(
+                            spacing: 4,
+                            runSpacing: 4,
+                            children: [
+                              _buildBadge(
+                                theme,
+                                "${variant.conversionFactor} ${unitName ?? ''}",
+                                theme.colorScheme.secondary,
+                              ),
+                              _buildBadge(
+                                theme,
+                                "Stock: ${variant.stock ?? 0}",
+                                (variant.stock ?? 0) > 0
+                                    ? Colors.green
+                                    : theme.colorScheme.error,
+                              ),
+                            ],
+                          ),
+                        ],
                       ),
                     ),
-                    const SizedBox(height: 4),
-                    Wrap(
-                      spacing: 4,
-                      runSpacing: 4,
+
+                    // Precio / Costo Destacado
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        _buildBadge(
-                          theme,
-                          "${variant.conversionFactor} ${unitName ?? ''}",
-                          theme.colorScheme.secondary,
+                        Text(
+                          '\$${((isSales ? variant.priceCents : variant.costPriceCents) / 100).toStringAsFixed(2)}',
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w800,
+                            color: theme.colorScheme.onSurface,
+                          ),
                         ),
-                        _buildBadge(
-                          theme,
-                          "Stock: ${variant.stock ?? 0}",
-                          (variant.stock ?? 0) > 0
-                              ? Colors.green
-                              : theme.colorScheme.error,
+                        Text(
+                          isSales ? "Precio" : "Costo",
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
                         ),
                       ],
                     ),
                   ],
                 ),
               ),
+            ),
+          ),
 
-              // Precio / Costo Destacado
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    '\$${((isSales ? variant.priceCents : variant.costPriceCents) / 100).toStringAsFixed(2)}',
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w800,
-                      color: theme.colorScheme.onSurface,
-                    ),
+          // Botón de más acciones simple (Fuera del InkWell para evitar conflictos de hover)
+          Padding(
+            padding: const EdgeInsets.only(right: 4.0),
+            child: MenuAnchor(
+              builder: (context, controller, child) {
+                return IconButton(
+                  onPressed: () {
+                    if (controller.isOpen) {
+                      controller.close();
+                    } else {
+                      controller.open();
+                    }
+                  },
+                  icon: const Icon(Icons.more_vert_rounded, size: 20),
+                  tooltip: 'Opciones',
+                );
+              },
+              menuChildren: [
+                MenuItemButton(
+                  leadingIcon: const Icon(Icons.edit_outlined),
+                  onPressed: () => onEdit(variant, index),
+                  child: const Text('Editar'),
+                ),
+                MenuItemButton(
+                  leadingIcon: const Icon(
+                    Icons.delete_outline,
+                    color: Colors.red,
                   ),
-                  Text(
-                    isSales ? "Precio" : "Costo",
-                    style: theme.textTheme.labelSmall?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
-                    ),
+                  onPressed: () => _confirmDelete(context),
+                  child: Text(
+                    'Eliminar',
+                    style: TextStyle(color: theme.colorScheme.error),
                   ),
-                ],
-              ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
-              const SizedBox(width: 8),
-
-              // Botón de más acciones simple
-              MenuAnchor(
-                builder: (context, controller, child) {
-                  return IconButton(
-                    onPressed: () {
-                      if (controller.isOpen) {
-                        controller.close();
-                      } else {
-                        controller.open();
-                      }
-                    },
-                    icon: const Icon(Icons.more_vert_rounded, size: 20),
-                    tooltip: 'Opciones',
-                  );
-                },
-                menuChildren: [
-                  MenuItemButton(
-                    leadingIcon: const Icon(Icons.edit_outlined),
-                    onPressed: () => onEdit(variant, index),
-                    child: const Text('Editar'),
-                  ),
-                  MenuItemButton(
-                    leadingIcon: const Icon(
-                      Icons.delete_outline,
-                      color: Colors.red,
-                    ),
-                    onPressed: () => _confirmDelete(context),
-                    child: Text(
-                      'Eliminar',
-                      style: TextStyle(color: theme.colorScheme.error),
-                    ),
-                  ),
-                ],
+  void _showContextMenu(BuildContext context, Offset globalPosition) {
+    final theme = Theme.of(context);
+    showMenu(
+      context: context,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      position: RelativeRect.fromLTRB(
+        globalPosition.dx,
+        globalPosition.dy,
+        globalPosition.dx,
+        globalPosition.dy,
+      ),
+      items: [
+        PopupMenuItem(
+          onTap: () => onEdit(variant, index),
+          child: Row(
+            children: [
+              Icon(Icons.edit_outlined, color: theme.colorScheme.onSurface),
+              const SizedBox(width: 12),
+              Text(
+                'Editar',
+                style: TextStyle(color: theme.colorScheme.onSurface),
               ),
             ],
           ),
         ),
-      ),
+        PopupMenuItem(
+          onTap: () {
+            Future.delayed(Duration.zero, () {
+              if (context.mounted) _confirmDelete(context);
+            });
+          },
+          child: Row(
+            children: [
+              Icon(Icons.delete_outline, color: theme.colorScheme.error),
+              const SizedBox(width: 12),
+              Text(
+                'Eliminar',
+                style: TextStyle(color: theme.colorScheme.error),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 
