@@ -13,8 +13,13 @@ part of 'product_di.dart';
 const labelServiceProvider = LabelServiceProvider._();
 
 final class LabelServiceProvider
-    extends $FunctionalProvider<LabelService, LabelService, LabelService>
-    with $Provider<LabelService> {
+    extends
+        $FunctionalProvider<
+          AsyncValue<LabelService>,
+          LabelService,
+          FutureOr<LabelService>
+        >
+    with $FutureModifier<LabelService>, $FutureProvider<LabelService> {
   const LabelServiceProvider._()
     : super(
         from: null,
@@ -31,24 +36,17 @@ final class LabelServiceProvider
 
   @$internal
   @override
-  $ProviderElement<LabelService> $createElement($ProviderPointer pointer) =>
-      $ProviderElement(pointer);
+  $FutureProviderElement<LabelService> $createElement(
+    $ProviderPointer pointer,
+  ) => $FutureProviderElement(pointer);
 
   @override
-  LabelService create(Ref ref) {
+  FutureOr<LabelService> create(Ref ref) {
     return labelService(ref);
-  }
-
-  /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(LabelService value) {
-    return $ProviderOverride(
-      origin: this,
-      providerOverride: $SyncValueProvider<LabelService>(value),
-    );
   }
 }
 
-String _$labelServiceHash() => r'0a8a7d696a0171744c0c0bd1b0b93598000f21b3';
+String _$labelServiceHash() => r'3916e6678e3e0d57ca3b48137fc767a9984fe911';
 
 @ProviderFor(productLocalDataSource)
 const productLocalDataSourceProvider = ProductLocalDataSourceProvider._();

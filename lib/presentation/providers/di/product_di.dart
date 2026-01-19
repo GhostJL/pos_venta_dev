@@ -32,13 +32,18 @@ import 'package:posventa/presentation/providers/di/core_di.dart';
 import 'package:posventa/data/datasources/product_local_datasource.dart';
 import 'package:posventa/data/datasources/product_local_datasource_impl.dart';
 import 'package:posventa/domain/services/label_service.dart';
+import 'package:posventa/presentation/providers/di/printer_di.dart';
 
 part 'product_di.g.dart';
 
 // --- Product Providers ---
 
 @riverpod
-LabelService labelService(ref) => LabelService();
+Future<LabelService> labelService(ref) async {
+  final settingsRepository = await ref.watch(settingsRepositoryProvider.future);
+  final printerService = ref.watch(printerServiceProvider);
+  return LabelService(settingsRepository, printerService);
+}
 
 @riverpod
 ProductLocalDataSource productLocalDataSource(ref) =>

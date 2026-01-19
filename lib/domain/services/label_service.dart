@@ -1,8 +1,12 @@
+import 'dart:io';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
+import 'package:posventa/core/utils/file_manager_service.dart';
 import 'package:posventa/domain/entities/product.dart';
 import 'package:posventa/domain/entities/product_variant.dart';
+import 'package:posventa/domain/repositories/settings_repository.dart';
+import 'package:posventa/domain/services/printer_service.dart';
 
 class LabelPrintRequest {
   final Product product;
@@ -13,7 +17,14 @@ class LabelPrintRequest {
 }
 
 class LabelService {
-  Future<void> printLabels(List<LabelPrintRequest> requests) async {
+  final SettingsRepository _settingsRepository;
+  final PrinterService _printerService;
+
+  LabelService(this._settingsRepository, this._printerService);
+
+  /// Prints labels or saves them as PDF if no printer is configured.
+  /// Returns the path of the saved PDF if saved, or null if printed.
+  Future<String?> printLabels(List<LabelPrintRequest> requests) async {
     final doc = pw.Document();
 
     // Standard thermal label size (e.g., 50mm x 30mm)
@@ -89,11 +100,65 @@ class LabelService {
       }
     }
 
-    await Printing.layoutPdf(
-      onLayout: (PdfPageFormat format) async => doc.save(),
-      name:
-          'Labels_${DateTime.now().millisecondsSinceEpoch}', // Unique job name
-    );
+    // Printer logic
+    final settings = await _settingsRepository.getSettings();
+    final printerName = settings.printerName;
+    Printer? targetPrinter;
+    bool shouldPrint = false;
+
+    if (printerName != null) {
+      // Check for PDF pseudo-printers to avoid system dialog
+      final lowerName = printerName.toLowerCase();
+      final isPdfPrinter =
+          lowerName.contains('pdf') ||
+          lowerName.contains('microsoft print to pdf') ||
+          lowerName.contains('adobe pdf') ||
+          lowerName.contains('foxit') ||
+          lowerName.contains('cutepdf') ||
+          lowerName.contains('novapdf');
+
+      if (!isPdfPrinter) {
+        try {
+          final printers = await _printerService.getPrinters();
+          targetPrinter = printers
+              .where((p) => p.name == printerName)
+              .firstOrNull;
+          if (targetPrinter != null) {
+            shouldPrint = true;
+          }
+        } catch (e) {
+          // Ignore error, fallback to saving PDF
+        }
+      }
+    }
+
+    if (shouldPrint && targetPrinter != null) {
+      await Printing.directPrintPdf(
+        printer: targetPrinter,
+        onLayout: (PdfPageFormat format) async => doc.save(),
+      );
+      return null;
+    } else {
+      // Automatic PDF save
+      final pdfPath =
+          settings.pdfSavePath ??
+          await FileManagerService.getDefaultPdfSavePath();
+
+      final organizedPath = FileManagerService.getOrganizedPath(pdfPath);
+      await FileManagerService.ensureDirectoryExists(organizedPath);
+
+      final fileName = FileManagerService.generateFileName(
+        'etiquetas', // Prefix
+        'pdf',
+        identifier: 'batch_${requests.length}_items',
+      );
+
+      final filePath = '$organizedPath${Platform.pathSeparator}$fileName';
+      final file = File(filePath);
+      await file.writeAsBytes(await doc.save());
+
+      return filePath;
+    }
   }
 
   // Deprecated/Legacy wrapper for single print

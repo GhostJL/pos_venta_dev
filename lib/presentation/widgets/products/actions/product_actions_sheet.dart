@@ -387,13 +387,14 @@ class ProductActionsSheet extends ConsumerWidget {
   }
 
   Future<void> _handlePrintLabel(BuildContext context, WidgetRef ref) async {
-    final labelService = ref.read(labelServiceProvider);
     final navigator = Navigator.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+    final labelService = await ref.read(labelServiceProvider.future);
 
     navigator.pop(); // Close sheet
 
-    // Use navigator.context which remains valid
-    if (navigator.context.mounted) {
+    if (navigator.mounted) {
+      // ignore: use_build_context_synchronously
       final requests = await showDialog<List<LabelPrintRequest>>(
         context: navigator.context,
         builder: (context) => LabelPrintDialog(product: product),
@@ -402,14 +403,28 @@ class ProductActionsSheet extends ConsumerWidget {
       if (requests != null && requests.isNotEmpty) {
         try {
           debugPrint('Starting print job for ${requests.length} requests');
-          await labelService.printLabels(requests);
+          final savedPath = await labelService.printLabels(requests);
+
+          if (savedPath != null) {
+            messenger.showSnackBar(
+              SnackBar(
+                content: Text('PDF guardado en: $savedPath'),
+                backgroundColor: Colors.green,
+              ),
+            );
+          } else {
+            messenger.showSnackBar(
+              const SnackBar(
+                content: Text('Enviado a impresora'),
+                backgroundColor: Colors.green,
+              ),
+            );
+          }
         } catch (e) {
           debugPrint('Print error: $e');
-          if (navigator.context.mounted) {
-            ScaffoldMessenger.of(
-              context.mounted ? context : navigator.context,
-            ).showSnackBar(SnackBar(content: Text('Error al imprimir: $e')));
-          }
+          messenger.showSnackBar(
+            SnackBar(content: Text('Error al imprimir: $e')),
+          );
         }
       }
     }
