@@ -23,6 +23,9 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:posventa/core/error/domain_exceptions.dart';
 import 'package:posventa/core/error/error_reporter.dart';
 
+import 'package:posventa/presentation/providers/pos_grid_provider.dart';
+import 'package:posventa/presentation/providers/paginated_products_provider.dart';
+
 part 'pos_providers.g.dart';
 
 class POSState {
@@ -809,6 +812,10 @@ class POSNotifier extends _$POSNotifier {
           );
         }
       }
+
+      // Explicitly Refresh POS Product Grids to reflect stock changes immediately
+      ref.invalidate(posGridItemsProvider);
+      ref.invalidate(paginatedProductsPageProvider);
 
       // Invalidate product list to refresh stock
       ref.invalidate(productListProvider);
