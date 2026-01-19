@@ -128,7 +128,9 @@ class PurchaseItemsTable extends StatelessWidget {
                     Expanded(
                       flex: 2,
                       child: Text(
-                        item.variantName ?? '-',
+                        item.linkedVariantName != null
+                            ? '${item.variantName ?? '-'} -> ${item.linkedVariantName}'
+                            : item.variantName ?? '-',
                         style: theme.textTheme.bodyMedium,
                       ),
                     ),

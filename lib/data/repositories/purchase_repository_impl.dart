@@ -149,6 +149,9 @@ class PurchaseRepositoryImpl implements PurchaseRepository {
     final supplierRow = row.readTableOrNull(db.suppliers);
 
     // Get Items
+    // Define alias for linked variants
+    final linkedVariants = db.productVariants.createAlias('linked_variants');
+
     final itemsRows = await (db.select(db.purchaseItems).join([
       leftOuterJoin(
         db.products,
@@ -158,12 +161,17 @@ class PurchaseRepositoryImpl implements PurchaseRepository {
         db.productVariants,
         db.productVariants.id.equalsExp(db.purchaseItems.variantId),
       ),
+      leftOuterJoin(
+        linkedVariants,
+        linkedVariants.id.equalsExp(db.productVariants.linkedVariantId),
+      ),
     ])..where(db.purchaseItems.purchaseId.equals(id))).get();
 
     final items = itemsRows.map((iRow) {
       final item = iRow.readTable(db.purchaseItems);
       final product = iRow.readTableOrNull(db.products);
       final variant = iRow.readTableOrNull(db.productVariants);
+      final linkedVariant = iRow.readTableOrNull(linkedVariants);
 
       return PurchaseItemModel(
         id: item.id,
@@ -182,6 +190,7 @@ class PurchaseRepositoryImpl implements PurchaseRepository {
         createdAt: item.createdAt,
         productName: product?.name,
         variantName: variant?.variantName,
+        linkedVariantName: linkedVariant?.variantName,
       );
     }).toList();
 

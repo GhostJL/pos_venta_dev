@@ -18,6 +18,7 @@ class PurchaseItemModel extends PurchaseItem {
     required super.createdAt,
     super.productName,
     super.variantName,
+    super.linkedVariantName,
   });
 
   factory PurchaseItemModel.fromJson(Map<String, dynamic> json) {
@@ -44,6 +45,7 @@ class PurchaseItemModel extends PurchaseItem {
       createdAt: DateTime.parse(json['created_at']),
       productName: json['product_name'], // Joined field
       variantName: json['variant_name'], // Joined field
+      linkedVariantName: json['linked_variant_name'], // Joined field
     );
   }
 
@@ -84,6 +86,7 @@ class PurchaseItemModel extends PurchaseItem {
       createdAt: item.createdAt,
       productName: item.productName,
       variantName: item.variantName,
+      linkedVariantName: item.linkedVariantName,
     );
   }
 }
