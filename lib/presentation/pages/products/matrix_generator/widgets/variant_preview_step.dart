@@ -377,268 +377,352 @@ class _VariantPreviewStepState extends ConsumerState<VariantPreviewStep> {
   Widget _buildDesktopTable(List<ProductVariant> variants, ThemeData theme) {
     final isSales = widget.targetType == VariantType.sales;
 
-    return Card(
-      elevation: 0,
-      shape: RoundedRectangleBorder(
+    TextStyle headerStyle(ThemeData theme) =>
+        theme.textTheme.bodyMedium!.copyWith(
+          fontWeight: FontWeight.bold,
+          color: theme.colorScheme.onSurfaceVariant,
+        );
+
+    return Container(
+      decoration: BoxDecoration(
+        border: Border.all(color: theme.colorScheme.outlineVariant),
         borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: theme.colorScheme.outlineVariant),
       ),
-      child: SizedBox(
-        width: double.infinity,
-        child: SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: DataTable(
-            headingRowColor: WidgetStateProperty.all(
-              theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+      clipBehavior: Clip.antiAlias,
+      child: Column(
+        children: [
+          // Header
+          Container(
+            color: theme.colorScheme.surfaceContainerHighest.withValues(
+              alpha: 0.5,
             ),
-            columns: [
-              const DataColumn(label: Text('Variante')),
-              if (isSales) ...const [
-                DataColumn(label: Text('Precio')),
-                DataColumn(label: Text('Costo')),
-                DataColumn(label: Text('Mayoreo')),
-                DataColumn(label: Text('Min')),
-                DataColumn(label: Text('Max')),
-              ] else ...const [
-                DataColumn(label: Text('Costo Compra')),
-                DataColumn(label: Text('Conversión')),
-                DataColumn(label: Text('Código Barras')),
-                DataColumn(label: Text('Vinculado a')),
-              ],
-            ],
-            rows: variants.asMap().entries.map((entry) {
-              final index = entry.key;
-              final variant = entry.value;
-              return DataRow(
-                cells: [
-                  DataCell(
-                    Text(
-                      variant.variantName,
-                      style: const TextStyle(fontWeight: FontWeight.bold),
-                    ),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            child: Row(
+              children: [
+                Expanded(
+                  flex: 3,
+                  child: Text('Variante', style: headerStyle(theme)),
+                ),
+                if (isSales) ...[
+                  const SizedBox(width: 16),
+                  Expanded(
+                    flex: 2,
+                    child: Text('Precio', style: headerStyle(theme)),
                   ),
-                  if (isSales) ...[
-                    DataCell(
-                      _EditableCell(
-                        key: ValueKey('price_${index}_${variant.price}'),
-                        value: variant.price.toStringAsFixed(2),
-                        onChanged: (val) {
-                          final d = double.tryParse(val) ?? 0;
-                          final updated = variant.copyWith(
-                            priceCents: (d * 100).round(),
-                          );
-                          ref
-                              .read(
-                                matrixGeneratorProvider(
-                                  widget.productId,
-                                ).notifier,
-                              )
-                              .updateVariant(index, updated);
-                        },
+                  const SizedBox(width: 16),
+                  Expanded(
+                    flex: 2,
+                    child: Text('Costo', style: headerStyle(theme)),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    flex: 2,
+                    child: Text('Mayoreo', style: headerStyle(theme)),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    flex: 1,
+                    child: Text('Min', style: headerStyle(theme)),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    flex: 1,
+                    child: Text('Max', style: headerStyle(theme)),
+                  ),
+                ] else ...[
+                  const SizedBox(width: 16),
+                  Expanded(
+                    flex: 2,
+                    child: Text('Costo Compra', style: headerStyle(theme)),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    flex: 2,
+                    child: Text('Conversión', style: headerStyle(theme)),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    flex: 3,
+                    child: Text('Código Barras', style: headerStyle(theme)),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    flex: 3,
+                    child: Text('Vinculado a', style: headerStyle(theme)),
+                  ),
+                ],
+              ],
+            ),
+          ),
+          // List
+          ListView.separated(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: variants.length,
+            separatorBuilder: (_, __) => Divider(
+              height: 1,
+              color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
+            ),
+            itemBuilder: (context, index) {
+              final variant = variants[index];
+              return Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      flex: 3,
+                      child: Text(
+                        variant.variantName,
+                        style: const TextStyle(fontWeight: FontWeight.bold),
                       ),
                     ),
-                    DataCell(
-                      _EditableCell(
-                        key: ValueKey('cost_${index}_${variant.costPrice}'),
-                        value: variant.costPrice.toStringAsFixed(2),
-                        onChanged: (val) {
-                          final d = double.tryParse(val) ?? 0;
-                          final updated = variant.copyWith(
-                            costPriceCents: (d * 100).round(),
-                          );
-                          ref
-                              .read(
-                                matrixGeneratorProvider(
-                                  widget.productId,
-                                ).notifier,
-                              )
-                              .updateVariant(index, updated);
-                        },
-                      ),
-                    ),
-                    DataCell(
-                      _EditableCell(
-                        key: ValueKey(
-                          'wholesale_${index}_${variant.wholesalePriceCents}',
-                        ),
-                        value:
-                            (variant.wholesalePriceCents != null
-                                    ? variant.wholesalePriceCents! / 100.0
-                                    : 0.0)
-                                .toStringAsFixed(2),
-                        onChanged: (val) {
-                          final d = double.tryParse(val) ?? 0;
-                          final updated = variant.copyWith(
-                            wholesalePriceCents: (d * 100).round(),
-                          );
-                          ref
-                              .read(
-                                matrixGeneratorProvider(
-                                  widget.productId,
-                                ).notifier,
-                              )
-                              .updateVariant(index, updated);
-                        },
-                      ),
-                    ),
-                    DataCell(
-                      _EditableCell(
-                        key: ValueKey('min_${index}_${variant.stockMin}'),
-                        value: (variant.stockMin ?? 0).toStringAsFixed(0),
-                        onChanged: (val) {
-                          final d = double.tryParse(val) ?? 0;
-                          final updated = variant.copyWith(stockMin: d);
-                          ref
-                              .read(
-                                matrixGeneratorProvider(
-                                  widget.productId,
-                                ).notifier,
-                              )
-                              .updateVariant(index, updated);
-                        },
-                      ),
-                    ),
-                    DataCell(
-                      _EditableCell(
-                        key: ValueKey('max_${index}_${variant.stockMax}'),
-                        value: (variant.stockMax ?? 0).toStringAsFixed(0),
-                        onChanged: (val) {
-                          final d = double.tryParse(val) ?? 0;
-                          final updated = variant.copyWith(stockMax: d);
-                          ref
-                              .read(
-                                matrixGeneratorProvider(
-                                  widget.productId,
-                                ).notifier,
-                              )
-                              .updateVariant(index, updated);
-                        },
-                      ),
-                    ),
-                  ] else ...[
-                    DataCell(
-                      _EditableCell(
-                        key: ValueKey('cost_${index}_${variant.costPrice}'),
-                        value: variant.costPrice.toStringAsFixed(2),
-                        onChanged: (val) {
-                          final d = double.tryParse(val) ?? 0;
-                          final updated = variant.copyWith(
-                            costPriceCents: (d * 100).round(),
-                          );
-                          ref
-                              .read(
-                                matrixGeneratorProvider(
-                                  widget.productId,
-                                ).notifier,
-                              )
-                              .updateVariant(index, updated);
-                        },
-                      ),
-                    ),
-                    DataCell(
-                      _EditableCell(
-                        key: ValueKey(
-                          'factor_${index}_${variant.conversionFactor}',
-                        ),
-                        value: variant.conversionFactor.toStringAsFixed(2),
-                        onChanged: (val) {
-                          final d = double.tryParse(val) ?? 1.0;
-                          final updated = variant.copyWith(conversionFactor: d);
-                          ref
-                              .read(
-                                matrixGeneratorProvider(
-                                  widget.productId,
-                                ).notifier,
-                              )
-                              .updateVariant(index, updated);
-                        },
-                      ),
-                    ),
-                    DataCell(
-                      _EditableCell(
-                        key: ValueKey('barcode_${index}_${variant.barcode}'),
-                        value: variant.barcode ?? '',
-                        isNumeric: false,
-                        suffixIcon: IconButton(
-                          icon: const Icon(Icons.qr_code_scanner, size: 18),
-                          onPressed: () {
-                            Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (context) => BarcodeScannerWidget(
-                                  onBarcodeScanned: (context, code) {
-                                    final updated = variant.copyWith(
-                                      barcode: code,
-                                    );
-                                    ref
-                                        .read(
-                                          matrixGeneratorProvider(
-                                            widget.productId,
-                                          ).notifier,
-                                        )
-                                        .updateVariant(index, updated);
-                                    Navigator.of(context).pop();
-                                  },
-                                ),
-                              ),
+                    if (isSales) ...[
+                      const SizedBox(width: 16),
+                      Expanded(
+                        flex: 2,
+                        child: _EditableCell(
+                          key: ValueKey('price_${index}_${variant.price}'),
+                          value: variant.price.toStringAsFixed(2),
+                          onChanged: (val) {
+                            final d = double.tryParse(val) ?? 0;
+                            final updated = variant.copyWith(
+                              priceCents: (d * 100).round(),
                             );
+                            ref
+                                .read(
+                                  matrixGeneratorProvider(
+                                    widget.productId,
+                                  ).notifier,
+                                )
+                                .updateVariant(index, updated);
                           },
                         ),
-                        onChanged: (val) {
-                          final updated = variant.copyWith(
-                            barcode: val.isEmpty ? null : val,
-                          );
-                          ref
-                              .read(
-                                matrixGeneratorProvider(
-                                  widget.productId,
-                                ).notifier,
-                              )
-                              .updateVariant(index, updated);
-                        },
                       ),
-                    ),
-                    DataCell(
-                      DropdownButton<int>(
-                        value: variant.linkedVariantId,
-                        hint: const Text('Sin vinculo'),
-                        underline: const SizedBox(),
-                        items: [
-                          const DropdownMenuItem<int>(
-                            value: null,
-                            child: Text('Sin vinculo'),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        flex: 2,
+                        child: _EditableCell(
+                          key: ValueKey('cost_${index}_${variant.costPrice}'),
+                          value: variant.costPrice.toStringAsFixed(2),
+                          onChanged: (val) {
+                            final d = double.tryParse(val) ?? 0;
+                            final updated = variant.copyWith(
+                              costPriceCents: (d * 100).round(),
+                            );
+                            ref
+                                .read(
+                                  matrixGeneratorProvider(
+                                    widget.productId,
+                                  ).notifier,
+                                )
+                                .updateVariant(index, updated);
+                          },
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        flex: 2,
+                        child: _EditableCell(
+                          key: ValueKey(
+                            'wholesale_${index}_${variant.wholesalePriceCents}',
                           ),
-                          ...widget.existingVariants
-                              .where((v) => v.type == VariantType.sales)
-                              .map(
-                                (v) => DropdownMenuItem<int>(
-                                  value: v.id,
-                                  child: Text(
-                                    v.variantName,
-                                    overflow: TextOverflow.ellipsis,
+                          value:
+                              (variant.wholesalePriceCents != null
+                                      ? variant.wholesalePriceCents! / 100.0
+                                      : 0.0)
+                                  .toStringAsFixed(2),
+                          onChanged: (val) {
+                            final d = double.tryParse(val) ?? 0;
+                            final updated = variant.copyWith(
+                              wholesalePriceCents: (d * 100).round(),
+                            );
+                            ref
+                                .read(
+                                  matrixGeneratorProvider(
+                                    widget.productId,
+                                  ).notifier,
+                                )
+                                .updateVariant(index, updated);
+                          },
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        flex: 1,
+                        child: _EditableCell(
+                          key: ValueKey('min_${index}_${variant.stockMin}'),
+                          value: (variant.stockMin ?? 0).toStringAsFixed(0),
+                          onChanged: (val) {
+                            final d = double.tryParse(val) ?? 0;
+                            final updated = variant.copyWith(stockMin: d);
+                            ref
+                                .read(
+                                  matrixGeneratorProvider(
+                                    widget.productId,
+                                  ).notifier,
+                                )
+                                .updateVariant(index, updated);
+                          },
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        flex: 1,
+                        child: _EditableCell(
+                          key: ValueKey('max_${index}_${variant.stockMax}'),
+                          value: (variant.stockMax ?? 0).toStringAsFixed(0),
+                          onChanged: (val) {
+                            final d = double.tryParse(val) ?? 0;
+                            final updated = variant.copyWith(stockMax: d);
+                            ref
+                                .read(
+                                  matrixGeneratorProvider(
+                                    widget.productId,
+                                  ).notifier,
+                                )
+                                .updateVariant(index, updated);
+                          },
+                        ),
+                      ),
+                    ] else ...[
+                      const SizedBox(width: 16),
+                      Expanded(
+                        flex: 2,
+                        child: _EditableCell(
+                          key: ValueKey('cost_${index}_${variant.costPrice}'),
+                          value: variant.costPrice.toStringAsFixed(2),
+                          onChanged: (val) {
+                            final d = double.tryParse(val) ?? 0;
+                            final updated = variant.copyWith(
+                              costPriceCents: (d * 100).round(),
+                            );
+                            ref
+                                .read(
+                                  matrixGeneratorProvider(
+                                    widget.productId,
+                                  ).notifier,
+                                )
+                                .updateVariant(index, updated);
+                          },
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        flex: 2,
+                        child: _EditableCell(
+                          key: ValueKey(
+                            'factor_${index}_${variant.conversionFactor}',
+                          ),
+                          value: variant.conversionFactor.toStringAsFixed(2),
+                          onChanged: (val) {
+                            final d = double.tryParse(val) ?? 1.0;
+                            final updated = variant.copyWith(
+                              conversionFactor: d,
+                            );
+                            ref
+                                .read(
+                                  matrixGeneratorProvider(
+                                    widget.productId,
+                                  ).notifier,
+                                )
+                                .updateVariant(index, updated);
+                          },
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        flex: 3,
+                        child: _EditableCell(
+                          key: ValueKey('barcode_${index}_${variant.barcode}'),
+                          value: variant.barcode ?? '',
+                          isNumeric: false,
+                          suffixIcon: IconButton(
+                            icon: const Icon(Icons.qr_code_scanner, size: 18),
+                            onPressed: () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (context) => BarcodeScannerWidget(
+                                    onBarcodeScanned: (context, code) {
+                                      final updated = variant.copyWith(
+                                        barcode: code,
+                                      );
+                                      ref
+                                          .read(
+                                            matrixGeneratorProvider(
+                                              widget.productId,
+                                            ).notifier,
+                                          )
+                                          .updateVariant(index, updated);
+                                      Navigator.of(context).pop();
+                                    },
                                   ),
                                 ),
-                              ),
-                        ],
-                        onChanged: (val) {
-                          final updated = variant.copyWith(
-                            linkedVariantId: val,
-                          );
-                          ref
-                              .read(
-                                matrixGeneratorProvider(
-                                  widget.productId,
-                                ).notifier,
-                              )
-                              .updateVariant(index, updated);
-                        },
+                              );
+                            },
+                          ),
+                          onChanged: (val) {
+                            final updated = variant.copyWith(
+                              barcode: val.isEmpty ? null : val,
+                            );
+                            ref
+                                .read(
+                                  matrixGeneratorProvider(
+                                    widget.productId,
+                                  ).notifier,
+                                )
+                                .updateVariant(index, updated);
+                          },
+                        ),
                       ),
-                    ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        flex: 3,
+                        child: DropdownButton<int>(
+                          value: variant.linkedVariantId,
+                          isExpanded: true,
+                          hint: const Text('Sin vinculo'),
+                          underline: const SizedBox(),
+                          items: [
+                            const DropdownMenuItem<int>(
+                              value: null,
+                              child: Text('Sin vinculo'),
+                            ),
+                            ...widget.existingVariants
+                                .where((v) => v.type == VariantType.sales)
+                                .map(
+                                  (v) => DropdownMenuItem<int>(
+                                    value: v.id,
+                                    child: Text(
+                                      v.variantName,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                ),
+                          ],
+                          onChanged: (val) {
+                            final updated = variant.copyWith(
+                              linkedVariantId: val,
+                            );
+                            ref
+                                .read(
+                                  matrixGeneratorProvider(
+                                    widget.productId,
+                                  ).notifier,
+                                )
+                                .updateVariant(index, updated);
+                          },
+                        ),
+                      ),
+                    ],
                   ],
-                ],
+                ),
               );
-            }).toList(),
+            },
           ),
-        ),
+        ],
       ),
     );
   }

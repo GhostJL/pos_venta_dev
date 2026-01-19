@@ -6,19 +6,11 @@ import 'package:posventa/domain/entities/product.dart';
 import 'package:posventa/domain/entities/product_tax.dart' as pt;
 
 import 'package:posventa/presentation/providers/product_form_provider.dart';
-import 'package:posventa/presentation/providers/settings_provider.dart';
 import 'package:posventa/presentation/providers/tax_rate_provider.dart';
-import 'package:posventa/presentation/widgets/products/forms/product_form/product_basic_info_section.dart';
-import 'package:posventa/presentation/widgets/products/forms/product_form/product_classification_section.dart';
-import 'package:posventa/presentation/widgets/products/forms/product_form/product_tax_selection.dart';
-import 'package:posventa/presentation/widgets/products/forms/product_form/product_variants_list.dart';
-import 'package:posventa/presentation/widgets/products/forms/product_form/product_pricing_section.dart';
-import 'package:posventa/presentation/widgets/products/forms/product_form/product_inventory_section.dart';
+import 'package:posventa/presentation/pages/products/product_form/views/product_form_desktop.dart';
+import 'package:posventa/presentation/pages/products/product_form/views/product_form_mobile.dart';
 
 import 'package:posventa/domain/entities/product_variant.dart';
-import 'package:posventa/domain/entities/unit_of_measure.dart';
-import 'package:posventa/presentation/providers/unit_providers.dart';
-import 'package:posventa/presentation/widgets/common/selection_sheet.dart';
 
 class ProductFormPage extends ConsumerStatefulWidget {
   final Product? product;
@@ -85,42 +77,6 @@ class ProductFormPageState extends ConsumerState<ProductFormPage> {
   void dispose() {
     _controllers.dispose();
     super.dispose();
-  }
-
-  // Helper for Item Selection
-  Future<void> _showSelectionSheet<T>({
-    required BuildContext context,
-    required String title,
-    required List<T> items,
-    required String Function(T) labelBuilder,
-    T? selectedItem,
-    required ValueChanged<T?> onSelected,
-    VoidCallback? onAdd,
-  }) async {
-    final result = await showModalBottomSheet<SelectionSheetResult<T>>(
-      context: context,
-      isScrollControlled: true,
-      useSafeArea: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      builder: (context) => SelectionSheet<T>(
-        title: title,
-        items: items,
-        itemLabelBuilder: labelBuilder,
-        selectedItem: selectedItem,
-        areEqual: (a, b) => labelBuilder(a) == labelBuilder(b),
-        onAdd: onAdd,
-      ),
-    );
-
-    if (result != null) {
-      if (result.isCleared) {
-        onSelected(null);
-      } else if (result.value != null) {
-        onSelected(result.value);
-      }
-    }
   }
 
   Future<void> _submit() async {
@@ -227,19 +183,8 @@ class ProductFormPageState extends ConsumerState<ProductFormPage> {
   @override
   Widget build(BuildContext context) {
     final provider = productFormProvider(widget.product);
-    final state = ref.watch(provider);
-    final isLoading = state.isLoading;
-    final isNewProduct = widget.product == null || widget.product?.id == null;
     final theme = Theme.of(context);
-    final isModified = state.isModified;
-    final isVariable = state.isVariableProduct;
-
-    final settingsAsync = ref.watch(settingsProvider);
-    final useInventory = settingsAsync.value?.useInventory ?? true;
-    final useTax = settingsAsync.value?.useTax ?? true;
-
-    // Determine if we show the inventory tab
-    final showInventoryTab = isVariable || useInventory;
+    final isNewProduct = widget.product == null || widget.product?.id == null;
 
     // Listen for success or error
     ref.listen<ProductFormState>(provider, (previous, next) {
@@ -267,359 +212,30 @@ class ProductFormPageState extends ConsumerState<ProductFormPage> {
       }
     });
 
-    return DefaultTabController(
-      length: 2 + (showInventoryTab ? 1 : 0),
-      child: Scaffold(
-        appBar: AppBar(
-          title: Text(
-            isNewProduct ? 'Nuevo Producto' : 'Editar Producto',
-            style: const TextStyle(fontWeight: FontWeight.bold),
-          ),
-
-          bottom: TabBar(
-            isScrollable: true,
-            tabAlignment: TabAlignment.start,
-            tabs: [
-              const Tab(text: 'General'),
-              const Tab(text: 'Precios e Impuestos'),
-              if (showInventoryTab)
-                Tab(text: isVariable ? 'Variantes' : 'Inventario'),
-            ],
-          ),
-          actions: [
-            if (isLoading)
-              const Padding(
-                padding: EdgeInsets.symmetric(horizontal: 16.0),
-                child: SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                ),
-              )
-            else if (isModified)
-              TextButton(
-                onPressed: _submit,
-                child: Text(
-                  'GUARDAR',
-                  style: TextStyle(
-                    color: theme.colorScheme.primary,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-          ],
-        ),
-        body: SafeArea(
-          child: Form(
-            key: _formKey,
-            child: TabBarView(
-              children: [
-                // TAB 1: GENERAL
-                SingleChildScrollView(
-                  padding: const EdgeInsets.all(24),
-                  child: Column(
-                    children: [
-                      // Mode Toggle (Crucial Decision First)
-                      Center(
-                        child: FittedBox(
-                          fit: BoxFit.scaleDown,
-                          child: ToggleButtons(
-                            borderRadius: BorderRadius.circular(12),
-                            constraints: BoxConstraints(
-                              minWidth:
-                                  (MediaQuery.of(context).size.width - 48 - 6) /
-                                  2,
-                              minHeight: 40,
-                            ),
-                            isSelected: [!isVariable, isVariable],
-                            onPressed: (index) {
-                              ref
-                                  .read(provider.notifier)
-                                  .setVariableProduct(index == 1);
-                            },
-                            children: const [
-                              Text('Producto Simple'),
-                              Text('Con Variantes'),
-                            ],
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-
-                      ProductBasicInfoSection(
-                        product: widget.product,
-                        nameController: _controllers.nameController,
-                        codeController: _controllers.codeController,
-                        barcodeController: _controllers.barcodeController,
-                        descriptionController:
-                            _controllers.descriptionController,
-                        imageFile: ref.watch(
-                          provider.select((s) => s.imageFile),
-                        ),
-                        photoUrl: ref.watch(provider.select((s) => s.photoUrl)),
-                        onImageSelected: ref.read(provider.notifier).pickImage,
-                        onRemoveImage: ref.read(provider.notifier).removeImage,
-                      ),
-                      const SizedBox(height: 16),
-                      Consumer(
-                        builder: (context, ref, _) {
-                          final isActive = ref.watch(
-                            provider.select((s) => s.isActive),
-                          );
-                          return SwitchListTile(
-                            title: const Text('Producto Activo'),
-                            subtitle: const Text(
-                              'Disponible para venta y operaciones',
-                            ),
-                            value: isActive,
-                            onChanged: ref.read(provider.notifier).setActive,
-                            contentPadding: EdgeInsets.zero,
-                          );
-                        },
-                      ),
-                      const SizedBox(height: 16),
-                      ProductClassificationSection(product: widget.product),
-                    ],
-                  ),
-                ),
-
-                // TAB 2: PRICES & TAXES
-                SingleChildScrollView(
-                  padding: const EdgeInsets.all(24),
-                  child: Column(
-                    children: [
-                      if (!isVariable) ...[
-                        ProductPricingSection(
-                          product: widget.product,
-                          costPriceController: _controllers.costController,
-                          salePriceController: _controllers.priceController,
-                          wholesalePriceController:
-                              _controllers.wholesaleController,
-                        ),
-                        const SizedBox(height: 24),
-
-                        // UNIT & WEIGHT (Only for Simple Products)
-                        Consumer(
-                          builder: (context, ref, _) {
-                            final unitsAsync = ref.watch(unitListProvider);
-                            final provider = productFormProvider(
-                              widget.product,
-                            );
-                            final selectedUnitId = ref.watch(
-                              provider.select((s) => s.unitId),
-                            );
-
-                            return unitsAsync.when(
-                              data: (units) {
-                                final selectedUnit = units
-                                    .cast<UnitOfMeasure?>()
-                                    .firstWhere(
-                                      (u) => u?.id == selectedUnitId,
-                                      orElse: () => null,
-                                    );
-
-                                return SelectionField(
-                                  label: 'Unidad de Medida',
-                                  placeholder: 'Seleccionar unidad',
-                                  value: selectedUnit?.name,
-                                  helperText: 'Unidad de venta (ej. Pieza, Kg)',
-                                  prefixIcon: Icons.scale_rounded,
-                                  onTap: () =>
-                                      _showSelectionSheet<UnitOfMeasure>(
-                                        context: context,
-                                        title: 'Seleccionar Unidad',
-                                        items: units,
-                                        labelBuilder: (u) =>
-                                            '${u.name} (${u.code})',
-                                        selectedItem: selectedUnit,
-                                        onSelected: (u) => ref
-                                            .read(provider.notifier)
-                                            .setUnitId(u?.id),
-                                      ),
-                                  onClear: () => ref
-                                      .read(provider.notifier)
-                                      .setUnitId(null),
-                                );
-                              },
-                              loading: () => SelectionField(
-                                label: 'Unidad de Medida',
-                                isLoading: true,
-                                onTap: () {},
-                              ),
-                              error: (e, s) => Text('Error: $e'),
-                            );
-                          },
-                        ),
-                        const SizedBox(height: 16),
-                        Consumer(
-                          builder: (context, ref, _) {
-                            final isSoldByWeight = ref.watch(
-                              provider.select((s) => s.isSoldByWeight),
-                            );
-                            return SwitchListTile(
-                              title: const Text('Venta a granel / Por peso'),
-                              subtitle: const Text(
-                                'Habilita la captura de peso/cantidad en POS',
-                              ),
-                              value: isSoldByWeight,
-                              onChanged: ref
-                                  .read(provider.notifier)
-                                  .setSoldByWeight,
-                              contentPadding: EdgeInsets.zero,
-                            );
-                          },
-                        ),
-                        const SizedBox(height: 24),
-                      ] else
-                        Container(
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: theme.colorScheme.secondaryContainer
-                                .withValues(alpha: 0.3),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Row(
-                            children: [
-                              Icon(
-                                Icons.info_outline,
-                                color: theme.colorScheme.secondary,
-                              ),
-                              const SizedBox(width: 12),
-                              const Expanded(
-                                child: Text(
-                                  'Precios, costos, unidades y control de peso se gestionan individualmente en cada variante.',
-                                  style: TextStyle(fontSize: 13),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-
-                      if (useTax) ...[
-                        const SizedBox(height: 24),
-                        const Divider(),
-                        const SizedBox(height: 24),
-
-                        // TAXES
-                        Consumer(
-                          builder: (context, ref, child) {
-                            final usesTaxes = ref.watch(
-                              provider.select((s) => s.usesTaxes),
-                            );
-                            return Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                SwitchListTile(
-                                  title: const Text('¿Aplica Impuestos?'),
-                                  value: usesTaxes,
-                                  onChanged: (value) => ref
-                                      .read(provider.notifier)
-                                      .setUsesTaxes(value),
-                                  contentPadding: EdgeInsets.zero,
-                                ),
-                                if (usesTaxes) ...[
-                                  const SizedBox(height: 8),
-                                  ProductTaxSelection(product: widget.product),
-                                ],
-                              ],
-                            );
-                          },
-                        ),
-                      ],
-                    ],
-                  ),
-                ),
-
-                // TAB 3: INVENTORY OR VARIANTS
-                if (showInventoryTab)
-                  SingleChildScrollView(
-                    padding: const EdgeInsets.all(24),
-                    child: Column(
-                      children: [
-                        if (!isVariable) ...[
-                          ProductInventorySection(
-                            product: widget.product,
-                            stockController: _controllers.stockController,
-                            minStockController: _controllers.minStockController,
-                            maxStockController: _controllers.maxStockController,
-                          ),
-                        ] else ...[
-                          ProductVariantsList(
-                            product: widget.product,
-                            onAddVariant: _onAddVariant,
-                            onEditVariant: _onEditVariant,
-                          ),
-                          const SizedBox(height: 16),
-                          SizedBox(
-                            width: double.infinity,
-                            child: FilledButton.tonalIcon(
-                              onPressed: _onGenerateVariants,
-                              icon: const Icon(Icons.auto_awesome),
-                              label: const Text(
-                                'Generar Combinaciones (Matriz)',
-                              ),
-                              style: FilledButton.styleFrom(
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 16,
-                                ),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-                          Row(
-                            children: [
-                              Expanded(
-                                child: OutlinedButton.icon(
-                                  onPressed: () =>
-                                      _onAddVariant(VariantType.sales),
-                                  icon: const Icon(Icons.add_rounded),
-                                  label: const Text('Venta'),
-                                  style: OutlinedButton.styleFrom(
-                                    padding: const EdgeInsets.symmetric(
-                                      vertical: 16,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: OutlinedButton.icon(
-                                  onPressed: isNewProduct
-                                      ? () {
-                                          ScaffoldMessenger.of(
-                                            context,
-                                          ).showSnackBar(
-                                            const SnackBar(
-                                              content: Text(
-                                                'Guarda el producto primero para agregar variantes de compra.',
-                                              ),
-                                            ),
-                                          );
-                                        }
-                                      : () =>
-                                            _onAddVariant(VariantType.purchase),
-                                  icon: const Icon(
-                                    Icons.add_shopping_cart_rounded,
-                                  ),
-                                  label: const Text('Compra'),
-                                  style: OutlinedButton.styleFrom(
-                                    padding: const EdgeInsets.symmetric(
-                                      vertical: 16,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ],
-                    ),
-                  ),
-              ],
-            ),
-          ),
-        ),
-      ),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        if (constraints.maxWidth > 900) {
+          return ProductFormDesktop(
+            product: widget.product,
+            controllers: _controllers,
+            formKey: _formKey,
+            onSubmit: _submit,
+            onEditVariant: _onEditVariant,
+            onAddVariant: _onAddVariant,
+            onGenerateVariants: _onGenerateVariants,
+          );
+        } else {
+          return ProductFormMobile(
+            product: widget.product,
+            controllers: _controllers,
+            formKey: _formKey,
+            onSubmit: _submit,
+            onEditVariant: _onEditVariant,
+            onAddVariant: _onAddVariant,
+            onGenerateVariants: _onGenerateVariants,
+          );
+        }
+      },
     );
   }
 }

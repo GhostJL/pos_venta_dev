@@ -72,7 +72,7 @@ import 'package:posventa/domain/entities/sale.dart';
 import 'package:posventa/presentation/providers/auth_provider.dart';
 
 import 'package:posventa/presentation/pages/products/product_form_page.dart';
-import 'package:posventa/presentation/widgets/products/forms/variant_form_page.dart';
+import 'package:posventa/presentation/pages/products/variant_form/variant_form_page.dart';
 import 'package:posventa/presentation/widgets/catalog/brands/brand_form.dart';
 import 'package:posventa/presentation/widgets/catalog/categories/category_form.dart';
 import 'package:posventa/presentation/widgets/catalog/customers/customer_form.dart';

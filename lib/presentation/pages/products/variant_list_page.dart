@@ -4,9 +4,9 @@ import 'package:posventa/domain/entities/product.dart';
 import 'package:posventa/domain/entities/product_variant.dart';
 import 'package:posventa/presentation/pages/products/matrix_generator/matrix_generator_page.dart';
 import 'package:posventa/presentation/pages/products/variant_bulk_edit_page.dart';
+import 'package:posventa/presentation/pages/products/variant_form/variant_form_page.dart';
 import '../../providers/product_form_provider.dart';
 import '../../widgets/products/forms/product_form/product_variants_list.dart';
-import '../../widgets/products/forms/variant_form_page.dart';
 
 class VariantListPage extends ConsumerWidget {
   final Product product;
