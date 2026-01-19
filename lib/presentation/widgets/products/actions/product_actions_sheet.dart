@@ -81,9 +81,12 @@ class ProductActionsSheet extends ConsumerWidget {
                             context.pop();
                             Navigator.push(
                               context,
-                              MaterialPageRoute(
-                                builder: (context) =>
-                                    VariantManagementPage(product: product),
+                              PageRouteBuilder(
+                                pageBuilder:
+                                    (context, animation, secondaryAnimation) =>
+                                        VariantManagementPage(product: product),
+                                transitionDuration: Duration.zero,
+                                reverseTransitionDuration: Duration.zero,
                               ),
                             );
                           },

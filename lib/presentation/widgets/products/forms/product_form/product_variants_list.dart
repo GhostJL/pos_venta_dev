@@ -29,6 +29,13 @@ class ProductVariantsList extends ConsumerWidget {
     final state = ref.watch(provider);
     final allVariants = state.variants;
 
+    // Optimize: Pre-fetch unit lookup map to allow O(1) access without re-watching in every child
+    final unitsAsync = ref.watch(unitListProvider);
+    final unitMap = unitsAsync.maybeWhen(
+      data: (units) => {for (var u in units) u.id!: u.name.toLowerCase()},
+      orElse: () => <int, String>{},
+    );
+
     if (state.isLoading) {
       return _buildShimmerLoading(context);
     }
@@ -77,6 +84,7 @@ class ProductVariantsList extends ConsumerWidget {
                     ref.read(provider.notifier).removeVariant(idx);
                   }
                 },
+                unitName: unitMap[variant.unitId],
               );
             },
           );
@@ -102,6 +110,7 @@ class ProductVariantsList extends ConsumerWidget {
                   ref.read(provider.notifier).removeVariant(idx);
                 }
               },
+              unitName: unitMap[variant.unitId],
             );
           },
         );
@@ -306,29 +315,20 @@ class _VariantCard extends ConsumerWidget {
   final int index;
   final void Function(ProductVariant variant, int index) onEdit;
   final void Function(int index) onDelete;
+  final String? unitName;
 
   const _VariantCard({
     required this.variant,
     required this.index,
     required this.onEdit,
     required this.onDelete,
+    this.unitName,
   });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final isSales = variant.type == VariantType.sales;
-
-    // Obtener el nombre de la unidad
-    final unitsAsync = ref.watch(unitListProvider);
-    final unitName = unitsAsync.maybeWhen(
-      data: (units) => units
-          .where((u) => u.id == variant.unitId)
-          .firstOrNull
-          ?.name
-          .toLowerCase(),
-      orElse: () => null,
-    );
 
     return Card(
       elevation: 0,
@@ -418,7 +418,9 @@ class _VariantCard extends ConsumerWidget {
                             children: [
                               _buildBadge(
                                 theme,
-                                "${variant.conversionFactor} ${unitName ?? ''}",
+                                isSales
+                                    ? "${variant.quantity} ${unitName ?? ''}"
+                                    : "${variant.conversionFactor} ${unitName ?? ''}",
                                 theme.colorScheme.secondary,
                               ),
                               _buildBadge(
