@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:posventa/core/constants/permission_constants.dart';
 import 'package:posventa/domain/entities/product.dart';
-import 'package:posventa/presentation/pages/products/variant_type_selection_page.dart';
+import 'package:posventa/presentation/pages/products/variant_management/variant_management_page.dart';
 import 'package:posventa/presentation/providers/permission_provider.dart';
 import 'package:posventa/domain/entities/product_variant.dart';
 import 'package:posventa/presentation/providers/product_provider.dart';
@@ -83,7 +83,7 @@ class ProductActionsSheet extends ConsumerWidget {
                               context,
                               MaterialPageRoute(
                                 builder: (context) =>
-                                    VariantTypeSelectionPage(product: product),
+                                    VariantManagementPage(product: product),
                               ),
                             );
                           },

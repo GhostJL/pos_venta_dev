@@ -50,9 +50,9 @@ class ProductVariantsList extends ConsumerWidget {
           return GridView.builder(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
-            gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-              maxCrossAxisExtent: 350,
-              mainAxisExtent: 100, // Fixed height for consistency
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              mainAxisExtent: 110,
               crossAxisSpacing: 12,
               mainAxisSpacing: 12,
             ),
@@ -259,12 +259,21 @@ class _VariantCard extends ConsumerWidget {
                       ),
                     ),
                     const SizedBox(height: 4),
-                    Row(
+                    Wrap(
+                      spacing: 4,
+                      runSpacing: 4,
                       children: [
                         _buildBadge(
                           theme,
                           "${variant.conversionFactor} ${unitName ?? ''}",
                           theme.colorScheme.secondary,
+                        ),
+                        _buildBadge(
+                          theme,
+                          "Stock: ${variant.stock ?? 0}",
+                          (variant.stock ?? 0) > 0
+                              ? Colors.green
+                              : theme.colorScheme.error,
                         ),
                       ],
                     ),
