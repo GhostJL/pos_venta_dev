@@ -127,7 +127,10 @@ class PurchaseItemsTable extends StatelessWidget {
                     ),
                     Expanded(
                       flex: 2,
-                      child: Text('-', style: theme.textTheme.bodyMedium),
+                      child: Text(
+                        item.variantName ?? '-',
+                        style: theme.textTheme.bodyMedium,
+                      ),
                     ),
                     Expanded(
                       flex: 2,

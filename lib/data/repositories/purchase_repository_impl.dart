@@ -154,11 +154,16 @@ class PurchaseRepositoryImpl implements PurchaseRepository {
         db.products,
         db.products.id.equalsExp(db.purchaseItems.productId),
       ),
+      leftOuterJoin(
+        db.productVariants,
+        db.productVariants.id.equalsExp(db.purchaseItems.variantId),
+      ),
     ])..where(db.purchaseItems.purchaseId.equals(id))).get();
 
     final items = itemsRows.map((iRow) {
       final item = iRow.readTable(db.purchaseItems);
       final product = iRow.readTableOrNull(db.products);
+      final variant = iRow.readTableOrNull(db.productVariants);
 
       return PurchaseItemModel(
         id: item.id,
@@ -176,6 +181,7 @@ class PurchaseRepositoryImpl implements PurchaseRepository {
         expirationDate: item.expirationDate,
         createdAt: item.createdAt,
         productName: product?.name,
+        variantName: variant?.variantName,
       );
     }).toList();
 

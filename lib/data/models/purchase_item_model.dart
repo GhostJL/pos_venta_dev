@@ -17,6 +17,7 @@ class PurchaseItemModel extends PurchaseItem {
     super.expirationDate,
     required super.createdAt,
     super.productName,
+    super.variantName,
   });
 
   factory PurchaseItemModel.fromJson(Map<String, dynamic> json) {
@@ -42,6 +43,7 @@ class PurchaseItemModel extends PurchaseItem {
           : null,
       createdAt: DateTime.parse(json['created_at']),
       productName: json['product_name'], // Joined field
+      variantName: json['variant_name'], // Joined field
     );
   }
 
@@ -81,6 +83,7 @@ class PurchaseItemModel extends PurchaseItem {
       expirationDate: item.expirationDate,
       createdAt: item.createdAt,
       productName: item.productName,
+      variantName: item.variantName,
     );
   }
 }

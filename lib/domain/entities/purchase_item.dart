@@ -13,6 +13,7 @@ class PurchaseItem {
   final DateTime? expirationDate;
   final double quantityReceived;
   final int? variantId;
+  final String? variantName;
   final DateTime createdAt;
 
   const PurchaseItem({
@@ -31,6 +32,7 @@ class PurchaseItem {
     this.lotId,
     this.expirationDate,
     required this.createdAt,
+    this.variantName,
   });
 
   double get unitCost => unitCostCents / 100.0;
