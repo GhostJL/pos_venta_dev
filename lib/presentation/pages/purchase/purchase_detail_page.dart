@@ -6,10 +6,8 @@ import 'package:posventa/domain/entities/purchase.dart';
 import 'package:posventa/presentation/providers/auth_provider.dart';
 import 'package:posventa/presentation/providers/purchase_providers.dart';
 import 'package:posventa/presentation/widgets/purchases/dialogs/purchase_cancel_dialog.dart';
-import 'package:posventa/presentation/widgets/purchases/cards/purchase_info_card.dart';
-import 'package:posventa/presentation/widgets/purchases/lists/purchase_items_list.dart';
-
-import 'package:posventa/presentation/widgets/purchases/cards/purchase_totals_card.dart';
+import 'package:posventa/presentation/pages/purchase/views/purchase_detail_desktop.dart';
+import 'package:posventa/presentation/pages/purchase/views/purchase_detail_mobile.dart';
 
 class PurchaseDetailPage extends ConsumerWidget {
   final int purchaseId;
@@ -102,7 +100,15 @@ class PurchaseDetailPage extends ConsumerWidget {
           if (purchase == null) {
             return const Center(child: Text('Compra no encontrada'));
           }
-          return _PurchaseDetailContent(purchase: purchase);
+
+          return LayoutBuilder(
+            builder: (context, constraints) {
+              if (constraints.maxWidth > 900) {
+                return PurchaseDetailDesktop(purchase: purchase);
+              }
+              return PurchaseDetailMobile(purchase: purchase);
+            },
+          );
         },
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, stack) => Center(child: Text('Error: $error')),
@@ -157,46 +163,5 @@ class PurchaseDetailPage extends ConsumerWidget {
   ) async {
     // Navigate to full screen reception page
     context.push('/purchases/reception/${purchase.id}');
-  }
-}
-
-class _PurchaseDetailContent extends StatelessWidget {
-  final Purchase purchase;
-
-  const _PurchaseDetailContent({required this.purchase});
-
-  @override
-  Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      physics: const BouncingScrollPhysics(),
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Header Info
-          PurchaseInfoCard(purchase: purchase),
-          const SizedBox(height: 12),
-
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8.0),
-            child: Text(
-              'Productos',
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
-          ),
-          const SizedBox(height: 8),
-
-          // Items List
-          PurchaseItemsList(items: purchase.items, purchase: purchase),
-
-          // Totals
-          PurchaseTotalsCard(
-            subtotalCents: purchase.subtotalCents,
-            taxCents: purchase.taxCents,
-            totalCents: purchase.totalCents,
-          ),
-        ],
-      ),
-    );
   }
 }

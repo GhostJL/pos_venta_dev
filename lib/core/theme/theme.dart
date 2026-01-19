@@ -9,15 +9,19 @@ class AppTheme {
 
   /// Color principal del negocio - Usado en header, botones principales
   /// Representa confianza y profesionalismo en transacciones
-  static const Color brandPrimary = Color(0xFF1E40AF); // Azul corporativo
+  static const Color brandPrimary = Color(
+    0xFF0F172A,
+  ); // Slate 900 - Dark Professional Blue
   static const Color onBrandPrimary = Color(0xFFFFFFFF);
 
   /// Color secundario - Acciones complementarias, destacados sutiles
-  static const Color brandSecondary = Color(0xFF7C3AED); // Púrpura sofisticado
+  static const Color brandSecondary = Color(
+    0xFF6366F1,
+  ); // Indigo 500 - Vibrant but professional
   static const Color onBrandSecondary = Color(0xFFFFFFFF);
 
   /// Color terciario - Elementos decorativos, badges informativos
-  static const Color brandTertiary = Color(0xFF0891B2); // Cyan profesional
+  static const Color brandTertiary = Color(0xFF0EA5E9); // Sky 500
   static const Color onBrandTertiary = Color(0xFFFFFFFF);
 
   // COLORES TRANSACCIONALES - Estados de Operación
@@ -217,16 +221,18 @@ class AppTheme {
   // COLORES DE SUPERFICIE - Fondos y Contenedores
 
   /// Superficies Light Mode
-  static const Color surfaceLight = Color(0xFFFAFAFA);
+  /// Superficies Light Mode
+  static const Color surfaceLight = Color(0xFFF8FAFC); // Slate 50
   static const Color surfaceContainerLight = Color(0xFFFFFFFF);
-  static const Color surfaceContainerHighLight = Color(0xFFF5F5F5);
-  static const Color surfaceContainerLowLight = Color(0xFFFCFCFC);
+  static const Color surfaceContainerHighLight = Color(0xFFF1F5F9); // Slate 100
+  static const Color surfaceContainerLowLight = Color(0xFFF8FAFC);
 
   /// Superficies Dark Mode
-  static const Color surfaceDark = Color(0xFF0F0F0F);
-  static const Color surfaceContainerDark = Color(0xFF1A1A1A);
-  static const Color surfaceContainerHighDark = Color(0xFF2A2A2A);
-  static const Color surfaceContainerLowDark = Color(0xFF141414);
+  /// Superficies Dark Mode
+  static const Color surfaceDark = Color(0xFF0B0E14); // Very dark slate
+  static const Color surfaceContainerDark = Color(0xFF151922); // Dark slate
+  static const Color surfaceContainerHighDark = Color(0xFF1E293B); // Slate 800
+  static const Color surfaceContainerLowDark = Color(0xFF0F1116);
 
   // COLORES DE BORDE Y DIVISIÓN
   static const Color borderLight = Color(0xFFE5E5E5);

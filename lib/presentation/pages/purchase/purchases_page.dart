@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:posventa/presentation/pages/shared/main_layout.dart';
 
@@ -9,10 +10,10 @@ import 'package:posventa/core/constants/permission_constants.dart';
 import 'package:posventa/presentation/providers/permission_provider.dart';
 import 'package:posventa/presentation/widgets/purchases/filters/chips/purchase_filter_chips.dart';
 import 'package:posventa/presentation/widgets/purchases/misc/empty_purchases_view.dart';
-import 'package:posventa/presentation/widgets/purchases/lists/purchase_card_widget.dart';
 import 'package:posventa/presentation/widgets/common/async_value_handler.dart';
-import 'package:flutter/services.dart';
-import 'package:posventa/presentation/widgets/purchases/lists/purchase_table_row.dart';
+
+import 'package:posventa/presentation/pages/purchase/views/purchases_view_desktop.dart';
+import 'package:posventa/presentation/pages/purchase/views/purchases_view_mobile.dart';
 
 class PurchasesPage extends ConsumerStatefulWidget {
   const PurchasesPage({super.key});
@@ -125,54 +126,29 @@ class _PurchasesPageState extends ConsumerState<PurchasesPage> {
                       builder: (context, constraints) {
                         final isDesktop = constraints.maxWidth > 800;
 
-                        return RefreshIndicator(
-                          onRefresh: () async {
-                            ref.invalidate(paginatedPurchasesCountProvider);
-                            return Future.delayed(
-                              const Duration(milliseconds: 500),
-                            );
-                          },
-                          child: ListView.builder(
-                            controller: _scrollController,
-                            physics: const AlwaysScrollableScrollPhysics(),
-                            padding: const EdgeInsets.fromLTRB(16, 16, 16, 80),
-                            itemCount:
-                                count + (isDesktop ? 1 : 0), // Header space
-                            itemBuilder: (context, index) {
-                              if (isDesktop && index == 0) {
-                                return const PurchaseHeader();
-                              }
-
-                              final actualIndex = isDesktop ? index - 1 : index;
-
-                              final pageIndex =
-                                  actualIndex ~/ kPurchasePageSize;
-                              final indexInPage =
-                                  actualIndex % kPurchasePageSize;
-
-                              final pageAsync = ref.watch(
-                                paginatedPurchasesPageProvider(
-                                  pageIndex: pageIndex,
-                                ),
-                              );
-
-                              return pageAsync.when(
-                                data: (purchases) {
-                                  if (indexInPage >= purchases.length) {
-                                    return const SizedBox.shrink();
-                                  }
-                                  final purchase = purchases[indexInPage];
-                                  if (isDesktop) {
-                                    return PurchaseTableRow(purchase: purchase);
-                                  }
-                                  return PurchaseCard(purchase: purchase);
-                                },
-                                loading: () => _buildSkeletonItem(),
-                                error: (_, __) => const SizedBox.shrink(),
+                        if (isDesktop) {
+                          return PurchasesViewDesktop(
+                            totalCount: count,
+                            scrollController: _scrollController,
+                            onRefresh: () async {
+                              ref.invalidate(paginatedPurchasesCountProvider);
+                              return Future.delayed(
+                                const Duration(milliseconds: 500),
                               );
                             },
-                          ),
-                        );
+                          );
+                        } else {
+                          return PurchasesViewMobile(
+                            totalCount: count,
+                            scrollController: _scrollController,
+                            onRefresh: () async {
+                              ref.invalidate(paginatedPurchasesCountProvider);
+                              return Future.delayed(
+                                const Duration(milliseconds: 500),
+                              );
+                            },
+                          );
+                        }
                       },
                     );
                   },
@@ -184,17 +160,6 @@ class _PurchasesPageState extends ConsumerState<PurchasesPage> {
             ],
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _buildSkeletonItem() {
-    return Container(
-      height: 100,
-      margin: const EdgeInsets.only(bottom: 12),
-      decoration: BoxDecoration(
-        color: Colors.grey.withAlpha(20),
-        borderRadius: BorderRadius.circular(12),
       ),
     );
   }
