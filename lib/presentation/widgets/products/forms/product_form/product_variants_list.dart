@@ -26,7 +26,13 @@ class ProductVariantsList extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final provider = productFormProvider(product);
-    final allVariants = ref.watch(provider.select((s) => s.variants));
+    final state = ref.watch(provider);
+    final allVariants = state.variants;
+
+    if (state.isLoading) {
+      return _buildShimmerLoading(context);
+    }
+
     final variants = allVariants.toList();
 
     // Filter logic
@@ -153,6 +159,144 @@ class ProductVariantsList extends ConsumerWidget {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildShimmerLoading(BuildContext context) {
+    final theme = Theme.of(context);
+    // Simple pulse animation or static placeholder
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isWide = constraints.maxWidth > 500;
+        if (isWide) {
+          return GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              mainAxisExtent: 110,
+              crossAxisSpacing: 12,
+              mainAxisSpacing: 12,
+            ),
+            itemCount: 4, // Show 4 placeholders
+            itemBuilder: (context, index) => _ShimmerCard(theme: theme),
+          );
+        }
+        return ListView.separated(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: 3,
+          separatorBuilder: (context, index) => const SizedBox(height: 12),
+          itemBuilder: (context, index) => _ShimmerCard(theme: theme),
+        );
+      },
+    );
+  }
+}
+
+class _ShimmerCard extends StatefulWidget {
+  final ThemeData theme;
+  const _ShimmerCard({required this.theme});
+
+  @override
+  State<_ShimmerCard> createState() => _ShimmerCardState();
+}
+
+class _ShimmerCardState extends State<_ShimmerCard>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<Color?> _colorAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1000),
+    )..repeat(reverse: true);
+
+    _colorAnimation = ColorTween(
+      begin: widget.theme.colorScheme.surfaceContainerHighest.withValues(
+        alpha: 0.3,
+      ),
+      end: widget.theme.colorScheme.surfaceContainerHighest.withValues(
+        alpha: 0.6,
+      ),
+    ).animate(_controller);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _colorAnimation,
+      builder: (context, child) {
+        return Container(
+          height: 80,
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: widget.theme.colorScheme.surface,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: widget.theme.colorScheme.outlineVariant.withValues(
+                alpha: 0.2,
+              ),
+            ),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: _colorAnimation.value,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Container(
+                      width: double.infinity,
+                      height: 14,
+                      decoration: BoxDecoration(
+                        color: _colorAnimation.value,
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Container(
+                      width: 100,
+                      height: 10,
+                      decoration: BoxDecoration(
+                        color: _colorAnimation.value,
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 16),
+              Container(
+                width: 60,
+                height: 20,
+                decoration: BoxDecoration(
+                  color: _colorAnimation.value,
+                  borderRadius: BorderRadius.circular(4),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }

@@ -147,7 +147,7 @@ class ProductFormNotifier extends _$ProductFormNotifier {
   @override
   ProductFormState build(Product? product) {
     if (product != null) {
-      final state = ProductFormState(
+      var initialState = ProductFormState(
         initialProduct: product,
         name: product.name,
         code: product.code,
@@ -180,13 +180,14 @@ class ProductFormNotifier extends _$ProductFormNotifier {
             : [],
       );
 
-      _initialState = state;
-
       if (product.id != null) {
+        // Initialize with loading true to prevent ghosting of stale data
+        initialState = initialState.copyWith(isLoading: true);
         Future.microtask(() => refreshFromDb());
       }
 
-      return state;
+      _initialState = initialState;
+      return initialState;
     }
     _initialState = ProductFormState();
     return _initialState;
@@ -199,24 +200,33 @@ class ProductFormNotifier extends _$ProductFormNotifier {
     final productRepo = ref.read(productRepositoryProvider);
     final result = await productRepo.getProductById(id);
 
-    result.fold((failure) {}, (freshProduct) {
-      if (freshProduct != null) {
-        final newState = state.copyWith(
-          initialProduct: freshProduct,
-          unitId: (freshProduct.variants?.isNotEmpty ?? false)
-              ? freshProduct.variants!.first.unitId
-              : null,
-          variants: List.from(freshProduct.variants ?? []),
-          photoUrl: freshProduct.photoUrl,
-          additionalBarcodes: (freshProduct.variants?.isNotEmpty ?? false)
-              ? (freshProduct.variants!.first.additionalBarcodes ?? [])
-              : [],
-        );
-        state = newState;
-        _initialState = newState.copyWith(isModified: false);
-        _updateModified(state);
-      }
-    });
+    result.fold(
+      (failure) {
+        // Ensure loading is turned off even on failure
+        state = state.copyWith(isLoading: false);
+      },
+      (freshProduct) {
+        if (freshProduct != null) {
+          final newState = state.copyWith(
+            initialProduct: freshProduct,
+            unitId: (freshProduct.variants?.isNotEmpty ?? false)
+                ? freshProduct.variants!.first.unitId
+                : null,
+            variants: List.from(freshProduct.variants ?? []),
+            photoUrl: freshProduct.photoUrl,
+            additionalBarcodes: (freshProduct.variants?.isNotEmpty ?? false)
+                ? (freshProduct.variants!.first.additionalBarcodes ?? [])
+                : [],
+            isLoading: false, // Turn off loading
+          );
+          state = newState;
+          _initialState = newState.copyWith(isModified: false);
+          _updateModified(state);
+        } else {
+          state = state.copyWith(isLoading: false);
+        }
+      },
+    );
   }
 
   void _updateModified(ProductFormState newState) {
