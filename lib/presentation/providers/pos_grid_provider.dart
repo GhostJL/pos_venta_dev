@@ -2,6 +2,7 @@ import 'package:posventa/presentation/providers/product_provider.dart';
 import 'package:posventa/presentation/widgets/pos/product_grid/product_grid_item_model.dart';
 import 'package:posventa/presentation/providers/di/product_di.dart';
 import 'package:posventa/presentation/providers/di/sale_di.dart';
+import 'package:posventa/presentation/providers/di/core_di.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'pos_grid_provider.g.dart';
@@ -11,7 +12,21 @@ Future<List<ProductGridItem>> posGridItems(Ref ref) async {
   // Watch repositories/usecases
   final query = ref.watch(productSearchQueryProvider);
   final searchUseCase = ref.watch(searchProductsProvider);
-  final saleRepository = ref.watch(saleRepositoryProvider); // Needs import
+  final saleRepository = ref.watch(saleRepositoryProvider);
+
+  // Listen for database updates (Debounced)
+  ref.listen(debouncedTableUpdateStreamProvider, (previous, next) {
+    next.whenData((updates) {
+      if (updates.any(
+        (u) =>
+            u.table == 'products' ||
+            u.table == 'inventory' ||
+            u.table == 'product_variants',
+      )) {
+        ref.invalidateSelf();
+      }
+    });
+  });
 
   List<ProductGridItem> gridItems = [];
   final Set<int> addedProductIds = {};

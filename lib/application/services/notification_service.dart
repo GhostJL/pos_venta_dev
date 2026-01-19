@@ -18,6 +18,16 @@ class NotificationService {
     );
     const initializationSettings = InitializationSettings(
       android: androidSettings,
+      iOS: DarwinInitializationSettings(),
+      macOS: DarwinInitializationSettings(),
+      linux: LinuxInitializationSettings(
+        defaultActionName: 'Open notification',
+      ),
+      windows: WindowsInitializationSettings(
+        appName: 'POS Venta',
+        appUserModelId: 'GhostJL.PosVenta',
+        guid: '5056637e-61a7-4b71-93e1-314282544ec2',
+      ),
     );
 
     try {
