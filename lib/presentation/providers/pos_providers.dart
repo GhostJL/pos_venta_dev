@@ -26,6 +26,9 @@ import 'package:posventa/core/error/error_reporter.dart';
 import 'package:posventa/presentation/providers/pos_grid_provider.dart';
 import 'package:posventa/presentation/providers/paginated_products_provider.dart';
 
+import 'package:posventa/domain/entities/discount.dart';
+import 'package:posventa/presentation/providers/di/discount_di.dart';
+
 part 'pos_providers.g.dart';
 
 class POSState {
@@ -105,61 +108,31 @@ class POSNotifier extends _$POSNotifier {
       final newCart = <SaleItem>[];
 
       for (final item in state.cart) {
-        if (!useTax) {
-          // Remove taxes
-          newCart.add(
-            item.copyWith(
-              taxCents: 0,
-              taxes: [],
-              totalCents:
-                  item.subtotalCents, // Discount is applied to subtotal?
-              // Usually Total = Subtotal - Discount + Tax.
-              // If discount exists, we should preserve it.
-              // Current logic: total = subtotal + tax.
-              // Let's check addToCart logic: "totalCents = subtotalCents + taxCents;"
-              // It seems discount is not subtracted from total in addToCart logic viewed previously?
-              // Wait, SaleItem has discountCents.
-              // Let's stick to addToCart logic: totalCents = subtotalCents + taxCents.
-              // If discount logic exists elsewhere, we should verify.
-              // Inspecting addToCart:
-              // final totalCents = subtotalCents + taxCents;
-              // It seems addToCart DOES NOT handle discount subtraction in total calculation yet?
-              // Or maybe discount is applied to unit price?
-              // "discountCents = 0" default in SaleItem.
-              // I will stick to total = subtotal + tax.
-            ),
-          );
-        } else {
-          // Re-calculate taxes
-          final productRepo = ref.read(productRepositoryProvider);
-          final result = await productRepo.getTaxRatesForProduct(
-            item.productId,
-          );
-          final rates = result.getOrElse((_) => []);
+        final productRepo = ref.read(productRepositoryProvider);
+        final productResult = await productRepo.getProductById(item.productId);
+        final product = productResult.getOrElse((_) => null);
 
-          int itemTaxCents = 0;
-          final itemTaxes = <SaleItemTax>[];
-
-          for (final tax in rates) {
-            final amount = (item.subtotalCents * tax.rate).round();
-            itemTaxCents += amount;
-            itemTaxes.add(
-              SaleItemTax(
-                taxRateId: tax.id!,
-                taxName: tax.name,
-                taxRate: tax.rate,
-                taxAmountCents: amount,
-              ),
+        if (product != null) {
+          ProductVariant? variant;
+          if (item.variantId != null) {
+            variant = product.variants?.cast<ProductVariant?>().firstWhere(
+              (v) => v?.id == item.variantId,
+              orElse: () => null,
             );
           }
 
-          newCart.add(
-            item.copyWith(
-              taxCents: itemTaxCents,
-              taxes: itemTaxes,
-              totalCents: item.subtotalCents + itemTaxCents,
-            ),
+          final newItem = await _calculateItemAndReturn(
+            product: product,
+            variant: variant,
+            quantity: item.quantity,
+            useTax: useTax,
+            existingItem: item,
           );
+          newCart.add(newItem);
+        } else {
+          // Fallback: If product/variant not found, keep item as is (or partial update?)
+          // Without product, we can't reliably calc tax or discounts.
+          newCart.add(item);
         }
       }
       state = state.copyWith(cart: newCart, isLoading: false);
@@ -249,110 +222,23 @@ class POSNotifier extends _$POSNotifier {
       final existingItem = state.cart[existingIndex];
       final newQuantity = existingItem.quantity + quantity;
 
-      // Recalculate totals for item
-      // Use existing item's unit price to respect variant price
-      final unitPriceCents = existingItem.unitPriceCents;
-      final subtotalCents = (unitPriceCents * newQuantity).round();
-
-      int taxCents = 0;
-      final taxes = <SaleItemTax>[];
-
-      if (useTax) {
-        for (final tax in existingItem.taxes) {
-          final taxAmount = (subtotalCents * tax.taxRate).round();
-          taxCents += taxAmount;
-          taxes.add(
-            SaleItemTax(
-              taxRateId: tax.taxRateId,
-              taxName: tax.taxName,
-              taxRate: tax.taxRate,
-              taxAmountCents: taxAmount,
-            ),
-          );
-        }
-      }
-
-      final totalCents = subtotalCents + taxCents;
-
-      final updatedItem = SaleItem(
-        id: existingItem.id,
-        productId: product.id!,
-        variantId: variant?.id,
+      final updatedItem = await _calculateItemAndReturn(
+        product: product,
+        variant: variant,
         quantity: newQuantity,
-        unitOfMeasure: product.unitOfMeasure,
-        unitPriceCents: unitPriceCents,
-        subtotalCents: subtotalCents,
-        taxCents: taxCents,
-        totalCents: totalCents,
-        costPriceCents: existingItem.costPriceCents,
-        productName: existingItem.productName,
-        variantDescription: existingItem.variantDescription,
-        taxes: taxes,
-        unitsPerPack: existingItem.unitsPerPack,
+        useTax: useTax,
+        existingItem: existingItem,
       );
 
       newCart = List<SaleItem>.from(state.cart);
       newCart[existingIndex] = updatedItem;
     } else {
       // Add new item
-      // Fetch taxes
-      final productRepository = ref.read(productRepositoryProvider);
-
-      // Handle Either return type
-      final taxesResult = await productRepository.getTaxRatesForProduct(
-        product.id!,
-      );
-
-      final productTaxes = taxesResult.fold(
-        (failure) => <TaxRate>[], // Fallback to empty taxes on error
-        (rates) => rates,
-      );
-
-      final unitPriceCents = variant != null
-          ? variant.priceCents
-          : (product.price * 100).round();
-      final costPriceCents = variant != null
-          ? variant.costPriceCents
-          : (product.costPrice * 100).round();
-      final productName = product.name;
-      final variantDescription = variant?.description;
-      // final quantity = 1.0; // REMOVED: Use argument quantity
-      final subtotalCents = (unitPriceCents * quantity).round();
-
-      int taxCents = 0;
-      final taxes = <SaleItemTax>[];
-
-      if (useTax) {
-        for (final tax in productTaxes) {
-          final taxAmount = (subtotalCents * tax.rate).round();
-          taxCents += taxAmount;
-          taxes.add(
-            SaleItemTax(
-              taxRateId: tax.id!,
-              taxName: tax.name,
-              taxRate: tax.rate,
-              taxAmountCents: taxAmount,
-            ),
-          );
-        }
-      }
-
-      final totalCents = subtotalCents + taxCents;
-
-      final newItem = SaleItem(
-        productId: product.id!,
-        variantId: variant?.id,
+      final newItem = await _calculateItemAndReturn(
+        product: product,
+        variant: variant,
         quantity: quantity,
-        unitOfMeasure: product.unitOfMeasure,
-        unitPriceCents: unitPriceCents,
-        subtotalCents: subtotalCents,
-        taxCents: taxCents,
-        totalCents: totalCents,
-        costPriceCents: costPriceCents,
-        productName: productName,
-        variantDescription: variantDescription,
-        taxes: taxes,
-        unitsPerPack: variant?.quantity ?? 1.0,
+        useTax: useTax,
       );
 
       newCart = [...state.cart, newItem];
@@ -415,43 +301,12 @@ class POSNotifier extends _$POSNotifier {
         }
       }
 
-      final unitPriceCents = existingItem.unitPriceCents;
-      final subtotalCents = (unitPriceCents * quantity).round();
-
-      int taxCents = 0;
-      final taxes = <SaleItemTax>[];
-      if (useTax) {
-        for (final tax in existingItem.taxes) {
-          final taxAmount = (subtotalCents * tax.taxRate).round();
-          taxCents += taxAmount;
-          taxes.add(
-            SaleItemTax(
-              taxRateId: tax.taxRateId,
-              taxName: tax.taxName,
-              taxRate: tax.taxRate,
-              taxAmountCents: taxAmount,
-            ),
-          );
-        }
-      }
-
-      final totalCents = subtotalCents + taxCents;
-
-      final updatedItem = SaleItem(
-        id: existingItem.id,
-        productId: existingItem.productId,
-        variantId: existingItem.variantId, // KEEP VARIANT ID
+      final updatedItem = await _calculateItemAndReturn(
+        product: product,
+        variant: variant,
         quantity: quantity,
-        unitOfMeasure: existingItem.unitOfMeasure,
-        unitPriceCents: unitPriceCents,
-        subtotalCents: subtotalCents,
-        taxCents: taxCents,
-        totalCents: totalCents,
-        costPriceCents: existingItem.costPriceCents,
-        productName: existingItem.productName,
-        variantDescription: existingItem.variantDescription,
-        taxes: taxes,
-        unitsPerPack: existingItem.unitsPerPack,
+        useTax: useTax,
+        existingItem: existingItem,
       );
 
       final newCart = List<SaleItem>.from(state.cart);
@@ -459,7 +314,6 @@ class POSNotifier extends _$POSNotifier {
       state = state.copyWith(cart: newCart);
     } else {
       // Add as new item with specific quantity
-      // Validate stock
       // Validate stock
       try {
         await ref
@@ -478,55 +332,11 @@ class POSNotifier extends _$POSNotifier {
         return 'Error al validar stock: $e';
       }
 
-      // Fetch taxes
-      final productRepository = ref.read(productRepositoryProvider);
-      final taxesResult = await productRepository.getTaxRatesForProduct(
-        product.id!,
-      );
-      final productTaxes = taxesResult.fold((l) => <TaxRate>[], (r) => r);
-
-      final unitPriceCents = variant != null
-          ? variant.priceCents
-          : (product.price * 100).round();
-      final costPriceCents = variant != null
-          ? variant.costPriceCents
-          : (product.costPrice * 100).round();
-
-      final subtotalCents = (unitPriceCents * quantity).round();
-
-      int taxCents = 0;
-      final taxes = <SaleItemTax>[];
-      if (useTax) {
-        for (final tax in productTaxes) {
-          final taxAmount = (subtotalCents * tax.rate).round();
-          taxCents += taxAmount;
-          taxes.add(
-            SaleItemTax(
-              taxRateId: tax.id!,
-              taxName: tax.name,
-              taxRate: tax.rate,
-              taxAmountCents: taxAmount,
-            ),
-          );
-        }
-      }
-
-      final totalCents = subtotalCents + taxCents;
-
-      final newItem = SaleItem(
-        productId: product.id!,
-        variantId: variant?.id,
+      final newItem = await _calculateItemAndReturn(
+        product: product,
+        variant: variant,
         quantity: quantity,
-        unitOfMeasure: product.unitOfMeasure,
-        unitPriceCents: unitPriceCents,
-        subtotalCents: subtotalCents,
-        taxCents: taxCents,
-        totalCents: totalCents,
-        costPriceCents: costPriceCents,
-        productName: product.name,
-        variantDescription: variant?.description,
-        taxes: taxes,
-        unitsPerPack: variant?.quantity ?? 1.0,
+        useTax: useTax,
       );
 
       state = state.copyWith(cart: [...state.cart, newItem]);
@@ -622,44 +432,59 @@ class POSNotifier extends _$POSNotifier {
         }
       }
 
-      final unitPriceCents = existingItem.unitPriceCents;
-      final subtotalCents = (unitPriceCents * quantity).round();
+      // Fetch product to recalculate prices/discounts
+      final productRepo = ref.read(productRepositoryProvider);
+      final productRes = await productRepo.getProductById(productId);
+      final product = productRes.getOrElse((_) => null);
 
-      int taxCents = 0;
-      final taxes = <SaleItemTax>[];
-      if (useTax) {
-        for (final tax in existingItem.taxes) {
-          final taxAmount = (subtotalCents * tax.taxRate).round();
-          taxCents += taxAmount;
-          taxes.add(
-            SaleItemTax(
-              taxRateId: tax.taxRateId,
-              taxName: tax.taxName,
-              taxRate: tax.taxRate,
-              taxAmountCents: taxAmount,
-            ),
+      SaleItem updatedItem;
+      if (product != null) {
+        ProductVariant? variant;
+        if (variantId != null) {
+          variant = product.variants?.firstWhere(
+            (v) => v.id == variantId,
+            orElse: () => product.variants!.first,
           );
         }
+        updatedItem = await _calculateItemAndReturn(
+          product: product,
+          variant: variant,
+          quantity: quantity,
+          useTax: useTax,
+          existingItem: existingItem,
+        );
+      } else {
+        // Fallback: simple scaling (no discount update)
+        final unitPriceCents = existingItem.unitPriceCents;
+        final subtotalCents = (unitPriceCents * quantity).round();
+
+        // Helper to recalc tax
+        int taxCents = 0;
+        final taxes = <SaleItemTax>[];
+        if (useTax) {
+          for (final tax in existingItem.taxes) {
+            final taxAmount = (subtotalCents * tax.taxRate).round();
+            taxCents += taxAmount;
+            taxes.add(
+              SaleItemTax(
+                taxRateId: tax.taxRateId,
+                taxName: tax.taxName,
+                taxRate: tax.taxRate,
+                taxAmountCents: taxAmount,
+              ),
+            );
+          }
+        }
+        final totalCents = subtotalCents + taxCents;
+
+        updatedItem = existingItem.copyWith(
+          quantity: quantity,
+          subtotalCents: subtotalCents,
+          taxCents: taxCents,
+          totalCents: totalCents,
+          taxes: taxes,
+        );
       }
-
-      final totalCents = subtotalCents + taxCents;
-
-      final updatedItem = SaleItem(
-        id: existingItem.id,
-        productId: existingItem.productId,
-        variantId: existingItem.variantId,
-        quantity: quantity,
-        unitOfMeasure: existingItem.unitOfMeasure,
-        unitPriceCents: unitPriceCents,
-        subtotalCents: subtotalCents,
-        taxCents: taxCents,
-        totalCents: totalCents,
-        costPriceCents: existingItem.costPriceCents,
-        productName: existingItem.productName,
-        variantDescription: existingItem.variantDescription,
-        taxes: taxes,
-        unitsPerPack: existingItem.unitsPerPack,
-      );
 
       final newCart = List<SaleItem>.from(state.cart);
       newCart[index] = updatedItem;
@@ -885,6 +710,111 @@ class POSNotifier extends _$POSNotifier {
         context: 'completeSale - main',
       );
       state = state.copyWith(isLoading: false, errorMessage: e.toString());
+    }
+  }
+
+  Future<SaleItem> _calculateItemAndReturn({
+    required Product product,
+    ProductVariant? variant,
+    required double quantity,
+    required bool useTax,
+    SaleItem? existingItem,
+  }) async {
+    // 1. Get Prices
+    final unitPriceCents = variant != null
+        ? variant.priceCents
+        : (product.price * 100).round();
+    final costPriceCents = variant != null
+        ? variant.costPriceCents
+        : (product.costPrice * 100).round();
+
+    // 2. Gross Subtotal
+    final subtotalCents = (unitPriceCents * quantity).round();
+
+    // 3. Discounts
+    int discountCents = 0;
+    if (variant != null && variant.id != null) {
+      final discounts = await ref
+          .read(getDiscountsForVariantUseCaseProvider)
+          .execute(variant.id!);
+      final now = DateTime.now();
+      final activeDiscounts = discounts
+          .where(
+            (d) =>
+                d.isActive &&
+                (d.startDate == null || d.startDate!.isBefore(now)) &&
+                (d.endDate == null || d.endDate!.isAfter(now)),
+          )
+          .toList();
+
+      for (var d in activeDiscounts) {
+        if (d.type == DiscountType.percentage) {
+          // value is basis points (1000 = 10%)
+          discountCents += (subtotalCents * (d.value / 10000)).round();
+        } else {
+          // value is cents off per unit
+          discountCents += (d.value * quantity).round();
+        }
+      }
+    }
+    // Clamp discount
+    if (discountCents > subtotalCents) discountCents = subtotalCents;
+
+    final netSubtotalCents = subtotalCents - discountCents;
+
+    // 4. Taxes
+    int taxCents = 0;
+    final taxesList = <SaleItemTax>[];
+
+    if (useTax) {
+      final taxesResult = await ref
+          .read(productRepositoryProvider)
+          .getTaxRatesForProduct(product.id!);
+      final rates = taxesResult.getOrElse((_) => []);
+      for (var t in rates) {
+        final amount = (netSubtotalCents * t.rate).round();
+        taxCents += amount;
+        taxesList.add(
+          SaleItemTax(
+            taxRateId: t.id!,
+            taxName: t.name,
+            taxRate: t.rate,
+            taxAmountCents: amount,
+          ),
+        );
+      }
+    }
+
+    final totalCents = netSubtotalCents + taxCents;
+
+    if (existingItem != null) {
+      return existingItem.copyWith(
+        quantity: quantity,
+        subtotalCents: subtotalCents,
+        discountCents: discountCents,
+        taxCents: taxCents,
+        totalCents: totalCents,
+        taxes: taxesList,
+        unitPriceCents: unitPriceCents,
+        costPriceCents: costPriceCents,
+      );
+    } else {
+      return SaleItem(
+        productId: product.id!,
+        variantId: variant?.id,
+        quantity: quantity,
+        unitOfMeasure: product.unitOfMeasure,
+        unitPriceCents: unitPriceCents,
+        costPriceCents: costPriceCents,
+        subtotalCents: subtotalCents,
+        discountCents: discountCents,
+        taxCents: taxCents,
+        totalCents: totalCents,
+        productName: product.name,
+        variantDescription: variant?.description,
+        taxes: taxesList,
+        unitsPerPack: variant?.quantity ?? 1.0,
+      );
     }
   }
 }

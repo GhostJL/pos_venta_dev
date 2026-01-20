@@ -8,6 +8,9 @@ import 'package:posventa/presentation/pages/settings/backup/backup_settings_page
 import 'package:posventa/core/constants/permission_constants.dart';
 import 'package:posventa/core/utils/role_permissions_helper.dart';
 
+import 'package:posventa/presentation/pages/discounts/discounts_page.dart';
+import 'package:posventa/presentation/pages/discounts/discount_form_page.dart';
+import 'package:posventa/data/models/discount_model.dart';
 import 'package:posventa/presentation/pages/shared/main_layout.dart';
 
 import 'package:posventa/presentation/pages/adjustments/return_processing_page.dart';
@@ -210,6 +213,22 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: '/inventory',
             pageBuilder: (context, state) =>
                 const AppTransitionPage(child: InventoryPage()),
+          ),
+          GoRoute(
+            path: '/discounts',
+            pageBuilder: (context, state) =>
+                const AppTransitionPage(child: DiscountsPage()),
+            routes: [
+              GoRoute(
+                path: 'form',
+                pageBuilder: (context, state) {
+                  final discount = state.extra as DiscountModel?;
+                  return AppTransitionPage(
+                    child: DiscountFormPage(discount: discount),
+                  );
+                },
+              ),
+            ],
           ),
           GoRoute(
             path: '/customers',

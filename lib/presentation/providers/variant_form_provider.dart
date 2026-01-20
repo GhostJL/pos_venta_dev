@@ -1,4 +1,6 @@
 import 'dart:io';
+
+import 'package:posventa/presentation/providers/di/discount_di.dart';
 import 'package:posventa/presentation/providers/auth_provider.dart';
 
 import 'package:equatable/equatable.dart';
@@ -33,6 +35,7 @@ class VariantFormState extends Equatable {
   final String? photoUrl;
   final String profitMargin;
   final List<String> additionalBarcodes;
+  final List<int> discountIds;
 
   const VariantFormState({
     required this.name,
@@ -56,6 +59,7 @@ class VariantFormState extends Equatable {
     this.photoUrl,
     this.profitMargin = '',
     this.additionalBarcodes = const [],
+    this.discountIds = const [],
   });
 
   factory VariantFormState.initial(
@@ -89,6 +93,7 @@ class VariantFormState extends Equatable {
       isModified: false,
       profitMargin: '',
       additionalBarcodes: variant?.additionalBarcodes ?? const [],
+      discountIds: const [], // Loaded asynchronously
     );
   }
 
@@ -114,6 +119,7 @@ class VariantFormState extends Equatable {
     String? photoUrl,
     String? profitMargin,
     List<String>? additionalBarcodes,
+    List<int>? discountIds,
   }) {
     return VariantFormState(
       name: name ?? this.name,
@@ -137,6 +143,7 @@ class VariantFormState extends Equatable {
       photoUrl: photoUrl ?? this.photoUrl,
       profitMargin: profitMargin ?? this.profitMargin,
       additionalBarcodes: additionalBarcodes ?? this.additionalBarcodes,
+      discountIds: discountIds ?? this.discountIds,
     );
   }
 
@@ -168,6 +175,7 @@ class VariantFormState extends Equatable {
     bool clearPhotoUrl = false,
     String? profitMargin,
     List<String>? additionalBarcodes,
+    List<int>? discountIds,
   }) {
     return VariantFormState(
       name: name ?? this.name,
@@ -195,6 +203,7 @@ class VariantFormState extends Equatable {
       photoUrl: clearPhotoUrl ? null : (photoUrl ?? this.photoUrl),
       profitMargin: profitMargin ?? this.profitMargin,
       additionalBarcodes: additionalBarcodes ?? this.additionalBarcodes,
+      discountIds: discountIds ?? this.discountIds,
     );
   }
 
@@ -222,7 +231,11 @@ class VariantFormState extends Equatable {
         imageFile != other.imageFile ||
         photoUrl != other.photoUrl ||
         profitMargin != other.profitMargin ||
-        !listEquals(additionalBarcodes, other.additionalBarcodes);
+        !listEquals(additionalBarcodes, other.additionalBarcodes) ||
+        !listEquals(
+          discountIds.map((e) => e.toString()).toList(),
+          other.discountIds.map((e) => e.toString()).toList(),
+        );
   }
 
   @override
@@ -248,6 +261,7 @@ class VariantFormState extends Equatable {
     photoUrl,
     profitMargin,
     additionalBarcodes,
+    discountIds,
   ];
 }
 
@@ -393,6 +407,30 @@ class VariantForm extends _$VariantForm {
     _updateState(
       state.copyWithNullable(clearImageFile: true, clearPhotoUrl: true),
     );
+  }
+
+  Future<void> loadDiscounts(int variantId) async {
+    try {
+      final discounts = await ref
+          .read(getDiscountsForVariantUseCaseProvider)
+          .execute(variantId);
+      final ids = discounts.map((d) => d.id).toList();
+      _updateState(state.copyWithNullable(discountIds: ids));
+      // Update initial state so it doesn't show as 'modified' just from loading
+      _initialState = _initialState.copyWith(discountIds: ids);
+    } catch (e) {
+      // ignore
+    }
+  }
+
+  void toggleDiscount(int discountId) {
+    final current = List<int>.from(state.discountIds);
+    if (current.contains(discountId)) {
+      current.remove(discountId);
+    } else {
+      current.add(discountId);
+    }
+    _updateState(state.copyWithNullable(discountIds: current));
   }
 
   Future<bool> validateBarcode(List<String>? existingBarcodes) async {
@@ -562,6 +600,12 @@ class VariantForm extends _$VariantForm {
           }
 
           state = state.copyWithNullable(isSaving: false);
+
+          // Save discounts
+          await ref
+              .read(updateVariantDiscountsUseCaseProvider)
+              .execute(newVariant.id!, state.discountIds);
+
           return newVariant;
         } else {
           final userId = ref.read(authProvider).user?.id;
@@ -586,6 +630,14 @@ class VariantForm extends _$VariantForm {
           }
 
           state = state.copyWithNullable(isSaving: false);
+
+          // Save Discounts
+          if (newVariant.id != null) {
+            await ref
+                .read(updateVariantDiscountsUseCaseProvider)
+                .execute(newVariant.id!, state.discountIds);
+          }
+
           return savedVariant;
         }
       }

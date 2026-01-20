@@ -43,6 +43,7 @@ class CartSection extends ConsumerWidget {
                         productName: item.productName ?? 'Desconocido',
                         variantName: item.variantDescription,
                         pricePerUnit: item.unitPrice,
+                        discount: item.discount, // Pass discount
                         total: item.total,
                         quantity: item.quantity,
                         onRemove: () {

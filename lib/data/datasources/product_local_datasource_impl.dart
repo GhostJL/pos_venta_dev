@@ -711,7 +711,7 @@ class ProductLocalDataSourceImpl implements ProductLocalDataSource {
         .into(db.productTaxes)
         .insert(
           ProductTaxesCompanion.insert(
-            productId: (productTax as dynamic).productId ?? 0, // DANGEROUS
+            productId: productTax.productId ?? 0,
             taxRateId: productTax.taxRateId,
             applyOrder: Value(productTax.applyOrder),
           ),

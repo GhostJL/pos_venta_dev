@@ -11,6 +11,8 @@ part 'app_database.g.dart';
     Permissions,
     UserPermissions,
     Notifications,
+    Discounts,
+    ProductVariantDiscounts,
     Stores,
     AppMeta,
     Transactions,
@@ -48,7 +50,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 39; // Bumped to 39
+  int get schemaVersion => 40; // Bumped to 40
 
   static QueryExecutor _openConnection() {
     return driftDatabase(
@@ -81,6 +83,11 @@ class AppDatabase extends _$AppDatabase {
         await m.addColumn(sales, sales.balanceCents);
         await m.addColumn(sales, sales.amountPaidCents);
         await m.addColumn(sales, sales.paymentStatus);
+      }
+      if (from < 40) {
+        // Migration to 40: Add Discounts tables
+        await m.createTable(discounts);
+        await m.createTable(productVariantDiscounts);
       }
     },
     beforeOpen: (details) async {

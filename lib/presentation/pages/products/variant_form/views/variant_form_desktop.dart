@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:posventa/domain/entities/discount.dart';
+import 'package:posventa/presentation/providers/discount_provider.dart';
 import 'package:posventa/domain/entities/product_variant.dart';
 import 'package:posventa/presentation/pages/products/variant_form/variant_form_inputs.dart';
 import 'package:posventa/domain/entities/unit_of_measure.dart';
@@ -277,6 +279,17 @@ class VariantFormDesktop extends ConsumerWidget {
                               const SizedBox(height: 32),
                               _buildSectionHeader(
                                 context,
+                                'Descuentos',
+                                Icons.discount_outlined,
+                              ),
+                              const SizedBox(height: 16),
+                              _buildCard(
+                                context,
+                                child: _buildDiscountsSection(context, ref),
+                              ),
+                              const SizedBox(height: 32),
+                              _buildSectionHeader(
+                                context,
                                 'Identificación',
                                 Icons.qr_code_scanner_rounded,
                               ),
@@ -386,6 +399,60 @@ class VariantFormDesktop extends ConsumerWidget {
           },
         ),
       ],
+    );
+  }
+
+  Widget _buildDiscountsSection(BuildContext context, WidgetRef ref) {
+    final discountsAsync = ref.watch(discountListProvider);
+    final provider = variantFormProvider(variant, initialType: initialType);
+    final selectedIds = ref.watch(provider.select((s) => s.discountIds));
+
+    return discountsAsync.when(
+      data: (discounts) {
+        final activeDiscounts = discounts.where((d) => d.isActive).toList();
+
+        if (activeDiscounts.isEmpty) {
+          return const Padding(
+            padding: EdgeInsets.all(8.0),
+            child: Text('No hay descuentos activos registrados.'),
+          );
+        }
+
+        return Column(
+          children: activeDiscounts.map((discount) {
+            final isSelected = selectedIds.contains(discount.id);
+            final valueText = discount.type == DiscountType.percentage
+                ? '${(discount.valueAsDouble * 100).toStringAsFixed(2)}%'
+                : '\$${(discount.value / 100).toStringAsFixed(2)}';
+
+            return CheckboxListTile(
+              title: Text(
+                discount.name,
+                style: const TextStyle(fontWeight: FontWeight.w500),
+              ),
+              subtitle: Text(
+                valueText,
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.primary,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              value: isSelected,
+              onChanged: (_) =>
+                  ref.read(provider.notifier).toggleDiscount(discount.id),
+              contentPadding: EdgeInsets.zero,
+              controlAffinity: ListTileControlAffinity.leading,
+              dense: true,
+              activeColor: Theme.of(context).colorScheme.primary,
+            );
+          }).toList(),
+        );
+      },
+      loading: () => const Padding(
+        padding: EdgeInsets.all(16.0),
+        child: Center(child: CircularProgressIndicator()),
+      ),
+      error: (e, _) => Text('Error al cargar descuentos: $e'),
     );
   }
 }

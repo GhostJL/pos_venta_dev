@@ -106,6 +106,13 @@ class _VariantFormPageState extends ConsumerState<VariantFormPage> {
           .read(provider.notifier)
           .updateProfitMargin(_inputs.marginController.text),
     );
+
+    // Load existing discounts for this variant
+    if (widget.variant != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        ref.read(provider.notifier).loadDiscounts(widget.variant!.id!);
+      });
+    }
   }
 
   @override

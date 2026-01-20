@@ -63,6 +63,39 @@ class Notifications extends Table {
   String get tableName => 'notifications';
 }
 
+class Discounts extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  TextColumn get name => text()();
+  TextColumn get type => text().withDefault(
+    const Constant('percentage'),
+  )(); // 'percentage', 'amount'
+  IntColumn get value =>
+      integer()(); // stored in cents or basis points (e.g. 1000 = 10.00%)
+  DateTimeColumn get startDate => dateTime().nullable().named('start_date')();
+  DateTimeColumn get endDate => dateTime().nullable().named('end_date')();
+  BoolColumn get isActive =>
+      boolean().withDefault(const Constant(true)).named('is_active')();
+  DateTimeColumn get createdAt =>
+      dateTime().withDefault(currentDateAndTime).named('created_at')();
+
+  @override
+  String get tableName => 'discounts';
+}
+
+class ProductVariantDiscounts extends Table {
+  IntColumn get variantId => integer()
+      .named('variant_id')
+      .references(ProductVariants, #id, onDelete: KeyAction.cascade)();
+  IntColumn get discountId => integer()
+      .named('discount_id')
+      .references(Discounts, #id, onDelete: KeyAction.cascade)();
+
+  @override
+  Set<Column> get primaryKey => {variantId, discountId};
+  @override
+  String get tableName => 'product_variant_discounts';
+}
+
 class Stores extends Table {
   IntColumn get id => integer().autoIncrement()();
   TextColumn get name => text()();

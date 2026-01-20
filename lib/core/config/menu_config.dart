@@ -146,6 +146,12 @@ class MenuConfig {
               route: '/purchases',
               requiredPermissions: [PermissionConstants.catalogManage],
             ),
+            const MenuItem(
+              title: 'Descuentos',
+              icon: Icons.discount_rounded,
+              route: '/discounts',
+              requiredPermissions: [PermissionConstants.catalogManage],
+            ),
           ],
         )
       else

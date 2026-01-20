@@ -5,6 +5,7 @@ class CartItemCard extends StatelessWidget {
   final String productName;
   final String? variantName;
   final double pricePerUnit;
+  final double discount;
   final double total;
   final double quantity;
   final VoidCallback onRemove; // Used for Delete
@@ -17,6 +18,7 @@ class CartItemCard extends StatelessWidget {
     required this.productName,
     this.variantName,
     required this.pricePerUnit,
+    this.discount = 0.0,
     required this.total,
     required this.quantity,
     required this.onRemove,
@@ -165,6 +167,14 @@ class CartItemCard extends StatelessWidget {
                             ],
                           ),
                         ),
+                        if (discount > 0)
+                          Text(
+                            '- \$${discount.toStringAsFixed(2)}',
+                            style: theme.textTheme.labelMedium?.copyWith(
+                              color: colorScheme.error,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                         Text(
                           '\$${grossPricePerUnit.toStringAsFixed(2)} x un.',
                           style: theme.textTheme.bodySmall?.copyWith(
