@@ -7,6 +7,7 @@ import 'package:posventa/presentation/viewmodels/inventory_view_model.dart';
 import 'package:posventa/presentation/widgets/inventory/inventory_card_widget.dart';
 import 'package:posventa/presentation/widgets/inventory/inventory_header.dart';
 import 'package:posventa/presentation/widgets/inventory/inventory_table_row.dart';
+import 'package:posventa/presentation/widgets/menu/side_menu.dart';
 
 class InventoryPage extends ConsumerStatefulWidget {
   const InventoryPage({super.key});
@@ -71,6 +72,7 @@ class _InventoryPageState extends ConsumerState<InventoryPage> {
 
     return Scaffold(
       backgroundColor: theme.colorScheme.surface,
+      drawer: const SideMenu(),
       body: LayoutBuilder(
         builder: (context, constraints) {
           final isDesktop = constraints.maxWidth > 800;
