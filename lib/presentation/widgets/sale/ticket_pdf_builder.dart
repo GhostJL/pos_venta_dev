@@ -305,6 +305,22 @@ class TicketPdfBuilder {
                 ),
 
               // Tax if applicable
+              if (ticket.tax > 0)
+                pw.Row(
+                  mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                  children: [
+                    pw.Text(
+                      'Impuestos:',
+                      style: const pw.TextStyle(fontSize: 10),
+                    ),
+                    pw.Text(
+                      currency.format(ticket.tax),
+                      style: const pw.TextStyle(fontSize: 10),
+                    ),
+                  ],
+                ),
+
+              // Tax if applicable
               // if (ticket.tax > 0) ...
               pw.SizedBox(height: 8),
               pw.Divider(borderStyle: pw.BorderStyle.dashed),

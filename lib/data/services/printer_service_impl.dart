@@ -186,8 +186,25 @@ class PrinterServiceImpl implements PrinterService {
     bytes += generator.hr();
 
     // Totals
+    if (ticketData.discount > 0) {
+      bytes += generator.text(
+        'Subtotal: \$${(ticketData.subtotal).toStringAsFixed(2)}',
+        styles: const PosStyles(align: PosAlign.right),
+      );
+      bytes += generator.text(
+        'Descuento: -\$${(ticketData.discount).toStringAsFixed(2)}',
+        styles: const PosStyles(align: PosAlign.right),
+      );
+    }
+
+    if (ticketData.tax > 0) {
+      bytes += generator.text(
+        'Impuestos: \$${(ticketData.tax).toStringAsFixed(2)}',
+        styles: const PosStyles(align: PosAlign.right),
+      );
+    }
     bytes += generator.text(
-      'TOTAL: \$${(ticketData.sale.totalCents / 100).toStringAsFixed(2)}',
+      'TOTAL: \$${(ticketData.total).toStringAsFixed(2)}',
       styles: const PosStyles(
         align: PosAlign.right,
         height: PosTextSize.size2,

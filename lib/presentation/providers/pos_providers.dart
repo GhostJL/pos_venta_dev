@@ -523,11 +523,13 @@ class POSNotifier extends _$POSNotifier {
 
       // Calculate totals
       int subtotalCents = 0;
+      int discountCents = 0;
       int taxCents = 0;
       int totalCents = 0;
 
       for (var item in state.cart) {
         subtotalCents += item.subtotalCents;
+        discountCents += item.discountCents;
         taxCents += item.taxCents;
         totalCents += item.totalCents;
       }
@@ -549,6 +551,7 @@ class POSNotifier extends _$POSNotifier {
         customerId: state.selectedCustomer?.id,
         cashierId: user.id!,
         subtotalCents: subtotalCents,
+        discountCents: discountCents,
         taxCents: taxCents,
         totalCents: totalCents,
         saleDate: DateTime.now(),

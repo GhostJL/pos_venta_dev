@@ -19,8 +19,7 @@ class TicketData {
   double get total => sale.totalCents / 100.0;
   double get subtotal => sale.subtotalCents / 100.0;
   double get tax => sale.taxCents / 100.0;
-  double get discount =>
-      0.0; // Assuming discount not tracked separately in Sale object yet
+  double get discount => sale.discountCents / 100.0;
 
   double get amountReceived {
     if (sale.payments.isEmpty) return 0.0;

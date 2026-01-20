@@ -4,8 +4,6 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:posventa/domain/entities/discount.dart';
 import 'package:posventa/presentation/providers/discount_provider.dart';
-import 'package:posventa/presentation/widgets/menu/side_menu.dart';
-
 // Since I have not created the directory Structure for discounts widgets, I will put list logic here for now.
 
 class DiscountsPage extends ConsumerWidget {
@@ -17,7 +15,6 @@ class DiscountsPage extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(title: const Text('Descuentos')),
-      drawer: const SideMenu(),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           context.push('/discounts/form');
