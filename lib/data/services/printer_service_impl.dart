@@ -185,26 +185,46 @@ class PrinterServiceImpl implements PrinterService {
 
     bytes += generator.hr();
 
-    // Totals
+    // Totals Section - Standard Supermarket Format
+
+    // Subtotal (before discounts and taxes)
+    bytes += generator.text(
+      'Subtotal: \$${(ticketData.subtotal).toStringAsFixed(2)}',
+      styles: const PosStyles(align: PosAlign.right),
+    );
+
+    // Discount if applicable
     if (ticketData.discount > 0) {
-      bytes += generator.text(
-        'Subtotal: \$${(ticketData.subtotal).toStringAsFixed(2)}',
-        styles: const PosStyles(align: PosAlign.right),
-      );
       bytes += generator.text(
         'Descuento: -\$${(ticketData.discount).toStringAsFixed(2)}',
         styles: const PosStyles(align: PosAlign.right),
       );
     }
 
-    if (ticketData.tax > 0) {
+    // Subtotal Neto (after discount, before tax) - only if there's discount or tax
+    if (ticketData.discount > 0 || ticketData.tax > 0) {
+      bytes += generator.hr(ch: '-');
+      final subtotalNeto = ticketData.subtotal - ticketData.discount;
       bytes += generator.text(
-        'Impuestos: \$${(ticketData.tax).toStringAsFixed(2)}',
+        'Subtotal Neto: \$${subtotalNeto.toStringAsFixed(2)}',
         styles: const PosStyles(align: PosAlign.right),
       );
     }
+
+    // Tax if applicable
+    if (ticketData.tax > 0) {
+      bytes += generator.text(
+        'IVA (16%): +\$${(ticketData.tax).toStringAsFixed(2)}',
+        styles: const PosStyles(align: PosAlign.right),
+      );
+    }
+
+    // Separator before total
+    bytes += generator.hr(ch: '=');
+
+    // TOTAL
     bytes += generator.text(
-      'TOTAL: \$${(ticketData.total).toStringAsFixed(2)}',
+      'TOTAL A PAGAR: \$${(ticketData.total).toStringAsFixed(2)}',
       styles: const PosStyles(
         align: PosAlign.right,
         height: PosTextSize.size2,

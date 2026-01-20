@@ -279,6 +279,8 @@ class TicketPdfBuilder {
                 ],
               ),
               pw.SizedBox(height: 4),
+
+              // Subtotal (before discounts and taxes)
               pw.Row(
                 mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                 children: [
@@ -289,7 +291,10 @@ class TicketPdfBuilder {
                   ),
                 ],
               ),
-              if (ticket.discount > 0)
+
+              // Discount if applicable
+              if (ticket.discount > 0) ...[
+                pw.SizedBox(height: 2),
                 pw.Row(
                   mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                   children: [
@@ -303,36 +308,59 @@ class TicketPdfBuilder {
                     ),
                   ],
                 ),
+              ],
 
-              // Tax if applicable
-              if (ticket.tax > 0)
+              // Subtotal Neto (after discount, before tax) - only show if there's discount or tax
+              if (ticket.discount > 0 || ticket.tax > 0) ...[
+                pw.SizedBox(height: 4),
+                pw.Divider(borderStyle: pw.BorderStyle.solid, thickness: 0.5),
+                pw.SizedBox(height: 2),
                 pw.Row(
                   mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                   children: [
                     pw.Text(
-                      'Impuestos:',
+                      'Subtotal Neto:',
                       style: const pw.TextStyle(fontSize: 10),
                     ),
                     pw.Text(
-                      currency.format(ticket.tax),
+                      currency.format(ticket.subtotal - ticket.discount),
                       style: const pw.TextStyle(fontSize: 10),
                     ),
                   ],
                 ),
+              ],
 
               // Tax if applicable
-              // if (ticket.tax > 0) ...
+              if (ticket.tax > 0) ...[
+                pw.SizedBox(height: 2),
+                pw.Row(
+                  mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                  children: [
+                    pw.Text(
+                      'IVA (16%):',
+                      style: const pw.TextStyle(fontSize: 10),
+                    ),
+                    pw.Text(
+                      '+${currency.format(ticket.tax)}',
+                      style: const pw.TextStyle(fontSize: 10),
+                    ),
+                  ],
+                ),
+              ],
+
               pw.SizedBox(height: 8),
-              pw.Divider(borderStyle: pw.BorderStyle.dashed),
+              pw.Divider(borderStyle: pw.BorderStyle.dashed, thickness: 1),
               pw.SizedBox(height: 2),
+
+              // TOTAL
               pw.Row(
                 mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                 children: [
                   pw.Text(
-                    'TOTAL:',
+                    'TOTAL A PAGAR:',
                     style: pw.TextStyle(
                       fontWeight: pw.FontWeight.bold,
-                      fontSize: 16,
+                      fontSize: 14,
                     ),
                   ),
                   pw.Text(
