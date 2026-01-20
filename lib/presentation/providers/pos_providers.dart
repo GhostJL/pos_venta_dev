@@ -114,11 +114,15 @@ class POSNotifier extends _$POSNotifier {
 
         if (product != null) {
           ProductVariant? variant;
-          if (item.variantId != null) {
-            variant = product.variants?.cast<ProductVariant?>().firstWhere(
-              (v) => v?.id == item.variantId,
-              orElse: () => null,
-            );
+          if (item.variantId != null && product.variants != null) {
+            try {
+              variant = product.variants!.firstWhere(
+                (v) => v.id == item.variantId,
+              );
+            } catch (_) {
+              // Variant not found, keep as null
+              variant = null;
+            }
           }
 
           final newItem = await _calculateItemAndReturn(
@@ -440,11 +444,13 @@ class POSNotifier extends _$POSNotifier {
       SaleItem updatedItem;
       if (product != null) {
         ProductVariant? variant;
-        if (variantId != null) {
-          variant = product.variants?.firstWhere(
-            (v) => v.id == variantId,
-            orElse: () => product.variants!.first,
-          );
+        if (variantId != null && product.variants != null) {
+          try {
+            variant = product.variants!.firstWhere((v) => v.id == variantId);
+          } catch (_) {
+            // Variant not found, keep as null
+            variant = null;
+          }
         }
         updatedItem = await _calculateItemAndReturn(
           product: product,
