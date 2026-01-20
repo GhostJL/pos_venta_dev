@@ -37,17 +37,45 @@ class CartSummarySection extends ConsumerWidget {
         top: false,
         child: Column(
           children: [
+            // Subtotal (before discounts and taxes)
             _buildTotalRow(context, 'Subtotal', subtotal),
-            if (useTax)
-              ...taxBreakdown.entries.map(
-                (entry) => _buildTotalRow(context, entry.key, entry.value),
-              ),
-            if (discount > 0)
+
+            // Discount if applicable
+            if (discount > 0) ...[
+              const SizedBox(height: 4),
               _buildTotalRow(context, 'Descuento', -discount, isDiscount: true),
+            ],
+
+            // Subtotal Neto (after discount, before tax) - only show if there's discount or tax
+            if (discount > 0 || (useTax && taxBreakdown.isNotEmpty)) ...[
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 12),
+                child: Divider(height: 1, thickness: 1),
+              ),
+              _buildTotalRow(
+                context,
+                'Subtotal Neto',
+                subtotal - discount,
+                isSubtotalNeto: true,
+              ),
+            ],
+
+            // Taxes if applicable
+            if (useTax && taxBreakdown.isNotEmpty) ...[
+              const SizedBox(height: 4),
+              ...taxBreakdown.entries.map(
+                (entry) => _buildTotalRow(
+                  context,
+                  entry.key,
+                  entry.value,
+                  isTax: true,
+                ),
+              ),
+            ],
 
             const Padding(
               padding: EdgeInsets.symmetric(vertical: 16),
-              child: Divider(height: 1),
+              child: Divider(height: 1, thickness: 2),
             ),
 
             // Total
@@ -55,16 +83,17 @@ class CartSummarySection extends ConsumerWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  'Total',
+                  'Total a Pagar',
                   style: Theme.of(context).textTheme.titleLarge?.copyWith(
                     color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
                 Text(
                   '\$${total.toStringAsFixed(2)}',
                   style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                     fontWeight: FontWeight.bold,
-                    color: Theme.of(context).colorScheme.onSurface,
+                    color: Theme.of(context).colorScheme.primary,
                     height: 1,
                   ),
                 ),
@@ -122,7 +151,30 @@ class CartSummarySection extends ConsumerWidget {
     String label,
     double amount, {
     bool isDiscount = false,
+    bool isSubtotalNeto = false,
+    bool isTax = false,
   }) {
+    // Determine styling based on row type
+    Color textColor;
+    FontWeight fontWeight;
+    String prefix = '';
+
+    if (isDiscount) {
+      textColor = Colors.green[600]!;
+      fontWeight = FontWeight.w600;
+      // Amount is already negative, no prefix needed
+    } else if (isTax) {
+      textColor = Theme.of(context).colorScheme.onSurface;
+      fontWeight = FontWeight.w500;
+      prefix = '+';
+    } else if (isSubtotalNeto) {
+      textColor = Theme.of(context).colorScheme.onSurface;
+      fontWeight = FontWeight.w600;
+    } else {
+      textColor = Theme.of(context).colorScheme.onSurface;
+      fontWeight = FontWeight.w500;
+    }
+
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4.0),
       child: Row(
@@ -134,18 +186,19 @@ class CartSummarySection extends ConsumerWidget {
               style: TextStyle(
                 color: Theme.of(context).colorScheme.onSurfaceVariant,
                 fontSize: 14,
+                fontWeight: isSubtotalNeto
+                    ? FontWeight.w500
+                    : FontWeight.normal,
               ),
               overflow: TextOverflow.ellipsis,
             ),
           ),
           const SizedBox(width: 8),
           Text(
-            '\$${amount.toStringAsFixed(2)}',
+            '$prefix\$${amount.abs().toStringAsFixed(2)}',
             style: TextStyle(
-              color: isDiscount
-                  ? Colors.green[600]
-                  : Theme.of(context).colorScheme.onSurface,
-              fontWeight: isDiscount ? FontWeight.w600 : FontWeight.w500,
+              color: textColor,
+              fontWeight: fontWeight,
               fontSize: 14,
             ),
           ),
