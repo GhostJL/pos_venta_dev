@@ -17,6 +17,7 @@ class PosProductItem extends ConsumerStatefulWidget {
   final VoidCallback? onRemove; // Used for Remove / -
   final VoidCallback? onDelete; // Used for Delete
   final VoidCallback onLongPress;
+  final bool isFocused;
 
   const PosProductItem({
     super.key,
@@ -27,6 +28,7 @@ class PosProductItem extends ConsumerStatefulWidget {
     this.onRemove,
     this.onDelete,
     required this.onLongPress,
+    this.isFocused = false,
   });
 
   @override
@@ -84,8 +86,8 @@ class _PosProductItemState extends ConsumerState<PosProductItem> {
       stockColor = colorScheme.primary;
     }
 
-    final double scale = _isHovering ? 1.02 : 1.0;
-    final double elevation = _isHovering ? 4.0 : 0.0;
+    final double scale = _isHovering || widget.isFocused ? 1.02 : 1.0;
+    final double elevation = _isHovering || widget.isFocused ? 4.0 : 0.0;
 
     return MouseRegion(
       onEnter: _onEnter,
@@ -105,12 +107,14 @@ class _PosProductItemState extends ConsumerState<PosProductItem> {
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(16),
               side: BorderSide(
-                color: widget.quantityInCart > 0
+                color: widget.isFocused
                     ? colorScheme.primary
-                    : (_isHovering
-                          ? colorScheme.primary.withValues(alpha: 0.5)
-                          : colorScheme.outlineVariant),
-                width: widget.quantityInCart > 0 ? 2 : 1,
+                    : (widget.quantityInCart > 0
+                          ? colorScheme.primary
+                          : (_isHovering
+                                ? colorScheme.primary.withValues(alpha: 0.5)
+                                : colorScheme.outlineVariant)),
+                width: widget.isFocused || widget.quantityInCart > 0 ? 2 : 1,
               ),
             ),
             clipBehavior: Clip.antiAlias,

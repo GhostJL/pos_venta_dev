@@ -12,6 +12,7 @@ class CartItemCard extends StatelessWidget {
   final VoidCallback onIncrement; // Used for Add / +
   final VoidCallback onDecrement; // Used for Remove / -
   final VoidCallback? onLongPress;
+  final bool isFocused;
 
   const CartItemCard({
     super.key,
@@ -25,6 +26,7 @@ class CartItemCard extends StatelessWidget {
     required this.onIncrement,
     required this.onDecrement,
     this.onLongPress,
+    this.isFocused = false,
   });
 
   @override
@@ -45,7 +47,10 @@ class CartItemCard extends StatelessWidget {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
           side: BorderSide(
-            color: colorScheme.outlineVariant.withValues(alpha: 0.5),
+            color: isFocused
+                ? colorScheme.primary
+                : colorScheme.outlineVariant.withValues(alpha: 0.5),
+            width: isFocused ? 2 : 1,
           ),
         ),
         margin: EdgeInsets.zero,

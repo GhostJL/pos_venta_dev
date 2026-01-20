@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:posventa/presentation/widgets/pos/sale/cart_section.dart';
 import 'package:posventa/presentation/widgets/pos/product_grid_section.dart';
 import 'package:posventa/presentation/widgets/pos/consumer_selection_dialog_widget.dart';
+import 'package:posventa/presentation/widgets/pos/keyboard_shortcuts_help_overlay.dart';
 import 'package:posventa/core/constants/permission_constants.dart';
 import 'package:posventa/presentation/providers/permission_provider.dart';
 import 'package:posventa/presentation/providers/pos_providers.dart';
@@ -19,6 +20,7 @@ class PosSalesPage extends ConsumerStatefulWidget {
 class _PosSalesPageState extends ConsumerState<PosSalesPage> {
   // Focus nodes for keyboard navigation
   final FocusNode _searchFocusNode = FocusNode();
+  bool _showKeyboardHelp = false;
 
   @override
   void dispose() {
@@ -77,6 +79,12 @@ class _PosSalesPageState extends ConsumerState<PosSalesPage> {
     );
   }
 
+  void _toggleKeyboardHelp() {
+    setState(() {
+      _showKeyboardHelp = !_showKeyboardHelp;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final hasAccess = ref.watch(
@@ -122,27 +130,40 @@ class _PosSalesPageState extends ConsumerState<PosSalesPage> {
         const SingleActivator(LogicalKeyboardKey.f5): _handlePayShortcut,
         // Esc: Clear Search / Unfocus
         const SingleActivator(LogicalKeyboardKey.escape): () {
-          FocusScope.of(context).unfocus();
+          if (_showKeyboardHelp) {
+            _toggleKeyboardHelp();
+          } else {
+            FocusScope.of(context).unfocus();
+          }
         },
+        // F1: Toggle Keyboard Help
+        const SingleActivator(LogicalKeyboardKey.f1): _toggleKeyboardHelp,
       },
       child: FocusScope(
         autofocus: true,
         child: Scaffold(
           backgroundColor: Theme.of(context).colorScheme.surfaceContainerLow,
-          body: SafeArea(
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                // Breakpoints
-                final width = constraints.maxWidth;
-                final isMobile = width < 900; // Adjusted breakpoint
+          body: Stack(
+            children: [
+              SafeArea(
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    // Breakpoints
+                    final width = constraints.maxWidth;
+                    final isMobile = width < 900; // Adjusted breakpoint
 
-                if (isMobile) {
-                  return _MobileLayout(searchFocusNode: _searchFocusNode);
-                } else {
-                  return _WideLayout(searchFocusNode: _searchFocusNode);
-                }
-              },
-            ),
+                    if (isMobile) {
+                      return _MobileLayout(searchFocusNode: _searchFocusNode);
+                    } else {
+                      return _WideLayout(searchFocusNode: _searchFocusNode);
+                    }
+                  },
+                ),
+              ),
+              // Keyboard Shortcuts Help Overlay
+              if (_showKeyboardHelp)
+                KeyboardShortcutsHelpOverlay(onClose: _toggleKeyboardHelp),
+            ],
           ),
         ),
       ),

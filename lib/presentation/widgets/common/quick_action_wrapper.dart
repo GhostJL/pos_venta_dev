@@ -29,10 +29,12 @@ class _QuickActionWrapperState extends State<QuickActionWrapper> {
   void initState() {
     super.initState();
     _node = widget.focusNode ?? FocusNode();
+    _node.addListener(_handleFocusChange);
   }
 
   @override
   void dispose() {
+    _node.removeListener(_handleFocusChange);
     if (widget.focusNode == null) {
       _node.dispose();
     }
@@ -45,6 +47,16 @@ class _QuickActionWrapperState extends State<QuickActionWrapper> {
       if (isHovering) {
         _node.requestFocus();
       }
+    }
+  }
+
+  void _handleFocusChange() {
+    // When focus changes via keyboard (not hover), update hover state
+    if (_node.hasFocus && !_isHovering) {
+      setState(() => _isHovering = true);
+    } else if (!_node.hasFocus && _isHovering) {
+      // Only clear hover if we're not actually hovering with mouse
+      setState(() => _isHovering = false);
     }
   }
 
