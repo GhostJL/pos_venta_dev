@@ -1,18 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:posventa/presentation/pages/shared/main_layout.dart';
-
 import 'package:posventa/domain/entities/user.dart';
-
-import 'package:posventa/presentation/providers/paginated_sales_provider.dart';
-import 'package:posventa/core/constants/permission_constants.dart';
-import 'package:posventa/presentation/providers/permission_provider.dart';
-import 'package:posventa/presentation/widgets/common/layouts/permission_denied_widget.dart';
-import 'package:posventa/presentation/widgets/sales/history/sales_card_history_widget.dart';
-import 'package:posventa/presentation/widgets/common/filters/date_range_filter.dart';
-import 'package:posventa/presentation/widgets/common/async_value_handler.dart';
+import 'package:posventa/presentation/pages/shared/main_layout.dart';
 import 'package:posventa/presentation/providers/auth_provider.dart';
+import 'package:posventa/presentation/providers/paginated_sales_provider.dart';
+import 'package:posventa/presentation/providers/permission_provider.dart';
+import 'package:posventa/core/constants/permission_constants.dart';
+import 'package:posventa/presentation/utils/platform_detector.dart';
+import 'package:posventa/presentation/widgets/common/async_value_handler.dart';
 import 'package:posventa/presentation/widgets/common/empty_state_widget.dart';
+import 'package:posventa/presentation/widgets/common/filters/date_range_filter.dart';
+import 'package:posventa/presentation/widgets/common/layouts/permission_denied_widget.dart';
+import 'package:posventa/presentation/widgets/sales/history/desktop/sale_card_desktop.dart';
+import 'package:posventa/presentation/widgets/sales/history/mobile/sale_card_mobile.dart';
+import 'package:posventa/presentation/widgets/sales/history/tablet/sale_card_tablet.dart';
 
 class SalesHistoryPage extends ConsumerStatefulWidget {
   const SalesHistoryPage({super.key});
@@ -29,7 +30,7 @@ class _SalesHistoryPageState extends ConsumerState<SalesHistoryPage> {
   void initState() {
     super.initState();
     _scrollController.addListener(_onScroll);
-    // Set initial filter based on role
+    // Set initial filter based on role logic
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final user = ref.read(authProvider).user;
       if (user != null) {
@@ -77,39 +78,25 @@ class _SalesHistoryPageState extends ConsumerState<SalesHistoryPage> {
       hasPermissionProvider(PermissionConstants.reportsView),
     );
 
-    // Only watch count
     final countAsync = ref.watch(paginatedSalesCountProvider);
     final filter = ref.watch(saleFilterProvider);
-    final isSmallScreen = MediaQuery.of(context).size.width < 1200;
+    final isMobile = PlatformDetector.isMobile(context);
 
-    // Apply role-based filtering on build (or useEffect)
-    // Using listen to auth state changes to update filter
+    // Apply role-based filtering logic listener
     ref.listen(authProvider, (previous, next) {
       final user = next.user;
       if (user != null) {
         if (user.role == UserRole.cajero) {
-          // If user is cashier, force filter by their ID
-          // Use Future.microtask to avoid build-phase state updates
           Future.microtask(() {
             ref.read(saleFilterProvider.notifier).setCashierId(user.id);
           });
         } else {
-          // Admin sees all
           Future.microtask(() {
             ref.read(saleFilterProvider.notifier).setCashierId(null);
           });
         }
       }
     });
-
-    // Initial check (use a simple effect pattern)
-    // We cant easily use useEffect without flutter_hooks, so we do a pragmatic check
-    // or rely on the initState.
-    // However, since we are in build, let's just ensure it's set if not already matched?
-    // Doing strict "set on build" is risky for infinite loops.
-    // Better strategy: Set it once in initState or rely on the listener above.
-    // Let's rely on listener + one-time init.
-    // But we need to act on the *current* auth state too.
 
     if (!hasViewPermission) {
       return PermissionDeniedWidget(
@@ -122,7 +109,7 @@ class _SalesHistoryPageState extends ConsumerState<SalesHistoryPage> {
 
     return Scaffold(
       appBar: AppBar(
-        leading: isSmallScreen
+        leading: isMobile
             ? IconButton(
                 icon: const Icon(Icons.menu),
                 onPressed: () => MainLayout.of(context)?.openDrawer(),
@@ -167,75 +154,57 @@ class _SalesHistoryPageState extends ConsumerState<SalesHistoryPage> {
               ref.invalidate(paginatedSalesCountProvider);
               return Future.delayed(const Duration(milliseconds: 500));
             },
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                final isWide = constraints.maxWidth >= 900;
-
-                if (isWide) {
-                  return GridView.builder(
-                    controller:
-                        _scrollController, // Use same controller for scrolling features
-                    padding: const EdgeInsets.all(24),
-                    cacheExtent: 500,
-                    physics: const AlwaysScrollableScrollPhysics(),
-                    gridDelegate:
-                        const SliverGridDelegateWithMaxCrossAxisExtent(
-                          maxCrossAxisExtent: 400,
-                          mainAxisSpacing: 16,
-                          crossAxisSpacing: 16,
-                          mainAxisExtent: 300,
-                        ),
-                    itemCount: count,
-                    itemBuilder: (context, index) {
-                      final pageIndex = index ~/ kSalePageSize;
-                      final indexInPage = index % kSalePageSize;
-
-                      final pageAsync = ref.watch(
-                        paginatedSalesPageProvider(pageIndex: pageIndex),
-                      );
-
-                      return pageAsync.when(
-                        data: (sales) {
-                          if (indexInPage >= sales.length) {
-                            return const SizedBox.shrink();
-                          }
-                          final sale = sales[indexInPage];
-                          return SaleCardHistoryWidget(sale: sale);
-                        },
-                        loading: () => _buildSkeletonItem(), // Grid skeleton
-                        error: (_, __) => const SizedBox.shrink(),
-                      );
-                    },
-                  );
+            child: Builder(
+              builder: (context) {
+                // Determine platform based on width using MediaQuery to avoid LayoutBuilder mutation issues
+                final width = MediaQuery.of(context).size.width;
+                DevicePlatform platform;
+                if (width < 600) {
+                  platform = DevicePlatform.mobile;
+                } else if (width < 900) {
+                  platform = DevicePlatform.tablet;
                 } else {
-                  return ListView.builder(
-                    controller: _scrollController,
-                    padding: const EdgeInsets.all(16),
-                    cacheExtent: 500,
-                    physics: const AlwaysScrollableScrollPhysics(),
-                    itemCount: count,
-                    itemBuilder: (context, index) {
-                      final pageIndex = index ~/ kSalePageSize;
-                      final indexInPage = index % kSalePageSize;
-
-                      final pageAsync = ref.watch(
-                        paginatedSalesPageProvider(pageIndex: pageIndex),
-                      );
-
-                      return pageAsync.when(
-                        data: (sales) {
-                          if (indexInPage >= sales.length) {
-                            return const SizedBox.shrink();
-                          }
-                          final sale = sales[indexInPage];
-                          return SaleCardHistoryWidget(sale: sale);
-                        },
-                        loading: () => _buildSkeletonItem(),
-                        error: (_, __) => const SizedBox.shrink(),
-                      );
-                    },
-                  );
+                  platform = DevicePlatform.desktop;
                 }
+
+                // Unified ListView for all platforms
+                return ListView.builder(
+                  controller: _scrollController,
+                  padding: platform == DevicePlatform.mobile
+                      ? const EdgeInsets.all(16)
+                      : const EdgeInsets.symmetric(
+                          horizontal: 24,
+                          vertical: 16,
+                        ),
+                  cacheExtent: 500,
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  itemCount: count,
+                  itemBuilder: (context, index) {
+                    final pageIndex = index ~/ kSalePageSize;
+                    final indexInPage = index % kSalePageSize;
+
+                    final pageAsync = ref.watch(
+                      paginatedSalesPageProvider(pageIndex: pageIndex),
+                    );
+
+                    return pageAsync.when(
+                      data: (sales) {
+                        if (indexInPage >= sales.length) {
+                          return const SizedBox.shrink();
+                        }
+                        final sale = sales[indexInPage];
+
+                        return switch (platform) {
+                          DevicePlatform.mobile => SaleCardMobile(sale: sale),
+                          DevicePlatform.tablet => SaleCardTablet(sale: sale),
+                          DevicePlatform.desktop => SaleCardDesktop(sale: sale),
+                        };
+                      },
+                      loading: () => _buildSkeletonItem(platform),
+                      error: (_, __) => const SizedBox.shrink(),
+                    );
+                  },
+                );
               },
             ),
           );
@@ -249,13 +218,15 @@ class _SalesHistoryPageState extends ConsumerState<SalesHistoryPage> {
     );
   }
 
-  Widget _buildSkeletonItem() {
-    return Container(
-      height: 120,
-      margin: const EdgeInsets.only(bottom: 12),
-      decoration: BoxDecoration(
-        color: Colors.grey.withAlpha(20),
-        borderRadius: BorderRadius.circular(12),
+  Widget _buildSkeletonItem(DevicePlatform platform) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Container(
+        height: platform == DevicePlatform.mobile ? 140 : 80,
+        decoration: BoxDecoration(
+          color: Colors.grey[200],
+          borderRadius: BorderRadius.circular(12),
+        ),
       ),
     );
   }

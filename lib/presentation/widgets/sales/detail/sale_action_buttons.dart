@@ -2,9 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:posventa/domain/entities/sale.dart';
-import 'package:posventa/presentation/providers/auth_provider.dart';
 import 'package:posventa/presentation/providers/providers.dart';
-import 'package:posventa/presentation/widgets/transactions/void/transaction_void_dialog.dart';
 
 // Provider to check if a sale has any returns
 final saleHasReturnsProvider = FutureProvider.family<bool, int>((
@@ -86,40 +84,9 @@ class SaleActionButtons extends ConsumerWidget {
     );
   }
 
-  Future<void> _showCancelDialog(
-    BuildContext context,
-    WidgetRef ref,
-    Sale sale,
-  ) async {
-    final reason = await TransactionVoidDialog.show(context, sale);
-
-    if (reason == null || !context.mounted) return;
-
-    try {
-      final user = ref.read(authProvider).user;
-      if (user == null) throw Exception('Usuario no autenticado');
-
-      final cancelSale = await ref.read(cancelSaleUseCaseProvider.future);
-      await cancelSale.call(sale.id!, user.id!, reason);
-
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Venta cancelada exitosamente'),
-            backgroundColor: Theme.of(context).colorScheme.onSurface,
-          ),
-        );
-        context.pop();
-      }
-    } catch (e) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error: $e'),
-            backgroundColor: Theme.of(context).colorScheme.error,
-          ),
-        );
-      }
-    }
+  void _showCancelDialog(BuildContext context, WidgetRef ref, Sale sale) {
+    // Use GoRouter to push the cancellation page
+    // This ensures consistent transition handling and avoids layout conflicts
+    context.push('/sale-cancellation', extra: sale);
   }
 }

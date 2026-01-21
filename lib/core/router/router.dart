@@ -49,6 +49,7 @@ import 'package:posventa/presentation/pages/purchase/purchase_item_form_page.dar
 import 'package:posventa/presentation/pages/purchase/purchase_items_page.dart';
 import 'package:posventa/presentation/pages/purchase/reception/purchase_reception_page.dart';
 import 'package:posventa/presentation/pages/purchase/purchases_page.dart';
+import 'package:posventa/presentation/pages/sale/sale_cancellation_page.dart';
 import 'package:posventa/presentation/pages/sale/sale_detail_page.dart';
 import 'package:posventa/presentation/pages/sale/sale_returns_detail_page.dart';
 import 'package:posventa/presentation/pages/sale/sales_history_page.dart';
@@ -290,6 +291,13 @@ final routerProvider = Provider<GoRouter>((ref) {
               return AppTransitionPage(
                 child: SaleReturnsDetailPage(saleId: id, sale: sale),
               );
+            },
+          ),
+          GoRoute(
+            path: '/sale-cancellation',
+            pageBuilder: (context, state) {
+              final sale = state.extra as Sale;
+              return AppTransitionPage(child: SaleCancellationPage(sale: sale));
             },
           ),
           GoRoute(

@@ -1,16 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:posventa/domain/entities/sale.dart';
-import 'package:posventa/presentation/providers/providers.dart';
+import 'package:posventa/domain/usecases/sale/print_sale_ticket_use_case.dart';
 import 'package:posventa/presentation/providers/auth_provider.dart';
 import 'package:posventa/presentation/providers/di/sale_di.dart';
-import 'package:posventa/domain/usecases/sale/print_sale_ticket_use_case.dart';
-import 'package:posventa/presentation/widgets/sales/detail/sale_action_buttons.dart';
-import 'package:posventa/presentation/widgets/sales/detail/sale_header_card.dart';
-import 'package:posventa/presentation/widgets/sales/detail/sale_payments_list.dart';
-import 'package:posventa/presentation/widgets/sales/detail/sale_products_list.dart';
-import 'package:posventa/presentation/widgets/sales/detail/sale_returns_section.dart';
-import 'package:posventa/presentation/widgets/sales/detail/sale_totals_card.dart';
+import 'package:posventa/presentation/widgets/sales/detail/desktop/sale_detail_desktop_layout.dart';
+import 'package:posventa/presentation/widgets/sales/detail/mobile/sale_detail_mobile_layout.dart';
 
 class SaleDetailPage extends ConsumerWidget {
   final int saleId;
@@ -34,7 +29,7 @@ class SaleDetailPage extends ConsumerWidget {
           IconButton(
             icon: const Icon(Icons.print_outlined, size: 22),
             onPressed: () async {
-              // Get Sale from current state if available (it should be since we are in detail)
+              // Get Sale from current state if available
               final saleState = await ref.read(
                 saleDetailStreamProvider(saleId).future,
               );
@@ -71,7 +66,7 @@ class SaleDetailPage extends ConsumerWidget {
               ),
             );
           }
-          return _buildSaleDetail(context, ref, sale);
+          return _buildSaleDetail(context, sale: sale);
         },
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, stack) => Center(
@@ -97,132 +92,17 @@ class SaleDetailPage extends ConsumerWidget {
     );
   }
 
-  Widget _buildSaleDetail(BuildContext context, WidgetRef ref, Sale sale) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final isBroad = constraints.maxWidth >= 900;
+  Widget _buildSaleDetail(BuildContext context, {required Sale sale}) {
+    // Use MediaQuery instead of LayoutBuilder to avoid potential layout cycle/mutation errors
+    // during navigation transitions.
+    final width = MediaQuery.of(context).size.width;
+    final isBroad = width >= 900;
 
-        if (isBroad) {
-          // Desktop Layout (2 Columns)
-          // Left: Independent List for Products
-          // Right: Detailed Info (Header, Totals, Actions, Payments)
-          return Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Left Column: Products List (Independent Scroll)
-              Expanded(
-                flex: 4,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
-                      child: Text(
-                        'Productos (${sale.items.length})',
-                        style: Theme.of(context).textTheme.titleMedium
-                            ?.copyWith(fontWeight: FontWeight.bold),
-                      ),
-                    ),
-                    Expanded(
-                      child: SaleProductsList(
-                        sale: sale,
-                        padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              // Right Column: Summary & Actions (Scrollable)
-              Expanded(
-                flex: 3,
-                child: Container(
-                  decoration: BoxDecoration(
-                    border: Border(
-                      left: BorderSide(
-                        color: Theme.of(
-                          context,
-                        ).colorScheme.outlineVariant.withValues(alpha: 0.5),
-                      ),
-                    ),
-                  ),
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.all(24),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        SaleHeaderCard(sale: sale),
-                        SaleReturnsSection(sale: sale),
-                        const SizedBox(height: 24),
-                        SaleTotalsCard(sale: sale),
-                        const SizedBox(height: 24),
-                        SaleActionButtons(sale: sale),
-                        const SizedBox(height: 32),
-                        SalePaymentsList(sale: sale),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          );
-        } else {
-          // Mobile Layout (Tabs)
-          // Tab 1: Resumen (Header, Returns, Totals, Actions)
-          // Tab 2: Productos (Full List)
-          // Tab 3: Pagos (Full List)
-          return DefaultTabController(
-            length: 3,
-            child: Column(
-              children: [
-                TabBar(
-                  labelColor: Theme.of(context).colorScheme.primary,
-                  unselectedLabelColor: Theme.of(
-                    context,
-                  ).colorScheme.onSurfaceVariant,
-                  indicatorColor: Theme.of(context).colorScheme.primary,
-                  labelStyle: const TextStyle(fontWeight: FontWeight.w600),
-                  tabs: const [
-                    Tab(text: 'Resumen'),
-                    Tab(text: 'Productos'),
-                    Tab(text: 'Pagos'),
-                  ],
-                ),
-                Expanded(
-                  child: TabBarView(
-                    children: [
-                      // Tab 1: Resumen
-                      SingleChildScrollView(
-                        padding: const EdgeInsets.all(16),
-                        child: Column(
-                          children: [
-                            SaleHeaderCard(sale: sale),
-                            SaleReturnsSection(sale: sale),
-                            const SizedBox(height: 24),
-                            SaleTotalsCard(sale: sale),
-                            const SizedBox(height: 24),
-                            SaleActionButtons(sale: sale),
-                          ],
-                        ),
-                      ),
-                      // Tab 2: Productos (List)
-                      SaleProductsList(
-                        sale: sale,
-                        padding: const EdgeInsets.all(16),
-                      ),
-                      // Tab 3: Pagos
-                      SingleChildScrollView(
-                        padding: const EdgeInsets.all(16),
-                        child: SalePaymentsList(sale: sale),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          );
-        }
-      },
-    );
+    if (isBroad) {
+      return SaleDetailDesktopLayout(sale: sale);
+    } else {
+      return SaleDetailMobileLayout(sale: sale);
+    }
   }
 
   Future<void> _printTicket(

@@ -17,6 +17,9 @@ class SaleItemModel extends SaleItem {
     required super.costPriceCents,
     super.lotId,
     super.productName,
+    super.variantDescription,
+    super.variantName,
+    super.sku,
     super.taxes,
     super.unitsPerPack,
   });
@@ -37,6 +40,8 @@ class SaleItemModel extends SaleItem {
       costPriceCents: json['cost_price_cents'],
       lotId: json['lot_id'],
       productName: json['product_name'], // Joined field
+      variantName: json['variant_name'], // Joined field from productVariants
+      sku: json['sku'], // Joined field from products
       unitsPerPack: (json['units_per_pack'] as num?)?.toDouble() ?? 1.0,
     );
   }
@@ -75,6 +80,8 @@ class SaleItemModel extends SaleItem {
       costPriceCents: item.costPriceCents,
       lotId: item.lotId,
       productName: item.productName,
+      variantName: item.variantName,
+      sku: item.sku,
       taxes: item.taxes,
       unitsPerPack: item.unitsPerPack,
     );
@@ -97,6 +104,8 @@ class SaleItemModel extends SaleItem {
     int? lotId,
     String? productName,
     String? variantDescription,
+    String? variantName,
+    String? sku,
     List<SaleItemTax>? taxes,
     double? unitsPerPack,
   }) {
@@ -115,6 +124,8 @@ class SaleItemModel extends SaleItem {
       costPriceCents: costPriceCents ?? this.costPriceCents,
       lotId: lotId ?? this.lotId,
       productName: productName ?? this.productName,
+      variantName: variantName ?? this.variantName,
+      sku: sku ?? this.sku,
       taxes: taxes ?? this.taxes,
       unitsPerPack: unitsPerPack ?? this.unitsPerPack,
     );

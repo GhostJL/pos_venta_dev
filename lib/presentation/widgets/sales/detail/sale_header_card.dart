@@ -20,155 +20,239 @@ class SaleHeaderCard extends StatelessWidget {
 
     Color statusColor;
     String statusLabel;
+    IconData statusIcon;
+
     if (isCancelled) {
       statusColor = cs.error;
       statusLabel = 'CANCELADA';
+      statusIcon = Icons.cancel_outlined;
     } else if (isReturned) {
       statusColor = AppTheme.alertWarning;
       statusLabel = 'DEVUELTA';
+      statusIcon = Icons.keyboard_return_outlined;
     } else {
       statusColor = AppTheme.transactionSuccess;
       statusLabel = 'COMPLETADA';
+      statusIcon = Icons.check_circle_outline;
     }
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Card(
-          elevation: 0,
-          margin: EdgeInsets.zero,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-            side: BorderSide(color: cs.outlineVariant.withValues(alpha: 0.5)),
+    // Modern Stat Card Design
+    return Container(
+      decoration: BoxDecoration(
+        color: statusColor.withValues(alpha: 0.05),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: statusColor.withValues(alpha: 0.15)),
+      ),
+      child: Stack(
+        children: [
+          // Background Icon Watermark
+          Positioned(
+            right: -20,
+            top: -20,
+            child: Opacity(
+              opacity: 0.05,
+              child: Icon(statusIcon, size: 150, color: statusColor),
+            ),
           ),
-          child: Padding(
-            padding: const EdgeInsets.all(16),
+
+          Padding(
+            padding: const EdgeInsets.all(24),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // Top Row: Folio Badge and Status
                 Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color: cs.surface,
+                        borderRadius: BorderRadius.circular(8),
+                        boxShadow: [
+                          BoxShadow(
+                            color: cs.shadow.withValues(alpha: 0.05),
+                            blurRadius: 4,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: Row(
                         children: [
+                          Icon(
+                            Icons.receipt_long,
+                            size: 16,
+                            color: cs.onSurfaceVariant,
+                          ),
+                          const SizedBox(width: 8),
                           Text(
                             sale.saleNumber,
-                            style: tt.titleLarge?.copyWith(
+                            style: tt.bodyMedium?.copyWith(
+                              fontFamily: 'monospace',
                               fontWeight: FontWeight.bold,
                               letterSpacing: -0.5,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            dateFormat.format(sale.saleDate),
-                            style: tt.bodySmall?.copyWith(
-                              color: cs.onSurfaceVariant,
                             ),
                           ),
                         ],
                       ),
                     ),
-                    _StatusBadge(color: statusColor, label: statusLabel),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color: statusColor,
+                        borderRadius: BorderRadius.circular(20),
+                        boxShadow: [
+                          BoxShadow(
+                            color: statusColor.withValues(alpha: 0.3),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(statusIcon, size: 14, color: Colors.white),
+                          const SizedBox(width: 6),
+                          Text(
+                            statusLabel,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: 0.5,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ],
                 ),
-                const SizedBox(height: 20),
-                _InfoItem(
-                  icon: Icons.person_outline,
-                  label: 'Cliente',
-                  value: sale.customerName ?? 'Público General',
+
+                const SizedBox(height: 24),
+
+                // Main Content Grid
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Left Column: Customer & Date
+                    Expanded(
+                      flex: 3,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _StatItem(
+                            label: 'Cliente',
+                            value: sale.customerName ?? 'Público General',
+                            icon: Icons.person_outline,
+                            color: cs.onSurface,
+                          ),
+                          const SizedBox(height: 16),
+                          _StatItem(
+                            label: 'Fecha y Hora',
+                            value: dateFormat.format(sale.saleDate),
+                            icon: Icons.calendar_today_outlined,
+                            color: cs.onSurfaceVariant,
+                            isSubtle: true,
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    // Right Column: Warehouse & Reason if cancelled
+                    Expanded(
+                      flex: 2,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _StatItem(
+                            label: 'Almacén',
+                            value: 'Almacén #${sale.warehouseId}',
+                            icon: Icons.warehouse_outlined,
+                            color: cs.onSurfaceVariant,
+                            isSubtle: true,
+                          ),
+                          if (isCancelled &&
+                              sale.cancellationReason != null) ...[
+                            const SizedBox(height: 16),
+                            _StatItem(
+                              label: 'Motivo Cancelación',
+                              value: sale.cancellationReason!,
+                              icon: Icons.info_outline,
+                              color: cs.error,
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 12),
-                _InfoItem(
-                  icon: Icons.warehouse_outlined,
-                  label: 'Almacén',
-                  value: 'Almacén #${sale.warehouseId}',
-                ),
-                if (isCancelled && sale.cancellationReason != null) ...[
-                  const SizedBox(height: 16),
-                  _InfoItem(
-                    icon: Icons.cancel_outlined,
-                    label: 'Motivo de cancelación',
-                    value: sale.cancellationReason!,
-                    isError: true,
-                  ),
-                ],
               ],
             ),
           ),
-        ),
-      ],
-    );
-  }
-}
-
-class _StatusBadge extends StatelessWidget {
-  final Color color;
-  final String label;
-
-  const _StatusBadge({required this.color, required this.label});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: color.withValues(alpha: 0.2)),
-      ),
-      child: Text(
-        label,
-        style: TextStyle(
-          fontSize: 10,
-          fontWeight: FontWeight.w900,
-          color: color,
-          letterSpacing: 0.5,
-        ),
+        ],
       ),
     );
   }
 }
 
-class _InfoItem extends StatelessWidget {
-  final IconData icon;
+class _StatItem extends StatelessWidget {
   final String label;
   final String value;
-  final bool isError;
+  final IconData icon;
+  final Color color;
+  final bool isSubtle;
 
-  const _InfoItem({
-    required this.icon,
+  const _StatItem({
     required this.label,
     required this.value,
-    this.isError = false,
+    required this.icon,
+    required this.color,
+    this.isSubtle = false,
   });
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final cs = theme.colorScheme;
     final tt = theme.textTheme;
 
     return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(icon, size: 18, color: isError ? cs.error : cs.onSurfaceVariant),
+        Icon(
+          icon,
+          size: 18,
+          color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
+        ),
         const SizedBox(width: 12),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              label,
-              style: tt.labelSmall?.copyWith(color: cs.onSurfaceVariant),
-            ),
-            Text(
-              value,
-              style: tt.bodyLarge?.copyWith(
-                fontWeight: FontWeight.w500,
-                color: isError ? cs.error : cs.onSurface,
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label,
+                style: tt.labelSmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                  letterSpacing: 0.5,
+                ),
               ),
-            ),
-          ],
+              const SizedBox(height: 2),
+              Text(
+                value,
+                style: isSubtle
+                    ? tt.bodyMedium?.copyWith(color: color)
+                    : tt.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: color,
+                      ),
+              ),
+            ],
+          ),
         ),
       ],
     );

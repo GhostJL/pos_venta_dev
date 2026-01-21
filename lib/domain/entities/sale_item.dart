@@ -16,6 +16,8 @@ class SaleItem {
   final int? lotId;
   final String? productName; // For display convenience
   final String? variantDescription;
+  final String? variantName; // Variant name for display
+  final String? sku; // Product SKU for identification
 
   const SaleItem({
     this.id,
@@ -33,6 +35,8 @@ class SaleItem {
     this.lotId,
     this.productName,
     this.variantDescription,
+    this.variantName,
+    this.sku,
     this.taxes = const [],
     this.unitsPerPack = 1.0,
   });
@@ -62,6 +66,8 @@ class SaleItem {
     int? lotId,
     String? productName,
     String? variantDescription,
+    String? variantName,
+    String? sku,
     List<SaleItemTax>? taxes,
     double? unitsPerPack,
   }) {
@@ -81,6 +87,8 @@ class SaleItem {
       lotId: lotId ?? this.lotId,
       productName: productName ?? this.productName,
       variantDescription: variantDescription ?? this.variantDescription,
+      variantName: variantName ?? this.variantName,
+      sku: sku ?? this.sku,
       taxes: taxes ?? this.taxes,
       unitsPerPack: unitsPerPack ?? this.unitsPerPack,
     );

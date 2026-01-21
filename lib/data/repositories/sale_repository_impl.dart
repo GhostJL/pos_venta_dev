@@ -106,6 +106,10 @@ class SaleRepositoryImpl implements SaleRepository {
         db.products,
         db.products.id.equalsExp(db.saleItems.productId),
       ),
+      leftOuterJoin(
+        db.productVariants,
+        db.productVariants.id.equalsExp(db.saleItems.variantId),
+      ),
     ])..where(db.saleItems.saleId.equals(saleId));
 
     final rows = await query.get();
@@ -114,6 +118,7 @@ class SaleRepositoryImpl implements SaleRepository {
     for (final row in rows) {
       final itemRow = row.readTable(db.saleItems);
       final productRow = row.readTableOrNull(db.products);
+      final variantRow = row.readTableOrNull(db.productVariants);
 
       // Get taxes for item
       final taxesRows = await (db.select(
@@ -148,6 +153,8 @@ class SaleRepositoryImpl implements SaleRepository {
           costPriceCents: itemRow.costPriceCents,
           lotId: itemRow.lotId,
           productName: productRow?.name,
+          variantName: variantRow?.variantName,
+          sku: productRow?.code,
           taxes: taxes,
         ),
       );
