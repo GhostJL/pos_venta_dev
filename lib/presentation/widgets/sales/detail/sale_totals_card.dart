@@ -69,6 +69,25 @@ class SaleTotalsCard extends StatelessWidget {
                 ),
               ],
             ),
+            if (sale.amountPaidCents >= sale.totalCents) ...[
+              const SizedBox(height: 16),
+              _buildTotalRow(
+                context,
+                'Pagado',
+                sale.amountPaidCents / 100,
+                isBold: true,
+              ),
+              if (sale.amountPaidCents > sale.totalCents) ...[
+                const SizedBox(height: 8),
+                _buildTotalRow(
+                  context,
+                  'Cambio',
+                  (sale.amountPaidCents - sale.totalCents) / 100,
+                  isChange: true,
+                  isBold: true,
+                ),
+              ],
+            ],
           ],
         ),
       ),
@@ -80,7 +99,18 @@ class SaleTotalsCard extends StatelessWidget {
     String label,
     double amount, {
     bool isDiscount = false,
+    bool isChange = false,
+    bool isBold = false,
   }) {
+    Color? valueColor;
+    if (isDiscount) {
+      valueColor = Theme.of(context).colorScheme.tertiary;
+    } else if (isChange) {
+      valueColor = Theme.of(context).colorScheme.primary;
+    } else {
+      valueColor = Theme.of(context).colorScheme.onSurface;
+    }
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -88,6 +118,7 @@ class SaleTotalsCard extends StatelessWidget {
           label,
           style: TextStyle(
             fontSize: 14,
+            fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
             color: Theme.of(context).colorScheme.onSurfaceVariant,
           ),
         ),
@@ -95,10 +126,8 @@ class SaleTotalsCard extends StatelessWidget {
           '${isDiscount ? '-' : ''}\$${amount.toStringAsFixed(2)}',
           style: TextStyle(
             fontSize: 14,
-            fontWeight: FontWeight.w600,
-            color: isDiscount
-                ? Theme.of(context).colorScheme.tertiary
-                : Theme.of(context).colorScheme.onSurface,
+            fontWeight: isBold ? FontWeight.bold : FontWeight.w600,
+            color: valueColor,
             letterSpacing: -0.2,
           ),
         ),

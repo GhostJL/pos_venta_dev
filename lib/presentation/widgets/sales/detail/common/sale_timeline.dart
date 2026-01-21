@@ -151,7 +151,7 @@ class _TimelineItem extends StatelessWidget {
     switch (event.type) {
       case _TimelineEventType.created:
         icon = Icons.flag_outlined;
-        color = cs.primary;
+        color = cs.onPrimaryContainer;
         bgColor = cs.primaryContainer;
         break;
       case _TimelineEventType.payment:

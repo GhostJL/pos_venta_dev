@@ -87,7 +87,9 @@ class _ReturnItemsSelectorState extends ConsumerState<ReturnItemsSelector> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    item.productName ?? 'Producto #${item.productId}',
+                    item.variantName != null
+                        ? '${item.productName} - ${item.variantName}'
+                        : item.productName ?? 'Producto #${item.productId}',
                     style: TextStyle(
                       fontSize: 14,
                       color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -175,7 +177,10 @@ class _ReturnItemsSelectorState extends ConsumerState<ReturnItemsSelector> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          item.productName ?? 'Producto #${item.productId}',
+                          item.variantName != null
+                              ? '${item.productName} - ${item.variantName}'
+                              : item.productName ??
+                                    'Producto #${item.productId}',
                           style: TextStyle(
                             fontSize: 15,
                             fontWeight: FontWeight.w600,

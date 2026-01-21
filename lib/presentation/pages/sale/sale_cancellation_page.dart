@@ -385,7 +385,7 @@ class _ReasonCard extends StatelessWidget {
               Icon(
                 icon,
                 size: 28,
-                color: isSelected ? cs.primary : cs.onSurfaceVariant,
+                color: isSelected ? cs.onPrimaryContainer : cs.onSurfaceVariant,
               ),
               const SizedBox(height: 8),
               Text(

@@ -39,7 +39,7 @@ class SaleDetailDesktopLayout extends StatelessWidget {
                       ),
                       child: Icon(
                         Icons.inventory_2_outlined,
-                        color: cs.primary,
+                        color: cs.onPrimaryContainer,
                         size: 20,
                       ),
                     ),

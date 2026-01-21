@@ -7,6 +7,9 @@ import 'package:posventa/domain/entities/sale.dart';
 import 'package:posventa/presentation/providers/return_processing_provider.dart';
 import 'package:posventa/presentation/widgets/sales/common/sale_payment_method_chip.dart';
 import 'package:posventa/presentation/widgets/sales/common/sale_status_badge.dart';
+import 'package:posventa/domain/usecases/sale/print_sale_ticket_use_case.dart';
+import 'package:posventa/presentation/providers/auth_provider.dart';
+import 'package:posventa/presentation/providers/di/sale_di.dart';
 
 /// Desktop-optimized sale card styled as an interactive data row
 class SaleCardDesktop extends ConsumerStatefulWidget {
@@ -329,10 +332,9 @@ class _SaleCardDesktopState extends ConsumerState<SaleCardDesktop> {
                           IconButton(
                             icon: const Icon(Icons.print_outlined),
                             iconSize: 20,
-                            tooltip: 'Imprimir',
-                            onPressed: () {
-                              // TODO: Implement quick print
-                            },
+                            tooltip: 'Imprimir Ticket',
+                            onPressed: () =>
+                                _printTicket(context, ref, widget.sale),
                           ),
                         IconButton(
                           icon: const Icon(Icons.arrow_forward),
@@ -351,5 +353,54 @@ class _SaleCardDesktopState extends ConsumerState<SaleCardDesktop> {
         ),
       ),
     );
+  }
+
+  Future<void> _printTicket(
+    BuildContext context,
+    WidgetRef ref,
+    Sale sale,
+  ) async {
+    try {
+      final useCase = await ref.read(printSaleTicketUseCaseProvider.future);
+      final result = await useCase.execute(
+        sale: sale,
+        cashier: ref.read(authProvider).user,
+      );
+
+      if (!context.mounted) return;
+
+      switch (result) {
+        case TicketPrinted():
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Ticket enviado a imprimir'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        case TicketPdfSaved(:final path):
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Ticket guardado como PDF en: $path'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        case TicketPrintFailure(:final message):
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Error al imprimir: $message'),
+              backgroundColor: Colors.red,
+            ),
+          );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error inesperado: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 }

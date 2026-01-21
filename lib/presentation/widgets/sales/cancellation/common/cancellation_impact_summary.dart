@@ -59,7 +59,10 @@ class CancellationImpactSummary extends StatelessWidget {
                       children: [
                         Expanded(
                           child: Text(
-                            item.productName ?? 'Producto #${item.productId}',
+                            item.variantName != null
+                                ? '${item.productName} - ${item.variantName}'
+                                : item.productName ??
+                                      'Producto #${item.productId}',
                             style: tt.bodyMedium,
                           ),
                         ),
