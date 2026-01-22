@@ -34,8 +34,25 @@ class InventoryRepositoryImpl implements InventoryRepository {
   Future<List<Inventory>> getAllInventory() async {
     final rows = await db.select(db.inventory).get();
 
+    // Fetch variants to filter out 'purchase' type (Show only Sales variants)
+    final variants = await db.select(db.productVariants).get();
+    final purchaseVariantIds = variants
+        .where((v) => v.type == 'purchase')
+        .map((v) => v.id)
+        .toSet();
+
+    final filteredRows = rows
+        .where(
+          (row) =>
+              row.variantId == null ||
+              !purchaseVariantIds.contains(row.variantId),
+        )
+        .toList();
+
     // Fetch real stock from lots to fix desync issues
-    final lots = await db.select(db.inventoryLots).get();
+    final lots = await (db.select(
+      db.inventoryLots,
+    )..where((tbl) => tbl.quantity.isBiggerThanValue(0))).get();
 
     // Group lots by key (product_id-variant_id-warehouse_id)
     final lotMap = <String, double>{};
@@ -44,7 +61,7 @@ class InventoryRepositoryImpl implements InventoryRepository {
       lotMap[key] = (lotMap[key] ?? 0) + lot.quantity;
     }
 
-    return rows.map((row) {
+    return filteredRows.map((row) {
       final key = '${row.productId}-${row.variantId}-${row.warehouseId}';
       final realQty = lotMap[key];
 

@@ -184,9 +184,13 @@ class ProductLocalDataSourceImpl implements ProductLocalDataSource {
         db.productVariants,
       )..where((tbl) => tbl.productId.isIn(productIds))).get();
       final variantIds = variants.map((v) => v.id).toList();
-      final inventoryLots = await (db.select(
-        db.inventoryLots,
-      )..where((tbl) => tbl.productId.isIn(productIds))).get();
+      final inventoryLots =
+          await (db.select(db.inventoryLots)..where(
+                (tbl) =>
+                    tbl.productId.isIn(productIds) &
+                    tbl.quantity.isBiggerThanValue(0),
+              ))
+              .get();
       final stockMap = <int, double>{}; // variantId -> quantity
       for (final lot in inventoryLots) {
         if (lot.variantId != null) {
@@ -202,7 +206,10 @@ class ProductLocalDataSourceImpl implements ProductLocalDataSource {
         // Map Variant Type enum
         VariantType vType = VariantType.sales;
         try {
-          vType = VariantType.values.firstWhere((e) => e.name == v.type);
+          vType = VariantType.values.firstWhere(
+            (e) => e.name.toLowerCase() == v.type.toLowerCase(),
+            orElse: () => VariantType.sales,
+          );
         } catch (_) {}
 
         variantsMap[v.productId]!.add(
@@ -218,7 +225,10 @@ class ProductLocalDataSourceImpl implements ProductLocalDataSource {
             isActive: v.isActive,
             isForSale: v.isForSale,
             type: vType,
-            stock: stockMap[v.id] ?? 0.0,
+            // Per requirement: Purchase variants should not show stock
+            stock: vType == VariantType.purchase
+                ? 0.0
+                : (stockMap[v.id] ?? 0.0),
             stockMin: v.stockMin,
             stockMax: v.stockMax,
             unitId: v.unitId,
@@ -346,9 +356,13 @@ class ProductLocalDataSourceImpl implements ProductLocalDataSource {
         db.productVariants,
       )..where((t) => t.productId.equals(id))).get();
       final variantIds = variants.map((v) => v.id).toList();
-      final inventoryLots = await (db.select(
-        db.inventoryLots,
-      )..where((tbl) => tbl.productId.equals(id))).get();
+      final inventoryLots =
+          await (db.select(db.inventoryLots)..where(
+                (tbl) =>
+                    tbl.productId.equals(id) &
+                    tbl.quantity.isBiggerThanValue(0),
+              ))
+              .get();
       final stockMap = <int, double>{};
       for (final lot in inventoryLots) {
         if (lot.variantId != null) {
@@ -360,7 +374,10 @@ class ProductLocalDataSourceImpl implements ProductLocalDataSource {
       final variantModels = variants.map((v) {
         VariantType vType = VariantType.sales;
         try {
-          vType = VariantType.values.firstWhere((e) => e.name == v.type);
+          vType = VariantType.values.firstWhere(
+            (e) => e.name.toLowerCase() == v.type.toLowerCase(),
+            orElse: () => VariantType.sales,
+          );
         } catch (_) {}
 
         return ProductVariantModel(
@@ -375,7 +392,8 @@ class ProductLocalDataSourceImpl implements ProductLocalDataSource {
           isActive: v.isActive,
           isForSale: v.isForSale,
           type: vType,
-          stock: stockMap[v.id] ?? 0.0,
+          // Per requirement: Purchase variants should not show stock
+          stock: vType == VariantType.purchase ? 0.0 : (stockMap[v.id] ?? 0.0),
           stockMin: v.stockMin,
           stockMax: v.stockMax,
           unitId: v.unitId,
@@ -476,6 +494,9 @@ class ProductLocalDataSourceImpl implements ProductLocalDataSource {
         }
 
         if (product.variants != null && product.variants!.isNotEmpty) {
+          // Map to accumulate stock for each variant (targetVariantId -> quantity)
+          final Map<int, double> initialStockMap = {};
+
           for (final variant in product.variants!) {
             final variantId = await db
                 .into(db.productVariants)
@@ -502,35 +523,62 @@ class ProductLocalDataSourceImpl implements ProductLocalDataSource {
                 );
 
             if ((variant.stock ?? 0) > 0) {
+              // LOGIC TO REDIRECT STOCK FOR PURCHASE VARIANTS
+              int targetVariantId = variantId;
+              double quantity = variant.stock!;
+              int unitCostCents = variant.costPriceCents;
+
+              if (variant.type == VariantType.purchase &&
+                  variant.linkedVariantId != null) {
+                targetVariantId = variant.linkedVariantId!;
+                // Apply conversion
+                if (variant.conversionFactor > 0) {
+                  quantity = quantity * variant.conversionFactor;
+                  unitCostCents =
+                      (variant.costPriceCents / variant.conversionFactor)
+                          .round();
+                }
+              }
+
               await db
                   .into(db.inventoryLots)
                   .insert(
                     InventoryLotsCompanion.insert(
                       productId: productId,
-                      variantId: Value(variantId),
+                      variantId: Value(targetVariantId),
                       warehouseId: defaultWarehouseId,
                       lotNumber: 'Inicial',
-                      quantity: Value(variant.stock!),
-                      unitCostCents: variant.costPriceCents,
-                      totalCostCents: (variant.stock! * variant.costPriceCents)
-                          .round(),
+                      quantity: Value(quantity),
+                      unitCostCents: unitCostCents,
+                      totalCostCents: (quantity * unitCostCents).round(),
                       receivedAt: Value(DateTime.now()),
                     ),
                   );
 
-              await db
-                  .into(db.inventory)
-                  .insert(
-                    InventoryCompanion.insert(
-                      productId: productId,
-                      warehouseId: defaultWarehouseId,
-                      variantId: Value(variantId),
-                      quantityOnHand: Value(variant.stock!),
-                      quantityReserved: const Value(0),
-                      updatedAt: Value(DateTime.now()),
-                    ),
-                  );
+              // Accumulate stock for the target variant
+              initialStockMap[targetVariantId] =
+                  (initialStockMap[targetVariantId] ?? 0) + quantity;
             }
+          }
+
+          // Batch Insert/Update Inventory from accumulated map
+          for (final entry in initialStockMap.entries) {
+            final vId = entry.key;
+            final qty = entry.value;
+
+            // Since this is a new product, we can safely insert
+            await db
+                .into(db.inventory)
+                .insert(
+                  InventoryCompanion.insert(
+                    productId: productId,
+                    warehouseId: defaultWarehouseId,
+                    variantId: Value(vId),
+                    quantityOnHand: Value(qty),
+                    quantityReserved: const Value(0),
+                    updatedAt: Value(DateTime.now()),
+                  ),
+                );
           }
         }
 

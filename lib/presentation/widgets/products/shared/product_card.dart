@@ -124,28 +124,31 @@ class ProductCard extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   // Stock badge
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: hasStock
-                          ? Theme.of(context).colorScheme.tertiaryContainer
-                          : Theme.of(context).colorScheme.errorContainer,
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: Text(
-                      '${effectiveStock.toStringAsFixed(0)} en stock',
-                      style: TextStyle(
+                  if (variant?.type != VariantType.purchase)
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
                         color: hasStock
-                            ? Theme.of(context).colorScheme.onTertiaryContainer
-                            : Theme.of(context).colorScheme.onErrorContainer,
-                        fontSize: 11,
-                        fontWeight: FontWeight.w600,
+                            ? Theme.of(context).colorScheme.tertiaryContainer
+                            : Theme.of(context).colorScheme.errorContainer,
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(
+                        '${effectiveStock.toStringAsFixed(0)} en stock',
+                        style: TextStyle(
+                          color: hasStock
+                              ? Theme.of(
+                                  context,
+                                ).colorScheme.onTertiaryContainer
+                              : Theme.of(context).colorScheme.onErrorContainer,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ),
-                  ),
 
                   // Precio o Costo
                   Column(

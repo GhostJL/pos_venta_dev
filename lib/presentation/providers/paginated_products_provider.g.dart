@@ -99,7 +99,7 @@ final class PaginatedProductsPageProvider
 }
 
 String _$paginatedProductsPageHash() =>
-    r'3d5767b028b7b9bb9bb10461abea93380203b3f6';
+    r'766da1a0bd64fb14e66f3b89fb0a9b171940c76a';
 
 final class PaginatedProductsPageFamily extends $Family
     with $FunctionalFamilyOverride<FutureOr<List<Product>>, int> {
