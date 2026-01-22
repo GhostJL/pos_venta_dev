@@ -25,5 +25,6 @@ abstract class InventoryRepository {
     required int userId,
     String? reason,
   });
+  Future<void> recalculateInventory(int productId);
   Future<void> resetAllInventory();
 }

@@ -49,34 +49,13 @@ class InventoryRepositoryImpl implements InventoryRepository {
         )
         .toList();
 
-    // Fetch real stock from lots to fix desync issues
-    final lots = await (db.select(
-      db.inventoryLots,
-    )..where((tbl) => tbl.quantity.isBiggerThanValue(0))).get();
-
-    // Group lots by key (product_id-variant_id-warehouse_id)
-    final lotMap = <String, double>{};
-    for (var lot in lots) {
-      final key = '${lot.productId}-${lot.variantId}-${lot.warehouseId}';
-      lotMap[key] = (lotMap[key] ?? 0) + lot.quantity;
-    }
-
-    return filteredRows.map((row) {
-      final key = '${row.productId}-${row.variantId}-${row.warehouseId}';
-      final realQty = lotMap[key];
-
-      // Use real quantity from lots if available, otherwise fallback to row
-      // Actually, if we use inventory management (lots), we should trust lots.
-      // If no lots exist for this item, realQty is null.
-      // If realQty is null, it means 0 stock in lots?
-      // If the product track inventory, it means 0.
-
+    return filteredRows.map<Inventory>((row) {
       return InventoryModel(
         id: row.id,
         productId: row.productId,
         warehouseId: row.warehouseId,
         variantId: row.variantId,
-        quantityOnHand: realQty ?? row.quantityOnHand,
+        quantityOnHand: row.quantityOnHand,
         quantityReserved: row.quantityReserved,
         updatedAt: row.updatedAt,
       );
@@ -178,7 +157,7 @@ class InventoryRepositoryImpl implements InventoryRepository {
       db.inventory,
     )..where((t) => t.productId.equals(productId))).get();
     return rows
-        .map(
+        .map<Inventory>(
           (row) => InventoryModel(
             id: row.id,
             productId: row.productId,
@@ -198,7 +177,7 @@ class InventoryRepositoryImpl implements InventoryRepository {
       db.inventory,
     )..where((t) => t.warehouseId.equals(warehouseId))).get();
     return rows
-        .map(
+        .map<Inventory>(
           (row) => InventoryModel(
             id: row.id,
             productId: row.productId,
@@ -467,6 +446,90 @@ class InventoryRepositoryImpl implements InventoryRepository {
               movementDate: Value(DateTime.now()),
             ),
           );
+    });
+  }
+
+  @override
+  Future<void> recalculateInventory(int productId) async {
+    await db.transaction(() async {
+      // 1. Fetch all lots for the product
+      final lots = await (db.select(
+        db.inventoryLots,
+      )..where((t) => t.productId.equals(productId))).get();
+
+      // 2. Aggregate quantity by (variant, warehouse)
+      final aggregated = <String, double>{};
+      for (final lot in lots) {
+        final key = '${lot.variantId}-${lot.warehouseId}';
+        aggregated[key] = (aggregated[key] ?? 0) + lot.quantity;
+      }
+
+      // 3. Update or Insert Inventory records
+      // First, get existing inventory records for this product
+      final existingInventory = await (db.select(
+        db.inventory,
+      )..where((t) => t.productId.equals(productId))).get();
+
+      final existingMap = <String, drift_db.InventoryData>{};
+      for (final item in existingInventory) {
+        final key = '${item.variantId}-${item.warehouseId}';
+        existingMap[key] = item;
+      }
+
+      // Process aggregated data
+      for (final entry in aggregated.entries) {
+        final parts = entry.key.split('-');
+        final variantId = parts[0] == 'null' ? null : int.parse(parts[0]);
+        final warehouseId = int.parse(parts[1]);
+        final quantity = entry.value;
+
+        // Check if exists
+        final existingItem = existingMap[entry.key];
+
+        if (existingItem != null) {
+          // Update
+          if (existingItem.quantityOnHand != quantity) {
+            await (db.update(
+              db.inventory,
+            )..where((t) => t.id.equals(existingItem.id))).write(
+              drift_db.InventoryCompanion(
+                quantityOnHand: Value(quantity),
+                updatedAt: Value(DateTime.now()),
+              ),
+            );
+          }
+          // Remove from map to track what's handled
+          existingMap.remove(entry.key);
+        } else {
+          // Insert
+          await db
+              .into(db.inventory)
+              .insert(
+                drift_db.InventoryCompanion.insert(
+                  productId: productId,
+                  warehouseId: warehouseId,
+                  variantId: Value(variantId),
+                  quantityOnHand: Value(quantity),
+                  quantityReserved: const Value(0),
+                  updatedAt: Value(DateTime.now()),
+                ),
+              );
+        }
+      }
+
+      // 4. Handle remaining existing items (entry in inventory but no lots -> stock 0)
+      for (final item in existingMap.values) {
+        if (item.quantityOnHand != 0) {
+          await (db.update(
+            db.inventory,
+          )..where((t) => t.id.equals(item.id))).write(
+            drift_db.InventoryCompanion(
+              quantityOnHand: const Value(0),
+              updatedAt: Value(DateTime.now()),
+            ),
+          );
+        }
+      }
     });
   }
 

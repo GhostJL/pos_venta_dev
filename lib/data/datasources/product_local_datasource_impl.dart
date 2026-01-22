@@ -184,18 +184,14 @@ class ProductLocalDataSourceImpl implements ProductLocalDataSource {
         db.productVariants,
       )..where((tbl) => tbl.productId.isIn(productIds))).get();
       final variantIds = variants.map((v) => v.id).toList();
-      final inventoryLots =
-          await (db.select(db.inventoryLots)..where(
-                (tbl) =>
-                    tbl.productId.isIn(productIds) &
-                    tbl.quantity.isBiggerThanValue(0),
-              ))
-              .get();
+      final inventoryItems = await (db.select(
+        db.inventory,
+      )..where((tbl) => tbl.productId.isIn(productIds))).get();
       final stockMap = <int, double>{}; // variantId -> quantity
-      for (final lot in inventoryLots) {
-        if (lot.variantId != null) {
-          final vId = lot.variantId!;
-          stockMap[vId] = (stockMap[vId] ?? 0) + lot.quantity;
+      for (final item in inventoryItems) {
+        if (item.variantId != null) {
+          final vId = item.variantId!;
+          stockMap[vId] = (stockMap[vId] ?? 0) + item.quantityOnHand;
         }
       }
 
@@ -356,18 +352,14 @@ class ProductLocalDataSourceImpl implements ProductLocalDataSource {
         db.productVariants,
       )..where((t) => t.productId.equals(id))).get();
       final variantIds = variants.map((v) => v.id).toList();
-      final inventoryLots =
-          await (db.select(db.inventoryLots)..where(
-                (tbl) =>
-                    tbl.productId.equals(id) &
-                    tbl.quantity.isBiggerThanValue(0),
-              ))
-              .get();
+      final inventoryItems = await (db.select(
+        db.inventory,
+      )..where((tbl) => tbl.productId.equals(id))).get();
       final stockMap = <int, double>{};
-      for (final lot in inventoryLots) {
-        if (lot.variantId != null) {
-          final vId = lot.variantId!;
-          stockMap[vId] = (stockMap[vId] ?? 0) + lot.quantity;
+      for (final item in inventoryItems) {
+        if (item.variantId != null) {
+          final vId = item.variantId!;
+          stockMap[vId] = (stockMap[vId] ?? 0) + item.quantityOnHand;
         }
       }
 

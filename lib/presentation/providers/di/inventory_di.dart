@@ -27,6 +27,8 @@ import 'package:posventa/domain/use_cases/inventory_movement/get_inventory_movem
 import 'package:posventa/domain/use_cases/inventory_movement/get_inventory_movements_by_date_range.dart';
 import 'package:posventa/presentation/providers/di/core_di.dart';
 import 'package:posventa/domain/services/stock_validator_service.dart';
+import 'package:posventa/domain/services/stock_synchronizer.dart';
+import 'package:posventa/presentation/providers/di/product_di.dart';
 
 part 'inventory_di.g.dart';
 
@@ -34,7 +36,13 @@ part 'inventory_di.g.dart';
 
 @riverpod
 StockValidatorService stockValidatorService(ref) =>
-    StockValidatorService(ref.watch(inventoryLotRepositoryProvider));
+    StockValidatorService(ref.watch(inventoryRepositoryProvider));
+
+@riverpod
+StockSynchronizer stockSynchronizer(ref) => StockSynchronizer(
+  ref.watch(inventoryRepositoryProvider),
+  ref.watch(productRepositoryProvider),
+);
 
 // --- Warehouse Providers ---
 

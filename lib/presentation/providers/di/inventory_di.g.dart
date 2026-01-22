@@ -55,7 +55,54 @@ final class StockValidatorServiceProvider
 }
 
 String _$stockValidatorServiceHash() =>
-    r'15ddf48af5b37032ef1bba98e9be1065d544d6a2';
+    r'0442389d7ee47859c476708be66bfa11caccf91d';
+
+@ProviderFor(stockSynchronizer)
+const stockSynchronizerProvider = StockSynchronizerProvider._();
+
+final class StockSynchronizerProvider
+    extends
+        $FunctionalProvider<
+          StockSynchronizer,
+          StockSynchronizer,
+          StockSynchronizer
+        >
+    with $Provider<StockSynchronizer> {
+  const StockSynchronizerProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'stockSynchronizerProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$stockSynchronizerHash();
+
+  @$internal
+  @override
+  $ProviderElement<StockSynchronizer> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  StockSynchronizer create(Ref ref) {
+    return stockSynchronizer(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(StockSynchronizer value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<StockSynchronizer>(value),
+    );
+  }
+}
+
+String _$stockSynchronizerHash() => r'c4f03a6e7ee10ad41423b7fa8a7ce79cb97fdcc9';
 
 @ProviderFor(warehouseRepository)
 const warehouseRepositoryProvider = WarehouseRepositoryProvider._();

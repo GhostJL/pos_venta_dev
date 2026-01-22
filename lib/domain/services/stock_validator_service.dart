@@ -3,12 +3,13 @@ import 'package:posventa/domain/entities/product_variant.dart';
 import 'package:posventa/domain/entities/sale_item.dart';
 import 'package:posventa/core/error/domain_exceptions.dart';
 import 'package:posventa/core/error/error_reporter.dart';
-import 'package:posventa/domain/repositories/inventory_lot_repository.dart';
+import 'package:posventa/domain/entities/inventory.dart';
+import 'package:posventa/domain/repositories/inventory_repository.dart';
 
 class StockValidatorService {
-  final InventoryLotRepository _lotRepository;
+  final InventoryRepository _inventoryRepository;
 
-  StockValidatorService(this._lotRepository);
+  StockValidatorService(this._inventoryRepository);
 
   double _round(double value) {
     return double.parse(value.toStringAsFixed(6));
@@ -30,13 +31,22 @@ class StockValidatorService {
       // Ideally this should come from the current session context passed to this method
       const int warehouseId = 1;
 
-      // Check real stock from lots to match sale deduction logic
-      final lots = await _lotRepository.getAvailableLots(
+      // Check real stock from Inventory table (Single Source of Truth)
+      final inventoryList = await _inventoryRepository.getInventoryByProduct(
         product.id!,
-        warehouseId,
-        variantId: variant?.id,
       );
-      availableStock = lots.fold(0.0, (sum, lot) => sum + lot.quantity);
+
+      final inventory = inventoryList.firstWhere(
+        (i) => i.warehouseId == warehouseId && i.variantId == variant?.id,
+        orElse: () => Inventory(
+          productId: product.id!,
+          warehouseId: warehouseId,
+          variantId: variant?.id,
+          quantityOnHand: 0.0,
+        ),
+      );
+
+      availableStock = inventory.quantityOnHand;
 
       // Verify against cached stock as a secondary check or for display consistency?
       // No, let's trust lots as they are the source of truth for sales.

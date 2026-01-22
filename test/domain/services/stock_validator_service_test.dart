@@ -1,19 +1,21 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:posventa/domain/entities/product.dart';
-import 'package:posventa/domain/entities/inventory_lot.dart';
+import 'package:posventa/domain/repositories/inventory_repository.dart';
+import 'package:posventa/domain/entities/inventory.dart';
 import 'package:posventa/domain/services/stock_validator_service.dart';
-import 'package:posventa/domain/repositories/inventory_lot_repository.dart';
 
-class FakeInventoryLotRepository extends Fake
-    implements InventoryLotRepository {
+class FakeInventoryRepository extends Fake implements InventoryRepository {
   @override
-  Future<List<InventoryLot>> getAvailableLots(
-    int productId,
-    int warehouseId, {
-    int? variantId,
-  }) async {
-    // Return mock data if needed for specific tests
-    return [];
+  Future<List<Inventory>> getInventoryByProduct(int productId) async {
+    return [
+      Inventory(
+        id: 1,
+        productId: productId,
+        warehouseId: 1,
+        quantityOnHand: 10.0,
+        updatedAt: DateTime.now(),
+      ),
+    ];
   }
 }
 
@@ -22,7 +24,7 @@ void main() {
   late Product testProduct;
 
   setUp(() {
-    service = StockValidatorService(FakeInventoryLotRepository());
+    service = StockValidatorService(FakeInventoryRepository());
     testProduct = Product(
       id: 1,
       code: 'TEST001',
