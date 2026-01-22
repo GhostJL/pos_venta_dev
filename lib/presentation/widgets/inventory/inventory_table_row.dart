@@ -54,9 +54,9 @@ class _InventoryTableRowState extends ConsumerState<InventoryTableRow> {
         minStock > 0 &&
         stock <= (minStock * 1.25);
 
-    // Filter lots to get count
+    // Filter lots to get count (Using availableLots to count only active ones)
     final lotsAsync = ref.watch(
-      productLotsProvider(
+      availableLotsProvider(
         widget.inventory.productId,
         widget.inventory.warehouseId,
       ),

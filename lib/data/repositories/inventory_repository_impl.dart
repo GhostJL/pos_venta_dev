@@ -49,17 +49,20 @@ class InventoryRepositoryImpl implements InventoryRepository {
         )
         .toList();
 
-    return filteredRows.map<Inventory>((row) {
-      return InventoryModel(
-        id: row.id,
-        productId: row.productId,
-        warehouseId: row.warehouseId,
-        variantId: row.variantId,
-        quantityOnHand: row.quantityOnHand,
-        quantityReserved: row.quantityReserved,
-        updatedAt: row.updatedAt,
-      );
-    }).toList();
+    return filteredRows
+        .map<Inventory>((row) {
+          return InventoryModel(
+            id: row.id,
+            productId: row.productId,
+            warehouseId: row.warehouseId,
+            variantId: row.variantId,
+            quantityOnHand: row.quantityOnHand,
+            quantityReserved: row.quantityReserved,
+            updatedAt: row.updatedAt,
+          );
+        })
+        .where((inv) => inv.quantityOnHand > 0.0001)
+        .toList();
   }
 
   @override
