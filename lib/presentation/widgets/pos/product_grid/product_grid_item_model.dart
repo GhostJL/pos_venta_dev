@@ -5,8 +5,9 @@ import 'package:posventa/domain/entities/product_variant.dart';
 class ProductGridItem {
   final Product product;
   final ProductVariant? variant;
+  final double? realStock;
 
-  ProductGridItem({required this.product, this.variant});
+  ProductGridItem({required this.product, this.variant, this.realStock});
 
   String get displayName {
     if (variant != null) {

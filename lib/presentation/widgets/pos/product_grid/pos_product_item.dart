@@ -18,6 +18,7 @@ class PosProductItem extends ConsumerStatefulWidget {
   final VoidCallback? onDelete; // Used for Delete
   final VoidCallback onLongPress;
   final bool isFocused;
+  final double? displayedStock;
 
   const PosProductItem({
     super.key,
@@ -29,6 +30,7 @@ class PosProductItem extends ConsumerStatefulWidget {
     this.onDelete,
     required this.onLongPress,
     this.isFocused = false,
+    this.displayedStock,
   });
 
   @override
@@ -52,9 +54,12 @@ class _PosProductItemState extends ConsumerState<PosProductItem> {
     final colorScheme = theme.colorScheme;
 
     // Determine effective stock
-    final int stock = widget.variant != null
-        ? (widget.variant!.stock ?? 0).toInt()
-        : (widget.product.stock ?? 0);
+    // Use displayedStock (Real Stock) if available, otherwise fallback to cache
+    final int stock = widget.displayedStock != null
+        ? widget.displayedStock!.toInt()
+        : (widget.variant != null
+              ? (widget.variant!.stock ?? 0).toInt()
+              : (widget.product.stock ?? 0));
 
     // Calculate Gross Price
     // Global Settings

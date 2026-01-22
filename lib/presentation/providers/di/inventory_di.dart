@@ -33,7 +33,8 @@ part 'inventory_di.g.dart';
 // --- Stock Validator ---
 
 @riverpod
-StockValidatorService stockValidatorService(ref) => StockValidatorService();
+StockValidatorService stockValidatorService(ref) =>
+    StockValidatorService(ref.watch(inventoryLotRepositoryProvider));
 
 // --- Warehouse Providers ---
 

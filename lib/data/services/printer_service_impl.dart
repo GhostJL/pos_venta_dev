@@ -174,7 +174,12 @@ class PrinterServiceImpl implements PrinterService {
     for (final item in ticketData.items) {
       bytes += generator.row([
         PosColumn(text: item.quantity.toStringAsFixed(0), width: 2),
-        PosColumn(text: item.productName ?? '', width: 7),
+        PosColumn(
+          text: item.variantName != null
+              ? '${item.productName ?? ''} - ${item.variantName}'
+              : item.productName ?? '',
+          width: 7,
+        ),
         PosColumn(
           text: '\$${(item.totalCents / 100).toStringAsFixed(2)}',
           width: 3,

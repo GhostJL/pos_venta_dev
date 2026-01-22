@@ -184,13 +184,15 @@ class ProductLocalDataSourceImpl implements ProductLocalDataSource {
         db.productVariants,
       )..where((tbl) => tbl.productId.isIn(productIds))).get();
       final variantIds = variants.map((v) => v.id).toList();
-      final inventory = await (db.select(
-        db.inventory,
-      )..where((tbl) => tbl.variantId.isIn(variantIds))).get();
+      final inventoryLots = await (db.select(
+        db.inventoryLots,
+      )..where((tbl) => tbl.productId.isIn(productIds))).get();
       final stockMap = <int, double>{}; // variantId -> quantity
-      for (final inv in inventory) {
-        final vId = inv.variantId!;
-        stockMap[vId] = (stockMap[vId] ?? 0) + inv.quantityOnHand;
+      for (final lot in inventoryLots) {
+        if (lot.variantId != null) {
+          final vId = lot.variantId!;
+          stockMap[vId] = (stockMap[vId] ?? 0) + lot.quantity;
+        }
       }
 
       final variantsMap = <int, List<ProductVariantModel>>{};
@@ -344,13 +346,15 @@ class ProductLocalDataSourceImpl implements ProductLocalDataSource {
         db.productVariants,
       )..where((t) => t.productId.equals(id))).get();
       final variantIds = variants.map((v) => v.id).toList();
-      final inventory = await (db.select(
-        db.inventory,
-      )..where((tbl) => tbl.variantId.isIn(variantIds))).get();
+      final inventoryLots = await (db.select(
+        db.inventoryLots,
+      )..where((tbl) => tbl.productId.equals(id))).get();
       final stockMap = <int, double>{};
-      for (final inv in inventory) {
-        final vId = inv.variantId!;
-        stockMap[vId] = (stockMap[vId] ?? 0) + inv.quantityOnHand;
+      for (final lot in inventoryLots) {
+        if (lot.variantId != null) {
+          final vId = lot.variantId!;
+          stockMap[vId] = (stockMap[vId] ?? 0) + lot.quantity;
+        }
       }
 
       final variantModels = variants.map((v) {

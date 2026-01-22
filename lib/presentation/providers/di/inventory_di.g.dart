@@ -55,7 +55,7 @@ final class StockValidatorServiceProvider
 }
 
 String _$stockValidatorServiceHash() =>
-    r'f37d240b9e261776615c8d769044168fffa33ad3';
+    r'15ddf48af5b37032ef1bba98e9be1065d544d6a2';
 
 @ProviderFor(warehouseRepository)
 const warehouseRepositoryProvider = WarehouseRepositoryProvider._();

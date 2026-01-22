@@ -48,4 +48,4 @@ final class PosGridItemsProvider
   }
 }
 
-String _$posGridItemsHash() => r'e5726bc0f44c0fdc023a7a3fb6e1284d4bbcfc3d';
+String _$posGridItemsHash() => r'1787aa0ece6cc1a149c74d93eef36e52af1ab8f9';

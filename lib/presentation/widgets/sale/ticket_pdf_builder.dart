@@ -234,7 +234,9 @@ class TicketPdfBuilder {
                     children: [
                       // Description on top line
                       pw.Text(
-                        item.productName ?? 'Producto',
+                        item.variantName != null
+                            ? '${item.productName ?? 'Producto'} - ${item.variantName}'
+                            : item.productName ?? 'Producto',
                         style: const pw.TextStyle(fontSize: 10),
                       ),
                       // Qty x Price ..... Total

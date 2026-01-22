@@ -3,6 +3,8 @@ import 'package:posventa/presentation/widgets/pos/product_grid/product_grid_item
 import 'package:posventa/presentation/providers/di/product_di.dart';
 import 'package:posventa/presentation/providers/di/sale_di.dart';
 import 'package:posventa/presentation/providers/di/core_di.dart';
+import 'package:posventa/presentation/providers/di/inventory_di.dart';
+import 'package:posventa/presentation/providers/settings_provider.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'pos_grid_provider.g.dart';
@@ -159,6 +161,38 @@ Future<List<ProductGridItem>> posGridItems(Ref ref) async {
         }
       }
     });
+  }
+
+  // Optimize: Populate Real Stock (Lots) if Inventory Management is enabled
+  final settingsAsync = ref.watch(settingsProvider);
+  final useInventory = settingsAsync.value?.useInventory ?? true;
+
+  if (useInventory && gridItems.isNotEmpty) {
+    final lotRepository = ref.watch(inventoryLotRepositoryProvider);
+    // TODO: Get warehouseId from active session. Defaulting to 1 for now.
+    const int warehouseId = 1;
+
+    final updatedItems = await Future.wait(
+      gridItems.map((item) async {
+        try {
+          final lots = await lotRepository.getAvailableLots(
+            item.product.id!,
+            warehouseId,
+            variantId: item.variant?.id,
+          );
+          final realStock = lots.fold(0.0, (sum, lot) => sum + lot.quantity);
+          return ProductGridItem(
+            product: item.product,
+            variant: item.variant,
+            realStock: realStock,
+          );
+        } catch (e) {
+          // Fallback to cached stock if fetch fails
+          return item;
+        }
+      }),
+    );
+    gridItems = updatedItems;
   }
 
   return gridItems;

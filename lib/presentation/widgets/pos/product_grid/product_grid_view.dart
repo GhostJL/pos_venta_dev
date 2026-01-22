@@ -92,6 +92,7 @@ class ProductGridView extends StatelessWidget {
           onRemove: onItemRemove != null ? () => onItemRemove!(item) : null,
           onDelete: onItemDelete != null ? () => onItemDelete!(item) : null,
           onLongPress: () => onItemLongPress(item),
+          displayedStock: item.realStock,
         );
       },
     );

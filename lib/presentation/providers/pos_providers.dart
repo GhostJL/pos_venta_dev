@@ -25,6 +25,7 @@ import 'package:posventa/core/error/error_reporter.dart';
 
 import 'package:posventa/presentation/providers/pos_grid_provider.dart';
 import 'package:posventa/presentation/providers/paginated_products_provider.dart';
+import 'package:posventa/presentation/providers/inventory_providers.dart';
 
 import 'package:posventa/domain/entities/discount.dart';
 import 'package:posventa/presentation/providers/di/discount_di.dart';
@@ -656,6 +657,7 @@ class POSNotifier extends _$POSNotifier {
       // Invalidate dashboard metrics
       ref.invalidate(todaysRevenueProvider);
       ref.invalidate(todaysTransactionsProvider);
+      ref.invalidate(inventoryProvider);
 
       // Check stock levels and trigger notifications
       // Only runs if Inventory Management is enabled
@@ -821,6 +823,7 @@ class POSNotifier extends _$POSNotifier {
         totalCents: totalCents,
         productName: product.name,
         variantDescription: variant?.description,
+        variantName: variant?.variantName,
         taxes: taxesList,
         unitsPerPack: variant?.quantity ?? 1.0,
       );

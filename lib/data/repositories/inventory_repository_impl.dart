@@ -33,19 +33,37 @@ class InventoryRepositoryImpl implements InventoryRepository {
   @override
   Future<List<Inventory>> getAllInventory() async {
     final rows = await db.select(db.inventory).get();
-    return rows
-        .map(
-          (row) => InventoryModel(
-            id: row.id,
-            productId: row.productId,
-            warehouseId: row.warehouseId,
-            variantId: row.variantId,
-            quantityOnHand: row.quantityOnHand,
-            quantityReserved: row.quantityReserved,
-            updatedAt: row.updatedAt,
-          ),
-        )
-        .toList();
+
+    // Fetch real stock from lots to fix desync issues
+    final lots = await db.select(db.inventoryLots).get();
+
+    // Group lots by key (product_id-variant_id-warehouse_id)
+    final lotMap = <String, double>{};
+    for (var lot in lots) {
+      final key = '${lot.productId}-${lot.variantId}-${lot.warehouseId}';
+      lotMap[key] = (lotMap[key] ?? 0) + lot.quantity;
+    }
+
+    return rows.map((row) {
+      final key = '${row.productId}-${row.variantId}-${row.warehouseId}';
+      final realQty = lotMap[key];
+
+      // Use real quantity from lots if available, otherwise fallback to row
+      // Actually, if we use inventory management (lots), we should trust lots.
+      // If no lots exist for this item, realQty is null.
+      // If realQty is null, it means 0 stock in lots?
+      // If the product track inventory, it means 0.
+
+      return InventoryModel(
+        id: row.id,
+        productId: row.productId,
+        warehouseId: row.warehouseId,
+        variantId: row.variantId,
+        quantityOnHand: realQty ?? row.quantityOnHand,
+        quantityReserved: row.quantityReserved,
+        updatedAt: row.updatedAt,
+      );
+    }).toList();
   }
 
   @override

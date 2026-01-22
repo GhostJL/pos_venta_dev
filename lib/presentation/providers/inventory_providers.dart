@@ -9,8 +9,8 @@ part 'inventory_providers.g.dart';
 @Riverpod(keepAlive: true)
 class InventoryNotifier extends _$InventoryNotifier {
   @override
-  Stream<List<Inventory>> build() {
-    return ref.watch(getAllInventoryProvider).stream();
+  Future<List<Inventory>> build() async {
+    return ref.watch(getAllInventoryProvider).call();
   }
 
   Future<void> addInventory(Inventory inventory) async {

@@ -3,12 +3,14 @@ import 'package:posventa/domain/entities/product_variant.dart';
 import 'package:posventa/domain/entities/sale_item.dart';
 import 'package:posventa/core/error/domain_exceptions.dart';
 import 'package:posventa/core/error/error_reporter.dart';
+import 'package:posventa/domain/repositories/inventory_lot_repository.dart';
 
 class StockValidatorService {
+  final InventoryLotRepository _lotRepository;
+
+  StockValidatorService(this._lotRepository);
+
   double _round(double value) {
-    // Use a high precision for internal stock validation to avoid 0.1 + 0.2 != 0.3 issues
-    // while allowing for standard weight handling (e.g. 3 decimals).
-    // Using 6 decimals is generally safe for avoiding floating point drift.
     return double.parse(value.toStringAsFixed(6));
   }
 
@@ -24,13 +26,21 @@ class StockValidatorService {
     try {
       double availableStock = 0.0;
 
-      if (variant != null) {
-        availableStock = variant.stock ?? 0.0;
-      } else {
-        availableStock = product.stock == null
-            ? 0.0
-            : product.stock!.toDouble();
-      }
+      // Use a consistent warehouse ID (default 1 for now, as used in other fallback logic)
+      // Ideally this should come from the current session context passed to this method
+      const int warehouseId = 1;
+
+      // Check real stock from lots to match sale deduction logic
+      final lots = await _lotRepository.getAvailableLots(
+        product.id!,
+        warehouseId,
+        variantId: variant?.id,
+      );
+      availableStock = lots.fold(0.0, (sum, lot) => sum + lot.quantity);
+
+      // Verify against cached stock as a secondary check or for display consistency?
+      // No, let's trust lots as they are the source of truth for sales.
+      // If we used cached product.stock, we run into the bug where UI says 12 but lots are 0.
 
       // Calculate total quantity needed (existing in cart + new)
       final currentStockInCart = currentCart
@@ -57,14 +67,12 @@ class StockValidatorService {
       if (e is StockInsufficientException) {
         rethrow; // Allow domain specific exceptions to bubble up
       }
-      // Log unexpected errors but maybe don't block the sale if validation fails due to code error?
-      // Or safer to block? Let's throw an App Exception.
       AppErrorReporter().reportError(
         e,
         StackTrace.current,
         context: 'StockValidation',
       );
-      throw Exception('Error al validar stock: $e');
+      throw Exception('Error al validar stock real: $e');
     }
   }
 }
