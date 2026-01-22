@@ -100,27 +100,44 @@ class _ReturnSummaryCardState extends ConsumerState<ReturnSummaryCard> {
           child: Column(
             children: RefundMethod.values.map((method) {
               final isSelected = state.refundMethod == method;
-              return RadioListTile<RefundMethod>(
-                value: method,
-                groupValue: state.refundMethod,
-                onChanged: (val) {
-                  if (val != null) {
+              return Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: () {
                     ref
                         .read(returnProcessingProvider.notifier)
-                        .setRefundMethod(val);
-                  }
-                },
-                title: Text(method.displayName),
-                activeColor: cs.primary,
-                contentPadding: const EdgeInsets.symmetric(horizontal: 12),
-                shape: RoundedRectangleBorder(
+                        .setRefundMethod(method);
+                  },
                   borderRadius: BorderRadius.circular(8),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: isSelected
+                          ? cs.primaryContainer.withValues(alpha: 0.2)
+                          : null,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8, // VisualDensity.compact equivalent-ish
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          isSelected
+                              ? Icons.radio_button_checked
+                              : Icons.radio_button_unchecked,
+                          color: isSelected ? cs.primary : cs.onSurfaceVariant,
+                          size: 20, // Standard radio size
+                        ),
+                        const SizedBox(width: 16),
+                        Text(
+                          method.displayName,
+                          style: theme.textTheme.bodyLarge,
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
-                tileColor: isSelected
-                    ? cs.primaryContainer.withValues(alpha: 0.2)
-                    : null,
-                selected: isSelected,
-                visualDensity: VisualDensity.compact,
               );
             }).toList(),
           ),
