@@ -10475,7 +10475,7 @@ class $InventoryLotsTable extends InventoryLots
     type: DriftSqlType.int,
     requiredDuringInsert: false,
     defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'REFERENCES product_variants (id)',
+      'REFERENCES product_variants (id) ON DELETE CASCADE',
     ),
   );
   static const VerificationMeta _warehouseIdMeta = const VerificationMeta(
@@ -10509,6 +10509,18 @@ class $InventoryLotsTable extends InventoryLots
   @override
   late final GeneratedColumn<double> quantity = GeneratedColumn<double>(
     'quantity',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0.0),
+  );
+  static const VerificationMeta _originalQuantityMeta = const VerificationMeta(
+    'originalQuantity',
+  );
+  @override
+  late final GeneratedColumn<double> originalQuantity = GeneratedColumn<double>(
+    'original_quantity',
     aliasedName,
     false,
     type: DriftSqlType.double,
@@ -10569,6 +10581,7 @@ class $InventoryLotsTable extends InventoryLots
     warehouseId,
     lotNumber,
     quantity,
+    originalQuantity,
     unitCostCents,
     totalCostCents,
     expirationDate,
@@ -10626,6 +10639,15 @@ class $InventoryLotsTable extends InventoryLots
       context.handle(
         _quantityMeta,
         quantity.isAcceptableOrUnknown(data['quantity']!, _quantityMeta),
+      );
+    }
+    if (data.containsKey('original_quantity')) {
+      context.handle(
+        _originalQuantityMeta,
+        originalQuantity.isAcceptableOrUnknown(
+          data['original_quantity']!,
+          _originalQuantityMeta,
+        ),
       );
     }
     if (data.containsKey('unit_cost_cents')) {
@@ -10698,6 +10720,10 @@ class $InventoryLotsTable extends InventoryLots
         DriftSqlType.double,
         data['${effectivePrefix}quantity'],
       )!,
+      originalQuantity: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}original_quantity'],
+      )!,
       unitCostCents: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}unit_cost_cents'],
@@ -10730,6 +10756,7 @@ class InventoryLot extends DataClass implements Insertable<InventoryLot> {
   final int warehouseId;
   final String lotNumber;
   final double quantity;
+  final double originalQuantity;
   final int unitCostCents;
   final int totalCostCents;
   final DateTime? expirationDate;
@@ -10741,6 +10768,7 @@ class InventoryLot extends DataClass implements Insertable<InventoryLot> {
     required this.warehouseId,
     required this.lotNumber,
     required this.quantity,
+    required this.originalQuantity,
     required this.unitCostCents,
     required this.totalCostCents,
     this.expirationDate,
@@ -10757,6 +10785,7 @@ class InventoryLot extends DataClass implements Insertable<InventoryLot> {
     map['warehouse_id'] = Variable<int>(warehouseId);
     map['lot_number'] = Variable<String>(lotNumber);
     map['quantity'] = Variable<double>(quantity);
+    map['original_quantity'] = Variable<double>(originalQuantity);
     map['unit_cost_cents'] = Variable<int>(unitCostCents);
     map['total_cost_cents'] = Variable<int>(totalCostCents);
     if (!nullToAbsent || expirationDate != null) {
@@ -10776,6 +10805,7 @@ class InventoryLot extends DataClass implements Insertable<InventoryLot> {
       warehouseId: Value(warehouseId),
       lotNumber: Value(lotNumber),
       quantity: Value(quantity),
+      originalQuantity: Value(originalQuantity),
       unitCostCents: Value(unitCostCents),
       totalCostCents: Value(totalCostCents),
       expirationDate: expirationDate == null && nullToAbsent
@@ -10797,6 +10827,7 @@ class InventoryLot extends DataClass implements Insertable<InventoryLot> {
       warehouseId: serializer.fromJson<int>(json['warehouseId']),
       lotNumber: serializer.fromJson<String>(json['lotNumber']),
       quantity: serializer.fromJson<double>(json['quantity']),
+      originalQuantity: serializer.fromJson<double>(json['originalQuantity']),
       unitCostCents: serializer.fromJson<int>(json['unitCostCents']),
       totalCostCents: serializer.fromJson<int>(json['totalCostCents']),
       expirationDate: serializer.fromJson<DateTime?>(json['expirationDate']),
@@ -10813,6 +10844,7 @@ class InventoryLot extends DataClass implements Insertable<InventoryLot> {
       'warehouseId': serializer.toJson<int>(warehouseId),
       'lotNumber': serializer.toJson<String>(lotNumber),
       'quantity': serializer.toJson<double>(quantity),
+      'originalQuantity': serializer.toJson<double>(originalQuantity),
       'unitCostCents': serializer.toJson<int>(unitCostCents),
       'totalCostCents': serializer.toJson<int>(totalCostCents),
       'expirationDate': serializer.toJson<DateTime?>(expirationDate),
@@ -10827,6 +10859,7 @@ class InventoryLot extends DataClass implements Insertable<InventoryLot> {
     int? warehouseId,
     String? lotNumber,
     double? quantity,
+    double? originalQuantity,
     int? unitCostCents,
     int? totalCostCents,
     Value<DateTime?> expirationDate = const Value.absent(),
@@ -10838,6 +10871,7 @@ class InventoryLot extends DataClass implements Insertable<InventoryLot> {
     warehouseId: warehouseId ?? this.warehouseId,
     lotNumber: lotNumber ?? this.lotNumber,
     quantity: quantity ?? this.quantity,
+    originalQuantity: originalQuantity ?? this.originalQuantity,
     unitCostCents: unitCostCents ?? this.unitCostCents,
     totalCostCents: totalCostCents ?? this.totalCostCents,
     expirationDate: expirationDate.present
@@ -10855,6 +10889,9 @@ class InventoryLot extends DataClass implements Insertable<InventoryLot> {
           : this.warehouseId,
       lotNumber: data.lotNumber.present ? data.lotNumber.value : this.lotNumber,
       quantity: data.quantity.present ? data.quantity.value : this.quantity,
+      originalQuantity: data.originalQuantity.present
+          ? data.originalQuantity.value
+          : this.originalQuantity,
       unitCostCents: data.unitCostCents.present
           ? data.unitCostCents.value
           : this.unitCostCents,
@@ -10879,6 +10916,7 @@ class InventoryLot extends DataClass implements Insertable<InventoryLot> {
           ..write('warehouseId: $warehouseId, ')
           ..write('lotNumber: $lotNumber, ')
           ..write('quantity: $quantity, ')
+          ..write('originalQuantity: $originalQuantity, ')
           ..write('unitCostCents: $unitCostCents, ')
           ..write('totalCostCents: $totalCostCents, ')
           ..write('expirationDate: $expirationDate, ')
@@ -10895,6 +10933,7 @@ class InventoryLot extends DataClass implements Insertable<InventoryLot> {
     warehouseId,
     lotNumber,
     quantity,
+    originalQuantity,
     unitCostCents,
     totalCostCents,
     expirationDate,
@@ -10910,6 +10949,7 @@ class InventoryLot extends DataClass implements Insertable<InventoryLot> {
           other.warehouseId == this.warehouseId &&
           other.lotNumber == this.lotNumber &&
           other.quantity == this.quantity &&
+          other.originalQuantity == this.originalQuantity &&
           other.unitCostCents == this.unitCostCents &&
           other.totalCostCents == this.totalCostCents &&
           other.expirationDate == this.expirationDate &&
@@ -10923,6 +10963,7 @@ class InventoryLotsCompanion extends UpdateCompanion<InventoryLot> {
   final Value<int> warehouseId;
   final Value<String> lotNumber;
   final Value<double> quantity;
+  final Value<double> originalQuantity;
   final Value<int> unitCostCents;
   final Value<int> totalCostCents;
   final Value<DateTime?> expirationDate;
@@ -10934,6 +10975,7 @@ class InventoryLotsCompanion extends UpdateCompanion<InventoryLot> {
     this.warehouseId = const Value.absent(),
     this.lotNumber = const Value.absent(),
     this.quantity = const Value.absent(),
+    this.originalQuantity = const Value.absent(),
     this.unitCostCents = const Value.absent(),
     this.totalCostCents = const Value.absent(),
     this.expirationDate = const Value.absent(),
@@ -10946,6 +10988,7 @@ class InventoryLotsCompanion extends UpdateCompanion<InventoryLot> {
     required int warehouseId,
     required String lotNumber,
     this.quantity = const Value.absent(),
+    this.originalQuantity = const Value.absent(),
     required int unitCostCents,
     required int totalCostCents,
     this.expirationDate = const Value.absent(),
@@ -10962,6 +11005,7 @@ class InventoryLotsCompanion extends UpdateCompanion<InventoryLot> {
     Expression<int>? warehouseId,
     Expression<String>? lotNumber,
     Expression<double>? quantity,
+    Expression<double>? originalQuantity,
     Expression<int>? unitCostCents,
     Expression<int>? totalCostCents,
     Expression<DateTime>? expirationDate,
@@ -10974,6 +11018,7 @@ class InventoryLotsCompanion extends UpdateCompanion<InventoryLot> {
       if (warehouseId != null) 'warehouse_id': warehouseId,
       if (lotNumber != null) 'lot_number': lotNumber,
       if (quantity != null) 'quantity': quantity,
+      if (originalQuantity != null) 'original_quantity': originalQuantity,
       if (unitCostCents != null) 'unit_cost_cents': unitCostCents,
       if (totalCostCents != null) 'total_cost_cents': totalCostCents,
       if (expirationDate != null) 'expiration_date': expirationDate,
@@ -10988,6 +11033,7 @@ class InventoryLotsCompanion extends UpdateCompanion<InventoryLot> {
     Value<int>? warehouseId,
     Value<String>? lotNumber,
     Value<double>? quantity,
+    Value<double>? originalQuantity,
     Value<int>? unitCostCents,
     Value<int>? totalCostCents,
     Value<DateTime?>? expirationDate,
@@ -11000,6 +11046,7 @@ class InventoryLotsCompanion extends UpdateCompanion<InventoryLot> {
       warehouseId: warehouseId ?? this.warehouseId,
       lotNumber: lotNumber ?? this.lotNumber,
       quantity: quantity ?? this.quantity,
+      originalQuantity: originalQuantity ?? this.originalQuantity,
       unitCostCents: unitCostCents ?? this.unitCostCents,
       totalCostCents: totalCostCents ?? this.totalCostCents,
       expirationDate: expirationDate ?? this.expirationDate,
@@ -11028,6 +11075,9 @@ class InventoryLotsCompanion extends UpdateCompanion<InventoryLot> {
     if (quantity.present) {
       map['quantity'] = Variable<double>(quantity.value);
     }
+    if (originalQuantity.present) {
+      map['original_quantity'] = Variable<double>(originalQuantity.value);
+    }
     if (unitCostCents.present) {
       map['unit_cost_cents'] = Variable<int>(unitCostCents.value);
     }
@@ -11052,6 +11102,7 @@ class InventoryLotsCompanion extends UpdateCompanion<InventoryLot> {
           ..write('warehouseId: $warehouseId, ')
           ..write('lotNumber: $lotNumber, ')
           ..write('quantity: $quantity, ')
+          ..write('originalQuantity: $originalQuantity, ')
           ..write('unitCostCents: $unitCostCents, ')
           ..write('totalCostCents: $totalCostCents, ')
           ..write('expirationDate: $expirationDate, ')
@@ -11091,7 +11142,7 @@ class $InventoryMovementsTable extends InventoryMovements
     type: DriftSqlType.int,
     requiredDuringInsert: true,
     defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'REFERENCES products (id)',
+      'REFERENCES products (id) ON DELETE CASCADE',
     ),
   );
   static const VerificationMeta _warehouseIdMeta = const VerificationMeta(
@@ -11105,7 +11156,7 @@ class $InventoryMovementsTable extends InventoryMovements
     type: DriftSqlType.int,
     requiredDuringInsert: true,
     defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'REFERENCES warehouses (id)',
+      'REFERENCES warehouses (id) ON DELETE CASCADE',
     ),
   );
   static const VerificationMeta _variantIdMeta = const VerificationMeta(
@@ -11119,7 +11170,7 @@ class $InventoryMovementsTable extends InventoryMovements
     type: DriftSqlType.int,
     requiredDuringInsert: false,
     defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'REFERENCES product_variants (id)',
+      'REFERENCES product_variants (id) ON DELETE CASCADE',
     ),
   );
   static const VerificationMeta _movementTypeMeta = const VerificationMeta(
@@ -21539,10 +21590,38 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     ),
     WritePropagation(
       on: TableUpdateQuery.onTableName(
+        'product_variants',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('inventory_lots', kind: UpdateKind.delete)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
         'warehouses',
         limitUpdateKind: UpdateKind.delete,
       ),
       result: [TableUpdate('inventory_lots', kind: UpdateKind.delete)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'products',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('inventory_movements', kind: UpdateKind.delete)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'warehouses',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('inventory_movements', kind: UpdateKind.delete)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'product_variants',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('inventory_movements', kind: UpdateKind.delete)],
     ),
     WritePropagation(
       on: TableUpdateQuery.onTableName(
@@ -32806,6 +32885,7 @@ typedef $$InventoryLotsTableCreateCompanionBuilder =
       required int warehouseId,
       required String lotNumber,
       Value<double> quantity,
+      Value<double> originalQuantity,
       required int unitCostCents,
       required int totalCostCents,
       Value<DateTime?> expirationDate,
@@ -32819,6 +32899,7 @@ typedef $$InventoryLotsTableUpdateCompanionBuilder =
       Value<int> warehouseId,
       Value<String> lotNumber,
       Value<double> quantity,
+      Value<double> originalQuantity,
       Value<int> unitCostCents,
       Value<int> totalCostCents,
       Value<DateTime?> expirationDate,
@@ -32993,6 +33074,11 @@ class $$InventoryLotsTableFilterComposer
 
   ColumnFilters<double> get quantity => $composableBuilder(
     column: $table.quantity,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get originalQuantity => $composableBuilder(
+    column: $table.originalQuantity,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -33210,6 +33296,11 @@ class $$InventoryLotsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<double> get originalQuantity => $composableBuilder(
+    column: $table.originalQuantity,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<int> get unitCostCents => $composableBuilder(
     column: $table.unitCostCents,
     builder: (column) => ColumnOrderings(column),
@@ -33317,6 +33408,11 @@ class $$InventoryLotsTableAnnotationComposer
 
   GeneratedColumn<double> get quantity =>
       $composableBuilder(column: $table.quantity, builder: (column) => column);
+
+  GeneratedColumn<double> get originalQuantity => $composableBuilder(
+    column: $table.originalQuantity,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<int> get unitCostCents => $composableBuilder(
     column: $table.unitCostCents,
@@ -33551,6 +33647,7 @@ class $$InventoryLotsTableTableManager
                 Value<int> warehouseId = const Value.absent(),
                 Value<String> lotNumber = const Value.absent(),
                 Value<double> quantity = const Value.absent(),
+                Value<double> originalQuantity = const Value.absent(),
                 Value<int> unitCostCents = const Value.absent(),
                 Value<int> totalCostCents = const Value.absent(),
                 Value<DateTime?> expirationDate = const Value.absent(),
@@ -33562,6 +33659,7 @@ class $$InventoryLotsTableTableManager
                 warehouseId: warehouseId,
                 lotNumber: lotNumber,
                 quantity: quantity,
+                originalQuantity: originalQuantity,
                 unitCostCents: unitCostCents,
                 totalCostCents: totalCostCents,
                 expirationDate: expirationDate,
@@ -33575,6 +33673,7 @@ class $$InventoryLotsTableTableManager
                 required int warehouseId,
                 required String lotNumber,
                 Value<double> quantity = const Value.absent(),
+                Value<double> originalQuantity = const Value.absent(),
                 required int unitCostCents,
                 required int totalCostCents,
                 Value<DateTime?> expirationDate = const Value.absent(),
@@ -33586,6 +33685,7 @@ class $$InventoryLotsTableTableManager
                 warehouseId: warehouseId,
                 lotNumber: lotNumber,
                 quantity: quantity,
+                originalQuantity: originalQuantity,
                 unitCostCents: unitCostCents,
                 totalCostCents: totalCostCents,
                 expirationDate: expirationDate,

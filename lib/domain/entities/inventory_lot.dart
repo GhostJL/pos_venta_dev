@@ -7,6 +7,7 @@ class InventoryLot extends Equatable {
   final int warehouseId;
   final String lotNumber;
   final double quantity;
+  final double originalQuantity;
   final int unitCostCents;
   final int totalCostCents;
   final DateTime? expirationDate;
@@ -19,6 +20,7 @@ class InventoryLot extends Equatable {
     required this.warehouseId,
     required this.lotNumber,
     required this.quantity,
+    required this.originalQuantity,
     required this.unitCostCents,
     required this.totalCostCents,
     this.expirationDate,

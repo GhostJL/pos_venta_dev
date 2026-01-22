@@ -277,6 +277,18 @@ class ProductVariants extends Table {
       dateTime().withDefault(currentDateAndTime).named('updated_at')();
 
   @override
+  List<String> get customConstraints => [
+    "CHECK (type IN ('sales', 'purchase'))",
+    'CHECK (conversion_factor > 0)',
+    'CHECK (stock_min IS NULL OR stock_min >= 0)',
+    'CHECK (stock_max IS NULL OR stock_max >= 0)',
+    'CHECK (stock_max IS NULL OR stock_min IS NULL OR stock_max >= stock_min)',
+    'CHECK (cost_price_cents >= 0)',
+    'CHECK (sale_price_cents >= 0)',
+    'CHECK (wholesale_price_cents IS NULL OR wholesale_price_cents >= 0)',
+  ];
+
+  @override
   String get tableName => 'product_variants';
 }
 
@@ -338,6 +350,12 @@ class Inventory extends Table {
   @override
   List<String> get customConstraints => [
     'UNIQUE (product_id, warehouse_id, variant_id)',
+    'CHECK (quantity_on_hand >= 0)',
+    'CHECK (quantity_reserved >= 0)',
+    'CHECK (quantity_reserved <= quantity_on_hand)',
+    'CHECK (min_stock IS NULL OR min_stock >= 0)',
+    'CHECK (max_stock IS NULL OR max_stock >= 0)',
+    'CHECK (max_stock IS NULL OR min_stock IS NULL OR max_stock >= min_stock)',
   ];
 
   @override
@@ -352,12 +370,14 @@ class InventoryLots extends Table {
   IntColumn get variantId => integer()
       .nullable()
       .named('variant_id')
-      .references(ProductVariants, #id)();
+      .references(ProductVariants, #id, onDelete: KeyAction.cascade)();
   IntColumn get warehouseId => integer()
       .named('warehouse_id')
       .references(Warehouses, #id, onDelete: KeyAction.cascade)();
   TextColumn get lotNumber => text().named('lot_number')();
   RealColumn get quantity => real().withDefault(const Constant(0.0))();
+  RealColumn get originalQuantity =>
+      real().withDefault(const Constant(0.0)).named('original_quantity')();
   IntColumn get unitCostCents => integer().named('unit_cost_cents')();
   IntColumn get totalCostCents => integer().named('total_cost_cents')();
   DateTimeColumn get expirationDate =>
@@ -366,19 +386,30 @@ class InventoryLots extends Table {
       dateTime().withDefault(currentDateAndTime).named('received_at')();
 
   @override
+  List<String> get customConstraints => [
+    'CHECK (quantity >= 0)',
+    'CHECK (original_quantity >= 0)',
+    'CHECK (quantity <= original_quantity)',
+    'CHECK (unit_cost_cents >= 0)',
+    'CHECK (total_cost_cents >= 0)',
+  ];
+
+  @override
   String get tableName => 'inventory_lots';
 }
 
 class InventoryMovements extends Table {
   IntColumn get id => integer().autoIncrement()();
-  IntColumn get productId =>
-      integer().named('product_id').references(Products, #id)(); // Restrict
-  IntColumn get warehouseId =>
-      integer().named('warehouse_id').references(Warehouses, #id)(); // Restrict
+  IntColumn get productId => integer()
+      .named('product_id')
+      .references(Products, #id, onDelete: KeyAction.cascade)();
+  IntColumn get warehouseId => integer()
+      .named('warehouse_id')
+      .references(Warehouses, #id, onDelete: KeyAction.cascade)();
   IntColumn get variantId => integer()
       .nullable()
       .named('variant_id')
-      .references(ProductVariants, #id)();
+      .references(ProductVariants, #id, onDelete: KeyAction.cascade)();
   TextColumn get movementType => text().named('movement_type')();
   RealColumn get quantity => real()();
   RealColumn get quantityBefore => real().named('quantity_before')();

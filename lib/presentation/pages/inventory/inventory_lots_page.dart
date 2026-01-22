@@ -62,10 +62,10 @@ class _InventoryLotsPageState extends ConsumerState<InventoryLotsPage> {
     final lotsAsync = _showOnlyAvailable
         ? ref.watch(availableLotsProvider(widget.productId, widget.warehouseId))
         : ref.watch(productLotsProvider(widget.productId, widget.warehouseId));
+    final theme = Theme.of(context);
 
     return lotsAsync.when(
       data: (allLots) {
-        // Filter by selected variant if provided in widget arguments
         final lots = widget.variantId != null
             ? allLots.where((l) => l.variantId == widget.variantId).toList()
             : allLots;
@@ -76,16 +76,15 @@ class _InventoryLotsPageState extends ConsumerState<InventoryLotsPage> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Icon(
-                  Icons.inventory_2_outlined,
+                  Icons.inbox_rounded,
                   size: 64,
-                  color: Theme.of(context).colorScheme.outline,
+                  color: theme.colorScheme.outline.withValues(alpha: 0.5),
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  'No hay lotes disponibles',
-                  style: TextStyle(
-                    fontSize: 18,
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  'Sin lotes registrados',
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
                   ),
                 ),
               ],
@@ -93,35 +92,176 @@ class _InventoryLotsPageState extends ConsumerState<InventoryLotsPage> {
           );
         }
 
-        return ListView.builder(
-          padding: const EdgeInsets.all(16),
-          itemCount: lots.length,
-          itemBuilder: (context, index) {
-            final lot = lots[index];
-            return _LotCard(
-              lot: lot,
-              onTap: () {
-                context.push('/inventory/lot/${lot.id}');
-              },
+        return LayoutBuilder(
+          builder: (context, constraints) {
+            // Use Cards for very small screens, Table for everything else
+            if (constraints.maxWidth < 600) {
+              return ListView.separated(
+                padding: const EdgeInsets.all(16),
+                itemCount: lots.length,
+                separatorBuilder: (_, __) => const SizedBox(height: 12),
+                itemBuilder: (context, index) => _LotCard(
+                  lot: lots[index],
+                  onTap: () => context.push('/inventory/lot/${lots[index].id}'),
+                ),
+              );
+            }
+
+            return SingleChildScrollView(
+              padding: const EdgeInsets.all(24),
+              child: Card(
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  side: BorderSide(color: theme.colorScheme.outlineVariant),
+                ),
+                clipBehavior: Clip.antiAlias,
+                child: DataTable(
+                  headingRowColor: WidgetStateProperty.all(
+                    theme.colorScheme.surfaceContainerHighest.withValues(
+                      alpha: 0.5,
+                    ),
+                  ),
+                  dataRowMinHeight: 52,
+                  dataRowMaxHeight: 52,
+                  showCheckboxColumn: false,
+                  columnSpacing: 24,
+                  horizontalMargin: 24,
+                  columns: const [
+                    DataColumn(label: Text('LOTE / ID')),
+                    DataColumn(label: Text('RECEPCIÓN')),
+                    DataColumn(label: Text('VENCIMIENTO')),
+                    DataColumn(label: Text('COSTO U.')),
+                    DataColumn(numeric: true, label: Text('CANTIDAD')),
+                    DataColumn(label: Text('ESTADO')),
+                  ],
+                  rows: lots
+                      .map(
+                        (lot) => _buildDataRow(
+                          context,
+                          lot,
+                          () => context.push('/inventory/lot/${lot.id}'),
+                        ),
+                      )
+                      .toList(),
+                ),
+              ),
             );
           },
         );
       },
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (error, stack) => Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.error_outline,
-              size: 48,
-              color: Theme.of(context).colorScheme.error,
-            ),
-            const SizedBox(height: 16),
-            Text('Error: $error'),
-          ],
+      error: (e, _) => Center(child: Text('Error: $e')),
+    );
+  }
+
+  DataRow _buildDataRow(
+    BuildContext context,
+    InventoryLot lot,
+    VoidCallback onTap,
+  ) {
+    final theme = Theme.of(context);
+    final dateFormat = DateFormat('dd/MM/yyyy');
+    final isExpired =
+        lot.expirationDate != null &&
+        lot.expirationDate!.isBefore(DateTime.now());
+
+    // Status Logic
+    bool isActive = lot.quantity > 0;
+
+    return DataRow(
+      onSelectChanged: (_) => onTap(),
+      cells: [
+        DataCell(
+          Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                lot.lotNumber,
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+              if (!isActive)
+                Text(
+                  'Agotado',
+                  style: TextStyle(
+                    fontSize: 10,
+                    color: theme.colorScheme.error,
+                  ),
+                ),
+            ],
+          ),
         ),
-      ),
+        DataCell(Text(dateFormat.format(lot.receivedAt))),
+        DataCell(
+          lot.expirationDate == null
+              ? const Text('-')
+              : Row(
+                  children: [
+                    Icon(
+                      isExpired ? Icons.warning_amber_rounded : Icons.event,
+                      size: 16,
+                      color: isExpired ? theme.colorScheme.error : null,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      dateFormat.format(lot.expirationDate!),
+                      style: TextStyle(
+                        color: isExpired ? theme.colorScheme.error : null,
+                        fontWeight: isExpired
+                            ? FontWeight.bold
+                            : FontWeight.normal,
+                      ),
+                    ),
+                  ],
+                ),
+        ),
+        DataCell(Text('\$${(lot.unitCostCents / 100).toStringAsFixed(2)}')),
+        DataCell(
+          Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                '${lot.quantity.toStringAsFixed(2)} / ${lot.originalQuantity.toStringAsFixed(2)}',
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                ),
+              ),
+              if (lot.originalQuantity > 0)
+                Text(
+                  '${((lot.quantity / lot.originalQuantity) * 100).toStringAsFixed(0)}%',
+                  style: TextStyle(
+                    fontSize: 10,
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+            ],
+          ),
+        ),
+        DataCell(
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: isActive
+                  ? theme.colorScheme.primaryContainer
+                  : theme.colorScheme.surfaceContainerHighest,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Text(
+              isActive ? 'Activo' : 'Inactivo',
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.bold,
+                color: isActive
+                    ? theme.colorScheme.primary
+                    : theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
@@ -134,207 +274,88 @@ class _LotCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final dateFormat = DateFormat('dd/MM/yyyy HH:mm');
+    final theme = Theme.of(context);
+    final dateFormat = DateFormat('dd/MM/yyyy');
     final isExpired =
         lot.expirationDate != null &&
         lot.expirationDate!.isBefore(DateTime.now());
-    final isExpiringSoon =
-        lot.expirationDate != null &&
-        lot.expirationDate!.isAfter(DateTime.now()) &&
-        lot.expirationDate!.isBefore(
-          DateTime.now().add(const Duration(days: 30)),
-        );
 
     return Card(
-      margin: const EdgeInsets.only(bottom: 12),
       elevation: 0,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20),
-        side: BorderSide(
-          color: Theme.of(
-            context,
-          ).colorScheme.outlineVariant.withValues(alpha: 0.5),
-        ),
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(color: theme.colorScheme.outlineVariant),
       ),
-      color: Theme.of(context).colorScheme.surface,
-      child: InkWell(
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      lot.lotNumber,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  lot.lotNumber,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
                   ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: lot.quantity > 0
-                          ? Theme.of(context).colorScheme.tertiaryContainer
-                          : Theme.of(
-                              context,
-                            ).colorScheme.surfaceContainerHighest,
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Text(
-                      lot.quantity > 0 ? 'Disponible' : 'Agotado',
-                      style: TextStyle(
+                ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
                         color: lot.quantity > 0
-                            ? Theme.of(context).colorScheme.onTertiaryContainer
-                            : Theme.of(context).colorScheme.onSurfaceVariant,
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
+                            ? theme.colorScheme.primaryContainer
+                            : theme.colorScheme.surfaceContainerHighest,
+                        borderRadius: BorderRadius.circular(6),
                       ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  Expanded(
-                    child: _InfoItem(
-                      icon: Icons.inventory,
-                      label: 'Cantidad',
-                      value: lot.quantity.toStringAsFixed(2),
-                    ),
-                  ),
-                  Expanded(
-                    child: _InfoItem(
-                      icon: Icons.attach_money,
-                      label: 'Costo Unit.',
-                      value:
-                          '\$${(lot.unitCostCents / 100).toStringAsFixed(2)}',
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  Expanded(
-                    child: _InfoItem(
-                      icon: Icons.calendar_today,
-                      label: 'Recibido',
-                      value: dateFormat.format(lot.receivedAt),
-                      small: true,
-                    ),
-                  ),
-                ],
-              ),
-              if (lot.expirationDate != null) ...[
-                const SizedBox(height: 12),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 6,
-                  ),
-                  decoration: BoxDecoration(
-                    color: (isExpired || isExpiringSoon)
-                        ? (isExpired
-                              ? Theme.of(context).colorScheme.errorContainer
-                              : Theme.of(context).colorScheme.tertiaryContainer
-                                    .withValues(alpha: 0.3))
-                        : Theme.of(context).colorScheme.surfaceContainerLow,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        Icons.event_note,
-                        size: 14,
-                        color: isExpired
-                            ? Theme.of(context).colorScheme.error
-                            : isExpiringSoon
-                            ? Theme.of(context).colorScheme.tertiary
-                            : Theme.of(context).colorScheme.onSurfaceVariant,
-                      ),
-                      const SizedBox(width: 6),
-                      Text(
-                        'Expira: ${dateFormat.format(lot.expirationDate!)}',
+                      child: Text(
+                        '${lot.quantity.toStringAsFixed(2)} / ${lot.originalQuantity.toStringAsFixed(2)}',
                         style: TextStyle(
-                          fontSize: 11,
-                          color: isExpired
-                              ? Theme.of(context).colorScheme.error
-                              : isExpiringSoon
-                              ? Theme.of(context).colorScheme.tertiary
-                              : Theme.of(context).colorScheme.onSurfaceVariant,
-                          fontWeight: isExpired || isExpiringSoon
-                              ? FontWeight.bold
-                              : FontWeight.normal,
+                          fontWeight: FontWeight.bold,
+                          color: lot.quantity > 0
+                              ? theme.colorScheme.onPrimaryContainer
+                              : theme.colorScheme.onSurfaceVariant,
                         ),
                       ),
-                    ],
-                  ),
+                    ),
+                    if (lot.originalQuantity > 0)
+                      Text(
+                        '${((lot.quantity / lot.originalQuantity) * 100).toStringAsFixed(0)}% disponible',
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                  ],
                 ),
               ],
-            ],
-          ),
+            ),
+            const SizedBox(height: 12),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text('Recibido: ${dateFormat.format(lot.receivedAt)}'),
+                if (lot.expirationDate != null)
+                  Text(
+                    'Exp: ${dateFormat.format(lot.expirationDate!)}',
+                    style: TextStyle(
+                      color: isExpired ? theme.colorScheme.error : null,
+                      fontWeight: isExpired
+                          ? FontWeight.bold
+                          : FontWeight.normal,
+                    ),
+                  ),
+              ],
+            ),
+          ],
         ),
       ),
-    );
-  }
-}
-
-class _InfoItem extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final String value;
-  final bool small;
-
-  const _InfoItem({
-    required this.icon,
-    required this.label,
-    required this.value,
-    this.small = false,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Icon(
-          icon,
-          size: small ? 14 : 16,
-          color: Theme.of(context).colorScheme.onSurfaceVariant,
-        ),
-        const SizedBox(width: 4),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: small ? 10 : 11,
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
-              ),
-              Text(
-                value,
-                style: TextStyle(
-                  fontSize: small ? 11 : 13,
-                  fontWeight: FontWeight.w600,
-                ),
-                overflow: TextOverflow.ellipsis,
-              ),
-            ],
-          ),
-        ),
-      ],
     );
   }
 }

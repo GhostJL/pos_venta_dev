@@ -4,6 +4,7 @@ import 'package:posventa/data/datasources/local/database/app_database.dart'
 import 'package:posventa/data/models/purchase_item_model.dart';
 import 'package:posventa/data/models/purchase_model.dart';
 import 'package:posventa/domain/entities/inventory_lot.dart';
+import 'package:posventa/domain/entities/inventory_movement.dart';
 import 'package:posventa/domain/entities/purchase.dart';
 import 'package:posventa/domain/entities/purchase_reception_transaction.dart';
 import 'package:posventa/domain/repositories/purchase_repository.dart';
@@ -319,160 +320,204 @@ class PurchaseRepositoryImpl implements PurchaseRepository {
     PurchaseReceptionTransaction transaction,
   ) async {
     await db.transaction(() async {
-      // 1. Insert New Lots
-      final Map<InventoryLot, int> lotIdMap = Map.identity();
+      // 1. Insert new inventory lots and track their IDs
+      final lotIdMap = await _insertInventoryLots(transaction.newLots);
 
-      for (final lot in transaction.newLots) {
-        final lotId = await db
-            .into(db.inventoryLots)
-            .insert(
-              drift_db.InventoryLotsCompanion.insert(
-                productId: lot.productId,
-                warehouseId: lot.warehouseId,
-                lotNumber: lot.lotNumber,
-                quantity: Value(lot.quantity),
-                receivedAt: Value(lot.receivedAt),
-                unitCostCents: lot.unitCostCents,
-                totalCostCents: lot.totalCostCents,
-                variantId: Value(lot.variantId),
-                expirationDate: Value(lot.expirationDate),
-              ),
-            );
-        lotIdMap[lot] = lotId;
-      }
+      // 2. Update purchase items with received quantities and lot references
+      await _updatePurchaseItems(transaction.itemUpdates, lotIdMap);
 
-      // 2. Update Purchase Items
-      for (final update in transaction.itemUpdates) {
-        int? finalLotId;
-        if (update.newLot != null && lotIdMap.containsKey(update.newLot)) {
-          finalLotId = lotIdMap[update.newLot];
-        } else if (update.lotId != null) {
-          finalLotId = update.lotId;
-        }
+      // 3. Adjust inventory quantities (now handled by triggers, but kept for backwards compatibility)
+      await _adjustInventoryQuantities(transaction.inventoryAdjustments);
 
-        await (db.update(
-          db.purchaseItems,
-        )..where((t) => t.id.equals(update.itemId))).write(
-          drift_db.PurchaseItemsCompanion(
-            quantityReceived: Value(update.quantityReceived),
-            lotId: Value(finalLotId),
-          ),
-        );
-      }
+      // 4. Record inventory movements for audit trail
+      await _recordInventoryMovements(transaction.movements, lotIdMap);
 
-      // 3. Inventory Adjustments
-      for (final adj in transaction.inventoryAdjustments) {
-        final inventory =
-            await (db.select(db.inventory)..where(
-                  (t) =>
-                      t.productId.equals(adj.productId) &
-                      t.warehouseId.equals(adj.warehouseId) &
-                      (adj.variantId != null
-                          ? t.variantId.equals(adj.variantId!)
-                          : t.variantId.isNull()),
-                ))
-                .getSingleOrNull();
+      // 5. Update variant costs with latest purchase prices
+      await _updateVariantCosts(transaction.variantUpdates);
 
-        if (inventory == null) {
-          await db
-              .into(db.inventory)
-              .insert(
-                drift_db.InventoryCompanion.insert(
-                  productId: adj.productId,
-                  warehouseId: adj.warehouseId,
-                  quantityOnHand: Value(adj.quantityToAdd),
-                  updatedAt: Value(DateTime.now()),
-                  variantId: Value(adj.variantId),
-                  quantityReserved: Value(0.0),
-                ),
-              );
-        } else {
-          await (db.update(
-            db.inventory,
-          )..where((t) => t.id.equals(inventory.id))).write(
-            drift_db.InventoryCompanion(
-              quantityOnHand: Value(
-                inventory.quantityOnHand + adj.quantityToAdd,
-              ),
-              updatedAt: Value(DateTime.now()),
+      // 6. Update purchase status and metadata
+      await _updatePurchaseStatus(transaction);
+    });
+  }
+
+  /// Insert new inventory lots and return a map of lot entities to their database IDs
+  Future<Map<InventoryLot, int>> _insertInventoryLots(
+    List<InventoryLot> newLots,
+  ) async {
+    final lotIdMap = <InventoryLot, int>{};
+
+    for (final lot in newLots) {
+      final lotId = await db
+          .into(db.inventoryLots)
+          .insert(
+            drift_db.InventoryLotsCompanion.insert(
+              productId: lot.productId,
+              warehouseId: lot.warehouseId,
+              lotNumber: lot.lotNumber,
+              quantity: Value(lot.quantity),
+              originalQuantity: Value(lot.originalQuantity),
+              receivedAt: Value(lot.receivedAt),
+              unitCostCents: lot.unitCostCents,
+              totalCostCents: lot.totalCostCents,
+              variantId: Value(lot.variantId),
+              expirationDate: Value(lot.expirationDate),
             ),
           );
-        }
+      lotIdMap[lot] = lotId;
+    }
+
+    return lotIdMap;
+  }
+
+  /// Update purchase items with received quantities and lot references
+  Future<void> _updatePurchaseItems(
+    List<PurchaseItemUpdate> itemUpdates,
+    Map<InventoryLot, int> lotIdMap,
+  ) async {
+    for (final update in itemUpdates) {
+      int? finalLotId;
+      if (update.newLot != null && lotIdMap.containsKey(update.newLot)) {
+        finalLotId = lotIdMap[update.newLot];
+      } else if (update.lotId != null) {
+        finalLotId = update.lotId;
       }
 
-      // 4. Record Movements
-      for (final mov in transaction.movements) {
-        final invRow =
-            await (db.select(db.inventory)..where(
-                  (t) =>
-                      t.productId.equals(mov.productId) &
-                      t.warehouseId.equals(mov.warehouseId) &
-                      (mov.variantId != null
-                          ? t.variantId.equals(mov.variantId!)
-                          : t.variantId.isNull()),
-                ))
-                .getSingleOrNull();
+      await (db.update(
+        db.purchaseItems,
+      )..where((t) => t.id.equals(update.itemId))).write(
+        drift_db.PurchaseItemsCompanion(
+          quantityReceived: Value(update.quantityReceived),
+          lotId: Value(finalLotId),
+        ),
+      );
+    }
+  }
 
-        double currentQty = invRow?.quantityOnHand ?? 0.0;
+  /// Adjust inventory quantities for received items
+  /// Note: With triggers in place (schema v42+), this is redundant but kept for compatibility
+  Future<void> _adjustInventoryQuantities(
+    List<InventoryAdjustment> adjustments,
+  ) async {
+    for (final adj in adjustments) {
+      final inventory =
+          await (db.select(db.inventory)..where(
+                (t) =>
+                    t.productId.equals(adj.productId) &
+                    t.warehouseId.equals(adj.warehouseId) &
+                    (adj.variantId != null
+                        ? t.variantId.equals(adj.variantId!)
+                        : t.variantId.isNull()),
+              ))
+              .getSingleOrNull();
 
-        // Use lotId from new lots if needed or trust the incoming movement object has lotId?
-        // The domain transaction object `movements` has `lotId`.
-        // If we just created the lot, we need to inject the ID here as the UseCase didn't know it.
-        int? resolvedLotId = mov.lotId;
-        if (resolvedLotId == null) {
-          // Finding logic
-          for (final entry in lotIdMap.entries) {
-            if (entry.key.productId == mov.productId &&
-                entry.key.quantity == mov.quantity) {
-              resolvedLotId = entry.value;
-              break;
-            }
-          }
-        }
-
+      if (inventory == null) {
         await db
-            .into(db.inventoryMovements)
+            .into(db.inventory)
             .insert(
-              drift_db.InventoryMovementsCompanion.insert(
-                productId: mov.productId,
-                warehouseId: mov.warehouseId,
-                movementType: mov.movementType.value,
-                quantity: mov.quantity,
-                quantityBefore: currentQty - mov.quantity,
-                quantityAfter: currentQty,
-                reason: Value(mov.reason),
-                performedBy: mov.performedBy,
-                referenceType: Value(mov.referenceType),
-                referenceId: Value(mov.referenceId),
-                lotId: Value(resolvedLotId),
-                movementDate: Value(mov.movementDate),
+              drift_db.InventoryCompanion.insert(
+                productId: adj.productId,
+                warehouseId: adj.warehouseId,
+                quantityOnHand: Value(adj.quantityToAdd),
+                updatedAt: Value(DateTime.now()),
+                variantId: Value(adj.variantId),
+                quantityReserved: Value(0.0),
               ),
             );
-      }
-
-      // 5. Update Variant Costs
-      for (final update in transaction.variantUpdates) {
+      } else {
         await (db.update(
-          db.productVariants,
-        )..where((t) => t.id.equals(update.variantId))).write(
-          drift_db.ProductVariantsCompanion(
-            costPriceCents: Value(update.newCostPriceCents),
+          db.inventory,
+        )..where((t) => t.id.equals(inventory.id))).write(
+          drift_db.InventoryCompanion(
+            quantityOnHand: Value(inventory.quantityOnHand + adj.quantityToAdd),
             updatedAt: Value(DateTime.now()),
           ),
         );
       }
+    }
+  }
 
-      // 6. Update Purchase Status
+  /// Record inventory movements for audit trail
+  Future<void> _recordInventoryMovements(
+    List<InventoryMovement> movements,
+    Map<InventoryLot, int> lotIdMap,
+  ) async {
+    for (final mov in movements) {
+      final invRow =
+          await (db.select(db.inventory)..where(
+                (t) =>
+                    t.productId.equals(mov.productId) &
+                    t.warehouseId.equals(mov.warehouseId) &
+                    (mov.variantId != null
+                        ? t.variantId.equals(mov.variantId!)
+                        : t.variantId.isNull()),
+              ))
+              .getSingleOrNull();
+
+      final currentQty = invRow?.quantityOnHand ?? 0.0;
+
+      // Resolve lot ID from the map if not already set
+      int? resolvedLotId = mov.lotId;
+      if (resolvedLotId == null) {
+        for (final entry in lotIdMap.entries) {
+          if (entry.key.productId == mov.productId &&
+              entry.key.quantity == mov.quantity) {
+            resolvedLotId = entry.value;
+            break;
+          }
+        }
+      }
+
+      await db
+          .into(db.inventoryMovements)
+          .insert(
+            drift_db.InventoryMovementsCompanion.insert(
+              productId: mov.productId,
+              warehouseId: mov.warehouseId,
+              movementType: mov.movementType.value,
+              quantity: mov.quantity,
+              quantityBefore: currentQty - mov.quantity,
+              quantityAfter: currentQty,
+              reason: Value(mov.reason),
+              performedBy: mov.performedBy,
+              referenceType: Value(mov.referenceType),
+              referenceId: Value(mov.referenceId),
+              lotId: Value(resolvedLotId),
+              movementDate: Value(mov.movementDate),
+              variantId: Value(mov.variantId),
+            ),
+          );
+    }
+  }
+
+  /// Update variant costs with latest purchase prices (Last Cost policy)
+  Future<void> _updateVariantCosts(
+    List<ProductVariantUpdate> variantUpdates,
+  ) async {
+    for (final update in variantUpdates) {
       await (db.update(
-        db.purchases,
-      )..where((t) => t.id.equals(transaction.purchaseId))).write(
-        drift_db.PurchasesCompanion(
-          status: Value(transaction.newStatus),
-          receivedDate: Value(transaction.receivedDate),
-          receivedBy: Value(transaction.receivedBy),
+        db.productVariants,
+      )..where((t) => t.id.equals(update.variantId))).write(
+        drift_db.ProductVariantsCompanion(
+          costPriceCents: Value(update.newCostPriceCents),
+          updatedAt: Value(DateTime.now()),
         ),
       );
-    });
+    }
+  }
+
+  /// Update purchase status and metadata after reception
+  Future<void> _updatePurchaseStatus(
+    PurchaseReceptionTransaction transaction,
+  ) async {
+    await (db.update(
+      db.purchases,
+    )..where((t) => t.id.equals(transaction.purchaseId))).write(
+      drift_db.PurchasesCompanion(
+        status: Value(transaction.newStatus),
+        receivedDate: Value(transaction.receivedDate),
+        receivedBy: Value(transaction.receivedBy),
+      ),
+    );
   }
 
   @override

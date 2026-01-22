@@ -4,7 +4,7 @@ import 'package:posventa/domain/entities/purchase_reception_item.dart';
 import 'package:posventa/domain/entities/purchase_reception_transaction.dart';
 import 'package:posventa/domain/repositories/product_repository.dart';
 import 'package:posventa/domain/repositories/purchase_repository.dart';
-import 'package:posventa/domain/entities/product_variant.dart';
+import 'package:posventa/domain/services/variant_conversion_service.dart';
 
 /// Use case for receiving a purchase and updating inventory
 /// This is the critical process that:
@@ -16,8 +16,13 @@ import 'package:posventa/domain/entities/product_variant.dart';
 class ReceivePurchaseUseCase {
   final PurchaseRepository _purchaseRepository;
   final ProductRepository _productRepository;
+  final VariantConversionService _variantConversionService;
 
-  ReceivePurchaseUseCase(this._purchaseRepository, this._productRepository);
+  ReceivePurchaseUseCase(
+    this._purchaseRepository,
+    this._productRepository,
+    this._variantConversionService,
+  );
 
   /// Receive a purchase by ID
   /// [purchaseId] - The ID of the purchase to receive
@@ -102,20 +107,17 @@ class ReceivePurchaseUseCase {
                 .firstOrNull;
 
             if (variant != null) {
-              // Apply linking logic
-              if (variant.type == VariantType.purchase &&
-                  variant.linkedVariantId != null) {
-                targetVariantId = variant.linkedVariantId;
-                // Conversion Factor: variant.conversionFactor (e.g., 12 for a box of 12)
-                final conversionFactor = variant.conversionFactor;
+              // Use VariantConversionService for conversion logic
+              final conversionResult = _variantConversionService
+                  .convertPurchaseToSales(
+                    variant: variant,
+                    quantity: quantityToReceive,
+                    unitCostCents: unitCostCents,
+                  );
 
-                if (conversionFactor > 0) {
-                  adjustedQuantity = quantityToReceive * conversionFactor;
-                  // Cost per unit = Cost per pack / items per pack
-                  adjustedUnitCostCents = (unitCostCents / conversionFactor)
-                      .round();
-                }
-              }
+              targetVariantId = conversionResult.targetVariantId;
+              adjustedQuantity = conversionResult.convertedQuantity;
+              adjustedUnitCostCents = conversionResult.convertedUnitCostCents;
             }
           },
         );
@@ -131,6 +133,7 @@ class ReceivePurchaseUseCase {
         warehouseId: warehouseId,
         lotNumber: lotNumber,
         quantity: adjustedQuantity, // Use adjusted quantity
+        originalQuantity: adjustedQuantity, // Use adjusted quantity
         unitCostCents: adjustedUnitCostCents, // Use adjusted cost
         totalCostCents: totalCostCents,
         expirationDate: expirationDate,

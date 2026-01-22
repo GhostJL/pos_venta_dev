@@ -297,6 +297,54 @@ final class DeletePurchaseUseCaseProvider
 String _$deletePurchaseUseCaseHash() =>
     r'be05b66b079aa65b5c28d6916b1b474848b5d8d6';
 
+@ProviderFor(variantConversionService)
+const variantConversionServiceProvider = VariantConversionServiceProvider._();
+
+final class VariantConversionServiceProvider
+    extends
+        $FunctionalProvider<
+          VariantConversionService,
+          VariantConversionService,
+          VariantConversionService
+        >
+    with $Provider<VariantConversionService> {
+  const VariantConversionServiceProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'variantConversionServiceProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$variantConversionServiceHash();
+
+  @$internal
+  @override
+  $ProviderElement<VariantConversionService> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  VariantConversionService create(Ref ref) {
+    return variantConversionService(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(VariantConversionService value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<VariantConversionService>(value),
+    );
+  }
+}
+
+String _$variantConversionServiceHash() =>
+    r'1388ec44b5b4e4deeca7ccf4ca2853173a3dd9f8';
+
 @ProviderFor(receivePurchaseUseCase)
 const receivePurchaseUseCaseProvider = ReceivePurchaseUseCaseProvider._();
 
@@ -343,7 +391,7 @@ final class ReceivePurchaseUseCaseProvider
 }
 
 String _$receivePurchaseUseCaseHash() =>
-    r'a486676f272c5abf64f4b98b8a6daf60ac428a13';
+    r'391f9841287ca59fc64beb80c8931b44c0f4f22b';
 
 @ProviderFor(cancelPurchaseUseCase)
 const cancelPurchaseUseCaseProvider = CancelPurchaseUseCaseProvider._();

@@ -19,6 +19,7 @@ import 'package:posventa/domain/use_cases/purchase_item/update_purchase_item_use
 import 'package:posventa/domain/use_cases/purchase_item/delete_purchase_item_usecase.dart';
 import 'package:posventa/domain/use_cases/purchase_item/get_purchase_items_by_date_range_usecase.dart';
 import 'package:posventa/domain/use_cases/purchase_item/get_recent_purchase_items_usecase.dart';
+import 'package:posventa/domain/services/variant_conversion_service.dart';
 import 'package:posventa/presentation/providers/di/core_di.dart';
 import 'package:posventa/presentation/providers/di/product_di.dart';
 
@@ -51,9 +52,14 @@ DeletePurchaseUseCase deletePurchaseUseCase(ref) =>
     DeletePurchaseUseCase(ref.watch(purchaseRepositoryProvider));
 
 @riverpod
+VariantConversionService variantConversionService(ref) =>
+    VariantConversionService();
+
+@riverpod
 ReceivePurchaseUseCase receivePurchaseUseCase(ref) => ReceivePurchaseUseCase(
   ref.watch(purchaseRepositoryProvider),
   ref.watch(productRepositoryProvider),
+  ref.watch(variantConversionServiceProvider),
 );
 
 @riverpod

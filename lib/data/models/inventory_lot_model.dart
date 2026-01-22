@@ -8,6 +8,7 @@ class InventoryLotModel extends InventoryLot {
     required super.warehouseId,
     required super.lotNumber,
     required super.quantity,
+    required super.originalQuantity,
     required super.unitCostCents,
     required super.totalCostCents,
     super.expirationDate,
@@ -22,6 +23,9 @@ class InventoryLotModel extends InventoryLot {
       warehouseId: json['warehouse_id'] as int,
       lotNumber: json['lot_number'] as String,
       quantity: (json['quantity'] as num).toDouble(),
+      originalQuantity:
+          (json['original_quantity'] as num?)?.toDouble() ??
+          (json['quantity'] as num).toDouble(),
       unitCostCents: json['unit_cost_cents'] as int,
       totalCostCents: json['total_cost_cents'] as int,
       expirationDate: json['expiration_date'] != null
@@ -39,6 +43,7 @@ class InventoryLotModel extends InventoryLot {
       'warehouse_id': warehouseId,
       'lot_number': lotNumber,
       'quantity': quantity,
+      'original_quantity': originalQuantity,
       'unit_cost_cents': unitCostCents,
       'total_cost_cents': totalCostCents,
       'expiration_date': expirationDate?.toIso8601String(),
@@ -54,6 +59,7 @@ class InventoryLotModel extends InventoryLot {
       warehouseId: entity.warehouseId,
       lotNumber: entity.lotNumber,
       quantity: entity.quantity,
+      originalQuantity: entity.originalQuantity,
       unitCostCents: entity.unitCostCents,
       totalCostCents: entity.totalCostCents,
       expirationDate: entity.expirationDate,
