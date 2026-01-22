@@ -243,7 +243,9 @@ class _SaleCardDesktopState extends ConsumerState<SaleCardDesktop> {
                                         ),
                                         Expanded(
                                           child: Text(
-                                            item.productName ?? 'Unknown',
+                                            item.variantName != null
+                                                ? '${item.productName ?? 'Unknown'} - ${item.variantName}'
+                                                : item.productName ?? 'Unknown',
                                             style: const TextStyle(
                                               fontSize: 11,
                                             ),
