@@ -43,7 +43,12 @@ class ReturnItemData {
     );
   }
 
-  int get subtotalCents => (saleItem.unitPriceCents * returnQuantity).round();
+  int get returnDiscountCents =>
+      (saleItem.discountCents * (returnQuantity / saleItem.quantity)).round();
+
+  int get subtotalCents =>
+      (saleItem.unitPriceCents * returnQuantity).round() - returnDiscountCents;
+
   int get taxCents =>
       (saleItem.taxCents * (returnQuantity / saleItem.quantity)).round();
   int get totalCents => subtotalCents + taxCents;
@@ -103,6 +108,22 @@ class ReturnProcessingState {
     );
   }
 
+  int get totalGrossSubtotalCents {
+    return selectedItems.values.fold(
+      0,
+      (sum, item) =>
+          sum + (item.saleItem.unitPriceCents * item.returnQuantity).round(),
+    );
+  }
+
+  int get totalDiscountCents {
+    return selectedItems.values.fold(
+      0,
+      (sum, item) => sum + item.returnDiscountCents,
+    );
+  }
+
+  // This is now Net Subtotal
   int get totalSubtotalCents {
     return selectedItems.values.fold(
       0,

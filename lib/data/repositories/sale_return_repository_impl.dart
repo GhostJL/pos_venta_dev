@@ -331,11 +331,13 @@ class SaleReturnRepositoryImpl implements SaleReturnRepository {
 
     // Update Inventory
     final inventory =
-        await (db.select(db.inventory)..where(
-              (t) =>
-                  t.productId.equals(item.productId) &
-                  t.warehouseId.equals(warehouseId),
-            ))
+        await (db.select(db.inventory)
+              ..where(
+                (t) =>
+                    t.productId.equals(item.productId) &
+                    t.warehouseId.equals(warehouseId),
+              )
+              ..limit(1))
             .getSingleOrNull();
 
     double quantityBefore = inventory?.quantityOnHand ?? 0.0;
@@ -436,11 +438,13 @@ class SaleReturnRepositoryImpl implements SaleReturnRepository {
 
   Future<void> _createCashMovement(SaleReturn saleReturn, int returnId) async {
     final session =
-        await (db.select(db.cashSessions)..where(
-              (t) =>
-                  t.warehouseId.equals(saleReturn.warehouseId) &
-                  t.status.equals('open'),
-            ))
+        await (db.select(db.cashSessions)
+              ..where(
+                (t) =>
+                    t.warehouseId.equals(saleReturn.warehouseId) &
+                    t.status.equals('open'),
+              )
+              ..limit(1))
             .getSingleOrNull();
 
     if (session == null) {

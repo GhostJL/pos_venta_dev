@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import 'package:posventa/domain/entities/sale_item.dart';
 import 'package:posventa/domain/entities/return_reason.dart';
 import 'package:posventa/presentation/providers/di/sale_di.dart';
@@ -35,7 +36,27 @@ class _ReturnItemsSelectorState extends ConsumerState<ReturnItemsSelector> {
     final sale = state.selectedSale;
 
     if (sale == null || sale.items.isEmpty) {
-      return const Center(child: Text('No hay productos en esta venta'));
+      return Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.remove_shopping_cart_outlined,
+              size: 48,
+              color: Theme.of(
+                context,
+              ).colorScheme.outline.withValues(alpha: 0.5),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'No hay productos en esta venta',
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ],
+        ),
+      );
     }
 
     return FutureBuilder<Map<int, double>>(
@@ -49,10 +70,11 @@ class _ReturnItemsSelectorState extends ConsumerState<ReturnItemsSelector> {
 
         final returnedQty = snapshot.data!;
 
-        return ListView.builder(
+        return ListView.separated(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           itemCount: sale.items.length,
+          separatorBuilder: (context, index) => const SizedBox(height: 8),
           itemBuilder: (context, index) {
             final item = sale.items[index];
             final alreadyReturned = returnedQty[item.id] ?? 0.0;
@@ -70,46 +92,62 @@ class _ReturnItemsSelectorState extends ConsumerState<ReturnItemsSelector> {
   }
 
   Widget _buildFullyReturnedItem(SaleItem item) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      color: Theme.of(context).colorScheme.outline,
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Row(
-          children: [
-            Icon(
-              Icons.check_circle,
-              color: Theme.of(context).colorScheme.outline,
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: cs.surfaceContainerLowest,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.3)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: cs.outlineVariant.withValues(alpha: 0.2),
+              borderRadius: BorderRadius.circular(8),
             ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    item.variantName != null
-                        ? '${item.productName} - ${item.variantName}'
-                        : item.productName ?? 'Producto #${item.productId}',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      decoration: TextDecoration.lineThrough,
-                    ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  Text(
-                    'Ya devuelto completamente',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Theme.of(context).colorScheme.outline,
-                    ),
-                  ),
-                ],
-              ),
+            child: Icon(
+              Icons.inventory_2_outlined,
+              color: cs.outline,
+              size: 20,
             ),
-          ],
-        ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  item.variantName != null
+                      ? '${item.productName} - ${item.variantName}'
+                      : item.productName ?? 'Producto #${item.productId}',
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: cs.onSurfaceVariant.withValues(alpha: 0.7),
+                    decoration: TextDecoration.lineThrough,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                Text(
+                  'Completamente devuelto',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: cs.outline,
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Icon(
+            Icons.check_circle,
+            color: cs.primary.withValues(alpha: 0.5),
+            size: 20,
+          ),
+        ],
       ),
     );
   }
@@ -119,6 +157,8 @@ class _ReturnItemsSelectorState extends ConsumerState<ReturnItemsSelector> {
     double maxQuantity,
     ReturnProcessingState state,
   ) {
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
     final isSelected = state.selectedItems.containsKey(item.id);
     final itemData = state.selectedItems[item.id];
 
@@ -132,33 +172,32 @@ class _ReturnItemsSelectorState extends ConsumerState<ReturnItemsSelector> {
       _reasonControllers[item.id!] = TextEditingController();
     }
 
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      elevation: 0,
-      clipBehavior: Clip.antiAlias,
-      shape: RoundedRectangleBorder(
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 200),
+      decoration: BoxDecoration(
+        color: isSelected
+            ? cs.primaryContainer.withValues(alpha: 0.1)
+            : cs.surface,
         borderRadius: BorderRadius.circular(12),
-        side: isSelected
-            ? BorderSide(color: Theme.of(context).colorScheme.primary, width: 2)
-            : BorderSide(
-                color: Theme.of(
-                  context,
-                ).colorScheme.outlineVariant.withValues(alpha: 0.5),
-                width: 1,
-              ),
+        border: Border.all(
+          color: isSelected
+              ? cs.primary
+              : cs.outlineVariant.withValues(alpha: 0.5),
+          width: isSelected ? 1.5 : 1,
+        ),
       ),
-      child: InkWell(
-        onTap: () {
-          ref
-              .read(returnProcessingProvider.notifier)
-              .toggleItem(item, !isSelected, maxQuantity);
-        },
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
+      child: Column(
+        children: [
+          InkWell(
+            onTap: () {
+              ref
+                  .read(returnProcessingProvider.notifier)
+                  .toggleItem(item, !isSelected, maxQuantity);
+            },
+            borderRadius: BorderRadius.circular(12),
+            child: Padding(
+              padding: const EdgeInsets.all(12),
+              child: Row(
                 children: [
                   Checkbox(
                     value: isSelected,
@@ -172,6 +211,21 @@ class _ReturnItemsSelectorState extends ConsumerState<ReturnItemsSelector> {
                     ),
                   ),
                   const SizedBox(width: 12),
+                  // Product Icon/Thumbnail placeholder
+                  Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: cs.surfaceContainerHigh,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Icon(
+                      Icons.inventory_2_outlined,
+                      color: cs.primary,
+                      size: 20,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -181,207 +235,250 @@ class _ReturnItemsSelectorState extends ConsumerState<ReturnItemsSelector> {
                               ? '${item.productName} - ${item.variantName}'
                               : item.productName ??
                                     'Producto #${item.productId}',
-                          style: TextStyle(
-                            fontSize: 15,
+                          style: theme.textTheme.bodyMedium?.copyWith(
                             fontWeight: FontWeight.w600,
-                            color: Theme.of(context).colorScheme.onSurface,
+                            color: cs.onSurface,
                           ),
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                         ),
-                        const SizedBox(height: 4),
                         Text(
                           'Disponible: ${maxQuantity.toStringAsFixed(maxQuantity % 1 == 0 ? 0 : 2)} ${item.unitOfMeasure}',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Theme.of(
-                              context,
-                            ).colorScheme.onSurfaceVariant,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: cs.onSurfaceVariant,
                             fontFeatures: const [FontFeature.tabularFigures()],
                           ),
                         ),
                       ],
                     ),
                   ),
-                  Text(
-                    '\$${item.unitPrice.toStringAsFixed(2)}',
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.bold,
-                      color: Theme.of(context).colorScheme.onSurface,
-                      fontFeatures: const [FontFeature.tabularFigures()],
-                    ),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      if (item.discountCents > 0) ...[
+                        Text(
+                          '\$${item.unitPrice.toStringAsFixed(2)}',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: cs.onSurfaceVariant,
+                            decoration: TextDecoration.lineThrough,
+                            fontFeatures: const [FontFeature.tabularFigures()],
+                          ),
+                        ),
+                        Text(
+                          '\$${((item.unitPriceCents - (item.discountCents / item.quantity)) / 100.0).toStringAsFixed(2)}',
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: cs.primary,
+                            fontFeatures: const [FontFeature.tabularFigures()],
+                          ),
+                        ),
+                      ] else
+                        Text(
+                          '\$${item.unitPrice.toStringAsFixed(2)}',
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: cs.onSurface,
+                            fontFeatures: const [FontFeature.tabularFigures()],
+                          ),
+                        ),
+                      Text(
+                        'Unitario',
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          color: cs.outline,
+                          fontSize: 10,
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
-              AnimatedSize(
-                duration: const Duration(milliseconds: 250),
-                curve: Curves.easeInOut,
-                child: isSelected
-                    ? Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            child: Divider(
-                              height: 1,
-                              color: Theme.of(context)
-                                  .colorScheme
-                                  .outlineVariant
-                                  .withValues(alpha: 0.5),
-                            ),
-                          ),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              TextFormField(
-                                controller: _quantityControllers[item.id],
-                                decoration: InputDecoration(
-                                  labelText: 'Cantidad',
-                                  isDense: true,
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  suffixText: item.unitOfMeasure,
-                                ),
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                ),
-                                keyboardType:
-                                    const TextInputType.numberWithOptions(
-                                      decimal: true,
-                                    ),
-                                inputFormatters: [
-                                  FilteringTextInputFormatter.allow(
-                                    RegExp(r'^\d+\.?\d{0,2}'),
-                                  ),
-                                ],
-                                autovalidateMode:
-                                    AutovalidateMode.onUserInteraction,
-                                validator: (value) {
-                                  if (value == null || value.isEmpty) {
-                                    return 'Requerido';
-                                  }
-                                  final qty = double.tryParse(value);
-                                  if (qty == null) return 'Inválido';
-                                  if (qty <= 0) return '> 0';
-                                  if (qty > maxQuantity) {
-                                    return 'Max: $maxQuantity';
-                                  }
-                                  return null;
-                                },
-                                onChanged: (value) {
-                                  final qty = double.tryParse(value);
-                                  if (qty != null) {
-                                    ref
-                                        .read(returnProcessingProvider.notifier)
-                                        .updateItemQuantity(item.id!, qty);
-                                  } else {
-                                    // Handle empty or invalid input by setting to 0 (invalid)
-                                    ref
-                                        .read(returnProcessingProvider.notifier)
-                                        .updateItemQuantity(item.id!, 0.0);
-                                  }
-                                },
-                              ),
-                              const SizedBox(height: 16),
-                              DropdownButtonFormField<ReturnReason>(
-                                isExpanded: true,
-                                initialValue: itemData?.reason != null
-                                    ? ReturnReason.values.firstWhere(
-                                        (e) => e.label == itemData?.reason,
-                                        orElse: () => ReturnReason.other,
-                                      )
-                                    : null,
-                                decoration: InputDecoration(
-                                  labelText: 'Motivo',
-                                  isDense: true,
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  contentPadding: const EdgeInsets.symmetric(
-                                    horizontal: 12,
-                                    vertical: 14,
-                                  ),
-                                ),
-                                items: ReturnReason.values.map((reason) {
-                                  return DropdownMenuItem(
-                                    value: reason,
-                                    child: Text(
-                                      reason.label,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: const TextStyle(fontSize: 13),
-                                    ),
-                                  );
-                                }).toList(),
-                                onChanged: (value) {
-                                  if (value != null) {
-                                    _reasonControllers[item.id]?.text =
-                                        value.label;
-                                    ref
-                                        .read(returnProcessingProvider.notifier)
-                                        .updateItemReason(
-                                          item.id!,
-                                          value.label,
-                                        );
-                                  }
-                                },
-                              ),
-                            ],
-                          ),
-                          if (itemData != null) ...[
-                            const SizedBox(height: 12),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 16,
-                                vertical: 12,
-                              ),
-                              decoration: BoxDecoration(
-                                color: Theme.of(context)
-                                    .colorScheme
-                                    .secondaryContainer
-                                    .withValues(alpha: 0.7),
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(
-                                  color: Theme.of(context).colorScheme.secondary
-                                      .withValues(alpha: 0.2),
-                                ),
-                              ),
-                              child: Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
+            ),
+          ),
+          // Expanded Edit Section
+          AnimatedSize(
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.fastOutSlowIn,
+            child: isSelected
+                ? Container(
+                    decoration: BoxDecoration(
+                      color: cs.surfaceContainerLow.withValues(alpha: 0.5),
+                      borderRadius: const BorderRadius.vertical(
+                        bottom: Radius.circular(12),
+                      ),
+                    ),
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      children: [
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Quantity Input with buttons
+                            Expanded(
+                              flex: 2,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    'Subtotal a devolver:',
-                                    style: TextStyle(
-                                      fontSize: 13,
-                                      color: Theme.of(
-                                        context,
-                                      ).colorScheme.onSecondaryContainer,
-                                      fontWeight: FontWeight.w600,
-                                    ),
+                                    'Cantidad a devolver',
+                                    style: theme.textTheme.labelMedium
+                                        ?.copyWith(color: cs.onSurfaceVariant),
                                   ),
-                                  Text(
-                                    '\$${(itemData.totalCents / 100.0).toStringAsFixed(2)}',
-                                    style: TextStyle(
-                                      fontSize: 15,
-                                      color: Theme.of(
-                                        context,
-                                      ).colorScheme.onSecondaryContainer,
-                                      fontWeight: FontWeight.w900,
+                                  const SizedBox(height: 8),
+                                  TextFormField(
+                                    controller: _quantityControllers[item.id],
+                                    decoration: InputDecoration(
+                                      isDense: true,
+                                      filled: true,
+                                      fillColor: cs.surface,
+                                      border: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(8),
+                                        borderSide: BorderSide(
+                                          color: cs.outlineVariant,
+                                        ),
+                                      ),
+                                      suffixText: item.unitOfMeasure,
+                                      contentPadding:
+                                          const EdgeInsets.symmetric(
+                                            horizontal: 12,
+                                            vertical: 12,
+                                          ),
                                     ),
+                                    keyboardType:
+                                        const TextInputType.numberWithOptions(
+                                          decimal: true,
+                                        ),
+                                    inputFormatters: [
+                                      FilteringTextInputFormatter.allow(
+                                        RegExp(r'^\d+\.?\d{0,2}'),
+                                      ),
+                                    ],
+                                    onChanged: (value) {
+                                      final qty = double.tryParse(value);
+                                      if (qty != null) {
+                                        ref
+                                            .read(
+                                              returnProcessingProvider.notifier,
+                                            )
+                                            .updateItemQuantity(item.id!, qty);
+                                      }
+                                    },
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+                            // Reason Selector
+                            Expanded(
+                              flex: 3,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Motivo',
+                                    style: theme.textTheme.labelMedium
+                                        ?.copyWith(color: cs.onSurfaceVariant),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  DropdownButtonFormField<ReturnReason>(
+                                    isExpanded: true,
+                                    initialValue: itemData?.reason != null
+                                        ? ReturnReason.values.firstWhere(
+                                            (e) => e.label == itemData?.reason,
+                                            orElse: () => ReturnReason.other,
+                                          )
+                                        : null,
+                                    decoration: InputDecoration(
+                                      isDense: true,
+                                      filled: true,
+                                      fillColor: cs.surface,
+                                      border: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(8),
+                                        borderSide: BorderSide(
+                                          color: cs.outlineVariant,
+                                        ),
+                                      ),
+                                      contentPadding:
+                                          const EdgeInsets.symmetric(
+                                            horizontal: 12,
+                                            vertical: 12,
+                                          ),
+                                    ),
+                                    items: ReturnReason.values.map((reason) {
+                                      return DropdownMenuItem(
+                                        value: reason,
+                                        child: Text(
+                                          reason.label,
+                                          style: theme.textTheme.bodyMedium,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      );
+                                    }).toList(),
+                                    onChanged: (value) {
+                                      if (value != null) {
+                                        ref
+                                            .read(
+                                              returnProcessingProvider.notifier,
+                                            )
+                                            .updateItemReason(
+                                              item.id!,
+                                              value.label,
+                                            );
+                                      }
+                                    },
                                   ),
                                 ],
                               ),
                             ),
                           ],
-                        ],
-                      )
-                    : const SizedBox.shrink(),
-              ),
-            ],
+                        ),
+                        const SizedBox(height: 16),
+                        if (itemData != null)
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: cs.secondaryContainer,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Row(
+                                  children: [
+                                    Icon(
+                                      Icons.calculate_outlined,
+                                      size: 16,
+                                      color: cs.onSecondaryContainer,
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      'Reembolso estimado:',
+                                      style: theme.textTheme.labelMedium
+                                          ?.copyWith(
+                                            color: cs.onSecondaryContainer,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                    ),
+                                  ],
+                                ),
+                                Text(
+                                  '\$${(itemData.totalCents / 100.0).toStringAsFixed(2)}',
+                                  style: theme.textTheme.titleMedium?.copyWith(
+                                    color: cs.onSecondaryContainer,
+                                    fontWeight: FontWeight.w900,
+                                    fontFeatures: const [
+                                      FontFeature.tabularFigures(),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                      ],
+                    ),
+                  )
+                : const SizedBox.shrink(),
           ),
-        ),
+        ],
       ),
     );
   }

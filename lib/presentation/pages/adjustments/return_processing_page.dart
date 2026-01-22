@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+
 import 'package:posventa/domain/entities/sale.dart';
 import 'package:posventa/presentation/providers/return_processing_provider.dart';
 import 'package:posventa/presentation/widgets/sales/returns/processing/return_items_selector.dart';
@@ -30,7 +31,8 @@ class _ReturnProcessingPageState extends ConsumerState<ReturnProcessingPage> {
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(returnProcessingProvider);
-    final statsAsync = ref.watch(todayReturnsStatsProvider);
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
     final isDesktop = MediaQuery.of(context).size.width >= 900;
 
     // Listen for errors and success messages
@@ -42,7 +44,7 @@ class _ReturnProcessingPageState extends ConsumerState<ReturnProcessingPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(next.error!),
-            backgroundColor: Theme.of(context).colorScheme.error,
+            backgroundColor: cs.error,
             behavior: SnackBarBehavior.floating,
           ),
         );
@@ -55,39 +57,43 @@ class _ReturnProcessingPageState extends ConsumerState<ReturnProcessingPage> {
           SnackBar(
             content: Row(
               children: [
-                Icon(
-                  Icons.check_circle,
-                  color: Theme.of(context).colorScheme.onSurface,
+                Icon(Icons.check_circle, color: cs.onTertiaryContainer),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    next.successMessage!,
+                    style: TextStyle(color: cs.onTertiaryContainer),
+                  ),
                 ),
-                SizedBox(width: 12),
-                Expanded(child: Text(next.successMessage!)),
               ],
             ),
-            backgroundColor: Theme.of(context).colorScheme.tertiary,
+            backgroundColor: cs.tertiaryContainer,
             behavior: SnackBarBehavior.floating,
             duration: const Duration(milliseconds: 1200),
           ),
         );
         ref.read(returnProcessingProvider.notifier).clearSuccess();
 
-        // Capture router before async gap to avoid context usage warning
         final router = GoRouter.of(context);
-
-        // Navigate back to sales history immediately after showing success
         Future.delayed(const Duration(milliseconds: 800), () {
           if (!mounted) return;
-
           ref.read(returnProcessingProvider.notifier).reset();
-          // Use go instead of pop to ensure fresh navigation and data reload
           router.go('/sales-history');
         });
       }
     });
 
+    if (state.selectedSale == null) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+
     return Scaffold(
+      backgroundColor: cs.surface,
       appBar: AppBar(
-        elevation: 0,
-        title: const Text('Procesamiento de Devolución'),
+        title: const Text('Procesar Devolución'),
+        centerTitle: false,
+        backgroundColor: cs.surface,
+        scrolledUnderElevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () {
@@ -99,47 +105,322 @@ class _ReturnProcessingPageState extends ConsumerState<ReturnProcessingPage> {
           },
         ),
       ),
-      body: _buildReturnProcessingView(state),
-      bottomNavigationBar: (state.selectedItems.isNotEmpty && !isDesktop)
-          ? SafeArea(
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: FilledButton.icon(
-                  onPressed: state.canProcess && !state.isProcessing
-                      ? () => _triggerProcessReturn()
-                      : null,
-                  icon: state.isProcessing
-                      ? SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            valueColor: AlwaysStoppedAnimation<Color>(
-                              Theme.of(context).colorScheme.onSurface,
-                            ),
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          if (isDesktop) {
+            return Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Left Column: Content
+                Expanded(
+                  flex: 2,
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildSaleInfoHeader(context, state.selectedSale!),
+                        const SizedBox(height: 24),
+                        Text(
+                          'Selección de Productos',
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: cs.onSurface,
                           ),
-                        )
-                      : const Icon(Icons.check_circle),
-                  label: Text(
-                    state.isProcessing
-                        ? 'Procesando...'
-                        : 'Procesar Devolución',
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  style: FilledButton.styleFrom(
-                    backgroundColor: Theme.of(context).colorScheme.secondary,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                        ),
+                        const SizedBox(height: 16),
+                        const ReturnItemsSelector(),
+                      ],
                     ),
                   ),
                 ),
+                // Right Column: Summary Panel
+                Container(
+                  width: 400,
+                  decoration: BoxDecoration(
+                    color: cs.surfaceContainerLow,
+                    border: Border(
+                      left: BorderSide(
+                        color: cs.outlineVariant.withValues(alpha: 0.5),
+                      ),
+                    ),
+                  ),
+                  child: Column(
+                    children: [
+                      Expanded(
+                        child: SingleChildScrollView(
+                          padding: const EdgeInsets.all(24),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              Text(
+                                'Resumen',
+                                style: theme.textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              const SizedBox(height: 16),
+                              if (state.selectedItems.isNotEmpty)
+                                const ReturnSummaryCard()
+                              else
+                                Center(
+                                  child: Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 48,
+                                    ),
+                                    child: Column(
+                                      children: [
+                                        Icon(
+                                          Icons.shopping_cart_outlined,
+                                          size: 48,
+                                          color: cs.outline.withValues(
+                                            alpha: 0.5,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 16),
+                                        Text(
+                                          'Seleccione productos\npara comenzar',
+                                          textAlign: TextAlign.center,
+                                          style: TextStyle(
+                                            color: cs.onSurfaceVariant,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      // Fixed Action Button at Bottom Right
+                      if (state.selectedItems.isNotEmpty)
+                        Container(
+                          padding: const EdgeInsets.all(24),
+                          decoration: BoxDecoration(
+                            color: cs.surface,
+                            border: Border(
+                              top: BorderSide(
+                                color: cs.outlineVariant.withValues(alpha: 0.5),
+                              ),
+                            ),
+                          ),
+                          child: FilledButton.icon(
+                            onPressed: state.canProcess && !state.isProcessing
+                                ? () => _triggerProcessReturn()
+                                : null,
+                            icon: state.isProcessing
+                                ? SizedBox(
+                                    width: 20,
+                                    height: 20,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      valueColor: AlwaysStoppedAnimation<Color>(
+                                        cs.onPrimary,
+                                      ),
+                                    ),
+                                  )
+                                : const Icon(Icons.check_circle_outlined),
+                            label: Text(
+                              state.isProcessing
+                                  ? 'Procesando...'
+                                  : 'Confirmar Devolución',
+                            ),
+                            style: FilledButton.styleFrom(
+                              minimumSize: const Size.fromHeight(56),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ],
+            );
+          } else {
+            // Mobile/Tablet View
+            return Column(
+              children: [
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildSaleInfoHeader(context, state.selectedSale!),
+                        const SizedBox(height: 24),
+                        Text(
+                          'Selección de Productos',
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        const ReturnItemsSelector(),
+                        const SizedBox(height: 24),
+                        if (state.selectedItems.isNotEmpty) ...[
+                          Text(
+                            'Resumen',
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          const ReturnSummaryCard(),
+                          const SizedBox(height: 100),
+                        ],
+                      ],
+                    ),
+                  ),
+                ),
+                if (state.selectedItems.isNotEmpty)
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: cs.surface,
+                      border: Border(
+                        top: BorderSide(
+                          color: cs.outlineVariant.withValues(alpha: 0.5),
+                        ),
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: cs.shadow.withValues(alpha: 0.05),
+                          blurRadius: 10,
+                          offset: const Offset(0, -4),
+                        ),
+                      ],
+                    ),
+                    child: SafeArea(
+                      child: FilledButton.icon(
+                        onPressed: state.canProcess && !state.isProcessing
+                            ? () => _triggerProcessReturn()
+                            : null,
+                        icon: state.isProcessing
+                            ? SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                    cs.onPrimary,
+                                  ),
+                                ),
+                              )
+                            : const Icon(Icons.check_circle_outlined),
+                        label: Text(
+                          state.isProcessing
+                              ? 'Procesando...'
+                              : 'Confirmar Devolución',
+                        ),
+                        style: FilledButton.styleFrom(
+                          minimumSize: const Size.fromHeight(56),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            );
+          }
+        },
+      ),
+    );
+  }
+
+  Widget _buildSaleInfoHeader(BuildContext context, Sale sale) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: cs.secondaryContainer,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: cs.surface.withValues(alpha: 0.5),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(
+              Icons.receipt_long,
+              color: cs.onSecondaryContainer,
+              size: 32,
+            ),
+          ),
+          const SizedBox(width: 20),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Text(
+                      'Venta ${sale.saleNumber}',
+                      style: tt.titleLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: cs.onSecondaryContainer,
+                        letterSpacing: -0.5,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: cs.surface.withValues(alpha: 0.5),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(
+                        '${sale.items.length} productos',
+                        style: tt.labelSmall?.copyWith(
+                          color: cs.onSecondaryContainer,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Cliente: ${sale.customerName ?? 'Público General'}',
+                  style: tt.bodyMedium?.copyWith(
+                    color: cs.onSecondaryContainer.withValues(alpha: 0.8),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                'Total Venta',
+                style: tt.labelSmall?.copyWith(
+                  color: cs.onSecondaryContainer.withValues(alpha: 0.7),
+                ),
               ),
-            )
-          : null,
+              Text(
+                '\$${sale.total.toStringAsFixed(2)}',
+                style: tt.titleLarge?.copyWith(
+                  fontWeight: FontWeight.w900,
+                  color: cs.onSecondaryContainer,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 
@@ -153,241 +434,16 @@ class _ReturnProcessingPageState extends ConsumerState<ReturnProcessingPage> {
     }
   }
 
-  Widget _buildReturnProcessingView(ReturnProcessingState state) {
-    if (state.selectedSale == null) {
-      return const Center(child: CircularProgressIndicator());
-    }
-
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final isBroad = constraints.maxWidth >= 900;
-
-        if (isBroad) {
-          return Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Left Column: Selection
-              Expanded(
-                flex: 2,
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(24),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _buildSaleInfoCard(state),
-                      const SizedBox(height: 32),
-                      Text(
-                        'Seleccionar Productos a Devolver',
-                        style: Theme.of(context).textTheme.titleMedium
-                            ?.copyWith(fontWeight: FontWeight.bold),
-                      ),
-                      const SizedBox(height: 16),
-                      const ReturnItemsSelector(),
-                    ],
-                  ),
-                ),
-              ),
-              // Right Column: Summary & Actions
-              Expanded(
-                flex: 1,
-                child: Container(
-                  decoration: BoxDecoration(
-                    border: Border(
-                      left: BorderSide(
-                        color: Theme.of(
-                          context,
-                        ).colorScheme.outlineVariant.withValues(alpha: 0.5),
-                      ),
-                    ),
-                  ),
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.all(24),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        if (state.selectedItems.isNotEmpty) ...[
-                          const ReturnSummaryCard(),
-                          const SizedBox(height: 24),
-                          FilledButton.icon(
-                            onPressed: state.canProcess && !state.isProcessing
-                                ? () => _triggerProcessReturn()
-                                : null,
-                            icon: state.isProcessing
-                                ? SizedBox(
-                                    width: 20,
-                                    height: 20,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                      valueColor: AlwaysStoppedAnimation<Color>(
-                                        Theme.of(
-                                          context,
-                                        ).colorScheme.onSecondary,
-                                      ),
-                                    ),
-                                  )
-                                : const Icon(Icons.check_circle),
-                            label: Text(
-                              state.isProcessing
-                                  ? 'Procesando...'
-                                  : 'Procesar Devolución',
-                            ),
-                            style: FilledButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(vertical: 20),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                            ),
-                          ),
-                        ] else
-                          Center(
-                            child: Padding(
-                              padding: const EdgeInsets.all(32.0),
-                              child: Text(
-                                'Seleccione productos para continuar',
-                                style: TextStyle(
-                                  color: Theme.of(context).colorScheme.outline,
-                                ),
-                                textAlign: TextAlign.center,
-                              ),
-                            ),
-                          ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          );
-        } else {
-          // Mobile View
-          return ListView(
-            padding: const EdgeInsets.all(16.0),
-            children: [
-              _buildSaleInfoCard(state),
-              const SizedBox(height: 24),
-              Text(
-                'Seleccionar Productos a Devolver',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Theme.of(context).colorScheme.onSurface,
-                ),
-              ),
-              const SizedBox(height: 16),
-              const ReturnItemsSelector(),
-              const SizedBox(height: 24),
-              if (state.selectedItems.isNotEmpty) ...[
-                const ReturnSummaryCard(),
-                const SizedBox(height: 100), // Space for FAB/BottomBar
-              ],
-            ],
-          );
-        }
-      },
-    );
-  }
-
-  Widget _buildSaleInfoCard(ReturnProcessingState state) {
-    final sale = state.selectedSale!;
-
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(
-                  Icons.receipt_long,
-                  color: Theme.of(context).colorScheme.secondary,
-                  size: 24,
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Venta ${sale.saleNumber}',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: Theme.of(context).colorScheme.onSurface,
-                        ),
-                      ),
-                      if (sale.customerName != null)
-                        Text(
-                          sale.customerName!,
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: Theme.of(
-                              context,
-                            ).colorScheme.onSurfaceVariant,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            const Divider(height: 24),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                _buildInfoItem('Fecha', _formatDate(sale.saleDate)),
-                _buildInfoItem('Total', '\$${sale.total.toStringAsFixed(2)}'),
-                _buildInfoItem('Items', '${sale.items.length}'),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildInfoItem(String label, String value) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 12,
-            color: Theme.of(context).colorScheme.onSurfaceVariant,
-          ),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          value,
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-            color: Theme.of(context).colorScheme.onSurface,
-          ),
-        ),
-      ],
-    );
-  }
-
-  String _formatDate(DateTime date) {
-    return '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}';
-  }
-
   void _showCancelConfirmation(BuildContext context) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('¿Cancelar devolución?'),
-        content: const Text(
-          'Se perderán todos los datos ingresados. ¿Desea continuar?',
-        ),
+        title: const Text('¿Cancelar proceso?'),
+        content: const Text('Se perderá la selección actual. ¿Desea salir?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('No'),
+            child: const Text('Continuar editando'),
           ),
           FilledButton(
             onPressed: () {
@@ -397,8 +453,9 @@ class _ReturnProcessingPageState extends ConsumerState<ReturnProcessingPage> {
             },
             style: FilledButton.styleFrom(
               backgroundColor: Theme.of(context).colorScheme.error,
+              foregroundColor: Theme.of(context).colorScheme.onError,
             ),
-            child: const Text('Sí, cancelar'),
+            child: const Text('Salir'),
           ),
         ],
       ),
