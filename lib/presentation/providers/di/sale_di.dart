@@ -215,5 +215,6 @@ Future<PrintSaleTicketUseCase> printSaleTicketUseCase(Ref ref) async {
     ref.watch(printerServiceProvider),
     await ref.watch(settingsRepositoryProvider.future),
     ref.watch(storeRepositoryProvider),
+    ref.watch(saleReturnRepositoryProvider),
   );
 }
