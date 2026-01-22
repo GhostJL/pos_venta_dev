@@ -131,16 +131,41 @@ class SaleProductItem extends StatelessWidget {
                               ),
                               const SizedBox(width: 8),
                             ],
-                            Text(
-                              '\$${(item.unitPriceCents / 100).toStringAsFixed(2)} c/u',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: colorScheme.onSurfaceVariant,
-                                fontFeatures: const [
-                                  FontFeature.tabularFigures(),
-                                ],
+                            if (item.discountCents > 0) ...[
+                              Text(
+                                '\$${(item.unitPriceCents / 100).toStringAsFixed(2)}',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: colorScheme.onSurfaceVariant,
+                                  decoration: TextDecoration.lineThrough,
+                                  fontFeatures: const [
+                                    FontFeature.tabularFigures(),
+                                  ],
+                                ),
                               ),
-                            ),
+                              const SizedBox(width: 4),
+                              Text(
+                                '\$${((item.unitPriceCents - (item.discountCents / item.quantity)) / 100).toStringAsFixed(2)}',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: colorScheme.primary,
+                                  fontWeight: FontWeight.bold,
+                                  fontFeatures: const [
+                                    FontFeature.tabularFigures(),
+                                  ],
+                                ),
+                              ),
+                            ] else
+                              Text(
+                                '\$${(item.unitPriceCents / 100).toStringAsFixed(2)} c/u',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: colorScheme.onSurfaceVariant,
+                                  fontFeatures: const [
+                                    FontFeature.tabularFigures(),
+                                  ],
+                                ),
+                              ),
                           ],
                         ),
                       ],

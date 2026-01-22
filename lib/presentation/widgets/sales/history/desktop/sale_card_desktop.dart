@@ -306,6 +306,26 @@ class _SaleCardDesktopState extends ConsumerState<SaleCardDesktop> {
                           fontFeatures: [const FontFeature.tabularFigures()],
                         ),
                       ),
+                      if (widget.sale.discountCents > 0)
+                        Container(
+                          margin: const EdgeInsets.only(top: 2),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 4,
+                            vertical: 1,
+                          ),
+                          decoration: BoxDecoration(
+                            color: cs.tertiaryContainer,
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(
+                            '- \$${(widget.sale.discountCents / 100).toStringAsFixed(2)} desc.',
+                            style: tt.labelSmall?.copyWith(
+                              color: cs.onTertiaryContainer,
+                              fontSize: 9,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
                       if (returns.isNotEmpty)
                         Text(
                           'Dev: -\$ ${(totalReturnedCents / 100).toStringAsFixed(2)}',
