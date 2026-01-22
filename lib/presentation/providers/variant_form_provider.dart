@@ -565,7 +565,7 @@ class VariantForm extends _$VariantForm {
         isSoldByWeight: state.isSoldByWeight,
         photoUrl: savedPhotoUrl,
         additionalBarcodes: state.additionalBarcodes,
-        stock: variant?.stock,
+        // stock: variant?.stock, // Removed
         isActive: variant?.isActive ?? true,
       );
 

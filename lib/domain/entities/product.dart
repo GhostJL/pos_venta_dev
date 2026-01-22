@@ -19,15 +19,6 @@ class Product extends Equatable {
   final bool hasExpiration;
   final List<ProductTax>? productTaxes;
   final List<ProductVariant>? variants;
-
-  /// @deprecated Use Inventory table as single source of truth.
-  /// This field is maintained for backwards compatibility but may be out of sync.
-  /// Query Inventory table or use product_stock_summary view for accurate stock.
-  @Deprecated(
-    'Use Inventory table via repository. Will be removed in future version.',
-  )
-  final int? stock;
-
   final String? photoUrl;
 
   const Product({
@@ -46,7 +37,6 @@ class Product extends Equatable {
     this.hasExpiration = false,
     this.productTaxes,
     this.variants,
-    this.stock,
     this.photoUrl,
   });
 
@@ -110,54 +100,8 @@ class Product extends Equatable {
     return null;
   }
 
-  // Stock Logic - DEPRECATED
-  // Use Inventory table as single source of truth
-  // These getters are maintained for backwards compatibility only
-
-  /// @deprecated Use Inventory repository to get accurate stock.
-  /// Query: SELECT SUM(quantity_on_hand) FROM inventory WHERE product_id = ?
-  /// Or use product_stock_summary view for optimized queries.
-  @Deprecated('Use Inventory table via repository')
-  double get totalStock {
-    if (variants == null) return 0;
-    return variants!.fold(0.0, (sum, v) => sum + (v.stock ?? 0));
-  }
-
-  /// @deprecated Use stockMin from ProductVariant configuration
-  @Deprecated('Use variant.stockMin directly')
-  double get totalMinStock {
-    if (variants == null) return 0;
-    return variants!.fold(0.0, (sum, v) => sum + (v.stockMin ?? 0));
-  }
-
-  /// @deprecated Use stockMax from ProductVariant configuration
-  @Deprecated('Use variant.stockMax directly')
-  double get maxStockLimit {
-    if (variants == null) return 100;
-    double max = 0;
-    for (var v in variants!) {
-      if ((v.stockMax ?? 0) > max) max = v.stockMax!;
-    }
-    return max > 0 ? max : 100;
-  }
-
-  /// @deprecated Use Inventory repository to check stock levels.
-  /// Compare current stock from Inventory with variant.stockMin
-  @Deprecated('Use Inventory table via repository')
-  bool get isLowStock {
-    if (variants == null) return false;
-    for (var v in variants!) {
-      if ((v.stock ?? 0) <= (v.stockMin ?? 5)) {
-        return true;
-      }
-    }
-    return false;
-  }
-
-  /// @deprecated Use Inventory repository to check if out of stock.
-  /// Query: SELECT quantity_on_hand FROM inventory WHERE product_id = ?
-  @Deprecated('Use Inventory table via repository')
-  bool get isOutOfStock => totalStock <= 0;
+  // Stock removed - use Inventory table via repository
+  // Query Inventory directly or use product_stock_summary view
 
   Product copyWith({
     int? id,
@@ -174,7 +118,6 @@ class Product extends Equatable {
     bool? hasExpiration,
     List<ProductTax>? productTaxes,
     List<ProductVariant>? variants,
-    int? stock,
     String? photoUrl,
   }) {
     return Product(
@@ -192,7 +135,6 @@ class Product extends Equatable {
       hasExpiration: hasExpiration ?? this.hasExpiration,
       productTaxes: productTaxes ?? this.productTaxes,
       variants: variants ?? this.variants,
-      stock: stock ?? this.stock,
       photoUrl: photoUrl ?? this.photoUrl,
     );
   }

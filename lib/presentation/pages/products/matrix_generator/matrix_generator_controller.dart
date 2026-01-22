@@ -168,13 +168,6 @@ class MatrixGeneratorNotifier extends _$MatrixGeneratorNotifier {
     state = state.copyWith(generatedVariants: updated);
   }
 
-  void updateAllStocks(double stock) {
-    final updated = state.generatedVariants
-        .map((v) => v.copyWith(stock: stock))
-        .toList();
-    state = state.copyWith(generatedVariants: updated);
-  }
-
   void updateAllWholesalePrices(double price) {
     final priceCents = (price * 100).round();
     final updated = state.generatedVariants

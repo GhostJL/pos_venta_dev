@@ -29,7 +29,7 @@ void main() {
       id: 1,
       code: 'TEST001',
       name: 'Test Product',
-      stock: 10,
+      // stock: 10, // Removed
     );
   });
 

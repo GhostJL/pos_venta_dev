@@ -22,10 +22,8 @@ class ProductCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final effectiveStock = variant != null
-        ? (variant!.stock ?? 0)
-        : (product.stock ?? 0);
-    final hasStock = effectiveStock > 0;
+    // Stock Removed from Card
+    const hasStock = true; // Always enable tap for now, or depend on isActive
 
     final double displayValue = showCost
         ? (variant?.costPriceCents ?? product.costPriceCents) / 100
@@ -40,7 +38,7 @@ class ProductCard extends StatelessWidget {
         side: BorderSide(color: Theme.of(context).colorScheme.outline),
       ),
       child: InkWell(
-        onTap: (hasStock || showCost) ? onTap : null,
+        onTap: onTap,
         borderRadius: BorderRadius.circular(12),
         child: Padding(
           padding: const EdgeInsets.all(12),
@@ -124,31 +122,7 @@ class ProductCard extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   // Stock badge
-                  if (variant?.type != VariantType.purchase)
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        color: hasStock
-                            ? Theme.of(context).colorScheme.tertiaryContainer
-                            : Theme.of(context).colorScheme.errorContainer,
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: Text(
-                        '${effectiveStock.toStringAsFixed(0)} en stock',
-                        style: TextStyle(
-                          color: hasStock
-                              ? Theme.of(
-                                  context,
-                                ).colorScheme.onTertiaryContainer
-                              : Theme.of(context).colorScheme.onErrorContainer,
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
+                  // Stock badge Removed
 
                   // Precio o Costo
                   Column(

@@ -352,7 +352,7 @@ class ProductFormMobile extends ConsumerWidget {
                         if (!isVariable) ...[
                           ProductInventorySection(
                             product: product,
-                            stockController: controllers.stockController,
+
                             minStockController: controllers.minStockController,
                             maxStockController: controllers.maxStockController,
                           ),

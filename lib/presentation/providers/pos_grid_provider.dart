@@ -63,16 +63,13 @@ Future<List<ProductGridItem>> posGridItems(Ref ref) async {
                   product.variants?.where((v) => v.isForSale).toList() ?? [];
               if (sellableVariants.isNotEmpty) {
                 for (final variant in sellableVariants) {
-                  if ((variant.stock ?? 0) > 0) {
-                    gridItems.add(
-                      ProductGridItem(product: product, variant: variant),
-                    );
-                  }
+                  // Add all variants initially, filter later by real stock
+                  gridItems.add(
+                    ProductGridItem(product: product, variant: variant),
+                  );
                 }
               } else {
-                if ((product.stock ?? 0) > 0) {
-                  gridItems.add(ProductGridItem(product: product));
-                }
+                gridItems.add(ProductGridItem(product: product));
               }
               if (product.id != null) {
                 addedProductIds.add(product.id!);
@@ -92,7 +89,7 @@ Future<List<ProductGridItem>> posGridItems(Ref ref) async {
 
         final standardResult = await searchUseCase.call(
           '',
-          sortOrder: 'stock_desc', // Or 'id_desc'
+          sortOrder: 'id_desc',
           onlyWithStock: true,
           limit: 50,
         );
@@ -108,16 +105,12 @@ Future<List<ProductGridItem>> posGridItems(Ref ref) async {
                 product.variants?.where((v) => v.isForSale).toList() ?? [];
             if (sellableVariants.isNotEmpty) {
               for (final variant in sellableVariants) {
-                if ((variant.stock ?? 0) > 0) {
-                  gridItems.add(
-                    ProductGridItem(product: product, variant: variant),
-                  );
-                }
+                gridItems.add(
+                  ProductGridItem(product: product, variant: variant),
+                );
               }
             } else {
-              if ((product.stock ?? 0) > 0) {
-                gridItems.add(ProductGridItem(product: product));
-              }
+              gridItems.add(ProductGridItem(product: product));
             }
             if (product.id != null) {
               addedProductIds.add(product.id!);
@@ -133,7 +126,7 @@ Future<List<ProductGridItem>> posGridItems(Ref ref) async {
     // Search query active
     final result = await searchUseCase.call(
       query,
-      sortOrder: 'stock_desc',
+      sortOrder: 'id_desc',
       onlyWithStock: true, // Requested optimization
       limit: 50,
     );
@@ -148,16 +141,10 @@ Future<List<ProductGridItem>> posGridItems(Ref ref) async {
             // Should we enforce stock > 0 for search too?
             // User said "creo que es mejor solo mostrar los productos con stock disponible".
             // Implied generally.
-            if ((variant.stock ?? 0) > 0) {
-              gridItems.add(
-                ProductGridItem(product: product, variant: variant),
-              );
-            }
+            gridItems.add(ProductGridItem(product: product, variant: variant));
           }
         } else {
-          if ((product.stock ?? 0) > 0) {
-            gridItems.add(ProductGridItem(product: product));
-          }
+          gridItems.add(ProductGridItem(product: product));
         }
       }
     });
@@ -192,7 +179,9 @@ Future<List<ProductGridItem>> posGridItems(Ref ref) async {
         }
       }),
     );
-    gridItems = updatedItems;
+    gridItems = updatedItems
+        .where((item) => (item.realStock ?? 0) > 0)
+        .toList();
   }
 
   return gridItems;

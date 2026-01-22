@@ -327,7 +327,7 @@ class ProductFormDesktop extends ConsumerWidget {
                         title: 'Inventario',
                         child: ProductInventorySection(
                           product: product,
-                          stockController: controllers.stockController,
+
                           minStockController: controllers.minStockController,
                           maxStockController: controllers.maxStockController,
                         ),

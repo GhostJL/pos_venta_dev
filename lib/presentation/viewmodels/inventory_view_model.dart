@@ -163,7 +163,7 @@ final inventoryViewModelProvider = Provider<InventoryState>((ref) {
                 productId: product.id!,
                 warehouseId: defaultWarehouseId!,
                 variantId: variant.id,
-                quantityOnHand: variant.stock ?? 0,
+                quantityOnHand: 0,
                 minStock: variant.stockMin?.toInt() ?? 0,
                 maxStock: variant.stockMax?.toInt() ?? 0,
               ),

@@ -300,7 +300,7 @@ class ProductFormNotifier extends _$ProductFormNotifier {
       if (v1.isForSale != v2.isForSale) return true;
       if (v1.type != v2.type) return true;
       if (v1.linkedVariantId != v2.linkedVariantId) return true;
-      if (v1.stock != v2.stock) return true;
+      // if (v1.stock != v2.stock) return true; // Stock removed from logical equality checks
       if (v1.stockMin != v2.stockMin) return true;
       if (v1.stockMax != v2.stockMax) return true;
       if (v1.conversionFactor != v2.conversionFactor) return true;
@@ -440,11 +440,9 @@ class ProductFormNotifier extends _$ProductFormNotifier {
     _updateModified(state.copyWith(variants: updated));
   }
 
+  // Deprecated: Stock is managed via Inventory Adjustments
   void updateAllStocks(double stock) {
-    final updated = state.variants
-        .map((v) => v.copyWith(stock: stock))
-        .toList();
-    _updateModified(state.copyWith(variants: updated));
+    // No-op
   }
 
   void updateAllMinStocks(double stock) {
@@ -469,7 +467,7 @@ class ProductFormNotifier extends _$ProductFormNotifier {
     double? price,
     double? cost,
     double? wholesale,
-    double? stock,
+    // double? stock, // Removed
     double? minStock,
     double? maxStock,
     bool silent = false,
@@ -624,7 +622,6 @@ class ProductFormNotifier extends _$ProductFormNotifier {
         wholesalePriceCents: wholesale != null
             ? (wholesale * 100).round()
             : null,
-        stock: stock,
         stockMin: minStock,
         stockMax: maxStock,
         isForSale: true,

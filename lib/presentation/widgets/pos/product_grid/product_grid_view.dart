@@ -62,6 +62,7 @@ class ProductGridView extends StatelessWidget {
             quantityInCart: quantity,
             onTap: () => onItemTap(item),
             onLongPress: () => onItemLongPress(item),
+            displayedStock: item.realStock,
           );
         },
       );

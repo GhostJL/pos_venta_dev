@@ -150,9 +150,8 @@ class ProductListTile extends ConsumerWidget {
                 ),
               ),
 
-              // 5. Stock
-              if (useInventory)
-                Expanded(flex: 2, child: _buildStockIndicator(theme, product)),
+              // 5. Stock (Removed)
+              if (useInventory) const Expanded(flex: 2, child: SizedBox()),
 
               // 6. Actions
               SizedBox(
@@ -210,33 +209,5 @@ class ProductListTile extends ConsumerWidget {
     );
   }
 
-  Widget _buildStockIndicator(ThemeData theme, Product product) {
-    // Reuse logic from ProductCard or simplify
-    final totalStock = product.totalStock;
-    final isLow = product.isLowStock;
-    final isOut = product.isOutOfStock;
-    Color color = isOut
-        ? theme.colorScheme.error
-        : (isLow
-              ? theme.colorScheme.tertiary
-              : theme.colorScheme.onSurfaceVariant);
-
-    return Row(
-      children: [
-        Icon(
-          isOut ? Icons.error_outline : Icons.inventory_2_outlined,
-          size: 16,
-          color: color,
-        ),
-        const SizedBox(width: 4),
-        Text(
-          '$totalStock',
-          style: theme.textTheme.bodyMedium?.copyWith(
-            color: color,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-      ],
-    );
-  }
+  /* _buildStockIndicator Removed */
 }

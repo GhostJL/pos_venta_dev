@@ -69,7 +69,7 @@ void main() {
             priceCents: 100,
             costPriceCents: 50,
             type: VariantType.sales,
-            stock: 0,
+            // stock: 0, // Removed
             quantity: 1.0,
             isActive: true,
             isForSale: true,
@@ -99,7 +99,7 @@ void main() {
             costPriceCents: 500,
             type: VariantType.purchase,
             linkedVariantId: salesVariantId, // Linked to existing variant
-            stock: 10.0,
+            // stock: 10.0, // Removed
             conversionFactor: 12.0,
             quantity: 1.0,
             isActive: true,

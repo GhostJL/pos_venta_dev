@@ -5,14 +5,12 @@ import 'package:posventa/domain/entities/product.dart';
 
 class ProductInventorySection extends ConsumerWidget {
   final Product? product;
-  final TextEditingController stockController;
   final TextEditingController minStockController;
   final TextEditingController maxStockController;
 
   const ProductInventorySection({
     super.key,
     required this.product,
-    required this.stockController,
     required this.minStockController,
     required this.maxStockController,
   });
@@ -22,21 +20,6 @@ class ProductInventorySection extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Stock field (Initial Stock for new products or Current Stock adjustment)
-        if (product?.id == null)
-          TextFormField(
-            controller: stockController,
-            decoration: const InputDecoration(
-              labelText: 'Stock Inicial', // Changed for clarity
-              prefixIcon: Icon(Icons.inventory_2_rounded),
-              helperText: 'Cantidad disponible actualmente',
-            ),
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            inputFormatters: [
-              FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
-            ],
-          ),
-        if (product?.id == null) const SizedBox(height: 16),
         Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [

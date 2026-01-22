@@ -195,14 +195,6 @@ class ProductCard extends ConsumerWidget {
                             ],
                           ),
                         ),
-
-                        // Stock Indicator (Right aligned)
-                        if (useInventory &&
-                            product.variants != null &&
-                            product.variants!.isNotEmpty) ...[
-                          const SizedBox(width: 8),
-                          Flexible(child: _buildStockIndicator(theme, product)),
-                        ],
                       ],
                     ),
                   ],
@@ -215,76 +207,7 @@ class ProductCard extends ConsumerWidget {
     );
   }
 
-  Widget _buildStockIndicator(ThemeData theme, Product product) {
-    final totalStock = product.totalStock;
-    final maxStock = product.maxStockLimit;
-    final isLowStock = product.isLowStock;
-    final isOutOfStock = product.isOutOfStock;
-
-    // Progress calculation (clamped between 0 and 1)
-    final progress = (totalStock / maxStock).clamp(0.0, 1.0);
-
-    Color color;
-    Color backgroundColor;
-    IconData icon;
-
-    if (isOutOfStock) {
-      color = theme.colorScheme.error;
-      backgroundColor = theme.colorScheme.errorContainer;
-      icon = Icons.error_outline_rounded;
-    } else if (isLowStock) {
-      color = theme.colorScheme.tertiary;
-      backgroundColor = theme.colorScheme.tertiaryContainer;
-      icon = Icons.warning_amber_rounded;
-    } else {
-      color = theme.colorScheme.primary;
-      backgroundColor = theme.colorScheme.primaryContainer;
-      icon = Icons.inventory_2_outlined;
-    }
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.end,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-          decoration: BoxDecoration(
-            color: backgroundColor.withValues(alpha: 0.5),
-            borderRadius: BorderRadius.circular(6),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(icon, size: 12, color: color),
-              const SizedBox(width: 4),
-              Text(
-                '${_formatDouble(totalStock)} Unid.',
-                style: theme.textTheme.labelSmall?.copyWith(
-                  color: color,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 4),
-        SizedBox(
-          width: 60,
-          child: LinearProgressIndicator(
-            value: progress,
-            backgroundColor: theme.colorScheme.surfaceContainerHighest,
-            color: color,
-            minHeight: 3,
-            borderRadius: BorderRadius.circular(1.5),
-          ),
-        ),
-      ],
-    );
-  }
-
-  String _formatDouble(double value) {
-    return value.toString().replaceAll(RegExp(r'\.0$'), '');
-  }
+  /* _buildStockIndicator Removed */
 
   Widget _buildLeading(ThemeData theme, bool isActive) {
     if (product.photoUrl != null && product.photoUrl!.isNotEmpty) {

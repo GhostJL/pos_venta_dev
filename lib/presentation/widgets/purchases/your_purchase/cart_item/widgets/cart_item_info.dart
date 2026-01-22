@@ -14,9 +14,8 @@ class CartItemInfo extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final variant = helper.variant;
-    final stock = variant?.stock ?? 0;
+    // final stock = variant?.stock ?? 0; // Removed
     final colorScheme = Theme.of(context).colorScheme;
-
     final textTheme = Theme.of(context).textTheme;
 
     // Global Settings
@@ -89,13 +88,6 @@ class CartItemInfo extends ConsumerWidget {
           runSpacing: 8,
           crossAxisAlignment: WrapCrossAlignment.center,
           children: [
-            // Stock Chip
-            if (useInventory)
-              _InfoChip(
-                icon: Icons.inventory_2_outlined,
-                label: 'Stock: ${stock.toStringAsFixed(0)}',
-              ),
-
             // Margin Chip
             if (hasValidPrice) _MarginChip(margin: margin),
 
@@ -131,43 +123,6 @@ class CartItemInfo extends ConsumerWidget {
           ],
         ),
       ],
-    );
-  }
-}
-
-class _InfoChip extends StatelessWidget {
-  final IconData icon;
-  final String label;
-
-  const _InfoChip({required this.icon, required this.label});
-
-  @override
-  Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
-        borderRadius: BorderRadius.circular(6),
-        border: Border.all(
-          color: colorScheme.outlineVariant.withValues(alpha: 0.5),
-        ),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 14, color: colorScheme.onSurfaceVariant),
-          const SizedBox(width: 6),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.bold,
-              color: colorScheme.onSurfaceVariant,
-            ),
-          ),
-        ],
-      ),
     );
   }
 }

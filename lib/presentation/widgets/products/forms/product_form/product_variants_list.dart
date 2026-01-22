@@ -423,14 +423,6 @@ class _VariantCard extends ConsumerWidget {
                                     : "${variant.conversionFactor} ${unitName ?? ''}",
                                 theme.colorScheme.secondary,
                               ),
-                              if (isSales)
-                                _buildBadge(
-                                  theme,
-                                  "Stock: ${variant.stock ?? 0}",
-                                  (variant.stock ?? 0) > 0
-                                      ? Colors.green
-                                      : theme.colorScheme.error,
-                                ),
                             ],
                           ),
                         ],

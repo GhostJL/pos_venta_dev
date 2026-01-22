@@ -54,12 +54,10 @@ class _PosProductItemState extends ConsumerState<PosProductItem> {
     final colorScheme = theme.colorScheme;
 
     // Determine effective stock
-    // Use displayedStock (Real Stock) if available, otherwise fallback to cache
+    // Use displayedStock (Real Stock) if available, otherwise fallback to 0
     final int stock = widget.displayedStock != null
         ? widget.displayedStock!.toInt()
-        : (widget.variant != null
-              ? (widget.variant!.stock ?? 0).toInt()
-              : (widget.product.stock ?? 0));
+        : 0;
 
     // Calculate Gross Price
     // Global Settings

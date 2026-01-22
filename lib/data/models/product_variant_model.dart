@@ -15,7 +15,6 @@ class ProductVariantModel extends ProductVariant {
     required super.isForSale,
     required super.type,
     super.linkedVariantId,
-    super.stock,
     super.stockMin,
     super.stockMax,
     super.conversionFactor,
@@ -39,7 +38,6 @@ class ProductVariantModel extends ProductVariant {
       isForSale: variant.isForSale,
       type: variant.type,
       linkedVariantId: variant.linkedVariantId,
-      stock: variant.stock,
       stockMin: variant.stockMin,
       stockMax: variant.stockMax,
       conversionFactor: variant.conversionFactor,
@@ -69,7 +67,6 @@ class ProductVariantModel extends ProductVariant {
           ? VariantType.purchase
           : VariantType.sales,
       linkedVariantId: map['linked_variant_id'],
-      stock: map['stock'] != null ? (map['stock'] as num).toDouble() : null,
       stockMin: map['stock_min'] != null
           ? (map['stock_min'] as num).toDouble()
           : null,

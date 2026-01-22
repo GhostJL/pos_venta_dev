@@ -220,11 +220,8 @@ class ProductLocalDataSourceImpl implements ProductLocalDataSource {
             wholesalePriceCents: v.wholesalePriceCents,
             isActive: v.isActive,
             isForSale: v.isForSale,
-            type: vType,
             // Per requirement: Purchase variants should not show stock
-            stock: vType == VariantType.purchase
-                ? 0.0
-                : (stockMap[v.id] ?? 0.0),
+            type: vType,
             stockMin: v.stockMin,
             stockMax: v.stockMax,
             unitId: v.unitId,
@@ -242,24 +239,16 @@ class ProductLocalDataSourceImpl implements ProductLocalDataSource {
             final pTaxes = taxesMap[p.id] ?? [];
             final pVariants = variantsMap[p.id] ?? [];
 
-            final totalStock = pVariants.fold(
-              0.0,
-              (sum, v) => sum + (v.stock ?? 0),
-            );
-
-            return p.copyWith(
-              productTaxes: pTaxes,
-              variants: pVariants,
-              stock: totalStock.toInt(),
-            );
+            return p.copyWith(productTaxes: pTaxes, variants: pVariants);
           })
           .map((p) => ProductModel.fromEntity(p))
           .toList();
 
       // Apply Manual Sorting and Pagination if needed
+      // Stock sorting removed as stock is not calculated here anymore
       if (manualPagination && sortOrder == 'stock_desc') {
-        resultList.sort((a, b) => (b.stock ?? 0).compareTo(a.stock ?? 0));
-
+        // Fallback to ID desc or name asc? OR just do nothing specific for stock.
+        // For now, let's just paginate if needed.
         if (limit != null) {
           final start = offset ?? 0;
           if (start >= resultList.length) {
@@ -383,9 +372,8 @@ class ProductLocalDataSourceImpl implements ProductLocalDataSource {
           wholesalePriceCents: v.wholesalePriceCents,
           isActive: v.isActive,
           isForSale: v.isForSale,
-          type: vType,
           // Per requirement: Purchase variants should not show stock
-          stock: vType == VariantType.purchase ? 0.0 : (stockMap[v.id] ?? 0.0),
+          type: vType,
           stockMin: v.stockMin,
           stockMax: v.stockMax,
           unitId: v.unitId,
@@ -395,11 +383,6 @@ class ProductLocalDataSourceImpl implements ProductLocalDataSource {
           linkedVariantId: v.linkedVariantId,
         );
       }).toList();
-
-      final totalStock = variantModels.fold(
-        0.0,
-        (sum, v) => sum + (v.stock ?? 0),
-      );
 
       return ProductModel(
         id: product.id,
@@ -417,7 +400,6 @@ class ProductLocalDataSourceImpl implements ProductLocalDataSource {
         photoUrl: product.photoUrl,
         variants: variantModels,
         productTaxes: taxes,
-        stock: totalStock.toInt(),
       );
     } catch (e) {
       throw DatabaseException(e.toString());
@@ -486,11 +468,8 @@ class ProductLocalDataSourceImpl implements ProductLocalDataSource {
         }
 
         if (product.variants != null && product.variants!.isNotEmpty) {
-          // Map to accumulate stock for each variant (targetVariantId -> quantity)
-          final Map<int, double> initialStockMap = {};
-
           for (final variant in product.variants!) {
-            final variantId = await db
+            await db
                 .into(db.productVariants)
                 .insert(
                   ProductVariantsCompanion.insert(
@@ -511,64 +490,6 @@ class ProductLocalDataSourceImpl implements ProductLocalDataSource {
                     conversionFactor: Value(variant.conversionFactor),
                     photoUrl: Value(variant.photoUrl),
                     linkedVariantId: Value(variant.linkedVariantId),
-                  ),
-                );
-
-            if ((variant.stock ?? 0) > 0) {
-              // LOGIC TO REDIRECT STOCK FOR PURCHASE VARIANTS
-              int targetVariantId = variantId;
-              double quantity = variant.stock!;
-              int unitCostCents = variant.costPriceCents;
-
-              if (variant.type == VariantType.purchase &&
-                  variant.linkedVariantId != null) {
-                targetVariantId = variant.linkedVariantId!;
-                // Apply conversion
-                if (variant.conversionFactor > 0) {
-                  quantity = quantity * variant.conversionFactor;
-                  unitCostCents =
-                      (variant.costPriceCents / variant.conversionFactor)
-                          .round();
-                }
-              }
-
-              await db
-                  .into(db.inventoryLots)
-                  .insert(
-                    InventoryLotsCompanion.insert(
-                      productId: productId,
-                      variantId: Value(targetVariantId),
-                      warehouseId: defaultWarehouseId,
-                      lotNumber: 'Inicial',
-                      quantity: Value(quantity),
-                      unitCostCents: unitCostCents,
-                      totalCostCents: (quantity * unitCostCents).round(),
-                      receivedAt: Value(DateTime.now()),
-                    ),
-                  );
-
-              // Accumulate stock for the target variant
-              initialStockMap[targetVariantId] =
-                  (initialStockMap[targetVariantId] ?? 0) + quantity;
-            }
-          }
-
-          // Batch Insert/Update Inventory from accumulated map
-          for (final entry in initialStockMap.entries) {
-            final vId = entry.key;
-            final qty = entry.value;
-
-            // Since this is a new product, we can safely insert
-            await db
-                .into(db.inventory)
-                .insert(
-                  InventoryCompanion.insert(
-                    productId: productId,
-                    warehouseId: defaultWarehouseId,
-                    variantId: Value(vId),
-                    quantityOnHand: Value(qty),
-                    quantityReserved: const Value(0),
-                    updatedAt: Value(DateTime.now()),
                   ),
                 );
           }

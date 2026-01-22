@@ -10,7 +10,6 @@ class ProductFormControllers {
   final TextEditingController costController;
   final TextEditingController priceController;
   final TextEditingController wholesaleController;
-  final TextEditingController stockController;
   final TextEditingController minStockController;
   final TextEditingController maxStockController;
 
@@ -22,7 +21,6 @@ class ProductFormControllers {
     required this.costController,
     required this.priceController,
     required this.wholesaleController,
-    required this.stockController,
     required this.minStockController,
     required this.maxStockController,
   });
@@ -54,9 +52,6 @@ class ProductFormControllers {
             ? (defaultVariant!.wholesalePriceCents! / 100).toStringAsFixed(2)
             : '',
       ),
-      stockController: TextEditingController(
-        text: defaultVariant != null ? _formatDouble(defaultVariant.stock) : '',
-      ),
       minStockController: TextEditingController(
         text: defaultVariant != null
             ? _formatDouble(defaultVariant.stockMin)
@@ -78,7 +73,6 @@ class ProductFormControllers {
     costController.dispose();
     priceController.dispose();
     wholesaleController.dispose();
-    stockController.dispose();
     minStockController.dispose();
     maxStockController.dispose();
   }

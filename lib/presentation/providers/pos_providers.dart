@@ -687,10 +687,22 @@ class POSNotifier extends _$POSNotifier {
                     // Determine stock. If getProductById populates it, use it.
                     // Otherwise we might need to fetch it specifically.
                     // Assuming variant.stock is populated (as per implementation plan review).
+                    // Fetch real stock
+                    final lotRepo = ref.read(inventoryLotRepositoryProvider);
+                    final lots = await lotRepo.getAvailableLots(
+                      product.id!,
+                      1, // TODO: Dynamic Warehouse
+                      variantId: variant.id,
+                    );
+                    final currentStock = lots.fold(
+                      0.0,
+                      (sum, lot) => sum + lot.quantity,
+                    );
+
                     await notificationService.checkStockLevel(
                       variant: variant,
                       productName: product.name,
-                      currentStock: variant.stock ?? 0,
+                      currentStock: currentStock,
                     );
                   }
                 }

@@ -191,7 +191,7 @@ class BulkImportService {
               costPriceCents: (costVal * 100).round(),
               priceCents: (priceVal * 100).round(),
               wholesalePriceCents: (wholesaleVal * 100).round(),
-              stock: stockVal,
+              // stock: stockVal, // Removed
               stockMin: stockMinVal,
               stockMax: stockMaxVal,
               unitId: unitId,

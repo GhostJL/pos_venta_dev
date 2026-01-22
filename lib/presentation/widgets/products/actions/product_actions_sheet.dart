@@ -353,7 +353,7 @@ class ProductActionsSheet extends ConsumerWidget {
             isForSale: v.isForSale,
             type: v.type,
             linkedVariantId: null,
-            stock: 0,
+            // stock: 0, // Removed
             stockMin: v.stockMin,
             stockMax: v.stockMax,
             conversionFactor: v.conversionFactor,
@@ -379,7 +379,7 @@ class ProductActionsSheet extends ConsumerWidget {
       hasExpiration: product.hasExpiration,
       productTaxes: product.productTaxes,
       variants: newVariants,
-      stock: 0,
+      // stock: 0, // Removed
       photoUrl: product.photoUrl,
     );
 

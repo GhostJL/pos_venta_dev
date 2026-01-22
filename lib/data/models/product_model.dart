@@ -16,7 +16,6 @@ class ProductModel extends Product {
     required super.hasExpiration,
     super.productTaxes,
     super.variants,
-    super.stock,
     super.photoUrl,
   });
 
@@ -36,7 +35,6 @@ class ProductModel extends Product {
       hasExpiration: product.hasExpiration,
       productTaxes: product.productTaxes,
       variants: product.variants,
-      stock: product.stock,
       photoUrl: product.photoUrl,
     );
   }
@@ -55,7 +53,6 @@ class ProductModel extends Product {
       isSoldByWeight: map['is_sold_by_weight'] == 1,
       isActive: map['is_active'] == 1,
       hasExpiration: map['has_expiration'] == 1,
-      stock: map['stock'] != null ? (map['stock'] as num).toInt() : null,
       photoUrl: map['photo_url'],
     );
   }

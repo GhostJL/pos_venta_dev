@@ -22,7 +22,10 @@ class MobileProductItem extends ConsumerWidget {
     this.quantityInCart = 0,
     required this.onTap,
     required this.onLongPress,
+    this.displayedStock,
   });
+
+  final double? displayedStock;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -30,9 +33,8 @@ class MobileProductItem extends ConsumerWidget {
     final colorScheme = theme.colorScheme;
 
     // Determine effective stock
-    final int stock = variant != null
-        ? (variant!.stock ?? 0).toInt()
-        : (product.stock ?? 0);
+    // Determine effective stock
+    final int stock = displayedStock != null ? displayedStock!.toInt() : 0;
 
     // Calculate Gross Price
     // Global Settings

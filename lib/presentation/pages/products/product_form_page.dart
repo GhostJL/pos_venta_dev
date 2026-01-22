@@ -100,7 +100,7 @@ class ProductFormPageState extends ConsumerState<ProductFormPage> {
       price: double.tryParse(_controllers.priceController.text),
       cost: double.tryParse(_controllers.costController.text),
       wholesale: double.tryParse(_controllers.wholesaleController.text),
-      stock: double.tryParse(_controllers.stockController.text),
+
       minStock: double.tryParse(_controllers.minStockController.text),
       maxStock: double.tryParse(_controllers.maxStockController.text),
     );

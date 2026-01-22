@@ -18,9 +18,8 @@ class ProductVariant extends Equatable {
   final bool isForSale;
   final VariantType type;
   final int? linkedVariantId;
-  final double? stock;
-  final double? stockMin;
-  final double? stockMax;
+  final double? stockMin; // Configuration: minimum stock alert level
+  final double? stockMax; // Configuration: maximum stock capacity
   final double conversionFactor;
   final int? unitId;
   final bool isSoldByWeight;
@@ -40,7 +39,6 @@ class ProductVariant extends Equatable {
     this.isForSale = true,
     this.type = VariantType.sales,
     this.linkedVariantId,
-    this.stock,
     this.stockMin,
     this.stockMax,
     this.conversionFactor = 1.0,
@@ -69,7 +67,6 @@ class ProductVariant extends Equatable {
     bool? isForSale,
     VariantType? type,
     int? linkedVariantId,
-    double? stock,
     double? stockMin,
     double? stockMax,
     double? conversionFactor,
@@ -91,7 +88,6 @@ class ProductVariant extends Equatable {
       isForSale: isForSale ?? this.isForSale,
       type: type ?? this.type,
       linkedVariantId: linkedVariantId ?? this.linkedVariantId,
-      stock: stock ?? this.stock,
       stockMin: stockMin ?? this.stockMin,
       stockMax: stockMax ?? this.stockMax,
       conversionFactor: conversionFactor ?? this.conversionFactor,
@@ -116,7 +112,6 @@ class ProductVariant extends Equatable {
     isForSale,
     type,
     linkedVariantId,
-    stock,
     stockMin,
     stockMax,
     conversionFactor,
