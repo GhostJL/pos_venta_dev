@@ -50,7 +50,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 42; // Bumped to 42 for CHECK constraints and cascade fixes
+  int get schemaVersion => 43; // Bumped to 43 to fix DateTime trigger corruption
 
   static QueryExecutor _openConnection() {
     return driftDatabase(
@@ -102,6 +102,9 @@ class AppDatabase extends _$AppDatabase {
         // Migration to 42: Add triggers for auto-sync and performance indexes
 
         // 1. Create triggers for automatic inventory synchronization
+        // Note: These initial triggers had a bug (using CURRENT_TIMESTAMP).
+        // Fixed in v43, but we keep v42 migration as history (or we could just override it if we assume sequential updates)
+        // For safety, we reproduce them here as they were, knowing v43 will fix them.
         await customStatement('''
           CREATE TRIGGER IF NOT EXISTS sync_inventory_after_lot_insert
           AFTER INSERT ON inventory_lots
@@ -193,8 +196,7 @@ class AppDatabase extends _$AppDatabase {
           END;
         ''');
 
-        // 4. Create database views for common queries
-        // View: Product stock summary
+        // 4. Create database views
         await customStatement('''
           CREATE VIEW IF NOT EXISTS product_stock_summary AS
           SELECT 
@@ -211,7 +213,6 @@ class AppDatabase extends _$AppDatabase {
           GROUP BY p.id, p.code, p.name, i.warehouse_id
         ''');
 
-        // View: Low stock products
         await customStatement('''
           CREATE VIEW IF NOT EXISTS low_stock_products AS
           SELECT 
@@ -234,7 +235,7 @@ class AppDatabase extends _$AppDatabase {
           ORDER BY i.quantity_on_hand ASC
         ''');
 
-        // 5. Recalculate existing inventory for consistency
+        // 5. Recalculate existing inventory
         await customStatement('''
           UPDATE inventory
           SET quantity_on_hand = (
@@ -248,14 +249,108 @@ class AppDatabase extends _$AppDatabase {
           updated_at = CURRENT_TIMESTAMP
         ''');
       }
+
+      if (from < 43) {
+        // Migration to 43: Fix DateTime corruption by Triggers
+        // Replace CURRENT_TIMESTAMP (String) with CAST(strftime('%s', 'now') AS INTEGER)
+
+        // 1. Drop old triggers
+        await customStatement(
+          'DROP TRIGGER IF EXISTS sync_inventory_after_lot_insert',
+        );
+        await customStatement(
+          'DROP TRIGGER IF EXISTS sync_inventory_after_lot_update',
+        );
+        await customStatement(
+          'DROP TRIGGER IF EXISTS sync_inventory_after_lot_delete',
+        );
+        await customStatement(
+          'DROP TRIGGER IF EXISTS audit_inventory_manual_changes',
+        );
+
+        // 2. Re-create Triggers with Integer timestamp
+        await customStatement('''
+          CREATE TRIGGER IF NOT EXISTS sync_inventory_after_lot_insert
+          AFTER INSERT ON inventory_lots
+          BEGIN
+            INSERT INTO inventory (product_id, warehouse_id, variant_id, quantity_on_hand, quantity_reserved, updated_at)
+            VALUES (NEW.product_id, NEW.warehouse_id, NEW.variant_id, NEW.quantity, 0, CAST(strftime('%s', 'now') AS INTEGER))
+            ON CONFLICT (product_id, warehouse_id, variant_id) DO UPDATE
+            SET quantity_on_hand = quantity_on_hand + NEW.quantity,
+                updated_at = CAST(strftime('%s', 'now') AS INTEGER);
+          END;
+        ''');
+
+        await customStatement('''
+          CREATE TRIGGER IF NOT EXISTS sync_inventory_after_lot_update
+          AFTER UPDATE ON inventory_lots
+          BEGIN
+            UPDATE inventory
+            SET quantity_on_hand = quantity_on_hand + (NEW.quantity - OLD.quantity),
+                updated_at = CAST(strftime('%s', 'now') AS INTEGER)
+            WHERE product_id = NEW.product_id
+              AND warehouse_id = NEW.warehouse_id
+              AND (variant_id = NEW.variant_id OR (variant_id IS NULL AND NEW.variant_id IS NULL));
+          END;
+        ''');
+
+        await customStatement('''
+          CREATE TRIGGER IF NOT EXISTS sync_inventory_after_lot_delete
+          AFTER DELETE ON inventory_lots
+          BEGIN
+            UPDATE inventory
+            SET quantity_on_hand = quantity_on_hand - OLD.quantity,
+                updated_at = CAST(strftime('%s', 'now') AS INTEGER)
+            WHERE product_id = OLD.product_id
+              AND warehouse_id = OLD.warehouse_id
+              AND (variant_id = OLD.variant_id OR (variant_id IS NULL AND OLD.variant_id IS NULL));
+          END;
+        ''');
+
+        await customStatement('''
+          CREATE TRIGGER IF NOT EXISTS audit_inventory_manual_changes
+          AFTER UPDATE OF quantity_on_hand, quantity_reserved ON inventory
+          WHEN NEW.quantity_on_hand != OLD.quantity_on_hand 
+            OR NEW.quantity_reserved != OLD.quantity_reserved
+          BEGIN
+            INSERT INTO inventory_movements (
+              product_id, warehouse_id, variant_id, movement_type,
+              quantity, quantity_before, quantity_after,
+              reason, performed_by, movement_date
+            )
+            VALUES (
+              NEW.product_id, NEW.warehouse_id, NEW.variant_id, 'adjustment',
+              NEW.quantity_on_hand - OLD.quantity_on_hand,
+              OLD.quantity_on_hand, NEW.quantity_on_hand,
+              'Automatic audit log', 1, CAST(strftime('%s', 'now') AS INTEGER)
+            );
+          END;
+        ''');
+
+        // 3. Fix Existing Data
+        // Convert any Text strings in updated_at, createdAt, movementDate to integers
+        // Note: 'now' in strftime might not be appropriate for historical data,
+        // but converting the EXISTING text string to seconds is what we need.
+        // strftime('%s', column) attempts to parse the column string.
+
+        await customStatement(
+          "UPDATE inventory SET updated_at = CAST(strftime('%s', updated_at) AS INTEGER) WHERE typeof(updated_at) = 'text'",
+        );
+
+        await customStatement(
+          "UPDATE inventory_movements SET movement_date = CAST(strftime('%s', movement_date) AS INTEGER) WHERE typeof(movement_date) = 'text'",
+        );
+      }
     },
     beforeOpen: (details) async {
       await customStatement('PRAGMA foreign_keys = ON');
 
-      // FIX: Sanitize inventory.updated_at if it contains text strings (from previous bug)
-      // This prevents "FormatException: Invalid radix-10 number"
+      // Double-check sanitization on every open (harmless if data is clean)
       await customStatement(
         "UPDATE inventory SET updated_at = CAST(strftime('%s', updated_at) AS INTEGER) WHERE typeof(updated_at) = 'text'",
+      );
+      await customStatement(
+        "UPDATE inventory_movements SET movement_date = CAST(strftime('%s', movement_date) AS INTEGER) WHERE typeof(movement_date) = 'text'",
       );
 
       // Seed permissions if empty
@@ -272,6 +367,7 @@ class AppDatabase extends _$AppDatabase {
               module: 'pos',
               description: Value('Acceso al módulo de Punto de Venta'),
             ),
+
             PermissionsCompanion.insert(
               name: 'Descuentos POS',
               code: PermissionConstants.posDiscount,

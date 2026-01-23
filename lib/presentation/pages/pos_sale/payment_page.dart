@@ -160,6 +160,7 @@ class _PaymentPageState extends ConsumerState<PaymentPage> {
 
   void _handleConfirmPayment(double total) {
     final amountPaid = double.tryParse(_amountInput) ?? 0.0;
+
     if (amountPaid < total) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -170,6 +171,7 @@ class _PaymentPageState extends ConsumerState<PaymentPage> {
       );
       return;
     }
+
     ref
         .read(pOSProvider.notifier)
         .completeSale(_selectedPaymentMethod, amountPaid);

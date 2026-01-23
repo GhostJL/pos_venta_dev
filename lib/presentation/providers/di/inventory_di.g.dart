@@ -1125,3 +1125,46 @@ final class GetInventoryMovementsByDateRangeProvider
 
 String _$getInventoryMovementsByDateRangeHash() =>
     r'b2b6d81024167c492e0952d2e59dcfd18a3e6cc0';
+
+@ProviderFor(adjustInventoryUseCase)
+const adjustInventoryUseCaseProvider = AdjustInventoryUseCaseProvider._();
+
+final class AdjustInventoryUseCaseProvider
+    extends
+        $FunctionalProvider<AdjustInventory, AdjustInventory, AdjustInventory>
+    with $Provider<AdjustInventory> {
+  const AdjustInventoryUseCaseProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'adjustInventoryUseCaseProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$adjustInventoryUseCaseHash();
+
+  @$internal
+  @override
+  $ProviderElement<AdjustInventory> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  AdjustInventory create(Ref ref) {
+    return adjustInventoryUseCase(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(AdjustInventory value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<AdjustInventory>(value),
+    );
+  }
+}
+
+String _$adjustInventoryUseCaseHash() =>
+    r'5bddfd6ebaa6469662a877c4ed0a786943771d56';

@@ -9,6 +9,9 @@ import 'package:posventa/domain/entities/warehouse.dart';
 import 'package:posventa/presentation/providers/inventory_providers.dart';
 import 'package:posventa/presentation/providers/inventory_lot_providers.dart';
 import 'package:posventa/presentation/providers/settings_provider.dart';
+import 'package:posventa/domain/entities/inventory_movement.dart';
+import 'package:posventa/presentation/widgets/inventory/dialogs/inventory_adjustment_dialog.dart';
+import 'package:posventa/presentation/providers/auth_provider.dart';
 import 'package:posventa/presentation/widgets/common/right_click_menu_wrapper.dart';
 
 class InventoryTableRow extends ConsumerStatefulWidget {
@@ -69,7 +72,17 @@ class _InventoryTableRowState extends ConsumerState<InventoryTableRow> {
     final double elevation = _isHovering ? 2.0 : 0.0;
 
     final menuItems = <PopupMenuEntry<String>>[
-      if (widget.hasAdjustAccess)
+      if (widget.hasAdjustAccess) ...[
+        const PopupMenuItem(
+          value: 'adjust',
+          child: Row(
+            children: [
+              Icon(Icons.edit_note, size: 20),
+              SizedBox(width: 8),
+              Text('Ajustar Stock'),
+            ],
+          ),
+        ),
         const PopupMenuItem(
           value: 'delete',
           child: Row(
@@ -80,11 +93,14 @@ class _InventoryTableRowState extends ConsumerState<InventoryTableRow> {
             ],
           ),
         ),
+      ],
     ];
 
     void onAction(String value) {
       if (value == 'delete' && widget.hasAdjustAccess) {
         _confirmDelete(context, ref, widget.inventory, widget.product.name);
+      } else if (value == 'adjust' && widget.hasAdjustAccess) {
+        _openAdjustmentDialog(context, ref, widget.inventory, widget.product);
       }
     }
 
@@ -372,6 +388,51 @@ class _InventoryTableRowState extends ConsumerState<InventoryTableRow> {
               item.warehouseId,
               item.variantId!,
             );
+      }
+    }
+  }
+
+  Future<void> _openAdjustmentDialog(
+    BuildContext context,
+    WidgetRef ref,
+    Inventory inventory,
+    Product product,
+  ) async {
+    final result = await InventoryAdjustmentDialog.show(
+      context,
+      productName: product.name,
+      currentStock: inventory.quantityOnHand,
+    );
+
+    if (result != null) {
+      final user = ref.read(authProvider).user;
+      final userId = user?.id ?? 1;
+
+      final movement = InventoryMovement(
+        productId: inventory.productId,
+        warehouseId: inventory.warehouseId,
+        movementType: MovementType.adjustment,
+        quantity: result.type == AdjustmentType.increment
+            ? result.quantity
+            : -result.quantity,
+        quantityBefore: inventory.quantityOnHand,
+        quantityAfter: result.type == AdjustmentType.increment
+            ? inventory.quantityOnHand + result.quantity
+            : inventory.quantityOnHand - result.quantity,
+        referenceType: 'manual_adjustment',
+        referenceId: 0,
+        variantId: inventory.variantId,
+        reason: result.reason,
+        performedBy: userId,
+        movementDate: DateTime.now(),
+      );
+
+      await ref.read(inventoryProvider.notifier).adjustInventory(movement);
+
+      if (context.mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Inventario actualizado')));
       }
     }
   }

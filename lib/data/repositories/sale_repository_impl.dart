@@ -681,18 +681,16 @@ class SaleRepositoryImpl implements SaleRepository {
 
     if (match != null) {
       try {
-        final numberPart = int.parse(match.group(1)!);
+        final group = match.group(1)!;
+        final numberPart = int.parse(group);
         final nextNumber = numberPart + 1;
-        // Keep the prefix part if possible, otherwise default to SALE-
         final prefix = lastNumber.substring(0, match.start);
         return '$prefix${nextNumber.toString().padLeft(5, '0')}';
-      } catch (_) {
-        // Fallback if parsing fails despite regex match (unlikely)
+      } catch (e) {
+        return '$e';
       }
     }
 
-    // Fallback: Use ID + 1 to ensure uniqueness if parsing fails
-    // This handles cases like 'SALE-ABC' completely breaking the old logic
     return 'SALE-${(row.id + 1).toString().padLeft(5, '0')}';
   }
 

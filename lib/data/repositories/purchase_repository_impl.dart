@@ -326,16 +326,16 @@ class PurchaseRepositoryImpl implements PurchaseRepository {
       // 2. Update purchase items with received quantities and lot references
       await _updatePurchaseItems(transaction.itemUpdates, lotIdMap);
 
-      // 3. Adjust inventory quantities (now handled by triggers, but kept for backwards compatibility)
+      // 3. Adjust inventory quantities
       await _adjustInventoryQuantities(transaction.inventoryAdjustments);
 
-      // 4. Record inventory movements for audit trail
+      // 4. Record inventory movements
       await _recordInventoryMovements(transaction.movements, lotIdMap);
 
-      // 5. Update variant costs with latest purchase prices
+      // 5. Update variant costs
       await _updateVariantCosts(transaction.variantUpdates);
 
-      // 6. Update purchase status and metadata
+      // 6. Update purchase status
       await _updatePurchaseStatus(transaction);
     });
   }

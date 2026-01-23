@@ -60,7 +60,7 @@ final class MatrixGeneratorNotifierProvider
 }
 
 String _$matrixGeneratorNotifierHash() =>
-    r'bf1e61e2ef1ca993dfe9c9e59da4a0468f4889b3';
+    r'd1f178885d9b8a3050030f78f35b5df8cdd49bc0';
 
 final class MatrixGeneratorNotifierFamily extends $Family
     with

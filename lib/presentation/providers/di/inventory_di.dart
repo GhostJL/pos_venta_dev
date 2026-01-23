@@ -14,6 +14,7 @@ import 'package:posventa/domain/use_cases/inventory/delete_inventory.dart';
 import 'package:posventa/domain/use_cases/inventory/get_inventory_by_product.dart';
 import 'package:posventa/domain/use_cases/inventory/delete_inventory_by_variant.dart';
 import 'package:posventa/domain/use_cases/inventory/reset_inventory_use_case.dart';
+import 'package:posventa/domain/use_cases/inventory/adjust_inventory.dart';
 import 'package:posventa/domain/repositories/inventory_lot_repository.dart';
 import 'package:posventa/data/repositories/inventory_lot_repository_impl.dart';
 import 'package:posventa/domain/repositories/inventory_movement_repository.dart';
@@ -145,3 +146,9 @@ GetInventoryMovementsByDateRange getInventoryMovementsByDateRange(ref) =>
     GetInventoryMovementsByDateRange(
       ref.watch(inventoryMovementRepositoryProvider),
     );
+
+// --- Adjust Inventory ---
+
+@riverpod
+AdjustInventory adjustInventoryUseCase(ref) =>
+    AdjustInventory(ref.watch(inventoryRepositoryProvider));

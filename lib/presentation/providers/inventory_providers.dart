@@ -1,6 +1,7 @@
 import 'package:posventa/domain/entities/product.dart';
 import 'package:posventa/domain/entities/warehouse.dart';
 import 'package:posventa/domain/entities/inventory.dart';
+import 'package:posventa/domain/entities/inventory_movement.dart';
 import 'package:posventa/presentation/providers/providers.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -33,6 +34,13 @@ class InventoryNotifier extends _$InventoryNotifier {
     await ref
         .read(deleteInventoryByVariantProvider)
         .call(productId, warehouseId, variantId);
+  }
+
+  Future<void> adjustInventory(InventoryMovement movement) async {
+    await ref.read(adjustInventoryUseCaseProvider).call(movement);
+    // Refresh to show new stock
+    ref.invalidateSelf();
+    ref.invalidate(inventoryByProductProvider(movement.productId));
   }
 }
 
