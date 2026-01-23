@@ -1,4 +1,5 @@
 import 'package:drift/drift.dart';
+import 'package:posventa/core/constants/permission_constants.dart';
 import 'package:posventa/data/datasources/local/database/app_database.dart'
     as drift_db;
 import 'package:posventa/data/models/purchase_item_model.dart';
@@ -315,10 +316,44 @@ class PurchaseRepositoryImpl implements PurchaseRepository {
     await (db.delete(db.purchases)..where((t) => t.id.equals(id))).go();
   }
 
+  Future<void> _checkPermission(int userId, String permissionCode) async {
+    // Check if user is admin
+    final user = await (db.select(
+      db.users,
+    )..where((u) => u.id.equals(userId))).getSingleOrNull();
+    if (user != null && user.role == 'administrador') {
+      return;
+    }
+
+    // Check specific permission
+    final hasPermission =
+        await (db.select(db.userPermissions).join([
+                innerJoin(
+                  db.permissions,
+                  db.permissions.id.equalsExp(db.userPermissions.permissionId),
+                ),
+              ])
+              ..where(db.userPermissions.userId.equals(userId))
+              ..where(db.permissions.code.equals(permissionCode)))
+            .get();
+
+    if (hasPermission.isEmpty) {
+      throw Exception(
+        'Acceso denegado: Se requiere el permiso $permissionCode',
+      );
+    }
+  }
+
   @override
   Future<void> executePurchaseReception(
     PurchaseReceptionTransaction transaction,
   ) async {
+    // Validate permission
+    await _checkPermission(
+      transaction.receivedBy,
+      PermissionConstants.inventoryAdjust,
+    );
+
     await db.transaction(() async {
       // 1. Insert new inventory lots and track their IDs
       final lotIdMap = await _insertInventoryLots(transaction.newLots);
@@ -478,6 +513,9 @@ class PurchaseRepositoryImpl implements PurchaseRepository {
 
   @override
   Future<void> cancelPurchase(int purchaseId, int userId) async {
+    // Validate permission
+    await _checkPermission(userId, PermissionConstants.inventoryAdjust);
+
     await db.transaction(() async {
       final items = await (db.select(
         db.purchaseItems,
