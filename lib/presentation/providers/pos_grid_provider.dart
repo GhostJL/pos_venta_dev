@@ -156,8 +156,18 @@ Future<List<ProductGridItem>> posGridItems(Ref ref) async {
 
   if (useInventory && gridItems.isNotEmpty) {
     final lotRepository = ref.watch(inventoryLotRepositoryProvider);
-    // TODO: Get warehouseId from active session. Defaulting to 1 for now.
-    const int warehouseId = 1;
+
+    // Get warehouse from active session
+    int warehouseId = 1; // Default fallback
+    try {
+      final getCurrentSession = ref.watch(getCurrentSessionProvider);
+      final currentSession = await getCurrentSession.call();
+      if (currentSession != null) {
+        warehouseId = currentSession.warehouseId;
+      }
+    } catch (_) {
+      // If fetching session fails, keep default
+    }
 
     final updatedItems = await Future.wait(
       gridItems.map((item) async {

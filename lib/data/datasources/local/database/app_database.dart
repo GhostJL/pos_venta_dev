@@ -30,6 +30,7 @@ part 'app_database.g.dart';
     InventoryMovements,
     Customers,
     Suppliers,
+    SaleSequences, // Added for atomic sale number generation
     Sales,
     SaleItems,
     SaleItemTaxes,
@@ -50,7 +51,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 43; // Bumped to 43 to fix DateTime trigger corruption
+  int get schemaVersion => 44; // Bumped to 44 for sale sequences table
 
   static QueryExecutor _openConnection() {
     return driftDatabase(
@@ -340,6 +341,27 @@ class AppDatabase extends _$AppDatabase {
         await customStatement(
           "UPDATE inventory_movements SET movement_date = CAST(strftime('%s', movement_date) AS INTEGER) WHERE typeof(movement_date) = 'text'",
         );
+      }
+
+      if (from < 44) {
+        // Migration to 44: Create sale_sequences table for atomic sale number generation
+        await m.createTable(saleSequences);
+
+        // Initialize sequence with current max sale number
+        await customStatement('''
+          INSERT INTO sale_sequences (id, last_number, updated_at)
+          SELECT 1, 
+                 COALESCE(MAX(CAST(SUBSTR(sale_number, INSTR(sale_number, '-') + 1) AS INTEGER)), 0),
+                 CAST(strftime('%s', 'now') AS INTEGER)
+          FROM sales
+          WHERE sale_number LIKE 'SALE-%'
+        ''');
+
+        // If no sales exist, insert default
+        await customStatement('''
+          INSERT OR IGNORE INTO sale_sequences (id, last_number, updated_at)
+          VALUES (1, 0, CAST(strftime('%s', 'now') AS INTEGER))
+        ''');
       }
     },
     beforeOpen: (details) async {

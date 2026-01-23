@@ -545,6 +545,18 @@ class CustomerPayments extends Table {
 // 5. SALES TABLES
 // =================================================================
 
+// Table for atomic sale number generation
+class SaleSequences extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  IntColumn get lastNumber =>
+      integer().withDefault(const Constant(0)).named('last_number')();
+  DateTimeColumn get updatedAt =>
+      dateTime().withDefault(currentDateAndTime).named('updated_at')();
+
+  @override
+  String get tableName => 'sale_sequences';
+}
+
 class Sales extends Table {
   IntColumn get id => integer().autoIncrement()();
   TextColumn get saleNumber => text().unique().named('sale_number')();

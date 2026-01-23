@@ -691,7 +691,7 @@ class POSNotifier extends _$POSNotifier {
                     final lotRepo = ref.read(inventoryLotRepositoryProvider);
                     final lots = await lotRepo.getAvailableLots(
                       product.id!,
-                      1, // TODO: Dynamic Warehouse
+                      warehouseId, // Use warehouse from active session
                       variantId: variant.id,
                     );
                     final currentStock = lots.fold(

@@ -392,19 +392,15 @@ class SaleRepositoryImpl implements SaleRepository {
         int? primaryLotId;
 
         for (final deduction in itemDeduction.deductions) {
-          // Update lot quantity
-          // Use custom query for atomic update or just read-modify-write if transaction lock is active
-          // Drift transaction block works as a transaction, so we can read-modify-write safely-ish,
-          // but SQL is better for concurrency.
-          final lot = await (db.select(
-            db.inventoryLots,
-          )..where((t) => t.id.equals(deduction.lotId))).getSingle();
-          await (db.update(
-            db.inventoryLots,
-          )..where((t) => t.id.equals(deduction.lotId))).write(
-            drift_db.InventoryLotsCompanion(
-              quantity: Value(lot.quantity - deduction.quantityToDeduct),
-            ),
+          // Atomic lot quantity deduction using SQL
+          // This prevents race conditions in concurrent sales
+          await db.customUpdate(
+            'UPDATE inventory_lots SET quantity = quantity - ? WHERE id = ?',
+            variables: [
+              Variable.withReal(deduction.quantityToDeduct),
+              Variable.withInt(deduction.lotId),
+            ],
+            updates: {db.inventoryLots},
           );
 
           await db
@@ -489,21 +485,15 @@ class SaleRepositoryImpl implements SaleRepository {
         final update = transaction.creditUpdate!;
         final operator = update.isIncrement ? '+' : '-';
 
-        final customer = await (db.select(
-          db.customers,
-        )..where((t) => t.id.equals(update.customerId))).getSingle();
-
-        int newCreditUsed = customer.creditUsedCents;
-        if (update.isIncrement) {
-          newCreditUsed += update.amountCents;
-        } else {
-          newCreditUsed -= update.amountCents;
-        }
-
-        await (db.update(
-          db.customers,
-        )..where((t) => t.id.equals(update.customerId))).write(
-          drift_db.CustomersCompanion(creditUsedCents: Value(newCreditUsed)),
+        // Atomic credit update using SQL
+        // This prevents race conditions in concurrent credit sales
+        await db.customUpdate(
+          'UPDATE customers SET credit_used_cents = credit_used_cents $operator ? WHERE id = ?',
+          variables: [
+            Variable.withInt(update.amountCents),
+            Variable.withInt(update.customerId),
+          ],
+          updates: {db.customers},
         );
       }
 
@@ -539,15 +529,14 @@ class SaleRepositoryImpl implements SaleRepository {
 
         for (final row in lotDeductions) {
           final deduction = row.readTable(db.saleItemLots);
-          final lot = await (db.select(
-            db.inventoryLots,
-          )..where((t) => t.id.equals(deduction.lotId))).getSingle();
-          await (db.update(
-            db.inventoryLots,
-          )..where((t) => t.id.equals(deduction.lotId))).write(
-            drift_db.InventoryLotsCompanion(
-              quantity: Value(lot.quantity + deduction.quantityDeducted),
-            ),
+          // Atomic lot quantity restoration using SQL
+          await db.customUpdate(
+            'UPDATE inventory_lots SET quantity = quantity + ? WHERE id = ?',
+            variables: [
+              Variable.withReal(deduction.quantityDeducted),
+              Variable.withInt(deduction.lotId),
+            ],
+            updates: {db.inventoryLots},
           );
         }
       }
@@ -637,34 +626,26 @@ class SaleRepositoryImpl implements SaleRepository {
 
   @override
   Future<String> generateNextSaleNumber() async {
-    final query = db.select(db.sales)
-      ..orderBy([(t) => OrderingTerm.desc(t.id)])
-      ..limit(1);
-    final row = await query.getSingleOrNull();
+    // Use atomic SQL UPDATE to increment and return the sequence
+    // This is concurrency-safe even with multiple simultaneous sales
+    return await db.transaction(() async {
+      // Atomic increment using SQL
+      await db.customUpdate(
+        'UPDATE sale_sequences SET last_number = last_number + 1, updated_at = ? WHERE id = 1',
+        variables: [
+          Variable.withInt(DateTime.now().millisecondsSinceEpoch ~/ 1000),
+        ],
+        updates: {db.saleSequences},
+      );
 
-    if (row == null) {
-      return 'SALE-00001';
-    }
+      // Read the new value
+      final sequence = await (db.select(
+        db.saleSequences,
+      )..where((t) => t.id.equals(1))).getSingle();
 
-    final lastNumber = row.saleNumber;
-
-    // Attempt to extract numeric part using Regex
-    final regExp = RegExp(r'(\d+)$');
-    final match = regExp.firstMatch(lastNumber);
-
-    if (match != null) {
-      try {
-        final group = match.group(1)!;
-        final numberPart = int.parse(group);
-        final nextNumber = numberPart + 1;
-        final prefix = lastNumber.substring(0, match.start);
-        return '$prefix${nextNumber.toString().padLeft(5, '0')}';
-      } catch (e) {
-        return '$e';
-      }
-    }
-
-    return 'SALE-${(row.id + 1).toString().padLeft(5, '0')}';
+      final nextNumber = sequence.lastNumber;
+      return 'SALE-${nextNumber.toString().padLeft(5, '0')}';
+    });
   }
 
   @override

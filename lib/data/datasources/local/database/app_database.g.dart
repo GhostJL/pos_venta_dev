@@ -12760,6 +12760,256 @@ class CustomersCompanion extends UpdateCompanion<Customer> {
   }
 }
 
+class $SaleSequencesTable extends SaleSequences
+    with TableInfo<$SaleSequencesTable, SaleSequence> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $SaleSequencesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _lastNumberMeta = const VerificationMeta(
+    'lastNumber',
+  );
+  @override
+  late final GeneratedColumn<int> lastNumber = GeneratedColumn<int>(
+    'last_number',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [id, lastNumber, updatedAt];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'sale_sequences';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<SaleSequence> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('last_number')) {
+      context.handle(
+        _lastNumberMeta,
+        lastNumber.isAcceptableOrUnknown(data['last_number']!, _lastNumberMeta),
+      );
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  SaleSequence map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return SaleSequence(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      lastNumber: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}last_number'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+    );
+  }
+
+  @override
+  $SaleSequencesTable createAlias(String alias) {
+    return $SaleSequencesTable(attachedDatabase, alias);
+  }
+}
+
+class SaleSequence extends DataClass implements Insertable<SaleSequence> {
+  final int id;
+  final int lastNumber;
+  final DateTime updatedAt;
+  const SaleSequence({
+    required this.id,
+    required this.lastNumber,
+    required this.updatedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['last_number'] = Variable<int>(lastNumber);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    return map;
+  }
+
+  SaleSequencesCompanion toCompanion(bool nullToAbsent) {
+    return SaleSequencesCompanion(
+      id: Value(id),
+      lastNumber: Value(lastNumber),
+      updatedAt: Value(updatedAt),
+    );
+  }
+
+  factory SaleSequence.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return SaleSequence(
+      id: serializer.fromJson<int>(json['id']),
+      lastNumber: serializer.fromJson<int>(json['lastNumber']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'lastNumber': serializer.toJson<int>(lastNumber),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+    };
+  }
+
+  SaleSequence copyWith({int? id, int? lastNumber, DateTime? updatedAt}) =>
+      SaleSequence(
+        id: id ?? this.id,
+        lastNumber: lastNumber ?? this.lastNumber,
+        updatedAt: updatedAt ?? this.updatedAt,
+      );
+  SaleSequence copyWithCompanion(SaleSequencesCompanion data) {
+    return SaleSequence(
+      id: data.id.present ? data.id.value : this.id,
+      lastNumber: data.lastNumber.present
+          ? data.lastNumber.value
+          : this.lastNumber,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SaleSequence(')
+          ..write('id: $id, ')
+          ..write('lastNumber: $lastNumber, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, lastNumber, updatedAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is SaleSequence &&
+          other.id == this.id &&
+          other.lastNumber == this.lastNumber &&
+          other.updatedAt == this.updatedAt);
+}
+
+class SaleSequencesCompanion extends UpdateCompanion<SaleSequence> {
+  final Value<int> id;
+  final Value<int> lastNumber;
+  final Value<DateTime> updatedAt;
+  const SaleSequencesCompanion({
+    this.id = const Value.absent(),
+    this.lastNumber = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+  });
+  SaleSequencesCompanion.insert({
+    this.id = const Value.absent(),
+    this.lastNumber = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+  });
+  static Insertable<SaleSequence> custom({
+    Expression<int>? id,
+    Expression<int>? lastNumber,
+    Expression<DateTime>? updatedAt,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (lastNumber != null) 'last_number': lastNumber,
+      if (updatedAt != null) 'updated_at': updatedAt,
+    });
+  }
+
+  SaleSequencesCompanion copyWith({
+    Value<int>? id,
+    Value<int>? lastNumber,
+    Value<DateTime>? updatedAt,
+  }) {
+    return SaleSequencesCompanion(
+      id: id ?? this.id,
+      lastNumber: lastNumber ?? this.lastNumber,
+      updatedAt: updatedAt ?? this.updatedAt,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (lastNumber.present) {
+      map['last_number'] = Variable<int>(lastNumber.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SaleSequencesCompanion(')
+          ..write('id: $id, ')
+          ..write('lastNumber: $lastNumber, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+}
+
 class $SalesTable extends Sales with TableInfo<$SalesTable, Sale> {
   @override
   final GeneratedDatabase attachedDatabase;
@@ -21467,6 +21717,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $InventoryMovementsTable inventoryMovements =
       $InventoryMovementsTable(this);
   late final $CustomersTable customers = $CustomersTable(this);
+  late final $SaleSequencesTable saleSequences = $SaleSequencesTable(this);
   late final $SalesTable sales = $SalesTable(this);
   late final $SaleItemsTable saleItems = $SaleItemsTable(this);
   late final $SaleItemTaxesTable saleItemTaxes = $SaleItemTaxesTable(this);
@@ -21512,6 +21763,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     inventoryLots,
     inventoryMovements,
     customers,
+    saleSequences,
     sales,
     saleItems,
     saleItemTaxes,
@@ -35469,6 +35721,164 @@ typedef $$CustomersTableProcessedTableManager =
         bool customerPaymentsRefs,
       })
     >;
+typedef $$SaleSequencesTableCreateCompanionBuilder =
+    SaleSequencesCompanion Function({
+      Value<int> id,
+      Value<int> lastNumber,
+      Value<DateTime> updatedAt,
+    });
+typedef $$SaleSequencesTableUpdateCompanionBuilder =
+    SaleSequencesCompanion Function({
+      Value<int> id,
+      Value<int> lastNumber,
+      Value<DateTime> updatedAt,
+    });
+
+class $$SaleSequencesTableFilterComposer
+    extends Composer<_$AppDatabase, $SaleSequencesTable> {
+  $$SaleSequencesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get lastNumber => $composableBuilder(
+    column: $table.lastNumber,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$SaleSequencesTableOrderingComposer
+    extends Composer<_$AppDatabase, $SaleSequencesTable> {
+  $$SaleSequencesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get lastNumber => $composableBuilder(
+    column: $table.lastNumber,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$SaleSequencesTableAnnotationComposer
+    extends Composer<_$AppDatabase, $SaleSequencesTable> {
+  $$SaleSequencesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<int> get lastNumber => $composableBuilder(
+    column: $table.lastNumber,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+}
+
+class $$SaleSequencesTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $SaleSequencesTable,
+          SaleSequence,
+          $$SaleSequencesTableFilterComposer,
+          $$SaleSequencesTableOrderingComposer,
+          $$SaleSequencesTableAnnotationComposer,
+          $$SaleSequencesTableCreateCompanionBuilder,
+          $$SaleSequencesTableUpdateCompanionBuilder,
+          (
+            SaleSequence,
+            BaseReferences<_$AppDatabase, $SaleSequencesTable, SaleSequence>,
+          ),
+          SaleSequence,
+          PrefetchHooks Function()
+        > {
+  $$SaleSequencesTableTableManager(_$AppDatabase db, $SaleSequencesTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$SaleSequencesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$SaleSequencesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$SaleSequencesTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<int> lastNumber = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+              }) => SaleSequencesCompanion(
+                id: id,
+                lastNumber: lastNumber,
+                updatedAt: updatedAt,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<int> lastNumber = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+              }) => SaleSequencesCompanion.insert(
+                id: id,
+                lastNumber: lastNumber,
+                updatedAt: updatedAt,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$SaleSequencesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $SaleSequencesTable,
+      SaleSequence,
+      $$SaleSequencesTableFilterComposer,
+      $$SaleSequencesTableOrderingComposer,
+      $$SaleSequencesTableAnnotationComposer,
+      $$SaleSequencesTableCreateCompanionBuilder,
+      $$SaleSequencesTableUpdateCompanionBuilder,
+      (
+        SaleSequence,
+        BaseReferences<_$AppDatabase, $SaleSequencesTable, SaleSequence>,
+      ),
+      SaleSequence,
+      PrefetchHooks Function()
+    >;
 typedef $$SalesTableCreateCompanionBuilder =
     SalesCompanion Function({
       Value<int> id,
@@ -44331,6 +44741,8 @@ class $AppDatabaseManager {
       $$InventoryMovementsTableTableManager(_db, _db.inventoryMovements);
   $$CustomersTableTableManager get customers =>
       $$CustomersTableTableManager(_db, _db.customers);
+  $$SaleSequencesTableTableManager get saleSequences =>
+      $$SaleSequencesTableTableManager(_db, _db.saleSequences);
   $$SalesTableTableManager get sales =>
       $$SalesTableTableManager(_db, _db.sales);
   $$SaleItemsTableTableManager get saleItems =>

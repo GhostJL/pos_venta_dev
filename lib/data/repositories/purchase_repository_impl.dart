@@ -488,26 +488,18 @@ class PurchaseRepositoryImpl implements PurchaseRepository {
 
       for (final item in items) {
         if (item.quantityReceived > 0) {
-          // Deduct inventory
-          // Deduct inventory
-          // We need to fetch the specific inventory record first to update it cleanly with Drift
-          // Since we are inside a transaction and loop, let's fetch it.
-          final invToUpdate =
-              await (db.select(db.inventory)..where(
-                    (t) =>
-                        t.productId.equals(item.productId) &
-                        t.warehouseId.equals(purchase.warehouseId),
-                  ))
-                  .getSingle();
-
-          await (db.update(
-            db.inventory,
-          )..where((t) => t.id.equals(invToUpdate.id))).write(
-            drift_db.InventoryCompanion(
-              quantityOnHand: Value(
-                invToUpdate.quantityOnHand - item.quantityReceived,
-              ),
-            ),
+          // Atomic inventory deduction using SQL
+          // This prevents race conditions in concurrent operations
+          await db.customUpdate(
+            '''UPDATE inventory 
+               SET quantity_on_hand = quantity_on_hand - ? 
+               WHERE product_id = ? AND warehouse_id = ?''',
+            variables: [
+              Variable.withReal(item.quantityReceived),
+              Variable.withInt(item.productId),
+              Variable.withInt(purchase.warehouseId),
+            ],
+            updates: {db.inventory},
           );
 
           // Record movement
