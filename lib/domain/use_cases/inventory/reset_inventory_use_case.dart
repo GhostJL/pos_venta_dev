@@ -6,6 +6,7 @@ class ResetInventoryUseCase {
   ResetInventoryUseCase(this._inventoryRepository);
 
   Future<void> call() async {
-    return _inventoryRepository.resetAllInventory();
+    // Reconcile instead of Reset for safety
+    return _inventoryRepository.reconcileInventory();
   }
 }

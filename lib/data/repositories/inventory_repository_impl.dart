@@ -537,6 +537,45 @@ class InventoryRepositoryImpl implements InventoryRepository {
   }
 
   @override
+  Future<void> reconcileInventory() async {
+    // 1. Fetch ALL Lots
+    final allLots = await db.select(db.inventoryLots).get();
+
+    // 2. Group by (productId + warehouseId + variantId)
+    // Key: "prodId-whId-varId"
+    final Map<String, double> calculatedStock = {};
+
+    for (final lot in allLots) {
+      final key =
+          '${lot.productId}-${lot.warehouseId}-${lot.variantId ?? "null"}';
+      calculatedStock[key] = (calculatedStock[key] ?? 0.0) + lot.quantity;
+    }
+
+    // 3. Update Inventory Table
+    await db.transaction(() async {
+      // Fetch all inventory rows to find which ones need updating
+      final allInventory = await db.select(db.inventory).get();
+
+      for (final inv in allInventory) {
+        final key =
+            '${inv.productId}-${inv.warehouseId}-${inv.variantId ?? "null"}';
+        final realQuantity = calculatedStock[key] ?? 0.0;
+
+        if ((inv.quantityOnHand - realQuantity).abs() > 0.001) {
+          await (db.update(
+            db.inventory,
+          )..where((t) => t.id.equals(inv.id))).write(
+            drift_db.InventoryCompanion(
+              quantityOnHand: Value(realQuantity),
+              updatedAt: Value(DateTime.now()),
+            ),
+          );
+        }
+      }
+    });
+  }
+
+  @override
   Future<void> resetAllInventory() async {
     await db.transaction(() async {
       await db.delete(db.inventoryLots).go();

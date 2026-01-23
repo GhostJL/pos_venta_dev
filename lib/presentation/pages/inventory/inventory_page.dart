@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:posventa/presentation/providers/inventory_providers.dart';
+import 'package:posventa/presentation/providers/di/inventory_di.dart';
 import 'package:posventa/presentation/providers/product_provider.dart';
 import 'package:posventa/presentation/providers/settings_provider.dart';
 import 'package:posventa/presentation/viewmodels/inventory_view_model.dart';
@@ -8,6 +9,7 @@ import 'package:posventa/presentation/widgets/inventory/inventory_card_widget.da
 import 'package:posventa/presentation/widgets/inventory/inventory_header.dart';
 import 'package:posventa/presentation/widgets/inventory/inventory_table_row.dart';
 import 'package:posventa/presentation/widgets/menu/side_menu.dart';
+import 'package:posventa/presentation/providers/di/core_di.dart';
 
 class InventoryPage extends ConsumerStatefulWidget {
   const InventoryPage({super.key});
@@ -191,10 +193,125 @@ class _InventoryPageState extends ConsumerState<InventoryPage> {
       return const SliverToBoxAdapter(child: SizedBox.shrink());
     }
 
-    return const SliverAppBar(
-      title: Text('Inventario'),
+    return SliverAppBar(
+      title: const Text('Inventario'),
       floating: true,
       snap: true,
+      actions: [
+        IconButton(
+          icon: const Icon(Icons.bug_report),
+          tooltip: 'Diagnosticar Stock',
+          onPressed: () async {
+            final query = _searchController.text;
+            if (query.isEmpty) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text(
+                    'Escribe el nombre del producto en el buscador',
+                  ),
+                ),
+              );
+              return;
+            }
+
+            final products =
+                ref.read(productNotifierProvider).asData?.value ?? [];
+            final product = products.firstWhere(
+              (p) => p.name.toLowerCase().contains(query.toLowerCase()),
+              orElse: () => products.first, // Fallback if no match
+            );
+
+            // Fetch raw lots
+            final db = ref.read(appDatabaseProvider);
+            final lots = await (db.select(
+              db.inventoryLots,
+            )..where((t) => t.productId.equals(product.id!))).get();
+
+            final inv = await (db.select(
+              db.inventory,
+            )..where((t) => t.productId.equals(product.id!))).get();
+
+            if (context.mounted) {
+              showDialog(
+                context: context,
+                builder: (ctx) => AlertDialog(
+                  title: Text('Diagnóstico: ${product.name}'),
+                  content: SingleChildScrollView(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          'Inventory Logic Sum: ${lots.fold<double>(0, (p, e) => p + e.quantity)}',
+                        ),
+                        const Divider(),
+                        const Text('Inventory Table Rows:'),
+                        ...inv.map(
+                          (i) => Text(
+                            'WH:${i.warehouseId} Var:${i.variantId} Qty:${i.quantityOnHand}',
+                          ),
+                        ),
+                        const Divider(),
+                        const Text('Raw Lots:'),
+                        if (lots.isEmpty) const Text('No lots found'),
+                        ...lots.map(
+                          (l) => Text(
+                            'Lot:${l.lotNumber}\nQty:${l.quantity}\nVar:${l.variantId}\nWH:${l.warehouseId}\n---------',
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(ctx),
+                      child: const Text('Cerrar'),
+                    ),
+                  ],
+                ),
+              );
+            }
+          },
+        ),
+        IconButton(
+          icon: const Icon(Icons.sync_problem),
+          tooltip: 'Reparar/Sincronizar Inventario',
+          onPressed: () async {
+            final confirm = await showDialog<bool>(
+              context: context,
+              builder: (ctx) => AlertDialog(
+                title: const Text('Reparar Inventario'),
+                content: const Text(
+                  'Esto recalculará todo el inventario basándose en los lotes existentes. '
+                  'Úsalo solo si notas inconsistencias en las cantidades.',
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(ctx, false),
+                    child: const Text('Cancelar'),
+                  ),
+                  FilledButton(
+                    onPressed: () => Navigator.pop(ctx, true),
+                    child: const Text('Sincronizar'),
+                  ),
+                ],
+              ),
+            );
+
+            if (confirm == true && context.mounted) {
+              await ref.read(resetInventoryUseCaseProvider).call();
+              ref.invalidate(inventoryProvider);
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Inventario sincronizado correctamente'),
+                  ),
+                );
+              }
+            }
+          },
+        ),
+      ],
     );
   }
 

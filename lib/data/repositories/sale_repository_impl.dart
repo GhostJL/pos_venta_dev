@@ -428,35 +428,8 @@ class SaleRepositoryImpl implements SaleRepository {
       }
 
       // 4. Update Inventory
-      for (final adj in transaction.inventoryAdjustments) {
-        final inventoryRow =
-            await (db.select(db.inventory)..where(
-                  (t) =>
-                      t.productId.equals(adj.productId) &
-                      t.warehouseId.equals(adj.warehouseId) &
-                      (adj.variantId != null
-                          ? t.variantId.equals(adj.variantId!)
-                          : t.variantId.isNull()),
-                ))
-                .getSingle();
-
-        await (db.update(db.inventory)..where(
-              (t) =>
-                  t.productId.equals(adj.productId) &
-                  t.warehouseId.equals(adj.warehouseId) &
-                  (adj.variantId != null
-                      ? t.variantId.equals(adj.variantId!)
-                      : t.variantId.isNull()),
-            ))
-            .write(
-              drift_db.InventoryCompanion(
-                quantityOnHand: Value(
-                  inventoryRow.quantityOnHand - adj.quantityToDeduct,
-                ),
-                updatedAt: Value(DateTime.now()),
-              ),
-            );
-      }
+      // REMOVED: Now handled by DB Triggers (v43) to avoid double counting
+      // for (final adj in transaction.inventoryAdjustments) { ... }
 
       // 5. Record Movements
       for (final mov in transaction.movements) {

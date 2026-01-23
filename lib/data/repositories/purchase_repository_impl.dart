@@ -326,16 +326,13 @@ class PurchaseRepositoryImpl implements PurchaseRepository {
       // 2. Update purchase items with received quantities and lot references
       await _updatePurchaseItems(transaction.itemUpdates, lotIdMap);
 
-      // 3. Adjust inventory quantities
-      await _adjustInventoryQuantities(transaction.inventoryAdjustments);
-
-      // 4. Record inventory movements
+      // 3. Record inventory movements
       await _recordInventoryMovements(transaction.movements, lotIdMap);
 
-      // 5. Update variant costs
+      // 4. Update variant costs
       await _updateVariantCosts(transaction.variantUpdates);
 
-      // 6. Update purchase status
+      // 5. Update purchase status
       await _updatePurchaseStatus(transaction);
     });
   }
@@ -393,48 +390,7 @@ class PurchaseRepositoryImpl implements PurchaseRepository {
     }
   }
 
-  /// Adjust inventory quantities for received items
-  /// Note: With triggers in place (schema v42+), this is redundant but kept for compatibility
-  Future<void> _adjustInventoryQuantities(
-    List<InventoryAdjustment> adjustments,
-  ) async {
-    for (final adj in adjustments) {
-      final inventory =
-          await (db.select(db.inventory)..where(
-                (t) =>
-                    t.productId.equals(adj.productId) &
-                    t.warehouseId.equals(adj.warehouseId) &
-                    (adj.variantId != null
-                        ? t.variantId.equals(adj.variantId!)
-                        : t.variantId.isNull()),
-              ))
-              .getSingleOrNull();
-
-      if (inventory == null) {
-        await db
-            .into(db.inventory)
-            .insert(
-              drift_db.InventoryCompanion.insert(
-                productId: adj.productId,
-                warehouseId: adj.warehouseId,
-                quantityOnHand: Value(adj.quantityToAdd),
-                updatedAt: Value(DateTime.now()),
-                variantId: Value(adj.variantId),
-                quantityReserved: Value(0.0),
-              ),
-            );
-      } else {
-        await (db.update(
-          db.inventory,
-        )..where((t) => t.id.equals(inventory.id))).write(
-          drift_db.InventoryCompanion(
-            quantityOnHand: Value(inventory.quantityOnHand + adj.quantityToAdd),
-            updatedAt: Value(DateTime.now()),
-          ),
-        );
-      }
-    }
-  }
+  // _adjustInventoryQuantities removed (handled by triggers)
 
   /// Record inventory movements for audit trail
   Future<void> _recordInventoryMovements(

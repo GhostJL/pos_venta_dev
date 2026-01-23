@@ -26,5 +26,10 @@ abstract class InventoryRepository {
     String? reason,
   });
   Future<void> recalculateInventory(int productId);
+
+  /// Recalculates inventory quantities based on lots
+  Future<void> reconcileInventory();
+
+  /// Deletes all inventory data (Destructive)
   Future<void> resetAllInventory();
 }
