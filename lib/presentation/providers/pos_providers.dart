@@ -168,24 +168,27 @@ class POSNotifier extends _$POSNotifier {
     // Fetch fresh product data to ensure stock is up to date
     Product productToCheck = product;
     final productRepo = ref.read(productRepositoryProvider);
+    String? fetchError;
     final freshProductResult = await productRepo.getProductById(product.id!);
     freshProductResult.fold(
       (failure) {
-        // Log error, continue with existing product data as fallback?
-        // Or fail? Better to warn but maybe proceed with best effort.
-        // For strictness, we might want to fail, but let's use existing.
         AppErrorReporter().reportError(
           failure,
           null,
           context: 'addToCart - refreshProduct',
         );
+        fetchError = 'Error al verificar datos actualizados del producto';
       },
       (freshProduct) {
         if (freshProduct != null) {
           productToCheck = freshProduct;
+        } else {
+          fetchError = 'El producto ya no existe';
         }
       },
     );
+
+    if (fetchError != null) return fetchError;
 
     // If variant is provided, we should also try to get the fresh variant from the fresh product
     ProductVariant? variantToCheck = variant;

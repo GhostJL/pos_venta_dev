@@ -57,15 +57,111 @@ class SaleRepositoryImpl implements SaleRepository {
     }
 
     final rows = await q.get();
-    final sales = <Sale>[];
+    if (rows.isEmpty) return [];
 
+    final saleIds = rows.map((r) => r.readTable(db.sales).id).toList();
+
+    // Batch fetch Payments
+    final allPayments = await (db.select(
+      db.salePayments,
+    )..where((t) => t.saleId.isIn(saleIds))).get();
+
+    final paymentsMap = <int, List<SalePaymentModel>>{};
+    for (final p in allPayments) {
+      if (!paymentsMap.containsKey(p.saleId)) {
+        paymentsMap[p.saleId] = [];
+      }
+      paymentsMap[p.saleId]!.add(
+        SalePaymentModel(
+          id: p.id,
+          saleId: p.saleId,
+          paymentMethod: p.paymentMethod,
+          amountCents: p.amountCents,
+          paymentDate: p.paymentDate,
+          receivedBy: p.receivedBy,
+        ),
+      );
+    }
+
+    // Batch fetch Items with details
+    final itemsQuery = db.select(db.saleItems).join([
+      leftOuterJoin(
+        db.products,
+        db.products.id.equalsExp(db.saleItems.productId),
+      ),
+      leftOuterJoin(
+        db.productVariants,
+        db.productVariants.id.equalsExp(db.saleItems.variantId),
+      ),
+    ])..where(db.saleItems.saleId.isIn(saleIds));
+
+    final allItemRows = await itemsQuery.get();
+
+    // Map items to saleId, but we need Taxes first
+    final itemIds = allItemRows
+        .map((r) => r.readTable(db.saleItems).id)
+        .toList();
+
+    // Batch fetch Taxes
+    final allTaxes = await (db.select(
+      db.saleItemTaxes,
+    )..where((t) => t.saleItemId.isIn(itemIds))).get();
+
+    final taxesMap = <int, List<SaleItemTaxModel>>{};
+    for (final t in allTaxes) {
+      if (!taxesMap.containsKey(t.saleItemId)) {
+        taxesMap[t.saleItemId] = [];
+      }
+      taxesMap[t.saleItemId]!.add(
+        SaleItemTaxModel(
+          id: t.id,
+          saleItemId: t.saleItemId,
+          taxRateId: t.taxRateId,
+          taxName: t.taxName,
+          taxRate: t.taxRate,
+          taxAmountCents: t.taxAmountCents,
+        ),
+      );
+    }
+
+    // Reconstruct Items
+    final itemsMap = <int, List<SaleItemModel>>{};
+    for (final row in allItemRows) {
+      final itemRow = row.readTable(db.saleItems);
+      final productRow = row.readTableOrNull(db.products);
+      final variantRow = row.readTableOrNull(db.productVariants);
+
+      if (!itemsMap.containsKey(itemRow.saleId)) {
+        itemsMap[itemRow.saleId] = [];
+      }
+
+      itemsMap[itemRow.saleId]!.add(
+        SaleItemModel(
+          id: itemRow.id,
+          saleId: itemRow.saleId,
+          productId: itemRow.productId,
+          variantId: itemRow.variantId,
+          quantity: itemRow.quantity,
+          unitOfMeasure: itemRow.unitOfMeasure,
+          unitPriceCents: itemRow.unitPriceCents,
+          discountCents: itemRow.discountCents,
+          subtotalCents: itemRow.subtotalCents,
+          taxCents: itemRow.taxCents,
+          totalCents: itemRow.totalCents,
+          costPriceCents: itemRow.costPriceCents,
+          lotId: itemRow.lotId,
+          productName: productRow?.name,
+          variantName: variantRow?.variantName,
+          sku: productRow?.code,
+          taxes: taxesMap[itemRow.id] ?? [],
+        ),
+      );
+    }
+
+    final sales = <Sale>[];
     for (final row in rows) {
       final saleRow = row.readTable(db.sales);
       final customerRow = row.readTableOrNull(db.customers);
-
-      // Load items for each sale
-      final items = await _getSaleItems(saleRow.id);
-      final payments = await _getSalePayments(saleRow.id);
 
       sales.add(
         SaleModel(
@@ -90,8 +186,8 @@ class SaleRepositoryImpl implements SaleRepository {
           cancelledBy: saleRow.cancelledBy,
           cancelledAt: saleRow.cancelledAt,
           cancellationReason: saleRow.cancellationReason,
-          items: items,
-          payments: payments,
+          items: itemsMap[saleRow.id] ?? [],
+          payments: paymentsMap[saleRow.id] ?? [],
           customerName: customerRow != null
               ? '${customerRow.firstName} ${customerRow.lastName}'
               : null,
@@ -344,6 +440,19 @@ class SaleRepositoryImpl implements SaleRepository {
       PermissionConstants.posAccess,
     );
 
+    // Validate Integrity
+    if (transaction.sale.items.isEmpty) {
+      throw Exception('La venta debe tener items');
+    }
+    if (transaction.sale.totalCents < 0) {
+      throw Exception('El total no puede ser negativo');
+    }
+    for (final item in transaction.sale.items) {
+      if (item.quantity <= 0) {
+        throw Exception('Cantidad inválida para producto ${item.productId}');
+      }
+    }
+
     return db.transaction(() async {
       // 1. Insert Sale
       // Calculate totals from payments to ensure consistency
@@ -486,8 +595,8 @@ class SaleRepositoryImpl implements SaleRepository {
                 movementType: mov.movementType.value,
                 quantity: mov.quantity,
                 quantityBefore:
-                    currentQty +
-                    mov.quantity, // Corrected: Before was Current (Already Deducted) + Sold
+                    currentQty -
+                    mov.quantity, // Corrected: Before = After - Delta (Delta is negative for sale)
                 quantityAfter: currentQty,
                 referenceType: Value(mov.referenceType),
                 referenceId: Value(saleId),
