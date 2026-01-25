@@ -13,7 +13,7 @@ part of 'inventory_providers.dart';
 const inventoryProvider = InventoryNotifierProvider._();
 
 final class InventoryNotifierProvider
-    extends $AsyncNotifierProvider<InventoryNotifier, List<Inventory>> {
+    extends $StreamNotifierProvider<InventoryNotifier, List<Inventory>> {
   const InventoryNotifierProvider._()
     : super(
         from: null,
@@ -33,10 +33,10 @@ final class InventoryNotifierProvider
   InventoryNotifier create() => InventoryNotifier();
 }
 
-String _$inventoryNotifierHash() => r'8e5d99ca5baff7ff09918a054294c8cc767b1c36';
+String _$inventoryNotifierHash() => r'b888b5f1b5373134d4468988c3b44cc4750d89ec';
 
-abstract class _$InventoryNotifier extends $AsyncNotifier<List<Inventory>> {
-  FutureOr<List<Inventory>> build();
+abstract class _$InventoryNotifier extends $StreamNotifier<List<Inventory>> {
+  Stream<List<Inventory>> build();
   @$mustCallSuper
   @override
   void runBuild() {

@@ -36,12 +36,6 @@ class SyncInventoryWithLotsUseCase {
             updatedAt: Value(DateTime.now()),
           ),
         );
-
-        // Optional: Log the correction
-        print(
-          'Corrected Inventory ${inv.id} (Prod: ${inv.productId}, Var: ${inv.variantId}): '
-          'Was ${inv.quantityOnHand}, Now $totalLotsQuantity',
-        );
       }
     }
   }

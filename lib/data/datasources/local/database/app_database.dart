@@ -60,6 +60,10 @@ class AppDatabase extends _$AppDatabase {
     );
   }
 
+  void notifyInventoryUpdate() {
+    markTablesUpdated({inventory});
+  }
+
   @override
   MigrationStrategy get migration => MigrationStrategy(
     onCreate: (Migrator m) async {

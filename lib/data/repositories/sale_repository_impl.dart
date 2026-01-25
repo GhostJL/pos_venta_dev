@@ -667,12 +667,19 @@ class SaleRepositoryImpl implements SaleRepository {
 
       // 2. Restore Lots
       if (transaction.restoreInventory) {
+        final sale = await (db.select(
+          db.sales,
+        )..where((t) => t.id.equals(transaction.saleId))).getSingle();
+
         final lotDeductions = await (db.select(db.saleItemLots).join([
           innerJoin(
             db.saleItems,
             db.saleItems.id.equalsExp(db.saleItemLots.saleItemId),
           ),
         ])..where(db.saleItems.saleId.equals(transaction.saleId))).get();
+
+        // Track total restored to lots
+        final Map<int, double> restoredPerItem = {};
 
         for (final row in lotDeductions) {
           final deduction = row.readTable(db.saleItemLots);
@@ -685,7 +692,74 @@ class SaleRepositoryImpl implements SaleRepository {
             ],
             updates: {db.inventoryLots},
           );
+
+          restoredPerItem[deduction.saleItemId] =
+              (restoredPerItem[deduction.saleItemId] ?? 0.0) +
+              deduction.quantityDeducted;
         }
+
+        // Fallback: Check for items with insufficient lot restoration
+        final itemsForFallback = await (db.select(
+          db.saleItems,
+        )..where((t) => t.saleId.equals(transaction.saleId))).get();
+
+        for (final item in itemsForFallback) {
+          final restored = restoredPerItem[item.id] ?? 0.0;
+          final deficit = item.quantity - restored;
+
+          if (deficit > 0.001) {
+            // Find most recent active lot
+            final mostRecentLot =
+                await (db.select(db.inventoryLots)
+                      ..where(
+                        (t) =>
+                            t.productId.equals(item.productId) &
+                            t.warehouseId.equals(sale.warehouseId) &
+                            (item.variantId != null
+                                ? t.variantId.equals(item.variantId!)
+                                : t.variantId.isNull()),
+                      )
+                      ..orderBy([(t) => OrderingTerm.desc(t.receivedAt)])
+                      ..limit(1))
+                    .getSingleOrNull();
+
+            if (mostRecentLot != null) {
+              // Restore deficit to the most recent lot
+              await db.customUpdate(
+                'UPDATE inventory_lots SET quantity = quantity + ? WHERE id = ?',
+                variables: [
+                  Variable.withReal(deficit),
+                  Variable.withInt(mostRecentLot.id),
+                ],
+                updates: {db.inventoryLots},
+              );
+            } else {
+              // Edge case: No lots exist at all. Create one to ensure Trigger fires.
+              final now = DateTime.now();
+              final lotNumber =
+                  'CNL-${now.year}${now.month}${now.day}-${transaction.saleId}';
+
+              await db
+                  .into(db.inventoryLots)
+                  .insert(
+                    drift_db.InventoryLotsCompanion.insert(
+                      productId: item.productId,
+                      warehouseId: sale.warehouseId,
+                      variantId: Value(item.variantId),
+                      lotNumber: lotNumber,
+                      quantity: Value(deficit),
+                      originalQuantity: Value(deficit),
+                      receivedAt: Value(now),
+                      unitCostCents: item.unitPriceCents,
+                      totalCostCents: (item.unitPriceCents * deficit).round(),
+                    ),
+                  );
+            }
+          }
+        }
+
+        // Notify Drift that Inventory table has changed (via Trigger)
+        db.notifyInventoryUpdate();
 
         // Delete the lot deduction records to avoid phantom deductions
         // This makes the system consistent with Sale Returns which also clean up these records
@@ -698,7 +772,6 @@ class SaleRepositoryImpl implements SaleRepository {
             ))
             .go();
       }
-
       // 3. Restore Inventory
       if (transaction.restoreInventory) {
         final sale = await (db.select(
@@ -709,13 +782,13 @@ class SaleRepositoryImpl implements SaleRepository {
         )..where((t) => t.saleId.equals(transaction.saleId))).get();
 
         for (final item in items) {
-          double quantityToRestore = item.quantity;
+          final quantityToRestore = item.quantity;
 
-          // Fix: Do not multiply by variant quantity.
-          // Inventory stores the count of the specific variant unit (e.g. Packs), not the base units.
-          // quantityToRestore = item.quantity; (Already set above)
+          // Note: Inventory update is handled by DB Triggers on InventoryLots (Migration 42).
+          // We DO NOT update db.inventory manually here to avoid double counting.
+          // However, we still insert the movement record.
 
-          // Update Inventory
+          // Fetch current inventory (already updated by Trigger from Step 2)
           final inventoryRow =
               await (db.select(db.inventory)..where(
                     (t) =>
@@ -725,21 +798,30 @@ class SaleRepositoryImpl implements SaleRepository {
                             ? t.variantId.equals(item.variantId!)
                             : t.variantId.isNull()),
                   ))
-                  .getSingle();
-          await (db.update(db.inventory)..where(
-                (t) =>
-                    t.productId.equals(item.productId) &
-                    t.warehouseId.equals(sale.warehouseId) &
-                    (item.variantId != null
-                        ? t.variantId.equals(item.variantId!)
-                        : t.variantId.isNull()),
-              ))
-              .write(
-                drift_db.InventoryCompanion(
-                  quantityOnHand: Value(
-                    inventoryRow.quantityOnHand + quantityToRestore,
-                  ),
-                  updatedAt: Value(DateTime.now()),
+                  .getSingleOrNull();
+
+          // If inventoryRow is null, it means no lot was created/updated?
+          // But our fallback logic in Step 2 guarantees Lot creation, so Trigger should have created Inventory row.
+          // Unless Trigger failed?
+
+          final currentQty = inventoryRow?.quantityOnHand ?? 0.0;
+
+          await db
+              .into(db.inventoryMovements)
+              .insert(
+                drift_db.InventoryMovementsCompanion.insert(
+                  productId: item.productId,
+                  warehouseId: sale.warehouseId,
+                  movementType: 'return',
+                  quantity: quantityToRestore,
+                  quantityBefore: currentQty - quantityToRestore,
+                  quantityAfter: currentQty,
+                  referenceType: Value('sale_cancellation'),
+                  referenceId: Value(sale.id),
+                  reason: Value('Sale cancelled: ${transaction.reason}'),
+                  performedBy: transaction.userId,
+                  movementDate: Value(DateTime.now()),
+                  variantId: Value(item.variantId),
                 ),
               );
 

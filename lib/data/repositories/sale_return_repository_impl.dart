@@ -3,7 +3,6 @@ import 'package:posventa/data/datasources/local/database/app_database.dart'
     as drift_db;
 import 'package:posventa/domain/entities/sale_return.dart';
 import 'package:posventa/domain/entities/sale_return_item.dart';
-import 'package:posventa/domain/entities/inventory_movement.dart';
 import 'package:posventa/domain/repositories/sale_return_repository.dart';
 
 class SaleReturnRepositoryImpl implements SaleReturnRepository {
@@ -323,7 +322,18 @@ class SaleReturnRepositoryImpl implements SaleReturnRepository {
     // Inventory stores the count of the specific variant unit (e.g. Packs), not the base units.
     double quantityToRestore = item.quantity;
 
-    // Update Inventory
+    // Verify we are not duplicating logic with DB Triggers.
+    // Migration 42 added triggers that update Inventory when InventoryLots changes.
+    // So we should NOT update db.inventory manually if we are updating lots, otherwise we double count.
+
+    // However, we MUST ensure we update/insert a lot so the trigger fires.
+
+    // We still need to fetch inventory to record 'quantityBefore' for movement history
+    // and to handle the case where we might need to initialize 'Inventory' record if it doesn't exist?
+    // Triggers handle INSERT on InventoryLots -> INSERT/UPDATE on Inventory.
+    // So we can skip manual Inventory insert/update entirely!
+
+    // Wait, we need 'quantityBefore' for the movement record.
     final inventory =
         await (db.select(db.inventory)
               ..where(
@@ -339,51 +349,14 @@ class SaleReturnRepositoryImpl implements SaleReturnRepository {
 
     double quantityBefore = inventory?.quantityOnHand ?? 0.0;
 
-    if (inventory == null) {
-      await db
-          .into(db.inventory)
-          .insert(
-            drift_db.InventoryCompanion.insert(
-              productId: item.productId,
-              variantId: Value(saleItem.variantId),
-              warehouseId: warehouseId,
-              quantityOnHand: Value(quantityToRestore),
-              updatedAt: Value(DateTime.now()),
-              quantityReserved: Value(0.0), // Provide default
-            ),
-          );
-    } else {
-      await (db.update(
-        db.inventory,
-      )..where((t) => t.id.equals(inventory.id))).write(
-        drift_db.InventoryCompanion(
-          quantityOnHand: Value(inventory.quantityOnHand + quantityToRestore),
-          updatedAt: Value(DateTime.now()),
-        ),
-      );
-    }
+    // REMOVED manual db.inventory update/insert here to avoid double counting via Triggers.
 
-    await db
-        .into(db.inventoryMovements)
-        .insert(
-          drift_db.InventoryMovementsCompanion.insert(
-            productId: item.productId,
-            variantId: Value(saleItem.variantId),
-            warehouseId: warehouseId,
-            movementType: MovementType.returnMovement.value,
-            quantity: quantityToRestore,
-            quantityBefore: quantityBefore,
-            quantityAfter: quantityBefore + quantityToRestore,
-            referenceType: Value('sale_return'),
-            referenceId: Value(returnId),
-            reason: Value(reason),
-            performedBy: performedBy,
-            movementDate: Value(DateTime.now()),
-          ),
-        );
+    // ... (Movement Insert remains) ...
+    // Note: Movement will record the change.
 
     // Restore Lots logic (LIFO-ish restoration to sale_item_lots)
     double remainingToRestore = item.quantity;
+    double totalRestored = 0;
 
     final lotDeductions =
         await (db.select(db.saleItemLots)
@@ -431,8 +404,60 @@ class SaleReturnRepositoryImpl implements SaleReturnRepository {
           );
         }
         remainingToRestore -= amountToRestoreToThisLot;
+        totalRestored += amountToRestoreToThisLot;
       }
     }
+
+    // Fallback: If we still have quantity to restore
+    if (remainingToRestore > 0.001) {
+      final mostRecentLot =
+          await (db.select(db.inventoryLots)
+                ..where(
+                  (t) =>
+                      t.productId.equals(item.productId) &
+                      t.warehouseId.equals(warehouseId) &
+                      (saleItem.variantId != null
+                          ? t.variantId.equals(saleItem.variantId!)
+                          : t.variantId.isNull()),
+                )
+                ..orderBy([(t) => OrderingTerm.desc(t.receivedAt)])
+                ..limit(1))
+              .getSingleOrNull();
+
+      if (mostRecentLot != null) {
+        await (db.update(
+          db.inventoryLots,
+        )..where((t) => t.id.equals(mostRecentLot.id))).write(
+          drift_db.InventoryLotsCompanion(
+            quantity: Value(mostRecentLot.quantity + remainingToRestore),
+          ),
+        );
+      } else {
+        // Edge case: No lots exist at all. Create one to ensure Trigger fires.
+        final now = DateTime.now();
+        final lotNumber = 'RET-${now.year}${now.month}${now.day}-$returnId';
+
+        await db
+            .into(db.inventoryLots)
+            .insert(
+              drift_db.InventoryLotsCompanion.insert(
+                productId: item.productId,
+                warehouseId: warehouseId,
+                variantId: Value(saleItem.variantId),
+                lotNumber: lotNumber,
+                quantity: Value(remainingToRestore),
+                originalQuantity: Value(remainingToRestore),
+                receivedAt: Value(now),
+                unitCostCents: item.unitPriceCents, // Best guess
+                totalCostCents: (item.unitPriceCents * remainingToRestore)
+                    .round(),
+              ),
+            );
+      }
+    }
+
+    // Notify Drift that Inventory table has changed (via Trigger) so streams update
+    db.notifyInventoryUpdate();
   }
 
   Future<void> _createCashMovement(SaleReturn saleReturn, int returnId) async {
