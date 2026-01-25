@@ -30,6 +30,7 @@ import 'package:posventa/presentation/providers/di/core_di.dart';
 import 'package:posventa/domain/services/stock_validator_service.dart';
 import 'package:posventa/domain/services/stock_synchronizer.dart';
 import 'package:posventa/presentation/providers/di/product_di.dart';
+import 'package:posventa/domain/use_cases/inventory/sync_inventory_with_lots_use_case.dart';
 
 part 'inventory_di.g.dart';
 
@@ -152,3 +153,7 @@ GetInventoryMovementsByDateRange getInventoryMovementsByDateRange(ref) =>
 @riverpod
 AdjustInventory adjustInventoryUseCase(ref) =>
     AdjustInventory(ref.watch(inventoryRepositoryProvider));
+
+@riverpod
+SyncInventoryWithLotsUseCase syncInventoryWithLotsUseCase(ref) =>
+    SyncInventoryWithLotsUseCase(ref.watch(appDatabaseProvider));

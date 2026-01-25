@@ -1168,3 +1168,52 @@ final class AdjustInventoryUseCaseProvider
 
 String _$adjustInventoryUseCaseHash() =>
     r'5bddfd6ebaa6469662a877c4ed0a786943771d56';
+
+@ProviderFor(syncInventoryWithLotsUseCase)
+const syncInventoryWithLotsUseCaseProvider =
+    SyncInventoryWithLotsUseCaseProvider._();
+
+final class SyncInventoryWithLotsUseCaseProvider
+    extends
+        $FunctionalProvider<
+          SyncInventoryWithLotsUseCase,
+          SyncInventoryWithLotsUseCase,
+          SyncInventoryWithLotsUseCase
+        >
+    with $Provider<SyncInventoryWithLotsUseCase> {
+  const SyncInventoryWithLotsUseCaseProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'syncInventoryWithLotsUseCaseProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$syncInventoryWithLotsUseCaseHash();
+
+  @$internal
+  @override
+  $ProviderElement<SyncInventoryWithLotsUseCase> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  SyncInventoryWithLotsUseCase create(Ref ref) {
+    return syncInventoryWithLotsUseCase(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(SyncInventoryWithLotsUseCase value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<SyncInventoryWithLotsUseCase>(value),
+    );
+  }
+}
+
+String _$syncInventoryWithLotsUseCaseHash() =>
+    r'49477de1229f60f6385eda9ae0d05efdbd804a64';

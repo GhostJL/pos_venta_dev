@@ -711,14 +711,9 @@ class SaleRepositoryImpl implements SaleRepository {
         for (final item in items) {
           double quantityToRestore = item.quantity;
 
-          if (item.variantId != null) {
-            final variant = await (db.select(
-              db.productVariants,
-            )..where((t) => t.id.equals(item.variantId!))).getSingleOrNull();
-            if (variant != null) {
-              quantityToRestore = item.quantity * variant.quantity;
-            }
-          }
+          // Fix: Do not multiply by variant quantity.
+          // Inventory stores the count of the specific variant unit (e.g. Packs), not the base units.
+          // quantityToRestore = item.quantity; (Already set above)
 
           // Update Inventory
           final inventoryRow =

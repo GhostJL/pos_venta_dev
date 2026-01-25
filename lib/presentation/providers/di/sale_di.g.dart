@@ -441,7 +441,7 @@ final class CancelSaleUseCaseProvider
   }
 }
 
-String _$cancelSaleUseCaseHash() => r'3a677759e55b972bc2f476cf27ec8e08641412f1';
+String _$cancelSaleUseCaseHash() => r'550c4b2ca2b04ed85c50711c57a1bc1b3eae2981';
 
 @ProviderFor(todaysRevenue)
 const todaysRevenueProvider = TodaysRevenueProvider._();

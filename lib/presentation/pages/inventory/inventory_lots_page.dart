@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:posventa/domain/entities/inventory_lot.dart';
 import 'package:posventa/presentation/providers/inventory_lot_providers.dart';
+import 'package:posventa/presentation/providers/di/inventory_di.dart';
 
 class InventoryLotsPage extends ConsumerStatefulWidget {
   final int productId;
@@ -41,6 +42,30 @@ class _InventoryLotsPageState extends ConsumerState<InventoryLotsPage> {
         elevation: 0,
         // Standard back button will pop to previous screen (InventoryPage)
         actions: [
+          IconButton(
+            icon: const Icon(Icons.sync),
+            tooltip: 'Sincronizar Inventario con Lotes',
+            onPressed: () async {
+              try {
+                // Trigger sync
+                await ref.read(syncInventoryWithLotsUseCaseProvider).call();
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Inventario sincronizado correctamente'),
+                    ),
+                  );
+                  // Refresh providers if needed, though they might auto-update if they watch tables
+                }
+              } catch (e) {
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Error al sincronizar: $e')),
+                  );
+                }
+              }
+            },
+          ),
           IconButton(
             icon: Icon(
               _showOnlyAvailable ? Icons.visibility : Icons.visibility_off,
