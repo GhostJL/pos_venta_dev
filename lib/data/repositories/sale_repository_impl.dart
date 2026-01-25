@@ -686,6 +686,17 @@ class SaleRepositoryImpl implements SaleRepository {
             updates: {db.inventoryLots},
           );
         }
+
+        // Delete the lot deduction records to avoid phantom deductions
+        // This makes the system consistent with Sale Returns which also clean up these records
+        await (db.delete(db.saleItemLots)..where(
+              (t) => t.saleItemId.isIn(
+                lotDeductions
+                    .map((r) => r.readTable(db.saleItemLots).saleItemId)
+                    .toList(),
+              ),
+            ))
+            .go();
       }
 
       // 3. Restore Inventory

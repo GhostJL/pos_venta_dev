@@ -38,6 +38,8 @@ abstract class SaleReturnRepository {
   /// Checks if all items from a sale have been fully returned
   Future<bool> isSaleFullyReturned(int saleId);
 
+  Future<bool> hasReturns(int saleId);
+
   /// Get statistics for returns within a date range
   Future<Map<String, dynamic>> getReturnsStats({
     required DateTime startDate,

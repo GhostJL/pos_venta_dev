@@ -318,16 +318,10 @@ class SaleReturnRepositoryImpl implements SaleReturnRepository {
     final saleItem = await (db.select(
       db.saleItems,
     )..where((t) => t.id.equals(item.saleItemId))).getSingle();
-    double quantityToRestore = item.quantity;
 
-    if (saleItem.variantId != null) {
-      final variant = await (db.select(
-        db.productVariants,
-      )..where((t) => t.id.equals(saleItem.variantId!))).getSingleOrNull();
-      if (variant != null) {
-        quantityToRestore = item.quantity * variant.quantity;
-      }
-    }
+    // Fix: Do not multiply by variant quantity.
+    // Inventory stores the count of the specific variant unit (e.g. Packs), not the base units.
+    double quantityToRestore = item.quantity;
 
     // Update Inventory
     final inventory =
@@ -335,7 +329,10 @@ class SaleReturnRepositoryImpl implements SaleReturnRepository {
               ..where(
                 (t) =>
                     t.productId.equals(item.productId) &
-                    t.warehouseId.equals(warehouseId),
+                    t.warehouseId.equals(warehouseId) &
+                    (saleItem.variantId != null
+                        ? t.variantId.equals(saleItem.variantId!)
+                        : t.variantId.isNull()),
               )
               ..limit(1))
             .getSingleOrNull();
@@ -348,6 +345,7 @@ class SaleReturnRepositoryImpl implements SaleReturnRepository {
           .insert(
             drift_db.InventoryCompanion.insert(
               productId: item.productId,
+              variantId: Value(saleItem.variantId),
               warehouseId: warehouseId,
               quantityOnHand: Value(quantityToRestore),
               updatedAt: Value(DateTime.now()),
@@ -370,6 +368,7 @@ class SaleReturnRepositoryImpl implements SaleReturnRepository {
         .insert(
           drift_db.InventoryMovementsCompanion.insert(
             productId: item.productId,
+            variantId: Value(saleItem.variantId),
             warehouseId: warehouseId,
             movementType: MovementType.returnMovement.value,
             quantity: quantityToRestore,
@@ -551,6 +550,16 @@ class SaleReturnRepositoryImpl implements SaleReturnRepository {
     }
 
     return true;
+  }
+
+  @override
+  Future<bool> hasReturns(int saleId) async {
+    final count =
+        await (db.select(db.saleReturns)..where(
+              (t) => t.saleId.equals(saleId) & t.status.equals('completed'),
+            ))
+            .get();
+    return count.isNotEmpty;
   }
 
   @override

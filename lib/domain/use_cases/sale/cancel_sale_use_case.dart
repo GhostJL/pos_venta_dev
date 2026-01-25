@@ -7,15 +7,18 @@ import 'package:posventa/domain/use_cases/cash_movement/create_cash_movement.dar
 import 'package:posventa/domain/entities/sale.dart';
 import 'package:posventa/domain/repositories/sale_repository.dart';
 import 'package:posventa/domain/repositories/settings_repository.dart';
+import 'package:posventa/domain/repositories/sale_return_repository.dart';
 
 class CancelSaleUseCase {
   final SaleRepository _repository;
+  final SaleReturnRepository _saleReturnRepository;
   final CreateCashMovement _createCashMovement;
   final GetCurrentSession _getCurrentSession;
   final SettingsRepository _settingsRepository;
 
   CancelSaleUseCase(
     this._repository,
+    this._saleReturnRepository,
     this._createCashMovement,
     this._getCurrentSession,
     this._settingsRepository,
@@ -37,6 +40,16 @@ class CancelSaleUseCase {
         saleId,
         message:
             'No se puede cancelar una venta que ya ha sido devuelta. Utilice el módulo de devoluciones para más detalles.',
+      );
+    }
+
+    // Check if the sale has any partial returns
+    final hasReturns = await _saleReturnRepository.hasReturns(saleId);
+    if (hasReturns) {
+      throw SaleAlreadyReturnedException(
+        saleId,
+        message:
+            'Esta venta tiene devoluciones parciales. No se puede cancelar globalmente. Utilice el módulo de devoluciones para procesar el resto de los artículos.',
       );
     }
 

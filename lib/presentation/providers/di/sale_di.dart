@@ -83,6 +83,7 @@ GenerateNextSaleNumberUseCase generateNextSaleNumberUseCase(ref) =>
 @riverpod
 Future<CancelSaleUseCase> cancelSaleUseCase(ref) async => CancelSaleUseCase(
   ref.watch(saleRepositoryProvider),
+  ref.watch(saleReturnRepositoryProvider),
   ref.watch(createCashMovementUseCaseProvider),
   ref.watch(getCurrentSessionProvider),
   await ref.watch(settingsRepositoryProvider.future),
