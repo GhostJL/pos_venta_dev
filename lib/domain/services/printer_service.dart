@@ -45,4 +45,7 @@ abstract class PrinterService {
     String? cashierName,
     required String savePath,
   });
+
+  /// Show a ticket PDF preview in a dialog
+  Future<void> showPdfTicket(TicketData ticketData);
 }

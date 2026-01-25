@@ -535,4 +535,14 @@ class PrinterServiceImpl implements PrinterService {
 
     return filePath;
   }
+
+  @override
+  Future<void> showPdfTicket(TicketData ticketData) async {
+    final pdf = await TicketPdfBuilder.buildTicket(ticketData);
+    await Printing.layoutPdf(
+      onLayout: (PdfPageFormat format) async => pdf.save(),
+      name: 'Ticket_${ticketData.sale.saleNumber}',
+      format: PdfPageFormat.roll80,
+    );
+  }
 }
