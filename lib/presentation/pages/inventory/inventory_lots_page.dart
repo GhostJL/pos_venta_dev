@@ -255,7 +255,7 @@ class _InventoryLotsPageState extends ConsumerState<InventoryLotsPage> {
                 fontSize: 11,
                 fontWeight: FontWeight.bold,
                 color: isActive
-                    ? theme.colorScheme.primary
+                    ? theme.colorScheme.onPrimary
                     : theme.colorScheme.onSurfaceVariant,
               ),
             ),

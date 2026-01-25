@@ -297,6 +297,20 @@ class _PaymentPageState extends ConsumerState<PaymentPage> {
                                 'No se pudo imprimir. Ticket guardado como PDF.',
                               );
                             }
+                          } else {
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    'Error al imprimir: $printError',
+                                  ),
+                                  backgroundColor: Theme.of(
+                                    context,
+                                  ).colorScheme.error,
+                                  behavior: SnackBarBehavior.floating,
+                                ),
+                              );
+                            }
                           }
                         }
                       } else {

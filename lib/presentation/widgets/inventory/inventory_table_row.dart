@@ -345,7 +345,7 @@ class _InventoryTableRowState extends ConsumerState<InventoryTableRow> {
     }
     return _StatusChip(
       text: 'OK',
-      color: theme.primary,
+      color: theme.onPrimary,
       bgColor: theme.primaryContainer,
     );
   }

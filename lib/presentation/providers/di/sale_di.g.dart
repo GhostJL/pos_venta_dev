@@ -1268,4 +1268,4 @@ final class PrintSaleTicketUseCaseProvider
 }
 
 String _$printSaleTicketUseCaseHash() =>
-    r'3d6dce298453afbac3265702ff5164b7dbfa07b8';
+    r'5ab118c85144714b6733b77015f7a9bef5e233a2';

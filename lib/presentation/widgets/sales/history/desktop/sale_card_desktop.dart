@@ -7,7 +7,7 @@ import 'package:posventa/domain/entities/sale.dart';
 import 'package:posventa/presentation/providers/return_processing_provider.dart';
 import 'package:posventa/presentation/widgets/sales/common/sale_payment_method_chip.dart';
 import 'package:posventa/presentation/widgets/sales/common/sale_status_badge.dart';
-import 'package:posventa/domain/usecases/sale/print_sale_ticket_use_case.dart';
+import 'package:posventa/domain/use_cases/sale/print_sale_ticket_use_case.dart';
 import 'package:posventa/presentation/providers/auth_provider.dart';
 import 'package:posventa/presentation/providers/di/sale_di.dart';
 

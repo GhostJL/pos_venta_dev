@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:posventa/domain/entities/sale.dart';
-import 'package:posventa/domain/usecases/sale/print_sale_ticket_use_case.dart';
+import 'package:posventa/domain/use_cases/sale/print_sale_ticket_use_case.dart';
 import 'package:posventa/presentation/providers/auth_provider.dart';
 import 'package:posventa/presentation/providers/di/sale_di.dart';
 import 'package:posventa/presentation/widgets/sales/detail/desktop/sale_detail_desktop_layout.dart';

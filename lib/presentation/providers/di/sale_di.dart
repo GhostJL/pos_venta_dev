@@ -34,7 +34,7 @@ import 'package:posventa/presentation/providers/di/core_di.dart';
 import 'package:posventa/presentation/providers/di/inventory_di.dart';
 import 'package:posventa/presentation/providers/di/printer_di.dart';
 import 'package:posventa/presentation/providers/auth_provider.dart';
-import 'package:posventa/domain/usecases/sale/print_sale_ticket_use_case.dart';
+import 'package:posventa/domain/use_cases/sale/print_sale_ticket_use_case.dart';
 
 part 'sale_di.g.dart';
 
@@ -213,8 +213,6 @@ CreateCashMovement createCashMovementUseCase(Ref ref) =>
 Future<PrintSaleTicketUseCase> printSaleTicketUseCase(Ref ref) async {
   return PrintSaleTicketUseCase(
     ref.watch(printerServiceProvider),
-    await ref.watch(settingsRepositoryProvider.future),
     ref.watch(storeRepositoryProvider),
-    ref.watch(saleReturnRepositoryProvider),
   );
 }
