@@ -33,6 +33,7 @@ import 'package:posventa/presentation/pages/dashboards/dashboard_admin_page.dart
 import 'package:posventa/presentation/pages/dashboards/dashboard_cashier_page.dart';
 import 'package:posventa/presentation/pages/departaments/departments_page.dart';
 import 'package:posventa/presentation/pages/inventory/inventory_page.dart';
+import 'package:posventa/presentation/pages/inventory/inventory_audit_page.dart';
 import 'package:posventa/presentation/pages/inventory/inventory_notifications_page.dart';
 import 'package:posventa/presentation/pages/login/login_page.dart';
 import 'package:posventa/presentation/pages/login/create_account/create_account_page.dart';
@@ -497,6 +498,12 @@ final routerProvider = Provider<GoRouter>((ref) {
               final sale = state.extra as Sale?;
               return AppTransitionPage(child: ReturnProcessingPage(sale: sale));
             },
+          ),
+
+          GoRoute(
+            path: '/inventory-audit',
+            pageBuilder: (context, state) =>
+                const AppTransitionPage(child: InventoryAuditPage()),
           ),
 
           // Physical Inventory Routes

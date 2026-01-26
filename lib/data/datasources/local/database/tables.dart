@@ -796,3 +796,47 @@ class PurchaseItems extends Table {
   @override
   String get tableName => 'purchase_items';
 }
+
+// =================================================================
+// 7. INVENTORY AUDIT TABLES
+// =================================================================
+
+class InventoryAudits extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  DateTimeColumn get auditDate => dateTime().named('audit_date')();
+  IntColumn get warehouseId =>
+      integer().named('warehouse_id').references(Warehouses, #id)();
+  IntColumn get performedBy =>
+      integer().named('performed_by').references(Users, #id)();
+  TextColumn get status => text().withDefault(
+    const Constant('draft'),
+  )(); // 'draft', 'completed', 'cancelled'
+  TextColumn get notes => text().nullable()();
+  DateTimeColumn get createdAt =>
+      dateTime().withDefault(currentDateAndTime).named('created_at')();
+  DateTimeColumn get updatedAt =>
+      dateTime().withDefault(currentDateAndTime).named('updated_at')();
+
+  @override
+  String get tableName => 'inventory_audits';
+}
+
+class InventoryAuditItems extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  IntColumn get auditId => integer()
+      .named('audit_id')
+      .references(InventoryAudits, #id, onDelete: KeyAction.cascade)();
+  IntColumn get productId =>
+      integer().named('product_id').references(Products, #id)();
+  IntColumn get variantId => integer()
+      .nullable()
+      .named('variant_id')
+      .references(ProductVariants, #id)();
+  RealColumn get expectedQuantity => real().named('expected_quantity')();
+  RealColumn get countedQuantity =>
+      real().withDefault(const Constant(0.0)).named('counted_quantity')();
+  DateTimeColumn get countedAt => dateTime().nullable().named('counted_at')();
+
+  @override
+  String get tableName => 'inventory_audit_items';
+}

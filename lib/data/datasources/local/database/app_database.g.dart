@@ -21685,6 +21685,989 @@ class AuditLogsCompanion extends UpdateCompanion<AuditLog> {
   }
 }
 
+class $InventoryAuditsTable extends InventoryAudits
+    with TableInfo<$InventoryAuditsTable, InventoryAudit> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $InventoryAuditsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _auditDateMeta = const VerificationMeta(
+    'auditDate',
+  );
+  @override
+  late final GeneratedColumn<DateTime> auditDate = GeneratedColumn<DateTime>(
+    'audit_date',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _warehouseIdMeta = const VerificationMeta(
+    'warehouseId',
+  );
+  @override
+  late final GeneratedColumn<int> warehouseId = GeneratedColumn<int>(
+    'warehouse_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES warehouses (id)',
+    ),
+  );
+  static const VerificationMeta _performedByMeta = const VerificationMeta(
+    'performedBy',
+  );
+  @override
+  late final GeneratedColumn<int> performedBy = GeneratedColumn<int>(
+    'performed_by',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES users (id)',
+    ),
+  );
+  static const VerificationMeta _statusMeta = const VerificationMeta('status');
+  @override
+  late final GeneratedColumn<String> status = GeneratedColumn<String>(
+    'status',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('draft'),
+  );
+  static const VerificationMeta _notesMeta = const VerificationMeta('notes');
+  @override
+  late final GeneratedColumn<String> notes = GeneratedColumn<String>(
+    'notes',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    auditDate,
+    warehouseId,
+    performedBy,
+    status,
+    notes,
+    createdAt,
+    updatedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'inventory_audits';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<InventoryAudit> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('audit_date')) {
+      context.handle(
+        _auditDateMeta,
+        auditDate.isAcceptableOrUnknown(data['audit_date']!, _auditDateMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_auditDateMeta);
+    }
+    if (data.containsKey('warehouse_id')) {
+      context.handle(
+        _warehouseIdMeta,
+        warehouseId.isAcceptableOrUnknown(
+          data['warehouse_id']!,
+          _warehouseIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_warehouseIdMeta);
+    }
+    if (data.containsKey('performed_by')) {
+      context.handle(
+        _performedByMeta,
+        performedBy.isAcceptableOrUnknown(
+          data['performed_by']!,
+          _performedByMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_performedByMeta);
+    }
+    if (data.containsKey('status')) {
+      context.handle(
+        _statusMeta,
+        status.isAcceptableOrUnknown(data['status']!, _statusMeta),
+      );
+    }
+    if (data.containsKey('notes')) {
+      context.handle(
+        _notesMeta,
+        notes.isAcceptableOrUnknown(data['notes']!, _notesMeta),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  InventoryAudit map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return InventoryAudit(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      auditDate: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}audit_date'],
+      )!,
+      warehouseId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}warehouse_id'],
+      )!,
+      performedBy: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}performed_by'],
+      )!,
+      status: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}status'],
+      )!,
+      notes: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}notes'],
+      ),
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+    );
+  }
+
+  @override
+  $InventoryAuditsTable createAlias(String alias) {
+    return $InventoryAuditsTable(attachedDatabase, alias);
+  }
+}
+
+class InventoryAudit extends DataClass implements Insertable<InventoryAudit> {
+  final int id;
+  final DateTime auditDate;
+  final int warehouseId;
+  final int performedBy;
+  final String status;
+  final String? notes;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  const InventoryAudit({
+    required this.id,
+    required this.auditDate,
+    required this.warehouseId,
+    required this.performedBy,
+    required this.status,
+    this.notes,
+    required this.createdAt,
+    required this.updatedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['audit_date'] = Variable<DateTime>(auditDate);
+    map['warehouse_id'] = Variable<int>(warehouseId);
+    map['performed_by'] = Variable<int>(performedBy);
+    map['status'] = Variable<String>(status);
+    if (!nullToAbsent || notes != null) {
+      map['notes'] = Variable<String>(notes);
+    }
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    return map;
+  }
+
+  InventoryAuditsCompanion toCompanion(bool nullToAbsent) {
+    return InventoryAuditsCompanion(
+      id: Value(id),
+      auditDate: Value(auditDate),
+      warehouseId: Value(warehouseId),
+      performedBy: Value(performedBy),
+      status: Value(status),
+      notes: notes == null && nullToAbsent
+          ? const Value.absent()
+          : Value(notes),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+    );
+  }
+
+  factory InventoryAudit.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return InventoryAudit(
+      id: serializer.fromJson<int>(json['id']),
+      auditDate: serializer.fromJson<DateTime>(json['auditDate']),
+      warehouseId: serializer.fromJson<int>(json['warehouseId']),
+      performedBy: serializer.fromJson<int>(json['performedBy']),
+      status: serializer.fromJson<String>(json['status']),
+      notes: serializer.fromJson<String?>(json['notes']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'auditDate': serializer.toJson<DateTime>(auditDate),
+      'warehouseId': serializer.toJson<int>(warehouseId),
+      'performedBy': serializer.toJson<int>(performedBy),
+      'status': serializer.toJson<String>(status),
+      'notes': serializer.toJson<String?>(notes),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+    };
+  }
+
+  InventoryAudit copyWith({
+    int? id,
+    DateTime? auditDate,
+    int? warehouseId,
+    int? performedBy,
+    String? status,
+    Value<String?> notes = const Value.absent(),
+    DateTime? createdAt,
+    DateTime? updatedAt,
+  }) => InventoryAudit(
+    id: id ?? this.id,
+    auditDate: auditDate ?? this.auditDate,
+    warehouseId: warehouseId ?? this.warehouseId,
+    performedBy: performedBy ?? this.performedBy,
+    status: status ?? this.status,
+    notes: notes.present ? notes.value : this.notes,
+    createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+  );
+  InventoryAudit copyWithCompanion(InventoryAuditsCompanion data) {
+    return InventoryAudit(
+      id: data.id.present ? data.id.value : this.id,
+      auditDate: data.auditDate.present ? data.auditDate.value : this.auditDate,
+      warehouseId: data.warehouseId.present
+          ? data.warehouseId.value
+          : this.warehouseId,
+      performedBy: data.performedBy.present
+          ? data.performedBy.value
+          : this.performedBy,
+      status: data.status.present ? data.status.value : this.status,
+      notes: data.notes.present ? data.notes.value : this.notes,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('InventoryAudit(')
+          ..write('id: $id, ')
+          ..write('auditDate: $auditDate, ')
+          ..write('warehouseId: $warehouseId, ')
+          ..write('performedBy: $performedBy, ')
+          ..write('status: $status, ')
+          ..write('notes: $notes, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    auditDate,
+    warehouseId,
+    performedBy,
+    status,
+    notes,
+    createdAt,
+    updatedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is InventoryAudit &&
+          other.id == this.id &&
+          other.auditDate == this.auditDate &&
+          other.warehouseId == this.warehouseId &&
+          other.performedBy == this.performedBy &&
+          other.status == this.status &&
+          other.notes == this.notes &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt);
+}
+
+class InventoryAuditsCompanion extends UpdateCompanion<InventoryAudit> {
+  final Value<int> id;
+  final Value<DateTime> auditDate;
+  final Value<int> warehouseId;
+  final Value<int> performedBy;
+  final Value<String> status;
+  final Value<String?> notes;
+  final Value<DateTime> createdAt;
+  final Value<DateTime> updatedAt;
+  const InventoryAuditsCompanion({
+    this.id = const Value.absent(),
+    this.auditDate = const Value.absent(),
+    this.warehouseId = const Value.absent(),
+    this.performedBy = const Value.absent(),
+    this.status = const Value.absent(),
+    this.notes = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+  });
+  InventoryAuditsCompanion.insert({
+    this.id = const Value.absent(),
+    required DateTime auditDate,
+    required int warehouseId,
+    required int performedBy,
+    this.status = const Value.absent(),
+    this.notes = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+  }) : auditDate = Value(auditDate),
+       warehouseId = Value(warehouseId),
+       performedBy = Value(performedBy);
+  static Insertable<InventoryAudit> custom({
+    Expression<int>? id,
+    Expression<DateTime>? auditDate,
+    Expression<int>? warehouseId,
+    Expression<int>? performedBy,
+    Expression<String>? status,
+    Expression<String>? notes,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (auditDate != null) 'audit_date': auditDate,
+      if (warehouseId != null) 'warehouse_id': warehouseId,
+      if (performedBy != null) 'performed_by': performedBy,
+      if (status != null) 'status': status,
+      if (notes != null) 'notes': notes,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+    });
+  }
+
+  InventoryAuditsCompanion copyWith({
+    Value<int>? id,
+    Value<DateTime>? auditDate,
+    Value<int>? warehouseId,
+    Value<int>? performedBy,
+    Value<String>? status,
+    Value<String?>? notes,
+    Value<DateTime>? createdAt,
+    Value<DateTime>? updatedAt,
+  }) {
+    return InventoryAuditsCompanion(
+      id: id ?? this.id,
+      auditDate: auditDate ?? this.auditDate,
+      warehouseId: warehouseId ?? this.warehouseId,
+      performedBy: performedBy ?? this.performedBy,
+      status: status ?? this.status,
+      notes: notes ?? this.notes,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (auditDate.present) {
+      map['audit_date'] = Variable<DateTime>(auditDate.value);
+    }
+    if (warehouseId.present) {
+      map['warehouse_id'] = Variable<int>(warehouseId.value);
+    }
+    if (performedBy.present) {
+      map['performed_by'] = Variable<int>(performedBy.value);
+    }
+    if (status.present) {
+      map['status'] = Variable<String>(status.value);
+    }
+    if (notes.present) {
+      map['notes'] = Variable<String>(notes.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('InventoryAuditsCompanion(')
+          ..write('id: $id, ')
+          ..write('auditDate: $auditDate, ')
+          ..write('warehouseId: $warehouseId, ')
+          ..write('performedBy: $performedBy, ')
+          ..write('status: $status, ')
+          ..write('notes: $notes, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $InventoryAuditItemsTable extends InventoryAuditItems
+    with TableInfo<$InventoryAuditItemsTable, InventoryAuditItem> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $InventoryAuditItemsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _auditIdMeta = const VerificationMeta(
+    'auditId',
+  );
+  @override
+  late final GeneratedColumn<int> auditId = GeneratedColumn<int>(
+    'audit_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES inventory_audits (id) ON DELETE CASCADE',
+    ),
+  );
+  static const VerificationMeta _productIdMeta = const VerificationMeta(
+    'productId',
+  );
+  @override
+  late final GeneratedColumn<int> productId = GeneratedColumn<int>(
+    'product_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES products (id)',
+    ),
+  );
+  static const VerificationMeta _variantIdMeta = const VerificationMeta(
+    'variantId',
+  );
+  @override
+  late final GeneratedColumn<int> variantId = GeneratedColumn<int>(
+    'variant_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES product_variants (id)',
+    ),
+  );
+  static const VerificationMeta _expectedQuantityMeta = const VerificationMeta(
+    'expectedQuantity',
+  );
+  @override
+  late final GeneratedColumn<double> expectedQuantity = GeneratedColumn<double>(
+    'expected_quantity',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _countedQuantityMeta = const VerificationMeta(
+    'countedQuantity',
+  );
+  @override
+  late final GeneratedColumn<double> countedQuantity = GeneratedColumn<double>(
+    'counted_quantity',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0.0),
+  );
+  static const VerificationMeta _countedAtMeta = const VerificationMeta(
+    'countedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> countedAt = GeneratedColumn<DateTime>(
+    'counted_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    auditId,
+    productId,
+    variantId,
+    expectedQuantity,
+    countedQuantity,
+    countedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'inventory_audit_items';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<InventoryAuditItem> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('audit_id')) {
+      context.handle(
+        _auditIdMeta,
+        auditId.isAcceptableOrUnknown(data['audit_id']!, _auditIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_auditIdMeta);
+    }
+    if (data.containsKey('product_id')) {
+      context.handle(
+        _productIdMeta,
+        productId.isAcceptableOrUnknown(data['product_id']!, _productIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_productIdMeta);
+    }
+    if (data.containsKey('variant_id')) {
+      context.handle(
+        _variantIdMeta,
+        variantId.isAcceptableOrUnknown(data['variant_id']!, _variantIdMeta),
+      );
+    }
+    if (data.containsKey('expected_quantity')) {
+      context.handle(
+        _expectedQuantityMeta,
+        expectedQuantity.isAcceptableOrUnknown(
+          data['expected_quantity']!,
+          _expectedQuantityMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_expectedQuantityMeta);
+    }
+    if (data.containsKey('counted_quantity')) {
+      context.handle(
+        _countedQuantityMeta,
+        countedQuantity.isAcceptableOrUnknown(
+          data['counted_quantity']!,
+          _countedQuantityMeta,
+        ),
+      );
+    }
+    if (data.containsKey('counted_at')) {
+      context.handle(
+        _countedAtMeta,
+        countedAt.isAcceptableOrUnknown(data['counted_at']!, _countedAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  InventoryAuditItem map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return InventoryAuditItem(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      auditId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}audit_id'],
+      )!,
+      productId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}product_id'],
+      )!,
+      variantId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}variant_id'],
+      ),
+      expectedQuantity: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}expected_quantity'],
+      )!,
+      countedQuantity: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}counted_quantity'],
+      )!,
+      countedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}counted_at'],
+      ),
+    );
+  }
+
+  @override
+  $InventoryAuditItemsTable createAlias(String alias) {
+    return $InventoryAuditItemsTable(attachedDatabase, alias);
+  }
+}
+
+class InventoryAuditItem extends DataClass
+    implements Insertable<InventoryAuditItem> {
+  final int id;
+  final int auditId;
+  final int productId;
+  final int? variantId;
+  final double expectedQuantity;
+  final double countedQuantity;
+  final DateTime? countedAt;
+  const InventoryAuditItem({
+    required this.id,
+    required this.auditId,
+    required this.productId,
+    this.variantId,
+    required this.expectedQuantity,
+    required this.countedQuantity,
+    this.countedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['audit_id'] = Variable<int>(auditId);
+    map['product_id'] = Variable<int>(productId);
+    if (!nullToAbsent || variantId != null) {
+      map['variant_id'] = Variable<int>(variantId);
+    }
+    map['expected_quantity'] = Variable<double>(expectedQuantity);
+    map['counted_quantity'] = Variable<double>(countedQuantity);
+    if (!nullToAbsent || countedAt != null) {
+      map['counted_at'] = Variable<DateTime>(countedAt);
+    }
+    return map;
+  }
+
+  InventoryAuditItemsCompanion toCompanion(bool nullToAbsent) {
+    return InventoryAuditItemsCompanion(
+      id: Value(id),
+      auditId: Value(auditId),
+      productId: Value(productId),
+      variantId: variantId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(variantId),
+      expectedQuantity: Value(expectedQuantity),
+      countedQuantity: Value(countedQuantity),
+      countedAt: countedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(countedAt),
+    );
+  }
+
+  factory InventoryAuditItem.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return InventoryAuditItem(
+      id: serializer.fromJson<int>(json['id']),
+      auditId: serializer.fromJson<int>(json['auditId']),
+      productId: serializer.fromJson<int>(json['productId']),
+      variantId: serializer.fromJson<int?>(json['variantId']),
+      expectedQuantity: serializer.fromJson<double>(json['expectedQuantity']),
+      countedQuantity: serializer.fromJson<double>(json['countedQuantity']),
+      countedAt: serializer.fromJson<DateTime?>(json['countedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'auditId': serializer.toJson<int>(auditId),
+      'productId': serializer.toJson<int>(productId),
+      'variantId': serializer.toJson<int?>(variantId),
+      'expectedQuantity': serializer.toJson<double>(expectedQuantity),
+      'countedQuantity': serializer.toJson<double>(countedQuantity),
+      'countedAt': serializer.toJson<DateTime?>(countedAt),
+    };
+  }
+
+  InventoryAuditItem copyWith({
+    int? id,
+    int? auditId,
+    int? productId,
+    Value<int?> variantId = const Value.absent(),
+    double? expectedQuantity,
+    double? countedQuantity,
+    Value<DateTime?> countedAt = const Value.absent(),
+  }) => InventoryAuditItem(
+    id: id ?? this.id,
+    auditId: auditId ?? this.auditId,
+    productId: productId ?? this.productId,
+    variantId: variantId.present ? variantId.value : this.variantId,
+    expectedQuantity: expectedQuantity ?? this.expectedQuantity,
+    countedQuantity: countedQuantity ?? this.countedQuantity,
+    countedAt: countedAt.present ? countedAt.value : this.countedAt,
+  );
+  InventoryAuditItem copyWithCompanion(InventoryAuditItemsCompanion data) {
+    return InventoryAuditItem(
+      id: data.id.present ? data.id.value : this.id,
+      auditId: data.auditId.present ? data.auditId.value : this.auditId,
+      productId: data.productId.present ? data.productId.value : this.productId,
+      variantId: data.variantId.present ? data.variantId.value : this.variantId,
+      expectedQuantity: data.expectedQuantity.present
+          ? data.expectedQuantity.value
+          : this.expectedQuantity,
+      countedQuantity: data.countedQuantity.present
+          ? data.countedQuantity.value
+          : this.countedQuantity,
+      countedAt: data.countedAt.present ? data.countedAt.value : this.countedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('InventoryAuditItem(')
+          ..write('id: $id, ')
+          ..write('auditId: $auditId, ')
+          ..write('productId: $productId, ')
+          ..write('variantId: $variantId, ')
+          ..write('expectedQuantity: $expectedQuantity, ')
+          ..write('countedQuantity: $countedQuantity, ')
+          ..write('countedAt: $countedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    auditId,
+    productId,
+    variantId,
+    expectedQuantity,
+    countedQuantity,
+    countedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is InventoryAuditItem &&
+          other.id == this.id &&
+          other.auditId == this.auditId &&
+          other.productId == this.productId &&
+          other.variantId == this.variantId &&
+          other.expectedQuantity == this.expectedQuantity &&
+          other.countedQuantity == this.countedQuantity &&
+          other.countedAt == this.countedAt);
+}
+
+class InventoryAuditItemsCompanion extends UpdateCompanion<InventoryAuditItem> {
+  final Value<int> id;
+  final Value<int> auditId;
+  final Value<int> productId;
+  final Value<int?> variantId;
+  final Value<double> expectedQuantity;
+  final Value<double> countedQuantity;
+  final Value<DateTime?> countedAt;
+  const InventoryAuditItemsCompanion({
+    this.id = const Value.absent(),
+    this.auditId = const Value.absent(),
+    this.productId = const Value.absent(),
+    this.variantId = const Value.absent(),
+    this.expectedQuantity = const Value.absent(),
+    this.countedQuantity = const Value.absent(),
+    this.countedAt = const Value.absent(),
+  });
+  InventoryAuditItemsCompanion.insert({
+    this.id = const Value.absent(),
+    required int auditId,
+    required int productId,
+    this.variantId = const Value.absent(),
+    required double expectedQuantity,
+    this.countedQuantity = const Value.absent(),
+    this.countedAt = const Value.absent(),
+  }) : auditId = Value(auditId),
+       productId = Value(productId),
+       expectedQuantity = Value(expectedQuantity);
+  static Insertable<InventoryAuditItem> custom({
+    Expression<int>? id,
+    Expression<int>? auditId,
+    Expression<int>? productId,
+    Expression<int>? variantId,
+    Expression<double>? expectedQuantity,
+    Expression<double>? countedQuantity,
+    Expression<DateTime>? countedAt,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (auditId != null) 'audit_id': auditId,
+      if (productId != null) 'product_id': productId,
+      if (variantId != null) 'variant_id': variantId,
+      if (expectedQuantity != null) 'expected_quantity': expectedQuantity,
+      if (countedQuantity != null) 'counted_quantity': countedQuantity,
+      if (countedAt != null) 'counted_at': countedAt,
+    });
+  }
+
+  InventoryAuditItemsCompanion copyWith({
+    Value<int>? id,
+    Value<int>? auditId,
+    Value<int>? productId,
+    Value<int?>? variantId,
+    Value<double>? expectedQuantity,
+    Value<double>? countedQuantity,
+    Value<DateTime?>? countedAt,
+  }) {
+    return InventoryAuditItemsCompanion(
+      id: id ?? this.id,
+      auditId: auditId ?? this.auditId,
+      productId: productId ?? this.productId,
+      variantId: variantId ?? this.variantId,
+      expectedQuantity: expectedQuantity ?? this.expectedQuantity,
+      countedQuantity: countedQuantity ?? this.countedQuantity,
+      countedAt: countedAt ?? this.countedAt,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (auditId.present) {
+      map['audit_id'] = Variable<int>(auditId.value);
+    }
+    if (productId.present) {
+      map['product_id'] = Variable<int>(productId.value);
+    }
+    if (variantId.present) {
+      map['variant_id'] = Variable<int>(variantId.value);
+    }
+    if (expectedQuantity.present) {
+      map['expected_quantity'] = Variable<double>(expectedQuantity.value);
+    }
+    if (countedQuantity.present) {
+      map['counted_quantity'] = Variable<double>(countedQuantity.value);
+    }
+    if (countedAt.present) {
+      map['counted_at'] = Variable<DateTime>(countedAt.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('InventoryAuditItemsCompanion(')
+          ..write('id: $id, ')
+          ..write('auditId: $auditId, ')
+          ..write('productId: $productId, ')
+          ..write('variantId: $variantId, ')
+          ..write('expectedQuantity: $expectedQuantity, ')
+          ..write('countedQuantity: $countedQuantity, ')
+          ..write('countedAt: $countedAt')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -21735,6 +22718,11 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     this,
   );
   late final $AuditLogsTable auditLogs = $AuditLogsTable(this);
+  late final $InventoryAuditsTable inventoryAudits = $InventoryAuditsTable(
+    this,
+  );
+  late final $InventoryAuditItemsTable inventoryAuditItems =
+      $InventoryAuditItemsTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -21777,6 +22765,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     cashMovements,
     customerPayments,
     auditLogs,
+    inventoryAudits,
+    inventoryAuditItems,
   ];
   @override
   StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules([
@@ -21923,6 +22913,13 @@ abstract class _$AppDatabase extends GeneratedDatabase {
         limitUpdateKind: UpdateKind.delete,
       ),
       result: [TableUpdate('cash_movements', kind: UpdateKind.delete)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'inventory_audits',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('inventory_audit_items', kind: UpdateKind.delete)],
     ),
   ]);
 }
@@ -22147,6 +23144,29 @@ final class $$UsersTableReferences
 
     final cache = $_typedResult.readTableOrNull(
       _customerPaymentsRefsTable($_db),
+    );
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+
+  static MultiTypedResultKey<$InventoryAuditsTable, List<InventoryAudit>>
+  _inventoryAuditsRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
+    db.inventoryAudits,
+    aliasName: $_aliasNameGenerator(
+      db.users.id,
+      db.inventoryAudits.performedBy,
+    ),
+  );
+
+  $$InventoryAuditsTableProcessedTableManager get inventoryAuditsRefs {
+    final manager = $$InventoryAuditsTableTableManager(
+      $_db,
+      $_db.inventoryAudits,
+    ).filter((f) => f.performedBy.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(
+      _inventoryAuditsRefsTable($_db),
     );
     return ProcessedTableManager(
       manager.$state.copyWith(prefetchedData: cache),
@@ -22463,6 +23483,31 @@ class $$UsersTableFilterComposer extends Composer<_$AppDatabase, $UsersTable> {
           }) => $$CustomerPaymentsTableFilterComposer(
             $db: $db,
             $table: $db.customerPayments,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<bool> inventoryAuditsRefs(
+    Expression<bool> Function($$InventoryAuditsTableFilterComposer f) f,
+  ) {
+    final $$InventoryAuditsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.inventoryAudits,
+      getReferencedColumn: (t) => t.performedBy,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$InventoryAuditsTableFilterComposer(
+            $db: $db,
+            $table: $db.inventoryAudits,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -22844,6 +23889,31 @@ class $$UsersTableAnnotationComposer
     );
     return f(composer);
   }
+
+  Expression<T> inventoryAuditsRefs<T extends Object>(
+    Expression<T> Function($$InventoryAuditsTableAnnotationComposer a) f,
+  ) {
+    final $$InventoryAuditsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.inventoryAudits,
+      getReferencedColumn: (t) => t.performedBy,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$InventoryAuditsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.inventoryAudits,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
 }
 
 class $$UsersTableTableManager
@@ -22870,6 +23940,7 @@ class $$UsersTableTableManager
             bool cashSessionsRefs,
             bool cashMovementsRefs,
             bool customerPaymentsRefs,
+            bool inventoryAuditsRefs,
           })
         > {
   $$UsersTableTableManager(_$AppDatabase db, $UsersTable table)
@@ -22957,6 +24028,7 @@ class $$UsersTableTableManager
                 cashSessionsRefs = false,
                 cashMovementsRefs = false,
                 customerPaymentsRefs = false,
+                inventoryAuditsRefs = false,
               }) {
                 return PrefetchHooks(
                   db: db,
@@ -22971,6 +24043,7 @@ class $$UsersTableTableManager
                     if (cashSessionsRefs) db.cashSessions,
                     if (cashMovementsRefs) db.cashMovements,
                     if (customerPaymentsRefs) db.customerPayments,
+                    if (inventoryAuditsRefs) db.inventoryAudits,
                   ],
                   addJoins: null,
                   getPrefetchedDataCallback: (items) async {
@@ -23173,6 +24246,27 @@ class $$UsersTableTableManager
                               ),
                           typedResults: items,
                         ),
+                      if (inventoryAuditsRefs)
+                        await $_getPrefetchedData<
+                          User,
+                          $UsersTable,
+                          InventoryAudit
+                        >(
+                          currentTable: table,
+                          referencedTable: $$UsersTableReferences
+                              ._inventoryAuditsRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$UsersTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).inventoryAuditsRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.performedBy == item.id,
+                              ),
+                          typedResults: items,
+                        ),
                     ];
                   },
                 );
@@ -23204,6 +24298,7 @@ typedef $$UsersTableProcessedTableManager =
         bool cashSessionsRefs,
         bool cashMovementsRefs,
         bool customerPaymentsRefs,
+        bool inventoryAuditsRefs,
       })
     >;
 typedef $$PermissionsTableCreateCompanionBuilder =
@@ -26831,6 +27926,33 @@ final class $$ProductsTableReferences
       manager.$state.copyWith(prefetchedData: cache),
     );
   }
+
+  static MultiTypedResultKey<
+    $InventoryAuditItemsTable,
+    List<InventoryAuditItem>
+  >
+  _inventoryAuditItemsRefsTable(_$AppDatabase db) =>
+      MultiTypedResultKey.fromTable(
+        db.inventoryAuditItems,
+        aliasName: $_aliasNameGenerator(
+          db.products.id,
+          db.inventoryAuditItems.productId,
+        ),
+      );
+
+  $$InventoryAuditItemsTableProcessedTableManager get inventoryAuditItemsRefs {
+    final manager = $$InventoryAuditItemsTableTableManager(
+      $_db,
+      $_db.inventoryAuditItems,
+    ).filter((f) => f.productId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(
+      _inventoryAuditItemsRefsTable($_db),
+    );
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
 }
 
 class $$ProductsTableFilterComposer
@@ -27175,6 +28297,31 @@ class $$ProductsTableFilterComposer
           }) => $$PurchaseItemsTableFilterComposer(
             $db: $db,
             $table: $db.purchaseItems,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<bool> inventoryAuditItemsRefs(
+    Expression<bool> Function($$InventoryAuditItemsTableFilterComposer f) f,
+  ) {
+    final $$InventoryAuditItemsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.inventoryAuditItems,
+      getReferencedColumn: (t) => t.productId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$InventoryAuditItemsTableFilterComposer(
+            $db: $db,
+            $table: $db.inventoryAuditItems,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -27674,6 +28821,32 @@ class $$ProductsTableAnnotationComposer
     );
     return f(composer);
   }
+
+  Expression<T> inventoryAuditItemsRefs<T extends Object>(
+    Expression<T> Function($$InventoryAuditItemsTableAnnotationComposer a) f,
+  ) {
+    final $$InventoryAuditItemsTableAnnotationComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.id,
+          referencedTable: $db.inventoryAuditItems,
+          getReferencedColumn: (t) => t.productId,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$InventoryAuditItemsTableAnnotationComposer(
+                $db: $db,
+                $table: $db.inventoryAuditItems,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
+    return f(composer);
+  }
 }
 
 class $$ProductsTableTableManager
@@ -27702,6 +28875,7 @@ class $$ProductsTableTableManager
             bool saleItemsRefs,
             bool saleReturnItemsRefs,
             bool purchaseItemsRefs,
+            bool inventoryAuditItemsRefs,
           })
         > {
   $$ProductsTableTableManager(_$AppDatabase db, $ProductsTable table)
@@ -27801,6 +28975,7 @@ class $$ProductsTableTableManager
                 saleItemsRefs = false,
                 saleReturnItemsRefs = false,
                 purchaseItemsRefs = false,
+                inventoryAuditItemsRefs = false,
               }) {
                 return PrefetchHooks(
                   db: db,
@@ -27813,6 +28988,7 @@ class $$ProductsTableTableManager
                     if (saleItemsRefs) db.saleItems,
                     if (saleReturnItemsRefs) db.saleReturnItems,
                     if (purchaseItemsRefs) db.purchaseItems,
+                    if (inventoryAuditItemsRefs) db.inventoryAuditItems,
                   ],
                   addJoins:
                       <
@@ -28055,6 +29231,27 @@ class $$ProductsTableTableManager
                               ),
                           typedResults: items,
                         ),
+                      if (inventoryAuditItemsRefs)
+                        await $_getPrefetchedData<
+                          Product,
+                          $ProductsTable,
+                          InventoryAuditItem
+                        >(
+                          currentTable: table,
+                          referencedTable: $$ProductsTableReferences
+                              ._inventoryAuditItemsRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$ProductsTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).inventoryAuditItemsRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.productId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
                     ];
                   },
                 );
@@ -28088,6 +29285,7 @@ typedef $$ProductsTableProcessedTableManager =
         bool saleItemsRefs,
         bool saleReturnItemsRefs,
         bool purchaseItemsRefs,
+        bool inventoryAuditItemsRefs,
       })
     >;
 typedef $$ProductVariantsTableCreateCompanionBuilder =
@@ -28318,6 +29516,33 @@ final class $$ProductVariantsTableReferences
     ).filter((f) => f.variantId.id.sqlEquals($_itemColumn<int>('id')!));
 
     final cache = $_typedResult.readTableOrNull(_purchaseItemsRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+
+  static MultiTypedResultKey<
+    $InventoryAuditItemsTable,
+    List<InventoryAuditItem>
+  >
+  _inventoryAuditItemsRefsTable(_$AppDatabase db) =>
+      MultiTypedResultKey.fromTable(
+        db.inventoryAuditItems,
+        aliasName: $_aliasNameGenerator(
+          db.productVariants.id,
+          db.inventoryAuditItems.variantId,
+        ),
+      );
+
+  $$InventoryAuditItemsTableProcessedTableManager get inventoryAuditItemsRefs {
+    final manager = $$InventoryAuditItemsTableTableManager(
+      $_db,
+      $_db.inventoryAuditItems,
+    ).filter((f) => f.variantId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(
+      _inventoryAuditItemsRefsTable($_db),
+    );
     return ProcessedTableManager(
       manager.$state.copyWith(prefetchedData: cache),
     );
@@ -28611,6 +29836,31 @@ class $$ProductVariantsTableFilterComposer
           }) => $$PurchaseItemsTableFilterComposer(
             $db: $db,
             $table: $db.purchaseItems,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<bool> inventoryAuditItemsRefs(
+    Expression<bool> Function($$InventoryAuditItemsTableFilterComposer f) f,
+  ) {
+    final $$InventoryAuditItemsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.inventoryAuditItems,
+      getReferencedColumn: (t) => t.variantId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$InventoryAuditItemsTableFilterComposer(
+            $db: $db,
+            $table: $db.inventoryAuditItems,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -29040,6 +30290,32 @@ class $$ProductVariantsTableAnnotationComposer
     );
     return f(composer);
   }
+
+  Expression<T> inventoryAuditItemsRefs<T extends Object>(
+    Expression<T> Function($$InventoryAuditItemsTableAnnotationComposer a) f,
+  ) {
+    final $$InventoryAuditItemsTableAnnotationComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.id,
+          referencedTable: $db.inventoryAuditItems,
+          getReferencedColumn: (t) => t.variantId,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$InventoryAuditItemsTableAnnotationComposer(
+                $db: $db,
+                $table: $db.inventoryAuditItems,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
+    return f(composer);
+  }
 }
 
 class $$ProductVariantsTableTableManager
@@ -29064,6 +30340,7 @@ class $$ProductVariantsTableTableManager
             bool inventoryMovementsRefs,
             bool saleItemsRefs,
             bool purchaseItemsRefs,
+            bool inventoryAuditItemsRefs,
           })
         > {
   $$ProductVariantsTableTableManager(
@@ -29185,6 +30462,7 @@ class $$ProductVariantsTableTableManager
                 inventoryMovementsRefs = false,
                 saleItemsRefs = false,
                 purchaseItemsRefs = false,
+                inventoryAuditItemsRefs = false,
               }) {
                 return PrefetchHooks(
                   db: db,
@@ -29195,6 +30473,7 @@ class $$ProductVariantsTableTableManager
                     if (inventoryMovementsRefs) db.inventoryMovements,
                     if (saleItemsRefs) db.saleItems,
                     if (purchaseItemsRefs) db.purchaseItems,
+                    if (inventoryAuditItemsRefs) db.inventoryAuditItems,
                   ],
                   addJoins:
                       <
@@ -29373,6 +30652,27 @@ class $$ProductVariantsTableTableManager
                               ),
                           typedResults: items,
                         ),
+                      if (inventoryAuditItemsRefs)
+                        await $_getPrefetchedData<
+                          ProductVariant,
+                          $ProductVariantsTable,
+                          InventoryAuditItem
+                        >(
+                          currentTable: table,
+                          referencedTable: $$ProductVariantsTableReferences
+                              ._inventoryAuditItemsRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$ProductVariantsTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).inventoryAuditItemsRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.variantId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
                     ];
                   },
                 );
@@ -29402,6 +30702,7 @@ typedef $$ProductVariantsTableProcessedTableManager =
         bool inventoryMovementsRefs,
         bool saleItemsRefs,
         bool purchaseItemsRefs,
+        bool inventoryAuditItemsRefs,
       })
     >;
 typedef $$ProductVariantDiscountsTableCreateCompanionBuilder =
@@ -31785,6 +33086,29 @@ final class $$WarehousesTableReferences
       manager.$state.copyWith(prefetchedData: cache),
     );
   }
+
+  static MultiTypedResultKey<$InventoryAuditsTable, List<InventoryAudit>>
+  _inventoryAuditsRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
+    db.inventoryAudits,
+    aliasName: $_aliasNameGenerator(
+      db.warehouses.id,
+      db.inventoryAudits.warehouseId,
+    ),
+  );
+
+  $$InventoryAuditsTableProcessedTableManager get inventoryAuditsRefs {
+    final manager = $$InventoryAuditsTableTableManager(
+      $_db,
+      $_db.inventoryAudits,
+    ).filter((f) => f.warehouseId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(
+      _inventoryAuditsRefsTable($_db),
+    );
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
 }
 
 class $$WarehousesTableFilterComposer
@@ -32002,6 +33326,31 @@ class $$WarehousesTableFilterComposer
           }) => $$CashSessionsTableFilterComposer(
             $db: $db,
             $table: $db.cashSessions,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<bool> inventoryAuditsRefs(
+    Expression<bool> Function($$InventoryAuditsTableFilterComposer f) f,
+  ) {
+    final $$InventoryAuditsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.inventoryAudits,
+      getReferencedColumn: (t) => t.warehouseId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$InventoryAuditsTableFilterComposer(
+            $db: $db,
+            $table: $db.inventoryAudits,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -32270,6 +33619,31 @@ class $$WarehousesTableAnnotationComposer
     );
     return f(composer);
   }
+
+  Expression<T> inventoryAuditsRefs<T extends Object>(
+    Expression<T> Function($$InventoryAuditsTableAnnotationComposer a) f,
+  ) {
+    final $$InventoryAuditsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.inventoryAudits,
+      getReferencedColumn: (t) => t.warehouseId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$InventoryAuditsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.inventoryAudits,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
 }
 
 class $$WarehousesTableTableManager
@@ -32293,6 +33667,7 @@ class $$WarehousesTableTableManager
             bool saleReturnsRefs,
             bool purchasesRefs,
             bool cashSessionsRefs,
+            bool inventoryAuditsRefs,
           })
         > {
   $$WarehousesTableTableManager(_$AppDatabase db, $WarehousesTable table)
@@ -32363,6 +33738,7 @@ class $$WarehousesTableTableManager
                 saleReturnsRefs = false,
                 purchasesRefs = false,
                 cashSessionsRefs = false,
+                inventoryAuditsRefs = false,
               }) {
                 return PrefetchHooks(
                   db: db,
@@ -32374,6 +33750,7 @@ class $$WarehousesTableTableManager
                     if (saleReturnsRefs) db.saleReturns,
                     if (purchasesRefs) db.purchases,
                     if (cashSessionsRefs) db.cashSessions,
+                    if (inventoryAuditsRefs) db.inventoryAudits,
                   ],
                   addJoins: null,
                   getPrefetchedDataCallback: (items) async {
@@ -32525,6 +33902,27 @@ class $$WarehousesTableTableManager
                               ),
                           typedResults: items,
                         ),
+                      if (inventoryAuditsRefs)
+                        await $_getPrefetchedData<
+                          Warehouse,
+                          $WarehousesTable,
+                          InventoryAudit
+                        >(
+                          currentTable: table,
+                          referencedTable: $$WarehousesTableReferences
+                              ._inventoryAuditsRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$WarehousesTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).inventoryAuditsRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.warehouseId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
                     ];
                   },
                 );
@@ -32553,6 +33951,7 @@ typedef $$WarehousesTableProcessedTableManager =
         bool saleReturnsRefs,
         bool purchasesRefs,
         bool cashSessionsRefs,
+        bool inventoryAuditsRefs,
       })
     >;
 typedef $$InventoryTableCreateCompanionBuilder =
@@ -44688,6 +46087,1151 @@ typedef $$AuditLogsTableProcessedTableManager =
       AuditLog,
       PrefetchHooks Function()
     >;
+typedef $$InventoryAuditsTableCreateCompanionBuilder =
+    InventoryAuditsCompanion Function({
+      Value<int> id,
+      required DateTime auditDate,
+      required int warehouseId,
+      required int performedBy,
+      Value<String> status,
+      Value<String?> notes,
+      Value<DateTime> createdAt,
+      Value<DateTime> updatedAt,
+    });
+typedef $$InventoryAuditsTableUpdateCompanionBuilder =
+    InventoryAuditsCompanion Function({
+      Value<int> id,
+      Value<DateTime> auditDate,
+      Value<int> warehouseId,
+      Value<int> performedBy,
+      Value<String> status,
+      Value<String?> notes,
+      Value<DateTime> createdAt,
+      Value<DateTime> updatedAt,
+    });
+
+final class $$InventoryAuditsTableReferences
+    extends
+        BaseReferences<_$AppDatabase, $InventoryAuditsTable, InventoryAudit> {
+  $$InventoryAuditsTableReferences(
+    super.$_db,
+    super.$_table,
+    super.$_typedResult,
+  );
+
+  static $WarehousesTable _warehouseIdTable(_$AppDatabase db) =>
+      db.warehouses.createAlias(
+        $_aliasNameGenerator(db.inventoryAudits.warehouseId, db.warehouses.id),
+      );
+
+  $$WarehousesTableProcessedTableManager get warehouseId {
+    final $_column = $_itemColumn<int>('warehouse_id')!;
+
+    final manager = $$WarehousesTableTableManager(
+      $_db,
+      $_db.warehouses,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_warehouseIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+
+  static $UsersTable _performedByTable(_$AppDatabase db) =>
+      db.users.createAlias(
+        $_aliasNameGenerator(db.inventoryAudits.performedBy, db.users.id),
+      );
+
+  $$UsersTableProcessedTableManager get performedBy {
+    final $_column = $_itemColumn<int>('performed_by')!;
+
+    final manager = $$UsersTableTableManager(
+      $_db,
+      $_db.users,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_performedByTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+
+  static MultiTypedResultKey<
+    $InventoryAuditItemsTable,
+    List<InventoryAuditItem>
+  >
+  _inventoryAuditItemsRefsTable(_$AppDatabase db) =>
+      MultiTypedResultKey.fromTable(
+        db.inventoryAuditItems,
+        aliasName: $_aliasNameGenerator(
+          db.inventoryAudits.id,
+          db.inventoryAuditItems.auditId,
+        ),
+      );
+
+  $$InventoryAuditItemsTableProcessedTableManager get inventoryAuditItemsRefs {
+    final manager = $$InventoryAuditItemsTableTableManager(
+      $_db,
+      $_db.inventoryAuditItems,
+    ).filter((f) => f.auditId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(
+      _inventoryAuditItemsRefsTable($_db),
+    );
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+}
+
+class $$InventoryAuditsTableFilterComposer
+    extends Composer<_$AppDatabase, $InventoryAuditsTable> {
+  $$InventoryAuditsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get auditDate => $composableBuilder(
+    column: $table.auditDate,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get notes => $composableBuilder(
+    column: $table.notes,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$WarehousesTableFilterComposer get warehouseId {
+    final $$WarehousesTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.warehouseId,
+      referencedTable: $db.warehouses,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$WarehousesTableFilterComposer(
+            $db: $db,
+            $table: $db.warehouses,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$UsersTableFilterComposer get performedBy {
+    final $$UsersTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.performedBy,
+      referencedTable: $db.users,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$UsersTableFilterComposer(
+            $db: $db,
+            $table: $db.users,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  Expression<bool> inventoryAuditItemsRefs(
+    Expression<bool> Function($$InventoryAuditItemsTableFilterComposer f) f,
+  ) {
+    final $$InventoryAuditItemsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.inventoryAuditItems,
+      getReferencedColumn: (t) => t.auditId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$InventoryAuditItemsTableFilterComposer(
+            $db: $db,
+            $table: $db.inventoryAuditItems,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+}
+
+class $$InventoryAuditsTableOrderingComposer
+    extends Composer<_$AppDatabase, $InventoryAuditsTable> {
+  $$InventoryAuditsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get auditDate => $composableBuilder(
+    column: $table.auditDate,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get notes => $composableBuilder(
+    column: $table.notes,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$WarehousesTableOrderingComposer get warehouseId {
+    final $$WarehousesTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.warehouseId,
+      referencedTable: $db.warehouses,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$WarehousesTableOrderingComposer(
+            $db: $db,
+            $table: $db.warehouses,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$UsersTableOrderingComposer get performedBy {
+    final $$UsersTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.performedBy,
+      referencedTable: $db.users,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$UsersTableOrderingComposer(
+            $db: $db,
+            $table: $db.users,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$InventoryAuditsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $InventoryAuditsTable> {
+  $$InventoryAuditsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get auditDate =>
+      $composableBuilder(column: $table.auditDate, builder: (column) => column);
+
+  GeneratedColumn<String> get status =>
+      $composableBuilder(column: $table.status, builder: (column) => column);
+
+  GeneratedColumn<String> get notes =>
+      $composableBuilder(column: $table.notes, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  $$WarehousesTableAnnotationComposer get warehouseId {
+    final $$WarehousesTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.warehouseId,
+      referencedTable: $db.warehouses,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$WarehousesTableAnnotationComposer(
+            $db: $db,
+            $table: $db.warehouses,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$UsersTableAnnotationComposer get performedBy {
+    final $$UsersTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.performedBy,
+      referencedTable: $db.users,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$UsersTableAnnotationComposer(
+            $db: $db,
+            $table: $db.users,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  Expression<T> inventoryAuditItemsRefs<T extends Object>(
+    Expression<T> Function($$InventoryAuditItemsTableAnnotationComposer a) f,
+  ) {
+    final $$InventoryAuditItemsTableAnnotationComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.id,
+          referencedTable: $db.inventoryAuditItems,
+          getReferencedColumn: (t) => t.auditId,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$InventoryAuditItemsTableAnnotationComposer(
+                $db: $db,
+                $table: $db.inventoryAuditItems,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
+    return f(composer);
+  }
+}
+
+class $$InventoryAuditsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $InventoryAuditsTable,
+          InventoryAudit,
+          $$InventoryAuditsTableFilterComposer,
+          $$InventoryAuditsTableOrderingComposer,
+          $$InventoryAuditsTableAnnotationComposer,
+          $$InventoryAuditsTableCreateCompanionBuilder,
+          $$InventoryAuditsTableUpdateCompanionBuilder,
+          (InventoryAudit, $$InventoryAuditsTableReferences),
+          InventoryAudit,
+          PrefetchHooks Function({
+            bool warehouseId,
+            bool performedBy,
+            bool inventoryAuditItemsRefs,
+          })
+        > {
+  $$InventoryAuditsTableTableManager(
+    _$AppDatabase db,
+    $InventoryAuditsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$InventoryAuditsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$InventoryAuditsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$InventoryAuditsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<DateTime> auditDate = const Value.absent(),
+                Value<int> warehouseId = const Value.absent(),
+                Value<int> performedBy = const Value.absent(),
+                Value<String> status = const Value.absent(),
+                Value<String?> notes = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+              }) => InventoryAuditsCompanion(
+                id: id,
+                auditDate: auditDate,
+                warehouseId: warehouseId,
+                performedBy: performedBy,
+                status: status,
+                notes: notes,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required DateTime auditDate,
+                required int warehouseId,
+                required int performedBy,
+                Value<String> status = const Value.absent(),
+                Value<String?> notes = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+              }) => InventoryAuditsCompanion.insert(
+                id: id,
+                auditDate: auditDate,
+                warehouseId: warehouseId,
+                performedBy: performedBy,
+                status: status,
+                notes: notes,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$InventoryAuditsTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback:
+              ({
+                warehouseId = false,
+                performedBy = false,
+                inventoryAuditItemsRefs = false,
+              }) {
+                return PrefetchHooks(
+                  db: db,
+                  explicitlyWatchedTables: [
+                    if (inventoryAuditItemsRefs) db.inventoryAuditItems,
+                  ],
+                  addJoins:
+                      <
+                        T extends TableManagerState<
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic
+                        >
+                      >(state) {
+                        if (warehouseId) {
+                          state =
+                              state.withJoin(
+                                    currentTable: table,
+                                    currentColumn: table.warehouseId,
+                                    referencedTable:
+                                        $$InventoryAuditsTableReferences
+                                            ._warehouseIdTable(db),
+                                    referencedColumn:
+                                        $$InventoryAuditsTableReferences
+                                            ._warehouseIdTable(db)
+                                            .id,
+                                  )
+                                  as T;
+                        }
+                        if (performedBy) {
+                          state =
+                              state.withJoin(
+                                    currentTable: table,
+                                    currentColumn: table.performedBy,
+                                    referencedTable:
+                                        $$InventoryAuditsTableReferences
+                                            ._performedByTable(db),
+                                    referencedColumn:
+                                        $$InventoryAuditsTableReferences
+                                            ._performedByTable(db)
+                                            .id,
+                                  )
+                                  as T;
+                        }
+
+                        return state;
+                      },
+                  getPrefetchedDataCallback: (items) async {
+                    return [
+                      if (inventoryAuditItemsRefs)
+                        await $_getPrefetchedData<
+                          InventoryAudit,
+                          $InventoryAuditsTable,
+                          InventoryAuditItem
+                        >(
+                          currentTable: table,
+                          referencedTable: $$InventoryAuditsTableReferences
+                              ._inventoryAuditItemsRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$InventoryAuditsTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).inventoryAuditItemsRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.auditId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
+                    ];
+                  },
+                );
+              },
+        ),
+      );
+}
+
+typedef $$InventoryAuditsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $InventoryAuditsTable,
+      InventoryAudit,
+      $$InventoryAuditsTableFilterComposer,
+      $$InventoryAuditsTableOrderingComposer,
+      $$InventoryAuditsTableAnnotationComposer,
+      $$InventoryAuditsTableCreateCompanionBuilder,
+      $$InventoryAuditsTableUpdateCompanionBuilder,
+      (InventoryAudit, $$InventoryAuditsTableReferences),
+      InventoryAudit,
+      PrefetchHooks Function({
+        bool warehouseId,
+        bool performedBy,
+        bool inventoryAuditItemsRefs,
+      })
+    >;
+typedef $$InventoryAuditItemsTableCreateCompanionBuilder =
+    InventoryAuditItemsCompanion Function({
+      Value<int> id,
+      required int auditId,
+      required int productId,
+      Value<int?> variantId,
+      required double expectedQuantity,
+      Value<double> countedQuantity,
+      Value<DateTime?> countedAt,
+    });
+typedef $$InventoryAuditItemsTableUpdateCompanionBuilder =
+    InventoryAuditItemsCompanion Function({
+      Value<int> id,
+      Value<int> auditId,
+      Value<int> productId,
+      Value<int?> variantId,
+      Value<double> expectedQuantity,
+      Value<double> countedQuantity,
+      Value<DateTime?> countedAt,
+    });
+
+final class $$InventoryAuditItemsTableReferences
+    extends
+        BaseReferences<
+          _$AppDatabase,
+          $InventoryAuditItemsTable,
+          InventoryAuditItem
+        > {
+  $$InventoryAuditItemsTableReferences(
+    super.$_db,
+    super.$_table,
+    super.$_typedResult,
+  );
+
+  static $InventoryAuditsTable _auditIdTable(_$AppDatabase db) =>
+      db.inventoryAudits.createAlias(
+        $_aliasNameGenerator(
+          db.inventoryAuditItems.auditId,
+          db.inventoryAudits.id,
+        ),
+      );
+
+  $$InventoryAuditsTableProcessedTableManager get auditId {
+    final $_column = $_itemColumn<int>('audit_id')!;
+
+    final manager = $$InventoryAuditsTableTableManager(
+      $_db,
+      $_db.inventoryAudits,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_auditIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+
+  static $ProductsTable _productIdTable(_$AppDatabase db) =>
+      db.products.createAlias(
+        $_aliasNameGenerator(db.inventoryAuditItems.productId, db.products.id),
+      );
+
+  $$ProductsTableProcessedTableManager get productId {
+    final $_column = $_itemColumn<int>('product_id')!;
+
+    final manager = $$ProductsTableTableManager(
+      $_db,
+      $_db.products,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_productIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+
+  static $ProductVariantsTable _variantIdTable(_$AppDatabase db) =>
+      db.productVariants.createAlias(
+        $_aliasNameGenerator(
+          db.inventoryAuditItems.variantId,
+          db.productVariants.id,
+        ),
+      );
+
+  $$ProductVariantsTableProcessedTableManager? get variantId {
+    final $_column = $_itemColumn<int>('variant_id');
+    if ($_column == null) return null;
+    final manager = $$ProductVariantsTableTableManager(
+      $_db,
+      $_db.productVariants,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_variantIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$InventoryAuditItemsTableFilterComposer
+    extends Composer<_$AppDatabase, $InventoryAuditItemsTable> {
+  $$InventoryAuditItemsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get expectedQuantity => $composableBuilder(
+    column: $table.expectedQuantity,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get countedQuantity => $composableBuilder(
+    column: $table.countedQuantity,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get countedAt => $composableBuilder(
+    column: $table.countedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$InventoryAuditsTableFilterComposer get auditId {
+    final $$InventoryAuditsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.auditId,
+      referencedTable: $db.inventoryAudits,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$InventoryAuditsTableFilterComposer(
+            $db: $db,
+            $table: $db.inventoryAudits,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$ProductsTableFilterComposer get productId {
+    final $$ProductsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.productId,
+      referencedTable: $db.products,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ProductsTableFilterComposer(
+            $db: $db,
+            $table: $db.products,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$ProductVariantsTableFilterComposer get variantId {
+    final $$ProductVariantsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.variantId,
+      referencedTable: $db.productVariants,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ProductVariantsTableFilterComposer(
+            $db: $db,
+            $table: $db.productVariants,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$InventoryAuditItemsTableOrderingComposer
+    extends Composer<_$AppDatabase, $InventoryAuditItemsTable> {
+  $$InventoryAuditItemsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get expectedQuantity => $composableBuilder(
+    column: $table.expectedQuantity,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get countedQuantity => $composableBuilder(
+    column: $table.countedQuantity,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get countedAt => $composableBuilder(
+    column: $table.countedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$InventoryAuditsTableOrderingComposer get auditId {
+    final $$InventoryAuditsTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.auditId,
+      referencedTable: $db.inventoryAudits,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$InventoryAuditsTableOrderingComposer(
+            $db: $db,
+            $table: $db.inventoryAudits,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$ProductsTableOrderingComposer get productId {
+    final $$ProductsTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.productId,
+      referencedTable: $db.products,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ProductsTableOrderingComposer(
+            $db: $db,
+            $table: $db.products,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$ProductVariantsTableOrderingComposer get variantId {
+    final $$ProductVariantsTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.variantId,
+      referencedTable: $db.productVariants,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ProductVariantsTableOrderingComposer(
+            $db: $db,
+            $table: $db.productVariants,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$InventoryAuditItemsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $InventoryAuditItemsTable> {
+  $$InventoryAuditItemsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<double> get expectedQuantity => $composableBuilder(
+    column: $table.expectedQuantity,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<double> get countedQuantity => $composableBuilder(
+    column: $table.countedQuantity,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get countedAt =>
+      $composableBuilder(column: $table.countedAt, builder: (column) => column);
+
+  $$InventoryAuditsTableAnnotationComposer get auditId {
+    final $$InventoryAuditsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.auditId,
+      referencedTable: $db.inventoryAudits,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$InventoryAuditsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.inventoryAudits,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$ProductsTableAnnotationComposer get productId {
+    final $$ProductsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.productId,
+      referencedTable: $db.products,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ProductsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.products,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$ProductVariantsTableAnnotationComposer get variantId {
+    final $$ProductVariantsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.variantId,
+      referencedTable: $db.productVariants,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ProductVariantsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.productVariants,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$InventoryAuditItemsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $InventoryAuditItemsTable,
+          InventoryAuditItem,
+          $$InventoryAuditItemsTableFilterComposer,
+          $$InventoryAuditItemsTableOrderingComposer,
+          $$InventoryAuditItemsTableAnnotationComposer,
+          $$InventoryAuditItemsTableCreateCompanionBuilder,
+          $$InventoryAuditItemsTableUpdateCompanionBuilder,
+          (InventoryAuditItem, $$InventoryAuditItemsTableReferences),
+          InventoryAuditItem,
+          PrefetchHooks Function({bool auditId, bool productId, bool variantId})
+        > {
+  $$InventoryAuditItemsTableTableManager(
+    _$AppDatabase db,
+    $InventoryAuditItemsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$InventoryAuditItemsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$InventoryAuditItemsTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$InventoryAuditItemsTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<int> auditId = const Value.absent(),
+                Value<int> productId = const Value.absent(),
+                Value<int?> variantId = const Value.absent(),
+                Value<double> expectedQuantity = const Value.absent(),
+                Value<double> countedQuantity = const Value.absent(),
+                Value<DateTime?> countedAt = const Value.absent(),
+              }) => InventoryAuditItemsCompanion(
+                id: id,
+                auditId: auditId,
+                productId: productId,
+                variantId: variantId,
+                expectedQuantity: expectedQuantity,
+                countedQuantity: countedQuantity,
+                countedAt: countedAt,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required int auditId,
+                required int productId,
+                Value<int?> variantId = const Value.absent(),
+                required double expectedQuantity,
+                Value<double> countedQuantity = const Value.absent(),
+                Value<DateTime?> countedAt = const Value.absent(),
+              }) => InventoryAuditItemsCompanion.insert(
+                id: id,
+                auditId: auditId,
+                productId: productId,
+                variantId: variantId,
+                expectedQuantity: expectedQuantity,
+                countedQuantity: countedQuantity,
+                countedAt: countedAt,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$InventoryAuditItemsTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback:
+              ({auditId = false, productId = false, variantId = false}) {
+                return PrefetchHooks(
+                  db: db,
+                  explicitlyWatchedTables: [],
+                  addJoins:
+                      <
+                        T extends TableManagerState<
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic
+                        >
+                      >(state) {
+                        if (auditId) {
+                          state =
+                              state.withJoin(
+                                    currentTable: table,
+                                    currentColumn: table.auditId,
+                                    referencedTable:
+                                        $$InventoryAuditItemsTableReferences
+                                            ._auditIdTable(db),
+                                    referencedColumn:
+                                        $$InventoryAuditItemsTableReferences
+                                            ._auditIdTable(db)
+                                            .id,
+                                  )
+                                  as T;
+                        }
+                        if (productId) {
+                          state =
+                              state.withJoin(
+                                    currentTable: table,
+                                    currentColumn: table.productId,
+                                    referencedTable:
+                                        $$InventoryAuditItemsTableReferences
+                                            ._productIdTable(db),
+                                    referencedColumn:
+                                        $$InventoryAuditItemsTableReferences
+                                            ._productIdTable(db)
+                                            .id,
+                                  )
+                                  as T;
+                        }
+                        if (variantId) {
+                          state =
+                              state.withJoin(
+                                    currentTable: table,
+                                    currentColumn: table.variantId,
+                                    referencedTable:
+                                        $$InventoryAuditItemsTableReferences
+                                            ._variantIdTable(db),
+                                    referencedColumn:
+                                        $$InventoryAuditItemsTableReferences
+                                            ._variantIdTable(db)
+                                            .id,
+                                  )
+                                  as T;
+                        }
+
+                        return state;
+                      },
+                  getPrefetchedDataCallback: (items) async {
+                    return [];
+                  },
+                );
+              },
+        ),
+      );
+}
+
+typedef $$InventoryAuditItemsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $InventoryAuditItemsTable,
+      InventoryAuditItem,
+      $$InventoryAuditItemsTableFilterComposer,
+      $$InventoryAuditItemsTableOrderingComposer,
+      $$InventoryAuditItemsTableAnnotationComposer,
+      $$InventoryAuditItemsTableCreateCompanionBuilder,
+      $$InventoryAuditItemsTableUpdateCompanionBuilder,
+      (InventoryAuditItem, $$InventoryAuditItemsTableReferences),
+      InventoryAuditItem,
+      PrefetchHooks Function({bool auditId, bool productId, bool variantId})
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -44769,4 +47313,8 @@ class $AppDatabaseManager {
       $$CustomerPaymentsTableTableManager(_db, _db.customerPayments);
   $$AuditLogsTableTableManager get auditLogs =>
       $$AuditLogsTableTableManager(_db, _db.auditLogs);
+  $$InventoryAuditsTableTableManager get inventoryAudits =>
+      $$InventoryAuditsTableTableManager(_db, _db.inventoryAudits);
+  $$InventoryAuditItemsTableTableManager get inventoryAuditItems =>
+      $$InventoryAuditItemsTableTableManager(_db, _db.inventoryAuditItems);
 }

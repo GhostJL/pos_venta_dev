@@ -45,13 +45,15 @@ part 'app_database.g.dart';
     CashMovements,
     CustomerPayments,
     AuditLogs,
+    InventoryAudits,
+    InventoryAuditItems,
   ],
 )
 class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 44; // Bumped to 44 for sale sequences table
+  int get schemaVersion => 45; // Bumped to 45 for inventory audit tables
 
   static QueryExecutor _openConnection() {
     return driftDatabase(
@@ -366,6 +368,12 @@ class AppDatabase extends _$AppDatabase {
           INSERT OR IGNORE INTO sale_sequences (id, last_number, updated_at)
           VALUES (1, 0, CAST(strftime('%s', 'now') AS INTEGER))
         ''');
+      }
+
+      if (from < 45) {
+        // Migration to 45: Create inventory_audits and inventory_audit_items tables
+        await m.createTable(inventoryAudits);
+        await m.createTable(inventoryAuditItems);
       }
     },
     beforeOpen: (details) async {

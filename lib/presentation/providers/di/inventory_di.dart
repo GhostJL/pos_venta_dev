@@ -31,6 +31,9 @@ import 'package:posventa/domain/services/stock_validator_service.dart';
 import 'package:posventa/domain/services/stock_synchronizer.dart';
 import 'package:posventa/presentation/providers/di/product_di.dart';
 import 'package:posventa/domain/use_cases/inventory/sync_inventory_with_lots_use_case.dart';
+import 'package:posventa/domain/repositories/inventory_audit_repository.dart';
+import 'package:posventa/data/repositories/inventory_audit_repository_impl.dart';
+import 'package:posventa/domain/use_cases/inventory/audit_use_cases.dart';
 
 part 'inventory_di.g.dart';
 
@@ -157,3 +160,23 @@ AdjustInventory adjustInventoryUseCase(ref) =>
 @riverpod
 SyncInventoryWithLotsUseCase syncInventoryWithLotsUseCase(ref) =>
     SyncInventoryWithLotsUseCase(ref.watch(appDatabaseProvider));
+
+// --- Inventory Audit Providers ---
+
+@riverpod
+InventoryAuditRepository inventoryAuditRepository(ref) =>
+    InventoryAuditRepositoryImpl(ref.watch(appDatabaseProvider));
+
+@riverpod
+StartAuditUseCase startAuditUseCase(ref) => StartAuditUseCase(
+  ref.watch(inventoryAuditRepositoryProvider),
+  ref.watch(inventoryRepositoryProvider),
+);
+
+@riverpod
+CompleteAuditUseCase completeAuditUseCase(ref) =>
+    CompleteAuditUseCase(ref.watch(inventoryAuditRepositoryProvider));
+
+@riverpod
+UpdateAuditItemUseCase updateAuditItemUseCase(ref) =>
+    UpdateAuditItemUseCase(ref.watch(inventoryAuditRepositoryProvider));

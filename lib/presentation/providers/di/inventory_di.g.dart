@@ -1217,3 +1217,194 @@ final class SyncInventoryWithLotsUseCaseProvider
 
 String _$syncInventoryWithLotsUseCaseHash() =>
     r'49477de1229f60f6385eda9ae0d05efdbd804a64';
+
+@ProviderFor(inventoryAuditRepository)
+const inventoryAuditRepositoryProvider = InventoryAuditRepositoryProvider._();
+
+final class InventoryAuditRepositoryProvider
+    extends
+        $FunctionalProvider<
+          InventoryAuditRepository,
+          InventoryAuditRepository,
+          InventoryAuditRepository
+        >
+    with $Provider<InventoryAuditRepository> {
+  const InventoryAuditRepositoryProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'inventoryAuditRepositoryProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$inventoryAuditRepositoryHash();
+
+  @$internal
+  @override
+  $ProviderElement<InventoryAuditRepository> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  InventoryAuditRepository create(Ref ref) {
+    return inventoryAuditRepository(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(InventoryAuditRepository value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<InventoryAuditRepository>(value),
+    );
+  }
+}
+
+String _$inventoryAuditRepositoryHash() =>
+    r'ca8c58ece020d8f83a62f58ee069ca72c7a7804d';
+
+@ProviderFor(startAuditUseCase)
+const startAuditUseCaseProvider = StartAuditUseCaseProvider._();
+
+final class StartAuditUseCaseProvider
+    extends
+        $FunctionalProvider<
+          StartAuditUseCase,
+          StartAuditUseCase,
+          StartAuditUseCase
+        >
+    with $Provider<StartAuditUseCase> {
+  const StartAuditUseCaseProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'startAuditUseCaseProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$startAuditUseCaseHash();
+
+  @$internal
+  @override
+  $ProviderElement<StartAuditUseCase> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  StartAuditUseCase create(Ref ref) {
+    return startAuditUseCase(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(StartAuditUseCase value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<StartAuditUseCase>(value),
+    );
+  }
+}
+
+String _$startAuditUseCaseHash() => r'1530648b928071e7fafa43bb38eeec1d5a14e668';
+
+@ProviderFor(completeAuditUseCase)
+const completeAuditUseCaseProvider = CompleteAuditUseCaseProvider._();
+
+final class CompleteAuditUseCaseProvider
+    extends
+        $FunctionalProvider<
+          CompleteAuditUseCase,
+          CompleteAuditUseCase,
+          CompleteAuditUseCase
+        >
+    with $Provider<CompleteAuditUseCase> {
+  const CompleteAuditUseCaseProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'completeAuditUseCaseProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$completeAuditUseCaseHash();
+
+  @$internal
+  @override
+  $ProviderElement<CompleteAuditUseCase> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  CompleteAuditUseCase create(Ref ref) {
+    return completeAuditUseCase(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(CompleteAuditUseCase value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<CompleteAuditUseCase>(value),
+    );
+  }
+}
+
+String _$completeAuditUseCaseHash() =>
+    r'a193acebcdab9f183e1ac74f7751238f64e7ca6b';
+
+@ProviderFor(updateAuditItemUseCase)
+const updateAuditItemUseCaseProvider = UpdateAuditItemUseCaseProvider._();
+
+final class UpdateAuditItemUseCaseProvider
+    extends
+        $FunctionalProvider<
+          UpdateAuditItemUseCase,
+          UpdateAuditItemUseCase,
+          UpdateAuditItemUseCase
+        >
+    with $Provider<UpdateAuditItemUseCase> {
+  const UpdateAuditItemUseCaseProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'updateAuditItemUseCaseProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$updateAuditItemUseCaseHash();
+
+  @$internal
+  @override
+  $ProviderElement<UpdateAuditItemUseCase> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  UpdateAuditItemUseCase create(Ref ref) {
+    return updateAuditItemUseCase(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(UpdateAuditItemUseCase value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<UpdateAuditItemUseCase>(value),
+    );
+  }
+}
+
+String _$updateAuditItemUseCaseHash() =>
+    r'86144aa4bbe7f90f9a891e6b658a44cfe806adec';

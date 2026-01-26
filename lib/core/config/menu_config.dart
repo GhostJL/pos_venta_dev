@@ -139,7 +139,12 @@ class MenuConfig {
               route: '/inventory',
               requiredPermissions: [PermissionConstants.inventoryView],
             ),
-
+            const MenuItem(
+              title: 'Toma de Inventario',
+              icon: Icons.fact_check_rounded,
+              route: '/inventory-audit',
+              requiredPermissions: [PermissionConstants.inventoryAdjust],
+            ),
             const MenuItem(
               title: 'Órdenes de Compra',
               icon: Icons.shopping_cart_rounded,
