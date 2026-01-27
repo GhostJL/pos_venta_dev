@@ -35,7 +35,7 @@ final class InventoryAuditViewModelProvider
 }
 
 String _$inventoryAuditViewModelHash() =>
-    r'0c9648d0bc26f012d9c299e3dcf245725e51f1c7';
+    r'124de69cead014e61fa5c9b7cc808c788cedcbcf';
 
 abstract class _$InventoryAuditViewModel
     extends $AsyncNotifier<InventoryAuditEntity?> {
@@ -55,6 +55,59 @@ abstract class _$InventoryAuditViewModel
                 InventoryAuditEntity?
               >,
               AsyncValue<InventoryAuditEntity?>,
+              Object?,
+              Object?
+            >;
+    element.handleValue(ref, created);
+  }
+}
+
+@ProviderFor(QuickAuditState)
+const quickAuditStateProvider = QuickAuditStateProvider._();
+
+final class QuickAuditStateProvider
+    extends $NotifierProvider<QuickAuditState, int> {
+  const QuickAuditStateProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'quickAuditStateProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$quickAuditStateHash();
+
+  @$internal
+  @override
+  QuickAuditState create() => QuickAuditState();
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(int value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<int>(value),
+    );
+  }
+}
+
+String _$quickAuditStateHash() => r'2bd48920e76d83277da7c4da090e718571ff84d3';
+
+abstract class _$QuickAuditState extends $Notifier<int> {
+  int build();
+  @$mustCallSuper
+  @override
+  void runBuild() {
+    final created = build();
+    final ref = this.ref as $Ref<int, int>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<int, int>,
+              int,
               Object?,
               Object?
             >;

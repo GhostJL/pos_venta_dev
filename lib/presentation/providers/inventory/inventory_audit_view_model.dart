@@ -130,6 +130,49 @@ class InventoryAuditViewModel extends _$InventoryAuditViewModel {
     }
   }
 
+  // --- Quick Audit Logic ---
+
+  void startQuickAudit() {
+    final audit = state.value;
+    if (audit == null || audit.items.isEmpty) return;
+
+    // Start at the first uncounted item, or 0 if all are counted
+    final firstUncounted = audit.items.indexWhere(
+      (i) => i.countedQuantity == 0,
+    );
+    final startIndex = firstUncounted != -1 ? firstUncounted : 0;
+
+    ref.read(quickAuditStateProvider.notifier).start(startIndex);
+  }
+
+  void exitQuickAudit() {
+    ref.read(quickAuditStateProvider.notifier).stop();
+  }
+
+  Future<void> confirmQuickAuditItemAndNext(double quantity) async {
+    final audit = state.value;
+    // Get current index from the separate provider
+    final currentIndex = ref.read(quickAuditStateProvider);
+
+    if (audit == null ||
+        currentIndex < 0 ||
+        currentIndex >= audit.items.length) {
+      return;
+    }
+
+    final currentItem = audit.items[currentIndex];
+
+    // Save current
+    await updateItemCount(currentItem.id!, quantity);
+
+    // IMPORTANT: The updateItemCount refreshes 'state' (the audit).
+    // The QuickAuditState provider is separate, so it maintains the index.
+
+    // Move to next
+    // Even if at the end, next() will take us to (length), which triggers the "Done" view in QuickAuditView
+    ref.read(quickAuditStateProvider.notifier).next();
+  }
+
   Future<InventoryAuditEntity?> completeAudit({String? reason}) async {
     final audit = state.value;
     if (audit == null) return null;
@@ -154,6 +197,10 @@ class InventoryAuditViewModel extends _$InventoryAuditViewModel {
       // Refresh the list so the status update appears in the sidebar
       ref.invalidate(inventoryAuditListProvider);
 
+      ref
+          .read(quickAuditStateProvider.notifier)
+          .stop(); // Reset quick audit on complete
+
       state = const AsyncValue.data(null); // Audit closed in the current view
       return completedAudit;
     } catch (e, st) {
@@ -161,6 +208,22 @@ class InventoryAuditViewModel extends _$InventoryAuditViewModel {
       return null;
     }
   }
+}
+
+// Separate provider for the Quick Audit Index to avoid polluting the main Entity state
+// and to allow specific UI rebuilds.
+@riverpod
+class QuickAuditState extends _$QuickAuditState {
+  @override
+  int build() => -1; // -1 means inactive
+
+  void start(int startIndex) => state = startIndex;
+  void next() => state++;
+  void previous() {
+    if (state > 0) state--;
+  }
+
+  void stop() => state = -1;
 }
 
 @riverpod

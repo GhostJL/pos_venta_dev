@@ -8,6 +8,7 @@ import 'package:posventa/presentation/widgets/inventory/inventory_audit_pdf_buil
 import 'package:posventa/presentation/providers/auth_provider.dart';
 import 'package:posventa/presentation/providers/store_provider.dart';
 import 'package:posventa/presentation/widgets/menu/side_menu.dart';
+import 'package:posventa/presentation/pages/inventory/widgets/quick_audit_view.dart';
 
 class InventoryAuditMobilePage extends ConsumerStatefulWidget {
   const InventoryAuditMobilePage({super.key});
@@ -20,76 +21,60 @@ class InventoryAuditMobilePage extends ConsumerStatefulWidget {
 class _InventoryAuditMobilePageState
     extends ConsumerState<InventoryAuditMobilePage> {
   final TextEditingController _searchController = TextEditingController();
+  final FocusNode _searchFocusNode = FocusNode();
   String _filterText = '';
+  // Used to debounce searches if needed, or just standard state update
 
   @override
   void dispose() {
     _searchController.dispose();
+    _searchFocusNode.dispose();
     super.dispose();
   }
 
   void _handleSearch(String value) {
     setState(() {
-      _filterText = value.toLowerCase();
+      _filterText = value;
     });
   }
 
   Future<void> _handleScan(String code) async {
     if (code.isEmpty) return;
-
-    // Check if it's a known product in the audit
-    final audit = ref.read(inventoryAuditViewModelProvider).asData?.value;
-    if (audit == null) return;
-
-    final isKnown = audit.items.any((item) => item.barcode == code);
-
-    if (isKnown) {
-      try {
-        await ref
-            .read(inventoryAuditViewModelProvider.notifier)
-            .scanProduct(code);
-        _searchController.clear();
-        setState(() => _filterText = '');
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Producto Agregado (+1)'),
-              backgroundColor: Colors.green,
-              duration: Duration(milliseconds: 600),
-            ),
-          );
-        }
-      } catch (e) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
-          );
-        }
-      }
-    } else {
-      // If simply filtering, do nothing special on enter except maybe show "not found"
-      // But since we filter on change, enter usually means "I want to scan this"
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Producto no encontrado en la auditoría'),
-            backgroundColor: Colors.orange,
-            duration: Duration(seconds: 1),
-          ),
-        );
-      }
+    try {
+      await ref
+          .read(inventoryAuditViewModelProvider.notifier)
+          .scanProduct(code);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Producto escaneado: $code (+1)'),
+          backgroundColor: Colors.green,
+          duration: const Duration(milliseconds: 800),
+        ),
+      );
+      _searchController.clear();
+      setState(() {
+        _filterText = '';
+      });
+      _searchFocusNode.requestFocus();
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error: $e'),
+          backgroundColor: Theme.of(context).colorScheme.error,
+        ),
+      );
     }
   }
 
   void _openCameraScanner() {
-    Navigator.of(context).push(
+    Navigator.push(
+      context,
       MaterialPageRoute(
         builder: (context) => BarcodeScannerWidget(
           onBarcodeScanned: (context, code) {
-            Navigator.of(context).pop(); // Close scanner
+            Navigator.pop(context);
             _handleScan(code);
           },
-          title: 'Escanear Producto',
         ),
       ),
     );
@@ -98,66 +83,26 @@ class _InventoryAuditMobilePageState
   @override
   Widget build(BuildContext context) {
     final activeAuditAsync = ref.watch(inventoryAuditViewModelProvider);
-
-    return activeAuditAsync.when(
-      data: (audit) {
-        if (audit == null) {
-          return _buildAuditHistoryList(context);
-        }
-        return _buildActiveAuditView(context, audit);
-      },
-      loading: () =>
-          const Scaffold(body: Center(child: CircularProgressIndicator())),
-      error: (e, st) => Scaffold(body: Center(child: Text('Error: $e'))),
-    );
-  }
-
-  Widget _buildAuditHistoryList(BuildContext context) {
-    final auditListAsync = ref.watch(inventoryAuditListProvider);
-    final theme = Theme.of(context);
+    final quickAuditIndex = ref.watch(quickAuditStateProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Auditorias'),
-        centerTitle: true,
-        elevation: 0,
-      ),
-      drawer: const SideMenu(),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _showStartAuditDialog(context),
-        label: const Text('Nueva'),
-        icon: const Icon(Icons.add),
-      ),
-      body: auditListAsync.when(
-        data: (audits) {
-          if (audits.isEmpty) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.inventory_2_outlined,
-                    size: 64,
-                    color: theme.colorScheme.outline,
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    'No hay auditorías registradas',
-                    style: theme.textTheme.bodyLarge,
-                  ),
-                ],
-              ),
-            );
+      drawer: const SideMenu(), // Assuming SideMenu exists
+      appBar: activeAuditAsync.value == null
+          ? AppBar(title: const Text('Auditoría de Inventario'))
+          : null, // If active, we usually show custom appbar within the view or here.
+      // Let's keep the main appbar for lists.
+      body: activeAuditAsync.when(
+        data: (audit) {
+          if (audit == null) {
+            return _buildAuditHistoryList(context);
           }
-          return ListView.separated(
-            padding: const EdgeInsets.all(16),
-            itemCount: audits.length,
-            separatorBuilder: (c, i) => const SizedBox(height: 12),
-            itemBuilder: (context, index) {
-              final audit = audits[index];
-              return _buildAuditHistoryCard(context, audit);
-            },
-          );
+
+          // If Quick Audit Mode is active, show that view
+          if (quickAuditIndex >= 0) {
+            return QuickAuditView(audit: audit);
+          }
+
+          return _buildActiveAuditView(context, audit);
         },
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, st) => Center(child: Text('Error: $e')),
@@ -165,77 +110,80 @@ class _InventoryAuditMobilePageState
     );
   }
 
-  Widget _buildAuditHistoryCard(
-    BuildContext context,
-    InventoryAuditEntity audit,
-  ) {
-    final theme = Theme.of(context);
-    final isCompleted = audit.status == InventoryAuditStatus.completed;
-    final color = isCompleted ? Colors.green : Colors.orange;
+  Widget _buildAuditHistoryList(BuildContext context) {
+    // This should list previous audits and allow creating a new one
+    final auditList = ref.watch(inventoryAuditListProvider);
 
-    return Card(
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: theme.dividerColor),
-      ),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(12),
-        onTap: () => ref
-            .read(inventoryAuditViewModelProvider.notifier)
-            .loadAudit(audit.id!),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'Folio #${audit.id}',
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
+    return auditList.when(
+      data: (audits) {
+        return Column(
+          children: [
+            Expanded(
+              child: audits.isEmpty
+                  ? const Center(child: Text('No hay auditorías registradas.'))
+                  : ListView.builder(
+                      itemCount: audits.length,
+                      itemBuilder: (context, index) {
+                        final audit = audits[index];
+                        return ListTile(
+                          title: Text('Auditoría #${audit.id}'),
+                          subtitle: Text(
+                            DateFormat(
+                              'dd/MM/yyyy HH:mm',
+                            ).format(audit.auditDate),
+                          ),
+                          trailing: _buildStatusChip(context, audit.status),
+                          onTap: () {
+                            ref
+                                .read(inventoryAuditViewModelProvider.notifier)
+                                .loadAudit(audit.id!);
+                          },
+                        );
+                      },
                     ),
-                  ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: color.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(
-                      isCompleted ? 'FINALIZADA' : 'EN PROCESO',
-                      style: TextStyle(
-                        color: color,
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ],
+            ),
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: SizedBox(
+                width: double.infinity,
+                child: FilledButton.icon(
+                  onPressed: () => _showStartAuditDialog(context),
+                  icon: const Icon(Icons.add),
+                  label: const Text('Nueva Auditoría'),
+                ),
               ),
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  Icon(Icons.calendar_today, size: 14, color: theme.hintColor),
-                  const SizedBox(width: 4),
-                  Text(
-                    DateFormat(
-                      'dd MMM yyyy, HH:mm',
-                      'es',
-                    ).format(audit.auditDate),
-                    style: theme.textTheme.bodySmall,
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
+            ),
+          ],
+        );
+      },
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (e, st) => Center(child: Text('Error al cargar historial: $e')),
+    );
+  }
+
+  Widget _buildStatusChip(BuildContext context, InventoryAuditStatus status) {
+    Color color;
+    String label;
+    switch (status) {
+      case InventoryAuditStatus.draft:
+        color = Colors.orange;
+        label = 'En Proceso';
+        break;
+      case InventoryAuditStatus.completed:
+        color = Colors.green;
+        label = 'Finalizada';
+        break;
+      case InventoryAuditStatus.cancelled:
+        color = Colors.red;
+        label = 'Cancelada';
+        break;
+    }
+    return Chip(
+      label: Text(
+        label,
+        style: const TextStyle(fontSize: 12, color: Colors.white),
       ),
+      backgroundColor: color,
     );
   }
 
@@ -246,166 +194,107 @@ class _InventoryAuditMobilePageState
     final theme = Theme.of(context);
     final isLocked = audit.status == InventoryAuditStatus.completed;
 
-    // Filter Items
     final filteredItems = audit.items.where((item) {
       if (_filterText.isEmpty) return true;
+      final term = _filterText.toLowerCase();
       final name = item.productName?.toLowerCase() ?? '';
-      final code = item.barcode?.toLowerCase() ?? '';
-      return name.contains(_filterText) || code.contains(_filterText);
+      final barcode = item.barcode?.toLowerCase() ?? '';
+      return name.contains(term) || barcode.contains(term);
     }).toList();
-
-    // Sort: Counted first
-    filteredItems.sort((a, b) {
-      if (a.countedQuantity > 0 && b.countedQuantity == 0) return -1;
-      if (a.countedQuantity == 0 && b.countedQuantity > 0) return 1;
-      return 0;
-    });
-
-    final totalCounted = audit.items.where((i) => i.countedQuantity > 0).length;
 
     return Scaffold(
       appBar: AppBar(
+        title: Text('Auditoría #${audit.id}'),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => ref.invalidate(inventoryAuditViewModelProvider),
         ),
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Auditoría #${audit.id}',
-              style: const TextStyle(fontSize: 16),
-            ),
-            Text(
-              'Almacén ${audit.warehouseId}',
-              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w300),
-            ),
-          ],
-        ),
         actions: [
           if (!isLocked)
             IconButton(
-              icon: const Icon(Icons.check_circle_outline),
-              tooltip: 'Finalizar',
-              onPressed: () => _confirmCompleteAudit(context),
+              icon: const Icon(Icons.flash_on),
+              tooltip: 'Modo Rápido',
+              onPressed: () {
+                ref
+                    .read(inventoryAuditViewModelProvider.notifier)
+                    .startQuickAudit();
+              },
             ),
-          PopupMenuButton<String>(
-            onSelected: (value) {
-              if (value == 'report') _viewReport(context, audit);
-              if (value == 'copy') _confirmFillStock(context);
-            },
-            itemBuilder: (context) => [
-              const PopupMenuItem(
-                value: 'report',
-                child: Row(
-                  children: [
-                    Icon(Icons.picture_as_pdf, color: Colors.grey),
-                    SizedBox(width: 8),
-                    Text('Ver Reporte'),
-                  ],
-                ),
-              ),
-              if (!isLocked)
-                const PopupMenuItem(
-                  value: 'copy',
-                  child: Row(
-                    children: [
-                      Icon(Icons.copy_all, color: Colors.grey),
-                      SizedBox(width: 8),
-                      Text('Copiar Stock Sistema'),
-                    ],
-                  ),
-                ),
-            ],
+          IconButton(
+            icon: const Icon(Icons.picture_as_pdf),
+            onPressed: () => _viewReport(context, audit),
           ),
+          if (!isLocked)
+            PopupMenuButton(
+              itemBuilder: (context) => [
+                const PopupMenuItem(
+                  value: 'fill',
+                  child: Text('Copiar Stock Sistema'),
+                ),
+                const PopupMenuItem(
+                  value: 'finish',
+                  child: Text('Finalizar Auditoría'),
+                ),
+              ],
+              onSelected: (value) {
+                if (value == 'fill') _confirmFillStock(context);
+                if (value == 'finish') _confirmCompleteAudit(context);
+              },
+            ),
         ],
       ),
       body: Column(
         children: [
-          // Progress Bar
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            color: theme.colorScheme.surfaceContainerHighest.withValues(
-              alpha: 0.5,
-            ),
+          // Search & Scan Bar
+          Padding(
+            padding: const EdgeInsets.all(8.0),
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text('Progreso: $totalCounted / ${audit.items.length}'),
-                Text(
-                  isLocked ? 'FINALIZADA' : 'EN PROCESO',
-                  style: TextStyle(
-                    color: isLocked ? Colors.green : Colors.orange,
-                    fontWeight: FontWeight.bold,
+                Expanded(
+                  child: TextField(
+                    controller: _searchController,
+                    focusNode: _searchFocusNode,
+                    decoration: InputDecoration(
+                      hintText: 'Buscar o Escanear...',
+                      prefixIcon: const Icon(Icons.search),
+                      suffixIcon: IconButton(
+                        icon: const Icon(Icons.clear),
+                        onPressed: () {
+                          _searchController.clear();
+                          setState(() => _filterText = '');
+                        },
+                      ),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    onChanged: _handleSearch,
+                    onSubmitted: _handleScan,
+                    textInputAction: TextInputAction.search,
                   ),
+                ),
+                const SizedBox(width: 8),
+                IconButton.filled(
+                  onPressed: _openCameraScanner,
+                  icon: const Icon(Icons.camera_alt),
                 ),
               ],
             ),
           ),
 
-          // Unified Smart Input (Search + Scan)
-          if (!isLocked)
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-              child: TextField(
-                controller: _searchController,
-                onChanged: _handleSearch,
-                onSubmitted: _handleScan,
-                textInputAction: TextInputAction.send, // "Enter" to scan
-                decoration: InputDecoration(
-                  hintText: 'Buscar o Escanear producto...',
-                  prefixIcon: const Icon(Icons.search),
-                  suffixIcon: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      if (_searchController.text.isNotEmpty)
-                        IconButton(
-                          icon: const Icon(Icons.clear),
-                          onPressed: () {
-                            _searchController.clear();
-                            _handleSearch('');
-                          },
-                        ),
-                      IconButton(
-                        icon: const Icon(Icons.qr_code_scanner),
-                        tooltip: 'Usar Cámara',
-                        onPressed: _openCameraScanner,
-                      ),
-                    ],
-                  ),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  filled: true,
-                  fillColor: theme.colorScheme.surfaceContainerHighest
-                      .withValues(alpha: 0.3),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 16),
-                ),
-              ),
-            ),
-
-          // Items List
+          // List
           Expanded(
-            child: filteredItems.isEmpty
-                ? Center(
-                    child: Text(
-                      _filterText.isEmpty
-                          ? 'No hay items'
-                          : 'No se encontraron productos',
-                      style: theme.textTheme.bodyLarge?.copyWith(
-                        color: theme.hintColor,
-                      ),
-                    ),
-                  )
-                : ListView.separated(
-                    padding: const EdgeInsets.all(16),
-                    itemCount: filteredItems.length,
-                    separatorBuilder: (c, i) => const SizedBox(height: 8),
-                    itemBuilder: (context, index) {
-                      final item = filteredItems[index];
-                      return _buildAuditItemCard(context, item, isLocked);
-                    },
-                  ),
+            child: ListView.builder(
+              padding: const EdgeInsets.only(bottom: 80),
+              itemCount: filteredItems.length,
+              itemBuilder: (context, index) {
+                return _buildAuditItemCard(
+                  context,
+                  filteredItems[index],
+                  isLocked,
+                );
+              },
+            ),
           ),
         ],
       ),
@@ -427,6 +316,7 @@ class _InventoryAuditMobilePageState
 
     return Card(
       elevation: 0,
+      margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
         side: BorderSide(
