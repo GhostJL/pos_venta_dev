@@ -5,6 +5,10 @@ import 'package:posventa/domain/entities/inventory_audit.dart';
 import 'package:posventa/presentation/providers/inventory/inventory_audit_view_model.dart';
 import 'package:posventa/presentation/widgets/inventory/inventory_audit_search_delegate.dart';
 import 'package:posventa/presentation/widgets/inventory/inventory_scan_widget.dart';
+import 'package:posventa/presentation/widgets/inventory/inventory_audit_pdf_builder.dart';
+import 'package:posventa/presentation/providers/auth_provider.dart';
+import 'package:posventa/presentation/providers/store_provider.dart';
+import 'package:posventa/presentation/widgets/menu/side_menu.dart';
 
 class InventoryAuditMobilePage extends ConsumerWidget {
   const InventoryAuditMobilePage({super.key});
@@ -12,9 +16,7 @@ class InventoryAuditMobilePage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final activeAuditAsync = ref.watch(inventoryAuditViewModelProvider);
-    final theme = Theme.of(context);
 
-    // If no active audit is selected/loaded, show the history list
     return activeAuditAsync.when(
       data: (audit) {
         if (audit == null) {
@@ -33,26 +35,12 @@ class InventoryAuditMobilePage extends ConsumerWidget {
     final theme = Theme.of(context);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Auditorías de Inventario')),
-      drawer: NavigationDrawer(
-        children: [
-          const UserAccountsDrawerHeader(
-            accountName: Text('Usuario'),
-            accountEmail: Text('admin@pos.com'),
-            currentAccountPicture: CircleAvatar(child: Icon(Icons.person)),
-          ),
-          ListTile(
-            leading: const Icon(Icons.dashboard),
-            title: const Text('Dashboard'),
-            onTap: () {},
-          ),
-          ListTile(
-            leading: const Icon(Icons.inventory),
-            title: const Text('Inventario'),
-            onTap: () {},
-          ),
-        ],
+      appBar: AppBar(
+        title: const Text('Auditorias'),
+        centerTitle: true,
+        elevation: 0,
       ),
+      drawer: const SideMenu(),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _showStartAuditDialog(context, ref),
         label: const Text('Nueva'),
@@ -61,41 +49,111 @@ class InventoryAuditMobilePage extends ConsumerWidget {
       body: auditListAsync.when(
         data: (audits) {
           if (audits.isEmpty) {
-            return const Center(child: Text('No hay auditorías registradas'));
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.inventory_2_outlined,
+                    size: 64,
+                    color: theme.colorScheme.outline,
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'No hay auditorías registradas',
+                    style: theme.textTheme.bodyLarge,
+                  ),
+                ],
+              ),
+            );
           }
-          return ListView.builder(
+          return ListView.separated(
+            padding: const EdgeInsets.all(16),
             itemCount: audits.length,
+            separatorBuilder: (c, i) => const SizedBox(height: 12),
             itemBuilder: (context, index) {
               final audit = audits[index];
-              return ListTile(
-                leading: CircleAvatar(child: Text('#${audit.id}')),
-                title: Text(
-                  DateFormat(
-                    'dd MMM yyyy, HH:mm',
-                    'es',
-                  ).format(audit.auditDate),
-                ),
-                subtitle: Text(
-                  audit.status.name.toUpperCase(),
-                  style: TextStyle(
-                    color: audit.status.name == 'completed'
-                        ? Colors.green
-                        : Colors.orange,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                trailing: const Icon(Icons.chevron_right),
-                onTap: () {
-                  ref
-                      .read(inventoryAuditViewModelProvider.notifier)
-                      .loadAudit(audit.id!);
-                },
-              );
+              return _buildAuditHistoryCard(context, ref, audit);
             },
           );
         },
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, st) => Center(child: Text('Error: $e')),
+      ),
+    );
+  }
+
+  Widget _buildAuditHistoryCard(
+    BuildContext context,
+    WidgetRef ref,
+    InventoryAuditEntity audit,
+  ) {
+    final theme = Theme.of(context);
+    final isCompleted = audit.status == InventoryAuditStatus.completed;
+    final color = isCompleted ? Colors.green : Colors.orange;
+
+    return Card(
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(color: theme.dividerColor),
+      ),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(12),
+        onTap: () => ref
+            .read(inventoryAuditViewModelProvider.notifier)
+            .loadAudit(audit.id!),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Folio #${audit.id}',
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: color.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      isCompleted ? 'FINALIZADA' : 'EN PROCESO',
+                      style: TextStyle(
+                        color: color,
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Icon(Icons.calendar_today, size: 14, color: theme.hintColor),
+                  const SizedBox(width: 4),
+                  Text(
+                    DateFormat(
+                      'dd MMM yyyy, HH:mm',
+                      'es',
+                    ).format(audit.auditDate),
+                    style: theme.textTheme.bodySmall,
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -108,10 +166,10 @@ class InventoryAuditMobilePage extends ConsumerWidget {
     final theme = Theme.of(context);
     final isLocked = audit.status == InventoryAuditStatus.completed;
 
-    // Sort items: Counted first, then pending? Or just by ID
-    // Let's show counted at top for easier verification
+    // Sorting: Counted first for visibility
     final sortedItems = List<InventoryAuditItemEntity>.from(audit.items);
     sortedItems.sort((a, b) {
+      // Prioritize showing items that have been counted
       if (a.countedQuantity > 0 && b.countedQuantity == 0) return -1;
       if (a.countedQuantity == 0 && b.countedQuantity > 0) return 1;
       return 0;
@@ -134,27 +192,20 @@ class InventoryAuditMobilePage extends ConsumerWidget {
             ),
             Text(
               'Almacén ${audit.warehouseId}',
-              style: const TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.normal,
-              ),
+              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w300),
             ),
           ],
         ),
         actions: [
-          // If locked, don't show search or edit actions the same way
           IconButton(
             icon: const Icon(Icons.search),
-            tooltip: 'Buscar por nombre',
             onPressed: () async {
               final result = await showSearch(
                 context: context,
                 delegate: InventoryAuditSearchDelegate(audit.items),
               );
-              if (result != null && !isLocked) {
-                if (context.mounted) {
-                  _showEditCountDialog(context, ref, result);
-                }
+              if (result != null && !isLocked && context.mounted) {
+                _showEditCountDialog(context, ref, result);
               }
             },
           ),
@@ -164,33 +215,53 @@ class InventoryAuditMobilePage extends ConsumerWidget {
               tooltip: 'Finalizar',
               onPressed: () => _confirmCompleteAudit(context, ref),
             ),
-          if (isLocked)
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 8.0),
-              child: Icon(Icons.lock, color: Colors.white70),
-            ),
+          PopupMenuButton<String>(
+            onSelected: (value) {
+              if (value == 'report') _viewReport(context, ref, audit);
+              if (value == 'copy') _confirmFillStock(context, ref);
+            },
+            itemBuilder: (context) => [
+              const PopupMenuItem(
+                value: 'report',
+                child: Row(
+                  children: [
+                    Icon(Icons.picture_as_pdf, color: Colors.grey),
+                    SizedBox(width: 8),
+                    Text('Ver Reporte'),
+                  ],
+                ),
+              ),
+              if (!isLocked)
+                const PopupMenuItem(
+                  value: 'copy',
+                  child: Row(
+                    children: [
+                      Icon(Icons.copy_all, color: Colors.grey),
+                      SizedBox(width: 8),
+                      Text('Copiar Stock Sistema'),
+                    ],
+                  ),
+                ),
+            ],
+          ),
         ],
       ),
       body: Column(
         children: [
-          // Banner for status
+          // Progress Bar
           Container(
-            padding: const EdgeInsets.all(12),
-            color: isLocked
-                ? Colors.green.shade100
-                : theme.colorScheme.surfaceContainerHighest,
-            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            color: theme.colorScheme.surfaceContainerHighest.withValues(
+              alpha: 0.5,
+            ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  'Progreso: $totalCounted / ${audit.items.length}',
-                  style: const TextStyle(fontWeight: FontWeight.bold),
-                ),
+                Text('Progreso: $totalCounted / ${audit.items.length}'),
                 Text(
                   isLocked ? 'FINALIZADA' : 'EN PROCESO',
                   style: TextStyle(
-                    color: isLocked ? Colors.green[800] : Colors.orange[800],
+                    color: isLocked ? Colors.green : Colors.orange,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -198,11 +269,12 @@ class InventoryAuditMobilePage extends ConsumerWidget {
             ),
           ),
 
+          // Scan Area (Only if active)
           if (!isLocked)
             Padding(
               padding: const EdgeInsets.all(16.0),
               child: InventoryScanWidget(
-                hint: 'Escanear para sumar (+1)',
+                hint: 'Escanear producto...',
                 onScan: (barcode) async {
                   try {
                     await ref
@@ -211,7 +283,7 @@ class InventoryAuditMobilePage extends ConsumerWidget {
                     if (context.mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
-                          content: Text('Producto +1'),
+                          content: Text('Agregado +1'),
                           duration: Duration(milliseconds: 500),
                           backgroundColor: Colors.green,
                         ),
@@ -231,56 +303,119 @@ class InventoryAuditMobilePage extends ConsumerWidget {
               ),
             ),
 
+          // Items List
           Expanded(
             child: ListView.separated(
+              padding: const EdgeInsets.all(16),
               itemCount: sortedItems.length,
-              separatorBuilder: (c, i) => const Divider(height: 1),
+              separatorBuilder: (c, i) => const SizedBox(height: 8),
               itemBuilder: (context, index) {
                 final item = sortedItems[index];
-                final diff = item.difference;
-                final bool hasCount = item.countedQuantity > 0;
-
-                return ListTile(
-                  tileColor: hasCount
-                      ? theme.colorScheme.surfaceContainerLow
-                      : null,
-                  leading: const CircleAvatar(
-                    child: Icon(Icons.inventory_2_outlined),
-                  ),
-                  title: Text(
-                    item.variantName != null
-                        ? '${item.productName} - ${item.variantName}'
-                        : item.productName ?? 'Desconocido',
-                  ),
-                  subtitle: Text('Código: ${item.barcode ?? 'N/A'}'),
-                  trailing: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Text(
-                        '${item.countedQuantity}',
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      Text(
-                        'Sis: ${item.expectedQuantity}',
-                        style: const TextStyle(
-                          fontSize: 10,
-                          color: Colors.grey,
-                        ),
-                      ),
-                    ],
-                  ),
-                  onTap: isLocked
-                      ? null
-                      : () => _showEditCountDialog(context, ref, item),
-                );
+                return _buildAuditItemCard(context, ref, item, isLocked);
               },
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildAuditItemCard(
+    BuildContext context,
+    WidgetRef ref,
+    InventoryAuditItemEntity item,
+    bool isLocked,
+  ) {
+    final theme = Theme.of(context);
+    final hasCount = item.countedQuantity > 0;
+    final diff = item.difference;
+    final isMatch = diff == 0;
+    final diffColor = isMatch
+        ? Colors.green
+        : (diff > 0 ? Colors.blue : Colors.red);
+
+    return Card(
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(
+          color: hasCount
+              ? theme.primaryColor.withValues(alpha: 0.5)
+              : theme.dividerColor,
+        ),
+      ),
+      color: hasCount ? theme.primaryColor.withValues(alpha: 0.05) : null,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(12),
+        onTap: isLocked ? null : () => _showEditCountDialog(context, ref, item),
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Row(
+            children: [
+              // Product Icon
+              Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.surfaceContainerHighest,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Icon(Icons.inventory_2_outlined),
+              ),
+              const SizedBox(width: 12),
+              // Name & Code
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      item.variantName != null
+                          ? '${item.productName} - ${item.variantName}'
+                          : item.productName ?? 'Desconocido',
+                      style: const TextStyle(fontWeight: FontWeight.w600),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Código: ${item.barcode ?? 'N/A'}',
+                      style: theme.textTheme.bodySmall,
+                    ),
+                  ],
+                ),
+              ),
+              // Quantities
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    '${item.countedQuantity}',
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  Text(
+                    'Sis: ${item.expectedQuantity}',
+                    style: TextStyle(fontSize: 10, color: theme.hintColor),
+                  ),
+                  if (hasCount && !isMatch)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 2),
+                      child: Text(
+                        diff > 0 ? '+$diff' : '$diff',
+                        style: TextStyle(
+                          color: diffColor,
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -316,15 +451,12 @@ class InventoryAuditMobilePage extends ConsumerWidget {
     InventoryAuditItemEntity item,
   ) {
     final controller = TextEditingController(
-      text: item.countedQuantity.toString().replaceAll(
-        '.0',
-        '',
-      ), // Remove decimal if whole
+      text: item.countedQuantity.toString().replaceAll('.0', ''),
     );
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(item.productName ?? 'Editar Cantidad'),
+        title: Text(item.productName ?? 'Editar'),
         content: TextField(
           controller: controller,
           keyboardType: const TextInputType.numberWithOptions(decimal: true),
@@ -354,24 +486,49 @@ class InventoryAuditMobilePage extends ConsumerWidget {
     );
   }
 
+  void _confirmFillStock(BuildContext context, WidgetRef ref) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('¿Copiar Stock?'),
+        content: const Text(
+          'El stock físico será igual al del sistema para todos los productos.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancelar'),
+          ),
+          FilledButton(
+            onPressed: () {
+              ref
+                  .read(inventoryAuditViewModelProvider.notifier)
+                  .fillWithSystemStock();
+              Navigator.pop(context);
+            },
+            child: const Text('Copiar'),
+          ),
+        ],
+      ),
+    );
+  }
+
   void _confirmCompleteAudit(BuildContext context, WidgetRef ref) {
     final reasonController = TextEditingController();
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('¿Finalizar?'),
+        title: const Text('¿Finalizar Auditoría?'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'El inventario se ajustará a lo contado. Esta acción no se puede deshacer.',
-            ),
+            const Text('El inventario se ajustará permanentemente.'),
             const SizedBox(height: 12),
             TextField(
               controller: reasonController,
               decoration: const InputDecoration(
-                labelText: 'Motivo / Nota (Opcional)',
+                labelText: 'Motivo / Nota',
                 border: OutlineInputBorder(),
               ),
               maxLines: 2,
@@ -384,17 +541,48 @@ class InventoryAuditMobilePage extends ConsumerWidget {
             child: const Text('Cancelar'),
           ),
           FilledButton(
-            onPressed: () {
-              ref
+            onPressed: () async {
+              Navigator.pop(context);
+
+              final completedAudit = await ref
                   .read(inventoryAuditViewModelProvider.notifier)
                   .completeAudit(reason: reasonController.text);
-              Navigator.pop(context);
+
+              if (completedAudit != null && context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Auditoría finalizada. Generando reporte...'),
+                    backgroundColor: Colors.green,
+                  ),
+                );
+                _viewReport(context, ref, completedAudit);
+              }
             },
             style: FilledButton.styleFrom(backgroundColor: Colors.green),
             child: const Text('Finalizar'),
           ),
         ],
       ),
+    );
+  }
+
+  void _viewReport(
+    BuildContext context,
+    WidgetRef ref,
+    InventoryAuditEntity audit,
+  ) async {
+    final user = ref.read(authProvider).user;
+    final userName = user?.name ?? 'Usuario #${user?.id}';
+    final store = await ref.read(storeProvider.future);
+
+    await InventoryAuditPdfBuilder.generateAndOpen(
+      audit: audit,
+      store: store,
+      warehouseName: 'Almacén Principal',
+      userName: userName,
+      title: audit.status == InventoryAuditStatus.completed
+          ? 'Reporte Final de Auditoría'
+          : 'Reporte Preliminar',
     );
   }
 }
