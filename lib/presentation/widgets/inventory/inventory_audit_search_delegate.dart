@@ -40,7 +40,9 @@ class InventoryAuditSearchDelegate
     final cleanQuery = query.toLowerCase().trim();
 
     if (cleanQuery.isEmpty) {
-      return const Center(child: Text('Ingrese nombre o código del producto'));
+      return const Center(
+        child: Text('Ingrese nombre o código del producto para buscar'),
+      );
     }
 
     final filteredItems = items.where((item) {
@@ -69,7 +71,7 @@ class InventoryAuditSearchDelegate
                 : item.productName ?? 'Sin Nombre',
           ),
           subtitle: Text(
-            '${item.barcode ?? 'Sin Código'} | Actual: ${item.countedQuantity}',
+            '${item.barcode ?? 'Sin Código'} | Contado: ${item.countedQuantity}',
           ),
           onTap: () {
             close(context, item);

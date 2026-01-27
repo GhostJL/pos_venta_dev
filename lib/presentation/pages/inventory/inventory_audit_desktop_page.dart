@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:posventa/domain/entities/inventory_audit.dart';
 import 'package:posventa/presentation/providers/inventory/inventory_audit_view_model.dart';
-import 'package:posventa/presentation/widgets/inventory/inventory_scan_widget.dart';
+// Removed InventoryScanWidget import as we are implementing unified logic here
 
 class InventoryAuditDesktopPage extends ConsumerStatefulWidget {
   const InventoryAuditDesktopPage({super.key});
@@ -15,13 +15,75 @@ class InventoryAuditDesktopPage extends ConsumerStatefulWidget {
 
 class _InventoryAuditDesktopPageState
     extends ConsumerState<InventoryAuditDesktopPage> {
-  final TextEditingController _filterController = TextEditingController();
+  final TextEditingController _smartSearchController = TextEditingController();
+  final FocusNode _searchFocusNode = FocusNode();
   String _filterText = '';
 
   @override
   void dispose() {
-    _filterController.dispose();
+    _smartSearchController.dispose();
+    _searchFocusNode.dispose();
     super.dispose();
+  }
+
+  /// Handles "Smart" logic:
+  /// - If Enter is pressed: Try to Scan (Increment Count)
+  /// - As user types: Filter the list (handled by onChanged -> setState)
+  void _handleSubmitted(String value) async {
+    if (value.isEmpty) return;
+
+    // Logic: "Scan" implies incrementing count.
+    // If the audit is completed, we shouldn't allow scanning.
+    final audit = ref.read(inventoryAuditViewModelProvider).value;
+    if (audit?.status == InventoryAuditStatus.completed) {
+      _showErrorSnackBar(
+        'La auditoría está finalizada. No se pueden modificar datos.',
+      );
+      return;
+    }
+
+    // Try to scan/increment
+    try {
+      await ref
+          .read(inventoryAuditViewModelProvider.notifier)
+          .scanProduct(value);
+
+      // If successful, clear to be ready for next scan
+      _smartSearchController.clear();
+      setState(() {
+        _filterText = '';
+      });
+      // Keep focus for continuous scanning
+      _searchFocusNode.requestFocus();
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Producto escaneado: $value (+1)'),
+            backgroundColor: Colors.green,
+            duration: const Duration(milliseconds: 800),
+          ),
+        );
+      }
+    } catch (e) {
+      // If scan fails (product not found in this audit LIST),
+      // check if it is at least a valid search term.
+      // If the user just wanted to SEARCH and hit enter, we don't want to error if it's just a name.
+      // But typically "Enter" in a POS context with a barcode means "Action".
+      // Let's assume Scan first. If error, show error but keep text for filtering.
+      _showErrorSnackBar('No se pudo agregar: ${e.toString()}');
+    }
+  }
+
+  void _showErrorSnackBar(String message) {
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(message),
+          backgroundColor: Theme.of(context).colorScheme.error,
+        ),
+      );
+    }
   }
 
   @override
@@ -54,7 +116,7 @@ class _InventoryAuditDesktopPageState
               IconButton(
                 icon: const Icon(Icons.refresh),
                 onPressed: () => ref.invalidate(inventoryAuditListProvider),
-                tooltip: 'Recargar lista',
+                tooltip: 'Actualizar lista',
               ),
             ],
           ),
@@ -74,10 +136,29 @@ class _InventoryAuditDesktopPageState
                       ref.watch(inventoryAuditViewModelProvider).value?.id ==
                       audit.id;
 
+                  // Localization map for status
+                  String statusText = 'Desconocido';
+                  Color statusColor = Colors.grey;
+
+                  switch (audit.status) {
+                    case InventoryAuditStatus.draft:
+                      statusText = 'EN PROCESO';
+                      statusColor = Colors.orange;
+                      break;
+                    case InventoryAuditStatus.completed:
+                      statusText = 'FINALIZADA';
+                      statusColor = Colors.green;
+                      break;
+                    case InventoryAuditStatus.cancelled:
+                      statusText = 'CANCELADA';
+                      statusColor = Colors.red;
+                      break;
+                  }
+
                   return ListTile(
                     selected: isSelected,
                     selectedTileColor: theme.colorScheme.primaryContainer
-                        .withOpacity(0.2),
+                        .withValues(alpha: 0.2), // Fixed withOpacity
                     leading: CircleAvatar(
                       backgroundColor: isSelected
                           ? theme.colorScheme.primary
@@ -91,11 +172,9 @@ class _InventoryAuditDesktopPageState
                       DateFormat('dd MMM yyyy, HH:mm').format(audit.auditDate),
                     ),
                     subtitle: Text(
-                      audit.status.name.toUpperCase(),
+                      statusText,
                       style: TextStyle(
-                        color: audit.status.name == 'completed'
-                            ? Colors.green
-                            : Colors.orange,
+                        color: statusColor,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -103,9 +182,15 @@ class _InventoryAuditDesktopPageState
                       ref
                           .read(inventoryAuditViewModelProvider.notifier)
                           .loadAudit(audit.id!);
-                      _filterController.clear();
+                      _smartSearchController.clear();
                       setState(() {
                         _filterText = '';
+                      });
+                      // Focus search when loading an audit
+                      Future.delayed(const Duration(milliseconds: 100), () {
+                        if (_searchFocusNode.canRequestFocus) {
+                          _searchFocusNode.requestFocus();
+                        }
                       });
                     },
                   );
@@ -124,7 +209,7 @@ class _InventoryAuditDesktopPageState
             child: FilledButton.icon(
               onPressed: () => _showStartAuditDialog(context, ref),
               icon: const Icon(Icons.add),
-              label: const Text('Nueva Toma de Inventario'),
+              label: const Text('Nueva Auditoría'),
             ),
           ),
         ),
@@ -145,11 +230,13 @@ class _InventoryAuditDesktopPageState
                 Icon(
                   Icons.inventory_2_outlined,
                   size: 96,
-                  color: Theme.of(context).colorScheme.outline.withOpacity(0.5),
+                  color: Theme.of(context).colorScheme.outline.withValues(
+                    alpha: 0.5,
+                  ), // Fixed withOpacity
                 ),
                 const SizedBox(height: 24),
                 Text(
-                  'Seleccione una toma de inventario o inicie una nueva',
+                  'Seleccione una auditoría para ver detalles',
                   style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                     color: Theme.of(context).colorScheme.outline,
                   ),
@@ -171,6 +258,7 @@ class _InventoryAuditDesktopPageState
     InventoryAuditEntity audit,
   ) {
     final theme = Theme.of(context);
+    final isLocked = audit.status == InventoryAuditStatus.completed;
 
     // Apply local filter
     final filteredItems = audit.items.where((item) {
@@ -217,7 +305,7 @@ class _InventoryAuditDesktopPageState
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'Items contados: $totalCounted / ${audit.items.length}',
+                      'Progreso: $totalCounted de ${audit.items.length} productos contados',
                       style: theme.textTheme.bodyLarge?.copyWith(
                         color: theme.colorScheme.secondary,
                       ),
@@ -225,88 +313,111 @@ class _InventoryAuditDesktopPageState
                   ],
                 ),
               ),
-              if (audit.status.name != 'completed') ...[
+              if (!isLocked) ...[
                 OutlinedButton.icon(
                   onPressed: () =>
                       ref.invalidate(inventoryAuditViewModelProvider),
                   icon: const Icon(Icons.close),
-                  label: const Text('Cerrar Vieal'),
+                  label: const Text('Cerrar Vista'),
                 ),
                 const SizedBox(width: 12),
                 FilledButton.icon(
                   onPressed: () => _confirmCompleteAudit(context, ref),
                   icon: const Icon(Icons.check_circle),
-                  label: const Text('Finalizar y Ajustar'),
+                  label: const Text('Finalizar Auditoría'),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: Colors.green[700],
+                  ),
+                ),
+              ] else ...[
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.green.withValues(
+                      alpha: 0.1,
+                    ), // Fixed withOpacity
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: Colors.green),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.lock, size: 16, color: Colors.green[800]),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Auditoría Finalizada',
+                        style: TextStyle(
+                          color: Colors.green[800],
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 12),
+                OutlinedButton(
+                  onPressed: () =>
+                      ref.invalidate(inventoryAuditViewModelProvider),
+                  child: const Text('Cerrar'),
                 ),
               ],
             ],
           ),
         ),
 
-        // Tool Bar (Scanning + Search)
-        if (audit.status.name != 'completed')
-          Container(
-            padding: const EdgeInsets.all(16),
-            color: theme.colorScheme.surfaceContainerLow,
-            child: Row(
-              children: [
-                // Quick Scan
-                Expanded(
-                  flex: 3,
-                  child: InventoryScanWidget(
-                    hint: 'Escanear para sumar (+1)',
-                    onScan: (barcode) async {
-                      try {
-                        await ref
-                            .read(inventoryAuditViewModelProvider.notifier)
-                            .scanProduct(barcode);
-                      } catch (e) {
-                        if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(e.toString()),
-                              backgroundColor: theme.colorScheme.error,
-                            ),
-                          );
-                        }
-                      }
-                    },
-                  ),
-                ),
-                const SizedBox(width: 24),
-                // Search / Filter
-                Expanded(
-                  flex: 2,
-                  child: TextField(
-                    controller: _filterController,
-                    decoration: InputDecoration(
-                      hintText: 'Buscar por nombre o código...',
-                      prefixIcon: const Icon(Icons.search),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      filled: true,
-                      fillColor: theme.colorScheme.surface,
-                      suffixIcon: _filterText.isNotEmpty
-                          ? IconButton(
-                              icon: const Icon(Icons.clear),
-                              onPressed: () {
-                                _filterController.clear();
-                                setState(() => _filterText = '');
-                              },
-                            )
-                          : null,
+        // Unified Smart Search Bar
+        Container(
+          padding: const EdgeInsets.all(16),
+          color: theme.colorScheme.surfaceContainerLow,
+          child: Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: _smartSearchController,
+                  focusNode: _searchFocusNode,
+                  enabled: !isLocked,
+                  // We allow typing to search history even if locked
+                  // But Logic in onSubmitted handles the lock check for scanning
+                  decoration: InputDecoration(
+                    hintText: isLocked
+                        ? 'Buscar en historial...'
+                        : 'Buscar producto o Escanear código de barras...',
+                    prefixIcon: const Icon(Icons.search),
+                    suffixIcon: _filterText.isNotEmpty
+                        ? IconButton(
+                            icon: const Icon(Icons.clear),
+                            onPressed: () {
+                              _smartSearchController.clear();
+                              setState(() => _filterText = '');
+                              _searchFocusNode.requestFocus();
+                            },
+                          )
+                        : const Icon(Icons.qr_code_scanner, color: Colors.grey),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
                     ),
-                    onChanged: (val) {
-                      setState(() {
-                        _filterText = val;
-                      });
-                    },
+                    filled: true,
+                    fillColor: theme.colorScheme.surface,
                   ),
+                  onChanged: (val) {
+                    setState(() {
+                      _filterText = val;
+                    });
+                  },
+                  onSubmitted: (val) {
+                    // Only allow scanning new items if not locked
+                    if (!isLocked) {
+                      _handleSubmitted(val);
+                    }
+                  },
+                  textInputAction: TextInputAction.send,
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
+        ),
 
         // Items Table
         Expanded(
@@ -314,8 +425,10 @@ class _InventoryAuditDesktopPageState
               ? Center(
                   child: Text(
                     _filterText.isNotEmpty
-                        ? 'No se encontraron productos.'
-                        : 'No se han contado items aún.\nUse el buscador o escáner para comenzar.',
+                        ? 'No se encontraron productos con ese criterio.'
+                        : (isLocked
+                              ? 'No se encontraron registros.'
+                              : 'Escanee un código o busque un producto para comenzar.'),
                     textAlign: TextAlign.center,
                     style: theme.textTheme.bodyLarge?.copyWith(
                       color: theme.colorScheme.outline,
@@ -329,8 +442,8 @@ class _InventoryAuditDesktopPageState
                       width: double.infinity,
                       child: DataTable(
                         columns: const [
-                          DataColumn(label: Text('Producto')),
-                          DataColumn(label: Text('Código de Barras')),
+                          DataColumn(label: Text('Producto / Variante')),
+                          DataColumn(label: Text('Código')),
                           DataColumn(label: Text('Sistema')),
                           DataColumn(label: Text('Físico')),
                           DataColumn(label: Text('Diferencia')),
@@ -370,12 +483,21 @@ class _InventoryAuditDesktopPageState
                                 ),
                               ),
                               DataCell(
-                                IconButton(
-                                  icon: const Icon(Icons.edit),
-                                  onPressed: () =>
-                                      _showEditCountDialog(context, ref, item),
-                                  tooltip: 'Editar cantidad',
-                                ),
+                                isLocked
+                                    ? const Icon(
+                                        Icons.lock_outline,
+                                        size: 16,
+                                        color: Colors.grey,
+                                      )
+                                    : IconButton(
+                                        icon: const Icon(Icons.edit),
+                                        onPressed: () => _showEditCountDialog(
+                                          context,
+                                          ref,
+                                          item,
+                                        ),
+                                        tooltip: 'Editar cantidad manual',
+                                      ),
                               ),
                             ],
                           );
@@ -393,17 +515,15 @@ class _InventoryAuditDesktopPageState
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Nueva Toma de Inventario'),
+        title: const Text('Nueva Auditoría'),
         content: const Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'Esto iniciará una nueva sesión de auditoría para el Almacén Principal.',
-            ),
+            Text('Esto iniciará una nueva sesión de auditoría.'),
             SizedBox(height: 8),
             Text(
-              'Nota: Se tomará una "foto" del stock actual del sistema para comparar.',
+              'Nota: Se guardará una copia del stock actual del sistema para calcular diferencias.',
               style: TextStyle(fontSize: 12, color: Colors.grey),
             ),
           ],
@@ -420,7 +540,7 @@ class _InventoryAuditDesktopPageState
                   .startNewAudit(1);
               Navigator.pop(context);
             },
-            child: const Text('Iniciar Auditoría'),
+            child: const Text('Iniciar'),
           ),
         ],
       ),
@@ -458,7 +578,7 @@ class _InventoryAuditDesktopPageState
                   .updateItemCount(item.id!, count);
               Navigator.pop(context);
             },
-            child: const Text('Actualizar'),
+            child: const Text('Guardar'),
           ),
         ],
       ),
@@ -471,7 +591,7 @@ class _InventoryAuditDesktopPageState
       builder: (context) => AlertDialog(
         title: const Text('¿Finalizar Auditoría?'),
         content: const Text(
-          'Esta acción actualizará el stock de todos los productos auditados para que coincidan con el conteo físico.\n\nSe generarán movimientos de ajuste por inventario.\n\n¿Está seguro?',
+          'Esta acción actualizará el stock de todos los productos y cerrará la auditoría de forma permanente.\n\nNo se podrán realizar más cambios.\n\n¿Está seguro?',
         ),
         actions: [
           TextButton(
@@ -485,7 +605,8 @@ class _InventoryAuditDesktopPageState
                   .completeAudit();
               Navigator.pop(context);
             },
-            child: const Text('Confirmar y Ajustar Stock'),
+            style: FilledButton.styleFrom(backgroundColor: Colors.green[700]),
+            child: const Text('Confirmar Finalización'),
           ),
         ],
       ),
