@@ -326,73 +326,20 @@ class _InventoryAuditDesktopPageState
             textInputAction: TextInputAction.go,
           ),
         ),
-        // Table
+        // List of Cards (Replacing DataTable)
         Expanded(
           child: filteredItems.isEmpty
               ? const Center(
                   child: Text('No hay productos que coincidan con la búsqueda'),
                 )
-              : SingleChildScrollView(
-                  child: DataTable(
-                    columns: const [
-                      DataColumn(label: Text('Producto')),
-                      DataColumn(label: Text('Código')),
-                      DataColumn(
-                        label: Text('Esperado', textAlign: TextAlign.right),
-                      ),
-                      DataColumn(
-                        label: Text('Físico', textAlign: TextAlign.right),
-                      ),
-                      DataColumn(
-                        label: Text('Diferencia', textAlign: TextAlign.right),
-                      ),
-                      DataColumn(label: Text('Acciones')),
-                    ],
-                    rows: filteredItems.map((item) {
-                      final diff = item.difference;
-                      final diffColor = diff == 0
-                          ? Colors.green
-                          : (diff > 0 ? Colors.blue : Colors.red);
-                      final name = item.variantName != null
-                          ? '${item.productName} - ${item.variantName}'
-                          : item.productName ?? '-';
-
-                      return DataRow(
-                        cells: [
-                          DataCell(Text(name)),
-                          DataCell(Text(item.barcode ?? '-')),
-                          DataCell(Text('${item.expectedQuantity}')),
-                          DataCell(
-                            Text(
-                              '${item.countedQuantity}',
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                          DataCell(
-                            Text(
-                              diff > 0 ? '+$diff' : '$diff',
-                              style: TextStyle(
-                                color: diffColor,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                          DataCell(
-                            isLocked
-                                ? const SizedBox()
-                                : IconButton(
-                                    icon: const Icon(Icons.edit),
-                                    onPressed: () =>
-                                        _showEditCountDialog(context, item),
-                                    tooltip: 'Editar cantidad manual',
-                                  ),
-                          ),
-                        ],
-                      );
-                    }).toList(),
-                  ),
+              : ListView.separated(
+                  padding: const EdgeInsets.all(16),
+                  itemCount: filteredItems.length,
+                  separatorBuilder: (_, __) => const SizedBox(height: 12),
+                  itemBuilder: (context, index) {
+                    final item = filteredItems[index];
+                    return _buildDesktopAuditItemCard(context, item, isLocked);
+                  },
                 ),
         ),
         // Footer Actions
@@ -418,6 +365,204 @@ class _InventoryAuditDesktopPageState
               ],
             ),
           ),
+      ],
+    );
+  }
+
+  Widget _buildDesktopAuditItemCard(
+    BuildContext context,
+    InventoryAuditItemEntity item,
+    bool isLocked,
+  ) {
+    final theme = Theme.of(context);
+    final hasCount = item.countedQuantity > 0;
+    final diff = item.difference;
+    final isMatch = diff == 0;
+
+    return Card(
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(
+          color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
+        ),
+      ),
+      color: Colors.white,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16),
+        onTap: isLocked ? null : () => _showEditCountDialog(context, item),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            children: [
+              // Dark Icon
+              Container(
+                width: 56,
+                height: 56,
+                decoration: BoxDecoration(
+                  color: const Color(0xFF0F172A), // Dark Navy
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(
+                  Icons.inventory_2_outlined,
+                  color: Colors.white,
+                  size: 28,
+                ),
+              ),
+              const SizedBox(width: 20),
+
+              // Name & Code
+              Expanded(
+                flex: 3,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      item.variantName != null
+                          ? '${item.productName} - ${item.variantName}'
+                          : item.productName ?? 'Desconocido',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                        color: Color(0xFF0F172A),
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF1F5F9), // Slate 100
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Text(
+                        'Código: ${item.barcode ?? 'N/A'}',
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: Color(0xFF334155),
+                          fontFamily: 'Monospace',
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              // Metrics Row
+              Expanded(
+                flex: 4,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    _buildDesktopMetric('Sistema', '${item.expectedQuantity}'),
+                    const SizedBox(width: 16),
+                    _buildDesktopMetric(
+                      'Físico',
+                      hasCount ? '${item.countedQuantity}' : '-',
+                      isPrimary: true,
+                    ),
+                    const SizedBox(width: 16),
+                    _buildDesktopMetric(
+                      'Diferencia',
+                      hasCount ? (diff > 0 ? '+$diff' : '$diff') : '-',
+                      color: hasCount
+                          ? (diff == 0
+                                ? Colors.green
+                                : (diff > 0 ? Colors.blue : Colors.red))
+                          : const Color(0xFF94A3B8),
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(width: 16),
+
+              // Status & Action
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color: hasCount
+                          ? (isMatch
+                                ? const Color(0xFFDCFCE7)
+                                : const Color(0xFFDBEAFE))
+                          : const Color(0xFFF1F5F9),
+                      borderRadius: BorderRadius.circular(20),
+                      border: hasCount
+                          ? Border.all(
+                              color: isMatch
+                                  ? const Color(0xFF22C55E)
+                                  : const Color(0xFF3B82F6),
+                            )
+                          : null,
+                    ),
+                    child: Text(
+                      hasCount
+                          ? (isMatch
+                                ? 'Cuadrado'
+                                : (diff > 0 ? 'Excedente' : 'Faltante'))
+                          : 'Pendiente',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: hasCount
+                            ? (isMatch
+                                  ? const Color(0xFF15803D)
+                                  : const Color(0xFF1D4ED8))
+                            : const Color(0xFF64748B),
+                      ),
+                    ),
+                  ),
+                  if (!isLocked) ...[
+                    const SizedBox(height: 8),
+                    const Text(
+                      'Click para editar',
+                      style: TextStyle(fontSize: 10, color: Colors.grey),
+                    ),
+                  ],
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDesktopMetric(
+    String label,
+    String value, {
+    bool isPrimary = false,
+    Color? color,
+  }) {
+    return Column(
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 12,
+            color: Color(0xFF64748B),
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            color:
+                color ??
+                (isPrimary ? const Color(0xFF0F172A) : const Color(0xFF64748B)),
+          ),
+        ),
       ],
     );
   }

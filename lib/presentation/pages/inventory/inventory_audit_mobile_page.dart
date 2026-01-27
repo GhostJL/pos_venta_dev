@@ -44,6 +44,9 @@ class _InventoryAuditMobilePageState
       await ref
           .read(inventoryAuditViewModelProvider.notifier)
           .scanProduct(code);
+
+      if (!mounted) return;
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Producto escaneado: $code (+1)'),
@@ -57,6 +60,7 @@ class _InventoryAuditMobilePageState
       });
       _searchFocusNode.requestFocus();
     } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Error: $e'),
@@ -111,8 +115,8 @@ class _InventoryAuditMobilePageState
   }
 
   Widget _buildAuditHistoryList(BuildContext context) {
-    // This should list previous audits and allow creating a new one
     final auditList = ref.watch(inventoryAuditListProvider);
+    final theme = Theme.of(context);
 
     return auditList.when(
       data: (audits) {
@@ -121,23 +125,125 @@ class _InventoryAuditMobilePageState
             Expanded(
               child: audits.isEmpty
                   ? const Center(child: Text('No hay auditorías registradas.'))
-                  : ListView.builder(
+                  : ListView.separated(
+                      padding: const EdgeInsets.all(16),
                       itemCount: audits.length,
+                      separatorBuilder: (_, __) => const SizedBox(height: 12),
                       itemBuilder: (context, index) {
                         final audit = audits[index];
-                        return ListTile(
-                          title: Text('Auditoría #${audit.id}'),
-                          subtitle: Text(
-                            DateFormat(
-                              'dd/MM/yyyy HH:mm',
-                            ).format(audit.auditDate),
+                        // Status Config
+                        Color statusColor;
+                        Color statusBg;
+                        String statusText;
+                        switch (audit.status) {
+                          case InventoryAuditStatus.draft:
+                            statusColor = const Color(0xFFD97706); // Amber 700
+                            statusBg = const Color(0xFFFEF3C7); // Amber 100
+                            statusText = 'En Proceso';
+                            break;
+                          case InventoryAuditStatus.completed:
+                            statusColor = const Color(0xFF15803D); // Green 700
+                            statusBg = const Color(0xFFDCFCE7); // Green 100
+                            statusText = 'Finalizada';
+                            break;
+                          case InventoryAuditStatus.cancelled:
+                            statusColor = const Color(0xFFB91C1C); // Red 700
+                            statusBg = const Color(0xFFFEE2E2); // Red 100
+                            statusText = 'Cancelada';
+                            break;
+                        }
+
+                        return Card(
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                            side: BorderSide(
+                              color: theme.colorScheme.outlineVariant
+                                  .withValues(alpha: 0.5),
+                            ),
                           ),
-                          trailing: _buildStatusChip(context, audit.status),
-                          onTap: () {
-                            ref
-                                .read(inventoryAuditViewModelProvider.notifier)
-                                .loadAudit(audit.id!);
-                          },
+                          color: Colors.white,
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(16),
+                            onTap: () {
+                              ref
+                                  .read(
+                                    inventoryAuditViewModelProvider.notifier,
+                                  )
+                                  .loadAudit(audit.id!);
+                            },
+                            child: Padding(
+                              padding: const EdgeInsets.all(16),
+                              child: Row(
+                                children: [
+                                  // Icon
+                                  Container(
+                                    width: 48,
+                                    height: 48,
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFF0F172A),
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: const Icon(
+                                      Icons.assignment_turned_in_outlined,
+                                      color: Colors.white,
+                                      size: 24,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 16),
+
+                                  // Info
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          'Auditoría #${audit.id}',
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 16,
+                                            color: Color(0xFF0F172A),
+                                          ),
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Text(
+                                          DateFormat(
+                                            'dd MMM yyyy, HH:mm',
+                                            'es',
+                                          ).format(audit.auditDate),
+                                          style: const TextStyle(
+                                            fontSize: 13,
+                                            color: Color(0xFF64748B),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+
+                                  // Badge
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 10,
+                                      vertical: 6,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: statusBg,
+                                      borderRadius: BorderRadius.circular(20),
+                                    ),
+                                    child: Text(
+                                      statusText,
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.bold,
+                                        color: statusColor,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
                         );
                       },
                     ),
@@ -147,9 +253,18 @@ class _InventoryAuditMobilePageState
               child: SizedBox(
                 width: double.infinity,
                 child: FilledButton.icon(
+                  style: FilledButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
                   onPressed: () => _showStartAuditDialog(context),
                   icon: const Icon(Icons.add),
-                  label: const Text('Nueva Auditoría'),
+                  label: const Text(
+                    'Nueva Auditoría',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
                 ),
               ),
             ),
@@ -158,32 +273,6 @@ class _InventoryAuditMobilePageState
       },
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (e, st) => Center(child: Text('Error al cargar historial: $e')),
-    );
-  }
-
-  Widget _buildStatusChip(BuildContext context, InventoryAuditStatus status) {
-    Color color;
-    String label;
-    switch (status) {
-      case InventoryAuditStatus.draft:
-        color = Colors.orange;
-        label = 'En Proceso';
-        break;
-      case InventoryAuditStatus.completed:
-        color = Colors.green;
-        label = 'Finalizada';
-        break;
-      case InventoryAuditStatus.cancelled:
-        color = Colors.red;
-        label = 'Cancelada';
-        break;
-    }
-    return Chip(
-      label: Text(
-        label,
-        style: const TextStyle(fontSize: 12, color: Colors.white),
-      ),
-      backgroundColor: color,
     );
   }
 
@@ -310,87 +399,152 @@ class _InventoryAuditMobilePageState
     final hasCount = item.countedQuantity > 0;
     final diff = item.difference;
     final isMatch = diff == 0;
-    final diffColor = isMatch
-        ? Colors.green
-        : (diff > 0 ? Colors.blue : Colors.red);
 
     return Card(
       elevation: 0,
-      margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(16),
         side: BorderSide(
-          color: hasCount
-              ? theme.primaryColor.withValues(alpha: 0.5)
-              : theme.dividerColor,
+          color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
         ),
       ),
-      color: hasCount ? theme.primaryColor.withValues(alpha: 0.05) : null,
+      color: Colors.white,
       child: InkWell(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(16),
         onTap: isLocked ? null : () => _showEditCountDialog(context, item),
         child: Padding(
-          padding: const EdgeInsets.all(12),
-          child: Row(
+          padding: const EdgeInsets.all(16),
+          child: Column(
             children: [
-              // Product Icon
-              Container(
-                width: 48,
-                height: 48,
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.surfaceContainerHighest,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: const Icon(Icons.inventory_2_outlined),
-              ),
-              const SizedBox(width: 12),
-              // Name & Code
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      item.variantName != null
-                          ? '${item.productName} - ${item.variantName}'
-                          : item.productName ?? 'Desconocido',
-                      style: const TextStyle(fontWeight: FontWeight.w600),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'Código: ${item.barcode ?? 'N/A'}',
-                      style: theme.textTheme.bodySmall,
-                    ),
-                  ],
-                ),
-              ),
-              // Quantities
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    '${item.countedQuantity}',
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
+                  // Icon Part
+                  Container(
+                    width: 48,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF0F172A), // Dark Navy
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Icon(
+                      Icons.inventory_2_outlined,
+                      color: Colors.white,
+                      size: 24,
                     ),
                   ),
-                  Text(
-                    'Sis: ${item.expectedQuantity}',
-                    style: TextStyle(fontSize: 10, color: theme.hintColor),
-                  ),
-                  if (hasCount && !isMatch)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 2),
-                      child: Text(
-                        diff > 0 ? '+$diff' : '$diff',
-                        style: TextStyle(
-                          color: diffColor,
-                          fontSize: 10,
-                          fontWeight: FontWeight.bold,
+                  const SizedBox(width: 16),
+
+                  // Text Part
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Expanded(
+                              child: Text(
+                                item.productName ?? 'Desconocido',
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
+                                  color: Color(0xFF0F172A),
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            // Status Badge (like 'En Stock' but for audit status)
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 4,
+                              ),
+                              decoration: BoxDecoration(
+                                color: hasCount
+                                    ? (isMatch
+                                          ? const Color(0xFFDCFCE7)
+                                          : const Color(
+                                              0xFFDBEAFE,
+                                            )) // Green or Blue bg
+                                    : const Color(0xFFF1F5F9), // Slate 100
+                                borderRadius: BorderRadius.circular(6),
+                                border: hasCount
+                                    ? Border.all(
+                                        color: isMatch
+                                            ? const Color(0xFF22C55E)
+                                            : const Color(0xFF3B82F6),
+                                      )
+                                    : null,
+                              ),
+                              child: Text(
+                                hasCount
+                                    ? (isMatch
+                                          ? 'Cuadrado'
+                                          : (diff > 0
+                                                ? 'Excedente'
+                                                : 'Faltante'))
+                                    : 'Pendiente',
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w600,
+                                  color: hasCount
+                                      ? (isMatch
+                                            ? const Color(0xFF15803D)
+                                            : const Color(0xFF1D4ED8))
+                                      : const Color(0xFF64748B),
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
-                      ),
+                        if (item.variantName != null)
+                          Text(
+                            item.variantName!,
+                            style: const TextStyle(
+                              fontSize: 13,
+                              color: Color(0xFF64748B),
+                            ), // Slate 500
+                          ),
+                        const SizedBox(height: 2),
+                        Text(
+                          'SKU: ${item.barcode ?? 'N/A'}',
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: Color(0xFF94A3B8),
+                          ), // Slate 400
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              const Divider(height: 1, thickness: 1, color: Color(0xFFF1F5F9)),
+              const SizedBox(height: 12),
+
+              // Bottom Metrics Row
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  _buildListMetric('Sistema', '${item.expectedQuantity}'),
+                  // If counted, show physical, else show ---
+                  _buildListMetric(
+                    'Físico',
+                    hasCount ? '${item.countedQuantity}' : '-',
+                    isBold: true,
+                  ),
+
+                  // Diff
+                  if (hasCount)
+                    _buildListMetric(
+                      'Diferencia',
+                      (diff > 0 ? '+$diff' : '$diff'),
+                      color: diff == 0
+                          ? Colors.green
+                          : (diff > 0 ? Colors.blue : Colors.red),
                     ),
                 ],
               ),
@@ -398,6 +552,34 @@ class _InventoryAuditMobilePageState
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildListMetric(
+    String label,
+    String value, {
+    bool isBold = false,
+    Color? color,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(fontSize: 11, color: Color(0xFF64748B)),
+        ), // Slate 500
+        const SizedBox(height: 2),
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: isBold || color != null
+                ? FontWeight.bold
+                : FontWeight.normal,
+            color: color ?? const Color(0xFF0F172A),
+          ),
+        ),
+      ],
     );
   }
 

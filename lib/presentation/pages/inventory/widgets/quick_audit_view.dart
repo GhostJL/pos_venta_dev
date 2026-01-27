@@ -66,10 +66,6 @@ class _QuickAuditViewState extends ConsumerState<QuickAuditView> {
             ref.read(inventoryAuditViewModelProvider.notifier).exitQuickAudit();
           },
         ),
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(4),
-          child: LinearProgressIndicator(value: progress),
-        ),
       ),
       body: Padding(
         padding: const EdgeInsets.all(24.0),
@@ -79,27 +75,34 @@ class _QuickAuditViewState extends ConsumerState<QuickAuditView> {
             // Product Card
             Expanded(
               child: Card(
-                elevation: 4,
+                elevation: 0,
+                color: Colors.white,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(24),
+                  side: BorderSide(
+                    color: theme.colorScheme.outlineVariant.withValues(
+                      alpha: 0.5,
+                    ),
+                  ),
                 ),
                 child: Padding(
                   padding: const EdgeInsets.all(24.0),
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      // Product Icon/Image
+                      // Product Icon
                       Container(
-                        padding: const EdgeInsets.all(24),
+                        padding: const EdgeInsets.all(20),
                         decoration: BoxDecoration(
-                          color: theme.colorScheme.surfaceContainerHighest
-                              .withValues(alpha: 0.3),
-                          shape: BoxShape.circle,
+                          color: const Color(
+                            0xFF0F172A,
+                          ), // Dark Navy from image
+                          borderRadius: BorderRadius.circular(16),
                         ),
-                        child: Icon(
-                          Icons.inventory_2,
-                          size: 64,
-                          color: theme.colorScheme.primary,
+                        child: const Icon(
+                          Icons.inventory_2_outlined,
+                          size: 48,
+                          color: Colors.white,
                         ),
                       ),
                       const SizedBox(height: 24),
@@ -107,8 +110,9 @@ class _QuickAuditViewState extends ConsumerState<QuickAuditView> {
                       // Product Name & Variant
                       Text(
                         item.productName ?? 'Producto Desconocido',
-                        style: theme.textTheme.headlineMedium?.copyWith(
+                        style: theme.textTheme.headlineSmall?.copyWith(
                           fontWeight: FontWeight.bold,
+                          color: const Color(0xFF0F172A),
                         ),
                         textAlign: TextAlign.center,
                       ),
@@ -116,48 +120,61 @@ class _QuickAuditViewState extends ConsumerState<QuickAuditView> {
                         const SizedBox(height: 8),
                         Text(
                           item.variantName!,
-                          style: theme.textTheme.titleLarge?.copyWith(
-                            color: theme.colorScheme.secondary,
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            color: const Color(0xFF64748B), // Slate 500
+                            fontWeight: FontWeight.w600,
                           ),
                           textAlign: TextAlign.center,
                         ),
                       ],
                       const SizedBox(height: 16),
+                      // Code Badge
                       Container(
                         padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 6,
+                          horizontal: 16,
+                          vertical: 8,
                         ),
                         decoration: BoxDecoration(
-                          color: theme.colorScheme.surfaceContainerHighest,
+                          color: const Color(0xFFF1F5F9), // Slate 100
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
                           'Código: ${item.barcode ?? 'N/A'}',
-                          style: theme.textTheme.bodyLarge?.copyWith(
+                          style: theme.textTheme.bodyMedium?.copyWith(
                             fontFamily: 'Monospace',
+                            color: const Color(0xFF334155),
                           ),
                         ),
                       ),
 
                       const Spacer(),
 
-                      // Counts Comparison
+                      // Counts Grid (Like the image's "Existencia / Costo / Precio")
                       Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          _buildCountInfo(
-                            context,
-                            'Sistema',
-                            '${item.expectedQuantity}',
+                          Expanded(
+                            child: _buildMetricItem(
+                              context,
+                              'Sistema',
+                              '${item.expectedQuantity}',
+                              isPrimary: false,
+                            ),
                           ),
-                          const Icon(Icons.arrow_forward, color: Colors.grey),
-                          // Default to system count for rapid confirmation view
-                          _buildCountInfo(
-                            context,
-                            'Físico Sugerido',
-                            '${item.expectedQuantity}', // Showing expected as default
-                            isHighlight: true,
+                          Padding(
+                            padding: const EdgeInsets.only(top: 12),
+                            child: Icon(
+                              Icons.arrow_forward,
+                              color: theme.dividerColor,
+                            ),
+                          ),
+                          Expanded(
+                            child: _buildMetricItem(
+                              context,
+                              'Físico Sugerido',
+                              '${item.expectedQuantity}', // Default to expected
+                              isPrimary: true,
+                            ),
                           ),
                         ],
                       ),
@@ -286,22 +303,31 @@ class _QuickAuditViewState extends ConsumerState<QuickAuditView> {
     );
   }
 
-  Widget _buildCountInfo(
+  Widget _buildMetricItem(
     BuildContext context,
     String label,
     String value, {
-    bool isHighlight = false,
+    bool isPrimary = false,
   }) {
-    final theme = Theme.of(context);
     return Column(
       children: [
-        Text(label, style: theme.textTheme.bodySmall),
+        Text(
+          label,
+          style: const TextStyle(
+            color: Color(0xFF64748B),
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
         const SizedBox(height: 4),
         Text(
           value,
-          style: theme.textTheme.displaySmall?.copyWith(
+          style: TextStyle(
+            fontSize: 32,
             fontWeight: FontWeight.bold,
-            color: isHighlight ? Colors.green : null,
+            color: isPrimary
+                ? const Color(0xFF4CAF50)
+                : const Color(0xFF0F172A),
           ),
         ),
       ],
