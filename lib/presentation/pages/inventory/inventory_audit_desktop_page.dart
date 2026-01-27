@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:posventa/domain/entities/inventory_audit.dart';
 import 'package:posventa/presentation/providers/inventory/inventory_audit_view_model.dart';
+import 'package:posventa/presentation/widgets/inventory/inventory_audit_pdf_builder.dart';
 // Removed InventoryScanWidget import as we are implementing unified logic here
 
 class InventoryAuditDesktopPage extends ConsumerStatefulWidget {
@@ -324,6 +325,12 @@ class _InventoryAuditDesktopPageState
                   label: const Text('Cerrar Vista'),
                 ),
                 const SizedBox(width: 12),
+                OutlinedButton.icon(
+                  onPressed: () => _confirmFillStock(context, ref),
+                  icon: const Icon(Icons.copy_all),
+                  label: const Text('Copiar Stock Sistema'),
+                ),
+                const SizedBox(width: 12),
                 FilledButton.icon(
                   onPressed: () => _confirmCompleteAudit(context, ref),
                   icon: const Icon(Icons.check_circle),
@@ -619,14 +626,57 @@ class _InventoryAuditDesktopPageState
             child: const Text('Cancelar'),
           ),
           FilledButton(
-            onPressed: () {
-              ref
+            onPressed: () async {
+              Navigator.pop(context); // Close dialog first
+
+              final completedAudit = await ref
                   .read(inventoryAuditViewModelProvider.notifier)
                   .completeAudit(reason: reasonController.text);
-              Navigator.pop(context);
+
+              if (completedAudit != null && context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text(
+                      'Auditoría finalizada correctamente. Generando reporte...',
+                    ),
+                    backgroundColor: Colors.green,
+                  ),
+                );
+                // Generate and Open PDF
+                await InventoryAuditPdfBuilder.generateAndOpen(
+                  audit: completedAudit,
+                );
+              }
             },
             style: FilledButton.styleFrom(backgroundColor: Colors.green[700]),
             child: const Text('Confirmar Finalización'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _confirmFillStock(BuildContext context, WidgetRef ref) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('¿Copiar Stock del Sistema?'),
+        content: const Text(
+          'Esto sobrescribirá todos los conteos físicos actuales con la cantidad que el sistema esperaba al inicio de la auditoría.\n\nÚtil si el inventario físico coincide mayormente con el sistema y solo desea ajustar diferencias.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancelar'),
+          ),
+          FilledButton(
+            onPressed: () {
+              ref
+                  .read(inventoryAuditViewModelProvider.notifier)
+                  .fillWithSystemStock();
+              Navigator.pop(context);
+            },
+            child: const Text('Copiar Stock'),
           ),
         ],
       ),

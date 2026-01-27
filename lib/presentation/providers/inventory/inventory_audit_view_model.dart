@@ -98,9 +98,37 @@ class InventoryAuditViewModel extends _$InventoryAuditViewModel {
     }
   }
 
-  Future<void> completeAudit({String? reason}) async {
+  Future<void> fillWithSystemStock() async {
     final audit = state.value;
     if (audit == null) return;
+
+    state = const AsyncValue.loading();
+    try {
+      final updatedItems = <InventoryAuditItemEntity>[];
+
+      for (final item in audit.items) {
+        // Only update if not already counted (optional decision, but safer to overwrite all for "Copy System Stock" action,
+        // or maybe only 0s? User request implies "use total count", so overwriting seems appropriate or filling all.
+        // Let's overwrite all to match system stock as a baseline.)
+        final updatedItem = item.copyWith(
+          countedQuantity: item.expectedQuantity,
+          countedAt: DateTime.now(),
+        );
+        updatedItems.add(updatedItem);
+
+        // Update in DB (we could optimize this with a batch update use case if improved later)
+        await ref.read(updateAuditItemUseCaseProvider).call(updatedItem);
+      }
+
+      state = AsyncValue.data(audit.copyWith(items: updatedItems));
+    } catch (e, st) {
+      state = AsyncValue.error(e, st);
+    }
+  }
+
+  Future<InventoryAuditEntity?> completeAudit({String? reason}) async {
+    final audit = state.value;
+    if (audit == null) return null;
 
     state = const AsyncValue.loading();
     try {
@@ -113,9 +141,17 @@ class InventoryAuditViewModel extends _$InventoryAuditViewModel {
       await ref
           .read(completeAuditUseCaseProvider)
           .call(audit.id!, performedBy, reason: reason);
-      state = const AsyncValue.data(null); // Audit closed
+
+      // Fetch the final state of the audit to return it (for PDF generation)
+      final completedAudit = await ref
+          .read(inventoryAuditRepositoryProvider)
+          .getAuditById(audit.id!);
+
+      state = const AsyncValue.data(null); // Audit closed in the current view
+      return completedAudit;
     } catch (e, st) {
       state = AsyncValue.error(e, st);
+      return null;
     }
   }
 }
