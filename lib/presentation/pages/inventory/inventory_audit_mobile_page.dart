@@ -320,18 +320,22 @@ class _InventoryAuditMobilePageState
                   value: 'fill',
                   child: Text('Copiar Stock Sistema'),
                 ),
-                const PopupMenuItem(
-                  value: 'finish',
-                  child: Text('Finalizar Auditoría'),
-                ),
               ],
               onSelected: (value) {
                 if (value == 'fill') _confirmFillStock(context);
-                if (value == 'finish') _confirmCompleteAudit(context);
               },
             ),
         ],
       ),
+      floatingActionButton: !isLocked
+          ? FloatingActionButton.extended(
+              onPressed: () => _confirmCompleteAudit(context),
+              icon: const Icon(Icons.check),
+              label: const Text('Finalizar'),
+              backgroundColor: Colors.green,
+              foregroundColor: Colors.white,
+            )
+          : null,
       body: Column(
         children: [
           // Search & Scan Bar

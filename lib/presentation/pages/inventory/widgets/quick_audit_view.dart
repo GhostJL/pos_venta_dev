@@ -66,6 +66,16 @@ class _QuickAuditViewState extends ConsumerState<QuickAuditView> {
             ref.read(inventoryAuditViewModelProvider.notifier).exitQuickAudit();
           },
         ),
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(1.0),
+          child: LinearProgressIndicator(
+            value: progress,
+            minHeight: 1,
+            backgroundColor: theme.colorScheme.onSurface,
+          ),
+        ),
       ),
       body: Padding(
         padding: const EdgeInsets.all(24.0),
