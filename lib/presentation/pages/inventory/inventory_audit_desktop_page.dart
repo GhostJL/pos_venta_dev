@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:posventa/domain/entities/inventory_audit.dart';
 import 'package:posventa/presentation/providers/inventory/inventory_audit_view_model.dart';
 import 'package:posventa/presentation/widgets/inventory/inventory_audit_pdf_builder.dart';
+import 'package:posventa/presentation/providers/auth_provider.dart';
 // Removed InventoryScanWidget import as we are implementing unified logic here
 
 class InventoryAuditDesktopPage extends ConsumerStatefulWidget {
@@ -326,6 +327,12 @@ class _InventoryAuditDesktopPageState
                 ),
                 const SizedBox(width: 12),
                 OutlinedButton.icon(
+                  onPressed: () => _viewReport(audit),
+                  icon: const Icon(Icons.picture_as_pdf),
+                  label: const Text('Ver Reporte'),
+                ),
+                const SizedBox(width: 12),
+                OutlinedButton.icon(
                   onPressed: () => _confirmFillStock(context, ref),
                   icon: const Icon(Icons.copy_all),
                   label: const Text('Copiar Stock Sistema'),
@@ -643,8 +650,16 @@ class _InventoryAuditDesktopPageState
                   ),
                 );
                 // Generate and Open PDF
+                final user = ref.read(authProvider).user;
+                final userName =
+                    user?.name ?? 'Usuario #${ref.read(authProvider).user?.id}';
+
                 await InventoryAuditPdfBuilder.generateAndOpen(
                   audit: completedAudit,
+                  warehouseName:
+                      'Almacén Principal', // Ideally fetch from a warehouse provider or active selection
+                  userName: userName,
+                  title: 'Reporte Final de Auditoría',
                 );
               }
             },
@@ -653,6 +668,22 @@ class _InventoryAuditDesktopPageState
           ),
         ],
       ),
+    );
+  }
+
+  // Helper to view report for current audit (Preliminary or Final)
+  void _viewReport(InventoryAuditEntity audit) async {
+    final user = ref.read(authProvider).user;
+    final userName = user?.name ?? 'Usuario #${user?.id}';
+
+    await InventoryAuditPdfBuilder.generateAndOpen(
+      audit: audit,
+      warehouseName:
+          'Almacén Principal', // Placeholder until warehouse name is available in entity/provider
+      userName: userName,
+      title: audit.status == InventoryAuditStatus.completed
+          ? 'Reporte Final de Auditoría'
+          : 'Reporte Preliminar de Auditoría',
     );
   }
 

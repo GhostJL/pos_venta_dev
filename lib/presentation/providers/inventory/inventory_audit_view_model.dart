@@ -32,6 +32,10 @@ class InventoryAuditViewModel extends _$InventoryAuditViewModel {
       final audit = await ref
           .read(inventoryAuditRepositoryProvider)
           .getAuditById(auditId);
+
+      // Refresh the list so the new audit appears in the sidebar
+      ref.invalidate(inventoryAuditListProvider);
+
       state = AsyncValue.data(audit);
     } catch (e, st) {
       state = AsyncValue.error(e, st);
@@ -146,6 +150,9 @@ class InventoryAuditViewModel extends _$InventoryAuditViewModel {
       final completedAudit = await ref
           .read(inventoryAuditRepositoryProvider)
           .getAuditById(audit.id!);
+
+      // Refresh the list so the status update appears in the sidebar
+      ref.invalidate(inventoryAuditListProvider);
 
       state = const AsyncValue.data(null); // Audit closed in the current view
       return completedAudit;
