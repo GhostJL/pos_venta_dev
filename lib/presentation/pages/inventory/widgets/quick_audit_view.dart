@@ -95,102 +95,116 @@ class _QuickAuditViewState extends ConsumerState<QuickAuditView> {
                     ),
                   ),
                 ),
-                child: Padding(
-                  padding: const EdgeInsets.all(24.0),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      // Product Icon
-                      Container(
-                        padding: const EdgeInsets.all(20),
-                        decoration: BoxDecoration(
-                          color: const Color(
-                            0xFF0F172A,
-                          ), // Dark Navy from image
-                          borderRadius: BorderRadius.circular(16),
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    return SingleChildScrollView(
+                      child: ConstrainedBox(
+                        constraints: BoxConstraints(
+                          minHeight: constraints.maxHeight,
                         ),
-                        child: const Icon(
-                          Icons.inventory_2_outlined,
-                          size: 48,
-                          color: Colors.white,
-                        ),
-                      ),
-                      const SizedBox(height: 24),
+                        child: Padding(
+                          padding: const EdgeInsets.all(24.0),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              // Product Icon
+                              Container(
+                                padding: const EdgeInsets.all(20),
+                                decoration: BoxDecoration(
+                                  color: const Color(
+                                    0xFF0F172A,
+                                  ), // Dark Navy from image
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                                child: const Icon(
+                                  Icons.inventory_2_outlined,
+                                  size: 48,
+                                  color: Colors.white,
+                                ),
+                              ),
+                              const SizedBox(height: 24),
 
-                      // Product Name & Variant
-                      Text(
-                        item.productName ?? 'Producto Desconocido',
-                        style: theme.textTheme.headlineSmall?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: const Color(0xFF0F172A),
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                      if (item.variantName != null) ...[
-                        const SizedBox(height: 8),
-                        Text(
-                          item.variantName!,
-                          style: theme.textTheme.titleMedium?.copyWith(
-                            color: const Color(0xFF64748B), // Slate 500
-                            fontWeight: FontWeight.w600,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                      ],
-                      const SizedBox(height: 16),
-                      // Code Badge
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 8,
-                        ),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFF1F5F9), // Slate 100
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Text(
-                          'Código: ${item.barcode ?? 'N/A'}',
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            fontFamily: 'Monospace',
-                            color: const Color(0xFF334155),
-                          ),
-                        ),
-                      ),
+                              // Product Name & Variant
+                              Text(
+                                item.productName ?? 'Producto Desconocido',
+                                style: theme.textTheme.headlineSmall?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  color: const Color(0xFF0F172A),
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                              if (item.variantName != null) ...[
+                                const SizedBox(height: 8),
+                                Text(
+                                  item.variantName!,
+                                  style: theme.textTheme.titleMedium?.copyWith(
+                                    color: const Color(0xFF64748B), // Slate 500
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ],
+                              const SizedBox(height: 16),
+                              // Code Badge
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 8,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFF1F5F9), // Slate 100
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Text(
+                                  'Código: ${item.barcode ?? 'N/A'}',
+                                  style: theme.textTheme.bodyMedium?.copyWith(
+                                    fontFamily: 'Monospace',
+                                    color: const Color(0xFF334155),
+                                  ),
+                                ),
+                              ),
 
-                      const Spacer(),
-
-                      // Counts Grid (Like the image's "Existencia / Costo / Precio")
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Expanded(
-                            child: _buildMetricItem(
-                              context,
-                              'Sistema',
-                              '${item.expectedQuantity}',
-                              isPrimary: false,
-                            ),
+                              const SizedBox(
+                                height: 24,
+                              ), // Replaced Spacer with fixed spacing
+                              // Counts Grid (Like the image's "Existencia / Costo / Precio")
+                              Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Expanded(
+                                    child: _buildMetricItem(
+                                      context,
+                                      'Sistema',
+                                      '${item.expectedQuantity}',
+                                      isPrimary: false,
+                                    ),
+                                  ),
+                                  Padding(
+                                    padding: const EdgeInsets.only(top: 12),
+                                    child: Icon(
+                                      Icons.arrow_forward,
+                                      color: theme.dividerColor,
+                                    ),
+                                  ),
+                                  Expanded(
+                                    child: _buildMetricItem(
+                                      context,
+                                      'Físico Sugerido',
+                                      '${item.expectedQuantity}', // Default to expected
+                                      isPrimary: true,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(
+                                height: 24,
+                              ), // Replaced Spacer with fixed spacing
+                            ],
                           ),
-                          Padding(
-                            padding: const EdgeInsets.only(top: 12),
-                            child: Icon(
-                              Icons.arrow_forward,
-                              color: theme.dividerColor,
-                            ),
-                          ),
-                          Expanded(
-                            child: _buildMetricItem(
-                              context,
-                              'Físico Sugerido',
-                              '${item.expectedQuantity}', // Default to expected
-                              isPrimary: true,
-                            ),
-                          ),
-                        ],
+                        ),
                       ),
-                      const Spacer(),
-                    ],
-                  ),
+                    );
+                  },
                 ),
               ),
             ),
@@ -364,6 +378,14 @@ class _QuickAuditViewState extends ConsumerState<QuickAuditView> {
                 border: OutlineInputBorder(),
                 suffixText: 'Unidades',
               ),
+              textInputAction: TextInputAction.done,
+              onSubmitted: (value) {
+                final val = double.tryParse(value) ?? 0.0;
+                Navigator.pop(context);
+                ref
+                    .read(inventoryAuditViewModelProvider.notifier)
+                    .confirmQuickAuditItemAndNext(val);
+              },
             ),
           ],
         ),
