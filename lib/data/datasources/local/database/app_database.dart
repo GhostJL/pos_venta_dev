@@ -53,7 +53,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 45; // Bumped to 45 for inventory audit tables
+  int get schemaVersion => 46; // Bumped to 46 for Spanish localization trigger
 
   static QueryExecutor _openConnection() {
     return driftDatabase(
@@ -72,6 +72,32 @@ class AppDatabase extends _$AppDatabase {
       await m.createAll();
     },
     onUpgrade: (Migrator m, int from, int to) async {
+      if (from < 46) {
+        // Migration to 46: Translate Trigger "audit_inventory_manual_changes" to Spanish
+        await customStatement(
+          'DROP TRIGGER IF EXISTS audit_inventory_manual_changes',
+        );
+
+        await customStatement('''
+          CREATE TRIGGER IF NOT EXISTS audit_inventory_manual_changes
+          AFTER UPDATE OF quantity_on_hand, quantity_reserved ON inventory
+          WHEN NEW.quantity_on_hand != OLD.quantity_on_hand 
+            OR NEW.quantity_reserved != OLD.quantity_reserved
+          BEGIN
+            INSERT INTO inventory_movements (
+              product_id, warehouse_id, variant_id, movement_type,
+              quantity, quantity_before, quantity_after,
+              reason, performed_by, movement_date
+            )
+            VALUES (
+              NEW.product_id, NEW.warehouse_id, NEW.variant_id, 'adjustment',
+              NEW.quantity_on_hand - OLD.quantity_on_hand,
+              OLD.quantity_on_hand, NEW.quantity_on_hand,
+              'Registro automático de auditoría', 1, CAST(strftime('%s', 'now') AS INTEGER)
+            );
+          END;
+        ''');
+      }
       if (from < 37) {
         // Migration to version 37: Add credit columns to customers table
         await m.addColumn(customers, customers.creditLimitCents);

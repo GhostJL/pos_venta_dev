@@ -88,7 +88,7 @@ class _MovementTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final dateFormat = DateFormat('dd/MM/yyyy HH:mm');
+    final dateFormat = DateFormat('dd/MM/yyyy HH:mm', 'es');
     final isPositive = movement.quantity > 0;
     final color = isPositive ? Colors.green : Colors.red;
     final icon = isPositive ? Icons.arrow_circle_down : Icons.arrow_circle_up;

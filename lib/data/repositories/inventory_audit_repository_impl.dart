@@ -284,14 +284,15 @@ class InventoryAuditRepositoryImpl implements InventoryAuditRepository {
                   warehouseId: auditRow.warehouseId,
                   variantId: Value(item.variantId),
                   movementType:
-                      'audit_adjustment', // More specific than 'reconciliation'
+                      'adjustment', // Standard enum value, displayed as "Ajuste" in UI
                   quantity: delta,
                   quantityBefore: currentSystemQuantity,
                   quantityAfter: item.countedQuantity,
                   referenceType: const Value('audit'),
                   referenceId: Value(auditId),
                   reason: Value(
-                    reason ?? 'Audit #$auditId Adjustment (Lots Updated)',
+                    reason ??
+                        'Ajuste de Auditoría #$auditId (Lotes Actualizados)',
                   ),
                   performedBy: performedBy,
                   movementDate: Value(DateTime.now()),

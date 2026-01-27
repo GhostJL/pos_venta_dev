@@ -45,7 +45,7 @@ class PurchaseTableRow extends StatelessWidget {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final currencyFormat = NumberFormat.currency(symbol: '\$');
-    final dateFormat = DateFormat('dd/MM/yyyy HH:mm');
+    final dateFormat = DateFormat('dd/MM/yyyy HH:mm', 'es');
 
     final menuItems = [
       const PopupMenuItem(
