@@ -6,10 +6,12 @@ import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:open_filex/open_filex.dart';
 import 'package:posventa/domain/entities/inventory_audit.dart';
+import 'package:posventa/domain/entities/store.dart';
 
 class InventoryAuditPdfBuilder {
   static Future<void> generateAndOpen({
     required InventoryAuditEntity audit,
+    required Store? store,
     String? warehouseName,
     String? userName,
     String? title,
@@ -19,9 +21,8 @@ class InventoryAuditPdfBuilder {
     // Custom Font handling could ideally go here if we had custom fonts assets
 
     // Header Data
-    final storeName =
-        "Abarrotes El Tío"; // In a real app, inject this via ref or config
-    final storeAddress = "Calle Principal #123, Ciudad";
+    final storeName = store?.name ?? "Nombre de la Tienda";
+    final storeAddress = store?.address ?? "Dirección de la Tienda";
     final effectiveWarehouseName =
         warehouseName ?? 'Almacén #${audit.warehouseId}';
     final auditorName = userName ?? 'ID: ${audit.performedBy}';

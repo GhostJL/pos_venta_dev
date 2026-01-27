@@ -35,7 +35,7 @@ final class InventoryAuditViewModelProvider
 }
 
 String _$inventoryAuditViewModelHash() =>
-    r'7981d7f3be876efee623278c39596721a92dd665';
+    r'0c9648d0bc26f012d9c299e3dcf245725e51f1c7';
 
 abstract class _$InventoryAuditViewModel
     extends $AsyncNotifier<InventoryAuditEntity?> {

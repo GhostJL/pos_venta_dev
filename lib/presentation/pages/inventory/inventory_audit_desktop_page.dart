@@ -5,6 +5,7 @@ import 'package:posventa/domain/entities/inventory_audit.dart';
 import 'package:posventa/presentation/providers/inventory/inventory_audit_view_model.dart';
 import 'package:posventa/presentation/widgets/inventory/inventory_audit_pdf_builder.dart';
 import 'package:posventa/presentation/providers/auth_provider.dart';
+import 'package:posventa/presentation/providers/store_provider.dart';
 // Removed InventoryScanWidget import as we are implementing unified logic here
 
 class InventoryAuditDesktopPage extends ConsumerStatefulWidget {
@@ -374,6 +375,12 @@ class _InventoryAuditDesktopPageState
                   ),
                 ),
                 const SizedBox(width: 12),
+                OutlinedButton.icon(
+                  onPressed: () => _viewReport(audit),
+                  icon: const Icon(Icons.picture_as_pdf),
+                  label: const Text('Ver Reporte'),
+                ),
+                const SizedBox(width: 12),
                 OutlinedButton(
                   onPressed: () =>
                       ref.invalidate(inventoryAuditViewModelProvider),
@@ -653,9 +660,11 @@ class _InventoryAuditDesktopPageState
                 final user = ref.read(authProvider).user;
                 final userName =
                     user?.name ?? 'Usuario #${ref.read(authProvider).user?.id}';
+                final store = await ref.read(storeProvider.future);
 
                 await InventoryAuditPdfBuilder.generateAndOpen(
                   audit: completedAudit,
+                  store: store,
                   warehouseName:
                       'Almacén Principal', // Ideally fetch from a warehouse provider or active selection
                   userName: userName,
@@ -675,9 +684,11 @@ class _InventoryAuditDesktopPageState
   void _viewReport(InventoryAuditEntity audit) async {
     final user = ref.read(authProvider).user;
     final userName = user?.name ?? 'Usuario #${user?.id}';
+    final store = await ref.read(storeProvider.future);
 
     await InventoryAuditPdfBuilder.generateAndOpen(
       audit: audit,
+      store: store,
       warehouseName:
           'Almacén Principal', // Placeholder until warehouse name is available in entity/provider
       userName: userName,
