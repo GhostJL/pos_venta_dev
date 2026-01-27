@@ -11,7 +11,15 @@ class InventoryAuditRepositoryImpl implements InventoryAuditRepository {
 
   @override
   Future<List<InventoryAuditEntity>> getAllAudits() async {
-    final rows = await db.select(db.inventoryAudits).get();
+    final rows =
+        await (db.select(db.inventoryAudits)..orderBy([
+              (t) => OrderingTerm(
+                expression: t.auditDate,
+                mode: OrderingMode.desc,
+              ),
+              (t) => OrderingTerm(expression: t.id, mode: OrderingMode.desc),
+            ]))
+            .get();
     return rows.map((row) => _mapToEntity(row)).toList();
   }
 
