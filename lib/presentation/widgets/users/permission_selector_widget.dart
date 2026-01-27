@@ -93,7 +93,7 @@ class _PermissionSelectorWidgetState
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          entry.key,
+                          _getModuleDisplayName(entry.key),
                           style: Theme.of(context).textTheme.titleSmall
                               ?.copyWith(
                                 fontWeight: FontWeight.bold,
@@ -161,5 +161,30 @@ class _PermissionSelectorWidgetState
         ),
       ),
     );
+  }
+
+  String _getModuleDisplayName(String rawModule) {
+    switch (rawModule.toLowerCase()) {
+      case 'pos':
+        return 'Punto de Venta';
+      case 'cash':
+        return 'Caja';
+      case 'inventory':
+        return 'Inventario';
+      case 'reports':
+        return 'Reportes';
+      case 'catalog':
+        return 'Catálogo';
+      case 'customer':
+        return 'Clientes';
+      case 'settings':
+        return 'Configuración';
+      case 'users':
+        return 'Usuarios'; // In case it appears
+      default:
+        // Capitalize first letter as fallback
+        if (rawModule.isEmpty) return rawModule;
+        return rawModule[0].toUpperCase() + rawModule.substring(1);
+    }
   }
 }
