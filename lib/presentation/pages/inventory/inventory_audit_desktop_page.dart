@@ -169,7 +169,10 @@ class _InventoryAuditDesktopPageState
                       child: Text('#${audit.id}'),
                     ),
                     title: Text(
-                      DateFormat('dd MMM yyyy, HH:mm').format(audit.auditDate),
+                      DateFormat(
+                        'dd MMM yyyy, HH:mm',
+                        'es',
+                      ).format(audit.auditDate),
                     ),
                     subtitle: Text(
                       statusText,
@@ -586,12 +589,29 @@ class _InventoryAuditDesktopPageState
   }
 
   void _confirmCompleteAudit(BuildContext context, WidgetRef ref) {
+    final reasonController = TextEditingController();
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('¿Finalizar Auditoría?'),
-        content: const Text(
-          'Esta acción actualizará el stock de todos los productos y cerrará la auditoría de forma permanente.\n\nNo se podrán realizar más cambios.\n\n¿Está seguro?',
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Esta acción actualizará el stock de todos los productos y cerrará la auditoría de forma permanente.\n\nNo se podrán realizar más cambios.',
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: reasonController,
+              decoration: const InputDecoration(
+                labelText: 'Motivo / Comentarios (Opcional)',
+                hintText: 'Ej: Diferencias por merma, Ajuste anual...',
+                border: OutlineInputBorder(),
+              ),
+              maxLines: 2,
+            ),
+          ],
         ),
         actions: [
           TextButton(
@@ -602,7 +622,7 @@ class _InventoryAuditDesktopPageState
             onPressed: () {
               ref
                   .read(inventoryAuditViewModelProvider.notifier)
-                  .completeAudit();
+                  .completeAudit(reason: reasonController.text);
               Navigator.pop(context);
             },
             style: FilledButton.styleFrom(backgroundColor: Colors.green[700]),

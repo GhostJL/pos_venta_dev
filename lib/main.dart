@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:posventa/core/router/router.dart';
 import 'package:posventa/core/theme/theme.dart';
@@ -9,7 +10,8 @@ import 'package:window_manager/window_manager.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await initializeDateFormatting();
+  await initializeDateFormatting('es');
+  Intl.defaultLocale = 'es';
 
   // Initialize window_manager for Desktop platforms
   if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {

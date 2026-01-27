@@ -13,6 +13,6 @@ abstract class InventoryAuditRepository {
   Future<void> createAuditItems(List<InventoryAuditItemEntity> items);
 
   // Specific operations
-  Future<void> completeAudit(int auditId, int performedBy);
+  Future<void> completeAudit(int auditId, int performedBy, {String? reason});
   Future<void> cancelAudit(int auditId);
 }

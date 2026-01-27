@@ -70,7 +70,10 @@ class InventoryAuditMobilePage extends ConsumerWidget {
               return ListTile(
                 leading: CircleAvatar(child: Text('#${audit.id}')),
                 title: Text(
-                  DateFormat('dd MMM yyyy, HH:mm').format(audit.auditDate),
+                  DateFormat(
+                    'dd MMM yyyy, HH:mm',
+                    'es',
+                  ).format(audit.auditDate),
                 ),
                 subtitle: Text(
                   audit.status.name.toUpperCase(),
@@ -352,12 +355,28 @@ class InventoryAuditMobilePage extends ConsumerWidget {
   }
 
   void _confirmCompleteAudit(BuildContext context, WidgetRef ref) {
+    final reasonController = TextEditingController();
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('¿Finalizar?'),
-        content: const Text(
-          'El inventario se ajustará a lo contado. Esta acción no se puede deshacer.',
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'El inventario se ajustará a lo contado. Esta acción no se puede deshacer.',
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: reasonController,
+              decoration: const InputDecoration(
+                labelText: 'Motivo / Nota (Opcional)',
+                border: OutlineInputBorder(),
+              ),
+              maxLines: 2,
+            ),
+          ],
         ),
         actions: [
           TextButton(
@@ -368,7 +387,7 @@ class InventoryAuditMobilePage extends ConsumerWidget {
             onPressed: () {
               ref
                   .read(inventoryAuditViewModelProvider.notifier)
-                  .completeAudit();
+                  .completeAudit(reason: reasonController.text);
               Navigator.pop(context);
             },
             style: FilledButton.styleFrom(backgroundColor: Colors.green),

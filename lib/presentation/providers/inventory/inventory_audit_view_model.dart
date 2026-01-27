@@ -1,6 +1,7 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:posventa/domain/entities/inventory_audit.dart';
 import 'package:posventa/presentation/providers/di/inventory_di.dart';
+import 'package:posventa/presentation/providers/auth_provider.dart';
 
 part 'inventory_audit_view_model.g.dart';
 
@@ -14,9 +15,11 @@ class InventoryAuditViewModel extends _$InventoryAuditViewModel {
   Future<void> startNewAudit(int warehouseId, {String? notes}) async {
     state = const AsyncValue.loading();
     try {
-      // Get current user (for simplified example, we use ID 1, but should come from auth provider)
-      // TODO: Get real user ID
-      const performedBy = 1;
+      final user = ref.read(authProvider).user;
+      if (user == null || user.id == null) {
+        throw Exception('Usuario no autenticado');
+      }
+      final performedBy = user.id!;
 
       final auditId = await ref
           .read(startAuditUseCaseProvider)
@@ -95,15 +98,21 @@ class InventoryAuditViewModel extends _$InventoryAuditViewModel {
     }
   }
 
-  Future<void> completeAudit() async {
+  Future<void> completeAudit({String? reason}) async {
     final audit = state.value;
     if (audit == null) return;
 
     state = const AsyncValue.loading();
     try {
-      // TODO: Get real user ID
-      const performedBy = 1;
-      await ref.read(completeAuditUseCaseProvider).call(audit.id!, performedBy);
+      final user = ref.read(authProvider).user;
+      if (user == null || user.id == null) {
+        throw Exception('Usuario no autenticado');
+      }
+      final performedBy = user.id!;
+
+      await ref
+          .read(completeAuditUseCaseProvider)
+          .call(audit.id!, performedBy, reason: reason);
       state = const AsyncValue.data(null); // Audit closed
     } catch (e, st) {
       state = AsyncValue.error(e, st);

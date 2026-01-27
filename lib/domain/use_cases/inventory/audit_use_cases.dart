@@ -53,8 +53,8 @@ class CompleteAuditUseCase {
 
   CompleteAuditUseCase(this.auditRepository);
 
-  Future<void> call(int auditId, int performedBy) async {
-    await auditRepository.completeAudit(auditId, performedBy);
+  Future<void> call(int auditId, int performedBy, {String? reason}) async {
+    await auditRepository.completeAudit(auditId, performedBy, reason: reason);
   }
 }
 

@@ -129,7 +129,11 @@ class InventoryAuditRepositoryImpl implements InventoryAuditRepository {
   }
 
   @override
-  Future<void> completeAudit(int auditId, int performedBy) async {
+  Future<void> completeAudit(
+    int auditId,
+    int performedBy, {
+    String? reason,
+  }) async {
     await db.transaction(() async {
       final auditRow = await (db.select(
         db.inventoryAudits,
@@ -286,7 +290,9 @@ class InventoryAuditRepositoryImpl implements InventoryAuditRepository {
                   quantityAfter: item.countedQuantity,
                   referenceType: const Value('audit'),
                   referenceId: Value(auditId),
-                  reason: Value('Audit #$auditId Adjustment (Lots Updated)'),
+                  reason: Value(
+                    reason ?? 'Audit #$auditId Adjustment (Lots Updated)',
+                  ),
                   performedBy: performedBy,
                   movementDate: Value(DateTime.now()),
                 ),
