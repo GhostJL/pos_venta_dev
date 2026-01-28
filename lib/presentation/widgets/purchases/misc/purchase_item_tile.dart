@@ -79,50 +79,54 @@ class _PurchaseItemHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      crossAxisAlignment: CrossAxisAlignment.center,
+    // Construct the formatted variant string
+    String? variantString;
+    if (item.variantName != null) {
+      variantString = item.variantName;
+      if (item.linkedVariantName != null) {
+        variantString = '$variantString → ${item.linkedVariantName}';
+      }
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Expanded(
-          child: Text(
-            item.productName ?? 'Producto #${item.productId}',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-              color: Theme.of(context).colorScheme.primary,
-              height: 1.3,
-            ),
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
+        Text(
+          item.productName ?? 'Producto #${item.productId}',
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w700,
+            color: Theme.of(context).colorScheme.primary,
+            height: 1.3,
+            letterSpacing: -0.5,
           ),
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
         ),
-        if (variant != null) ...[
-          const SizedBox(width: 8),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.secondary.withAlpha(55),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  Icons.inventory_2_rounded,
-                  size: 12,
-                  color: Theme.of(context).colorScheme.primary,
-                ),
-                const SizedBox(width: 4),
-                Text(
-                  '${variant!.quantity.toStringAsFixed(0)} un/caja',
+        if (variantString != null) ...[
+          const SizedBox(height: 4),
+          Row(
+            children: [
+              Icon(
+                Icons.sell_outlined,
+                size: 14,
+                color: Theme.of(context).colorScheme.tertiary,
+              ),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  variantString,
                   style: TextStyle(
-                    fontSize: 11,
-                    color: Theme.of(context).colorScheme.primary,
+                    fontSize: 13,
+                    color: Theme.of(context).colorScheme.tertiary,
                     fontWeight: FontWeight.w600,
+                    fontStyle: FontStyle.italic,
                   ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ],
       ],

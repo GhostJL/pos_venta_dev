@@ -17,16 +17,17 @@ class PurchaseDetailMobile extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           PurchaseInfoCard(purchase: purchase),
-          const SizedBox(height: 24),
-          Text('Productos', style: Theme.of(context).textTheme.titleLarge),
-          const SizedBox(height: 12),
-          PurchaseItemsList(items: purchase.items, purchase: purchase),
-          const SizedBox(height: 24),
+          const SizedBox(height: 16),
           PurchaseTotalsCard(
             subtotalCents: purchase.subtotalCents,
             taxCents: purchase.taxCents,
             totalCents: purchase.totalCents,
           ),
+          const SizedBox(height: 24),
+          Text('Productos', style: Theme.of(context).textTheme.titleLarge),
+          const SizedBox(height: 12),
+          PurchaseItemsList(items: purchase.items, purchase: purchase),
+          const SizedBox(height: 24),
         ],
       ),
     );
