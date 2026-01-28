@@ -4,7 +4,8 @@ import 'package:posventa/domain/entities/product_variant.dart';
 
 import 'package:posventa/domain/entities/supplier.dart';
 import 'package:posventa/presentation/providers/purchase_form_provider.dart';
-import 'package:posventa/presentation/widgets/purchases/forms/purchase_header_form.dart';
+import 'package:posventa/presentation/widgets/purchases/forms/purchase_input_header.dart';
+import 'package:posventa/presentation/widgets/purchases/forms/purchase_summary_header.dart';
 import 'package:posventa/presentation/widgets/purchases/lists/purchase_items_list_widget.dart';
 import 'package:posventa/presentation/widgets/purchases/misc/purchase_product_grid.dart';
 import 'package:posventa/presentation/widgets/purchases/cards/purchase_totals_footer.dart';
@@ -86,11 +87,19 @@ class PurchaseFormDesktopLayout extends StatelessWidget {
                               letterSpacing: -0.5,
                             ),
                           ),
+                          const SizedBox(height: 8),
                           Text(
-                            'Seleccione los artículos para agregar a la orden.',
+                            'Seleccione proveedor y artículos para agregar a la orden.',
                             style: textTheme.bodyMedium?.copyWith(
                               color: colorScheme.onSurfaceVariant,
                             ),
+                          ),
+                          const SizedBox(height: 16),
+                          PurchaseInputHeader(
+                            selectedSupplier: formState.supplier,
+                            invoiceNumber: formState.invoiceNumber,
+                            onSupplierChanged: onSupplierChanged,
+                            onInvoiceNumberChanged: onInvoiceNumberChanged,
                           ),
                         ],
                       ),
@@ -125,14 +134,12 @@ class PurchaseFormDesktopLayout extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(height: 20),
-                        PurchaseHeaderForm(
+                        PurchaseSummaryHeader(
                           selectedSupplier: formState.supplier,
                           selectedWarehouse: formState.warehouse,
                           invoiceNumber: formState.invoiceNumber,
                           purchaseDate:
                               formState.purchaseDate ?? DateTime.now(),
-                          onSupplierChanged: onSupplierChanged,
-                          onInvoiceNumberChanged: onInvoiceNumberChanged,
                         ),
                         const SizedBox(height: 32),
                         Row(

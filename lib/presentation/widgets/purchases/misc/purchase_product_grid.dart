@@ -209,15 +209,6 @@ class _PurchaseProductGridState extends ConsumerState<PurchaseProductGrid>
 
               return productsAsync.when(
                 data: (products) {
-                  if (products.isEmpty) {
-                    return const Center(
-                      child: Text(
-                        'No se encontraron productos',
-                        style: TextStyle(color: Color(0xFF9E9E9E)),
-                      ),
-                    );
-                  }
-
                   // Flatten products and variants into grid items
                   final List<PurchaseGridItem> gridItems = [];
                   for (final product in products) {
@@ -239,6 +230,19 @@ class _PurchaseProductGridState extends ConsumerState<PurchaseProductGrid>
                       // Add simple product
                       gridItems.add(PurchaseGridItem(product: product));
                     }
+                  }
+
+                  if (gridItems.isEmpty) {
+                    final message = widget.supplierId != null
+                        ? 'No hay variantes de compra de ese proveedor'
+                        : 'No se encontraron productos';
+
+                    return Center(
+                      child: Text(
+                        message,
+                        style: const TextStyle(color: Color(0xFF9E9E9E)),
+                      ),
+                    );
                   }
 
                   // Determinar número de columnas según el tamaño

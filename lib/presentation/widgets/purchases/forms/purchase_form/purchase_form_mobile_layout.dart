@@ -3,7 +3,8 @@ import 'package:posventa/domain/entities/product.dart';
 import 'package:posventa/domain/entities/product_variant.dart';
 
 import 'package:posventa/presentation/providers/purchase_form_provider.dart';
-import 'package:posventa/presentation/widgets/purchases/forms/purchase_header_form.dart';
+import 'package:posventa/presentation/widgets/purchases/forms/purchase_input_header.dart';
+import 'package:posventa/presentation/widgets/purchases/forms/purchase_summary_header.dart';
 import 'package:posventa/presentation/widgets/purchases/lists/purchase_items_list_widget.dart';
 import 'package:posventa/presentation/widgets/purchases/misc/purchase_product_grid.dart';
 import 'package:posventa/presentation/widgets/purchases/cards/purchase_totals_footer.dart';
@@ -74,6 +75,15 @@ class PurchaseFormMobileLayout extends StatelessWidget {
               // Tab 1: Product Grid
               Column(
                 children: [
+                  Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: PurchaseInputHeader(
+                      selectedSupplier: formState.supplier,
+                      invoiceNumber: formState.invoiceNumber,
+                      onSupplierChanged: onSupplierChanged,
+                      onInvoiceNumberChanged: onInvoiceNumberChanged,
+                    ),
+                  ),
                   Expanded(
                     child: PurchaseProductGrid(
                       onProductSelected: onProductSelected,
@@ -94,14 +104,12 @@ class PurchaseFormMobileLayout extends StatelessWidget {
                     child: ListView(
                       padding: const EdgeInsets.all(16),
                       children: [
-                        PurchaseHeaderForm(
+                        PurchaseSummaryHeader(
                           selectedSupplier: formState.supplier,
                           selectedWarehouse: formState.warehouse,
                           invoiceNumber: formState.invoiceNumber,
                           purchaseDate:
                               formState.purchaseDate ?? DateTime.now(),
-                          onSupplierChanged: onSupplierChanged,
-                          onInvoiceNumberChanged: onInvoiceNumberChanged,
                         ),
                         const SizedBox(height: 24),
                         Text(
