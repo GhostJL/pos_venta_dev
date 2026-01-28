@@ -1,5 +1,5 @@
-import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:posventa/domain/entities/product.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:posventa/domain/entities/product_variant.dart';
 import 'package:posventa/domain/entities/purchase.dart';
 import 'package:posventa/domain/entities/purchase_item.dart';
@@ -8,6 +8,7 @@ import 'package:posventa/domain/entities/warehouse.dart';
 import 'package:posventa/presentation/providers/auth_provider.dart';
 import 'package:posventa/presentation/providers/purchase_providers.dart';
 import 'package:posventa/presentation/providers/purchase_item_providers.dart';
+import 'package:posventa/presentation/providers/providers.dart'; // For searchProductsProvider
 import 'package:posventa/core/utils/purchase_calculations.dart';
 import 'package:uuid/uuid.dart';
 
@@ -216,6 +217,22 @@ class PurchaseFormNotifier extends _$PurchaseFormNotifier {
     }
   }
 
+  void setSupplier(Supplier supplier) {
+    state = state.copyWith(supplier: supplier);
+  }
+
+  void setWarehouse(Warehouse warehouse) {
+    state = state.copyWith(warehouse: warehouse);
+  }
+
+  void setInvoiceNumber(String invoiceNumber) {
+    state = state.copyWith(invoiceNumber: invoiceNumber);
+  }
+
+  void setPurchaseDate(DateTime date) {
+    state = state.copyWith(purchaseDate: date);
+  }
+
   void clearError() {
     state = state.copyWith(error: null);
   }
@@ -295,8 +312,27 @@ class PurchaseItemFormNotifier extends _$PurchaseItemFormNotifier {
       state = const PurchaseItemFormState(isLoading: false);
       return true;
     } catch (e) {
-      state = PurchaseItemFormState(isLoading: false, error: e.toString());
       return false;
     }
   }
+}
+
+@riverpod
+Future<List<Product>> purchaseProductList(
+  Ref ref, {
+  int? supplierId,
+  String query = '',
+}) async {
+  final searchProducts = ref.watch(searchProductsProvider);
+
+  final result = await searchProducts.call(
+    query,
+    supplierId: supplierId,
+    limit: (query.isEmpty && supplierId == null) ? 50 : null,
+  );
+
+  return result.fold(
+    (failure) => throw failure.message,
+    (products) => products,
+  );
 }

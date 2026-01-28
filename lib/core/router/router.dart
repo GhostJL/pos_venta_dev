@@ -44,7 +44,7 @@ import 'package:posventa/presentation/pages/products/products_page.dart';
 import 'package:posventa/presentation/pages/products/bulk_import_page.dart';
 import 'package:posventa/presentation/pages/purchase/purchase_detail_page.dart';
 import 'package:posventa/presentation/pages/purchase/purchase_form_page.dart';
-import 'package:posventa/presentation/pages/purchase/purchase_header_page.dart';
+
 import 'package:posventa/presentation/pages/purchase/purchase_item_detail_page.dart';
 import 'package:posventa/presentation/pages/purchase/purchase_item_form_page.dart';
 import 'package:posventa/presentation/pages/purchase/purchase_items_page.dart';
@@ -311,8 +311,7 @@ final routerProvider = Provider<GoRouter>((ref) {
             pageBuilder: (context, state) {
               final id = state.pathParameters['id']!;
               if (id == 'new') {
-                // Step 1: Header page
-                return const AppTransitionPage(child: PurchaseHeaderPage());
+                return const AppTransitionPage(child: PurchaseFormPage());
               }
               return AppTransitionPage(
                 child: PurchaseDetailPage(purchaseId: int.parse(id)),
@@ -328,16 +327,7 @@ final routerProvider = Provider<GoRouter>((ref) {
               );
             },
           ),
-          // Step 2: Products page (receives header data)
-          GoRoute(
-            path: '/purchases/new/products',
-            pageBuilder: (context, state) {
-              final headerData = state.extra as Map<String, dynamic>?;
-              return AppTransitionPage(
-                child: PurchaseFormPage(headerData: headerData),
-              );
-            },
-          ),
+          // Purchase Items Routes
           // Purchase Items Routes
           GoRoute(
             path: '/purchase-items',

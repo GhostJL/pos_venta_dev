@@ -15,6 +15,7 @@ class SearchProducts {
     String? sortOrder,
     bool onlyWithStock = false,
     List<int>? ids,
+    int? supplierId,
   }) {
     return repository.getProducts(
       query: query,
@@ -23,6 +24,7 @@ class SearchProducts {
       sortOrder: sortOrder,
       onlyWithStock: onlyWithStock,
       ids: ids,
+      supplierId: supplierId,
     );
   }
 }

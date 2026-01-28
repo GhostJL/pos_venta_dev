@@ -3,10 +3,11 @@ import 'package:posventa/domain/entities/product.dart';
 import 'package:posventa/domain/entities/product_variant.dart';
 
 import 'package:posventa/presentation/providers/purchase_form_provider.dart';
-import 'package:posventa/presentation/widgets/purchases/cards/purchase_header_card.dart';
+import 'package:posventa/presentation/widgets/purchases/forms/purchase_header_form.dart';
 import 'package:posventa/presentation/widgets/purchases/lists/purchase_items_list_widget.dart';
 import 'package:posventa/presentation/widgets/purchases/misc/purchase_product_grid.dart';
 import 'package:posventa/presentation/widgets/purchases/cards/purchase_totals_footer.dart';
+import 'package:posventa/domain/entities/supplier.dart';
 
 class PurchaseFormMobileLayout extends StatelessWidget {
   final PurchaseFormState formState;
@@ -16,6 +17,8 @@ class PurchaseFormMobileLayout extends StatelessWidget {
   final Function(int, double) onQuantityChanged;
   final VoidCallback onSavePurchase;
   final GlobalKey<FormState> formKey;
+  final ValueChanged<Supplier?> onSupplierChanged;
+  final ValueChanged<String> onInvoiceNumberChanged;
 
   const PurchaseFormMobileLayout({
     super.key,
@@ -26,6 +29,8 @@ class PurchaseFormMobileLayout extends StatelessWidget {
     required this.onQuantityChanged,
     required this.onSavePurchase,
     required this.formKey,
+    required this.onSupplierChanged,
+    required this.onInvoiceNumberChanged,
   });
 
   @override
@@ -72,6 +77,7 @@ class PurchaseFormMobileLayout extends StatelessWidget {
                   Expanded(
                     child: PurchaseProductGrid(
                       onProductSelected: onProductSelected,
+                      supplierId: formState.supplier?.id,
                     ),
                   ),
                   _MiniSummary(
@@ -88,15 +94,15 @@ class PurchaseFormMobileLayout extends StatelessWidget {
                     child: ListView(
                       padding: const EdgeInsets.all(16),
                       children: [
-                        if (formState.supplier != null &&
-                            formState.warehouse != null)
-                          PurchaseHeaderCard(
-                            supplier: formState.supplier!,
-                            warehouse: formState.warehouse!,
-                            invoiceNumber: formState.invoiceNumber,
-                            purchaseDate:
-                                formState.purchaseDate ?? DateTime.now(),
-                          ),
+                        PurchaseHeaderForm(
+                          selectedSupplier: formState.supplier,
+                          selectedWarehouse: formState.warehouse,
+                          invoiceNumber: formState.invoiceNumber,
+                          purchaseDate:
+                              formState.purchaseDate ?? DateTime.now(),
+                          onSupplierChanged: onSupplierChanged,
+                          onInvoiceNumberChanged: onInvoiceNumberChanged,
+                        ),
                         const SizedBox(height: 24),
                         Text(
                           'Detalle de Productos',

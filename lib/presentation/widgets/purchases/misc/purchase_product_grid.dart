@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:posventa/domain/entities/product.dart';
 import 'package:posventa/domain/entities/product_variant.dart';
 import 'package:posventa/presentation/providers/product_provider.dart';
+import 'package:posventa/presentation/providers/purchase_form_provider.dart'; // For purchaseProductListProvider
 import 'package:posventa/presentation/widgets/products/shared/product_card.dart';
 import 'package:posventa/presentation/widgets/common/misc/scanner_arguments.dart';
 import 'package:posventa/presentation/mixins/search_debounce_mixin.dart';
@@ -37,8 +38,13 @@ class PurchaseGridItem {
 
 class PurchaseProductGrid extends ConsumerStatefulWidget {
   final Function(Product, ProductVariant?) onProductSelected;
+  final int? supplierId;
 
-  const PurchaseProductGrid({super.key, required this.onProductSelected});
+  const PurchaseProductGrid({
+    super.key,
+    required this.onProductSelected,
+    this.supplierId,
+  });
 
   @override
   ConsumerState<PurchaseProductGrid> createState() =>
@@ -48,6 +54,15 @@ class PurchaseProductGrid extends ConsumerStatefulWidget {
 class _PurchaseProductGridState extends ConsumerState<PurchaseProductGrid>
     with SearchDebounceMixin {
   final TextEditingController _searchController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    // Clear global search query when opening the purchase grid
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(productSearchQueryProvider.notifier).setQuery('');
+    });
+  }
 
   @override
   void dispose() {
@@ -71,7 +86,6 @@ class _PurchaseProductGridState extends ConsumerState<PurchaseProductGrid>
 
     return productsAsync.when(
       data: (products) {
-        // final products = state.products; // Removed
         Product? product;
         ProductVariant? matchedVariant;
 
@@ -185,11 +199,16 @@ class _PurchaseProductGridState extends ConsumerState<PurchaseProductGrid>
         Expanded(
           child: Consumer(
             builder: (context, ref, child) {
-              final productsAsync = ref.watch(productListProvider);
+              final query = ref.watch(productSearchQueryProvider);
+              final productsAsync = ref.watch(
+                purchaseProductListProvider(
+                  supplierId: widget.supplierId,
+                  query: query,
+                ),
+              );
 
               return productsAsync.when(
                 data: (products) {
-                  // final products = state.products; // Removed
                   if (products.isEmpty) {
                     return const Center(
                       child: Text(

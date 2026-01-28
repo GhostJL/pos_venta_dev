@@ -4,18 +4,16 @@ import 'package:go_router/go_router.dart';
 import 'package:posventa/domain/entities/product.dart';
 import 'package:posventa/domain/entities/product_variant.dart';
 import 'package:posventa/domain/entities/purchase_item.dart';
-import 'package:posventa/domain/entities/supplier.dart';
-import 'package:posventa/domain/entities/warehouse.dart';
 import 'package:posventa/presentation/providers/product_provider.dart';
 import 'package:posventa/presentation/providers/purchase_form_provider.dart';
+import 'package:posventa/presentation/providers/warehouse_providers.dart';
 import 'package:posventa/presentation/widgets/purchases/dialogs/purchase_item_dialog.dart';
 import 'package:posventa/presentation/widgets/purchases/forms/purchase_form/purchase_form_mobile_layout.dart';
 import 'package:posventa/presentation/widgets/purchases/forms/purchase_form/purchase_form_desktop_layout.dart';
+import 'package:posventa/presentation/providers/providers.dart';
 
 class PurchaseFormPage extends ConsumerStatefulWidget {
-  final Map<String, dynamic>? headerData;
-
-  const PurchaseFormPage({super.key, this.headerData});
+  const PurchaseFormPage({super.key});
 
   @override
   ConsumerState<PurchaseFormPage> createState() => _PurchaseFormPageState();
@@ -27,32 +25,38 @@ class _PurchaseFormPageState extends ConsumerState<PurchaseFormPage> {
   @override
   void initState() {
     super.initState();
-    _initializeForm();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadDefaults();
+    });
   }
 
-  void _initializeForm() {
-    if (widget.headerData != null) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        ref
-            .read(purchaseFormProvider.notifier)
-            .initialize(
-              supplier: widget.headerData!['supplier'] as Supplier,
-              warehouse: widget.headerData!['warehouse'] as Warehouse,
-              invoiceNumber: widget.headerData!['invoiceNumber'] as String,
-              purchaseDate: widget.headerData!['purchaseDate'] as DateTime,
-            );
+  Future<void> _loadDefaults() async {
+    // Set default date
+    ref.read(purchaseFormProvider.notifier).setPurchaseDate(DateTime.now());
+
+    // Load active session warehouse
+    try {
+      final sessionAsync = ref.read(currentCashSessionProvider);
+      sessionAsync.whenData((session) async {
+        if (session != null) {
+          final warehouses = await ref.read(warehouseProvider.future);
+          final activeWarehouse = warehouses
+              .where((w) => w.id == session.warehouseId)
+              .firstOrNull;
+
+          if (activeWarehouse != null) {
+            ref
+                .read(purchaseFormProvider.notifier)
+                .setWarehouse(activeWarehouse);
+          }
+        }
       });
+    } catch (_) {
+      // handle error?
     }
   }
 
   Future<void> _editItem(int index, PurchaseItem item) async {
-    // Determine product via provider check or reuse
-    // Since we don't hold the full list, we request it by ID via productProvider
-    // Using `ref.read` on a future provider?
-
-    // We can't synchronously get it if not loaded.
-    // But `_editItem` is async.
-
     try {
       final product = await ref.read(productProvider(item.productId).future);
       if (product != null) {
@@ -61,7 +65,11 @@ class _PurchaseFormPageState extends ConsumerState<PurchaseFormPage> {
             : null;
 
         final warehouseId = ref.read(purchaseFormProvider).warehouse?.id;
-        if (warehouseId == null) return;
+
+        if (warehouseId == null) {
+          _showSnackBar('Seleccione un almacén primero');
+          return;
+        }
 
         if (!mounted) return;
 
@@ -80,7 +88,6 @@ class _PurchaseFormPageState extends ConsumerState<PurchaseFormPage> {
         }
       }
     } catch (_) {
-      // Handle error if product load fails or network error
       if (mounted) _showSnackBar('Error cargando producto para edición');
     }
   }
@@ -107,10 +114,7 @@ class _PurchaseFormPageState extends ConsumerState<PurchaseFormPage> {
   void _showSnackBar(String message) {
     ScaffoldMessenger.of(context).hideCurrentSnackBar();
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        duration: const Duration(milliseconds: 500),
-      ),
+      SnackBar(content: Text(message), behavior: SnackBarBehavior.floating),
     );
   }
 
@@ -123,16 +127,6 @@ class _PurchaseFormPageState extends ConsumerState<PurchaseFormPage> {
 
   Future<void> _onQuantityChanged(int index, double quantity) async {
     final item = ref.read(purchaseFormProvider).items[index];
-    // Fetch product to ensure valid update or just pass product stub if we only need basic info?
-    // updateItemQuantity usages `product` to recalculate costs if unit cost changes?
-    // Actually `PurchaseFormNotifier.updateItemQuantity` uses `product` to Re-calculate defaults?
-    // checking `PurchaseFormNotifier`:
-    // updateItemQuantity(index, newQty, product) -> calls PurchaseCalculations.createPurchaseItem...
-    // which effectively just updates totals. It optionally updates unitCost if default logic applies.
-    // If we only change quantity, we might not strictly need the full product re-fetch if we trust `item.unitCost`.
-    // BUT `updateItemQuantity` signature requires `Product`.
-
-    // So we fetch it.
     try {
       final product = await ref.read(productProvider(item.productId).future);
       if (product != null) {
@@ -146,10 +140,12 @@ class _PurchaseFormPageState extends ConsumerState<PurchaseFormPage> {
   @override
   Widget build(BuildContext context) {
     final isMobile = MediaQuery.of(context).size.width < 800;
-    // Removed ref.watch(productNotifierProvider) to avoid full rebuilds on search
     final formState = ref.watch(purchaseFormProvider);
 
-    if (formState.isLoading) {
+    if (formState.isLoading &&
+        formState.items.isEmpty &&
+        formState.warehouse == null) {
+      // Only show full loader if initial load
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
@@ -163,6 +159,12 @@ class _PurchaseFormPageState extends ConsumerState<PurchaseFormPage> {
         onQuantityChanged: _onQuantityChanged,
         onSavePurchase: _savePurchase,
         formKey: _formKey,
+        onSupplierChanged: (s) {
+          if (s != null) ref.read(purchaseFormProvider.notifier).setSupplier(s);
+        },
+        onInvoiceNumberChanged: (val) {
+          ref.read(purchaseFormProvider.notifier).setInvoiceNumber(val);
+        },
       );
     }
 
@@ -175,6 +177,12 @@ class _PurchaseFormPageState extends ConsumerState<PurchaseFormPage> {
       onQuantityChanged: _onQuantityChanged,
       onSavePurchase: _savePurchase,
       formKey: _formKey,
+      onSupplierChanged: (s) {
+        if (s != null) ref.read(purchaseFormProvider.notifier).setSupplier(s);
+      },
+      onInvoiceNumberChanged: (val) {
+        ref.read(purchaseFormProvider.notifier).setInvoiceNumber(val);
+      },
     );
   }
 }
