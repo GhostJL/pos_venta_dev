@@ -25,6 +25,8 @@ class _InventoryAuditMobilePageState
   String _filterText = '';
   // Used to debounce searches if needed, or just standard state update
 
+  DateTime? _lastBackPressTime;
+
   @override
   void dispose() {
     _searchController.dispose();
@@ -89,27 +91,64 @@ class _InventoryAuditMobilePageState
     final activeAuditAsync = ref.watch(inventoryAuditViewModelProvider);
     final quickAuditIndex = ref.watch(quickAuditStateProvider);
 
-    return Scaffold(
-      drawer: const SideMenu(), // Assuming SideMenu exists
-      appBar: activeAuditAsync.value == null
-          ? AppBar(title: const Text('Auditoría de Inventario'))
-          : null, // If active, we usually show custom appbar within the view or here.
-      // Let's keep the main appbar for lists.
-      body: activeAuditAsync.when(
-        data: (audit) {
-          if (audit == null) {
-            return _buildAuditHistoryList(context);
-          }
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) async {
+        if (didPop) return;
 
-          // If Quick Audit Mode is active, show that view
-          if (quickAuditIndex >= 0) {
-            return QuickAuditView(audit: audit);
-          }
+        // 1. If Quick Audit is active, exit Quick Mode first
+        if (quickAuditIndex >= 0) {
+          ref.read(inventoryAuditViewModelProvider.notifier).exitQuickAudit();
+          return;
+        }
 
-          return _buildActiveAuditView(context, audit);
-        },
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, st) => Center(child: Text('Error: $e')),
+        // 2. If an audit is active (viewing details), go back to list
+        if (activeAuditAsync.value != null) {
+          ref.invalidate(inventoryAuditViewModelProvider);
+          return;
+        }
+
+        // 3. Otherwise (List view), handle Double Back to Exit
+        final now = DateTime.now();
+        if (_lastBackPressTime == null ||
+            now.difference(_lastBackPressTime!) > const Duration(seconds: 2)) {
+          _lastBackPressTime = now;
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Presiona atrás de nuevo para salir'),
+              duration: Duration(seconds: 2),
+            ),
+          );
+          return;
+        }
+
+        // If double pressed efficiently, allow exit
+        if (context.mounted) {
+          Navigator.of(context).pop();
+        }
+      },
+      child: Scaffold(
+        drawer: const SideMenu(), // Assuming SideMenu exists
+        appBar: activeAuditAsync.value == null
+            ? AppBar(title: const Text('Auditoría de Inventario'))
+            : null, // If active, we usually show custom appbar within the view or here.
+        // Let's keep the main appbar for lists.
+        body: activeAuditAsync.when(
+          data: (audit) {
+            if (audit == null) {
+              return _buildAuditHistoryList(context);
+            }
+
+            // If Quick Audit Mode is active, show that view
+            if (quickAuditIndex >= 0) {
+              return QuickAuditView(audit: audit);
+            }
+
+            return _buildActiveAuditView(context, audit);
+          },
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (e, st) => Center(child: Text('Error: $e')),
+        ),
       ),
     );
   }
